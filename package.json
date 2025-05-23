@@ -1,0 +1,40 @@
+{
+  "name": "livraison-abidjan",
+  "version": "1.0.0",
+  "description": "Plateforme de livraison collaborative pour Abidjan",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:web\" \"npm run dev:mobile\"",
+    "dev:backend": "cd backend && source venv/bin/activate && uvicorn main:app --reload",
+    "dev:web": "cd web && npm run dev",
+    "dev:mobile": "cd mobile && npx expo start",
+    "install:all": "npm run install:backend && npm run install:web && npm run install:mobile",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:web": "cd web && npm install",
+    "install:mobile": "cd mobile && npm install",
+    "test": "npm run test:backend && npm run test:web && npm run test:mobile",
+    "test:backend": "cd backend && python -m pytest",
+    "test:web": "cd web && npm run test",
+    "test:mobile": "cd mobile && npm test",
+    "build": "npm run build:web && npm run build:mobile",
+    "build:web": "cd web && npm run build",
+    "build:mobile": "cd mobile && npx expo build",
+    "lint": "npm run lint:backend && npm run lint:web && npm run lint:mobile",
+    "lint:backend": "cd backend && black . && flake8 .",
+    "lint:web": "cd web && npm run lint",
+    "lint:mobile": "cd mobile && npm run lint",
+    "docker:up": "docker-compose -f docker-compose.dev.yml up -d",
+    "docker:down": "docker-compose -f docker-compose.dev.yml down",
+    "docker:logs": "docker-compose -f docker-compose.dev.yml logs -f"
+  },
+  "keywords": ["delivery", "logistics", "abidjan", "collaborative", "fastapi", "vue", "react-native"],
+  "author": "Livraison Abidjan Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

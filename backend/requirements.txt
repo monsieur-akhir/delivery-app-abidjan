@@ -1,0 +1,35 @@
+# FastAPI et dépendances
+fastapi==0.103.1
+uvicorn==0.23.2
+pydantic==2.3.0
+pydantic-settings==2.0.3
+email-validator==2.0.0.post2
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Base de données
+sqlalchemy==2.0.20
+alembic==1.12.0
+psycopg2-binary==2.9.7
+redis==4.6.0
+
+# Gestion des fichiers
+aiofiles==23.2.1
+boto3==1.28.40
+
+# HTTP et WebSockets
+httpx==0.24.1
+websockets==11.0.3
+requests==2.31.0
+
+# Utilitaires
+python-dotenv==1.0.0
+tenacity==8.2.3
+jinja2==3.1.2
+pillow==10.0.0
+pytz==2023.3
+
+# Tests
+pytest==7.4.0
+pytest-asyncio==0.21.1

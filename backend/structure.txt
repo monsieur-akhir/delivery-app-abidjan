@@ -1,0 +1,91 @@
+backend/
+├── alembic/                    # Migrations de base de données
+│   ├── versions/
+│   ├── env.py
+│   └── alembic.ini
+├── app/                        # Code source principal
+│   ├── api/                    # Routes API par module
+│   │   ├── auth.py             # Routes d'authentification
+│   │   ├── users.py            # Gestion des utilisateurs
+│   │   ├── deliveries.py       # Livraisons et enchères
+│   │   ├── tracking.py         # Suivi des coursiers
+│   │   ├── ratings.py          # Notations et commentaires
+│   │   ├── gamification.py     # Système de points et récompenses
+│   │   ├── notifications.py    # Notifications push/SMS
+│   │   ├── market.py           # Marché intégré
+│   │   ├── manager/            # Routes pour les gestionnaires
+│   │   │   ├── clients.py
+│   │   │   ├── couriers.py
+│   │   │   ├── companies.py
+│   │   │   ├── finances.py
+│   │   │   ├── stats.py
+│   │   │   └── config.py
+│   │   ├── wallet.py           # Portefeuille communautaire
+│   │   ├── collaborative.py    # Livraison collaborative
+│   │   ├── traffic.py          # Analyse des embouteillages
+│   │   ├── express.py          # Livraison express solidaire
+│   │   ├── assistant.py        # Assistant vocal
+│   │   ├── weather.py          # Prévisions météo
+│   │   └── companies.py        # Gestion d'entreprise
+│   ├── core/                   # Fonctionnalités centrales
+│   │   ├── config.py           # Configuration de l'application
+│   │   ├── security.py         # Sécurité et authentification
+│   │   ├── dependencies.py     # Dépendances FastAPI
+│   │   └── exceptions.py       # Gestion des exceptions
+│   ├── db/                     # Base de données
+│   │   ├── base.py             # Configuration de base
+│   │   ├── session.py          # Session SQLAlchemy
+│   │   └── init_db.py          # Initialisation de la base de données
+│   ├── models/                 # Modèles SQLAlchemy
+│   │   ├── user.py             # Utilisateurs et profils
+│   │   ├── delivery.py         # Livraisons et enchères
+│   │   ├── rating.py           # Notations et commentaires
+│   │   ├── gamification.py     # Points et récompenses
+│   │   ├── market.py           # Produits du marché
+│   │   ├── wallet.py           # Transactions du portefeuille
+│   │   ├── notification.py     # Notifications
+│   │   └── traffic.py          # Données de trafic
+│   ├── schemas/                # Schémas Pydantic
+│   │   ├── user.py             # Schémas utilisateurs
+│   │   ├── delivery.py         # Schémas livraisons
+│   │   ├── rating.py           # Schémas notations
+│   │   ├── gamification.py     # Schémas gamification
+│   │   ├── market.py           # Schémas marché
+│   │   ├── wallet.py           # Schémas portefeuille
+│   │   └── notification.py     # Schémas notifications
+│   ├── services/               # Services métier
+│   │   ├── auth.py             # Service d'authentification
+│   │   ├── user.py             # Service utilisateurs
+│   │   ├── delivery.py         # Service livraisons
+│   │   ├── tracking.py         # Service de suivi
+│   │   ├── rating.py           # Service de notation
+│   │   ├── gamification.py     # Service de gamification
+│   │   ├── notification.py     # Service de notification
+│   │   ├── market.py           # Service de marché
+│   │   ├── wallet.py           # Service de portefeuille
+│   │   ├── weather.py          # Service météo
+│   │   ├── assistant.py        # Service assistant vocal
+│   │   └── traffic.py          # Service analyse trafic
+│   ├── utils/                  # Utilitaires
+│   │   ├── geocoding.py        # Géocodage des adresses
+│   │   ├── payment.py          # Intégration paiements
+│   │   ├── sms.py              # Envoi de SMS
+│   │   ├── push.py             # Notifications push
+│   │   └── validators.py       # Validateurs personnalisés
+│   ├── websockets/             # Gestion des WebSockets
+│   │   ├── connection.py       # Gestionnaire de connexions
+│   │   └── tracking.py         # WebSockets pour le tracking
+│   └── main.py                 # Point d'entrée de l'application
+├── tests/                      # Tests unitaires et d'intégration
+│   ├── conftest.py             # Configuration des tests
+│   ├── api/                    # Tests des API
+│   └── services/               # Tests des services
+├── scripts/                    # Scripts utilitaires
+│   ├── create_admin.py         # Création d'un administrateur
+│   └── seed_data.py            # Données de test
+├── .env.example                # Exemple de variables d'environnement
+├── Dockerfile                  # Configuration Docker
+├── docker-compose.yml          # Configuration Docker Compose
+├── requirements.txt            # Dépendances Python
+├── alembic.ini                 # Configuration Alembic
+└── README.md                   # Documentation
