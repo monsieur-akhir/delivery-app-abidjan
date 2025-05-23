@@ -134,3 +134,27 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+*.log
+*.env
+# Dossiers à ignorer
+**/.angular/
+**/node_modules/
+node_modules/
+dist/
+.angular/
+.cache/
+# Dossiers spécifiques aux applications
+web/node_modules/
+web/dist/
+web/.cache/
+web/.cache/
+web/.angular/cache/
+backend/node_modules/
+backend/dist/
+
+backend/.env
+mobile/node_modules/
+mobile/dist/
+# Fichiers à ignorer
+*.log
+*.env
