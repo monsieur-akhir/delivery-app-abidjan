@@ -9,6 +9,8 @@ import {
   Platform,
   TouchableOpacity,
   TextInput as RNTextInput,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
 } from "react-native"
 import { Text, Button, Snackbar } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
@@ -19,15 +21,25 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
 
+type VerifyOTPScreenRouteParams = {
+  phone: string
+  isReset?: boolean
+}
+
 type VerifyOTPScreenProps = {
   route: RouteProp<RootStackParamList, "VerifyOTP">
   navigation: NativeStackNavigationProp<RootStackParamList, "VerifyOTP">
 }
 
+interface AuthContextType {
+  completeRegistration?: () => Promise<void>
+  // Ajoutez ici les autres propriétés de votre contexte si nécessaire
+}
+
 const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) => {
   const { t } = useTranslation()
   const { phone } = route.params
-  const { completeRegistration } = useAuth()
+  const { completeRegistration } = useAuth() as AuthContextType
 
   const [otp, setOtp] = useState<string[]>(["", "", "", ""])
   const [loading, setLoading] = useState<boolean>(false)
@@ -38,7 +50,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
 
   const inputRefs = useRef<Array<RNTextInput | null>>([])
 
-  // Compte à rebours pour la réexpédition du code
+  // Countdown for resending code
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
     if (countdown > 0) {
@@ -56,14 +68,17 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
     newOtp[index] = value
     setOtp(newOtp)
 
-    // Passer automatiquement au champ suivant
+    // Automatically move to next field
     if (value && index < 3 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1]?.focus()
     }
   }
 
-  const handleKeyPress = (e: any, index: number): void => {
-    // Revenir au champ précédent lors de la suppression
+  const handleKeyPress = (
+    e: NativeSyntheticEvent<TextInputKeyPressEventData>, 
+    index: number
+  ): void => {
+    // Go back to previous field on delete
     if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0 && inputRefs.current[index - 1]) {
       inputRefs.current[index - 1]?.focus()
     }
@@ -80,10 +95,14 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
     setLoading(true)
     try {
       await verifyOTP(phone, otpCode)
-      await completeRegistration()
+      if (completeRegistration) {
+        await completeRegistration()
+      }
+
+      // Navigate to appropriate screen
       navigation.reset({
         index: 0,
-        routes: [{ name: "Main" }],
+        routes: [{ name: "ClientTabs" }],
       })
     } catch (error) {
       console.error("OTP verification error:", error)

@@ -1,13 +1,14 @@
 import type React from "react"
 import { View, StyleSheet, TouchableOpacity } from "react-native"
-import { IconButton } from "react-native-paper"
+import { Feather } from "@expo/vector-icons"
 
-interface StarRatingProps {
+export interface StarRatingProps {
   rating: number
   size?: number
   color?: string
   inactiveColor?: string
   onRatingChange?: (rating: number) => void
+  editable?: boolean
 }
 
 const StarRating: React.FC<StarRatingProps> = ({
@@ -16,13 +17,14 @@ const StarRating: React.FC<StarRatingProps> = ({
   color = "#FFC107",
   inactiveColor = "#E0E0E0",
   onRatingChange,
+  editable = false,
 }) => {
-  // Générer un tableau de 5 étoiles
+  // Generate an array of 5 stars
   const stars = Array.from({ length: 5 }, (_, index) => index + 1)
 
-  // Gérer le clic sur une étoile
+  // Handle click on a star
   const handleStarPress = (selectedRating: number): void => {
-    if (onRatingChange) {
+    if (editable && onRatingChange) {
       onRatingChange(selectedRating)
     }
   }
@@ -33,14 +35,13 @@ const StarRating: React.FC<StarRatingProps> = ({
         <TouchableOpacity
           key={star}
           onPress={() => handleStarPress(star)}
-          disabled={!onRatingChange}
+          disabled={!editable || !onRatingChange}
           style={styles.starContainer}
         >
-          <IconButton
-            icon={star <= rating ? "star" : "star-outline"}
+          <Feather
+            name={star <= rating ? "star" : "star"}
             size={size}
-            color={star <= rating ? color : inactiveColor}
-            style={styles.star}
+            style={{ color: star <= rating ? color : inactiveColor, margin: 0 }}
           />
         </TouchableOpacity>
       ))}
@@ -55,8 +56,6 @@ const styles = StyleSheet.create({
   },
   starContainer: {
     padding: 0,
-  },
-  star: {
     margin: 0,
   },
 })

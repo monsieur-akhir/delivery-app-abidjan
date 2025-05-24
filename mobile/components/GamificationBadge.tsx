@@ -90,7 +90,7 @@ const GamificationBadge: React.FC<GamificationBadgeProps> = ({ badge, size = "me
         <IconButton
           icon={badgeIcon}
           size={sizeStyles.iconSize}
-          color={badge.unlocked ? badgeColor : "#BDBDBD"}
+          iconColor={badge.unlocked ? badgeColor : "#BDBDBD"}
           style={styles.icon}
         />
       </View>
@@ -108,7 +108,7 @@ const GamificationBadge: React.FC<GamificationBadgeProps> = ({ badge, size = "me
       </Text>
       {!badge.unlocked && size !== "small" && (
         <View style={styles.lockedOverlay}>
-          <IconButton icon="lock" size={24} color="#FFFFFF" style={styles.lockIcon} />
+          <IconButton icon="lock" size={24} iconColor="#FFFFFF" style={styles.lockIcon} />
         </View>
       )}
     </View>

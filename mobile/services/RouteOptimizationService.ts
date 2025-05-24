@@ -1,187 +1,112 @@
 import axios from "axios"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { API_URL } from "../config/environment"
 import type { Coordinates } from "../types/models"
 
-export interface OptimizedRoute {
-  distance: number
-  duration: number
-  coordinates: Coordinates[]
-  instructions: RouteInstruction[]
+interface TrafficHotspot {
+  coordinates: Coordinates
+  intensity: number
 }
 
-export interface RouteInstruction {
-  text: string
+interface RouteResponse {
+  route: Coordinates[]
   distance: number
   duration: number
-  type: string
-  index: number
-}
-
-export interface OptimizationParams {
-  origin: Coordinates
-  destination: Coordinates
-  waypoints?: Coordinates[]
-  avoid_tolls?: boolean
-  avoid_highways?: boolean
-  traffic?: boolean
-  departure_time?: number // timestamp
+  trafficDelay: number
 }
 
 class RouteOptimizationService {
   /**
-   * Obtenir un itinéraire optimisé entre deux points
+   * Récupère les points chauds de trafic dans la zone d'Abidjan
    */
-  async getOptimizedRoute(params: OptimizationParams): Promise<OptimizedRoute> {
+  static async getTrafficHotspots(): Promise<TrafficHotspot[]> {
     try {
-      const token = await AsyncStorage.getItem("token")
-      const response = await axios.post(`${API_URL}/routes/optimize`, params, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-
+      const response = await axios.get(`${API_URL}/api/traffic/hotspots`)
       return response.data
     } catch (error) {
-      console.error("Error getting optimized route:", error)
-      throw error
+      console.error("Error fetching traffic hotspots:", error)
+      return []
     }
   }
 
   /**
-   * Obtenir plusieurs itinéraires alternatifs
+   * Calcule l'itinéraire optimal entre deux points en tenant compte du trafic
    */
-  async getAlternativeRoutes(params: OptimizationParams): Promise<OptimizedRoute[]> {
+  static async getOptimalRoute(
+    origin: Coordinates,
+    destination: Coordinates,
+    waypoints?: Coordinates[],
+  ): Promise<RouteResponse> {
     try {
-      const token = await AsyncStorage.getItem("token")
-      const response = await axios.post(`${API_URL}/routes/alternatives`, params, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const response = await axios.post(`${API_URL}/api/routes/optimize`, {
+        origin,
+        destination,
+        waypoints: waypoints || [],
       })
-
       return response.data
     } catch (error) {
-      console.error("Error getting alternative routes:", error)
-      throw error
+      console.error("Error calculating optimal route:", error)
+      throw new Error("Impossible de calculer l'itinéraire optimal")
     }
   }
 
   /**
-   * Obtenir un itinéraire optimisé pour plusieurs arrêts
+   * Estime le temps de livraison en fonction de l'heure de la journée et du trafic
    */
-  async getMultiStopRoute(params: OptimizationParams): Promise<OptimizedRoute> {
+  static async estimateDeliveryTime(
+    origin: Coordinates,
+    destination: Coordinates,
+    scheduledTime?: Date,
+  ): Promise<{ duration: number; trafficDelay: number }> {
     try {
-      const token = await AsyncStorage.getItem("token")
-      const response = await axios.post(`${API_URL}/routes/multi-stop`, params, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const response = await axios.post(`${API_URL}/api/routes/estimate-time`, {
+        origin,
+        destination,
+        scheduledTime: scheduledTime ? scheduledTime.toISOString() : new Date().toISOString(),
       })
-
       return response.data
     } catch (error) {
-      console.error("Error getting multi-stop route:", error)
-      throw error
+      console.error("Error estimating delivery time:", error)
+      throw new Error("Impossible d'estimer le temps de livraison")
     }
   }
 
   /**
-   * Obtenir une estimation du temps de trajet en tenant compte du trafic
+   * Suggère le meilleur moment pour effectuer une livraison
    */
-  async getETA(params: OptimizationParams): Promise<{ eta: number; traffic_delay: number }> {
+  static async suggestDeliveryTime(
+    origin: Coordinates,
+    destination: Coordinates,
+  ): Promise<{ suggestedTime: string; estimatedDuration: number }> {
     try {
-      const token = await AsyncStorage.getItem("token")
-      const response = await axios.post(`${API_URL}/routes/eta`, params, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const response = await axios.post(`${API_URL}/api/routes/suggest-time`, {
+        origin,
+        destination,
       })
-
       return response.data
     } catch (error) {
-      console.error("Error getting ETA:", error)
-      throw error
+      console.error("Error suggesting delivery time:", error)
+      throw new Error("Impossible de suggérer un horaire de livraison")
     }
   }
 
   /**
-   * Obtenir les zones de trafic dense à éviter
+   * Optimise l'ordre des livraisons pour un coursier
    */
-  async getTrafficHotspots(): Promise<{ coordinates: Coordinates; intensity: number }[]> {
+  static async optimizeDeliveryOrder(
+    startPoint: Coordinates,
+    deliveryPoints: Array<{ id: string; coordinates: Coordinates }>,
+  ): Promise<{ order: string[]; route: Coordinates[]; totalDistance: number; totalDuration: number }> {
     try {
-      const token = await AsyncStorage.getItem("token")
-      const response = await axios.get(`${API_URL}/traffic/hotspots`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axios.post(`${API_URL}/api/routes/optimize-order`, {
+        startPoint,
+        deliveryPoints,
       })
-
       return response.data
     } catch (error) {
-      console.error("Error getting traffic hotspots:", error)
-      throw error
-    }
-  }
-
-  /**
-   * Signaler un incident de trafic
-   */
-  async reportTrafficIncident(
-    coordinates: Coordinates,
-    type: "accident" | "construction" | "closure" | "congestion",
-    description?: string,
-  ): Promise<boolean> {
-    try {
-      const token = await AsyncStorage.getItem("token")
-      await axios.post(
-        `${API_URL}/traffic/report`,
-        { coordinates, type, description },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      )
-
-      return true
-    } catch (error) {
-      console.error("Error reporting traffic incident:", error)
-      return false
-    }
-  }
-
-  /**
-   * Obtenir les statistiques de trafic pour une zone
-   */
-  async getTrafficStats(
-    coordinates: Coordinates,
-    radius: number,
-  ): Promise<{ congestion_level: number; average_speed: number; incidents: number }> {
-    try {
-      const token = await AsyncStorage.getItem("token")
-      const response = await axios.get(`${API_URL}/traffic/stats`, {
-        params: {
-          lat: coordinates.latitude,
-          lng: coordinates.longitude,
-          radius,
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      return response.data
-    } catch (error) {
-      console.error("Error getting traffic stats:", error)
-      throw error
+      console.error("Error optimizing delivery order:", error)
+      throw new Error("Impossible d'optimiser l'ordre des livraisons")
     }
   }
 }
 
-export default new RouteOptimizationService()
+export default RouteOptimizationService

@@ -6,11 +6,14 @@ import { Text, Card, RadioButton, Divider, Button, IconButton, TextInput } from 
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNavigation, useRoute } from "@react-navigation/native"
-import PaymentService, { type PaymentMethod } from "../../services/PaymentService"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RouteProp } from "@react-navigation/native"
+import type { RootStackParamList } from "../../types/navigation"
+import PaymentService, { type PaymentMethod, type PaymentInitiationResponse } from "../../services/PaymentService"
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons"
 
 interface PaymentMethodsScreenProps {
-  deliveryId?: number
+  deliveryId?: number | string
   amount?: number
   onPaymentComplete?: (transactionId: string) => void
   isWalletTopUp?: boolean
@@ -18,8 +21,8 @@ interface PaymentMethodsScreenProps {
 
 const PaymentMethodsScreen = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation()
-  const route = useRoute()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Payment">>()
+  const route = useRoute<RouteProp<RootStackParamList, "Payment">>()
   const params = route.params as PaymentMethodsScreenProps
 
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
@@ -34,61 +37,50 @@ const PaymentMethodsScreen = () => {
   const amount = params?.amount || 0
   const onPaymentComplete = params?.onPaymentComplete
 
-  useEffect(() => {
-    fetchPaymentMethods()
-  }, [])
-
-  const fetchPaymentMethods = async () => {
+  const fetchPaymentMethods = async (): Promise<void> => {
     try {
       setLoading(true)
       const methods = await PaymentService.getPaymentMethods()
       setPaymentMethods(methods)
-
-      // Sélectionner la première méthode par défaut
       if (methods.length > 0 && methods[0].enabled) {
         setSelectedMethod(methods[0].id)
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error fetching payment methods:", err)
       setError(t("payment.errorFetchingMethods"))
     } finally {
       setLoading(false)
     }
   }
+  useEffect(() => {
+    fetchPaymentMethods()
+  }, [])
 
-  const handlePayment = async () => {
+  const handlePayment = async (): Promise<void> => {
     if (!selectedMethod) {
       Alert.alert(t("payment.error"), t("payment.selectMethod"))
       return
     }
-
     try {
       setProcessing(true)
       setError(null)
-
-      // Vérifier si un numéro de téléphone est nécessaire pour la méthode sélectionnée
       const isMobileMoneyMethod = ["orange_money", "mtn_money", "moov_money"].includes(selectedMethod)
-
       if (isMobileMoneyMethod && !phoneNumber) {
         Alert.alert(t("payment.error"), t("payment.enterPhoneNumber"))
         setProcessing(false)
         return
       }
-
-      let response
+      let response: PaymentInitiationResponse
       if (isWalletTopUp) {
-        // Recharger le portefeuille
         response = await PaymentService.topUpWallet({
           amount,
           payment_method: selectedMethod,
           phone: isMobileMoneyMethod ? phoneNumber : undefined,
         })
       } else {
-        // Payer une livraison
         if (!deliveryId) {
           throw new Error("Delivery ID is required")
         }
-
         response = await PaymentService.initiatePayment({
           delivery_id: deliveryId,
           amount,
@@ -96,20 +88,17 @@ const PaymentMethodsScreen = () => {
           phone: isMobileMoneyMethod ? phoneNumber : undefined,
         })
       }
-
       if (response.status === "success" && response.payment_url) {
-        // Rediriger vers la page de paiement externe
         navigation.navigate("WebPayment", {
           paymentUrl: response.payment_url,
           transactionId: response.transaction_id,
-          onComplete: (success) => {
+          onComplete: (success: boolean) => {
             if (success && onPaymentComplete) {
               onPaymentComplete(response.transaction_id)
             }
           },
         })
       } else if (response.status === "success") {
-        // Paiement traité avec succès (ex: paiement en espèces)
         Alert.alert(t("payment.success"), t("payment.processedSuccessfully"), [
           {
             text: t("common.ok"),
@@ -123,13 +112,18 @@ const PaymentMethodsScreen = () => {
           },
         ])
       } else {
-        // Erreur de paiement
         throw new Error(response.message || t("payment.unknownError"))
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Payment error:", err)
-      setError(err.message || t("payment.processingError"))
-      Alert.alert(t("payment.error"), err.message || t("payment.processingError"))
+      let errorMessage = t("payment.processingError")
+      if (err instanceof Error) {
+        errorMessage = err.message
+      } else if (typeof err === "string") {
+        errorMessage = err
+      }
+      setError(errorMessage)
+      Alert.alert(t("payment.error"), errorMessage)
     } finally {
       setProcessing(false)
     }

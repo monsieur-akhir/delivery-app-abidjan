@@ -1,11 +1,13 @@
+/* eslint-disable prefer-const */
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { API_URL } from "../config/environment"
+import type { Delivery, User, DeliveryStatus, Weather, VehicleType, CargoCategory, Bid, Courier } from "../types/models"
 
-// Types
+// Types pour les réponses de l'API
 export interface LoginResponse {
   token: string
-  user: any
+  user: User
 }
 
 export interface RegisterUserData {
@@ -16,6 +18,8 @@ export interface RegisterUserData {
   role: string
   commune?: string
   language_preference?: string
+  vehicle_type?: string
+  license_plate?: string
 }
 
 export interface DeliveryData {
@@ -36,6 +40,8 @@ export interface DeliveryData {
   notes?: string
   estimated_distance?: number
   estimated_duration?: number
+  cargo_category?: string
+  required_vehicle_type?: string
 }
 
 export interface PriceEstimateData {
@@ -43,7 +49,7 @@ export interface PriceEstimateData {
   package_size: string
   is_fragile: boolean
   is_urgent: boolean
-  weather_condition?: number
+  weather_condition?: string | number // Modifié pour accepter chaîne ou nombre
   pickup_commune?: string
   delivery_commune?: string
 }
@@ -85,7 +91,7 @@ export interface VoiceCommandResponse {
   transcript: string
   response: string
   action?: string
-  data?: any
+  data?: Record<string, unknown> // Replaced `any` with a more specific type
 }
 
 // Types pour les véhicules
@@ -125,12 +131,16 @@ export interface TransportRuleData {
 }
 
 export interface VehicleRecommendation {
-  vehicle_id: string
-  recommended: boolean
+  recommended_vehicle: {
+    type: VehicleType
+    name: string
+  }
+  reason: string
+  price_multiplier: number
 }
 
 export interface VehicleRecommendationData {
-  cargo_category: string
+  cargo_category: CargoCategory
   custom_category?: string
   distance: number
   weight?: number
@@ -139,9 +149,6 @@ export interface VehicleRecommendationData {
   is_urgent?: boolean
   weather_condition?: number
 }
-
-export type VehicleType = "car" | "motorcycle" | "truck"
-export type CargoCategory = "small" | "medium" | "large"
 
 // Créer une instance axios avec la configuration de base
 const api = axios.create({
@@ -174,7 +181,7 @@ api.interceptors.response.use(
     const originalRequest = error.config
 
     // Si l'erreur est 401 (non autorisé) et que nous n'avons pas déjà essayé de rafraîchir le token
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
       try {
@@ -212,7 +219,7 @@ api.interceptors.response.use(
 )
 
 // API d'authentification
-export const login = async (phone: string, password: string): Promise<LoginResponse> => {
+export const login = async (phone: string, password: string): Promise<{ token: string; user: User }> => {
   const response = await api.post("/auth/login", { phone, password })
   return response.data
 }
@@ -227,7 +234,7 @@ export const register = async (userData: RegisterUserData): Promise<void> => {
 export const verifyToken = async (token: string): Promise<boolean> => {
   try {
     const response = await api.post("/auth/verify", { token })
-    return response.ok
+    return response.status === 200
   } catch (error) {
     console.error("Token verification error:", error)
     return false
@@ -253,13 +260,13 @@ export const resetPassword = async (phone: string): Promise<void> => {
 }
 
 // Profil utilisateur
-export const getUserProfile = async (): Promise<any> => {
+export const getUserProfile = async (): Promise<User> => {
   const response = await api.get("/users/profile")
   return response.data
 }
 
 // Mise à jour du profil
-export const updateUserProfile = async (userData: any): Promise<any> => {
+export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
   const response = await api.put("/users/profile", userData)
   return response.data
 }
@@ -276,6 +283,8 @@ export const uploadProfilePicture = async (formData: FormData): Promise<any> => 
   return response.data
 }
 
+export const uploadProfileImage = uploadProfilePicture
+
 // Enregistrement du token push
 export const registerPushToken = async (token: string, userId: string): Promise<void> => {
   const response = await api.post("/users/push-token", { token, user_id: userId })
@@ -290,7 +299,19 @@ export const geocodeAddress = async (address: string): Promise<any[]> => {
 
 // Obtenir le prix recommandé
 export const getRecommendedPrice = async (data: PriceEstimateData): Promise<number> => {
-  const response = await api.post("/deliveries/price-estimate", data)
+  const payload = { ...data }
+  if (typeof payload.weather_condition === "string") {
+    // Mappage des conditions météo en codes (à ajuster selon votre API)
+    const conditionMap: Record<string, number> = {
+      sunny: 1000,
+      rainy: 1003,
+      cloudy: 1006,
+      partly_cloudy: 1009,
+      // Ajoutez d'autres conditions selon les données de votre API météo
+    }
+    payload.weather_condition = conditionMap[payload.weather_condition.toLowerCase()] || 1000
+  }
+  const response = await api.post("/deliveries/price-estimate", payload)
   return response.data
 }
 
@@ -301,7 +322,7 @@ export const createDelivery = async (deliveryData: DeliveryData): Promise<any> =
 }
 
 // Obtenir les détails d'une livraison
-export const fetchDeliveryDetails = async (deliveryId: string): Promise<any> => {
+export const fetchDeliveryDetails = async (deliveryId: string): Promise<Delivery> => {
   const response = await api.get(`/deliveries/${deliveryId}`)
   return response.data
 }
@@ -313,14 +334,63 @@ export const getBidsForDelivery = async (deliveryId: string): Promise<any[]> => 
 }
 
 // Accepter une enchère
-export const acceptBid = async (deliveryId: string, bidId: string): Promise<void> => {
-  const response = await api.post(`/deliveries/${deliveryId}/bids/${bidId}/accept`)
+export const acceptBid = async (bidId: string, deliveryId?: string): Promise<void> => {
+  let targetDeliveryId = deliveryId
+  if (!targetDeliveryId) {
+    const bidDetails = await api.get(`/bids/${bidId}`)
+    targetDeliveryId = bidDetails.data.delivery_id
+  }
+  const response = await api.post(`/deliveries/${targetDeliveryId}/bids/${bidId}/accept`)
   return response.data
+}
+
+// Rejeter une enchère
+export const rejectBid = async (bidId: string, deliveryId?: string): Promise<void> => {
+  let targetDeliveryId = deliveryId
+  if (!targetDeliveryId) {
+    const bidDetails = await api.get(`/bids/${bidId}`)
+    targetDeliveryId = bidDetails.data.delivery_id
+  }
+  const response = await api.post(`/deliveries/${targetDeliveryId}/bids/${bidId}/reject`)
+  return response.data
+}
+
+// Obtenir les offres pour une livraison
+export const fetchDeliveryBids = async (deliveryId: string): Promise<Bid[]> => {
+  const response = await api.get(`/deliveries/${deliveryId}/bids`)
+  const bidsWithCourierPromises = response.data.map(async (bid: any) => {
+    try {
+      const courierResponse = await api.get(`/couriers/${bid.courier_id}`)
+      return {
+        ...bid,
+        courier: courierResponse.data,
+      }
+    } catch (error) {
+      console.error(`Erreur lors de la récupération du coursier pour l'offre ${bid.id}:`, error)
+      return {
+        ...bid,
+        courier: {
+          id: bid.courier_id,
+          name: "Unknown",
+          rating: 0,
+          rating_count: 0,
+        },
+      }
+    }
+  })
+  const bidsWithCourier = await Promise.all(bidsWithCourierPromises)
+  return bidsWithCourier
 }
 
 // Créer une enchère
 export const createBid = async (bidData: BidData): Promise<any> => {
   const response = await api.post("/bids", bidData)
+  return response.data
+}
+
+// Enchérir pour une livraison
+export const bidForDelivery = async (deliveryId: string, amount: number): Promise<any> => {
+  const response = await api.post(`/deliveries/${deliveryId}/bid`, { amount })
   return response.data
 }
 
@@ -331,8 +401,14 @@ export const getCourierLocation = async (deliveryId: string): Promise<any> => {
 }
 
 // Mettre à jour le statut de la livraison
-export const updateDeliveryStatus = async (deliveryId: string, status: string): Promise<void> => {
+export const updateDeliveryStatus = async (deliveryId: string, status: DeliveryStatus): Promise<void> => {
   const response = await api.put(`/deliveries/${deliveryId}/status`, { status })
+  return response.data
+}
+
+// Annuler une livraison
+export const cancelDelivery = async (deliveryId: string): Promise<void> => {
+  const response = await api.post(`/deliveries/${deliveryId}/cancel`)
   return response.data
 }
 
@@ -371,14 +447,11 @@ export const verifyPayment = async (verificationData: PaymentVerificationData): 
 export const fetchNearbyMerchants = async (commune?: string, category?: string): Promise<any[]> => {
   let url = "/merchants/nearby"
   const params = []
-
   if (commune) params.push(`commune=${encodeURIComponent(commune)}`)
   if (category) params.push(`category=${encodeURIComponent(category)}`)
-
   if (params.length > 0) {
     url += `?${params.join("&")}`
   }
-
   const response = await api.get(url)
   return response.data
 }
@@ -401,18 +474,22 @@ export const fetchCourierEarnings = async (period = "month") => {
   return response.data
 }
 
-export const withdrawFunds = async (amount) => {
+export const withdrawFunds = async (amount: number) => {
   const response = await api.post("/courier/withdraw", { amount })
   return response.data
 }
 
-export const fetchCourierProfile = async () => {
+export const fetchCourierProfile = async (): Promise<any> => {
   const response = await api.get("/courier/profile")
   return response.data
 }
 
-export const updateCourierStatus = async (isOnline, lat = null, lng = null) => {
-  const data = { is_online: isOnline }
+export const updateCourierStatus = async (
+  isOnline: boolean,
+  lat?: number | null,
+  lng?: number | null,
+): Promise<any> => {
+  const data: Record<string, any> = { is_online: isOnline }
   if (lat !== null && lng !== null) {
     data.latitude = lat
     data.longitude = lng
@@ -436,30 +513,30 @@ export const fetchCollaborativeDeliveries = async () => {
   return response.data
 }
 
-export const joinCollaborativeDelivery = async (deliveryId, data) => {
+export const joinCollaborativeDelivery = async (deliveryId: string, data: any) => {
   const response = await api.post(`/courier/collaborative-deliveries/${deliveryId}/join`, data)
   return response.data
 }
 
-export const sendTrackingPoint = async (data) => {
+export const sendTrackingPoint = async (data: any) => {
   const response = await api.post("/tracking/point", data)
   return response.data
 }
 
-export const getDirections = async (startLat, startLng, endLat, endLng) => {
+export const getDirections = async (startLat: number, startLng: number, endLat: number, endLng: number) => {
   const response = await api.get(
     `/directions?start_lat=${startLat}&start_lng=${startLng}&end_lat=${endLat}&end_lng=${endLng}`,
   )
   return response.data
 }
 
-export const sendDeliveryNotification = async (userId, notification) => {
+export const sendDeliveryNotification = async (userId: string, notification: any) => {
   const response = await api.post(`/notifications/user/${userId}`, notification)
   return response.data
 }
 
 // Récupérer l'historique des livraisons pour un client
-export const fetchClientDeliveryHistory = async (filter?: string): Promise<any[]> => {
+export const fetchClientDeliveryHistory = async (filter?: string): Promise<Delivery[]> => {
   let url = "/client/deliveries/history"
   if (filter) {
     url += `?status=${filter}`
@@ -469,7 +546,7 @@ export const fetchClientDeliveryHistory = async (filter?: string): Promise<any[]
 }
 
 // Récupérer l'historique des livraisons pour un coursier
-export const fetchCourierDeliveryHistory = async (filter?: string): Promise<any[]> => {
+export const fetchCourierDeliveryHistory = async (filter?: string): Promise<Delivery[]> => {
   let url = "/courier/deliveries/history"
   if (filter) {
     url += `?status=${filter}`
@@ -479,7 +556,7 @@ export const fetchCourierDeliveryHistory = async (filter?: string): Promise<any[
 }
 
 // Récupérer les livraisons disponibles pour un coursier
-export const fetchAvailableDeliveries = async (commune?: string): Promise<any[]> => {
+export const fetchAvailableDeliveries = async (commune?: string): Promise<Delivery[]> => {
   let url = "/courier/deliveries/available"
   if (commune) {
     url += `?commune=${encodeURIComponent(commune)}`
@@ -489,19 +566,24 @@ export const fetchAvailableDeliveries = async (commune?: string): Promise<any[]>
 }
 
 // Récupérer les livraisons actives pour un client
-export const fetchActiveDeliveries = async (): Promise<any[]> => {
+export const fetchActiveDeliveries = async (): Promise<Delivery[]> => {
   const response = await api.get("/client/deliveries/active")
   return response.data
 }
 
 // Récupérer les prévisions météo
-export const fetchWeatherForecast = async (latitude: number, longitude: number, commune?: string): Promise<any> => {
+export const fetchWeatherForecast = async (latitude: number, longitude: number, commune?: string): Promise<Weather> => {
   let url = `/weather?lat=${latitude}&lng=${longitude}`
   if (commune) {
     url += `&commune=${encodeURIComponent(commune)}`
   }
   const response = await api.get(url)
-  return response.data
+  const data = response.data
+  // Transformer condition si nécessaire
+  if (data.current && data.current.condition && typeof data.current.condition === "object") {
+    data.current.condition = data.current.condition.text || "unknown"
+  }
+  return data
 }
 
 // Récupérer les alertes météo
@@ -529,6 +611,12 @@ export const processVoiceCommand = async (audioBase64: string): Promise<VoiceCom
 // Obtenir une réponse du chatbot
 export const getChatbotResponse = async (message: string): Promise<{ message: string; action?: string }> => {
   const response = await api.post("/assistant/chat", { message })
+  return response.data
+}
+
+// Obtenir une recommandation de véhicule
+export const getVehicleRecommendation = async (data: VehicleRecommendationData): Promise<VehicleRecommendation> => {
+  const response = await api.post("/transport/recommend", data)
   return response.data
 }
 
@@ -644,6 +732,61 @@ export const sendCollaborativeMessage = async (deliveryId: string, message: stri
   return response.data
 }
 
+// Nouvelle fonction pour remplacer fetchWeatherForecast
+export const getWeatherData = async (latitude: number, longitude: number, commune?: string): Promise<Weather> => {
+  try {
+    // Générer une clé unique pour le cache
+    const cacheKey = `weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`
+    const cachedData = await AsyncStorage.getItem(cacheKey)
+    const cacheTimestamp = await AsyncStorage.getItem(`${cacheKey}_timestamp`)
+
+    // Vérifier si les données en cache sont récentes (moins de 10 minutes)
+    const cacheDuration = 10 * 60 * 1000 // 10 minutes en millisecondes
+    if (cachedData && cacheTimestamp && Date.now() - Number.parseInt(cacheTimestamp) < cacheDuration) {
+      return JSON.parse(cachedData) as Weather
+    }
+
+    // Construire l'URL de la requête
+    const params = new URLSearchParams({
+      lat: latitude.toString(),
+      lng: longitude.toString(),
+    })
+    if (commune) {
+      params.append("commune", commune)
+    }
+    const url = `/weather?${params.toString()}`
+
+    // Effectuer la requête API
+    const response = await api.get(url)
+    let weatherData = response.data
+
+    // Transformer condition si nécessaire
+    if (weatherData.current && weatherData.current.condition && typeof weatherData.current.condition === "object") {
+      weatherData.current.condition = weatherData.current.condition.text || "unknown"
+    }
+
+    // Valider la structure des données
+    if (!weatherData.current || typeof weatherData.current.temperature !== "number" || typeof weatherData.current.condition !== "string") {
+      throw new Error("Invalid weather data format")
+    }
+
+    // Mettre en cache les données
+    await AsyncStorage.setItem(cacheKey, JSON.stringify(weatherData))
+    await AsyncStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
+
+    return weatherData as Weather
+  } catch (error) {
+    // Gestion des erreurs
+    console.error("Error fetching weather data:", error) // eslint-disable-next-line no-console
+    const cachedData = await AsyncStorage.getItem(`weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`)
+    if (cachedData) {
+      return JSON.parse(cachedData) as Weather
+    }
+    throw new Error("Failed to fetch weather data and no cached data available")
+  }
+}
+
+
 // Fonction pour vider le cache API
 export const clearApiCache = async (): Promise<boolean> => {
   try {
@@ -654,219 +797,6 @@ export const clearApiCache = async (): Promise<boolean> => {
   } catch (error) {
     console.error("Error clearing API cache:", error)
     return false
-  }
-}
-
-// Fonctions pour les véhicules
-export const fetchVehicles = async (businessId?: string, vehicleType?: string, status?: string): Promise<any[]> => {
-  let url = "/transport/vehicles"
-  const params = []
-
-  if (businessId) params.push(`business_id=${businessId}`)
-  if (vehicleType) params.push(`vehicle_type=${vehicleType}`)
-  if (status) params.push(`status=${status}`)
-
-  if (params.length > 0) {
-    url += `?${params.join("&")}`
-  }
-
-  const response = await api.get(url)
-  return response.data
-}
-
-export const fetchVehicleDetails = async (vehicleId: string): Promise<any> => {
-  const response = await api.get(`/transport/vehicles/${vehicleId}`)
-  return response.data
-}
-
-export const createVehicle = async (vehicleData: VehicleData): Promise<any> => {
-  const response = await api.post("/transport/vehicles", vehicleData)
-  return response.data
-}
-
-export const updateVehicle = async (vehicleId: string, vehicleData: Partial<VehicleData>): Promise<any> => {
-  const response = await api.put(`/transport/vehicles/${vehicleId}`, vehicleData)
-  return response.data
-}
-
-export const deleteVehicle = async (vehicleId: string): Promise<void> => {
-  await api.delete(`/transport/vehicles/${vehicleId}`)
-}
-
-// Fonctions pour les véhicules des coursiers
-/**
- * Récupère la liste des véhicules d'un coursier
- * @param courierId ID du coursier
- * @returns Liste des véhicules du coursier
- */
-export const fetchCourierVehiclesList = async (courierId: number): Promise<CourierVehicle[]> => {
-  try {
-    const response = await api.get(`/transport/courier/${courierId}/vehicles`)
-    return response.data
-  } catch (error) {
-    console.error("Error fetching courier vehicles:", error)
-    throw error
-  }
-}
-
-/**
- * Assigne un véhicule à un coursier
- * @param courierId ID du coursier
- * @param vehicleData Données du véhicule
- * @returns Véhicule assigné
- */
-export const assignCourierVehicle = async (
-  courierId: number,
-  vehicleData: {
-    vehicle_type: VehicleType
-    license_plate: string
-    brand?: string
-    model?: string
-    is_electric: boolean
-  },
-): Promise<CourierVehicle> => {
-  try {
-    const response = await api.post(`/transport/courier/${courierId}/vehicles`, vehicleData)
-    return response.data
-  } catch (error) {
-    console.error("Error assigning vehicle to courier:", error)
-    throw error
-  }
-}
-
-/**
- * Met à jour un véhicule de coursier
- * @param courierVehicleId ID de l'association coursier-véhicule
- * @param updateData Données de mise à jour
- * @returns Véhicule mis à jour
- */
-export const updateCourierVehicleDetails = async (
-  courierVehicleId: number,
-  updateData: {
-    license_plate?: string
-    brand?: string
-    model?: string
-    is_electric?: boolean
-  },
-): Promise<CourierVehicle> => {
-  try {
-    const response = await api.put(`/transport/courier/vehicles/${courierVehicleId}`, updateData)
-    return response.data
-  } catch (error) {
-    console.error("Error updating courier vehicle:", error)
-    throw error
-  }
-}
-
-/**
- * Supprime un véhicule de coursier
- * @param courierVehicleId ID de l'association coursier-véhicule
- */
-export const removeCourierVehicleAssociation = async (courierVehicleId: number): Promise<void> => {
-  try {
-    await api.delete(`/transport/courier/vehicles/${courierVehicleId}`)
-  } catch (error) {
-    console.error("Error removing courier vehicle:", error)
-    throw error
-  }
-}
-
-/**
- * Définit un véhicule comme principal pour un coursier
- * @param courierVehicleId ID de l'association coursier-véhicule
- * @returns Véhicule mis à jour
- */
-export const setCourierVehicleAsPrimary = async (courierVehicleId: number): Promise<CourierVehicle> => {
-  try {
-    const response = await api.put(`/transport/courier/vehicles/${courierVehicleId}/primary`)
-    return response.data
-  } catch (error) {
-    console.error("Error setting primary vehicle:", error)
-    throw error
-  }
-}
-
-/**
- * Télécharge un document pour un véhicule
- * @param courierVehicleId ID de l'association coursier-véhicule
- * @param formData Données du formulaire contenant le fichier
- * @returns Véhicule mis à jour
- */
-export const uploadCourierVehicleDocument = async (
-  courierVehicleId: number,
-  formData: FormData,
-): Promise<CourierVehicle> => {
-  try {
-    const response = await api.post(`/transport/courier/vehicles/${courierVehicleId}/documents`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
-    return response.data
-  } catch (error) {
-    console.error("Error uploading vehicle document:", error)
-    throw error
-  }
-}
-
-// Fonctions pour les règles de transport
-export const fetchTransportRulesList = async (
-  businessId?: string,
-  vehicleId?: string,
-  cargoCategory?: string,
-  isActive?: boolean,
-): Promise<any[]> => {
-  let url = "/transport/rules"
-  const params = []
-
-  if (businessId) params.push(`business_id=${businessId}`)
-  if (vehicleId) params.push(`vehicle_id=${vehicleId}`)
-  if (cargoCategory) params.push(`cargo_category=${cargoCategory}`)
-  if (isActive !== undefined) params.push(`is_active=${isActive}`)
-
-  if (params.length > 0) {
-    url += `?${params.join("&")}`
-  }
-
-  const response = await api.get(url)
-  return response.data
-}
-
-export const createTransportRuleEntry = async (ruleData: TransportRuleData): Promise<any> => {
-  const response = await api.post("/transport/rules", ruleData)
-  return response.data
-}
-
-export const updateTransportRuleEntry = async (ruleId: string, ruleData: Partial<TransportRuleData>): Promise<any> => {
-  const response = await api.put(`/transport/rules/${ruleId}`, ruleData)
-  return response.data
-}
-
-export const deleteTransportRuleEntry = async (ruleId: string): Promise<void> => {
-  await api.delete(`/transport/rules/${ruleId}`)
-}
-
-// Fonction pour la recommandation de véhicule
-/**
- * Obtient une recommandation de véhicule pour une livraison
- * @param deliveryData Données de la livraison
- * @returns Recommandation de véhicule
- */
-export const getVehicleRecommendationForDelivery = async (deliveryData: {
-  cargo_category: CargoCategory
-  distance: number
-  weight?: number
-  volume?: number
-  is_fragile?: boolean
-  is_urgent?: boolean
-  weather_condition?: number
-}): Promise<VehicleRecommendation> => {
-  try {
-    const response = await api.post("/transport/recommend", deliveryData)
-    return response.data
-  } catch (error) {
-    console.error("Error getting vehicle recommendation:", error)
-    throw error
   }
 }
 

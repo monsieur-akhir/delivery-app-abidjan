@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
+import { Feather } from "@expo/vector-icons"
 import VehicleService from "../../services/VehicleService"
 import type { Vehicle } from "../../types/models"
 import { useAuth } from "../../contexts/AuthContext"
@@ -12,12 +13,14 @@ import { useTheme } from "../../contexts/ThemeContext"
 import { useNetworkContext } from "../../contexts/NetworkContext"
 import ErrorView from "../../components/ErrorView"
 import EmptyState from "../../components/EmptyState"
+import { useTranslation } from "react-i18next"
 
 const VehicleManagementScreen: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { t } = useTranslation()
 
   const navigation = useNavigation()
   const { user } = useAuth()
@@ -81,6 +84,10 @@ const VehicleManagementScreen: React.FC = () => {
     ])
   }
 
+  const handleVehiclePress = (vehicle: Vehicle) => {
+    handleViewVehicle(vehicle)
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -96,71 +103,67 @@ const VehicleManagementScreen: React.FC = () => {
     }
   }
 
-  const renderVehicleItem = ({ item }: { item: Vehicle }) => (
+  const renderItem = ({ item }: { item: Vehicle }) => (
     <TouchableOpacity
       style={[styles.vehicleCard, { backgroundColor: colors.card }]}
-      onPress={() => handleViewVehicle(item)}
+      onPress={() => handleVehiclePress(item)}
     >
       <View style={styles.vehicleHeader}>
-        <View>
-          <Text style={[styles.vehicleName, { color: colors.text }]}>{item.name}</Text>
-          <Text style={[styles.vehiclePlate, { color: colors.text }]}>{item.licensePlate}</Text>
-        </View>
+        <Text style={[styles.vehiclePlate, { color: colors.text }]}>
+          {item.licensePlate || item.license_plate || "N/A"}
+        </Text>
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: getStatusColor(item.status) + "20", borderColor: getStatusColor(item.status) },
+            {
+              backgroundColor: getStatusColor(item.status || "inactive") + "20",
+              borderColor: getStatusColor(item.status || "inactive"),
+            },
           ]}
         >
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {item.status === "active"
-              ? "Actif"
-              : item.status === "maintenance"
-                ? "En maintenance"
-                : item.status === "inactive"
-                  ? "Inactif"
-                  : "En vérification"}
+          <Text style={[styles.statusText, { color: getStatusColor(item.status || "inactive") }]}>
+            {(item.status || "inactive") === "active"
+              ? t("vehicle.active")
+              : (item.status || "inactive") === "maintenance"
+                ? t("vehicle.maintenance")
+                : (item.status || "inactive") === "inactive"
+                  ? t("vehicle.inactive")
+                  : t("vehicle.unknown")}
           </Text>
         </View>
       </View>
 
       <View style={styles.vehicleDetails}>
-        <View style={styles.detailItem}>
-          <Ionicons name="car-outline" size={16} color={colors.text} />
+        <View style={styles.vehicleDetail}>
+          <Feather name="truck" size={16} color={colors.text} />
           <Text style={[styles.detailText, { color: colors.text }]}>
-            {item.type === "motorcycle"
-              ? "Moto"
-              : item.type === "bicycle"
-                ? "Vélo"
-                : item.type === "scooter"
-                  ? "Trottinette"
-                  : item.type === "van"
-                    ? "Fourgonnette"
-                    : item.type === "pickup"
-                      ? "Pick-up"
-                      : item.type === "kia_truck"
-                        ? "Camion KIA"
-                        : item.type === "moving_truck"
-                          ? "Camion de déménagement"
-                          : item.customType || "Autre"}
+            {item.type === "car"
+              ? t("vehicle.car")
+              : item.type === "motorcycle"
+                ? t("vehicle.motorcycle")
+                : item.type === "bicycle"
+                  ? t("vehicle.bicycle")
+                  : item.type === "truck"
+                    ? t("vehicle.truck")
+                    : item.customType || "Autre"}
           </Text>
         </View>
 
-        {item.maxWeight && (
-          <View style={styles.detailItem}>
-            <Ionicons name="barbell-outline" size={16} color={colors.text} />
-            <Text style={[styles.detailText, { color: colors.text }]}>{item.maxWeight} kg</Text>
+        {(item.maxWeight || item.max_weight) && (
+          <View style={styles.vehicleDetail}>
+            <Feather name="package" size={16} color={colors.text} />
+            <Text style={[styles.detailText, { color: colors.text }]}>{item.maxWeight || item.max_weight} kg</Text>
           </View>
         )}
 
         {item.maxDistance && (
-          <View style={styles.detailItem}>
-            <Ionicons name="map-outline" size={16} color={colors.text} />
+          <View style={styles.vehicleDetail}>
+            <Feather name="map" size={16} color={colors.text} />
             <Text style={[styles.detailText, { color: colors.text }]}>{item.maxDistance} km</Text>
           </View>
         )}
 
-        <View style={styles.detailItem}>
+        <View style={styles.vehicleDetail}>
           <Ionicons name={item.isElectric ? "flash-outline" : "water-outline"} size={16} color={colors.text} />
           <Text style={[styles.detailText, { color: colors.text }]}>
             {item.isElectric ? "Électrique" : "Thermique"}
@@ -213,7 +216,7 @@ const VehicleManagementScreen: React.FC = () => {
       ) : (
         <FlatList
           data={vehicles}
-          renderItem={renderVehicleItem}
+          renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
@@ -268,10 +271,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 12,
   },
-  vehicleName: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
   vehiclePlate: {
     fontSize: 14,
     opacity: 0.7,
@@ -291,7 +290,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginBottom: 16,
   },
-  detailItem: {
+  vehicleDetail: {
     flexDirection: "row",
     alignItems: "center",
     marginRight: 16,

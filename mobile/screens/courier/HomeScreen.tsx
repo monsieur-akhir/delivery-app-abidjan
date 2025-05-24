@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
-import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Dimensions } from "react-native"
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from "react-native"
 import { Text, Card, Button, Chip, ActivityIndicator, Badge, Avatar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
@@ -22,13 +22,22 @@ import {
 } from "../../services/api"
 import { formatPrice, formatDistance, formatDate } from "../../utils/formatters"
 import type { CourierHomeScreenNavigationProp } from "../../types/navigation"
-import type { Delivery, Weather } from "../../types/models"
+import type { Delivery } from "../../types/models"
+
+// Define Weather type if it doesn't exist in models
+interface Weather {
+  current: {
+    temperature: number
+    condition: string
+    humidity: number
+    wind_speed: number
+    wind_kph: number
+  }
+}
 
 type CourierHomeScreenProps = {
   navigation: CourierHomeScreenNavigationProp
 }
-
-const { width } = Dimensions.get("window")
 
 const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => {
   const { user, updateUserData } = useAuth()
@@ -46,11 +55,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
   const [weather, setWeather] = useState<Weather | null>(null)
   const [locationPermissionDenied, setLocationPermissionDenied] = useState<boolean>(false)
 
-  useEffect(() => {
-    loadInitialData()
-  }, [])
-
-  const loadInitialData = async (): Promise<void> => {
+  const loadInitialData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
 
@@ -73,7 +78,8 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
       setIsOnline(profileData.is_online)
 
       // Charger les livraisons disponibles
-      await loadAvailableDeliveries()
+      const deliveries = await fetchAvailableDeliveries()
+      setAvailableDeliveries(deliveries)
 
       // Charger les données météo
       const weatherData = await fetchWeatherForecast(location.coords.latitude, location.coords.longitude)
@@ -83,24 +89,19 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const loadAvailableDeliveries = async (): Promise<void> => {
-    try {
-      const deliveries = await fetchAvailableDeliveries()
-      setAvailableDeliveries(deliveries)
-    } catch (error) {
-      console.error("Error loading available deliveries:", error)
-    }
-  }
+  useEffect(() => {
+    loadInitialData()
+  }, [loadInitialData])
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     setRefreshing(true)
     await loadInitialData()
     setRefreshing(false)
-  }, [])
+  }
 
-  const toggleOnlineStatus = async (): Promise<void> => {
+  const toggleOnlineStatus = useCallback(async (): Promise<void> => {
     if (!isConnected && !isOfflineMode) {
       return
     }
@@ -133,14 +134,14 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
       setIsOnline(newStatus)
 
       // Mettre à jour les données utilisateur
-      updateUserData({ is_online: newStatus })
+      updateUserData({ status: newStatus ? "online" : "offline" })
 
       // Envoyer un message WebSocket pour informer le serveur du changement de statut
-      if (isConnected) {
+      if (isConnected && user?.id) {
         sendMessage({
           type: "courier_status_update",
           data: {
-            courier_id: user?.id,
+            courier_id: user.id,
             is_online: newStatus,
             location: currentLocation
               ? {
@@ -156,7 +157,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
     } finally {
       setStatusLoading(false)
     }
-  }
+  }, [isConnected, isOfflineMode, isOnline, currentLocation, updateUserData, user?.id, loadInitialData])
 
   const getWeatherIcon = (condition: string): string => {
     switch (condition.toLowerCase()) {
@@ -201,7 +202,10 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate("Notifications")}>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate("Notifications" as any)}
+          >
             <Feather name="bell" size={24} color="#212121" />
             {unreadCount > 0 && (
               <Badge style={styles.notificationBadge} size={16}>
@@ -229,10 +233,10 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
           </View>
         ) : locationPermissionDenied ? (
           <View style={styles.permissionDeniedContainer}>
-            <Feather name="map-pin-off" size={64} color="#FF6B00" />
+            <Feather name="map-off" size={64} color="#FF6B00" />
             <Text style={styles.permissionDeniedTitle}>Localisation requise</Text>
             <Text style={styles.permissionDeniedText}>
-              Pour utiliser cette application en tant que coursier, vous devez autoriser l'accès à votre position.
+              Pour utiliser cette application en tant que coursier, vous devez autoriser l&apos;accès à votre position.
             </Text>
             <Button
               mode="contained"
@@ -240,7 +244,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                 const { status } = await Location.requestForegroundPermissionsAsync()
                 if (status === "granted") {
                   setLocationPermissionDenied(false)
-                  loadInitialData()
+                  await loadInitialData()
                 }
               }}
               style={styles.permissionButton}
@@ -328,7 +332,9 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                       </View>
                       <View style={styles.weatherDetail}>
                         <Feather name="wind" size={14} color="#607D8B" />
-                        <Text style={styles.weatherDetailText}>{weather.current.wind_speed} km/h</Text>
+                        <Text style={styles.weatherDetailText}>
+                          {weather.current.wind_kph || weather.current.wind_speed} km/h
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -394,7 +400,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                           <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
                           <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
                         </View>
-                        <Text style={styles.deliveryPrice}>{formatPrice(delivery.proposed_price)} FCFA</Text>
+                        <Text style={styles.deliveryPrice}>{formatPrice(delivery.price)} FCFA</Text>
                       </View>
 
                       <View style={styles.addressContainer}>
@@ -403,7 +409,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                           <View style={styles.addressTextContainer}>
                             <Text style={styles.addressLabel}>Ramassage</Text>
                             <Text style={styles.addressText}>{delivery.pickup_address}</Text>
-                            <Text style={styles.communeText}>{delivery.pickup_commune}</Text>
+                            <Text style={styles.communeText}>{delivery.pickup_location}</Text>
                           </View>
                         </View>
 
@@ -414,7 +420,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                           <View style={styles.addressTextContainer}>
                             <Text style={styles.addressLabel}>Livraison</Text>
                             <Text style={styles.addressText}>{delivery.delivery_address}</Text>
-                            <Text style={styles.communeText}>{delivery.delivery_commune}</Text>
+                            <Text style={styles.communeText}>{delivery.delivery_location}</Text>
                           </View>
                         </View>
                       </View>
@@ -422,7 +428,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                       {delivery.distance && (
                         <View style={styles.deliveryFooter}>
                           <Chip icon="map-marker-distance">{formatDistance(delivery.distance)}</Chip>
-                          {delivery.type === "express" && (
+                          {delivery.delivery_type === "express" && (
                             <Chip icon="flash" style={styles.expressChip}>
                               Express
                             </Chip>

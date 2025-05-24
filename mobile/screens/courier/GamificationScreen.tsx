@@ -242,7 +242,7 @@ const GamificationScreen: React.FC = () => {
                     <View style={styles.achievementHeader}>
                       <Text style={styles.achievementName}>{achievement.name}</Text>
                       {achievement.completed && (
-                        <IconButton icon="check-circle" size={20} color="#4CAF50" style={styles.completedIcon} />
+                        <IconButton icon="check-circle" size={20} iconColor="#4CAF50" style={styles.completedIcon} />
                       )}
                     </View>
                     <Text style={styles.achievementDescription}>{achievement.description}</Text>
@@ -390,7 +390,7 @@ const GamificationScreen: React.FC = () => {
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <IconButton icon="alert-circle" size={48} color="#F44336" />
+        <IconButton icon="alert-circle" size={48} iconColor="#F44336" />
         <Text style={styles.errorText}>{error}</Text>
         <Button mode="contained" onPress={loadData} style={styles.retryButton}>
           {t("common.retry")}

@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator, Alert } from "react-native"
-import { Text, Card, Button, IconButton, TouchableOpacity } from "react-native-paper"
+import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator, Alert, TouchableOpacity } from "react-native"
+import { Text, Card, Button, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNavigation } from "@react-navigation/native"
@@ -95,7 +95,7 @@ const AnalyticsDashboardScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Sélecteur de période */}
+        {/* Timeframe selector */}
         <View style={styles.timeframeSelector}>
           <TouchableOpacity
             style={[styles.timeframeOption, timeframe === "week" && styles.selectedTimeframe]}
@@ -125,7 +125,7 @@ const AnalyticsDashboardScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Statistiques générales */}
+        {/* General statistics */}
         <Card style={styles.statsCard}>
           <Card.Content>
             <Text style={styles.cardTitle}>{t("analytics.overview")}</Text>
@@ -154,7 +154,7 @@ const AnalyticsDashboardScreen = () => {
           </Card.Content>
         </Card>
 
-        {/* Graphique des dépenses */}
+        {/* Spending chart */}
         <Card style={styles.chartCard}>
           <Card.Content>
             <Text style={styles.cardTitle}>{t("analytics.spendingOverTime")}</Text>
@@ -162,10 +162,10 @@ const AnalyticsDashboardScreen = () => {
             {stats.spendingOverTime.length > 0 ? (
               <LineChart
                 data={{
-                  labels: stats.spendingOverTime.map((item) => item.label),
+                  labels: stats.spendingOverTime.map((item: any) => item.label),
                   datasets: [
                     {
-                      data: stats.spendingOverTime.map((item) => item.value),
+                      data: stats.spendingOverTime.map((item: any) => item.value),
                     },
                   ],
                 }}
@@ -196,14 +196,14 @@ const AnalyticsDashboardScreen = () => {
           </Card.Content>
         </Card>
 
-        {/* Graphique des livraisons par statut */}
+        {/* Deliveries by status chart */}
         <Card style={styles.chartCard}>
           <Card.Content>
             <Text style={styles.cardTitle}>{t("analytics.deliveriesByStatus")}</Text>
 
             {stats.deliveriesByStatus.length > 0 ? (
               <PieChart
-                data={stats.deliveriesByStatus.map((item) => ({
+                data={stats.deliveriesByStatus.map((item: any) => ({
                   name: item.label,
                   population: item.value,
                   color: item.color,
@@ -229,7 +229,7 @@ const AnalyticsDashboardScreen = () => {
           </Card.Content>
         </Card>
 
-        {/* Distribution des temps de livraison */}
+        {/* Delivery time distribution */}
         <Card style={styles.chartCard}>
           <Card.Content>
             <Text style={styles.cardTitle}>{t("analytics.deliveryTimeDistribution")}</Text>
@@ -237,10 +237,10 @@ const AnalyticsDashboardScreen = () => {
             {stats.deliveryTimeDistribution.length > 0 ? (
               <BarChart
                 data={{
-                  labels: stats.deliveryTimeDistribution.map((item) => item.label),
+                  labels: stats.deliveryTimeDistribution.map((item: any) => item.label),
                   datasets: [
                     {
-                      data: stats.deliveryTimeDistribution.map((item) => item.value),
+                      data: stats.deliveryTimeDistribution.map((item: any) => item.value),
                     },
                   ],
                 }}
@@ -266,14 +266,14 @@ const AnalyticsDashboardScreen = () => {
           </Card.Content>
         </Card>
 
-        {/* Destinations les plus fréquentes */}
+        {/* Top destinations */}
         <Card style={styles.chartCard}>
           <Card.Content>
             <Text style={styles.cardTitle}>{t("analytics.topDestinations")}</Text>
 
             {stats.topDestinations.length > 0 ? (
               <View style={styles.destinationsContainer}>
-                {stats.topDestinations.map((destination, index) => (
+                {stats.topDestinations.map((destination: any, index) => (
                   <View key={index} style={styles.destinationItem}>
                     <View style={styles.destinationRank}>
                       <Text style={styles.rankText}>{index + 1}</Text>
@@ -298,7 +298,7 @@ const AnalyticsDashboardScreen = () => {
           mode="outlined"
           style={styles.exportButton}
           onPress={() => {
-            // Fonctionnalité d'exportation à implémenter
+            // Export functionality to be implemented
             Alert.alert(t("analytics.exportTitle"), t("analytics.exportMessage"))
           }}
         >

@@ -1,0 +1,72 @@
+# Dockerfile pour les workers de traitement asynchrone de Livraison Abidjan
+# Multi-stage build pour optimiser la taille et la sécurité
+
+# Stage 1: Construction
+FROM python:3.11-slim AS builder
+
+# Définir des variables de construction
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Installer les dépendances de construction
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Créer et activer l'environnement virtuel
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copier et installer les dépendances
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+RUN pip install celery redis
+
+# Stage 2: Image finale
+FROM python:3.11-slim
+
+# Métadonnées de l'image
+LABEL maintainer="Team Livraison Abidjan <tech@livraison-abidjan.com>"
+LABEL description="Worker de traitement asynchrone pour l'application Livraison Abidjan"
+LABEL version="1.0"
+
+# Variables d'environnement
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+# Créer un utilisateur non-root
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Installer les dépendances runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copier l'environnement virtuel depuis le builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Créer les répertoires nécessaires et définir les permissions
+RUN mkdir -p /app/uploads /app/logs \
+    && chown -R appuser:appuser /app
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier uniquement les fichiers nécessaires pour les workers
+COPY --chown=appuser:appuser ./app /app/app
+COPY --chown=appuser:appuser ./worker.py /app/
+COPY --chown=appuser:appuser ./celeryconfig.py /app/
+
+# Ajouter des points de montage pour les uploads et les logs
+VOLUME ["/app/uploads", "/app/logs"]
+
+# Changer l'utilisateur
+USER appuser
+
+# Commande de démarrage
+CMD ["celery", "-A", "worker", "worker", "--loglevel=info"]

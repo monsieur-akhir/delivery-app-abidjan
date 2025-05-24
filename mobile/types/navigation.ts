@@ -1,92 +1,87 @@
-import type { RouteProp } from "@react-navigation/native"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 export type RootStackParamList = {
-  // Auth Screens
   Login: undefined
   Register: undefined
   VerifyOTP: { phone: string }
   ForgotPassword: undefined
-
-  // Tab Navigators
   ClientTabs: undefined
   CourierTabs: undefined
-
-  // Client Screens
-  ClientHome: undefined
+  Home: undefined
   CreateDelivery: undefined
+  MerchantDetails: { merchantId: string }
+  DeliveryDetails: { deliveryId: string }
   Bids: { deliveryId: string }
   TrackDelivery: { deliveryId: string }
   Payment: { deliveryId: string; amount: number }
-  Marketplace: undefined
-  MerchantDetails: { merchantId: string }
   RateDelivery: { deliveryId: string }
   EnhancedRateDelivery: { deliveryId: string }
-  DeliveryDetails: { deliveryId: string }
-  DeliveryHistory: undefined
-  ClientNotifications: undefined
-  ClientProfile: undefined
-
-  // Courier Screens
-  CourierHome: undefined
   Bid: { deliveryId: string }
   CourierTrackDelivery: { deliveryId: string }
-  CourierEarnings: undefined
-  CourierStatus: undefined
+  CourierStatus: { initialStatus?: boolean } | undefined
   CourierStats: undefined
-  CourierDeliveryHistory: undefined
   CollaborativeDeliveries: undefined
+  CollaborativeDeliveryDetails: { deliveryId: string; clientName: string; finalPrice: number }
+  JoinCollaborativeDelivery: { deliveryId: string }
   CollaborativeChat: { deliveryId: string }
   Gamification: undefined
   CommunityWallet: undefined
-  CourierNotifications: undefined
-  CourierProfile: undefined
-
-  // Common Screens
-  Settings: undefined
+  VehicleManagement: undefined
+  CourierProfile: { courierId: string }
+  Notifications: undefined
   Support: undefined
   LanguageSettings: undefined
+  Main: undefined
+  ClientHome: undefined
+  Marketplace: { category?: string }
+  DeliveryHistory: undefined
+  Settings: undefined
+  CourierHome: undefined
+  CourierEarnings: undefined
+  CourierDeliveryHistory: undefined
+  WebPayment: { paymentUrl: string; transactionId: string; onComplete: (success: boolean) => void }
+  Cart: { merchantId: string }
+  Profile: undefined
+  NotificationSettings: undefined
+  SecuritySettings: undefined
   ChangePassword: undefined
-  DeleteAccount: undefined
-  TermsOfService: undefined
-  PrivacyPolicy: undefined
-  ContactSupport: undefined
-  CollaborativeDeliveryDetails: { deliveryId: string }
+  SecurityQuestions: undefined
+  StorageManagementScreen: undefined
+  AutoSyncSettingsScreen: undefined
+  DataUsageSettingsScreen: undefined
+  WeatherScreen: { location: string }
+  GamificationScreen: undefined
+  AvailableDeliveries: undefined
 }
 
-export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">
-export type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Register">
-export type VerifyOTPScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "VerifyOTP">
-export type ForgotPasswordScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "ForgotPassword">
+export type ClientTabParamList = {
+  ClientHome: undefined
+  Marketplace: undefined
+  DeliveryHistory: undefined
+  Settings: undefined
+}
+
+export type CourierTabParamList = {
+  CourierHome: undefined
+  CourierEarnings: undefined
+  CourierDeliveryHistory: undefined
+  Settings: undefined
+}
 
 export type ClientHomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "ClientHome">
-export type CreateDeliveryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CreateDelivery">
+export type CourierHomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CourierHome">
+export type DeliveryDetailsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "DeliveryDetails">
 export type BidsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Bids">
 export type TrackDeliveryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "TrackDelivery">
 export type PaymentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Payment">
-export type MarketplaceScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Marketplace">
-export type MerchantDetailsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "MerchantDetails">
 export type RateDeliveryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "RateDelivery">
-export type EnhancedRateDeliveryScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "EnhancedRateDelivery"
->
-export type DeliveryDetailsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "DeliveryDetails">
-export type DeliveryHistoryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "DeliveryHistory">
-
-export type CourierHomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CourierHome">
 export type BidScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Bid">
 export type CourierTrackDeliveryScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "CourierTrackDelivery"
 >
-export type CourierEarningsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CourierEarnings">
 export type CourierStatusScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CourierStatus">
 export type CourierStatsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CourierStats">
-export type CourierDeliveryHistoryScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "CourierDeliveryHistory"
->
 export type CollaborativeDeliveriesScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "CollaborativeDeliveries"
@@ -94,20 +89,39 @@ export type CollaborativeDeliveriesScreenNavigationProp = NativeStackNavigationP
 export type CollaborativeChatScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CollaborativeChat">
 export type GamificationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Gamification">
 export type CommunityWalletScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CommunityWallet">
-
-export type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Settings">
+export type VehicleManagementScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "VehicleManagement">
+export type CourierProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CourierProfile">
+export type NotificationsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Notifications">
 export type SupportScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Support">
 export type LanguageSettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "LanguageSettings">
-
-export type BidsScreenRouteProp = RouteProp<RootStackParamList, "Bids">
-export type TrackDeliveryScreenRouteProp = RouteProp<RootStackParamList, "TrackDelivery">
-export type PaymentScreenRouteProp = RouteProp<RootStackParamList, "Payment">
-export type MerchantDetailsScreenRouteProp = RouteProp<RootStackParamList, "MerchantDetails">
-export type RateDeliveryScreenRouteProp = RouteProp<RootStackParamList, "RateDelivery">
-export type EnhancedRateDeliveryScreenRouteProp = RouteProp<RootStackParamList, "EnhancedRateDelivery">
-export type DeliveryDetailsScreenRouteProp = RouteProp<RootStackParamList, "DeliveryDetails">
-export type BidScreenRouteProp = RouteProp<RootStackParamList, "Bid">
-export type CourierTrackDeliveryScreenRouteProp = RouteProp<RootStackParamList, "CourierTrackDelivery">
-export type VerifyOTPScreenRouteProp = RouteProp<RootStackParamList, "VerifyOTP">
-export type CollaborativeChatScreenRouteProp = RouteProp<RootStackParamList, "CollaborativeChat">
-export type CollaborativeDeliveryDetailsScreenRouteProp = RouteProp<RootStackParamList, "CollaborativeDeliveryDetails">
+export type MainScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Main">
+export type DeliveryHistoryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "DeliveryHistory">
+export type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Settings">
+export type CourierEarningsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "CourierEarnings">
+export type CourierDeliveryHistoryScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "CourierDeliveryHistory"
+>
+export type WebPaymentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "WebPayment">
+export type CartScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Cart">
+export type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">
+export type NotificationSettingsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "NotificationSettings"
+>
+export type SecuritySettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "SecuritySettings">
+export type ChangePasswordScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "ChangePassword">
+export type SecurityQuestionsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "SecurityQuestions">
+export type StorageManagementScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "StorageManagementScreen"
+>
+export type AutoSyncSettingsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "AutoSyncSettingsScreen"
+>
+export type DataUsageSettingsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "DataUsageSettingsScreen"
+>
+export type WeatherScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "WeatherScreen">

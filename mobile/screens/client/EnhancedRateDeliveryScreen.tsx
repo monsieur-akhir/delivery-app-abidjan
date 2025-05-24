@@ -3,24 +3,26 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from "react-native"
-import { Text, Card, Button, TextInput, Divider, ActivityIndicator, IconButton } from "react-native-paper"
+import { Text, Card, Button, TextInput, Divider, ActivityIndicator } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
-import * as Permissions from "expo-permissions"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { fetchDeliveryDetails, submitRating, transcribeVoiceRating } from "../../services/api"
 import StarRating from "../../components/StarRating"
+import FeatherIcon from "../../components/FeatherIcon"
+import { requestPermission } from "../../utils/permissions"
+import { getAudioRecordingOptions } from "../../utils/audioUtils"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
-import type { Delivery } from "../../types/models"
+import type { Delivery, PendingOperation } from "../../types/models"
 
 type EnhancedRateDeliveryScreenProps = {
-  route: RouteProp<RootStackParamList, "RateDelivery">
-  navigation: NativeStackNavigationProp<RootStackParamList, "RateDelivery">
+  route: RouteProp<RootStackParamList, "EnhancedRateDelivery">
+  navigation: NativeStackNavigationProp<RootStackParamList, "EnhancedRateDelivery">
 }
 
 const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({ route, navigation }) => {
@@ -39,7 +41,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
   const [recording, setRecording] = useState<Audio.Recording | null>(null)
   const [transcribing, setTranscribing] = useState<boolean>(false)
   const [recordingDuration, setRecordingDuration] = useState<number>(0)
-  const [durationTimer, setDurationTimer] = useState<NodeJS.Timeout | null>(null)
+  const [durationTimer, setDurationTimer] = useState<NodeJS.Timeout | number | null>(null)
   const [permissionGranted, setPermissionGranted] = useState<boolean>(false)
   const [ratingAspects, setRatingAspects] = useState({
     punctuality: 5,
@@ -51,15 +53,13 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
   useEffect(() => {
     loadDeliveryDetails()
     checkPermissions()
-  }, [deliveryId])
 
-  useEffect(() => {
     return () => {
       if (durationTimer) {
         clearInterval(durationTimer)
       }
     }
-  }, [durationTimer])
+  }, [deliveryId])
 
   const checkPermissions = async (): Promise<void> => {
     if (Platform.OS === "web") {
@@ -67,8 +67,8 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
       return
     }
 
-    const { status } = await Permissions.askAsync(Permissions.AUDIO_RECORDING)
-    setPermissionGranted(status === "granted")
+    const granted = await requestPermission("microphone")
+    setPermissionGranted(granted)
   }
 
   const loadDeliveryDetails = async (): Promise<void> => {
@@ -78,9 +78,9 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
       setDelivery(data)
 
       // Vérifier si la livraison a déjà été évaluée
-      if (data.rating) {
-        setRating(data.rating.rating)
-        setComment(data.rating.comment || "")
+      if (data.rating && typeof data.rating === 'object') {
+        setRating(data.rating || 5)
+        setComment(comment || "")
         Alert.alert(t("rateDelivery.alreadyRated"), t("rateDelivery.alreadyRatedMessage"), [
           {
             text: "OK",
@@ -130,7 +130,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
 
       // Start recording
       const recording = new Audio.Recording()
-      await recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
+      await recording.prepareToRecordAsync(getAudioRecordingOptions())
       await recording.startAsync()
       setRecording(recording)
 
@@ -222,7 +222,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
         Alert.alert(t("rateDelivery.thankYou"), t("rateDelivery.ratingSubmitted"), [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Home"),
+            onPress: () => navigation.navigate("ClientHome"),
           },
         ])
       } else {
@@ -230,13 +230,12 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
         addPendingUpload({
           type: "submit_rating",
           data: ratingData,
-          timestamp: new Date().toISOString(),
-        })
+        } as PendingOperation)
 
         Alert.alert(t("rateDelivery.thankYou"), t("rateDelivery.offlineRatingSubmitted"), [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Home"),
+            onPress: () => navigation.navigate("ClientHome"),
           },
         ])
       }
@@ -255,8 +254,8 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
         style: "cancel",
       },
       {
-        text: t("common.skip"),
-        onPress: () => navigation.navigate("Home"),
+        text: "OK",
+        onPress: () => navigation.navigate("ClientHome"),
       },
     ])
   }
@@ -266,7 +265,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <FeatherIcon name="arrow-left" size={24} color="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
           <View style={{ width: 48 }} />
@@ -285,14 +284,14 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <FeatherIcon name="arrow-left" size={24} color="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
           <View style={{ width: 48 }} />
         </View>
 
         <View style={styles.errorContainer}>
-          <IconButton icon="alert-circle-outline" size={50} color="#F44336" />
+          <FeatherIcon name="alert-circle" size={50} color="#F44336" />
           <Text style={styles.errorText}>{error || t("rateDelivery.deliveryNotFound")}</Text>
           <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
             {t("common.back")}
@@ -306,7 +305,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <FeatherIcon name="arrow-left" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
         <View style={{ width: 48 }} />
@@ -323,10 +322,19 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
             <Divider style={styles.divider} />
 
             <View style={styles.courierInfo}>
-              <IconButton icon="account" size={40} color="#FF6B00" style={styles.courierIcon} />
+              <FeatherIcon
+                name="user"
+                size={40}
+                color="#FF6B00"
+                style={{
+                  margin: 0,
+                  backgroundColor: "#FFF3E0",
+                  borderRadius: 20,
+                }}
+              />
               <View style={styles.courierDetails}>
-                <Text style={styles.courierName}>{delivery.courier.full_name}</Text>
-                <Text style={styles.courierVehicle}>{delivery.courier.vehicle_type}</Text>
+                <Text style={styles.courierName}>{delivery.courier.name}</Text>
+                <Text style={styles.courierVehicle}>{"Standard Vehicle"}</Text>
               </View>
             </View>
 
@@ -334,7 +342,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
 
             <View style={styles.addressContainer}>
               <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} color="#FF6B00" style={styles.addressIcon} />
+                <FeatherIcon name="map-pin" size={20} color="#FF6B00" style={{ margin: 0, padding: 0 }} />
                 <View style={styles.addressContent}>
                   <Text style={styles.addressLabel}>{t("rateDelivery.from")}</Text>
                   <Text style={styles.addressText}>{delivery.pickup_address}</Text>
@@ -346,7 +354,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
               </View>
 
               <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} color="#4CAF50" style={styles.addressIcon} />
+                <FeatherIcon name="map-pin" size={20} color="#4CAF50" style={{ margin: 0, padding: 0 }} />
                 <View style={styles.addressContent}>
                   <Text style={styles.addressLabel}>{t("rateDelivery.to")}</Text>
                   <Text style={styles.addressText}>{delivery.delivery_address}</Text>
@@ -430,12 +438,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
                 onPress={isRecording ? stopRecording : startRecording}
                 disabled={transcribing}
               >
-                <IconButton
-                  icon={isRecording ? "stop" : "microphone"}
-                  size={24}
-                  color="#FFFFFF"
-                  style={styles.voiceButtonIcon}
-                />
+                <FeatherIcon name={isRecording ? "square" : "mic"} size={24} color="#FFFFFF" style={{ margin: 0 }} />
                 <Text style={styles.voiceButtonText}>
                   {isRecording
                     ? `${t("rateDelivery.recording")} (${formatDuration(recordingDuration)})`
@@ -552,11 +555,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  courierIcon: {
-    margin: 0,
-    backgroundColor: "#FFF3E0",
-    borderRadius: 20,
-  },
   courierDetails: {
     marginLeft: 16,
   },
@@ -576,10 +574,6 @@ const styles = StyleSheet.create({
   addressItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-  },
-  addressIcon: {
-    margin: 0,
-    padding: 0,
   },
   addressContent: {
     flex: 1,
@@ -623,13 +617,31 @@ const styles = StyleSheet.create({
   },
   starsContainer: {
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 24,
   },
   ratingText: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#FF6B00",
     marginTop: 8,
+  },
+  commentInput: {
+    backgroundColor: "#FFFFFF",
+    marginBottom: 16,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  skipButton: {
+    flex: 1,
+    marginRight: 8,
+    borderColor: "#757575",
+  },
+  submitButton: {
+    flex: 1,
+    marginLeft: 8,
+    backgroundColor: "#FF6B00",
   },
   aspectsTitle: {
     fontSize: 16,
@@ -668,9 +680,6 @@ const styles = StyleSheet.create({
   recordingButton: {
     backgroundColor: "#F44336",
   },
-  voiceButtonIcon: {
-    margin: 0,
-  },
   voiceButtonText: {
     color: "#FFFFFF",
     fontWeight: "bold",
@@ -685,24 +694,6 @@ const styles = StyleSheet.create({
   transcribingText: {
     marginLeft: 8,
     color: "#757575",
-  },
-  commentInput: {
-    backgroundColor: "#FFFFFF",
-    marginBottom: 16,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  skipButton: {
-    flex: 1,
-    marginRight: 8,
-    borderColor: "#757575",
-  },
-  submitButton: {
-    flex: 1,
-    marginLeft: 8,
-    backgroundColor: "#FF6B00",
   },
 })
 

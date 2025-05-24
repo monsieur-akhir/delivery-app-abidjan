@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, FlatList, ActivityIndicator } from "react-native"
 import { Text, Card, Button, Divider, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -22,11 +22,7 @@ const RecommendedDeliveriesScreen = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [hasMore, setHasMore] = useState(true)
 
-  useEffect(() => {
-    fetchRecommendations()
-  }, [])
-
-  const fetchRecommendations = async (refresh = false) => {
+  const fetchRecommendations = useCallback(async (refresh = false) => {
     try {
       if (refresh) {
         setPage(1)
@@ -57,7 +53,11 @@ const RecommendedDeliveriesScreen = () => {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [t, page, hasMore])
+
+  useEffect(() => {
+    fetchRecommendations()
+  }, [fetchRecommendations])
 
   const handleRefresh = () => {
     fetchRecommendations(true)
@@ -74,7 +74,7 @@ const RecommendedDeliveriesScreen = () => {
     RecommendationService.provideFeedback("delivery", delivery.id, "viewed")
 
     // Naviguer vers les détails de la livraison
-    navigation.navigate("DeliveryDetails", { deliveryId: delivery.id })
+    navigation.navigate("DeliveryDetails", { deliveryId: delivery.id.toString() })
   }
 
   const handleAcceptDelivery = (delivery: DeliveryRecommendation) => {
@@ -82,7 +82,7 @@ const RecommendedDeliveriesScreen = () => {
     RecommendationService.provideFeedback("delivery", delivery.id, "accepted")
 
     // Naviguer vers l'écran d'enchère
-    navigation.navigate("BidScreen", { deliveryId: delivery.id })
+    navigation.navigate("BidScreen", { deliveryId: delivery.id.toString() })
   }
 
   const handleRejectDelivery = (deliveryId: number) => {

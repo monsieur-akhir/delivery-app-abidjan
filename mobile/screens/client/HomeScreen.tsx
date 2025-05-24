@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Image } from "react-native"
 import { Text, Card, Button, FAB, Searchbar, Chip, ActivityIndicator } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -34,13 +34,30 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const communes: string[] = ["Cocody", "Yopougon", "Plateau", "Treichville", "Adjamé", "Marcory", "Abobo"]
 
+  const loadData = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true)
+
+      // Charger les livraisons actives
+      const deliveriesData = await fetchActiveDeliveries()
+      setActiveDeliveries(deliveriesData)
+
+      // Charger les commerçants à proximité
+      const merchantsData = await fetchNearbyMerchants(selectedCommune || undefined)
+      setNearbyMerchants(merchantsData)
+    } catch (error) {
+      console.error("Error loading data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedCommune])
+
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync()
         if (status !== "granted") {
-          console.log("Permission to access location was denied")
-          return
+          throw new Error("Permission to access location was denied")
         }
 
         const location = await Location.getCurrentPositionAsync({})
@@ -53,25 +70,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         setLoading(false)
       }
     })()
-  }, [])
-
-  const loadData = async (): Promise<void> => {
-    try {
-      setLoading(true)
-
-      // Charger les livraisons actives
-      const deliveriesData = await fetchActiveDeliveries()
-      setActiveDeliveries(deliveriesData)
-
-      // Charger les commerçants à proximité
-      const merchantsData = await fetchNearbyMerchants(selectedCommune)
-      setNearbyMerchants(merchantsData)
-    } catch (error) {
-      console.error("Error loading data:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [loadData])
 
   const onRefresh = async (): Promise<void> => {
     setRefreshing(true)
@@ -96,8 +95,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Bonjour, {user?.full_name?.split(" ")[0]}</Text>
-          <Text style={styles.subGreeting}>Que souhaitez-vous livrer aujourd'hui ?</Text>
+          <Text style={styles.greeting}>Bonjour, {user?.name?.split(" ")[0]}</Text>
+          <Text style={styles.subGreeting}>Que souhaitez-vous livrer aujourd&rsquo;hui ?</Text>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate("Notifications")}>
           <Feather name="bell" size={24} color="#FF6B00" />

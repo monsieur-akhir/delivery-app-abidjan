@@ -4,23 +4,10 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useColorScheme } from "react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import type { ThemeColors } from "../types/theme"
 
 type ThemeType = "light" | "dark" | "system"
 type CurrentThemeType = "light" | "dark"
-
-interface ThemeColors {
-  primary: string
-  secondary: string
-  background: string
-  surface: string
-  error: string
-  text: string
-  subtext: string
-  placeholder: string
-  border: string
-  card: string
-  notification: string
-}
 
 interface ThemeContextType {
   theme: ThemeType
@@ -34,14 +21,26 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+const defaultColors: ThemeColors = {
+  primary: "#FF6B00",
+  background: "#FFFFFF",
+  card: "#FFFFFF",
+  text: "#212121",
+  border: "#E0E0E0",
+  notification: "#FF6B00",
+  muted: "#757575",
+}
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: "light",
+  currentTheme: "light",
+  colors: defaultColors,
+  changeTheme: async () => {},
+  toggleTheme: async () => {},
+})
 
 export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext)
-  if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider")
-  }
-  return context
+  return useContext(ThemeContext)
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
@@ -99,7 +98,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       surface: "#F5F5F5",
       error: "#B00020",
       text: "#212121",
-      subtext: "#757575",
+      muted: "#757575",
       placeholder: "#9E9E9E",
       border: "#E0E0E0",
       card: "#FFFFFF",
@@ -112,7 +111,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       surface: "#1E1E1E",
       error: "#CF6679",
       text: "#FFFFFF",
-      subtext: "#B0B0B0",
+      muted: "#B0B0B0",
       placeholder: "#6C6C6C",
       border: "#2C2C2C",
       card: "#1E1E1E",

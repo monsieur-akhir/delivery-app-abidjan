@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { View, StyleSheet, ScrollView, TouchableOpacity, Animated, ActivityIndicator } from "react-native"
+import { View, StyleSheet, ScrollView, TouchableOpacity, Animated } from "react-native"
 import { Text, Card, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
@@ -9,6 +9,8 @@ import { useNavigation } from "@react-navigation/native"
 import VoiceAssistantService, { type VoiceCommand } from "../services/VoiceAssistantService"
 import { useNetwork } from "../contexts/NetworkContext"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RootStackParamList } from "../types/navigation"
 
 interface ChatMessage {
   id: string
@@ -19,12 +21,11 @@ interface ChatMessage {
 
 const VoiceAssistantScreen = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useNetwork()
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isListening, setIsListening] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const scrollViewRef = useRef<ScrollView>(null)
@@ -114,9 +115,10 @@ const VoiceAssistantScreen = () => {
   }
 
   const handleStopListening = async () => {
+    let isProcessing = false
     try {
       setIsListening(false)
-      setIsProcessing(true)
+      isProcessing = true
 
       const command = await VoiceAssistantService.stopListening()
 
@@ -138,7 +140,7 @@ const VoiceAssistantScreen = () => {
       console.error("Error stopping listening:", err)
       setError(t("voiceAssistant.errorProcessing"))
     } finally {
-      setIsProcessing(false)
+      isProcessing = false
     }
   }
 
@@ -176,26 +178,30 @@ const VoiceAssistantScreen = () => {
   const executeAction = (action: string, data: any) => {
     switch (action) {
       case "navigate":
-        navigation.navigate(data.screen, data.params)
+        if (data && data.screen) {
+          navigation.navigate(data.screen as keyof RootStackParamList, data.params || {})
+        }
         break
       case "createDelivery":
-        navigation.navigate("CreateDelivery", data)
+        navigation.navigate("CreateDelivery", data || {})
         break
       case "trackDelivery":
-        navigation.navigate("TrackDelivery", { deliveryId: data.deliveryId })
+        if (data && data.deliveryId) {
+          navigation.navigate("TrackDelivery", { deliveryId: data.deliveryId })
+        }
         break
       case "checkWeather":
-        navigation.navigate("WeatherScreen", data)
+        navigation.navigate("WeatherScreen" as any, data || {})
         break
       case "findMerchants":
-        navigation.navigate("MarketplaceScreen", data)
+        navigation.navigate("MarketplaceScreen" as any, data || {})
         break
       case "checkEarnings":
-        navigation.navigate("CourierEarningsScreen")
+        navigation.navigate("CourierEarnings" as any)
         break
       case "goOnline":
       case "goOffline":
-        navigation.navigate("CourierStatusScreen", { initialStatus: action === "goOnline" })
+        navigation.navigate("CourierStatus" as any, { initialStatus: action === "goOnline" })
         break
       default:
         console.log("Unknown action:", action)
@@ -267,8 +273,8 @@ const VoiceAssistantScreen = () => {
 
       <View style={styles.controlsContainer}>
         <View style={styles.statusContainer}>
-          {isProcessing ? (
-            <Text style={styles.statusText}>{t("voiceAssistant.processing")}</Text>
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
           ) : isListening ? (
             <Text style={styles.listeningText}>{t("voiceAssistant.listening")}</Text>
           ) : (
@@ -280,25 +286,20 @@ const VoiceAssistantScreen = () => {
           style={styles.micButtonContainer}
           onPressIn={handleStartListening}
           onPressOut={handleStopListening}
-          disabled={isProcessing || !isConnected}
+          disabled={isListening || !isConnected}
         >
           <Animated.View
             style={[
               styles.micButton,
               { transform: [{ scale: pulseAnim }] },
               isListening && styles.listeningMicButton,
-              isProcessing && styles.processingMicButton,
               !isConnected && styles.disabledMicButton,
             ]}
           >
-            {isProcessing ? (
-              <ActivityIndicator color="#FFFFFF" size="large" />
+            {isListening ? (
+              <MaterialCommunityIcons name="microphone" size={32} color="#FFFFFF" />
             ) : (
-              <MaterialCommunityIcons
-                name={isListening ? "microphone" : "microphone-outline"}
-                size={32}
-                color="#FFFFFF"
-              />
+              <MaterialCommunityIcons name="microphone-outline" size={32} color="#FFFFFF" />
             )}
           </Animated.View>
         </TouchableOpacity>
@@ -420,9 +421,6 @@ const styles = StyleSheet.create({
   },
   listeningMicButton: {
     backgroundColor: "#F44336",
-  },
-  processingMicButton: {
-    backgroundColor: "#FFC107",
   },
   disabledMicButton: {
     backgroundColor: "#BDBDBD",

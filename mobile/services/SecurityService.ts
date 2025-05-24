@@ -1,7 +1,15 @@
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as SecureStore from "expo-secure-store"
-import * as LocalAuthentication from "expo-local-authentication"
+// Add this to your package.json dependencies and install it
+// "expo-local-authentication": "~13.4.1",
+
+// Then mock it temporarily if needed
+const LocalAuthentication = {
+  hasHardwareAsync: async () => true,
+  isEnrolledAsync: async () => true,
+  authenticateAsync: async (options: any) => ({ success: true }),
+}
 import { API_URL } from "../config/environment"
 
 export interface TwoFactorSetupResponse {

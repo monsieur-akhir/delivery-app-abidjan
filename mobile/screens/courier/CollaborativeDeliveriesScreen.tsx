@@ -1,18 +1,18 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import CollaborativeService from "../../services/CollaborativeService"
-import type { CollaborativeDelivery } from "../../types/models"
-import { useAuth } from "../../contexts/AuthContext"
+import type { CollaborativeDelivery, DeliveryStatus } from "../../types/models"
 import { useTheme } from "../../contexts/ThemeContext"
-import { useNetworkContext } from "../../contexts/NetworkContext"
 import ErrorView from "../../components/ErrorView"
 import EmptyState from "../../components/EmptyState"
 import DeliveryStatusBadge from "../../components/DeliveryStatusBadge"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RootStackParamList } from "../../types/navigation"
 
 const CollaborativeDeliveriesScreen: React.FC = () => {
   const [deliveries, setDeliveries] = useState<CollaborativeDelivery[]>([])
@@ -21,12 +21,10 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"active" | "available" | "completed">("active")
 
-  const navigation = useNavigation()
-  const { user } = useAuth()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { colors } = useTheme()
-  const { isConnected } = useNetworkContext()
 
-  const fetchDeliveries = async () => {
+  const fetchDeliveries = useCallback(async () => {
     try {
       setError(null)
       let data: CollaborativeDelivery[] = []
@@ -47,11 +45,11 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [activeTab])
 
   useEffect(() => {
     fetchDeliveries()
-  }, [activeTab])
+  }, [activeTab, fetchDeliveries])
 
   const onRefresh = () => {
     setRefreshing(true)
@@ -59,17 +57,18 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
   }
 
   const handleViewDelivery = (delivery: CollaborativeDelivery) => {
-    // @ts-ignore
-    navigation.navigate("CollaborativeDeliveryDetails", { deliveryId: delivery.id })
+    navigation.navigate("CollaborativeDeliveryDetails", {
+      deliveryId: delivery.id,
+      clientName: delivery.clientName,
+      finalPrice: delivery.finalPrice || 0, // Default to 0 if finalPrice is undefined
+    })
   }
 
   const handleJoinDelivery = (delivery: CollaborativeDelivery) => {
-    // @ts-ignore
     navigation.navigate("JoinCollaborativeDelivery", { deliveryId: delivery.id })
   }
 
   const handleChatDelivery = (delivery: CollaborativeDelivery) => {
-    // @ts-ignore
     navigation.navigate("CollaborativeChat", { deliveryId: delivery.id })
   }
 
@@ -102,7 +101,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
           <Text style={[styles.deliveryId, { color: colors.text }]}>#{item.id.substring(0, 8)}</Text>
           <Text style={[styles.clientName, { color: colors.text }]}>{item.clientName}</Text>
         </View>
-        <DeliveryStatusBadge status={item.status} />
+        <DeliveryStatusBadge status={item.status as DeliveryStatus} />
       </View>
 
       <View style={styles.routeContainer}>
@@ -121,7 +120,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
         <View style={styles.detailItem}>
           <Ionicons name="cash-outline" size={16} color={colors.text} />
           <Text style={[styles.detailText, { color: colors.text }]}>
-            {item.finalPrice ? formatCurrency(item.finalPrice) : formatCurrency(item.proposedPrice)}
+            {item.finalPrice ? formatCurrency(item.finalPrice) : formatCurrency(item.proposedPrice || 0)}
           </Text>
         </View>
 
@@ -177,7 +176,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
     </TouchableOpacity>
   )
 
-  const renderTabButton = (tab: "active" | "available" | "completed", label: string, icon: string) => (
+  const renderTabButton = (tab: "active" | "available" | "completed", label: string, icon: keyof typeof Ionicons.glyphMap) => (
     <TouchableOpacity
       style={[
         styles.tabButton,
@@ -185,7 +184,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
       ]}
       onPress={() => setActiveTab(tab)}
     >
-      <Ionicons name={icon as any} size={18} color={activeTab === tab ? colors.primary : colors.text} />
+      <Ionicons name={icon} size={18} color={activeTab === tab ? colors.primary : colors.text} />
       <Text style={[styles.tabButtonText, { color: activeTab === tab ? colors.primary : colors.text }]}>{label}</Text>
     </TouchableOpacity>
   )
@@ -197,19 +196,19 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.tabsContainer}>
-        {renderTabButton("active", "En cours", "bicycle-outline")}
-        {renderTabButton("available", "Disponibles", "search-outline")}
-        {renderTabButton("completed", "Terminées", "checkmark-circle-outline")}
+        {renderTabButton("active", "En cours", "bicycle")}
+        {renderTabButton("available", "Disponibles", "search")}
+        {renderTabButton("completed", "Terminées", "checkmark-circle")}
       </View>
 
       {deliveries.length === 0 && !loading ? (
         <EmptyState
           icon={
             activeTab === "active"
-              ? "bicycle-outline"
+              ? "activity"
               : activeTab === "available"
-                ? "search-outline"
-                : "checkmark-circle-outline"
+                ? "search"
+                : "check-circle"
           }
           title={`Aucune livraison ${activeTab === "active" ? "en cours" : activeTab === "available" ? "disponible" : "terminée"}`}
           message={

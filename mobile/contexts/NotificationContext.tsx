@@ -8,15 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Platform } from "react-native"
 import { useAuth } from "./AuthContext"
 import { registerPushToken } from "../services/api"
-
-interface Notification {
-  id: string
-  title: string
-  body: string
-  data?: any
-  date: string
-  read: boolean
-}
+import type { Notification } from "../types/models"
 
 interface NotificationContextType {
   expoPushToken: string
@@ -24,9 +16,9 @@ interface NotificationContextType {
   notifications: Notification[]
   unreadCount: number
   sendLocalNotification: (title: string, body: string, data?: any) => Promise<void>
-  markNotificationAsRead: (notificationId: string) => void
+  markNotificationAsRead: (id: string) => void
   markAllNotificationsAsRead: () => void
-  deleteNotification: (notificationId: string) => void
+  deleteNotification: (id: string) => void
   clearAllNotifications: () => void
 }
 
@@ -45,7 +37,7 @@ export const useNotification = (): NotificationContextType => {
 }
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
-  const { userToken, user } = useAuth()
+  const { token, user } = useAuth()
   const [expoPushToken, setExpoPushToken] = useState<string>("")
   const [notification, setNotification] = useState<Notifications.Notification | null>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -60,9 +52,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       // Ajouter la notification à la liste
       const newNotification: Notification = {
+        user_id: user?.id || "",
         id: notification.request.identifier,
         title: notification.request.content.title,
-        body: notification.request.content.body,
+        message: notification.request.content.body,
         data: notification.request.content.data,
         date: new Date().toISOString(),
         read: false,
@@ -93,10 +86,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Enregistrer le token sur le serveur lorsque l'utilisateur est connecté
   useEffect(() => {
-    if (userToken && expoPushToken && user) {
+    if (token && expoPushToken && user) {
       registerPushToken(expoPushToken, user.id)
     }
-  }, [userToken, expoPushToken, user])
+  }, [token, expoPushToken, user])
 
   // Enregistrer pour les notifications push
   const registerForPushNotificationsAsync = async (): Promise<string | undefined> => {
@@ -164,11 +157,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   }
 
   // Marquer une notification comme lue
-  const markNotificationAsRead = (notificationId: string): void => {
+  const markNotificationAsRead = (id: string): void => {
     setNotifications((prevNotifications) => {
-      const updatedNotifications = prevNotifications.map((item) =>
-        item.id === notificationId ? { ...item, read: true } : item,
-      )
+      const updatedNotifications = prevNotifications.map((item) => (item.id === id ? { ...item, read: true } : item))
       saveNotifications(updatedNotifications)
       return updatedNotifications
     })
@@ -184,9 +175,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   }
 
   // Supprimer une notification
-  const deleteNotification = (notificationId: string): void => {
+  const deleteNotification = (id: string): void => {
     setNotifications((prevNotifications) => {
-      const updatedNotifications = prevNotifications.filter((item) => item.id !== notificationId)
+      const updatedNotifications = prevNotifications.filter((item) => item.id !== id)
       saveNotifications(updatedNotifications)
       return updatedNotifications
     })
@@ -217,21 +208,19 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     })
   }
 
-  return (
-    <NotificationContext.Provider
-      value={{
-        expoPushToken,
-        notification,
-        notifications,
-        unreadCount: notifications.filter((n) => !n.read).length,
-        sendLocalNotification,
-        markNotificationAsRead,
-        markAllNotificationsAsRead,
-        deleteNotification,
-        clearAllNotifications,
-      }}
-    >
-      {children}
-    </NotificationContext.Provider>
-  )
+  const unreadCount = notifications.filter((n) => !n.read).length
+
+  const value: NotificationContextType = {
+    expoPushToken,
+    notification,
+    notifications,
+    unreadCount,
+    sendLocalNotification,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    deleteNotification,
+    clearAllNotifications,
+  }
+
+  return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>
 }

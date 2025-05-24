@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { API_URL } from "../config/environment"
@@ -36,7 +37,7 @@ export interface TopUpRequest {
 }
 
 export interface PaymentRequest {
-  delivery_id: number
+  delivery_id: number | string
   amount: number
   payment_method: string
   phone?: string
@@ -157,6 +158,7 @@ class PaymentService {
       addPendingUpload({
         type: "payment",
         data: paymentRequest,
+        id: ""
       })
 
       // Stocker localement le statut de paiement

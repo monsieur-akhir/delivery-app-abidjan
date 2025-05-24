@@ -116,7 +116,7 @@ class PredictiveAnalyticsService {
         level,
         description: `Trafic ${level === "low" ? "fluide" : level === "medium" ? "modéré" : "dense"}`,
         estimated_delay: level === "low" ? 0 : level === "medium" ? 5 : 15,
-        alternative_routes: level === "high" || level === "severe",
+        alternative_routes: level === "high",
       }
     }
   }

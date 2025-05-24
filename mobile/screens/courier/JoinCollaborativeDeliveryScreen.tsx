@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   View,
   Text,
@@ -10,20 +10,18 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Dimensions,
 } from "react-native"
 import { useRoute, useNavigation } from "@react-navigation/native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import Slider from "@react-native-community/slider"
-import { Card, Button } from "react-native-elements"
+import { Button } from "react-native-elements"
+import { Card } from "react-native-paper"
 import CollaborativeService from "../../services/CollaborativeService"
-import type { CollaborativeDelivery, CollaboratorRole } from "../../types/models"
+import type { CollaborativeDelivery, CollaboratorRole, Collaborator } from "../../types/models"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
 import { formatCurrency } from "../../utils/formatters"
 import ErrorView from "../../components/ErrorView"
-
-const { width } = Dimensions.get("window")
 
 type RouteParams = {
   deliveryId: string
@@ -38,7 +36,7 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
   // Form state
   const [selectedRole, setSelectedRole] = useState<CollaboratorRole>("secondary")
   const [sharePercentage, setSharePercentage] = useState(25)
-  const [notes, setNotes] = useState("")
+  const [notes] = useState("")
 
   const route = useRoute()
   const { deliveryId } = route.params as RouteParams
@@ -52,33 +50,12 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
     { label: "Support", value: "support" as CollaboratorRole },
   ]
 
-  const fetchDeliveryDetails = async () => {
-    try {
-      setError(null)
-      setLoading(true)
-      const data = await CollaborativeService.getCollaborativeDelivery(deliveryId)
-      setDelivery(data)
-
-      // Set default share percentage based on role
-      updateDefaultShare(selectedRole, data)
-    } catch (err) {
-      console.error("Error fetching delivery details:", err)
-      setError("Impossible de charger les détails de la livraison")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchDeliveryDetails()
-  }, [deliveryId])
-
-  const updateDefaultShare = (role: CollaboratorRole, deliveryData?: CollaborativeDelivery) => {
+  const updateDefaultShare = useCallback((role: CollaboratorRole, deliveryData?: CollaborativeDelivery) => {
     const currentDelivery = deliveryData || delivery
     if (!currentDelivery) return
 
     // Calculate remaining percentage
-    const usedPercentage = currentDelivery.collaborators.reduce((sum, c) => sum + c.sharePercentage, 0)
+    const usedPercentage = currentDelivery.collaborators.reduce((sum: number, c: Collaborator) => sum + c.sharePercentage, 0)
     const remainingPercentage = 100 - usedPercentage
 
     let defaultShare: number
@@ -97,7 +74,28 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
     }
 
     setSharePercentage(Math.max(5, defaultShare))
-  }
+  }, [delivery])
+
+  const fetchDeliveryDetails = useCallback(async () => {
+    try {
+      setError(null)
+      setLoading(true)
+      const data = await CollaborativeService.getCollaborativeDelivery(deliveryId)
+      setDelivery(data)
+
+      // Set default share percentage based on role
+      updateDefaultShare(selectedRole, data)
+    } catch (err) {
+      console.error("Error fetching delivery details:", err)
+      setError("Impossible de charger les détails de la livraison")
+    } finally {
+      setLoading(false)
+    }
+  }, [deliveryId, selectedRole, updateDefaultShare])
+
+  useEffect(() => {
+    fetchDeliveryDetails()
+  }, [deliveryId, fetchDeliveryDetails])
 
   const handleRoleChange = (role: CollaboratorRole) => {
     setSelectedRole(role)
@@ -105,23 +103,23 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
   }
 
   const calculateEstimatedEarnings = () => {
-    if (!delivery) return 0
+    if (!delivery || delivery.proposedPrice === undefined) return 0
     const platformFee = delivery.proposedPrice * 0.1
     const distributableAmount = delivery.proposedPrice - platformFee
     return distributableAmount * (sharePercentage / 100)
   }
 
   const getRemainingPercentage = () => {
-    if (!delivery) return 100
-    const usedPercentage = delivery.collaborators.reduce((sum, c) => sum + c.sharePercentage, 0)
+    if (!delivery || !delivery.collaborators) return 100
+    const usedPercentage = delivery.collaborators.reduce((sum: number, c: Collaborator) => sum + c.sharePercentage, 0)
     return 100 - usedPercentage
   }
 
   const canJoinWithRole = (role: CollaboratorRole) => {
-    if (!delivery) return false
+    if (!delivery || !delivery.collaborators) return false
 
     // Check if role is already taken
-    const roleExists = delivery.collaborators.some((c) => c.role === role)
+    const roleExists = delivery.collaborators.some((c: Collaborator) => c.role === role)
     if (role === "primary" && roleExists) {
       return false
     }
@@ -155,7 +153,8 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
 
       await CollaborativeService.joinCollaborativeDelivery(deliveryId, {
         role: selectedRole,
-        sharePercentage,
+        // Utiliser sharePercentage qui correspond à l'interface Collaborator
+        sharePercentage: sharePercentage,
         notes: notes.trim() || undefined,
       })
 
@@ -200,100 +199,104 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Card containerStyle={[styles.card, { backgroundColor: colors.card }]}>
-        <Card.Title>Détails de la livraison</Card.Title>
-        <Card.Divider />
-        <View style={styles.deliveryInfo}>
-          <View style={styles.routeContainer}>
-            <View style={styles.routePoint}>
-              <Ionicons name="location-outline" size={20} color={colors.primary} />
-              <Text style={[styles.routeText, { color: colors.text }]}>{delivery.pickupCommune}</Text>
+      <Card style={[styles.card, { backgroundColor: colors.card }]}>
+        <Card.Title title="Détails de la livraison" />
+        <Card.Content>
+          <View style={styles.deliveryInfo}>
+            <View style={styles.routeContainer}>
+              <View style={styles.routePoint}>
+                <Ionicons name="location-outline" size={20} color={colors.primary} />
+                <Text style={[styles.routeText, { color: colors.text }]}>{delivery.pickupCommune}</Text>
+              </View>
+              <View style={[styles.routeLine, { backgroundColor: colors.border }]} />
+              <View style={styles.routePoint}>
+                <Ionicons name="location" size={20} color="#ef4444" />
+                <Text style={[styles.routeText, { color: colors.text }]}>{delivery.deliveryCommune}</Text>
+              </View>
             </View>
-            <View style={[styles.routeLine, { backgroundColor: colors.border }]} />
-            <View style={styles.routePoint}>
-              <Ionicons name="location" size={20} color="#ef4444" />
-              <Text style={[styles.routeText, { color: colors.text }]}>{delivery.deliveryCommune}</Text>
-            </View>
-          </View>
 
-          <View style={styles.deliveryDetails}>
-            <View style={styles.detailItem}>
-              <MaterialIcons name="attach-money" size={16} color={colors.text} />
-              <Text style={[styles.detailText, { color: colors.text }]}>{formatCurrency(delivery.proposedPrice)}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Ionicons name="people-outline" size={16} color={colors.text} />
-              <Text style={[styles.detailText, { color: colors.text }]}>
-                {delivery.collaborators.length} collaborateur{delivery.collaborators.length !== 1 ? "s" : ""}
-              </Text>
+            <View style={styles.deliveryDetails}>
+              <View style={styles.detailItem}>
+                <MaterialIcons name="attach-money" size={16} color={colors.text} />
+                <Text style={[styles.detailText, { color: colors.text }]}>{formatCurrency(delivery.proposedPrice || 0)}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Ionicons name="people-outline" size={16} color={colors.text} />
+                <Text style={[styles.detailText, { color: colors.text }]}>
+                  {delivery.collaborators.length} collaborateur{delivery.collaborators.length !== 1 ? "s" : ""}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </Card.Content>
       </Card>
 
-      <Card containerStyle={[styles.card, { backgroundColor: colors.card }]}>
-        <Card.Title>Choisir votre rôle</Card.Title>
-        <Card.Divider />
-        <View style={styles.roleSelection}>
-          {roleOptions.map((option, index) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.roleOption,
-                selectedRole === option.value && { backgroundColor: colors.primary + "20" },
-                !canJoinWithRole(option.value) && styles.roleOptionDisabled,
-              ]}
-              onPress={() => canJoinWithRole(option.value) && handleRoleChange(option.value)}
-              disabled={!canJoinWithRole(option.value)}
-            >
-              <View style={styles.roleHeader}>
+      <Card style={[styles.card, { backgroundColor: colors.card }]}>
+        <Card.Title title="Choisir votre rôle" />
+        <Card.Content>
+          <View style={styles.roleSelection}>
+            {roleOptions.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.roleOption,
+                  selectedRole === option.value && { backgroundColor: colors.primary + "20" },
+                  !canJoinWithRole(option.value) && styles.roleOptionDisabled,
+                ]}
+                onPress={() => canJoinWithRole(option.value) && handleRoleChange(option.value)}
+                disabled={!canJoinWithRole(option.value)}
+              >
+                <View style={styles.roleHeader}>
+                  <Text
+                    style={[
+                      styles.roleTitle,
+                      { color: selectedRole === option.value ? colors.primary : colors.text },
+                      !canJoinWithRole(option.value) && { color: colors.muted },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {!canJoinWithRole(option.value) && (
+                    <Text style={[styles.unavailableText, { color: colors.muted }]}>Non disponible</Text>
+                  )}
+                </View>
                 <Text
                   style={[
-                    styles.roleTitle,
-                    { color: selectedRole === option.value ? colors.primary : colors.text },
-                    !canJoinWithRole(option.value) && { color: colors.muted },
+                    styles.roleDescription,
+                    { color: colors.muted },
+                    !canJoinWithRole(option.value) && { opacity: 0.5 },
                   ]}
                 >
-                  {option.label}
+                  {getRoleDescription(option.value)}
                 </Text>
-                {!canJoinWithRole(option.value) && (
-                  <Text style={[styles.unavailableText, { color: colors.muted }]}>Non disponible</Text>
-                )}
-              </View>
-              <Text
-                style={[
-                  styles.roleDescription,
-                  { color: colors.muted },
-                  !canJoinWithRole(option.value) && { opacity: 0.5 },
-                ]}
-              >
-                {getRoleDescription(option.value)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Card.Content>
       </Card>
 
-      <Card containerStyle={[styles.card, { backgroundColor: colors.card }]}>
-        <Card.Title>Part des gains</Card.Title>
-        <Card.Divider />
-        <View style={styles.shareSection}>
-          <View style={styles.shareHeader}>
-            <Text style={[styles.shareLabel, { color: colors.text }]}>Pourcentage demandé</Text>
-            <Text style={[styles.shareValue, { color: colors.primary }]}>{sharePercentage}%</Text>
-          </View>
+      <Card style={styles.card}>
+        <Card.Title title="Part des gains" />
+        <Card.Content>
+          <View style={styles.shareSection}>
+            <View style={styles.shareHeader}>
+              <Text style={[styles.shareLabel, { color: colors.text }]}>Pourcentage demandé</Text>
+              <Text style={[styles.shareValue, { color: colors.primary }]}>{sharePercentage}%</Text>
+            </View>
 
-          <Slider
-            style={styles.slider}
-            minimumValue={5}
-            maximumValue={remainingPercentage}
-            value={sharePercentage}
-            onValueChange={setSharePercentage}
-            step={5}
-            minimumTrackTintColor={colors.primary}
-            maximumTrackTintColor={colors.border}
-            thumbStyle={{ backgroundColor: colors.primary }}
-          />
+            <Slider
+              style={styles.slider}
+              minimumValue={5}
+              maximumValue={remainingPercentage}
+              value={sharePercentage}
+              onValueChange={setSharePercentage}
+              step={5}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.border}
+              // thumbStyle n'est pas supporté, utilisons la valeur globale
+              // thumbTintColor à la place
+              thumbTintColor={colors.primary}
+            />
 
           <View style={styles.shareInfo}>
             <Text style={[styles.shareInfoText, { color: colors.muted }]}>
@@ -309,19 +312,19 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
             <View style={styles.breakdownItem}>
               <Text style={[styles.breakdownLabel, { color: colors.muted }]}>Prix total</Text>
               <Text style={[styles.breakdownValue, { color: colors.text }]}>
-                {formatCurrency(delivery.proposedPrice)}
+                {formatCurrency(delivery.proposedPrice || 0)}
               </Text>
             </View>
             <View style={styles.breakdownItem}>
               <Text style={[styles.breakdownLabel, { color: colors.muted }]}>Frais plateforme (10%)</Text>
               <Text style={[styles.breakdownValue, { color: colors.text }]}>
-                -{formatCurrency(delivery.proposedPrice * 0.1)}
+                -{formatCurrency((delivery.proposedPrice || 0) * 0.1)}
               </Text>
             </View>
             <View style={styles.breakdownItem}>
               <Text style={[styles.breakdownLabel, { color: colors.muted }]}>Montant distribuable</Text>
               <Text style={[styles.breakdownValue, { color: colors.text }]}>
-                {formatCurrency(delivery.proposedPrice * 0.9)}
+                {formatCurrency((delivery.proposedPrice || 0) * 0.9)}
               </Text>
             </View>
             <View style={[styles.breakdownItem, styles.breakdownTotal]}>
@@ -333,7 +336,8 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
               </Text>
             </View>
           </View>
-        </View>
+          </View>
+        </Card.Content>
       </Card>
 
       <View style={styles.actionContainer}>

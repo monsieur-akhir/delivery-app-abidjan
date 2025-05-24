@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 3.13.3"
+    "version": ">= 5.4.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -8,26 +9,66 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "EXPO_RELEASE_CHANNEL": "development"
+        "ENVIRONMENT": "development",
+        "API_URL": "https://dev-api.livraison-abidjan.com/v1",
+        "WEBSOCKET_URL": "wss://dev-api.livraison-abidjan.com/ws",
+        "MAPS_API_KEY": "AIzaSyDev123456789",
+        "SENTRY_DSN": "",
+        "ENABLE_LOGS": "true"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true
       }
     },
-    "staging": {
+    "preview": {
       "distribution": "internal",
       "channel": "staging",
       "env": {
-        "EXPO_RELEASE_CHANNEL": "staging"
+        "ENVIRONMENT": "staging",
+        "API_URL": "https://staging-api.livraison-abidjan.com/v1",
+        "WEBSOCKET_URL": "wss://staging-api.livraison-abidjan.com/ws",
+        "MAPS_API_KEY": "AIzaSyStaging123456789",
+        "SENTRY_DSN": "https://staging123456789@o123456.ingest.sentry.io/123456",
+        "ENABLE_LOGS": "true"
       },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_RELEASE_CHANNEL": "production"
+        "ENVIRONMENT": "production",
+        "API_URL": "https://api.livraison-abidjan.com/v1",
+        "WEBSOCKET_URL": "wss://api.livraison-abidjan.com/ws",
+        "MAPS_API_KEY": "AIzaSyProd123456789",
+        "SENTRY_DSN": "https://prod123456789@o123456.ingest.sentry.io/123456",
+        "ENABLE_LOGS": "false"
+      }
+    },
+    "local": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "local",
+      "env": {
+        "ENVIRONMENT": "local",
+        "API_URL": "http://localhost:8000/v1",
+        "WEBSOCKET_URL": "ws://localhost:8000/ws",
+        "MAPS_API_KEY": "AIzaSyLocal123456789",
+        "SENTRY_DSN": "",
+        "ENABLE_LOGS": "true"
       },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true
       }
     }
   },
@@ -38,9 +79,9 @@
         "track": "production"
       },
       "ios": {
-        "appleId": "YOUR_APPLE_ID",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+        "appleId": "ios@livraison-abidjan.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "AB12CD34EF"
       }
     }
   }
