@@ -86,7 +86,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ compact = false, st
           <Text style={[styles.languageName, isSelected && styles.selectedLanguageText]}>{language.nativeName}</Text>
           {!compact && <Text style={styles.languageNameEnglish}>{language.name}</Text>}
         </View>
-        {isSelected && <IconButton icon="check" size={20} color="#FF6B00" style={styles.checkIcon} />}
+        {isSelected && <IconButton icon="check" size={20} iconColor="#FF6B00" style={styles.checkIcon} />}
       </TouchableOpacity>
     )
   }

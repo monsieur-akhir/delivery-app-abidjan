@@ -1,186 +1,158 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { login, register, verifyToken, getUserProfile } from "../services/api"
-
-interface User {
-  id: string
-  full_name: string
-  phone: string
-  email?: string
-  role: string
-  profile_picture?: string
-  commune?: string
-  language_preference?: string
-  rating?: number
-  deliveries_completed?: number
-  vehicle_type?: string
-}
+import { login, register, verifyOTP } from "../services/api"
+import axios from "axios"
+import { API_URL } from "../config/environment"
+import type { User } from "../types/models"
+import type { RegisterUserData } from "../services/api"
 
 interface AuthContextType {
-  isLoading: boolean
-  isAuthenticated: boolean
   user: User | null
-  userToken: string | null
+  token: string | null
+  loading: boolean
+  error: string | null
   signIn: (phone: string, password: string) => Promise<void>
   signUp: (userData: RegisterUserData) => Promise<void>
+  verify: (phone: string, otp: string) => Promise<void>
   signOut: () => Promise<void>
-  completeRegistration: () => Promise<void>
-  updateUserData: (userData: Partial<User>) => void
+  updateUserData: (data: Partial<User>) => void
 }
 
-interface AuthProviderProps {
-  children: ReactNode
-}
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  token: null,
+  loading: false,
+  error: null,
+  signIn: async () => {},
+  signUp: async () => {},
+  verify: async () => {},
+  signOut: async () => {},
+  updateUserData: () => {},
+})
 
-interface RegisterUserData {
-  full_name: string
-  phone: string
-  email?: string
-  password: string
-  role: string
-  commune?: string
-  language_preference?: string
-}
+export const useAuth = () => useContext(AuthContext)
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [userToken, setUserToken] = useState<string | null>(null)
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Vérifier si l'utilisateur est déjà connecté au démarrage
   useEffect(() => {
-    const bootstrapAsync = async () => {
+    // Check if user is already logged in
+    const loadUserData = async () => {
       try {
-        // Charger le token depuis le stockage
-        const token = await AsyncStorage.getItem("userToken")
+        const storedUser = await AsyncStorage.getItem("user")
+        const storedToken = await AsyncStorage.getItem("token")
 
-        if (token) {
-          // Vérifier si le token est valide
-          const isValid = await verifyToken(token)
+        if (storedUser && storedToken) {
+          setUser(JSON.parse(storedUser))
+          setToken(storedToken)
 
-          if (isValid) {
-            setUserToken(token)
-
-            // Charger les données de l'utilisateur
-            const userData = await getUserProfile()
-            setUser(userData)
-          } else {
-            // Token invalide, supprimer
-            await AsyncStorage.removeItem("userToken")
-            await AsyncStorage.removeItem("userData")
+          // Refresh token if needed
+          try {
+            const refreshedToken = await tryRefreshToken()
+            if (refreshedToken) {
+              setToken(refreshedToken)
+              await AsyncStorage.setItem("token", refreshedToken)
+            }
+          } catch (refreshError) {
+            console.error("Error refreshing token:", refreshError)
+            // If refresh fails, we'll keep using the old token
           }
         }
-      } catch (error) {
-        console.error("Error bootstrapping auth:", error)
+      } catch (e) {
+        console.error("Error loading user data:", e)
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
-    bootstrapAsync()
+    loadUserData()
   }, [])
 
-  // Connexion
-  const signIn = async (phone: string, password: string): Promise<void> => {
+  // Fonction utilitaire locale pour rafraîchir le token
+  const tryRefreshToken = async (): Promise<string | null> => {
     try {
-      const response = await login(phone, password)
-
-      // Sauvegarder le token
-      await AsyncStorage.setItem("userToken", response.token)
-      setUserToken(response.token)
-
-      // Sauvegarder les données utilisateur
-      await AsyncStorage.setItem("userData", JSON.stringify(response.user))
-      setUser(response.user)
+      const response = await axios.post(`${API_URL}/auth/refresh`, {
+        refresh_token: await AsyncStorage.getItem("refreshToken"),
+      })
+      const { access_token, refresh_token } = response.data
+      await AsyncStorage.setItem("authToken", access_token)
+      await AsyncStorage.setItem("refreshToken", refresh_token)
+      return access_token
     } catch (error) {
-      console.error("Login error:", error)
-      throw error
+      console.error("Error refreshing token:", error)
+      return null
     }
   }
 
-  // Inscription
-  const signUp = async (userData: RegisterUserData): Promise<void> => {
+  const signIn = async (phone: string, password: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { user: userData, token: authToken } = await login(phone, password)
+      setUser(userData)
+      setToken(authToken)
+      await AsyncStorage.setItem("user", JSON.stringify(userData))
+      await AsyncStorage.setItem("token", authToken)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An error occurred during sign in")
+      throw e
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signUp = async (userData: RegisterUserData) => {
+    setLoading(true)
+    setError(null)
     try {
       await register(userData)
-      // L'utilisateur devra vérifier son numéro de téléphone avant de pouvoir se connecter
-    } catch (error) {
-      console.error("Registration error:", error)
-      throw error
+      // After registration, user needs to verify OTP
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An error occurred during sign up")
+      throw e
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Finaliser l'inscription après vérification OTP
-  const completeRegistration = async (): Promise<void> => {
+  const verify = async (phone: string, otp: string) => {
+    setLoading(true)
+    setError(null)
     try {
-      // Récupérer les données utilisateur après vérification OTP
-      const userData = await getUserProfile()
-
-      // Sauvegarder les données utilisateur
-      await AsyncStorage.setItem("userData", JSON.stringify(userData))
-      setUser(userData)
-    } catch (error) {
-      console.error("Complete registration error:", error)
-      throw error
+      await verifyOTP(phone, otp)
+      // Après vérification OTP, il faut recharger l'utilisateur et le token depuis le backend ou le storage
+      // Ici, on suppose que l'utilisateur doit se reconnecter ou que l'API met à jour le storage
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An error occurred during verification")
+      throw e
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Déconnexion
-  const signOut = async (): Promise<void> => {
-    try {
-      // Supprimer le token et les données utilisateur
-      await AsyncStorage.removeItem("userToken")
-      await AsyncStorage.removeItem("userData")
-
-      setUserToken(null)
-      setUser(null)
-    } catch (error) {
-      console.error("Logout error:", error)
-      throw error
-    }
+  const signOut = async () => {
+    setUser(null)
+    setToken(null)
+    await AsyncStorage.removeItem("user")
+    await AsyncStorage.removeItem("token")
   }
 
-  // Mettre à jour les données utilisateur
-  const updateUserData = (userData: Partial<User>): void => {
-    setUser((prevUser) => {
-      if (!prevUser) return userData as User
-      const updatedUser = { ...prevUser, ...userData }
-
-      // Sauvegarder les données mises à jour
-      AsyncStorage.setItem("userData", JSON.stringify(updatedUser)).catch((error) =>
-        console.error("Error saving updated user data:", error),
-      )
-
-      return updatedUser
-    })
+  const updateUserData = (data: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...data }
+      setUser(updatedUser)
+      AsyncStorage.setItem("user", JSON.stringify(updatedUser))
+    }
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        isLoading,
-        isAuthenticated: !!userToken,
-        user,
-        userToken,
-        signIn,
-        signUp,
-        signOut,
-        completeRegistration,
-        updateUserData,
-      }}
-    >
+    <AuthContext.Provider value={{ user, token, loading, error, signIn, signUp, verify, signOut, updateUserData }}>
       {children}
     </AuthContext.Provider>
   )

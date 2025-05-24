@@ -102,6 +102,11 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
     try {
       setProcessingPayment(true)
 
+      if (!paymentReference) {
+        setError(t("payment.errorPaymentReference"))
+        return
+      }
+
       const verificationData = {
         reference: paymentReference,
         otp: otp,

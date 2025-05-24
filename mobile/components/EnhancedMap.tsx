@@ -1,14 +1,15 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { View, StyleSheet, TouchableOpacity, Platform } from "react-native"
-import { Text, IconButton, ActivityIndicator } from "react-native-paper"
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Callout, type MapViewRef } from "react-native-maps"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { View, StyleSheet, TouchableOpacity, Platform, type StyleProp, type ViewStyle } from "react-native"
+import { Text, ActivityIndicator } from "react-native-paper"
+import MapView, { Polyline, PROVIDER_GOOGLE, type Region, Marker, Callout } from "react-native-maps"
+
 import * as Location from "expo-location"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../contexts/NetworkContext"
 import RouteOptimizationService from "../services/RouteOptimizationService"
+import FeatherIcon from "./FeatherIcon"
 import type { Coordinates } from "../types/models"
 
 interface EnhancedMapProps {
@@ -29,10 +30,10 @@ interface EnhancedMapProps {
   showUserLocation?: boolean
   showTraffic?: boolean
   routeCoordinates?: Coordinates[]
-  onRegionChange?: (region: any) => void
+  onRegionChange?: (region: Region) => void
   onMarkerPress?: (markerId: string | number) => void
   onMapPress?: (coordinate: Coordinates) => void
-  style?: any
+  style?: StyleProp<ViewStyle> // Style spécifique avec type correct
   zoomEnabled?: boolean
   rotateEnabled?: boolean
   scrollEnabled?: boolean
@@ -42,6 +43,11 @@ interface EnhancedMapProps {
   showScale?: boolean
   loadingRoute?: boolean
   children?: React.ReactNode
+}
+
+interface TrafficHotspot {
+  coordinates: Coordinates
+  intensity: number
 }
 
 const EnhancedMap: React.FC<EnhancedMapProps> = ({
@@ -71,31 +77,21 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
 }) => {
   const { t } = useTranslation()
   const { isConnected } = useNetwork()
-  const mapRef = useRef<MapViewRef>(null)
+  const mapRef = useRef<MapView>(null)
 
   const [region, setRegion] = useState(initialRegion)
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null)
-  const [trafficHotspots, setTrafficHotspots] = useState<Array<{ coordinates: Coordinates; intensity: number }>>([])
+  const [trafficHotspots, setTrafficHotspots] = useState<TrafficHotspot[]>([])
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
 
-  useEffect(() => {
-    if (showUserLocation) {
-      getUserLocation()
-    }
-
-    if (showTraffic && isConnected) {
-      loadTrafficData()
-    }
-  }, [showUserLocation, showTraffic, isConnected])
-
-  const getUserLocation = async () => {
+  const getUserLocation = useCallback(async () => {
     try {
       setIsLoadingLocation(true)
 
       const { status } = await Location.requestForegroundPermissionsAsync()
 
       if (status !== "granted") {
-        console.log("Permission to access location was denied")
+        // Permission denied, handle silently or show user feedback
         return
       }
 
@@ -129,18 +125,18 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
     } finally {
       setIsLoadingLocation(false)
     }
-  }
+  }, [initialRegion])
 
-  const loadTrafficData = async () => {
+  const loadTrafficData = useCallback(async () => {
     try {
       const hotspots = await RouteOptimizationService.getTrafficHotspots()
       setTrafficHotspots(hotspots)
     } catch (error) {
       console.error("Error loading traffic data:", error)
     }
-  }
+  }, [])
 
-  const handleRegionChange = (newRegion: any) => {
+  const handleRegionChange = (newRegion: Region) => {
     setRegion(newRegion)
     if (onRegionChange) {
       onRegionChange(newRegion)
@@ -153,7 +149,7 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
     }
   }
 
-  const handleMapPress = (event: any) => {
+  const handleMapPress = (event: { nativeEvent: { coordinate: Coordinates } }) => {
     if (onMapPress) {
       onMapPress(event.nativeEvent.coordinate)
     }
@@ -190,24 +186,6 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
     }
   }
 
-  const renderTrafficHotspots = () => {
-    return trafficHotspots.map((hotspot, index) => (
-      <Marker key={`hotspot-${index}`} coordinate={hotspot.coordinates} tracksViewChanges={false}>
-        <View style={[styles.trafficHotspot, { backgroundColor: getTrafficColor(hotspot.intensity) }]}>
-          <IconButton icon="car-brake-alert" size={16} color="#FFFFFF" />
-        </View>
-        <Callout>
-          <View style={styles.callout}>
-            <Text style={styles.calloutTitle}>{t("map.trafficAlert")}</Text>
-            <Text style={styles.calloutText}>
-              {t("map.congestionLevel")}: {getTrafficLevel(hotspot.intensity)}
-            </Text>
-          </View>
-        </Callout>
-      </Marker>
-    ))
-  }
-
   const getTrafficColor = (intensity: number) => {
     if (intensity > 0.7) return "rgba(244, 67, 54, 0.8)" // Rouge
     if (intensity > 0.4) return "rgba(255, 152, 0, 0.8)" // Orange
@@ -220,13 +198,37 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
     return t("map.light")
   }
 
+  // Rendu des hotspots de trafic
+  const renderTrafficHotspots = () => (
+    trafficHotspots.map((hotspot, index) => (
+      <Marker key={`hotspot-${index}`} coordinate={hotspot.coordinates} tracksViewChanges={false}>
+        <View style={[styles.trafficHotspot, { backgroundColor: getTrafficColor(hotspot.intensity) }]}>
+          <FeatherIcon name="alert-triangle" size={16} color="#FFFFFF" />
+        </View>
+        <Callout tooltip>
+          <View style={styles.callout}>
+            <Text style={styles.calloutTitle}>{t("map.trafficAlert")}</Text>
+            <Text style={styles.calloutText}>
+              {t("map.congestionLevel")}: {getTrafficLevel(hotspot.intensity)}
+            </Text>
+          </View>
+        </Callout>
+      </Marker>
+    ))
+  )
+
+  useEffect(() => {
+    getUserLocation()
+    loadTrafficData()
+  }, [getUserLocation, loadTrafficData])
+
   return (
     <View style={[styles.container, style]}>
       <MapView
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
-        region={region}
+        initialRegion={region}
         onRegionChangeComplete={handleRegionChange}
         onPress={handleMapPress}
         showsUserLocation={showUserLocation}
@@ -240,26 +242,19 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
         showsCompass={showCompass}
         showsScale={showScale}
         loadingEnabled={true}
+        {...{} /* Cast to enforce type compatibility */}
       >
         {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            coordinate={marker.coordinate}
-            title={marker.title}
-            description={marker.description}
-            pinColor={marker.color}
-            onPress={() => handleMarkerPress(marker.id)}
-            tracksViewChanges={false}
-          >
+          <Marker key={marker.id} coordinate={marker.coordinate} title={marker.title} description={marker.description} onPress={() => onMarkerPress?.(marker.id)}>
             {marker.icon && (
               <View style={[styles.customMarker, { backgroundColor: marker.color || "#FF6B00" }]}>
-                <IconButton icon={marker.icon} size={20} color="#FFFFFF" />
+                <FeatherIcon name={marker.icon} size={20} color="#FFFFFF" />
               </View>
             )}
           </Marker>
         ))}
 
-        {showTraffic && renderTrafficHotspots()}
+        {renderTrafficHotspots()}
 
         {routeCoordinates && routeCoordinates.length > 0 && (
           <Polyline coordinates={routeCoordinates} strokeWidth={4} strokeColor="#FF6B00" lineDashPattern={[1]} />
@@ -273,13 +268,13 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
           {isLoadingLocation ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <IconButton icon="crosshairs-gps" size={20} color="#FFFFFF" />
+            <FeatherIcon name="crosshair" size={20} color="#FFFFFF" />
           )}
         </TouchableOpacity>
 
         {markers.length > 0 && (
           <TouchableOpacity style={styles.mapButton} onPress={fitToMarkers}>
-            <IconButton icon="fit-to-screen" size={20} color="#FFFFFF" />
+            <FeatherIcon name="maximize" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         )}
       </View>

@@ -36,9 +36,9 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
       await resetPassword(phone)
       setSuccess(t("forgotPassword.resetSent"))
       setVisible(true)
-      // Rediriger vers l'écran de vérification OTP après un court délai
+      // Redirect to OTP verification screen after a short delay
       setTimeout(() => {
-        navigation.navigate("VerifyOTP", { phone, isReset: true })
+        navigation.navigate("VerifyOTP", { phone: phone })
       }, 2000)
     } catch (error) {
       console.error("Password reset error:", error)

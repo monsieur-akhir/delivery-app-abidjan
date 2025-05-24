@@ -10,8 +10,8 @@ import MapView, { Marker, Polyline } from "react-native-maps"
 import * as Location from "expo-location"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchDeliveryDetails, bidForDelivery } from "../../services/api"
-import { formatPrice, formatDateTime } from "../../utils/formatters"
+import { fetchDeliveryDetails, getBidsForDelivery } from "../../services/api"
+import { formatPrice, formatDate } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
@@ -55,7 +55,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       setDelivery(data)
 
       // Définir un montant d'enchère par défaut légèrement inférieur au prix proposé
-      const defaultBid = Math.round(data.proposed_price * 0.9)
+      const defaultBid = Math.round(data.price * 0.9)
       setBidAmount(defaultBid.toString())
     } catch (error) {
       setError("Erreur lors du chargement des détails de la livraison")
@@ -174,7 +174,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
     const amount = Number(bidAmount)
 
     // Vérifier que le montant est raisonnable
-    if (delivery && amount > delivery.proposed_price) {
+    if (delivery && amount > delivery.price) {
       Alert.alert(
         "Montant élevé",
         "Votre enchère est supérieure au prix proposé par le client. Êtes-vous sûr de vouloir continuer ?",
@@ -186,7 +186,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       return
     }
 
-    if (delivery && amount < delivery.proposed_price * 0.5) {
+    if (delivery && amount < delivery.price * 0.5) {
       Alert.alert(
         "Montant bas",
         "Votre enchère est très basse. Le client pourrait ne pas l'accepter. Êtes-vous sûr de vouloir continuer ?",
@@ -209,8 +209,10 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
         // Sauvegarder l'enchère pour synchronisation ultérieure
         addPendingUpload({
           type: "bid",
-          deliveryId,
-          amount,
+          data: {
+            delivery_id: deliveryId,
+            amount,
+          },
           timestamp: new Date().toISOString(),
         })
 
@@ -221,7 +223,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
         )
       } else {
         // Soumettre l'enchère immédiatement
-        await bidForDelivery(deliveryId, amount)
+        await getBidsForDelivery(deliveryId, amount)
 
         Alert.alert(
           "Enchère soumise",
@@ -270,9 +272,9 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
             <View style={styles.deliveryHeader}>
               <View>
                 <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
-                <Text style={styles.deliveryDate}>{formatDateTime(delivery.created_at)}</Text>
+                <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
               </View>
-              <Text style={styles.deliveryPrice}>{formatPrice(delivery.proposed_price)} FCFA</Text>
+              <Text style={styles.deliveryPrice}>{formatPrice(delivery.price)} FCFA</Text>
             </View>
 
             <Divider style={styles.divider} />
@@ -283,7 +285,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
                 <View style={styles.addressTextContainer}>
                   <Text style={styles.addressLabel}>Ramassage</Text>
                   <Text style={styles.addressText}>{delivery.pickup_address}</Text>
-                  <Text style={styles.communeText}>{delivery.pickup_commune}</Text>
+                  <Text style={styles.communeText}>{delivery.pickup_location}</Text>
                 </View>
               </View>
 
@@ -294,15 +296,15 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
                 <View style={styles.addressTextContainer}>
                   <Text style={styles.addressLabel}>Livraison</Text>
                   <Text style={styles.addressText}>{delivery.delivery_address}</Text>
-                  <Text style={styles.communeText}>{delivery.delivery_commune}</Text>
+                  <Text style={styles.communeText}>{delivery.delivery_location}</Text>
                 </View>
               </View>
             </View>
 
-            {delivery.description && (
+            {delivery.notes && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.descriptionLabel}>Description :</Text>
-                <Text style={styles.descriptionText}>{delivery.description}</Text>
+                <Text style={styles.descriptionText}>{delivery.notes}</Text>
               </View>
             )}
           </Card.Content>

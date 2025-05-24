@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   View,
   Text,
@@ -14,13 +14,13 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native"
-import { useRoute, useNavigation } from "@react-navigation/native"
+import { useRoute } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import CollaborativeService from "../../services/CollaborativeService"
 import type { ChatMessage, CollaborativeDelivery } from "../../types/models"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
-import { useWebSocketContext } from "../../contexts/WebSocketContext"
+import { useWebSocket } from "../../contexts/WebSocketContext"
 import ErrorView from "../../components/ErrorView"
 
 type RouteParams = {
@@ -37,13 +37,12 @@ const CollaborativeChatScreen: React.FC = () => {
 
   const route = useRoute()
   const { deliveryId } = route.params as RouteParams
-  const navigation = useNavigation()
   const { user } = useAuth()
   const { colors } = useTheme()
-  const { socket } = useWebSocketContext()
+  const { lastMessage, connected } = useWebSocket()
   const flatListRef = useRef<FlatList>(null)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setError(null)
       setLoading(true)
@@ -54,31 +53,52 @@ const CollaborativeChatScreen: React.FC = () => {
 
       // Fetch chat messages
       const messagesData = await CollaborativeService.getChatMessages(deliveryId)
-      setMessages(messagesData)
+      
+      // Map API response properties to our expected ChatMessage properties
+      const enhancedMessages = messagesData.map(msg => ({
+        ...msg,
+        createdAt: msg.createdAt || msg.timestamp || new Date().toISOString(),
+        userId: msg.userId || msg.user_id,
+        userName: msg.userName || "Utilisateur",
+        userRole: msg.userRole || "courier",
+      }));
+      
+      setMessages(enhancedMessages)
     } catch (err) {
       console.error("Error fetching chat data:", err)
       setError("Impossible de charger les messages. Veuillez réessayer.")
     } finally {
       setLoading(false)
     }
-  }
+  }, [deliveryId])
 
   useEffect(() => {
     fetchData()
 
     // Set up WebSocket listener for new messages
-    if (socket) {
-      socket.on(`chat_message_${deliveryId}`, (message: ChatMessage) => {
-        setMessages((prevMessages) => [...prevMessages, message])
-      })
+    if (connected && lastMessage && lastMessage.type === 'chat_message' && lastMessage.data) {
+      // Check if the message is for our current chat
+      if (lastMessage.data.delivery_id === deliveryId) {
+        const chatMsg = {
+          id: lastMessage.data.id || Math.random().toString(),
+          delivery_id: lastMessage.data.delivery_id,
+          user_id: lastMessage.data.user_id,
+          userId: lastMessage.data.user_id,
+          message: lastMessage.data.message,
+          timestamp: lastMessage.data.timestamp || new Date().toISOString(),
+          createdAt: lastMessage.data.createdAt || lastMessage.data.timestamp || new Date().toISOString(),
+          userName: lastMessage.data.userName || "Utilisateur",
+          userRole: lastMessage.data.userRole || "courier",
+          userAvatar: lastMessage.data.userAvatar
+        };
+        setMessages((prevMessages) => [...prevMessages, chatMsg])
+      }
     }
 
     return () => {
-      if (socket) {
-        socket.off(`chat_message_${deliveryId}`)
-      }
+      // Clean up WebSocket listener if needed
     }
-  }, [deliveryId, socket])
+  }, [deliveryId, connected, lastMessage, fetchData])
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -143,20 +163,22 @@ const CollaborativeChatScreen: React.FC = () => {
   }
 
   const renderMessageItem = ({ item, index }: { item: ChatMessage; index: number }) => {
-    const isCurrentUser = item.userId === user?.id
+    const isCurrentUser = (item.userId || item.user_id) === user?.id
+    const createdAt = item.createdAt || item.timestamp || new Date().toISOString()
+    const prevCreatedAt = index > 0 ? (messages[index - 1].createdAt || messages[index - 1].timestamp || '') : ''
     const showDateHeader =
-      index === 0 || new Date(item.createdAt).toDateString() !== new Date(messages[index - 1].createdAt).toDateString()
+      index === 0 || new Date(createdAt).toDateString() !== new Date(prevCreatedAt).toDateString()
 
     return (
       <>
         {showDateHeader && (
           <View style={styles.dateHeader}>
             <Text style={[styles.dateHeaderText, { color: colors.text }]}>
-              {isToday(item.createdAt)
+              {isToday(createdAt)
                 ? "Aujourd'hui"
-                : isYesterday(item.createdAt)
+                : isYesterday(createdAt)
                   ? "Hier"
-                  : formatDate(item.createdAt)}
+                  : formatDate(createdAt)}
             </Text>
           </View>
         )}
@@ -167,7 +189,9 @@ const CollaborativeChatScreen: React.FC = () => {
                 <Image source={{ uri: item.userAvatar }} style={styles.avatar} />
               ) : (
                 <View style={[styles.avatarFallback, { backgroundColor: colors.primary + "40" }]}>
-                  <Text style={[styles.avatarFallbackText, { color: colors.primary }]}>{item.userName.charAt(0)}</Text>
+                  <Text style={[styles.avatarFallbackText, { color: colors.primary }]}>
+                    {(item.userName || "U").charAt(0)}
+                  </Text>
                 </View>
               )}
             </View>
@@ -182,13 +206,14 @@ const CollaborativeChatScreen: React.FC = () => {
           >
             {!isCurrentUser && (
               <Text style={[styles.userName, { color: colors.primary }]}>
-                {item.userName} (
-                {item.userRole === "primary" ? "Principal" : item.userRole === "secondary" ? "Secondaire" : "Support"})
+                {item.userName || "Utilisateur"} (
+                {(item.userRole === "primary" || item.userRole === "primary_courier") ? "Principal" : 
+                 (item.userRole === "secondary" || item.userRole === "secondary_courier") ? "Secondaire" : "Support"})
               </Text>
             )}
             <Text style={[styles.messageText, { color: isCurrentUser ? "white" : colors.text }]}>{item.message}</Text>
             <Text style={[styles.messageTime, { color: isCurrentUser ? "rgba(255, 255, 255, 0.7)" : colors.muted }]}>
-              {formatTime(item.createdAt)}
+              {formatTime(createdAt)}
             </Text>
           </View>
         </View>

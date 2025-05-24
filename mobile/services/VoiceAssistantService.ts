@@ -1,19 +1,15 @@
-import * as Speech from "expo-speech"
-import * as FileSystem from "expo-file-system"
 import { Audio } from "expo-av"
-import axios from "axios"
+import * as FileSystem from "expo-file-system"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { API_URL } from "../config/environment"
 
-// Types
 export interface VoiceCommand {
   command: string
-  confidence: number
-  intent: string
-  entities: Record<string, any>
+  intent?: string
+  entities?: Record<string, any>
 }
 
-export interface AssistantResponse {
+export interface VoiceResponse {
   text: string
   action?: string
   data?: any
@@ -21,23 +17,17 @@ export interface AssistantResponse {
 
 class VoiceAssistantService {
   private recording: Audio.Recording | null = null
-  private isListening = false
-  private audioUri: string | null = null
-  private language = "fr-FR"
+  private speechRecognitionEnabled = false
 
-  // Initialiser le service
+  /**
+   * Initialiser le service d'assistant vocal
+   */
   async initialize(): Promise<void> {
     try {
-      // Demander les permissions
+      // Vérifier les permissions
       const { status } = await Audio.requestPermissionsAsync()
       if (status !== "granted") {
         throw new Error("Microphone permission not granted")
-      }
-
-      // Charger la langue préférée
-      const savedLanguage = await AsyncStorage.getItem("voiceLanguage")
-      if (savedLanguage) {
-        this.language = savedLanguage
       }
 
       // Configurer l'audio
@@ -46,122 +36,128 @@ class VoiceAssistantService {
         playsInSilentModeIOS: true,
         staysActiveInBackground: false,
         shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
       })
+
+      this.speechRecognitionEnabled = true
     } catch (error) {
       console.error("Error initializing voice assistant:", error)
+      this.speechRecognitionEnabled = false
       throw error
     }
   }
 
-  // Démarrer l'écoute
+  /**
+   * Démarrer l'écoute
+   */
   async startListening(): Promise<void> {
-    if (this.isListening) {
-      return
+    if (!this.speechRecognitionEnabled) {
+      await this.initialize()
+    }
+
+    if (this.recording) {
+      await this.stopListening()
     }
 
     try {
-      this.isListening = true
-
-      // Configurer l'enregistrement
       this.recording = new Audio.Recording()
       await this.recording.prepareToRecordAsync({
         android: {
           extension: ".m4a",
-          outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4,
-          audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC,
+          outputFormat: Audio.AndroidOutputFormat.MPEG_4 || 2,
+          audioEncoder: Audio.AndroidAudioEncoder.AAC || 3,
           sampleRate: 44100,
-          numberOfChannels: 1,
+          numberOfChannels: 2,
           bitRate: 128000,
         },
         ios: {
           extension: ".m4a",
-          outputFormat: Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_MPEG4AAC,
-          audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
+          outputFormat: Audio.IOSOutputFormat.MPEG4AAC || "aac",
+          audioQuality: Audio.IOSAudioQuality.HIGH || "high",
           sampleRate: 44100,
-          numberOfChannels: 1,
+          numberOfChannels: 2,
           bitRate: 128000,
           linearPCMBitDepth: 16,
           linearPCMIsBigEndian: false,
           linearPCMIsFloat: false,
         },
+        web: {
+          mimeType: "audio/webm",
+          bitsPerSecond: 128000,
+        },
       })
-
       await this.recording.startAsync()
     } catch (error) {
-      this.isListening = false
-      console.error("Error starting voice recording:", error)
+      console.error("Error starting recording:", error)
+      this.recording = null
       throw error
     }
   }
 
-  // Arrêter l'écoute et traiter la commande
-  async stopListening(): Promise<VoiceCommand | null> {
-    if (!this.isListening || !this.recording) {
-      return null
+  /**
+   * Arrêter l'écoute et traiter la commande
+   */
+  async stopListening(): Promise<VoiceCommand> {
+    if (!this.recording) {
+      return { command: "" }
     }
 
     try {
-      // Arrêter l'enregistrement
       await this.recording.stopAndUnloadAsync()
-      this.isListening = false
-
-      // Récupérer l'URI de l'audio
       const uri = this.recording.getURI()
+      this.recording = null
+
       if (!uri) {
-        throw new Error("Recording URI is null")
+        return { command: "" }
       }
-      this.audioUri = uri
 
-      // Traiter l'audio pour obtenir la commande
-      return await this.processAudio(uri)
-    } catch (error) {
-      this.isListening = false
-      console.error("Error stopping voice recording:", error)
-      return null
-    }
-  }
-
-  // Traiter l'audio pour obtenir la commande
-  private async processAudio(audioUri: string): Promise<VoiceCommand | null> {
-    try {
-      // Créer un FormData pour envoyer l'audio
-      const formData = new FormData()
-      formData.append("audio", {
-        uri: audioUri,
-        type: "audio/m4a",
-        name: "recording.m4a",
-      } as any)
-      formData.append("language", this.language)
-
-      // Envoyer l'audio au serveur pour traitement
-      const token = await AsyncStorage.getItem("token")
-      const response = await axios.post(`${API_URL}/assistant/voice-command`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
+      // Convertir l'enregistrement en base64
+      const base64Audio = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
       })
 
-      return response.data
-    } catch (error) {
-      console.error("Error processing audio:", error)
-      return null
-    }
-  }
-
-  // Exécuter une commande vocale
-  async executeCommand(command: VoiceCommand): Promise<AssistantResponse> {
-    try {
+      // Envoyer au serveur pour reconnaissance vocale
       const token = await AsyncStorage.getItem("token")
-      const response = await axios.post(`${API_URL}/assistant/execute-command`, command, {
+      const response = await fetch(`${API_URL}/assistant/recognize`, {
+        method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ audio: base64Audio }),
       })
 
-      return response.data
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error("Error stopping recording:", error)
+      return { command: "" }
+    }
+  }
+
+  /**
+   * Exécuter une commande vocale
+   */
+  async executeCommand(command: VoiceCommand): Promise<VoiceResponse> {
+    try {
+      const token = await AsyncStorage.getItem("token")
+      const response = await fetch(`${API_URL}/assistant/execute`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(command),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+
+      return await response.json()
     } catch (error) {
       console.error("Error executing command:", error)
       return {
@@ -170,26 +166,44 @@ class VoiceAssistantService {
     }
   }
 
-  // Parler une réponse
+  /**
+   * Lire un texte à haute voix
+   */
   async speak(text: string): Promise<void> {
     try {
-      await Speech.speak(text, {
-        language: this.language,
-        pitch: 1.0,
-        rate: 0.9,
+      const token = await AsyncStorage.getItem("token")
+      const response = await fetch(`${API_URL}/assistant/speak`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text }),
       })
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+
+      const { audio } = await response.json()
+
+      // Créer un fichier temporaire pour l'audio
+      const fileUri = FileSystem.documentDirectory + "temp_speech.mp3"
+      await FileSystem.writeAsStringAsync(fileUri, audio, {
+        encoding: FileSystem.EncodingType.Base64,
+      })
+
+      // Jouer l'audio
+      const { sound } = await Audio.Sound.createAsync({ uri: fileUri })
+      await sound.playAsync()
     } catch (error) {
-      console.error("Error speaking response:", error)
+      console.error("Error speaking text:", error)
     }
   }
 
-  // Changer la langue
-  async setLanguage(language: string): Promise<void> {
-    this.language = language
-    await AsyncStorage.setItem("voiceLanguage", language)
-  }
-
-  // Nettoyer les ressources
+  /**
+   * Nettoyer les ressources
+   */
   async cleanup(): Promise<void> {
     if (this.recording) {
       try {
@@ -199,22 +213,6 @@ class VoiceAssistantService {
       }
       this.recording = null
     }
-
-    if (this.audioUri) {
-      try {
-        await FileSystem.deleteAsync(this.audioUri)
-      } catch (error) {
-        // Ignorer les erreurs lors du nettoyage
-      }
-      this.audioUri = null
-    }
-
-    this.isListening = false
-  }
-
-  // Vérifier si le service est en train d'écouter
-  isCurrentlyListening(): boolean {
-    return this.isListening
   }
 }
 

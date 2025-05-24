@@ -361,7 +361,7 @@ const CommunityWalletScreen: React.FC = () => {
                     <IconButton
                       icon={getTransactionIcon(transaction.type)}
                       size={24}
-                      color={getTransactionColor(transaction.type)}
+                      iconColor={getTransactionColor(transaction.type)}
                       style={styles.transactionIcon}
                     />
                   </View>
@@ -487,7 +487,7 @@ const CommunityWalletScreen: React.FC = () => {
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <IconButton icon="alert-circle" size={48} color="#F44336" />
+        <IconButton icon="alert-circle" size={48} iconColor="#F44336" />
         <Text style={styles.errorText}>{error}</Text>
         <Button mode="contained" onPress={loadData} style={styles.retryButton}>
           {t("common.retry")}

@@ -1,29 +1,29 @@
 import type React from "react"
-import { StyleSheet } from "react-native"
+import { View, StyleSheet } from "react-native"
 import { Text, Button } from "react-native-paper"
 import { Feather } from "@expo/vector-icons"
-import Animated, { FadeIn } from "react-native-reanimated"
+import type { FeatherIconName } from "./FeatherIcon"
 
-interface EmptyStateProps {
-  icon: string
+export interface EmptyStateProps {
+  icon: keyof typeof Feather.glyphMap
   title: string
   message: string
-  actionLabel?: string
-  onAction?: () => void
+  buttonText?: string
+  onButtonPress?: () => void
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message, actionLabel, onAction }) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message, buttonText, onButtonPress }) => {
   return (
-    <Animated.View style={styles.container} entering={FadeIn.duration(500)}>
+    <View style={styles.container}>
       <Feather name={icon} size={64} color="#CCCCCC" />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
-      {actionLabel && onAction && (
-        <Button mode="contained" onPress={onAction} style={styles.button}>
-          {actionLabel}
+      {onButtonPress && (
+        <Button mode="contained" onPress={onButtonPress} style={styles.button}>
+          {buttonText || "Réessayer"}
         </Button>
       )}
-    </Animated.View>
+    </View>
   )
 }
 
@@ -32,10 +32,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 40,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    marginTop: 16,
+    padding: 32,
   },
   title: {
     fontSize: 18,

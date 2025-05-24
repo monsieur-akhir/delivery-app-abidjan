@@ -3,12 +3,14 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native"
-import { Text, Card, ActivityIndicator, IconButton, Divider, Chip, Button } from "react-native-paper"
+import { Text, Card, ActivityIndicator, Button, Divider, Chip } from "react-native-paper"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../contexts/NetworkContext"
 import WeatherAlertModal from "./WeatherAlertModal"
 import CommuneWeatherService from "../services/CommuneWeatherService"
+import FeatherIcon from "./FeatherIcon"
 
+// Types pour les données météo
 interface WeatherCondition {
   code: number
   condition: string
@@ -60,12 +62,22 @@ interface WeatherData {
   alerts: WeatherAlert[]
 }
 
+import { ViewStyle } from "react-native"
+
 interface EnhancedWeatherInfoProps {
   commune?: string
   onSelectCommune?: (commune: string) => void
   showDeliveryTips?: boolean
   compact?: boolean
-  style?: any
+  style?: ViewStyle
+}
+
+interface CustomModalProps {
+  visible: boolean
+  transparent?: boolean
+  animationType?: "none" | "slide" | "fade"
+  onRequestClose?: () => void
+  children: React.ReactNode
 }
 
 const { width } = Dimensions.get("window")
@@ -133,27 +145,27 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
   const getWeatherIcon = (condition: string): string => {
     // Mapping des conditions météo aux icônes
     const iconMap: Record<string, string> = {
-      clear: "weather-sunny",
-      sunny: "weather-sunny",
-      partly_cloudy: "weather-partly-cloudy",
-      cloudy: "weather-cloudy",
-      overcast: "weather-cloudy",
-      mist: "weather-fog",
-      fog: "weather-fog",
-      rain: "weather-rainy",
-      light_rain: "weather-partly-rainy",
-      heavy_rain: "weather-pouring",
-      showers: "weather-pouring",
-      thunderstorm: "weather-lightning",
-      storm: "weather-lightning-rainy",
-      snow: "weather-snowy",
-      sleet: "weather-snowy-rainy",
-      hail: "weather-hail",
-      windy: "weather-windy",
+      clear: "sun",
+      sunny: "sun",
+      partly_cloudy: "cloud",
+      cloudy: "cloud",
+      overcast: "cloud",
+      mist: "cloud-drizzle",
+      fog: "cloud-drizzle",
+      rain: "cloud-rain",
+      light_rain: "cloud-drizzle",
+      heavy_rain: "cloud-rain",
+      showers: "cloud-rain",
+      thunderstorm: "cloud-lightning",
+      storm: "cloud-lightning",
+      snow: "cloud-snow",
+      sleet: "cloud-snow",
+      hail: "cloud-snow",
+      windy: "wind",
     }
 
     const conditionKey = condition.toLowerCase().replace(/\s+/g, "_")
-    return iconMap[conditionKey] || "weather-cloudy"
+    return iconMap[conditionKey] || "cloud"
   }
 
   const getWeatherTip = (condition: string): string => {
@@ -188,7 +200,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
         <Chip
           style={[styles.alertChip, { backgroundColor: `${severityColor}20` }]}
           textStyle={{ color: severityColor }}
-          icon={() => <IconButton icon="alert-circle" size={16} color={severityColor} style={styles.chipIcon} />}
+          icon={() => <FeatherIcon name="alert-circle" size={16} color={severityColor} style={styles.chipIcon} />}
         >
           {alert.title}
         </Chip>
@@ -211,7 +223,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
     return (
       <Card style={[styles.container, style]}>
         <Card.Content style={styles.errorContainer}>
-          <IconButton icon="cloud-off-outline" size={40} color="#757575" />
+          <FeatherIcon name="cloud-off" size={40} color="#757575" />
           <Text style={styles.errorText}>{error}</Text>
           <Button mode="outlined" onPress={handleRefresh} style={styles.retryButton}>
             {t("common.retry")}
@@ -232,15 +244,17 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
         <Card.Content style={styles.compactContent}>
           <View style={styles.compactHeader}>
             <View style={styles.compactLocationContainer}>
-              <IconButton icon="map-marker" size={16} color="#FF6B00" style={styles.compactLocationIcon} />
+              <FeatherIcon name="map-pin" size={16} color="#FF6B00" style={styles.compactLocationIcon} />
               <Text style={styles.compactLocation}>{weatherData.commune || weatherData.location}</Text>
             </View>
-            <IconButton icon="refresh" size={16} color="#757575" onPress={handleRefresh} />
+            <TouchableOpacity onPress={handleRefresh}>
+              <FeatherIcon name="refresh-cw" size={16} color="#757575" />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.compactWeatherInfo}>
-            <IconButton
-              icon={getWeatherIcon(weatherData.current.condition)}
+            <FeatherIcon
+              name={getWeatherIcon(weatherData.current.condition)}
               size={32}
               color="#FF6B00"
               style={styles.compactWeatherIcon}
@@ -274,21 +288,23 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
       <Card.Content>
         <View style={styles.header}>
           <View style={styles.locationContainer}>
-            <IconButton icon="map-marker" size={20} color="#FF6B00" style={styles.locationIcon} />
-            <TouchableOpacity onPress={() => setCommuneSelectVisible(true)}>
+            <FeatherIcon name="map-pin" size={20} color="#FF6B00" style={styles.locationIcon} />
+          <TouchableOpacity onPress={() => setCommuneSelectVisible(true)}>
               <View style={styles.communeSelector}>
                 <Text style={styles.location}>{weatherData.commune || weatherData.location}</Text>
-                <IconButton icon="chevron-down" size={16} color="#757575" style={styles.selectorIcon} />
+                <FeatherIcon name="chevron-down" size={16} color="#757575" style={styles.selectorIcon} />
               </View>
-            </TouchableOpacity>
+          </TouchableOpacity>
           </View>
-          <IconButton icon="refresh" size={20} color="#757575" onPress={handleRefresh} />
+          <TouchableOpacity onPress={handleRefresh}>
+            <FeatherIcon name="refresh-cw" size={20} color="#757575" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.currentWeather}>
           <View style={styles.temperatureContainer}>
-            <IconButton
-              icon={getWeatherIcon(weatherData.current.condition)}
+            <FeatherIcon
+              name={getWeatherIcon(weatherData.current.condition)}
               size={48}
               color="#FF6B00"
               style={styles.weatherIcon}
@@ -303,7 +319,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
 
         <View style={styles.detailsContainer}>
           <View style={styles.detailItem}>
-            <IconButton icon="water-percent" size={20} color="#03A9F4" style={styles.detailIcon} />
+            <FeatherIcon name="droplet" size={20} color="#03A9F4" style={styles.detailIcon} />
             <View style={styles.detailTextContainer}>
               <Text style={styles.detailLabel}>{t("weather.humidity")}</Text>
               <Text style={styles.detailValue}>{weatherData.current.humidity}%</Text>
@@ -311,7 +327,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
           </View>
 
           <View style={styles.detailItem}>
-            <IconButton icon="weather-windy" size={20} color="#607D8B" style={styles.detailIcon} />
+            <FeatherIcon name="wind" size={20} color="#607D8B" style={styles.detailIcon} />
             <View style={styles.detailTextContainer}>
               <Text style={styles.detailLabel}>{t("weather.wind")}</Text>
               <Text style={styles.detailValue}>{weatherData.current.wind_speed} km/h</Text>
@@ -319,7 +335,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
           </View>
 
           <View style={styles.detailItem}>
-            <IconButton icon="eye" size={20} color="#9C27B0" style={styles.detailIcon} />
+            <FeatherIcon name="eye" size={20} color="#9C27B0" style={styles.detailIcon} />
             <View style={styles.detailTextContainer}>
               <Text style={styles.detailLabel}>{t("weather.visibility")}</Text>
               <Text style={styles.detailValue}>{weatherData.current.visibility} km</Text>
@@ -327,7 +343,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
           </View>
 
           <View style={styles.detailItem}>
-            <IconButton icon="white-balance-sunny" size={20} color="#FF9800" style={styles.detailIcon} />
+            <FeatherIcon name="sun" size={20} color="#FF9800" style={styles.detailIcon} />
             <View style={styles.detailTextContainer}>
               <Text style={styles.detailLabel}>{t("weather.uvIndex")}</Text>
               <Text style={styles.detailValue}>{weatherData.current.uv_index}</Text>
@@ -352,8 +368,8 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
             <Card key={index} style={styles.forecastCard}>
               <Card.Content style={styles.forecastCardContent}>
                 <Text style={styles.forecastDay}>{day.day}</Text>
-                <IconButton
-                  icon={getWeatherIcon(day.condition)}
+                <FeatherIcon
+                  name={getWeatherIcon(day.condition)}
                   size={32}
                   color="#FF6B00"
                   style={styles.forecastIcon}
@@ -364,11 +380,11 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
                   <Text style={styles.forecastMinTemp}>{Math.round(day.min_temp)}°</Text>
                 </View>
                 <View style={styles.forecastDetail}>
-                  <IconButton icon="water-percent" size={16} color="#03A9F4" style={styles.forecastDetailIcon} />
+                  <FeatherIcon name="droplet" size={16} color="#03A9F4" style={styles.forecastDetailIcon} />
                   <Text style={styles.forecastDetailText}>{day.humidity}%</Text>
                 </View>
                 <View style={styles.forecastDetail}>
-                  <IconButton icon="weather-rainy" size={16} color="#4CAF50" style={styles.forecastDetailIcon} />
+                  <FeatherIcon name="cloud-rain" size={16} color="#4CAF50" style={styles.forecastDetailIcon} />
                   <Text style={styles.forecastDetailText}>{day.chance_of_rain}%</Text>
                 </View>
               </Card.Content>
@@ -392,17 +408,14 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
       />
 
       {/* Modal pour la sélection de commune */}
-      <Modal
-        visible={communeSelectVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setCommuneSelectVisible(false)}
-      >
+      <CustomModal visible={communeSelectVisible} transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t("weather.communeWeather.selectCommune")}</Text>
-              <IconButton icon="close" size={24} color="#757575" onPress={() => setCommuneSelectVisible(false)} />
+              <TouchableOpacity onPress={() => setCommuneSelectVisible(false)}>
+                <FeatherIcon name="x" size={24} color="#757575" />
+              </TouchableOpacity>
             </View>
             <ScrollView style={styles.communeList}>
               {availableCommunes.map((communeName) => (
@@ -420,20 +433,20 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
                     {communeName}
                   </Text>
                   {communeName === (commune || "Plateau") && (
-                    <IconButton icon="check" size={20} color="#FF6B00" style={styles.selectedIcon} />
+                    <FeatherIcon name="check" size={20} color="#FF6B00" style={styles.selectedIcon} />
                   )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </CustomModal>
     </Card>
   )
 }
 
 // Composant Modal pour la sélection de commune
-const Modal = ({ visible, transparent, animationType, onRequestClose, children }) => {
+const CustomModal: React.FC<CustomModalProps> = ({ visible, transparent, children }) => {
   if (!visible) return null
 
   return (
@@ -713,6 +726,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   transparentModal: {
     backgroundColor: "rgba(0, 0, 0, 0.5)",

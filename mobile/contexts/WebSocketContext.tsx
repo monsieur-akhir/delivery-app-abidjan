@@ -1,220 +1,129 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { WS_URL } from "../config/environment"
 import { useAuth } from "./AuthContext"
-import { useNetwork } from "./NetworkContext"
 
-interface Subscription {
-  channel: string
-  index: number
+export interface WebSocketMessage {
+  type: string
+  data?: Record<string, unknown>
 }
 
-interface WebSocketContextType {
-  isConnected: boolean
-  isConnecting: boolean
-  error: string | null
-  connect: () => void
-  disconnect: () => void
-  send: (data: any) => boolean
-  subscribe: (channel: string, callback: (data: any) => void) => Subscription
-  unsubscribe: (subscription: Subscription) => boolean
+export interface WebSocketContextType {
+  connected: boolean
+  sendMessage: (message: WebSocketMessage) => void
+  lastMessage: WebSocketMessage | null
+  subscribe: (channel: string, callback: (data: Record<string, unknown>) => void) => () => void
+  unsubscribe: (channel: string) => void
 }
 
-interface WebSocketProviderProps {
-  children: ReactNode
-}
+const WebSocketContext = createContext<WebSocketContextType>({
+  connected: false,
+  sendMessage: () => {},
+  lastMessage: null,
+  subscribe: () => () => {},
+  unsubscribe: () => {},
+})
 
-const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined)
+export const useWebSocket = () => useContext(WebSocketContext)
 
-export const useWebSocket = (): WebSocketContextType => {
-  const context = useContext(WebSocketContext)
-  if (!context) {
-    throw new Error("useWebSocket must be used within a WebSocketProvider")
-  }
-  return context
-}
+export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, token } = useAuth()
+  const [socket, setSocket] = useState<WebSocket | null>(null)
+  const [connected, setConnected] = useState<boolean>(false)
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
+  const [subscriptions, setSubscriptions] = useState<{
+    [key: string]: (data: any) => void
+  }>({})
 
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
-  const { userToken, user } = useAuth()
-  const { isConnected: isNetworkConnected } = useNetwork()
+  const connectWebSocket = useCallback(() => {
+    if (!token || !user) return
 
-  const [isConnecting, setIsConnecting] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
+    const ws = new WebSocket(`${WS_URL}?token=${token}`)
 
-  const socket = useRef<WebSocket | null>(null)
-  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null)
-  const subscriptions = useRef<Record<string, ((data: any) => void)[]>>({})
+    ws.onopen = () => {
+      console.log("WebSocket connected")
+      setConnected(true)
+    }
 
-  // Établir la connexion WebSocket
-  const connect = (): void => {
-    if (!userToken || !isNetworkConnected || isConnecting || socket.current) return
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data)
+        setLastMessage(message)
 
-    try {
-      setIsConnecting(true)
-
-      // Créer une nouvelle connexion WebSocket
-      const wsUrl = `wss://api.livraison-abidjan.com/ws?token=${userToken}`
-      socket.current = new WebSocket(wsUrl)
-
-      // Gestionnaire d'ouverture de connexion
-      socket.current.onopen = () => {
-        console.log("WebSocket connection established")
-        setIsConnecting(false)
-        setError(null)
-      }
-
-      // Gestionnaire de messages
-      socket.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-
-          // Traiter les messages en fonction de leur type
-          if (data.type === "ping") {
-            // Répondre au ping pour maintenir la connexion active
-            send({ type: "pong" })
-          } else if (data.channel && subscriptions.current[data.channel]) {
-            // Distribuer le message aux abonnés du canal
-            subscriptions.current[data.channel].forEach((callback) => {
-              callback(data)
-            })
-          }
-        } catch (error) {
-          console.error("Error parsing WebSocket message:", error)
+        // Notify subscribers about the new message
+        if (message.type && subscriptions[message.type]) {
+          subscriptions[message.type](message.data)
         }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error)
       }
+    }
 
-      // Gestionnaire d'erreur
-      socket.current.onerror = (event) => {
-        console.error("WebSocket error:", event)
-        setError("WebSocket connection error")
-      }
-
-      // Gestionnaire de fermeture
-      socket.current.onclose = (event) => {
-        console.log("WebSocket connection closed:", event.code, event.reason)
-        socket.current = null
-
-        // Tenter de se reconnecter après un délai
-        if (isNetworkConnected) {
-          reconnectTimeout.current = setTimeout(() => {
-            connect()
-          }, 5000) // Reconnecter après 5 secondes
+    ws.onclose = () => {
+      console.log("WebSocket disconnected")
+      setConnected(false)
+      // Try to reconnect after a delay
+      setTimeout(() => {
+        if (token && user) {
+          connectWebSocket()
         }
-      }
-    } catch (error) {
-      console.error("Error establishing WebSocket connection:", error)
-      setError("Failed to establish WebSocket connection")
-      setIsConnecting(false)
-    }
-  }
-
-  // Fermer la connexion WebSocket
-  const disconnect = (): void => {
-    if (reconnectTimeout.current) {
-      clearTimeout(reconnectTimeout.current)
-      reconnectTimeout.current = null
+      }, 5000)
     }
 
-    if (socket.current) {
-      socket.current.close()
-      socket.current = null
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error)
+      ws.close()
     }
 
-    subscriptions.current = {}
-  }
-
-  // Envoyer un message via WebSocket
-  const send = (data: any): boolean => {
-    if (!socket.current || socket.current.readyState !== WebSocket.OPEN) {
-      console.error("WebSocket not connected")
-      return false
-    }
-
-    try {
-      socket.current.send(JSON.stringify(data))
-      return true
-    } catch (error) {
-      console.error("Error sending WebSocket message:", error)
-      return false
-    }
-  }
-
-  // S'abonner à un canal
-  const subscribe = (channel: string, callback: (data: any) => void): Subscription => {
-    if (!subscriptions.current[channel]) {
-      subscriptions.current[channel] = []
-
-      // Envoyer une demande d'abonnement au serveur
-      if (isNetworkConnected) {
-        send({
-          type: "subscribe",
-          channel,
-          user_id: user?.id,
-        })
-      }
-    }
-
-    // Ajouter le callback à la liste des abonnés
-    subscriptions.current[channel].push(callback)
-
-    // Retourner un identifiant d'abonnement pour permettre la désinscription
-    return {
-      channel,
-      index: subscriptions.current[channel].length - 1,
-    }
-  }
-
-  // Se désabonner d'un canal
-  const unsubscribe = (subscription: Subscription): boolean => {
-    if (!subscription || !subscription.channel || !subscriptions.current[subscription.channel]) {
-      return false
-    }
-
-    // Supprimer le callback de la liste des abonnés
-    subscriptions.current[subscription.channel].splice(subscription.index, 1)
-
-    // Si plus aucun abonné, envoyer une demande de désabonnement au serveur
-    if (subscriptions.current[subscription.channel].length === 0) {
-      delete subscriptions.current[subscription.channel]
-
-      if (isNetworkConnected) {
-        send({
-          type: "unsubscribe",
-          channel: subscription.channel,
-          user_id: user?.id,
-        })
-      }
-    }
-
-    return true
-  }
-
-  // Connecter/déconnecter en fonction de l'état de l'authentification et de la connexion réseau
-  useEffect(() => {
-    if (userToken && isNetworkConnected && !socket.current) {
-      connect()
-    } else if ((!userToken || !isNetworkConnected) && socket.current) {
-      disconnect()
-    }
+    setSocket(ws)
 
     return () => {
-      disconnect()
+      ws.close()
     }
-  }, [userToken, isNetworkConnected])
+  }, [token, user, subscriptions])
+
+  useEffect(() => {
+    if (token && user) {
+      const cleanup = connectWebSocket()
+      return cleanup
+    }
+  }, [token, user, connectWebSocket])
+
+  const sendMessage = useCallback(
+    (message: WebSocketMessage) => {
+      if (socket && connected) {
+        socket.send(JSON.stringify(message))
+      }
+    },
+    [socket, connected],
+  )
+
+  const subscribe = useCallback(
+    (channel: string, callback: (data: any) => void) => {
+      setSubscriptions((prev) => ({ ...prev, [channel]: callback }))
+      return () => {
+        unsubscribe(channel)
+      }
+    },
+    [],
+  )
+
+  const unsubscribe = useCallback(
+    (channel: string) => {
+      setSubscriptions((prev) => {
+        const newSubscriptions = { ...prev }
+        delete newSubscriptions[channel]
+        return newSubscriptions
+      })
+    },
+    [],
+  )
 
   return (
     <WebSocketContext.Provider
-      value={{
-        isConnected: !!socket.current && socket.current.readyState === WebSocket.OPEN,
-        isConnecting,
-        error,
-        connect,
-        disconnect,
-        send,
-        subscribe,
-        unsubscribe,
-      }}
+      value={{ connected, sendMessage, lastMessage, subscribe, unsubscribe }}
     >
       {children}
     </WebSocketContext.Provider>

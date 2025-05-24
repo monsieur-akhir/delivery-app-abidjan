@@ -1,10 +1,8 @@
-"use client"
-
 import type React from "react"
-import { useState, useEffect } from "react"
-import { View, StyleSheet, Modal, ScrollView, Linking } from "react-native"
-import { Text, Card, Button, IconButton, Divider, Chip } from "react-native-paper"
+import { View, StyleSheet, Modal, ScrollView } from "react-native"
+import { Text, Card, Button, Chip, Divider } from "react-native-paper"
 import { useTranslation } from "react-i18next"
+import FeatherIcon from "./FeatherIcon"
 
 interface WeatherAlert {
   id: string
@@ -23,22 +21,14 @@ interface WeatherAlertModalProps {
   visible: boolean
   alert: WeatherAlert | null
   onDismiss: () => void
-  onViewMore?: () => void
 }
 
-const WeatherAlertModal: React.FC<WeatherAlertModalProps> = ({ visible, alert, onDismiss, onViewMore }) => {
+const WeatherAlertModal: React.FC<WeatherAlertModalProps> = ({ visible, alert, onDismiss }) => {
   const { t } = useTranslation()
-  const [expanded, setExpanded] = useState<boolean>(false)
-
-  useEffect(() => {
-    if (visible) {
-      setExpanded(false)
-    }
-  }, [visible])
 
   if (!alert) return null
 
-  const getAlertSeverityColor = (severity: string): string => {
+  const getSeverityColor = (severity: "low" | "medium" | "high"): string => {
     switch (severity) {
       case "high":
         return "#F44336"
@@ -51,20 +41,16 @@ const WeatherAlertModal: React.FC<WeatherAlertModalProps> = ({ visible, alert, o
     }
   }
 
-  const getAlertIcon = (type: string): string => {
-    switch (type) {
-      case "flood":
-        return "water"
-      case "storm":
-        return "weather-lightning"
-      case "wind":
-        return "weather-windy"
-      case "heat":
-        return "thermometer"
-      case "rain":
-        return "weather-pouring"
+  const getSeverityText = (severity: "low" | "medium" | "high"): string => {
+    switch (severity) {
+      case "high":
+        return t("weather.alerts.severityHigh")
+      case "medium":
+        return t("weather.alerts.severityMedium")
+      case "low":
+        return t("weather.alerts.severityLow")
       default:
-        return "alert-circle"
+        return ""
     }
   }
 
@@ -73,109 +59,93 @@ const WeatherAlertModal: React.FC<WeatherAlertModalProps> = ({ visible, alert, o
     return date.toLocaleString()
   }
 
-  const handleViewWeatherWebsite = (): void => {
-    Linking.openURL("https://www.weather.com")
-  }
-
   return (
-    <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onDismiss}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <IconButton
-              icon={getAlertIcon(alert.type)}
-              size={24}
-              color={getAlertSeverityColor(alert.severity)}
-              style={styles.headerIcon}
-            />
-            <Text style={[styles.headerTitle, { color: getAlertSeverityColor(alert.severity) }]}>{alert.title}</Text>
-            <IconButton icon="close" size={24} color="#757575" onPress={onDismiss} />
-          </View>
+        <Card style={styles.modalContent}>
+          <Card.Content>
+            <View style={styles.modalHeader}>
+              <View style={styles.titleContainer}>
+                <Text style={styles.modalTitle}>{alert.title}</Text>
+                <Chip
+                  style={[styles.severityChip, { backgroundColor: `${getSeverityColor(alert.severity)}20` }]}
+                  textStyle={{ color: getSeverityColor(alert.severity) }}
+                >
+                  {getSeverityText(alert.severity)}
+                </Chip>
+              </View>
+              <FeatherIcon name="x" size={24} color="#757575" onPress={onDismiss} />
+            </View>
 
-          <ScrollView style={styles.scrollContent}>
-            <Card style={styles.alertCard}>
-              <Card.Content>
-                <View style={styles.alertInfo}>
-                  <View style={styles.infoItem}>
-                    <Text style={styles.infoLabel}>{t("weather.alerts.severity")}</Text>
-                    <Chip
-                      style={[styles.severityChip, { backgroundColor: getAlertSeverityColor(alert.severity) + "20" }]}
-                      textStyle={{ color: getAlertSeverityColor(alert.severity) }}
-                    >
-                      {t(`weather.alerts.${alert.severity}`)}
-                    </Chip>
-                  </View>
+            <Divider style={styles.divider} />
 
-                  <View style={styles.infoItem}>
-                    <Text style={styles.infoLabel}>{t("weather.alerts.startTime")}</Text>
-                    <Text style={styles.infoValue}>{formatDate(alert.start_time)}</Text>
-                  </View>
-
-                  <View style={styles.infoItem}>
-                    <Text style={styles.infoLabel}>{t("weather.alerts.endTime")}</Text>
-                    <Text style={styles.infoValue}>{formatDate(alert.end_time)}</Text>
-                  </View>
+            <ScrollView style={styles.scrollContent}>
+              <View style={styles.alertInfo}>
+                <View style={styles.infoRow}>
+                  <FeatherIcon name="alert-triangle" size={18} color="#FF6B00" style={styles.infoIcon} />
+                  <Text style={styles.infoLabel}>{t("weather.alerts.type")}:</Text>
+                  <Text style={styles.infoValue}>{alert.type}</Text>
                 </View>
 
-                <Divider style={styles.divider} />
+                <View style={styles.infoRow}>
+                  <FeatherIcon name="clock" size={18} color="#FF6B00" style={styles.infoIcon} />
+                  <Text style={styles.infoLabel}>{t("weather.alerts.validFrom")}:</Text>
+                  <Text style={styles.infoValue}>{formatDate(alert.start_time)}</Text>
+                </View>
 
+                <View style={styles.infoRow}>
+                  <FeatherIcon name="clock" size={18} color="#FF6B00" style={styles.infoIcon} />
+                  <Text style={styles.infoLabel}>{t("weather.alerts.validUntil")}:</Text>
+                  <Text style={styles.infoValue}>{formatDate(alert.end_time)}</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <FeatherIcon name="map-pin" size={18} color="#FF6B00" style={styles.infoIcon} />
+                  <Text style={styles.infoLabel}>{t("weather.alerts.affectedAreas")}:</Text>
+                </View>
+
+                <View style={styles.communesContainer}>
+                  {alert.affected_communes.map((commune, index) => (
+                    <Chip key={index} style={styles.communeChip}>
+                      {commune}
+                    </Chip>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.descriptionContainer}>
                 <Text style={styles.descriptionTitle}>{t("weather.alerts.description")}</Text>
                 <Text style={styles.descriptionText}>{alert.description}</Text>
+              </View>
 
-                {alert.affected_communes && alert.affected_communes.length > 0 && (
-                  <>
-                    <Text style={styles.affectedAreasTitle}>{t("weather.alerts.affectedAreas")}</Text>
-                    <View style={styles.communesContainer}>
-                      {alert.affected_communes.map((commune, index) => (
-                        <Chip key={index} style={styles.communeChip}>
-                          {commune}
-                        </Chip>
-                      ))}
+              {alert.precautions && alert.precautions.length > 0 && (
+                <View style={styles.precautionsContainer}>
+                  <Text style={styles.precautionsTitle}>{t("weather.alerts.precautions")}</Text>
+                  {alert.precautions.map((precaution, index) => (
+                    <View key={index} style={styles.precautionItem}>
+                      <FeatherIcon name="check" size={16} color="#4CAF50" style={styles.precautionIcon} />
+                      <Text style={styles.precautionText}>{precaution}</Text>
                     </View>
-                  </>
-                )}
-
-                {alert.precautions && alert.precautions.length > 0 && (
-                  <>
-                    <Text style={styles.precautionsTitle}>{t("weather.alerts.precautions")}</Text>
-                    <View style={styles.precautionsList}>
-                      {alert.precautions.map((precaution, index) => (
-                        <View key={index} style={styles.precautionItem}>
-                          <IconButton icon="check-circle" size={16} color="#4CAF50" style={styles.precautionIcon} />
-                          <Text style={styles.precautionText}>{precaution}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
-
-                {alert.source && (
-                  <View style={styles.sourceContainer}>
-                    <Text style={styles.sourceLabel}>{t("weather.alerts.source")}: </Text>
-                    <Text style={styles.sourceText}>{alert.source}</Text>
-                  </View>
-                )}
-              </Card.Content>
-            </Card>
-
-            <View style={styles.actionsContainer}>
-              <Button mode="outlined" onPress={handleViewWeatherWebsite} style={styles.actionButton} icon="web">
-                Voir le site météo
-              </Button>
-
-              {onViewMore && (
-                <Button
-                  mode="contained"
-                  onPress={onViewMore}
-                  style={[styles.actionButton, styles.primaryButton]}
-                  icon="alert-circle"
-                >
-                  Voir toutes les alertes
-                </Button>
+                  ))}
+                </View>
               )}
-            </View>
-          </ScrollView>
-        </View>
+
+              {alert.source && (
+                <View style={styles.sourceContainer}>
+                  <Text style={styles.sourceText}>
+                    {t("weather.alerts.source")}: {alert.source}
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+
+            <Divider style={styles.divider} />
+
+            <Button mode="contained" onPress={onDismiss} style={styles.closeButton}>
+              {t("common.close")}
+            </Button>
+          </Card.Content>
+        </Card>
       </View>
     </Modal>
   )
@@ -187,66 +157,70 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 16,
   },
   modalContent: {
-    width: "90%",
+    width: "100%",
     maxHeight: "80%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    overflow: "hidden",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
-  header: {
+  modalHeader: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "#F5F5F5",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    alignItems: "flex-start",
+    marginBottom: 8,
   },
-  headerIcon: {
-    margin: 0,
-  },
-  headerTitle: {
+  titleContainer: {
     flex: 1,
+    marginRight: 16,
+  },
+  modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginLeft: 8,
+    color: "#212121",
+    marginBottom: 8,
+  },
+  severityChip: {
+    alignSelf: "flex-start",
+    marginBottom: 8,
+  },
+  divider: {
+    marginVertical: 8,
   },
   scrollContent: {
-    padding: 16,
-  },
-  alertCard: {
-    marginBottom: 16,
+    maxHeight: 400,
   },
   alertInfo: {
     marginBottom: 16,
   },
-  infoItem: {
+  infoRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
-  infoLabel: {
-    fontSize: 14,
-    color: "#757575",
+  infoIcon: {
+    marginRight: 8,
   },
-  infoValue: {
+  infoLabel: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#212121",
+    marginRight: 8,
   },
-  severityChip: {
-    height: 28,
+  infoValue: {
+    fontSize: 14,
+    color: "#757575",
+    flex: 1,
   },
-  divider: {
-    marginVertical: 16,
+  communesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginLeft: 26,
+  },
+  communeChip: {
+    margin: 4,
+  },
+  descriptionContainer: {
+    marginBottom: 16,
   },
   descriptionTitle: {
     fontSize: 16,
@@ -258,21 +232,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#212121",
     lineHeight: 20,
+  },
+  precautionsContainer: {
     marginBottom: 16,
-  },
-  affectedAreasTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 8,
-  },
-  communesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 16,
-  },
-  communeChip: {
-    margin: 4,
   },
   precautionsTitle: {
     fontSize: 16,
@@ -280,47 +242,31 @@ const styles = StyleSheet.create({
     color: "#212121",
     marginBottom: 8,
   },
-  precautionsList: {
-    marginBottom: 16,
-  },
   precautionItem: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
+    alignItems: "flex-start",
+    marginBottom: 8,
   },
   precautionIcon: {
-    margin: 0,
-    padding: 0,
+    marginRight: 8,
+    marginTop: 2,
   },
   precautionText: {
-    flex: 1,
     fontSize: 14,
     color: "#212121",
+    flex: 1,
+    lineHeight: 20,
   },
   sourceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     marginTop: 8,
-  },
-  sourceLabel: {
-    fontSize: 12,
-    color: "#757575",
   },
   sourceText: {
     fontSize: 12,
-    color: "#212121",
+    color: "#757575",
     fontStyle: "italic",
   },
-  actionsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  actionButton: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  primaryButton: {
+  closeButton: {
+    marginTop: 8,
     backgroundColor: "#FF6B00",
   },
 })

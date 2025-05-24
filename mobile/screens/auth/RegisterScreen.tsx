@@ -12,13 +12,12 @@ import { useNetwork } from "../../contexts/NetworkContext"
 import { validatePhone, validateEmail, validatePassword } from "../../utils/validators"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
-import type { VehicleType } from "../../types/models"
+import type { UserRole, VehicleType } from "../../types/models"
 
 type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Register">
 }
 
-type UserRole = "client" | "courier" | "business"
 type LanguageCode = "fr" | "dioula" | "baoulé"
 
 interface Language {
@@ -66,14 +65,14 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   ]
 
   const handleRegister = async (): Promise<void> => {
-    // Validation des champs
+    // Validate fields
     if (!fullName || !phone || !password || !confirmPassword) {
       setError(t("register.errorRequiredFields"))
       setVisible(true)
       return
     }
 
-    // Si l'utilisateur est un coursier, vérifier la plaque d'immatriculation
+    // If user is a courier, check license plate
     if (role === "courier" && !licensePlate) {
       setError(t("register.errorLicensePlateRequired"))
       setVisible(true)
@@ -107,7 +106,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     setLoading(true)
 
     try {
-      const userData = {
+      const userData: any = {
         full_name: fullName,
         phone,
         email: email || undefined,
@@ -117,22 +116,21 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         language_preference: language,
       }
 
-      // Ajouter les informations du véhicule pour les coursiers
+      // Add vehicle information for couriers
       if (role === "courier") {
         userData.vehicle_type = vehicleType
         userData.license_plate = licensePlate
       }
 
       if (isConnected) {
-        // Enregistrement en ligne
+        // Online registration
         await signUp(userData)
         navigation.navigate("VerifyOTP", { phone })
       } else {
-        // Mode hors ligne: stocker pour synchronisation ultérieure
+        // Offline mode: store for later synchronization
         addPendingUpload({
           type: "register",
           data: userData,
-          timestamp: new Date().toISOString(),
         })
         setError(t("register.offlineRegistration"))
         setVisible(true)
@@ -157,7 +155,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
           <Text style={styles.title}>{t("register.title")}</Text>
           <Text style={styles.subtitle}>{t("register.subtitle")}</Text>
 
-          {/* Sélection de la langue */}
+          {/* Language selection */}
           <View style={styles.pickerContainer}>
             <Text style={styles.pickerLabel}>{t("register.language")}</Text>
             <Picker

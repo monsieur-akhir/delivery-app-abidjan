@@ -98,7 +98,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
       // Start recording
       const recording = new Audio.Recording()
-      await recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
+      await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY)
       await recording.startAsync()
       setRecording(recording)
 
@@ -196,7 +196,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           <IconButton
             icon={isRecording ? "stop" : "microphone"}
             size={buttonSize / 2}
-            color="#FFFFFF"
+            iconColor="#FFFFFF"
             style={styles.buttonIcon}
           />
         )}

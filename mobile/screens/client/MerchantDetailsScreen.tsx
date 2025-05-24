@@ -1,19 +1,37 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, RefreshControl } from "react-native"
 import { Text, Card, Button, Chip, Divider, ActivityIndicator, IconButton, Badge } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchMerchantDetails, fetchMerchantProducts, addToCart, fetchCart } from "../../services/api"
+import { fetchMerchantDetails, fetchMerchantProducts,  } from "../../services/api" // Adjustez si nécessaire
+import fetchCart from "../../services/api"
+import addToCart from "../../services/api"
 import { formatPrice } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
-import type { Merchant, Product, CartItem } from "../../types/models"
+import type { Merchant } from "../../types/models"
+
+interface Product {
+  id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  image_url?: string
+  is_popular?: boolean
+}
+
+interface CartItem {
+  id: string
+  product_id: string
+  quantity: number
+  price: number
+}
 
 type MerchantDetailsScreenProps = {
   route: RouteProp<RootStackParamList, "MerchantDetails">
@@ -28,7 +46,6 @@ interface Category {
 const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, navigation }) => {
   const { merchantId } = route.params
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { isConnected } = useNetwork()
 
   const [merchant, setMerchant] = useState<Merchant | null>(null)
@@ -42,47 +59,35 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
   const [cartCount, setCartCount] = useState<number>(0)
   const [addingToCart, setAddingToCart] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadMerchantDetails()
-    loadCart()
-  }, [merchantId])
-
-  const loadMerchantDetails = async (): Promise<void> => {
+  const loadMerchantDetails = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-
-      // Charger les détails du commerçant
       const merchantData = await fetchMerchantDetails(merchantId)
       setMerchant(merchantData)
-
-      // Charger les produits du commerçant
       const productsData = await fetchMerchantProducts(merchantId)
       setProducts(productsData)
       setFilteredProducts(productsData)
-
-      // Extraire les catégories uniques des produits
       const uniqueCategories = Array.from(new Set(productsData.map((product) => product.category))).map((category) => ({
         id: category,
         name: category,
       }))
-
       setCategories(uniqueCategories)
     } catch (error) {
       console.error("Error loading merchant details:", error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [merchantId])
 
-  const loadCart = async (): Promise<void> => {
+  const loadCart = useCallback(async (): Promise<void> => {
     try {
-      const cartData = await fetchCart()
-      setCartItems(cartData.items)
-      setCartCount(cartData.items.reduce((total, item) => total + item.quantity, 0))
+      const cartData = await fetchCart({})
+      setCartItems(cartData.data.items)
+      setCartCount(cartData.data.items.reduce((total: number, item: { quantity: number }) => total + item.quantity, 0))
     } catch (error) {
       console.error("Error loading cart:", error)
     }
-  }
+  }, [])
 
   const onRefresh = async (): Promise<void> => {
     setRefreshing(true)
@@ -90,17 +95,22 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
     setRefreshing(false)
   }
 
-  useEffect(() => {
-    filterProducts()
-  }, [selectedCategory, products])
-
-  const filterProducts = (): void => {
+  const filterProducts = useCallback((): void => {
     if (!selectedCategory) {
       setFilteredProducts(products)
     } else {
       setFilteredProducts(products.filter((product) => product.category === selectedCategory))
     }
-  }
+  }, [selectedCategory, products])
+
+  useEffect(() => {
+    loadMerchantDetails()
+    loadCart()
+  }, [merchantId, loadMerchantDetails, loadCart])
+
+  useEffect(() => {
+    filterProducts()
+  }, [selectedCategory, products, filterProducts])
 
   const handleCategorySelect = (categoryId: string): void => {
     setSelectedCategory(selectedCategory === categoryId ? null : categoryId)
@@ -108,19 +118,21 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
 
   const handleAddToCart = async (product: Product): Promise<void> => {
     if (!isConnected) {
-      // Gérer le mode hors ligne
       return
     }
 
     try {
       setAddingToCart(product.id)
-
-      await addToCart({
-        product_id: product.id,
-        merchant_id: merchantId,
-        quantity: 1,
-      })
-
+      await addToCart(
+        "/cart/items",
+        {
+          data: {
+            product_id: product.id,
+            merchant_id: merchantId,
+            quantity: 1,
+          },
+        }
+      )
       await loadCart()
     } catch (error) {
       console.error("Error adding to cart:", error)
@@ -151,7 +163,6 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
     return (
       <Card style={styles.productCard}>
         <Image source={{ uri: item.image_url || "https://via.placeholder.com/100" }} style={styles.productImage} />
-
         <Card.Content style={styles.productContent}>
           <View style={styles.productHeader}>
             <Text style={styles.productName}>{item.name}</Text>
@@ -161,20 +172,17 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
               </Chip>
             )}
           </View>
-
           <Text style={styles.productDescription} numberOfLines={2}>
             {item.description}
           </Text>
-
           <View style={styles.productFooter}>
             <Text style={styles.productPrice}>{formatPrice(item.price)} FCFA</Text>
-
             {isInCart ? (
               <View style={styles.quantityContainer}>
                 <IconButton
                   icon="minus"
                   size={16}
-                  color="#FF6B00"
+                  iconColor="#FF6B00"
                   style={styles.quantityButton}
                   onPress={() => {
                     /* Implémenter la diminution de quantité */
@@ -184,7 +192,7 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
                 <IconButton
                   icon="plus"
                   size={16}
-                  color="#FF6B00"
+                  iconColor="#FF6B00"
                   style={styles.quantityButton}
                   onPress={() => handleAddToCart(item)}
                 />
@@ -211,12 +219,11 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("merchant.loading")}</Text>
           <View style={{ width: 48 }} />
         </View>
-
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FF6B00" />
           <Text style={styles.loadingText}>{t("merchant.loadingDetails")}</Text>
@@ -230,14 +237,13 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("merchant.error")}</Text>
           <View style={{ width: 48 }} />
         </View>
-
         <View style={styles.errorContainer}>
-          <IconButton icon="store-off" size={50} color="#CCCCCC" />
+          <IconButton icon="store-off" size={50} iconColor="#CCCCCC" />
           <Text style={styles.errorText}>{t("merchant.merchantNotFound")}</Text>
           <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
             {t("common.back")}
@@ -251,19 +257,18 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {merchant.name}
         </Text>
         <TouchableOpacity onPress={viewCart}>
           <View>
-            <IconButton icon="cart" size={24} color="#212121" />
+            <IconButton icon="cart" size={24} iconColor="#212121" />
             {cartCount > 0 && <Badge style={styles.cartBadge}>{cartCount}</Badge>}
           </View>
         </TouchableOpacity>
       </View>
-
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />}
       >
@@ -271,50 +276,46 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
           source={{ uri: merchant.cover_image || "https://via.placeholder.com/500x200?text=Boutique" }}
           style={styles.coverImage}
         />
-
         <View style={styles.merchantInfoContainer}>
           <View style={styles.merchantHeader}>
             <View style={styles.merchantInfo}>
               <Text style={styles.merchantName}>{merchant.name}</Text>
               <View style={styles.ratingContainer}>
-                <IconButton icon="star" size={16} color="#FFC107" style={styles.ratingIcon} />
+                <IconButton icon="star" size={16} iconColor="#FFC107" style={styles.ratingIcon} />
                 <Text style={styles.ratingText}>{merchant.rating.toFixed(1)}</Text>
-                <Text style={styles.ratingCount}>({merchant.rating_count})</Text>
+                <Text style={styles.ratingCount}>({merchant.review_count})</Text>
               </View>
             </View>
-
             <View style={styles.merchantMeta}>
               <Chip icon="map-marker" style={styles.communeChip}>
                 {merchant.commune}
               </Chip>
-              <View style={styles.deliveryTimeContainer}>
-                <IconButton icon="clock-outline" size={16} color="#757575" style={styles.timeIcon} />
-                <Text style={styles.deliveryTime}>{merchant.delivery_time} min</Text>
-              </View>
+              {merchant.delivery_time && (
+                <View style={styles.deliveryTimeContainer}>
+                  <IconButton icon="clock-outline" size={16} iconColor="#757575" style={styles.timeIcon} />
+                  <Text style={styles.deliveryTime}>{merchant.delivery_time} min</Text>
+                </View>
+              )}
             </View>
           </View>
-
           <Text style={styles.merchantDescription}>{merchant.description}</Text>
-
           <View style={styles.merchantDetails}>
             <View style={styles.detailItem}>
-              <IconButton icon="clock-outline" size={20} color="#FF6B00" style={styles.detailIcon} />
+              <IconButton icon="clock-outline" size={20} iconColor="#FF6B00" style={styles.detailIcon} />
               <View>
                 <Text style={styles.detailLabel}>{t("merchant.openingHours")}</Text>
                 <Text style={styles.detailValue}>{merchant.opening_hours}</Text>
               </View>
             </View>
-
             <View style={styles.detailItem}>
-              <IconButton icon="phone" size={20} color="#FF6B00" style={styles.detailIcon} />
+              <IconButton icon="phone" size={20} iconColor="#FF6B00" style={styles.detailIcon} />
               <View>
                 <Text style={styles.detailLabel}>{t("merchant.phone")}</Text>
                 <Text style={styles.detailValue}>{merchant.phone}</Text>
               </View>
             </View>
-
             <View style={styles.detailItem}>
-              <IconButton icon="map-marker" size={20} color="#FF6B00" style={styles.detailIcon} />
+              <IconButton icon="map-marker" size={20} iconColor="#FF6B00" style={styles.detailIcon} />
               <View>
                 <Text style={styles.detailLabel}>{t("merchant.address")}</Text>
                 <Text style={styles.detailValue}>{merchant.address}</Text>
@@ -322,12 +323,9 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
             </View>
           </View>
         </View>
-
         <Divider style={styles.divider} />
-
         <View style={styles.productsContainer}>
           <Text style={styles.sectionTitle}>{t("merchant.products")}</Text>
-
           <FlatList
             data={categories}
             renderItem={renderCategoryItem}
@@ -336,18 +334,16 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesList}
           />
-
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => <View key={product.id}>{renderProductItem({ item: product })}</View>)
           ) : (
             <View style={styles.emptyProductsContainer}>
-              <IconButton icon="package-variant" size={50} color="#CCCCCC" />
+              <IconButton icon="package-variant" size={50} iconColor="#CCCCCC" />
               <Text style={styles.emptyText}>{t("merchant.noProducts")}</Text>
             </View>
           )}
         </View>
       </ScrollView>
-
       {cartCount > 0 && (
         <View style={styles.cartPreview}>
           <View style={styles.cartInfo}>

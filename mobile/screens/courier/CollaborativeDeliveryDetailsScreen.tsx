@@ -1,16 +1,17 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from "react-native"
 import { useRoute, useNavigation, type RouteProp } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons"
 import { Card, Divider, Button, Avatar, Badge } from "react-native-elements"
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
-import { CollaborativeService } from "../../services/CollaborativeService"
+import CollaborativeService from "../../services/CollaborativeService"
 import { formatCurrency, formatDate, formatTime } from "../../utils/formatters"
 import type { CollaborativeDelivery, Collaborator, CollaboratorRole } from "../../types/models"
+import type { RootStackParamList } from "../../types/navigation"
 
 type ParamList = {
   CollaborativeDeliveryDetails: {
@@ -20,7 +21,7 @@ type ParamList = {
 
 const CollaborativeDeliveryDetailsScreen: React.FC = () => {
   const route = useRoute<RouteProp<ParamList, "CollaborativeDeliveryDetails">>()
-  const navigation = useNavigation<StackNavigationProp<any>>()
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, "CollaborativeDeliveryDetails">>()
   const { deliveryId } = route.params
 
   const [delivery, setDelivery] = useState<CollaborativeDelivery | null>(null)
@@ -28,11 +29,7 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [joining, setJoining] = useState(false)
 
-  useEffect(() => {
-    loadDeliveryDetails()
-  }, [deliveryId])
-
-  const loadDeliveryDetails = async () => {
+  const loadDeliveryDetails = useCallback(async () => {
     try {
       setLoading(true)
       const data = await CollaborativeService.getDeliveryById(deliveryId)
@@ -44,7 +41,11 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [deliveryId])
+
+  useEffect(() => {
+    loadDeliveryDetails()
+  }, [loadDeliveryDetails])
 
   const handleJoinDelivery = () => {
     navigation.navigate("JoinCollaborativeDelivery", { deliveryId })
@@ -196,6 +197,8 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <Card containerStyle={styles.headerCard}>
+        <Card.Title>Livraison</Card.Title>
+        <Card.Divider />
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.deliveryId}>ID: {delivery.id.substring(0, 8)}</Text>
@@ -205,7 +208,7 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
               containerStyle={styles.statusBadge}
             />
           </View>
-          <Text style={styles.price}>{formatCurrency(delivery.proposedPrice)}</Text>
+          <Text style={styles.price}>{formatCurrency(delivery.proposedPrice || 0)}</Text>
         </View>
         <Text style={styles.date}>Créée le {formatDate(delivery.createdAt)}</Text>
       </Card>
@@ -247,13 +250,13 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
             <Marker
               coordinate={{ latitude: 5.35, longitude: -4.01 }}
               title="Ramassage"
-              description={delivery.pickupAddress}
+              description={delivery.pickupAddress || "Unknown Address"}
               pinColor="#3498db"
             />
             <Marker
               coordinate={{ latitude: 5.37, longitude: -4.0 }}
               title="Livraison"
-              description={delivery.deliveryAddress}
+              description={delivery.deliveryAddress || "Unknown Address"}
               pinColor="#e74c3c"
             />
           </MapView>

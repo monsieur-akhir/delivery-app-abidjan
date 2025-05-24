@@ -1,19 +1,21 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
-import { Text, Card, Button, TextInput, Divider, ActivityIndicator, IconButton } from "react-native-paper"
+import { useState, useEffect, useCallback } from "react"
+import { View, ScrollView, TouchableOpacity, Alert } from "react-native"
+import { Text, Card, Button, TextInput, Divider, ActivityIndicator } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { fetchDeliveryDetails, submitRating } from "../../services/api"
 import StarRating from "../../components/StarRating"
+import { Feather } from "@expo/vector-icons"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery } from "../../types/models"
+import { StyleSheet } from "react-native"
+import { API_URL } from "../../config/environment"
 
 type RateDeliveryScreenProps = {
   route: RouteProp<RootStackParamList, "RateDelivery">
@@ -23,7 +25,6 @@ type RateDeliveryScreenProps = {
 const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigation }) => {
   const { deliveryId } = route.params
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { isConnected, addPendingUpload } = useNetwork()
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
@@ -33,20 +34,18 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
 
-  useEffect(() => {
-    loadDeliveryDetails()
-  }, [deliveryId])
-
-  const loadDeliveryDetails = async (): Promise<void> => {
+  const loadDeliveryDetails = useCallback(async () => {
     try {
       setLoading(true)
       const data = await fetchDeliveryDetails(deliveryId)
       setDelivery(data)
 
       // Vérifier si la livraison a déjà été évaluée
-      if (data.rating) {
-        setRating(data.rating.rating)
-        setComment(data.rating.comment || "")
+      if (typeof data.rating === "number") {
+        setRating(data.rating)
+        // Note: Comment is not stored in Delivery.rating; it’s part of the Rating interface
+        // If comments are fetched separately, update this logic
+        setComment("") // Default to empty since comment isn’t in Delivery
         Alert.alert(t("rateDelivery.alreadyRated"), t("rateDelivery.alreadyRatedMessage"), [
           {
             text: "OK",
@@ -60,13 +59,17 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
     } finally {
       setLoading(false)
     }
-  }
+  }, [deliveryId, navigation, t])
 
-  const handleRatingChange = (value: number): void => {
+  useEffect(() => {
+    loadDeliveryDetails()
+  }, [loadDeliveryDetails])
+
+  const handleRatingChange = (value: number) => {
     setRating(value)
   }
 
-  const handleSubmit = async (): Promise<void> => {
+  const handleSubmit = async () => {
     if (!delivery || !delivery.courier) {
       setError(t("rateDelivery.errorDeliveryNotFound"))
       return
@@ -92,12 +95,13 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
           },
         ])
       } else {
-        // Stocker l'évaluation pour synchronisation ultérieure
         addPendingUpload({
+          id: Date.now().toString(),
           type: "submit_rating",
           data: ratingData,
-          timestamp: new Date().toISOString(),
-        })
+          delivery_id: deliveryId, // Added to match PendingOperation
+          timestamp: Date.now().toString(),
+        } as any)
 
         Alert.alert(t("rateDelivery.thankYou"), t("rateDelivery.offlineRatingSubmitted"), [
           {
@@ -114,7 +118,7 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
     }
   }
 
-  const handleSkip = (): void => {
+  const handleSkip = () => {
     Alert.alert(t("rateDelivery.skipRating"), t("rateDelivery.skipRatingMessage"), [
       {
         text: t("common.cancel"),
@@ -132,7 +136,7 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <Feather name="arrow-left" size={24} color="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
           <View style={{ width: 48 }} />
@@ -151,14 +155,14 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <Feather name="arrow-left" size={24} color="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
           <View style={{ width: 48 }} />
         </View>
 
         <View style={styles.errorContainer}>
-          <IconButton icon="alert-circle-outline" size={50} color="#F44336" />
+          <Feather name="alert-circle" size={50} color="#F44336" />
           <Text style={styles.errorText}>{error || t("rateDelivery.deliveryNotFound")}</Text>
           <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
             {t("common.back")}
@@ -172,7 +176,7 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <Feather name="arrow-left" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
         <View style={{ width: 48 }} />
@@ -189,9 +193,11 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
             <Divider style={styles.divider} />
 
             <View style={styles.courierInfo}>
-              <IconButton icon="account" size={40} color="#FF6B00" style={styles.courierIcon} />
+              <View style={styles.courierIcon}>
+                <Feather name="user" size={40} color="#FF6B00" />
+              </View>
               <View style={styles.courierDetails}>
-                <Text style={styles.courierName}>{delivery.courier.full_name}</Text>
+                <Text style={styles.courierName}>{delivery.courier.name}</Text>
                 <Text style={styles.courierVehicle}>{delivery.courier.vehicle_type}</Text>
               </View>
             </View>
@@ -200,7 +206,9 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
 
             <View style={styles.addressContainer}>
               <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} color="#FF6B00" style={styles.addressIcon} />
+                <View style={styles.addressIcon}>
+                  <Feather name="map-pin" size={20} color="#FF6B00" />
+                </View>
                 <View style={styles.addressContent}>
                   <Text style={styles.addressLabel}>{t("rateDelivery.from")}</Text>
                   <Text style={styles.addressText}>{delivery.pickup_address}</Text>
@@ -212,7 +220,9 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
               </View>
 
               <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} color="#4CAF50" style={styles.addressIcon} />
+                <View style={styles.addressIcon}>
+                  <Feather name="map-pin" size={20} color="#4CAF50" />
+                </View>
                 <View style={styles.addressContent}>
                   <Text style={styles.addressLabel}>{t("rateDelivery.to")}</Text>
                   <Text style={styles.addressText}>{delivery.delivery_address}</Text>
@@ -275,6 +285,8 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
     </SafeAreaView>
   )
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -344,12 +356,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   courierIcon: {
-    margin: 0,
     backgroundColor: "#FFF3E0",
     borderRadius: 20,
+    padding: 8,
+    marginRight: 16,
   },
   courierDetails: {
-    marginLeft: 16,
+    flex: 1,
   },
   courierName: {
     fontSize: 16,
@@ -369,12 +382,11 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   addressIcon: {
-    margin: 0,
-    padding: 0,
+    marginRight: 8,
+    marginTop: 2,
   },
   addressContent: {
     flex: 1,
-    marginLeft: 8,
   },
   addressLabel: {
     fontSize: 12,

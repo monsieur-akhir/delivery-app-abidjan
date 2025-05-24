@@ -1,18 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, ScrollView, ActivityIndicator, Alert } from "react-native"
 import { Text, Card, Button, IconButton, Divider, List } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNavigation } from "@react-navigation/native"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RootStackParamList } from "../types/navigation"
 import OfflineService, { type SyncStatus } from "../services/OfflineService"
 import { useNetwork } from "../contexts/NetworkContext"
 import { formatDate } from "../utils/formatters"
 
 const OfflineManagerScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { t } = useTranslation()
-  const navigation = useNavigation()
   const { isConnected, pendingUploads, pendingDownloads, synchronizeData } = useNetwork()
 
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
@@ -21,35 +23,31 @@ const OfflineManagerScreen = () => {
     pendingDownloads: 0,
     syncInProgress: false,
   })
-  const [cacheSize, setCacheSize] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [preloading, setPreloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       const status = await OfflineService.getSyncStatus()
-      setSyncStatus(status)
-
-      // Mettre à jour avec les données du contexte réseau
-      setSyncStatus((prev) => ({
-        ...prev,
+      setSyncStatus({
+        ...status,
         pendingUploads: pendingUploads.length,
         pendingDownloads: pendingDownloads.length,
-      }))
+      })
     } catch (err) {
       console.error("Error loading offline data:", err)
       setError(t("offline.errorLoadingData"))
     } finally {
       setLoading(false)
     }
-  }
+  }, [pendingUploads, pendingDownloads, t])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleSync = async () => {
     if (!isConnected) {
@@ -128,7 +126,6 @@ const OfflineManagerScreen = () => {
         onPress: async () => {
           try {
             await OfflineService.clearCache()
-            setCacheSize(0)
             Alert.alert(t("offline.success"), t("offline.cacheCleared"))
           } catch (err) {
             console.error("Error clearing cache:", err)
@@ -167,7 +164,7 @@ const OfflineManagerScreen = () => {
         {/* Statut de connexion */}
         <Card style={[styles.statusCard, isConnected ? styles.onlineCard : styles.offlineCard]}>
           <Card.Content style={styles.statusCardContent}>
-            <IconButton icon={isConnected ? "wifi" : "wifi-off"} size={32} color="#FFFFFF" style={styles.statusIcon} />
+            <IconButton icon={isConnected ? "wifi" : "wifi-off"} size={32} iconColor="#FFFFFF" style={styles.statusIcon} />
             <View style={styles.statusTextContainer}>
               <Text style={styles.statusTitle}>{isConnected ? t("offline.online") : t("offline.offline")}</Text>
               <Text style={styles.statusDescription}>
@@ -228,7 +225,7 @@ const OfflineManagerScreen = () => {
                 preloading ? (
                   <ActivityIndicator size="small" color="#FF6B00" />
                 ) : (
-                  <IconButton icon="chevron-right" size={24} onPress={handlePreloadData} disabled={!isConnected} />
+                  <IconButton {...props} icon="chevron-right" size={24} onPress={handlePreloadData} disabled={!isConnected} />
                 )
               }
             />
@@ -239,7 +236,7 @@ const OfflineManagerScreen = () => {
               title={t("offline.clearCache")}
               description={t("offline.clearCacheDescription")}
               left={(props) => <List.Icon {...props} icon="delete" />}
-              right={(props) => <IconButton icon="chevron-right" size={24} onPress={handleClearCache} />}
+              right={(props) => <IconButton {...props} icon="chevron-right" size={24} onPress={handleClearCache} />}
             />
 
             <Divider style={styles.divider} />
@@ -250,12 +247,10 @@ const OfflineManagerScreen = () => {
               left={(props) => <List.Icon {...props} icon="folder" />}
               right={(props) => (
                 <IconButton
+                  {...props}
                   icon="chevron-right"
                   size={24}
-                  onPress={() => {
-                    // Navigation vers l'écran de gestion du stockage
-                    navigation.navigate("StorageManagementScreen")
-                  }}
+                  onPress={() => navigation.navigate("StorageManagementScreen")}
                 />
               )}
             />

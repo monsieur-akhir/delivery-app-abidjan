@@ -52,7 +52,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
   const loadMerchants = async (): Promise<void> => {
     try {
       setLoading(true)
-      const data = await fetchNearbyMerchants(selectedCommune, selectedCategory)
+      const data = await fetchNearbyMerchants(selectedCommune || undefined, selectedCategory || undefined)
       setMerchants(data)
       setFilteredMerchants(data)
     } catch (error) {

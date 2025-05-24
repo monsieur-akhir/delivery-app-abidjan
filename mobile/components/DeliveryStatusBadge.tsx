@@ -1,10 +1,11 @@
 import type React from "react"
 import { View, StyleSheet } from "react-native"
 import { Text } from "react-native-paper"
-import { Feather } from "@expo/vector-icons"
+import FeatherIcon from "./FeatherIcon"
+import type { DeliveryStatus } from "../types/models"
 
 interface DeliveryStatusBadgeProps {
-  status: string
+  status: DeliveryStatus
   size?: "small" | "medium" | "large"
 }
 
@@ -30,7 +31,7 @@ const DeliveryStatusBadge: React.FC<DeliveryStatusBadgeProps> = ({ status, size 
           label: "Ramassée",
           color: "#FF9800",
           backgroundColor: "#FFF3E0",
-          icon: "package-up",
+          icon: "package",
         }
       case "in_progress":
         return {
@@ -44,7 +45,7 @@ const DeliveryStatusBadge: React.FC<DeliveryStatusBadgeProps> = ({ status, size 
           label: "Livrée",
           color: "#4CAF50",
           backgroundColor: "#E8F5E9",
-          icon: "package-down",
+          icon: "package",
         }
       case "completed":
         return {
@@ -94,7 +95,7 @@ const DeliveryStatusBadge: React.FC<DeliveryStatusBadgeProps> = ({ status, size 
 
   return (
     <View style={[styles.container, { backgroundColor }, currentSize.container]}>
-      <Feather name={icon} size={currentSize.icon} color={color} style={styles.icon} />
+      <FeatherIcon name={icon} size={currentSize.icon} color={color} style={styles.icon} />
       <Text style={[styles.text, { color }, currentSize.text]}>{label}</Text>
     </View>
   )

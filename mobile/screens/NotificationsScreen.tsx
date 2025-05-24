@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from "react-native"
-import { Text, Card, IconButton, Divider, Menu, Chip, ActivityIndicator } from "react-native-paper"
+import { Text, IconButton, Divider, Menu, ActivityIndicator } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNotification } from "../contexts/NotificationContext"
@@ -11,6 +11,8 @@ import { formatRelativeTime } from "../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../types/navigation"
 import type { Notification } from "../types/models"
+import Feather from "react-native-feather"
+import { colors } from "../styles/colors"
 
 type NotificationsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Notifications">
@@ -51,37 +53,22 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     ])
   }
 
-  const handleNotificationPress = (notification: Notification): void => {
-    // Marquer comme lu
-    if (!notification.read) {
-      markNotificationAsRead(notification.id)
-    }
+  const handleNotificationPress = (notification: Notification) => {
+    if (!notification.data) return
 
-    // Naviguer vers l'écran approprié en fonction du type de notification
-    if (notification.data && notification.data.type) {
-      switch (notification.data.type) {
-        case "delivery_status":
-          navigation.navigate("DeliveryDetails", { deliveryId: notification.data.deliveryId })
-          break
-        case "new_bid":
-          navigation.navigate("DeliveryDetails", { deliveryId: notification.data.deliveryId })
-          break
-        case "payment":
-          navigation.navigate("Payment", { paymentId: notification.data.paymentId })
-          break
-        case "rating":
-          navigation.navigate("RateDelivery", {
-            deliveryId: notification.data.deliveryId,
-            courierId: notification.data.courierId,
-          })
-          break
-        case "promotion":
-          navigation.navigate("Marketplace")
-          break
-        default:
-          // Aucune action spécifique
-          break
-      }
+    const deliveryId = notification.data.deliveryId as string
+    const paymentId = notification.data.paymentId as string
+
+    if (notification.data.type === "delivery_assigned" || notification.data.type === "delivery_status") {
+      navigation.navigate("DeliveryDetails", { deliveryId })
+    } else if (notification.data.type === "bid_accepted") {
+      navigation.navigate("DeliveryDetails", { deliveryId })
+    } else if (notification.data.type === "payment") {
+      navigation.navigate("Payment", { deliveryId, amount: 0 })
+    } else if (notification.data.type === "delivery_completed") {
+      navigation.navigate("RateDelivery", {
+        deliveryId,
+      })
     }
   }
 
@@ -100,13 +87,15 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
 
   const getNotificationIcon = (type?: string): string => {
     switch (type) {
+      case "delivery_assigned":
+        return "package"
       case "delivery_status":
         return "package"
-      case "new_bid":
+      case "bid_accepted":
         return "tag"
       case "payment":
         return "credit-card"
-      case "rating":
+      case "delivery_completed":
         return "star"
       case "promotion":
         return "gift"
@@ -117,13 +106,15 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
 
   const getNotificationColor = (type?: string): string => {
     switch (type) {
+      case "delivery_assigned":
+        return "#4CAF50"
       case "delivery_status":
         return "#4CAF50"
-      case "new_bid":
+      case "bid_accepted":
         return "#2196F3"
       case "payment":
         return "#FF9800"
-      case "rating":
+      case "delivery_completed":
         return "#FFC107"
       case "promotion":
         return "#9C27B0"
@@ -132,38 +123,25 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     }
   }
 
-  const renderNotificationItem = ({ item }: { item: Notification }): React.ReactElement => (
-    <Card
-      style={[styles.notificationCard, !item.read && styles.unreadCard]}
+  const renderItem = ({ item }: { item: Notification }) => (
+    <TouchableOpacity
+      style={[styles.notificationItem, { backgroundColor: colors.card }]}
       onPress={() => handleNotificationPress(item)}
     >
-      <Card.Content>
-        <View style={styles.notificationHeader}>
-          <View style={styles.notificationIconContainer}>
-            <IconButton
-              icon={getNotificationIcon(item.data?.type)}
-              size={24}
-              color="#FFFFFF"
-              style={[styles.notificationIcon, { backgroundColor: getNotificationColor(item.data?.type) }]}
-            />
-          </View>
-
-          <View style={styles.notificationContent}>
-            <Text style={styles.notificationTitle}>{item.title}</Text>
-            <Text style={styles.notificationBody}>{item.body}</Text>
-            <Text style={styles.notificationTime}>{formatRelativeTime(item.date)}</Text>
-          </View>
-
-          <IconButton icon="delete" size={20} color="#757575" onPress={() => handleDeleteNotification(item.id)} />
+      <View style={styles.notificationContent}>
+        <View style={[styles.notificationIcon, { backgroundColor: getNotificationColor(item.data?.type as string) }]}>
+          <Feather name={getNotificationIcon(item.data?.type as string)} size={20} style={styles.iconStyle} />
         </View>
-
-        {!item.read && (
-          <Chip style={styles.unreadChip} textStyle={styles.unreadChipText}>
-            {t("notifications.new")}
-          </Chip>
-        )}
-      </Card.Content>
-    </Card>
+        <View style={styles.notificationTextContainer}>
+          <Text style={[styles.notificationTitle, { color: colors.text }]}>{item.title}</Text>
+          <Text style={styles.notificationMessage}>{item.message}</Text>
+          <Text style={styles.notificationTime}>{formatRelativeTime(item.date || new Date().toISOString())}</Text>
+        </View>
+        <TouchableOpacity onPress={() => handleDeleteNotification(item.id)}>
+          <Feather name="delete" size={20} color="#757575" />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
   )
 
   const renderEmptyList = (): React.ReactElement => (
@@ -212,7 +190,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
 
           <FlatList
             data={notifications}
-            renderItem={renderNotificationItem}
+            renderItem={renderItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
             ListEmptyComponent={renderEmptyList}
@@ -264,33 +242,34 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 80,
   },
-  notificationCard: {
-    marginBottom: 0,
-    backgroundColor: "#FFFFFF",
-  },
-  unreadCard: {
-    backgroundColor: "#FFF8E1",
-  },
-  notificationHeader: {
+  notificationItem: {
     flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  notificationIconContainer: {
-    marginRight: 12,
-  },
-  notificationIcon: {
-    margin: 0,
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   notificationContent: {
+    flexDirection: "row",
+    flex: 1,
+  },
+  notificationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  notificationTextContainer: {
     flex: 1,
   },
   notificationTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#212121",
     marginBottom: 4,
   },
-  notificationBody: {
+  notificationMessage: {
     fontSize: 14,
     color: "#757575",
     marginBottom: 4,
@@ -299,16 +278,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9E9E9E",
   },
-  unreadChip: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "#FF6B00",
-    height: 24,
-  },
-  unreadChipText: {
+  iconStyle: {
     color: "#FFFFFF",
-    fontSize: 10,
   },
   separator: {
     height: 8,

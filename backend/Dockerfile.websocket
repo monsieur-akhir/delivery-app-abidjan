@@ -1,0 +1,81 @@
+# Dockerfile pour le service WebSocket de Livraison Abidjan
+# Multi-stage build pour optimiser la taille et la sécurité
+
+# Stage 1: Construction
+FROM python:3.11-slim AS builder
+
+# Définir des variables de construction
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Installer les dépendances de construction
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Créer et activer l'environnement virtuel
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copier et installer les dépendances
+WORKDIR /app
+COPY requirements-websocket.txt .
+RUN pip install -r requirements-websocket.txt
+
+# Stage 2: Image finale
+FROM python:3.11-slim
+
+# Métadonnées de l'image
+LABEL maintainer="Team Livraison Abidjan <tech@livraison-abidjan.com>"
+LABEL description="Service WebSocket pour l'application Livraison Abidjan"
+LABEL version="1.0"
+
+# Variables d'environnement
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    PORT=8001
+
+# Créer un utilisateur non-root
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Installer les dépendances runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copier l'environnement virtuel depuis le builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Créer les répertoires nécessaires et définir les permissions
+RUN mkdir -p /app/logs \
+    && chown -R appuser:appuser /app
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier uniquement les fichiers nécessaires pour le service WebSocket
+COPY --chown=appuser:appuser ./app/websockets /app/app/websockets
+COPY --chown=appuser:appuser ./app/core /app/app/core
+COPY --chown=appuser:appuser ./app/utils /app/app/utils
+COPY --chown=appuser:appuser ./websocket_server.py /app/
+
+# Ajouter un point de montage pour les logs
+VOLUME ["/app/logs"]
+
+# Exposer le port
+EXPOSE $PORT
+
+# Changer l'utilisateur
+USER appuser
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:$PORT/health || exit 1
+
+# Commande de démarrage
+CMD ["python", "websocket_server.py"]

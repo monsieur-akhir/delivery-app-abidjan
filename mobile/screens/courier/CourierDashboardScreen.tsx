@@ -1,25 +1,60 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from "react-native"
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from "react-native"
 import { Text, Card, Button, Avatar, Divider, IconButton, ProgressBar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNavigation } from "@react-navigation/native"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RootStackParamList } from "../../types/navigation"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { LineChart } from "react-native-chart-kit"
 import { Dimensions } from "react-native"
 import { formatPrice } from "../../utils/formatters"
 import OfflineIndicator from "../../components/OfflineIndicator"
 import WeatherInfo from "../../components/WeatherInfo"
 import { fetchCourierStats, fetchCourierEarnings, fetchAvailableDeliveries } from "../../services/api"
+import type { Delivery } from "../../types/models"
+import { LineChart } from "react-native-chart-kit";
+
+// Define the missing types for the chart components
+declare module 'react-native-chart-kit' {
+  export interface LineChartData {
+    labels: string[]
+    datasets: {
+      data: number[]
+      color?: (opacity: number) => string
+      strokeWidth?: number
+    }[]
+    legend?: string[]
+  }
+
+  export interface ChartConfig {
+    backgroundGradientFrom: string
+    backgroundGradientTo: string
+    color: (opacity: number) => string
+    strokeWidth?: number
+    barPercentage?: number
+    useShadowColorFromDataset?: boolean
+    decimalPlaces?: number
+    labelColor?: (opacity: number) => string
+    style?: {
+      borderRadius?: number
+    }
+    propsForDots?: {
+      r: string
+      strokeWidth: string
+      stroke: string
+    }
+  }
+}
 
 const screenWidth = Dimensions.get("window").width
 
 const CourierDashboardScreen = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { user } = useAuth()
   const { isConnected } = useNetwork()
 
@@ -41,13 +76,26 @@ const CourierDashboardScreen = () => {
       },
     ],
   })
-  const [availableDeliveries, setAvailableDeliveries] = useState([])
+  const [availableDeliveries, setAvailableDeliveries] = useState<Delivery[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  // Add loading state to component rendering
   useEffect(() => {
     loadDashboardData()
   }, [])
+
+  // Add a loading indicator at the top of the component if needed
+  if (loading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B00" />
+          <Text style={styles.loadingText}>Chargement du tableau de bord...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   const loadDashboardData = async () => {
     try {
@@ -58,22 +106,22 @@ const CourierDashboardScreen = () => {
       setStats(statsData)
 
       // Charger les données de gains
-      const earningsData = await fetchCourierEarnings({ period: "week" })
+      const earningsData = await fetchCourierEarnings("week")
 
       // Formater les données pour le graphique
       const chartData = {
-        labels: earningsData.days.map((day) => day.day_short),
+        labels: earningsData.days.map((day: { day_short: string }) => day.day_short),
         datasets: [
           {
-            data: earningsData.days.map((day) => day.amount),
+            data: earningsData.days.map((day: { amount: number }) => day.amount),
           },
         ],
       }
       setEarningsData(chartData)
 
       // Charger les livraisons disponibles
-      const deliveriesData = await fetchAvailableDeliveries({ limit: 5 })
-      setAvailableDeliveries(deliveriesData.deliveries)
+      const deliveriesData = await fetchAvailableDeliveries("5")
+      setAvailableDeliveries(deliveriesData)
     } catch (error) {
       console.error("Error loading dashboard data:", error)
     } finally {
@@ -87,20 +135,20 @@ const CourierDashboardScreen = () => {
     loadDashboardData()
   }
 
-  const navigateToDeliveryDetails = (deliveryId) => {
-    navigation.navigate("DeliveryDetails", { deliveryId })
+  const navigateToDeliveryDetails = (deliveryId: string) => {
+    navigation.navigate("DeliveryDetails", { deliveryId });
   }
 
-  const navigateToEarnings = () => {
-    navigation.navigate("CourierEarnings")
+  const navigateToCourierEarnings = () => {
+    navigation.navigate("CourierEarnings", undefined);
   }
 
   const navigateToGamification = () => {
-    navigation.navigate("GamificationScreen")
+    navigation.navigate("GamificationScreen");
   }
 
   const navigateToAvailableDeliveries = () => {
-    navigation.navigate("AvailableDeliveries")
+    navigation.navigate("AvailableDeliveries");
   }
 
   const chartConfig = {
@@ -113,19 +161,22 @@ const CourierDashboardScreen = () => {
     decimalPlaces: 0,
   }
 
+  const userProfilePicture = user?.profile_picture || "https://via.placeholder.com/40";
+  const userFullName = user?.full_name || "Anonymous";
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Avatar.Image size={40} source={{ uri: user?.profile_picture || "https://via.placeholder.com/40" }} />
+          <Avatar.Image size={40} source={{ uri: userProfilePicture }} />
           <View style={styles.headerText}>
             <Text style={styles.welcomeText}>{t("dashboard.welcome")}</Text>
-            <Text style={styles.nameText}>{user?.full_name}</Text>
+            <Text style={styles.nameText}>{userFullName}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <IconButton icon="bell-outline" size={24} onPress={() => navigation.navigate("Notifications")} />
-          <IconButton icon="cog-outline" size={24} onPress={() => navigation.navigate("Settings")} />
+          <IconButton icon="bell-outline" iconColor="#212121" size={24} onPress={() => navigation.navigate("Notifications")} />
+          <IconButton icon="cog-outline" iconColor="#212121" size={24} onPress={() => navigation.navigate("Settings")} />
         </View>
       </View>
 
@@ -135,7 +186,7 @@ const CourierDashboardScreen = () => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />}
       >
-        <WeatherInfo style={styles.weatherCard} />
+        <WeatherInfo />
 
         <View style={styles.statsContainer}>
           <Card style={styles.statsCard}>
@@ -154,7 +205,7 @@ const CourierDashboardScreen = () => {
                 <View style={styles.statItem}>
                   <View style={styles.ratingContainer}>
                     <Text style={styles.statValue}>{stats.rating.toFixed(1)}</Text>
-                    <IconButton icon="star" size={16} color="#FFC107" style={styles.ratingIcon} />
+                    <IconButton icon="star" size={16} iconColor="#FFC107" style={styles.ratingIcon} />
                   </View>
                   <Text style={styles.statLabel}>{t("dashboard.rating")}</Text>
                 </View>
@@ -172,7 +223,7 @@ const CourierDashboardScreen = () => {
               </View>
               <TouchableOpacity onPress={navigateToGamification}>
                 <View style={styles.badgesContainer}>
-                  <IconButton icon="medal" size={20} color="#FF6B00" style={styles.badgeIcon} />
+                  <IconButton icon="medal" size={20} iconColor="#FF6B00" style={styles.badgeIcon} />
                   <Text style={styles.badgesCount}>{stats.badges_count}</Text>
                 </View>
               </TouchableOpacity>
@@ -195,7 +246,7 @@ const CourierDashboardScreen = () => {
           <Card.Content>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{t("dashboard.weeklyEarnings")}</Text>
-              <TouchableOpacity onPress={navigateToEarnings}>
+              <TouchableOpacity onPress={navigateToCourierEarnings}>
                 <Text style={styles.seeAllText}>{t("dashboard.seeAll")}</Text>
               </TouchableOpacity>
             </View>
@@ -249,7 +300,7 @@ const CourierDashboardScreen = () => {
               </>
             ) : (
               <View style={styles.emptyDeliveries}>
-                <IconButton icon="package-variant" size={40} color="#BDBDBD" />
+                <IconButton icon="package-variant" size={40} iconColor="#BDBDBD" />
                 <Text style={styles.emptyText}>{t("dashboard.noAvailableDeliveries")}</Text>
               </View>
             )}
@@ -284,6 +335,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#757575",
   },
   header: {
     flexDirection: "row",

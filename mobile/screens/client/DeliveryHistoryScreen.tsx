@@ -236,7 +236,7 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("deliveryHistory.title")}</Text>
         <View style={{ width: 48 }} />
@@ -390,8 +390,8 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
                 ? t("deliveryHistory.noFilterResults")
                 : t("deliveryHistory.emptyHistory")
           }
-          actionLabel={searchQuery || currentFilter !== "all" ? t("deliveryHistory.clearFilters") : undefined}
-          onAction={() => {
+          buttonText={searchQuery || currentFilter !== "all" ? t("deliveryHistory.clearFilters") : undefined}
+          onButtonPress={() => {
             setSearchQuery("")
             setCurrentFilter("all")
           }}

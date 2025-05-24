@@ -1,21 +1,17 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, Image, TouchableOpacity, type ImageSourcePropType } from "react-native"
 import { Text, Card, ActivityIndicator, IconButton } from "react-native-paper"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../contexts/NetworkContext"
 import { fetchWeatherForecast } from "../services/api"
+import type { WeatherAlert } from "../types/models"
 
 interface WeatherLocation {
   latitude: number
   longitude: number
-}
-
-interface WeatherCondition {
-  code: number
-  condition: string
 }
 
 interface WeatherCurrent {
@@ -33,10 +29,9 @@ interface WeatherForecastDay {
 }
 
 interface WeatherData {
-  location: string
   current: WeatherCurrent
-  forecast: WeatherForecastDay[]
-  alert?: string
+  forecast?: WeatherForecastDay[]  // Make forecast optional to match the Weather interface
+  alerts?: WeatherAlert[] | string[]  // Support both string[] and WeatherAlert[]
 }
 
 interface WeatherInfoProps {
@@ -54,16 +49,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
   const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<boolean>(false)
 
-  useEffect(() => {
-    if (location && location.latitude && location.longitude) {
-      loadWeatherData(location.latitude, location.longitude)
-    } else {
-      // Coordonnées par défaut pour Abidjan
-      loadWeatherData(5.3599517, -4.0082563)
-    }
-  }, [location])
-
-  const loadWeatherData = async (latitude: number, longitude: number): Promise<void> => {
+  const loadWeatherData = useCallback(async (latitude: number, longitude: number): Promise<void> => {
     if (!isConnected && !isOfflineMode) {
       setLoading(false)
       setError(t("weather.offlineError"))
@@ -72,8 +58,14 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
 
     try {
       setLoading(true)
-      const data = await fetchWeatherForecast(latitude, longitude)
-      setWeather(data)
+      const apiData = await fetchWeatherForecast(latitude, longitude)
+      // Transform the API data to match the WeatherData interface
+      const formattedData: WeatherData = {
+        current: apiData.current,
+        forecast: apiData.forecast || [],
+        alerts: apiData.alerts ? apiData.alerts.map((a: WeatherAlert) => a.title || a.description || "") : undefined
+      }
+      setWeather(formattedData)
       setError(null)
     } catch (error) {
       console.error("Error loading weather data:", error)
@@ -81,7 +73,16 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
     } finally {
       setLoading(false)
     }
-  }
+  }, [isConnected, isOfflineMode, t])
+
+  useEffect(() => {
+    if (location && location.latitude && location.longitude) {
+      loadWeatherData(location.latitude, location.longitude)
+    } else {
+      // Coordonnées par défaut pour Abidjan
+      loadWeatherData(5.3599517, -4.0082563)
+    }
+  }, [location, loadWeatherData])
 
   const toggleExpanded = (): void => {
     setExpanded(!expanded)
@@ -128,7 +129,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
     return (
       <Card style={styles.card}>
         <Card.Content style={styles.errorContainer}>
-          <IconButton icon="weather-cloudy-alert" size={24} color="#F44336" />
+          <IconButton icon="weather-cloudy-alert" size={24} iconColor="#F44336" />
           <Text style={styles.errorText}>{error}</Text>
         </Card.Content>
       </Card>
@@ -150,18 +151,13 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
               <Text style={styles.condition}>{t(`weather.conditions.${weather.current.condition}`)}</Text>
             </View>
           </View>
-
-          <View style={styles.locationContainer}>
-            <IconButton icon="map-marker" size={16} color="#FF6B00" style={styles.locationIcon} />
-            <Text style={styles.location}>{weather.location}</Text>
-          </View>
         </View>
 
         {expanded && (
           <View style={styles.details}>
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
-                <IconButton icon="water-percent" size={20} color="#42A5F5" style={styles.detailIcon} />
+                <IconButton icon="water-percent" size={20} iconColor="#42A5F5" style={styles.detailIcon} />
                 <View>
                   <Text style={styles.detailLabel}>{t("weather.humidity")}</Text>
                   <Text style={styles.detailValue}>{weather.current.humidity}%</Text>
@@ -169,7 +165,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
               </View>
 
               <View style={styles.detailItem}>
-                <IconButton icon="weather-windy" size={20} color="#78909C" style={styles.detailIcon} />
+                <IconButton icon="weather-windy" size={20} iconColor="#78909C" style={styles.detailIcon} />
                 <View>
                   <Text style={styles.detailLabel}>{t("weather.wind")}</Text>
                   <Text style={styles.detailValue}>{weather.current.wind_speed} km/h</Text>
@@ -177,34 +173,38 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
               </View>
             </View>
 
-            <View style={styles.forecastContainer}>
-              <Text style={styles.forecastTitle}>{t("weather.forecast")}</Text>
-              <View style={styles.forecastList}>
-                {weather.forecast.map((day, index) => (
-                  <View key={index} style={styles.forecastItem}>
-                    <Text style={styles.forecastDay}>{index === 0 ? t("weather.today") : day.day}</Text>
-                    <Image source={getWeatherIcon(day.condition)} style={styles.forecastIcon} />
-                    <Text style={styles.forecastTemp}>
-                      {day.max_temp}° / {day.min_temp}°
-                    </Text>
-                  </View>
-                ))}
+            {weather.forecast && weather.forecast.length > 0 && (
+              <View style={styles.forecastContainer}>
+                <Text style={styles.forecastTitle}>{t("weather.forecast")}</Text>
+                <View style={styles.forecastList}>
+                  {weather.forecast.map((day, index) => (
+                    <View key={index} style={styles.forecastItem}>
+                      <Text style={styles.forecastDay}>{index === 0 ? t("weather.today") : day.day}</Text>
+                      <Image source={getWeatherIcon(day.condition)} style={styles.forecastIcon} />
+                      <Text style={styles.forecastTemp}>
+                        {day.max_temp}° / {day.min_temp}°
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
+            )}
 
-            {weather.alert && (
-              <View
-                style={[styles.alertContainer, { backgroundColor: getWeatherColor(weather.current.condition) + "20" }]}
-              >
+            {weather.alerts && weather.alerts.length > 0 && (
+              <View style={[styles.alertContainer, { backgroundColor: getWeatherColor(weather.current.condition) + "20" }]}>
                 <IconButton
                   icon="alert"
                   size={20}
-                  color={getWeatherColor(weather.current.condition)}
+                  iconColor={getWeatherColor(weather.current.condition)}
                   style={styles.alertIcon}
                 />
-                <Text style={[styles.alertText, { color: getWeatherColor(weather.current.condition) }]}>
-                  {weather.alert}
-                </Text>
+                <View style={{ flex: 1 }}>
+                  {weather.alerts.map((alert, idx) => (
+                    <Text key={idx} style={[styles.alertText, { color: getWeatherColor(weather.current.condition) }]}>
+                      {typeof alert === 'string' ? alert : (alert.title || alert.description || '')}
+                    </Text>
+                  ))}
+                </View>
               </View>
             )}
           </View>
@@ -212,7 +212,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
 
         {expanded && (
           <TouchableOpacity style={styles.collapseButton} onPress={toggleExpanded}>
-            <IconButton icon="chevron-up" size={24} color="#757575" />
+            <IconButton icon="chevron-up" size={24} iconColor="#757575" />
           </TouchableOpacity>
         )}
       </Card.Content>
@@ -268,18 +268,6 @@ const styles = StyleSheet.create({
     color: "#212121",
   },
   condition: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  locationIcon: {
-    margin: 0,
-    padding: 0,
-  },
-  location: {
     fontSize: 14,
     color: "#757575",
   },

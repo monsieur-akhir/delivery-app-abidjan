@@ -25,7 +25,7 @@ interface PredictiveDeliveryScreenProps {
 
 const PredictiveDeliveryScreen = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation()
+  const navigation = useNavigation<any>()
   const route = useRoute()
   const params = route.params as PredictiveDeliveryScreenProps
 

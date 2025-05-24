@@ -1,22 +1,20 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from "react-native"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { View, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, StyleSheet } from "react-native"
 import { Text, TextInput, Button, Divider, Chip, HelperText, Snackbar, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
-import MapView, { Marker, type MapViewRef } from "react-native-maps"
+import MapView, { Marker } from "react-native-maps"
 import * as Location from "expo-location"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { createDelivery, geocodeAddress, getRecommendedPrice, getVehicleRecommendation } from "../../services/api"
+import { createDelivery, geocodeAddress, getRecommendedPrice, getVehicleRecommendation, getWeatherData } from "../../services/api"
 import { formatPrice } from "../../utils/formatters"
-import { getWeatherForecast } from "../../services/api"
 import WeatherInfo from "../../components/WeatherInfo"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
-import type { WeatherData, CargoCategory, VehicleType } from "../../types/models"
+import { Weather, CargoCategory, VehicleType } from "../../types/models"
 
 type CreateDeliveryScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "CreateDelivery">
@@ -42,11 +40,9 @@ interface CargoCategoryOption {
 
 const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { isConnected, addPendingUpload } = useNetwork()
-  const mapRef = useRef<MapViewRef>(null)
+  const mapRef = useRef<MapView | null>(null)
 
-  // États pour les champs du formulaire
   const [pickupAddress, setPickupAddress] = useState<string>("")
   const [pickupCommune, setPickupCommune] = useState<string>("")
   const [deliveryAddress, setDeliveryAddress] = useState<string>("")
@@ -60,16 +56,12 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   const [proposedPrice, setProposedPrice] = useState<string>("")
   const [notes, setNotes] = useState<string>("")
 
-  // États pour la géolocalisation
-  const [location, setLocation] = useState<Location.LocationObject | null>(null)
   const [pickupLocation, setPickupLocation] = useState<Location.LocationObject | null>(null)
   const [deliveryLocation, setDeliveryLocation] = useState<Location.LocationObject | null>(null)
-
-  // États pour les calculs et recommandations
   const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null)
   const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null)
   const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null)
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
+  const [weatherData, setWeatherData] = useState<Weather | null>(null)
   const [recommendedVehicle, setRecommendedVehicle] = useState<{
     type: VehicleType
     name: string
@@ -77,7 +69,6 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
     priceMultiplier: number
   } | null>(null)
 
-  // États pour l'UI
   const [loading, setLoading] = useState<boolean>(false)
   const [geocoding, setGeocoding] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
@@ -112,195 +103,42 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   ]
 
   const cargoCategories: CargoCategoryOption[] = [
-    { value: "documents", label: t("createDelivery.cargoCategories.documents") },
-    { value: "small_packages", label: t("createDelivery.cargoCategories.smallPackages") },
-    { value: "medium_packages", label: t("createDelivery.cargoCategories.mediumPackages") },
-    { value: "large_packages", label: t("createDelivery.cargoCategories.largePackages") },
-    { value: "fragile", label: t("createDelivery.cargoCategories.fragile") },
-    { value: "food", label: t("createDelivery.cargoCategories.food") },
-    { value: "electronics", label: t("createDelivery.cargoCategories.electronics") },
-    { value: "furniture", label: t("createDelivery.cargoCategories.furniture") },
-    { value: "appliances", label: t("createDelivery.cargoCategories.appliances") },
-    { value: "construction", label: t("createDelivery.cargoCategories.construction") },
-    { value: "custom", label: t("createDelivery.cargoCategories.custom") },
+    { value: CargoCategory.DOCUMENTS, label: t("createDelivery.cargoCategories.documents") },
+    { value: CargoCategory.SMALL_PACKAGE, label: t("createDelivery.cargoCategories.smallPackages") },
+    { value: CargoCategory.MEDIUM_PACKAGE, label: t("createDelivery.cargoCategories.mediumPackages") },
+    { value: CargoCategory.LARGE_PACKAGE, label: t("createDelivery.cargoCategories.largePackages") },
+    { value: CargoCategory.FRAGILE, label: t("createDelivery.cargoCategories.fragile") },
+    { value: CargoCategory.FOOD, label: t("createDelivery.cargoCategories.food") },
+    { value: CargoCategory.ELECTRONICS, label: t("createDelivery.cargoCategories.electronics") },
+    { value: CargoCategory.FURNITURE, label: t("createDelivery.cargoCategories.furniture") },
+    { value: CargoCategory.APPLIANCES, label: t("createDelivery.cargoCategories.appliances") },
+    { value: CargoCategory.CONSTRUCTION, label: t("createDelivery.cargoCategories.construction") },
+    { value: CargoCategory.CUSTOM, label: t("createDelivery.cargoCategories.custom") },
   ]
 
-  // Obtenir la position actuelle
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync()
-        if (status !== "granted") {
-          Alert.alert(t("createDelivery.locationPermissionDenied"), t("createDelivery.locationPermissionMessage"))
-          return
-        }
-
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        })
-        setLocation(location)
-        setPickupLocation(location)
-
-        // Centrer la carte sur la position actuelle
-        if (mapRef.current) {
-          mapRef.current.animateToRegion({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          })
-        }
-
-        // Obtenir les prévisions météo pour la position actuelle
-        if (isConnected) {
-          const weather = await getWeatherForecast(location.coords.latitude, location.coords.longitude)
-          setWeatherData(weather)
-        }
-      } catch (error) {
-        console.error("Error getting location:", error)
-      }
-    })()
+  const deg2rad = useCallback((deg: number) => {
+    return deg * (Math.PI / 180)
   }, [])
 
-  // Géocodage de l'adresse de ramassage
-  const searchPickupLocation = async (): Promise<void> => {
-    if (!pickupAddress || !pickupCommune) return
+  const calculateDistance = useCallback(
+    (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      const R = 6371 // Rayon de la Terre en km
+      const dLat = deg2rad(lat2 - lat1)
+      const dLon = deg2rad(lon2 - lon1)
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+      const distance = R * c
+      return Math.round(distance * 10) / 10
+    },
+    [deg2rad],
+  )
 
-    try {
-      setGeocoding(true)
-      const searchQuery = `${pickupAddress}, ${pickupCommune}, Abidjan, Côte d'Ivoire`
-
-      if (isConnected) {
-        const result = await geocodeAddress(searchQuery)
-
-        if (result && result.length > 0) {
-          const newLocation: Location.LocationObject = {
-            coords: {
-              latitude: result[0].latitude,
-              longitude: result[0].longitude,
-              altitude: null,
-              accuracy: null,
-              altitudeAccuracy: null,
-              heading: null,
-              speed: null,
-            },
-            timestamp: Date.now(),
-          }
-          setPickupLocation(newLocation)
-
-          // Centrer la carte sur la nouvelle position
-          if (mapRef.current) {
-            mapRef.current.animateToRegion({
-              latitude: result[0].latitude,
-              longitude: result[0].longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            })
-          }
-        } else {
-          // Fallback pour les adresses non trouvées
-          Alert.alert(t("createDelivery.addressNotFound"), t("createDelivery.tryDifferentAddress"))
-        }
-      } else {
-        // En mode hors ligne, utiliser la position actuelle
-        Alert.alert(t("createDelivery.offlineGeocoding"), t("createDelivery.usingCurrentLocation"))
-      }
-    } catch (error) {
-      console.error("Error geocoding pickup address:", error)
-    } finally {
-      setGeocoding(false)
-      updatePriceEstimate()
-    }
-  }
-
-  // Géocodage de l'adresse de livraison
-  const searchDeliveryLocation = async (): Promise<void> => {
-    if (!deliveryAddress || !deliveryCommune) return
-
-    try {
-      setGeocoding(true)
-      const searchQuery = `${deliveryAddress}, ${deliveryCommune}, Abidjan, Côte d'Ivoire`
-
-      if (isConnected) {
-        const result = await geocodeAddress(searchQuery)
-
-        if (result && result.length > 0) {
-          const newLocation: Location.LocationObject = {
-            coords: {
-              latitude: result[0].latitude,
-              longitude: result[0].longitude,
-              altitude: null,
-              accuracy: null,
-              altitudeAccuracy: null,
-              heading: null,
-              speed: null,
-            },
-            timestamp: Date.now(),
-          }
-          setDeliveryLocation(newLocation)
-
-          // Ajuster la carte pour montrer les deux points
-          if (mapRef.current && pickupLocation) {
-            const edgePadding = {
-              top: 50,
-              right: 50,
-              bottom: 50,
-              left: 50,
-            }
-
-            mapRef.current.fitToCoordinates(
-              [
-                {
-                  latitude: pickupLocation.coords.latitude,
-                  longitude: pickupLocation.coords.longitude,
-                },
-                {
-                  latitude: result[0].latitude,
-                  longitude: result[0].longitude,
-                },
-              ],
-              { edgePadding },
-            )
-          }
-        } else {
-          // Fallback pour les adresses non trouvées
-          Alert.alert(t("createDelivery.addressNotFound"), t("createDelivery.tryDifferentAddress"))
-        }
-      } else {
-        // En mode hors ligne, utiliser une position approximative
-        Alert.alert(t("createDelivery.offlineGeocoding"), t("createDelivery.usingApproximateLocation"))
-
-        // Simuler une position à 5km de la position de ramassage
-        if (pickupLocation) {
-          const newLocation: Location.LocationObject = {
-            coords: {
-              latitude: pickupLocation.coords.latitude + 0.045,
-              longitude: pickupLocation.coords.longitude + 0.045,
-              altitude: null,
-              accuracy: null,
-              altitudeAccuracy: null,
-              heading: null,
-              speed: null,
-            },
-            timestamp: Date.now(),
-          }
-          setDeliveryLocation(newLocation)
-        }
-      }
-    } catch (error) {
-      console.error("Error geocoding delivery address:", error)
-    } finally {
-      setGeocoding(false)
-      updatePriceEstimate()
-    }
-  }
-
-  // Mettre à jour l'estimation de prix
-  const updatePriceEstimate = async (): Promise<void> => {
+  const updatePriceEstimate = useCallback(async () => {
     if (!pickupLocation || !deliveryLocation) return
 
     try {
-      // Calculer la distance
       const distance = calculateDistance(
         pickupLocation.coords.latitude,
         pickupLocation.coords.longitude,
@@ -309,30 +147,26 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
       )
       setEstimatedDistance(distance)
 
-      // Estimer la durée (1 km = environ 3 minutes en moto à Abidjan avec trafic)
-      const duration = Math.round(distance * 3)
+      const duration = Math.round(distance * 3) // Estimation simple : 3 min/km
       setEstimatedDuration(duration)
 
       if (isConnected) {
-        // Obtenir le prix recommandé du serveur
         const price = await getRecommendedPrice({
           distance,
           package_size: packageSize,
           is_fragile: isFragile,
           is_urgent: isUrgent,
-          weather_condition: weatherData?.current?.condition?.code || 1000, // 1000 = ciel dégagé par défaut
+          weather_condition: weatherData?.current.condition || "Clear", // Utiliser condition comme string
           pickup_commune: pickupCommune,
           delivery_commune: deliveryCommune,
         })
 
         setRecommendedPrice(price)
 
-        // Pré-remplir le prix proposé avec le prix recommandé
         if (!proposedPrice) {
           setProposedPrice(price.toString())
         }
 
-        // Obtenir la recommandation de véhicule si une catégorie de marchandises est sélectionnée
         if (cargoCategory) {
           try {
             const recommendation = await getVehicleRecommendation({
@@ -350,66 +184,207 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
               priceMultiplier: recommendation.price_multiplier,
             })
 
-            // Ajuster le prix en fonction du multiplicateur
             const adjustedPrice = Math.round(price * recommendation.price_multiplier)
             setRecommendedPrice(adjustedPrice)
             if (!proposedPrice) {
               setProposedPrice(adjustedPrice.toString())
             }
           } catch (error) {
-            console.error("Error getting vehicle recommendation:", error)
+            console.error("Erreur lors de la récupération de la recommandation de véhicule :", error)
           }
         }
       } else {
-        // Calcul local simplifié en mode hors ligne
         const basePrice = 500
         const pricePerKm = 100
         let price = basePrice + Math.round(distance * pricePerKm)
 
-        // Ajustements selon les options
         if (packageSize === "large") price += 300
         if (isFragile) price += 200
         if (isUrgent) price += 500
 
         setRecommendedPrice(price)
 
-        // Pré-remplir le prix proposé avec le prix recommandé
         if (!proposedPrice) {
           setProposedPrice(price.toString())
         }
       }
     } catch (error) {
-      console.error("Error calculating price estimate:", error)
+      console.error("Erreur lors du calcul de l'estimation de prix :", error)
     }
-  }
+  }, [pickupLocation, deliveryLocation, packageSize, isFragile, isUrgent, pickupCommune, deliveryCommune, isConnected, cargoCategory, proposedPrice, calculateDistance, weatherData])
 
-  // Calculer la distance entre deux points
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371 // Rayon de la Terre en km
-    const dLat = deg2rad(lat2 - lat1)
-    const dLon = deg2rad(lon2 - lon1)
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    const distance = R * c // Distance en km
-    return Math.round(distance * 10) / 10 // Arrondir à 1 décimale
-  }
+  const searchPickupLocation = useCallback(
+    async () => {
+      if (!pickupAddress || !pickupCommune) return
 
-  const deg2rad = (deg: number): number => {
-    return deg * (Math.PI / 180)
-  }
+      try {
+        setGeocoding(true)
+        const searchQuery = `${pickupAddress}, ${pickupCommune}, Abidjan, Côte d'Ivoire`
 
-  // Soumettre la demande de livraison
-  const handleSubmit = async (): Promise<void> => {
-    // Validation des champs
+        if (isConnected) {
+          const result = await geocodeAddress(searchQuery)
+
+          if (result && result.length > 0) {
+            const newLocation: Location.LocationObject = {
+              coords: {
+                latitude: result[0].latitude,
+                longitude: result[0].longitude,
+                altitude: null,
+                accuracy: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+              },
+              timestamp: Date.now(),
+            }
+            setPickupLocation(newLocation)
+
+            if (mapRef.current) {
+              mapRef.current.animateToRegion({
+                latitude: result[0].latitude,
+                longitude: result[0].longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              })
+            }
+          } else {
+            Alert.alert(t("createDelivery.addressNotFound"), t("createDelivery.tryDifferentAddress"))
+          }
+        } else {
+          Alert.alert(t("createDelivery.offlineGeocoding"), t("createDelivery.usingCurrentLocation"))
+        }
+      } catch (error) {
+        console.error("Erreur lors du géocodage de l'adresse de ramassage :", error)
+      } finally {
+        setGeocoding(false)
+        updatePriceEstimate()
+      }
+    },
+    [pickupAddress, pickupCommune, isConnected, t, updatePriceEstimate],
+  )
+
+  const searchDeliveryLocation = useCallback(
+    async () => {
+      if (!deliveryAddress || !deliveryCommune) return
+
+      try {
+        setGeocoding(true)
+        const searchQuery = `${deliveryAddress}, ${deliveryCommune}, Abidjan, Côte d'Ivoire`
+
+        if (isConnected) {
+          const result = await geocodeAddress(searchQuery)
+
+          if (result && result.length > 0) {
+            const newLocation: Location.LocationObject = {
+              coords: {
+                latitude: result[0].latitude,
+                longitude: result[0].longitude,
+                altitude: null,
+                accuracy: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+              },
+              timestamp: Date.now(),
+            }
+            setDeliveryLocation(newLocation)
+
+            if (mapRef.current && pickupLocation) {
+              const edgePadding = {
+                top: 50,
+                right: 50,
+                bottom: 50,
+                left: 50,
+              }
+
+              mapRef.current.fitToCoordinates(
+                [
+                  {
+                    latitude: pickupLocation.coords.latitude,
+                    longitude: pickupLocation.coords.longitude,
+                  },
+                  {
+                    latitude: result[0].latitude,
+                    longitude: result[0].longitude,
+                  },
+                ],
+                { edgePadding },
+              )
+            }
+          } else {
+            Alert.alert(t("createDelivery.addressNotFound"), t("createDelivery.tryDifferentAddress"))
+          }
+        } else {
+          Alert.alert(t("createDelivery.offlineGeocoding"), t("createDelivery.usingApproximateLocation"))
+
+          if (pickupLocation) {
+            const newLocation: Location.LocationObject = {
+              coords: {
+                latitude: pickupLocation.coords.latitude + 0.045,
+                longitude: pickupLocation.coords.longitude + 0.045,
+                altitude: null,
+                accuracy: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+              },
+              timestamp: Date.now(),
+            }
+            setDeliveryLocation(newLocation)
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors du géocodage de l'adresse de livraison :", error)
+      } finally {
+        setGeocoding(false)
+        updatePriceEstimate()
+      }
+    },
+    [deliveryAddress, deliveryCommune, isConnected, pickupLocation, t, updatePriceEstimate],
+  )
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync()
+        if (status !== "granted") {
+          Alert.alert(t("createDelivery.locationPermissionDenied"), t("createDelivery.locationPermissionMessage"))
+          return
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        })
+        setPickupLocation(location)
+
+        if (mapRef.current) {
+          mapRef.current.animateToRegion({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          })
+        }
+
+        if (isConnected) {
+          const weather = await getWeatherData(location.coords.latitude, location.coords.longitude)
+          setWeatherData(weather)
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération de la localisation ou des données météo :", error)
+        setError(t("createDelivery.errorFetchingLocation"))
+        setVisible(true)
+      }
+    })()
+  }, [isConnected, t])
+
+  const handleSubmit = async () => {
     if (!pickupAddress || !pickupCommune || !deliveryAddress || !deliveryCommune || !proposedPrice) {
       setError(t("createDelivery.errorRequiredFields"))
       setVisible(true)
       return
     }
 
-    // Vérifier si une catégorie de marchandises est sélectionnée
     if (!cargoCategory) {
       setError(t("createDelivery.errorCargoCategoryRequired"))
       setVisible(true)
@@ -422,7 +397,6 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
       return
     }
 
-    // Vérifier si le prix proposé est trop bas
     if (recommendedPrice && Number.parseFloat(proposedPrice) < recommendedPrice * 0.7) {
       Alert.alert(t("createDelivery.lowPriceWarning"), t("createDelivery.lowPriceMessage"), [
         {
@@ -431,7 +405,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
         },
         {
           text: t("common.continue"),
-          onPress: () => submitDelivery(),
+          onPress: submitDelivery,
         },
       ])
     } else {
@@ -439,7 +413,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
     }
   }
 
-  const submitDelivery = async (): Promise<void> => {
+  const submitDelivery = async () => {
     setLoading(true)
     try {
       const deliveryData = {
@@ -451,29 +425,27 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
         delivery_commune: deliveryCommune,
         delivery_lat: deliveryLocation?.coords.latitude,
         delivery_lng: deliveryLocation?.coords.longitude,
-        description: description,
+        description,
         package_size: packageSize,
         package_type: packageType,
         cargo_category: cargoCategory as CargoCategory,
         is_fragile: isFragile,
         is_urgent: isUrgent,
         proposed_price: Number.parseFloat(proposedPrice),
-        notes: notes,
-        estimated_distance: estimatedDistance,
-        estimated_duration: estimatedDuration,
+        notes,
+        estimated_distance: estimatedDistance ?? undefined,
+        estimated_duration: estimatedDuration ?? undefined,
         required_vehicle_type: recommendedVehicle?.type,
       }
 
       if (isConnected) {
-        // Créer la livraison en ligne
         const response = await createDelivery(deliveryData)
         navigation.navigate("DeliveryDetails", { deliveryId: response.id })
       } else {
-        // Stocker la livraison pour synchronisation ultérieure
         addPendingUpload({
+          id: Date.now().toString(),
           type: "create_delivery",
           data: deliveryData,
-          timestamp: new Date().toISOString(),
         })
 
         Alert.alert(t("createDelivery.offlineDeliveryCreated"), t("createDelivery.offlineDeliveryMessage"), [
@@ -484,7 +456,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
         ])
       }
     } catch (error) {
-      console.error("Error creating delivery:", error)
+      console.error("Erreur lors de la création de la livraison :", error)
       setError(error instanceof Error ? error.message : t("createDelivery.errorCreatingDelivery"))
       setVisible(true)
     } finally {
@@ -492,18 +464,17 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
     }
   }
 
-  // Mettre à jour les estimations lorsque la catégorie de marchandises change
   useEffect(() => {
     if (cargoCategory && estimatedDistance) {
       updatePriceEstimate()
     }
-  }, [cargoCategory])
+  }, [cargoCategory, estimatedDistance, updatePriceEstimate])
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <IconButton icon="arrow-left" iconColor="#212121" size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("createDelivery.title")}</Text>
         <View style={{ width: 24 }} />
@@ -511,17 +482,19 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {/* Carte */}
           <View style={styles.mapContainer}>
             <MapView
               ref={mapRef}
               style={styles.map}
               initialRegion={{
                 latitude: 5.3599517,
-                longitude: -4.0082563, // Coordonnées d'Abidjan par défaut
+                longitude: -4.0082563,
                 latitudeDelta: 0.1,
                 longitudeDelta: 0.1,
               }}
+              provider="google"
+              showsUserLocation
+              showsMyLocationButton
             >
               {pickupLocation && (
                 <Marker
@@ -560,7 +533,6 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
             )}
           </View>
 
-          {/* Adresse de ramassage */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.pickupAddress")}</Text>
 
@@ -597,7 +569,6 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
 
           <Divider style={styles.divider} />
 
-          {/* Adresse de livraison */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.deliveryAddress")}</Text>
 
@@ -634,7 +605,6 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
 
           <Divider style={styles.divider} />
 
-          {/* Détails du colis */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.packageDetails")}</Text>
 
@@ -739,7 +709,6 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
 
           <Divider style={styles.divider} />
 
-          {/* Prix et estimation */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.priceAndEstimates")}</Text>
 
@@ -763,23 +732,23 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
                   <View style={styles.vehicleIconContainer}>
                     <IconButton
                       icon={
-                        recommendedVehicle.type === "scooter"
+                        recommendedVehicle.type === VehicleType.SCOOTER
                           ? "scooter"
-                          : recommendedVehicle.type === "bicycle"
+                          : recommendedVehicle.type === VehicleType.BICYCLE
                             ? "bicycle"
-                            : recommendedVehicle.type === "motorcycle"
+                            : recommendedVehicle.type === VehicleType.MOTORCYCLE
                               ? "motorcycle"
-                              : recommendedVehicle.type === "van"
+                              : recommendedVehicle.type === VehicleType.VAN
                                 ? "van-utility"
-                                : recommendedVehicle.type === "pickup"
+                                : recommendedVehicle.type === VehicleType.PICKUP
                                   ? "truck-pickup"
-                                  : recommendedVehicle.type === "kia_truck" ||
-                                      recommendedVehicle.type === "moving_truck"
+                                  : recommendedVehicle.type === VehicleType.KIA_TRUCK ||
+                                      recommendedVehicle.type === VehicleType.MOVING_TRUCK
                                     ? "truck"
                                     : "truck-outline"
                       }
                       size={36}
-                      color="#FF6B00"
+                      iconColor="#FF6B00"
                     />
                   </View>
                   <View style={styles.vehicleRecommendationDetails}>
@@ -837,6 +806,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
     </SafeAreaView>
   )
 }
+
 
 const styles = StyleSheet.create({
   container: {

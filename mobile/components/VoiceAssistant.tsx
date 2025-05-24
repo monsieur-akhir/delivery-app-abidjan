@@ -6,11 +6,11 @@ import { View, StyleSheet, TouchableOpacity, Animated, Easing, Platform } from "
 import { Text, Portal, Modal, ActivityIndicator } from "react-native-paper"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
-import * as Permissions from "expo-permissions"
 import { useTranslation } from "react-i18next"
 import { useTheme } from "../contexts/ThemeContext"
 import { useNetwork } from "../contexts/NetworkContext"
 import { processVoiceCommand } from "../services/api"
+import { requestAudioPermissions, HIGH_QUALITY_RECORDING_OPTIONS } from "../utils/audioUtils"
 
 type VoiceAssistantProps = {}
 
@@ -64,8 +64,8 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = () => {
       return
     }
 
-    const { status } = await Permissions.askAsync(Permissions.AUDIO_RECORDING)
-    setPermissionGranted(status === "granted")
+    const hasPermission = await requestAudioPermissions()
+    setPermissionGranted(hasPermission)
   }
 
   const startListening = async (): Promise<void> => {
@@ -88,7 +88,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = () => {
       })
 
       const recording = new Audio.Recording()
-      await recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
+      await recording.prepareToRecordAsync(HIGH_QUALITY_RECORDING_OPTIONS)
       await recording.startAsync()
       setRecording(recording)
 
