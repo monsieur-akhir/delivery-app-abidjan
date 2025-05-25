@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from "react-native"
-import { Text, IconButton, Divider, Menu, ActivityIndicator } from "react-native-paper"
+import { Text, IconButton, Divider, Menu } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNotification } from "../contexts/NotificationContext"
@@ -11,8 +11,9 @@ import { formatRelativeTime } from "../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../types/navigation"
 import type { Notification } from "../types/models"
-import Feather from "react-native-feather"
-import { colors } from "../styles/colors"
+import FeatherIcon from "../components/FeatherIcon"
+import { colors } from '../styles/colors';
+import type { FeatherIconName } from '../components/FeatherIcon';
 
 type NotificationsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Notifications">
@@ -22,14 +23,12 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
   const { t } = useTranslation()
   const {
     notifications,
-    markNotificationAsRead,
     markAllNotificationsAsRead,
     deleteNotification,
     clearAllNotifications,
   } = useNotification()
 
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
-  const [loading, setLoading] = useState<boolean>(false)
 
   const openMenu = (): void => setMenuVisible(true)
   const closeMenu = (): void => setMenuVisible(false)
@@ -57,7 +56,6 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     if (!notification.data) return
 
     const deliveryId = notification.data.deliveryId as string
-    const paymentId = notification.data.paymentId as string
 
     if (notification.data.type === "delivery_assigned" || notification.data.type === "delivery_status") {
       navigation.navigate("DeliveryDetails", { deliveryId })
@@ -85,7 +83,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     ])
   }
 
-  const getNotificationIcon = (type?: string): string => {
+  const getNotificationIcon = (type?: string): FeatherIconName => {
     switch (type) {
       case "delivery_assigned":
         return "package"
@@ -130,7 +128,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     >
       <View style={styles.notificationContent}>
         <View style={[styles.notificationIcon, { backgroundColor: getNotificationColor(item.data?.type as string) }]}>
-          <Feather name={getNotificationIcon(item.data?.type as string)} size={20} style={styles.iconStyle} />
+          <FeatherIcon name={getNotificationIcon(item.data?.type as FeatherIconName)} size={20} color="#000000" style={styles.iconStyle} />
         </View>
         <View style={styles.notificationTextContainer}>
           <Text style={[styles.notificationTitle, { color: colors.text }]}>{item.title}</Text>
@@ -138,7 +136,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
           <Text style={styles.notificationTime}>{formatRelativeTime(item.date || new Date().toISOString())}</Text>
         </View>
         <TouchableOpacity onPress={() => handleDeleteNotification(item.id)}>
-          <Feather name="delete" size={20} color="#757575" />
+          <FeatherIcon name="delete" size={20} color="#757575" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -146,7 +144,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
 
   const renderEmptyList = (): React.ReactElement => (
     <View style={styles.emptyContainer}>
-      <IconButton icon="bell-off" size={50} color="#CCCCCC" />
+      <IconButton icon="bell-off" size={50} iconColor="#CCCCCC" />
       <Text style={styles.emptyText}>{t("notifications.noNotifications")}</Text>
       <Text style={styles.emptySubtext}>{t("notifications.checkLater")}</Text>
     </View>
@@ -156,14 +154,16 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("notifications.title")}</Text>
 
         <Menu
           visible={menuVisible}
           onDismiss={closeMenu}
-          anchor={<IconButton icon="dots-vertical" size={24} color="#212121" onPress={openMenu} />}
+          anchor={<TouchableOpacity onPress={openMenu} style={styles.menuButton}>
+            <FeatherIcon name="more-vertical" size={24} color="#212121" />
+          </TouchableOpacity>}
         >
           <Menu.Item onPress={handleMarkAllAsRead} title={t("notifications.markAllAsRead")} leadingIcon="check-all" />
           <Divider />
@@ -171,33 +171,25 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
         </Menu>
       </View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
+      {notifications.length > 0 && (
+        <View style={styles.statsContainer}>
+          <Text style={styles.statsText}>{t("notifications.total", { count: notifications.length })}</Text>
+          <Text style={styles.statsText}>
+            {t("notifications.unread", {
+              count: notifications.filter((n) => !n.read).length,
+            })}
+          </Text>
         </View>
-      ) : (
-        <>
-          {notifications.length > 0 && (
-            <View style={styles.statsContainer}>
-              <Text style={styles.statsText}>{t("notifications.total", { count: notifications.length })}</Text>
-              <Text style={styles.statsText}>
-                {t("notifications.unread", {
-                  count: notifications.filter((n) => !n.read).length,
-                })}
-              </Text>
-            </View>
-          )}
-
-          <FlatList
-            data={notifications}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            ListEmptyComponent={renderEmptyList}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-          />
-        </>
       )}
+
+      <FlatList
+        data={notifications}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={renderEmptyList}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
     </SafeAreaView>
   )
 }
@@ -303,6 +295,9 @@ const styles = StyleSheet.create({
     color: "#9E9E9E",
     marginTop: 8,
     textAlign: "center",
+  },
+  menuButton: {
+    padding: 8,
   },
 })
 

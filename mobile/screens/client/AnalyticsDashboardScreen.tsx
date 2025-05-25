@@ -246,6 +246,8 @@ const AnalyticsDashboardScreen = () => {
                 }}
                 width={screenWidth - 64}
                 height={220}
+                yAxisLabel=""
+                yAxisSuffix=""
                 chartConfig={{
                   backgroundColor: "#FFFFFF",
                   backgroundGradientFrom: "#FFFFFF",

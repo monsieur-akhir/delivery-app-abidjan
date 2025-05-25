@@ -79,17 +79,17 @@ const CollaborativeChatScreen: React.FC = () => {
     if (connected && lastMessage && lastMessage.type === 'chat_message' && lastMessage.data) {
       // Check if the message is for our current chat
       if (lastMessage.data.delivery_id === deliveryId) {
-        const chatMsg = {
-          id: lastMessage.data.id || Math.random().toString(),
+        const chatMsg: ChatMessage = {
+          id: lastMessage.data.id?.toString() || Math.random().toString(),
           delivery_id: lastMessage.data.delivery_id,
-          user_id: lastMessage.data.user_id,
-          userId: lastMessage.data.user_id,
-          message: lastMessage.data.message,
-          timestamp: lastMessage.data.timestamp || new Date().toISOString(),
-          createdAt: lastMessage.data.createdAt || lastMessage.data.timestamp || new Date().toISOString(),
-          userName: lastMessage.data.userName || "Utilisateur",
-          userRole: lastMessage.data.userRole || "courier",
-          userAvatar: lastMessage.data.userAvatar
+          user_id: lastMessage.data.user_id?.toString() || '',
+          userId: lastMessage.data.user_id?.toString() || '',
+          message: typeof lastMessage.data.message === 'string' ? lastMessage.data.message : "",
+          timestamp: lastMessage.data.timestamp?.toString() || new Date().toISOString(),
+          createdAt: lastMessage.data.createdAt?.toString() || lastMessage.data.timestamp?.toString() || new Date().toISOString(),
+          userName: lastMessage.data.userName?.toString() || "Utilisateur",
+          userRole: lastMessage.data.userRole?.toString() || "courier",
+          userAvatar: typeof lastMessage.data.userAvatar === 'string' ? lastMessage.data.userAvatar : undefined
         };
         setMessages((prevMessages) => [...prevMessages, chatMsg])
       }
@@ -220,6 +220,13 @@ const CollaborativeChatScreen: React.FC = () => {
       </>
     )
   }
+
+  const updateMessages = (prevMessages: ChatMessage[]): ChatMessage[] => {
+    return prevMessages.map((message) => ({
+      ...message,
+      // Ensure all returned objects conform to ChatMessage type
+    }));
+  };
 
   if (error) {
     return <ErrorView message={error} onRetry={fetchData} />

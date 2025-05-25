@@ -12,6 +12,10 @@ export const API_URL = __DEV__
 export const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"
 export const WEATHER_API_KEY = "YOUR_WEATHER_API_KEY"
 
+// Configuration Sentry
+export const SENTRY_DSN = __DEV__ ? "" : "YOUR_SENTRY_DSN"
+export const ENVIRONMENT = __DEV__ ? "development" : "production"
+
 // Configuration des timeouts
 export const API_TIMEOUT = 30000 // 30 secondes
 

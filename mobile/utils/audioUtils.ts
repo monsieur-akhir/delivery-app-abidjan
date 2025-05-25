@@ -1,6 +1,17 @@
 import * as FileSystem from "expo-file-system"
 import { Audio } from "expo-av"
 
+// Request audio recording permissions
+export async function requestAudioPermissions(): Promise<boolean> {
+  try {
+    const { status } = await Audio.requestPermissionsAsync()
+    return status === 'granted'
+  } catch (error) {
+    console.error("Error requesting audio permissions:", error)
+    return false
+  }
+}
+
 // Update the readAsStringAsync function
 export async function getAudioBase64(uri: string): Promise<string> {
   try {
@@ -47,5 +58,32 @@ export function getAudioRecordingOptions() {
       mimeType: 'audio/webm',
       bitsPerSecond: 128000
     }
+  }
+}
+
+// High quality recording options
+export const HIGH_QUALITY_RECORDING_OPTIONS = {
+  android: {
+    extension: '.m4a',
+    outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+    audioEncoder: Audio.AndroidAudioEncoder.AAC,
+    sampleRate: 44100,
+    numberOfChannels: 2,
+    bitRate: 256000,
+  },
+  ios: {
+    extension: '.m4a',
+    outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
+    audioQuality: Audio.IOSAudioQuality.HIGH,
+    sampleRate: 44100,
+    numberOfChannels: 2,
+    bitRate: 256000,
+    linearPCMBitDepth: 16,
+    linearPCMIsBigEndian: false,
+    linearPCMIsFloat: false,
+  },
+  web: {
+    mimeType: 'audio/webm',
+    bitsPerSecond: 256000
   }
 }

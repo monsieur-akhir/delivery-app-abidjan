@@ -158,7 +158,7 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
             message: ticketMessage,
             images: ticketImages,
           },
-          timestamp: new Date().toISOString(),
+
         })
 
         // Reset form
@@ -219,7 +219,6 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
             ticketId: selectedTicket.id,
             message: replyMessage,
           },
-          timestamp: new Date().toISOString(),
         })
 
         // Reset reply input
@@ -660,7 +659,7 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("support.title")}</Text>
         <View style={{ width: 48 }} />

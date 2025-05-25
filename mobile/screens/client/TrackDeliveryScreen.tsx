@@ -1,13 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { View, StyleSheet, TouchableOpacity, Alert, Linking, Platform } from "react-native"
 import { Text, Card, Button, Avatar, Chip, Divider, ActivityIndicator, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import MapView, { Marker, Polyline } from "react-native-maps"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { useWebSocket } from "../../contexts/WebSocketContext"
 import { fetchDeliveryDetails } from "../../services/api"
@@ -18,13 +17,13 @@ import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery, Courier, Coordinates, DeliveryStatus } from "../../types/models"
 
 // Define the missing API functions
-const fetchDeliveryRoute = async (deliveryId: string): Promise<Coordinates[]> => {
+const fetchDeliveryRoute = async (_deliveryId: string): Promise<Coordinates[]> => {
   // Implementation would call the actual API
   // This is a placeholder that returns an empty array
   return []
 }
 
-const getETA = async (deliveryId: string): Promise<{ eta_minutes: number }> => {
+const getETA = async (_deliveryId: string): Promise<{ eta_minutes: number }> => {
   // Implementation would call the actual API
   // This is a placeholder that returns a default value
   return { eta_minutes: 15 }
@@ -45,9 +44,8 @@ interface DeliveryStatusInfo {
 const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, navigation }) => {
   const { deliveryId } = route.params
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { isConnected } = useNetwork()
-  const { subscribe, unsubscribe } = useWebSocket()
+  const { subscribe } = useWebSocket()
   const mapRef = useRef<MapView | null>(null)
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
@@ -58,47 +56,52 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>("")
 
-  useEffect(() => {
-    loadDeliveryDetails()
-
-    // S'abonner aux mises à jour de localisation du coursier
-    const unsubscribeFromLocation = subscribe(`delivery.${deliveryId}.location`, handleLocationUpdate)
-
-    // S'abonner aux mises à jour de statut de la livraison
-    const unsubscribeFromStatus = subscribe(`delivery.${deliveryId}.status`, handleStatusUpdate)
-
-    return () => {
-      unsubscribeFromLocation()
-      unsubscribeFromStatus()
-    }
-  }, [deliveryId])
-
-  const loadDeliveryDetails = async (): Promise<void> => {
+  // Define update handlers using useCallback before using them in useEffect
+  const updateEta = useCallback(async (): Promise<void> => {
+    if (!isConnected || !delivery) return
+    
     try {
-      setLoading(true)
-
-      // Charger les détails de la livraison
-      const deliveryData = await fetchDeliveryDetails(deliveryId)
-      setDelivery(deliveryData)
-
-      // Si un coursier est assigné, charger ses informations
-      if (deliveryData.courier) {
-        setCourier(deliveryData.courier)
-
-        // Si la livraison est en cours, charger l'itinéraire et l'ETA
-        if (deliveryData.status === "in_progress" || deliveryData.status === "picked_up") {
-          await loadRouteAndEta(deliveryData)
-        }
-      }
+      const etaData = await getETA(deliveryId)
+      setEta(etaData.eta_minutes)
     } catch (error) {
-      console.error("Error loading delivery details:", error)
-      setError(t("trackDelivery.errorLoadingDelivery"))
-    } finally {
-      setLoading(false)
+      console.error("Error updating ETA:", error)
     }
-  }
+  }, [isConnected, delivery, deliveryId])
 
-  const loadRouteAndEta = async (deliveryData: Delivery): Promise<void> => {
+  const handleLocationUpdate = useCallback((data: Record<string, unknown>): void => {
+    const latitude = data.latitude as number;
+    const longitude = data.longitude as number;
+    
+    setCourierLocation({
+      latitude,
+      longitude,
+    })
+
+    // Mettre à jour l'ETA si nécessaire
+    updateEta()
+  }, [updateEta])
+
+  const handleStatusUpdate = useCallback((data: Record<string, unknown>): void => {
+    if (delivery) {
+      const status = data.status as DeliveryStatus;
+      setDelivery({
+        ...delivery,
+        status,
+      })
+
+      // Si la livraison est terminée, naviguer vers l'écran d'évaluation
+      if (status === "delivered") {
+        Alert.alert(t("trackDelivery.deliveryCompleted"), t("trackDelivery.deliveryCompletedMessage"), [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("RateDelivery", { deliveryId }),
+          },
+        ])
+      }
+    }
+  }, [delivery, t, navigation, deliveryId])
+
+  const loadRouteAndEta = useCallback(async (deliveryData: Delivery): Promise<void> => {
     try {
       // Charger l'itinéraire
       const route = await fetchDeliveryRoute(deliveryId)
@@ -133,47 +136,47 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
     } catch (error) {
       console.error("Error loading route and ETA:", error)
     }
-  }
+  }, [deliveryId])
 
-  const handleLocationUpdate = (data: { latitude: number; longitude: number }): void => {
-    setCourierLocation({
-      latitude: data.latitude,
-      longitude: data.longitude,
-    })
-
-    // Mettre à jour l'ETA si nécessaire
-    updateEta()
-  }
-
-  const handleStatusUpdate = (data: { status: DeliveryStatus }): void => {
-    if (delivery) {
-      setDelivery({
-        ...delivery,
-        status: data.status,
-      })
-
-      // Si la livraison est terminée, naviguer vers l'écran d'évaluation
-      if (data.status === "delivered") {
-        Alert.alert(t("trackDelivery.deliveryCompleted"), t("trackDelivery.deliveryCompletedMessage"), [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("RateDelivery", { deliveryId }),
-          },
-        ])
-      }
-    }
-  }
-
-  const updateEta = async (): Promise<void> => {
-    if (!isConnected || !delivery) return
-
+  const loadDeliveryDetails = useCallback(async (): Promise<void> => {
     try {
-      const etaData = await getETA(deliveryId)
-      setEta(etaData.eta_minutes)
+      setLoading(true)
+
+      // Charger les détails de la livraison
+      const deliveryData = await fetchDeliveryDetails(deliveryId)
+      setDelivery(deliveryData)
+
+      // Si un coursier est assigné, charger ses informations
+      if (deliveryData.courier) {
+        setCourier(deliveryData.courier)
+
+        // Si la livraison est en cours, charger l'itinéraire et l'ETA
+        if (deliveryData.status === "in_progress" || deliveryData.status === "picked_up") {
+          await loadRouteAndEta(deliveryData)
+        }
+      }
     } catch (error) {
-      console.error("Error updating ETA:", error)
+      console.error("Error loading delivery details:", error)
+      setError(t("trackDelivery.errorLoadingDelivery"))
+    } finally {
+      setLoading(false)
     }
-  }
+  }, [deliveryId, loadRouteAndEta, t])
+  
+  useEffect(() => {
+    loadDeliveryDetails()
+
+    // S'abonner aux mises à jour de localisation du coursier
+    const unsubscribeFromLocation = subscribe(`delivery.${deliveryId}.location`, handleLocationUpdate)
+
+    // S'abonner aux mises à jour de statut de la livraison
+    const unsubscribeFromStatus = subscribe(`delivery.${deliveryId}.status`, handleStatusUpdate)
+
+    return () => {
+      unsubscribeFromLocation()
+      unsubscribeFromStatus()
+    }
+  }, [deliveryId, loadDeliveryDetails, subscribe, handleLocationUpdate, handleStatusUpdate])
 
   const callCourier = (): void => {
     if (!courier || !courier.phone) {

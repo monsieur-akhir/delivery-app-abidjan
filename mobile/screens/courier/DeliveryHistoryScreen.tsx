@@ -61,7 +61,6 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   const [currentPeriod, setCurrentPeriod] = useState<"week" | "month" | "year">("week")
   const [currentFilter, setCurrentFilter] = useState<string>("all")
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest")
-  const [currentPage, setCurrentPage] = useState<number>(1) // Used for pagination
   const [showFilters, setShowFilters] = useState<boolean>(false)
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
   const [showStats, setShowStats] = useState<boolean>(true)
@@ -112,7 +111,6 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   const loadDeliveryHistory = useCallback(async (refresh = true): Promise<void> => {
     if (refresh) {
       setLoading(true)
-      setCurrentPage(1)
     }
 
     try {
@@ -161,7 +159,6 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   // Handle loading more data when user reaches end of list
   const handleLoadMore = useCallback(() => {
     if (!loading && !error) {
-      setCurrentPage((prev) => prev + 1)
       loadDeliveryHistory(false)
     }
   }, [loading, error, loadDeliveryHistory])
@@ -238,16 +235,21 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
             <View style={styles.ratingContainer}>
               <Text style={styles.ratingLabel}>{t("deliveryHistory.rating")}</Text>
               <View style={styles.ratingStars}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <MaterialIcons
-                    key={i}
-                    name={i < Math.round(item.rating ?? 0) ? "star" : "star-outline"} // Adjusted to valid `MaterialIcons` names
-                    size={16}
-                    color={i < Math.round(item.rating ?? 0) ? "#FFC107" : "#CCCCCC"}
-                    style={styles.ratingStar}
-                  />
-                ))}
-                <Text style={styles.ratingValue}>({item.rating})</Text>
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const ratingValue = typeof item.rating === 'number' ? item.rating : item.rating?.rating ?? 0;
+                  return (
+                    <MaterialIcons
+                      key={i}
+                      name={i < Math.round(ratingValue) ? "star" : "star-outline"} // Adjusted to valid `MaterialIcons` names
+                      size={16}
+                      color={i < Math.round(ratingValue) ? "#FFC107" : "#CCCCCC"}
+                      style={styles.ratingStar}
+                    />
+                  );
+                })}
+                <Text style={styles.ratingValue}>
+                  ({typeof item.rating === 'number' ? item.rating.toFixed(1) : item.rating?.rating?.toFixed(1) ?? 'N/A'})
+                </Text>
               </View>
             </View>
           )}

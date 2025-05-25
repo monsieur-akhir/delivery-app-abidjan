@@ -1,13 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from "react-native"
-import { Text, Card, Chip, Searchbar, ActivityIndicator, IconButton } from "react-native-paper"
+import { Text, Card, Chip, Searchbar, ActivityIndicator } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { useNetwork } from "../../contexts/NetworkContext"
 import { fetchNearbyMerchants } from "../../services/api"
+import IconButton from "../../components/IconButton"
+import { Feather } from "@expo/vector-icons"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Merchant } from "../../types/models"
@@ -19,12 +20,11 @@ type MarketplaceScreenProps = {
 interface CategoryItem {
   id: string
   name: string
-  icon: string
+  icon: React.ComponentProps<typeof Feather>["name"]
 }
 
 const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { isConnected, isOfflineMode } = useNetwork()
 
   const [merchants, setMerchants] = useState<Merchant[]>([])
   const [filteredMerchants, setFilteredMerchants] = useState<Merchant[]>([])
@@ -35,21 +35,17 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
   const [selectedCommune, setSelectedCommune] = useState<string | null>(null)
 
   const categories: CategoryItem[] = [
-    { id: "food", name: t("marketplace.categories.food"), icon: "food" },
-    { id: "clothing", name: t("marketplace.categories.clothing"), icon: "tshirt-crew" },
-    { id: "electronics", name: t("marketplace.categories.electronics"), icon: "cellphone" },
-    { id: "groceries", name: t("marketplace.categories.groceries"), icon: "cart" },
-    { id: "pharmacy", name: t("marketplace.categories.pharmacy"), icon: "pill" },
-    { id: "other", name: t("marketplace.categories.other"), icon: "dots-horizontal" },
+    { id: "food", name: t("marketplace.categories.food"), icon: "coffee" },
+    { id: "clothing", name: t("marketplace.categories.clothing"), icon: "tag" },
+    { id: "electronics", name: t("marketplace.categories.electronics"), icon: "smartphone" },
+    { id: "groceries", name: t("marketplace.categories.groceries"), icon: "shopping-cart" },
+    { id: "pharmacy", name: t("marketplace.categories.pharmacy"), icon: "heart" },
+    { id: "other", name: t("marketplace.categories.other"), icon: "more-horizontal" },
   ]
 
   const communes: string[] = ["Cocody", "Yopougon", "Plateau", "Treichville", "Adjamé", "Marcory", "Abobo"]
 
-  useEffect(() => {
-    loadMerchants()
-  }, [])
-
-  const loadMerchants = async (): Promise<void> => {
+  const loadMerchants = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
       const data = await fetchNearbyMerchants(selectedCommune || undefined, selectedCategory || undefined)
@@ -60,19 +56,9 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedCommune, selectedCategory])
 
-  const onRefresh = async (): Promise<void> => {
-    setRefreshing(true)
-    await loadMerchants()
-    setRefreshing(false)
-  }
-
-  useEffect(() => {
-    filterMerchants()
-  }, [searchQuery, selectedCategory, selectedCommune, merchants])
-
-  const filterMerchants = (): void => {
+  const filterMerchants = useCallback((): void => {
     let filtered = [...merchants]
 
     // Filtrer par recherche
@@ -94,7 +80,21 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
     }
 
     setFilteredMerchants(filtered)
+  }, [searchQuery, selectedCategory, selectedCommune, merchants])
+
+  const onRefresh = async (): Promise<void> => {
+    setRefreshing(true)
+    await loadMerchants()
+    setRefreshing(false)
   }
+
+  useEffect(() => {
+    loadMerchants()
+  }, [loadMerchants])
+
+  useEffect(() => {
+    filterMerchants()
+  }, [filterMerchants])
 
   const handleCategorySelect = (categoryId: string): void => {
     setSelectedCategory(selectedCategory === categoryId ? null : categoryId)
@@ -119,7 +119,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
   const renderMerchantItem = ({ item }: { item: Merchant }): React.ReactElement => (
     <Card style={styles.merchantCard} onPress={() => navigation.navigate("MerchantDetails", { merchantId: item.id })}>
       <Card.Cover
-        source={{ uri: item.image_url || "https://via.placeholder.com/300x150?text=Boutique" }}
+        source={{ uri: item.cover_image || "https://via.placeholder.com/300x150?text=Boutique" }}
         style={styles.merchantImage}
       />
 
@@ -140,7 +140,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
           <Chip style={styles.communeChip}>{item.commune}</Chip>
 
           <Text style={styles.deliveryTime}>
-            <IconButton icon="clock-outline" size={14} color="#757575" style={styles.timeIcon} />
+            <IconButton icon="clock" size={14} color="#757575" style={styles.timeIcon} />
             {item.delivery_time} min
           </Text>
         </View>
@@ -150,7 +150,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
 
   const renderEmptyList = (): React.ReactElement => (
     <View style={styles.emptyContainer}>
-      <IconButton icon="store-off" size={50} color="#CCCCCC" />
+      <IconButton icon="shopping-bag" size={50} color="#CCCCCC" />
       <Text style={styles.emptyText}>{t("marketplace.noMerchants")}</Text>
       <Text style={styles.emptySubtext}>{t("marketplace.tryDifferentFilters")}</Text>
     </View>

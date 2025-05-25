@@ -6,6 +6,7 @@ import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from "
 import { Text, Card, Button, Chip, ActivityIndicator, Badge, Avatar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
+import FeatherIcon, { FeatherIconName } from "../../components/FeatherIcon"
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
 import { useAuth } from "../../contexts/AuthContext"
@@ -24,16 +25,8 @@ import { formatPrice, formatDistance, formatDate } from "../../utils/formatters"
 import type { CourierHomeScreenNavigationProp } from "../../types/navigation"
 import type { Delivery } from "../../types/models"
 
-// Define Weather type if it doesn't exist in models
-interface Weather {
-  current: {
-    temperature: number
-    condition: string
-    humidity: number
-    wind_speed: number
-    wind_kph: number
-  }
-}
+// Import the Weather type from models
+import type { Weather } from "../../types/models"
 
 type CourierHomeScreenProps = {
   navigation: CourierHomeScreenNavigationProp
@@ -157,34 +150,22 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
     } finally {
       setStatusLoading(false)
     }
-  }, [isConnected, isOfflineMode, isOnline, currentLocation, updateUserData, user?.id, loadInitialData])
+  }, [isConnected, isOfflineMode, isOnline, updateUserData, user?.id, sendMessage, currentLocation])
 
-  const getWeatherIcon = (condition: string): string => {
+  const getWeatherIcon = (condition: string): FeatherIconName => {
     switch (condition.toLowerCase()) {
-      case "clear":
       case "sunny":
-        return "sun"
-      case "partly cloudy":
-        return "cloud"
+        return "sun";
       case "cloudy":
-        return "cloud"
-      case "overcast":
-        return "cloud"
-      case "mist":
-      case "fog":
-        return "cloud-drizzle"
-      case "rain":
-      case "light rain":
-      case "moderate rain":
-        return "cloud-rain"
-      case "heavy rain":
-        return "cloud-rain"
-      case "thunderstorm":
-        return "cloud-lightning"
+        return "cloud";
+      case "rainy":
+        return "cloud-rain";
+      case "stormy":
+        return "cloud-lightning";
       default:
-        return "cloud"
+        return "cloud-drizzle";
     }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -204,9 +185,9 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.notificationButton}
-            onPress={() => navigation.navigate("Notifications" as any)}
+            onPress={() => navigation.navigate("Notifications")}
           >
-            <Feather name="bell" size={24} color="#212121" />
+            <FeatherIcon name="bell" size={24} color="#212121" />
             {unreadCount > 0 && (
               <Badge style={styles.notificationBadge} size={16}>
                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -233,7 +214,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
           </View>
         ) : locationPermissionDenied ? (
           <View style={styles.permissionDeniedContainer}>
-            <Feather name="map-off" size={64} color="#FF6B00" />
+            <FeatherIcon name="map" size={64} color="#FF6B00" />
             <Text style={styles.permissionDeniedTitle}>Localisation requise</Text>
             <Text style={styles.permissionDeniedText}>
               Pour utiliser cette application en tant que coursier, vous devez autoriser l&apos;accès à votre position.
@@ -320,7 +301,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
               <Card style={styles.weatherCard}>
                 <Card.Content>
                   <View style={styles.weatherContainer}>
-                    <Feather name={getWeatherIcon(weather.current.condition)} size={36} color="#FF6B00" />
+                    <FeatherIcon name={getWeatherIcon(weather.current.condition) as any} size={36} color="#FF6B00" />
                     <View style={styles.weatherInfo}>
                       <Text style={styles.weatherTemperature}>{weather.current.temperature}°C</Text>
                       <Text style={styles.weatherCondition}>{weather.current.condition}</Text>
@@ -333,7 +314,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                       <View style={styles.weatherDetail}>
                         <Feather name="wind" size={14} color="#607D8B" />
                         <Text style={styles.weatherDetailText}>
-                          {weather.current.wind_kph || weather.current.wind_speed} km/h
+                          {weather.current.wind_speed} km/h
                         </Text>
                       </View>
                     </View>
@@ -400,7 +381,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                           <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
                           <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
                         </View>
-                        <Text style={styles.deliveryPrice}>{formatPrice(delivery.price)} FCFA</Text>
+                        <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price)} FCFA</Text>
                       </View>
 
                       <View style={styles.addressContainer}>
@@ -409,7 +390,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                           <View style={styles.addressTextContainer}>
                             <Text style={styles.addressLabel}>Ramassage</Text>
                             <Text style={styles.addressText}>{delivery.pickup_address}</Text>
-                            <Text style={styles.communeText}>{delivery.pickup_location}</Text>
+                            <Text style={styles.communeText}>{delivery.pickup_lat && delivery.pickup_lng ? `${delivery.pickup_lat}, ${delivery.pickup_lng}` : "N/A"}</Text>
                           </View>
                         </View>
 
@@ -420,7 +401,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                           <View style={styles.addressTextContainer}>
                             <Text style={styles.addressLabel}>Livraison</Text>
                             <Text style={styles.addressText}>{delivery.delivery_address}</Text>
-                            <Text style={styles.communeText}>{delivery.delivery_location}</Text>
+                            <Text style={styles.communeText}>{delivery.delivery_lat && delivery.delivery_lng ? `${delivery.delivery_lat}, ${delivery.delivery_lng}` : "N/A"}</Text>
                           </View>
                         </View>
                       </View>

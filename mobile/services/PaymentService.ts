@@ -158,7 +158,7 @@ class PaymentService {
       addPendingUpload({
         type: "payment",
         data: paymentRequest,
-        id: ""
+
       })
 
       // Stocker localement le statut de paiement

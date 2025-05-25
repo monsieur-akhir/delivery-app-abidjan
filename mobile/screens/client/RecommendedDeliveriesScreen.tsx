@@ -6,6 +6,8 @@ import { Text, Card, Button, Divider, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNavigation } from "@react-navigation/native"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RootStackParamList } from "../../types/navigation"
 import RecommendationService, { type DeliveryRecommendation } from "../../services/RecommendationService"
 import EmptyState from "../../components/EmptyState"
 import ErrorView from "../../components/ErrorView"
@@ -13,7 +15,7 @@ import { formatCurrency, formatDistance } from "../../utils/formatters"
 
 const RecommendedDeliveriesScreen = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
 
   const [recommendations, setRecommendations] = useState<DeliveryRecommendation[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,7 +84,7 @@ const RecommendedDeliveriesScreen = () => {
     RecommendationService.provideFeedback("delivery", delivery.id, "accepted")
 
     // Naviguer vers l'écran d'enchère
-    navigation.navigate("BidScreen", { deliveryId: delivery.id.toString() })
+    navigation.navigate("Bid", { deliveryId: delivery.id.toString() })
   }
 
   const handleRejectDelivery = (deliveryId: number) => {

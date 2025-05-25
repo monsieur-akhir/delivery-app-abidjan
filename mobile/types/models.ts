@@ -1,5 +1,9 @@
+import { ReactNode } from "react"
+import { Double } from "react-native/Libraries/Types/CodegenTypes"
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Weather {
+  location: ReactNode
   current: {
     temperature: number
     condition: string
@@ -43,6 +47,7 @@ export interface WeatherForecastDay {
 }
 
 export interface WeatherAlert {
+  message: string
   id: string
   type: string
   severity: "low" | "medium" | "high"
@@ -117,7 +122,7 @@ export interface EarningsDistribution {
 }
 
 export type CollaboratorRole = "primary" | "secondary" | "support"
-
+export type UserRole = "client" | "coursier" | "vendeur" | "collaborator"
 export interface Collaborator {
   courierName: any
   profilePicture: any
@@ -133,19 +138,16 @@ export interface Collaborator {
 
 export interface Vehicle {
   id: string
-  user_id: string
-  type: string
-  make: string
-  model: string
-  year: number
-  color: string
-  max_weight: number
-  licensePlate: string // Add this property
-  status: string // Add this property
-  customType?: string // Add this property
-  maxDistance?: number // Add this property
-  isElectric?: boolean // Add this property
-  // Other existing properties...
+  name: string
+  licensePlate?: string
+  license_plate?: string
+  maxWeight?: number
+  max_weight?: number
+  maxDistance?: number
+  isElectric?: boolean
+  type?: "car" | "motorcycle" | "bicycle" | "truck"
+  status?: "active" | "maintenance" | "inactive" | "pending_verification"
+  customType?: string
 }
 
 export interface VehicleDocument {
@@ -202,6 +204,7 @@ export interface TransportRule {
 
 export interface UserProfile {
   user_id: string
+  full_name?: string
   address: string
   city: string
   country: string
@@ -214,6 +217,7 @@ export interface UserProfile {
   business_name?: string // Add this property
   business_address?: string // Add this property
   profile_picture?: string // Add this property
+  created_at?: string
   // Other existing properties...
 }
 
@@ -246,7 +250,6 @@ export interface CollaboratorOld {
 
 export interface PendingOperation {
   id: string
-  timestamp: Date | string
   type:
     | "create_delivery"
     | "submit_rating"
@@ -259,9 +262,12 @@ export interface PendingOperation {
     | "support_ticket"
     | "ticket_reply"
     | "payment"
+    | "collaborative_delivery"
+    |"register"
   data: any // Consider replacing with a more specific type later
   delivery_id?: string // Added to support tracking data
   status?: DeliveryStatus // Added to support status updates
+  timestamp?: Date | string // Make timestamp optional since it can be added automatically
 }
 
 export interface ProfileUpdateData {
@@ -315,6 +321,11 @@ export type DeliveryStatus =
   | "bidding"
 
 export interface Delivery {
+  is_paid: any
+  payment_method: any
+  price: number | undefined
+  pickup_location: ReactNode
+  delivery_location: ReactNode
   final_price: number
   id: string
   user_id: string
@@ -359,7 +370,7 @@ export interface Delivery {
   actual_pickup_time?: string
   estimated_delivery_time?: string
   actual_delivery_time?: string
-  rating?: number
+  rating?: number | Rating
   feedback?: string
 }
 
@@ -367,8 +378,9 @@ export interface User {
   id: string
   name: string
   email: string
-  phone: string
-  role: "client" | "courier" | "admin"
+  phone?: string
+  role?: string // Add role property to match backend User model
+  status?: "online" | "offline"; // Added status property
   profile_image?: string
   created_at: string
   updated_at: string
@@ -382,6 +394,7 @@ export interface User {
   business_address?: string
   profile_picture?: string
   full_name?: string
+  is_online?: boolean;
 }
 
 export interface Merchant {
@@ -392,6 +405,7 @@ export interface Merchant {
   name: string
   logo: string
   cover_image?: string
+  image_url?: string
   description: string
   address: string
   commune: string
@@ -518,3 +532,6 @@ export interface CourierStats {
   nextLevelExperience: number;
   badges: Badge[];
 }
+
+// Added FeatherIconName type for better type safety
+export type FeatherIconName = 'package' | 'tag' | 'credit-card' | 'star' | 'gift' | 'bell' | 'dots-vertical' | 'delete';

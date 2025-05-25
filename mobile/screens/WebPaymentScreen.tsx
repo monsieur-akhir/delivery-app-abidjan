@@ -3,7 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
 import { useTheme } from "../contexts/ThemeContext"
 
 // Create custom Button component
-const Button = ({ children, onClick, variant = "default" }) => {
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick: () => void;
+  variant?: "default" | string;
+}
+
+const Button = ({ children, onClick, variant = "default" }: ButtonProps) => {
   const { colors } = useTheme()
 
   return (
@@ -17,7 +23,12 @@ const Button = ({ children, onClick, variant = "default" }) => {
 }
 
 // Create custom Alert component
-const Alert = ({ children, variant = "default" }) => {
+interface AlertProps {
+  children: React.ReactNode;
+  variant?: "default" | string;
+}
+
+const Alert = ({ children, variant = "default" }: AlertProps) => {
   const { colors } = useTheme()
 
   return (

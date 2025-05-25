@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { View, StyleSheet } from "react-native"
+import { View, TouchableOpacity } from "react-native"
 import { Feather } from "@expo/vector-icons"
 
 // Liste des noms d'icônes disponibles dans Feather
@@ -301,28 +301,29 @@ export type FeatherIconName =
   | "weather-cloudy-alert"
 
 interface FeatherIconProps {
-  name: string
+  name: FeatherIconName
   size: number
   color: string
-  style?: any
+  style?: object
+  onPress?: () => void
 }
 
 /**
  * Custom wrapper for Feather icons to handle TypeScript compatibility
  */
-const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size, color, style }) => {
+const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size, color, style, onPress }) => {
+  if (onPress) {
+    return (
+      <TouchableOpacity style={style} onPress={onPress}>
+        <Feather name={name as any} size={size} color={color} />
+      </TouchableOpacity>
+    );
+  }
   return (
     <View style={style}>
       <Feather name={name as any} size={size} color={color} />
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-})
 
 export default FeatherIcon

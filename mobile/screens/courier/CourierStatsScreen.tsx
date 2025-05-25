@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
 import type React from "react"
@@ -173,6 +174,7 @@ const CourierStatsScreen: React.FC<CourierStatsScreenProps> = ({ navigation }) =
         data={data}
         width={screenWidth - 32}
         height={220}
+        yAxisLabel=""
         yAxisSuffix="%"
         chartConfig={{
           backgroundColor: "#FFFFFF",
@@ -280,7 +282,7 @@ const CourierStatsScreen: React.FC<CourierStatsScreenProps> = ({ navigation }) =
                     <Text style={styles.statLabel}>Note moyenne</Text>
                   </View>
                   <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{formatTime(stats.average_delivery_time)}</Text>
+                    <Text style={styles.statValue}>{formatTime(String(stats.average_delivery_time))}</Text>
                     <Text style={styles.statLabel}>Temps moyen</Text>
                   </View>
                   <View style={styles.statItem}>

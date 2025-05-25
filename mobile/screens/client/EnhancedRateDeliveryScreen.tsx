@@ -79,8 +79,8 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
 
       // Vérifier si la livraison a déjà été évaluée
       if (data.rating && typeof data.rating === 'object') {
-        setRating(data.rating || 5)
-        setComment(comment || "")
+        setRating(data.rating.rating || 5)
+        setComment(data.rating.comment || "")
         Alert.alert(t("rateDelivery.alreadyRated"), t("rateDelivery.alreadyRatedMessage"), [
           {
             text: "OK",

@@ -6,13 +6,8 @@ import { View, StyleSheet, TouchableOpacity, Alert, Platform, AppState, type App
 import { Text, Button, Card, Snackbar, ActivityIndicator, Badge } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE, type MapViewProps as RNMapsViewProps } from "react-native-maps"
-import type { ReactNode } from "react"
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps"
 
-// Extended MapView props to include children
-interface MapViewProps extends RNMapsViewProps {
-  children?: ReactNode
-}
 import * as Location from "expo-location"
 import { Audio } from "expo-av"
 import { useAuth } from "../../contexts/AuthContext"
@@ -363,7 +358,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
       }
       if (isOfflineMode) {
         addPendingUpload({
-          id: Date.now().toString(),
+
           type: "tracking",
           data: trackingData,
         })
@@ -397,7 +392,6 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
       if (isOfflineMode && !isConnected) {
         // Utiliser un type valide pour PendingOperation
         addPendingUpload({
-          id: Date.now().toString(),
           type: "update_profile", // Using an existing allowed type
           data: {
             delivery_id: deliveryId,

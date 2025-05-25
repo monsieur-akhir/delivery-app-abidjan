@@ -9,6 +9,8 @@ import { useNetwork } from "../contexts/NetworkContext"
 import WeatherAlertModal from "./WeatherAlertModal"
 import CommuneWeatherService from "../services/CommuneWeatherService"
 import FeatherIcon from "./FeatherIcon"
+  // Import FeatherIconName type
+  import type { FeatherIconName } from "./FeatherIcon"
 
 // Types pour les données météo
 interface WeatherCondition {
@@ -142,9 +144,11 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
     }
   }
 
-  const getWeatherIcon = (condition: string): string => {
+
+
+  const getWeatherIcon = (condition: string): FeatherIconName => {
     // Mapping des conditions météo aux icônes
-    const iconMap: Record<string, string> = {
+    const iconMap: Record<string, FeatherIconName> = {
       clear: "sun",
       sunny: "sun",
       partly_cloudy: "cloud",
@@ -165,7 +169,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
     }
 
     const conditionKey = condition.toLowerCase().replace(/\s+/g, "_")
-    return iconMap[conditionKey] || "cloud"
+    return (iconMap[conditionKey] || "cloud") as FeatherIconName
   }
 
   const getWeatherTip = (condition: string): string => {

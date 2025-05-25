@@ -1,12 +1,13 @@
 import { TouchableOpacity, StyleSheet } from "react-native"
 import { Feather } from "@expo/vector-icons"
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface IconButtonProps {
-  icon: string
+  icon: React.ComponentProps<typeof Feather>["name"] // Ensures type safety for Feather icons
   size?: number
   color?: string
   onPress?: () => void
-  style?: any
+  style?: object
 }
 
 const IconButton = ({ icon, size = 24, color = "#000000", onPress, style }: IconButtonProps) => {

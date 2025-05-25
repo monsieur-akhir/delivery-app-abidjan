@@ -41,7 +41,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const [isRecording, setIsRecording] = useState<boolean>(false)
   const [recording, setRecording] = useState<Audio.Recording | null>(null)
   const [recordingDuration, setRecordingDuration] = useState<number>(0)
-  const [durationTimer, setDurationTimer] = useState<NodeJS.Timeout | null>(null)
+  const [durationTimer, setDurationTimer] = useState<number | null>(null)
   const [permissionGranted, setPermissionGranted] = useState<boolean>(false)
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
