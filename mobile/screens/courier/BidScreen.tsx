@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
 import type React from "react"
@@ -10,7 +11,7 @@ import MapView, { Marker, Polyline } from "react-native-maps"
 import * as Location from "expo-location"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchDeliveryDetails, getBidsForDelivery } from "../../services/api"
+import { fetchDeliveryDetails, getBidsForDelivery, bidForDelivery } from "../../services/api"
 import { formatPrice, formatDate } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
@@ -55,7 +56,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       setDelivery(data)
 
       // Définir un montant d'enchère par défaut légèrement inférieur au prix proposé
-      const defaultBid = Math.round(data.price * 0.9)
+      const defaultBid = Math.round(((data.actual_price ?? data.price ?? 0) * 0.9))
       setBidAmount(defaultBid.toString())
     } catch (error) {
       setError("Erreur lors du chargement des détails de la livraison")
@@ -174,7 +175,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
     const amount = Number(bidAmount)
 
     // Vérifier que le montant est raisonnable
-    if (delivery && amount > delivery.price) {
+    if (delivery && amount > delivery.proposed_price) {
       Alert.alert(
         "Montant élevé",
         "Votre enchère est supérieure au prix proposé par le client. Êtes-vous sûr de vouloir continuer ?",
@@ -186,7 +187,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       return
     }
 
-    if (delivery && amount < delivery.price * 0.5) {
+    if (delivery && amount < delivery.proposed_price * 0.5) {
       Alert.alert(
         "Montant bas",
         "Votre enchère est très basse. Le client pourrait ne pas l'accepter. Êtes-vous sûr de vouloir continuer ?",
@@ -213,7 +214,6 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
             delivery_id: deliveryId,
             amount,
           },
-          timestamp: new Date().toISOString(),
         })
 
         Alert.alert(
@@ -223,7 +223,9 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
         )
       } else {
         // Soumettre l'enchère immédiatement
-        await getBidsForDelivery(deliveryId, amount)
+        // Note: Changed from getBidsForDelivery to a more appropriate function
+        // You need to implement or import a submitBidForDelivery function
+        await bidForDelivery(deliveryId, amount)
 
         Alert.alert(
           "Enchère soumise",
@@ -274,7 +276,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
                 <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
                 <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
               </View>
-              <Text style={styles.deliveryPrice}>{formatPrice(delivery.price)} FCFA</Text>
+              <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price)} FCFA</Text>
             </View>
 
             <Divider style={styles.divider} />

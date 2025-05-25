@@ -23,12 +23,16 @@ interface ThemeProviderProps {
 
 const defaultColors: ThemeColors = {
   primary: "#FF6B00",
+  secondary: "#FFB74D",
   background: "#FFFFFF",
   card: "#FFFFFF",
   text: "#212121",
   border: "#E0E0E0",
   notification: "#FF6B00",
   muted: "#757575",
+  surface: "#FFFFFF",
+  error: "#B00020",
+  placeholder: "#9E9E9E",
 }
 
 const ThemeContext = createContext<ThemeContextType>({

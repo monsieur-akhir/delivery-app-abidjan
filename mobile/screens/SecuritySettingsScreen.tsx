@@ -6,12 +6,19 @@ import { Text, Switch, Divider, Button, IconButton, TextInput } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNavigation } from "@react-navigation/native"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import SecurityService, { type SecuritySettings } from "../services/SecurityService"
 import * as Clipboard from "expo-clipboard"
 
+// Define the navigation params type
+type RootStackParamList = {
+  ChangePassword: undefined;
+  SecurityQuestions: undefined;
+};
+
 const SecuritySettingsScreen = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
 
   const [settings, setSettings] = useState<SecuritySettings>({
     two_factor_enabled: false,
@@ -95,7 +102,7 @@ const SecuritySettingsScreen = () => {
         },
         {
           text: t("common.confirm"),
-          onPress: (code) => disableTwoFactor(code),
+          onPress: (code) => code ? disableTwoFactor(code) : Alert.alert(t("security.error"), t("security.invalidCode")),
         },
       ],
       "plain-text",
@@ -415,7 +422,7 @@ const SecuritySettingsScreen = () => {
                       : t("security.passwordNeverChanged")}
                   </Text>
                 </View>
-                <IconButton icon="chevron-right" size={24} color="#757575" />
+                <IconButton icon="chevron-right" size={24} iconColor="#757575" />
               </TouchableOpacity>
 
               <Divider style={styles.divider} />
@@ -429,7 +436,7 @@ const SecuritySettingsScreen = () => {
                       : t("security.securityQuestionsNotSet")}
                   </Text>
                 </View>
-                <IconButton icon="chevron-right" size={24} color="#757575" />
+                <IconButton icon="chevron-right" size={24} iconColor="#757575" />
               </TouchableOpacity>
             </View>
 
@@ -443,7 +450,7 @@ const SecuritySettingsScreen = () => {
                     {t("security.sessionTimeoutDescription", { minutes: settings.session_timeout })}
                   </Text>
                 </View>
-                <IconButton icon="pencil" size={24} color="#757575" onPress={() => {}} />
+                <IconButton icon="pencil" size={24} iconColor="#757575" onPress={() => {}} />
               </View>
             </View>
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client"
 
 import type React from "react"
@@ -207,7 +208,7 @@ const VehicleManagementScreen: React.FC = () => {
 
       {vehicles.length === 0 && !loading ? (
         <EmptyState
-          icon="car-outline"
+          icon="truck"
           title="Aucun véhicule"
           message="Vous n'avez pas encore de véhicules. Ajoutez-en un pour commencer."
           buttonText="Ajouter un véhicule"

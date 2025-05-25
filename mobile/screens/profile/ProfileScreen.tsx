@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from "react-native"
 import { Text, Card, Button, Avatar, TextInput, Divider, IconButton, ActivityIndicator } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -31,27 +31,60 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({})
   const [saving, setSaving] = useState<boolean>(false)
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
-  const loadProfile = async (): Promise<void> => {
+  const loadProfile = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
       const profileData = await getUserProfile()
-      setProfile(profileData)
-      setEditedProfile(profileData)
+      // Convert User to UserProfile by adding user_id and ensuring required fields
+      const userProfile: UserProfile = {
+        user_id: profileData.id || '',
+        address: profileData.address || "",
+        city: profileData.city || "",
+        country: profileData.country || "",
+        phone: profileData.phone,
+        email: profileData.email,
+        role: profileData.role,
+        commune: profileData.commune,
+        vehicle_type: profileData.vehicle_type,
+        license_plate: profileData.license_plate,
+        business_name: profileData.business_name,
+        business_address: profileData.business_address,
+        profile_picture: profileData.profile_picture,
+        full_name: profileData.full_name,
+        created_at: profileData.created_at,
+      }
+      setProfile(userProfile)
+      setEditedProfile(userProfile)
     } catch (error) {
       console.error("Error loading profile:", error)
       // Utiliser les données locales en cas d'erreur
       if (user) {
-        setProfile(user as UserProfile)
-        setEditedProfile(user as UserProfile)
+        const userProfile: UserProfile = {
+          user_id: user.id,
+          address: user.address || "",
+          city: user.city || "",
+          country: user.country || "",
+          phone: user.phone,
+          email: user.email,
+          commune: user.commune,
+          vehicle_type: user.vehicle_type,
+          license_plate: user.license_plate,
+          business_name: user.business_name,
+          business_address: user.business_address,
+          profile_picture: user.profile_picture,
+          full_name: user.full_name,
+        }
+        setProfile(userProfile)
+        setEditedProfile(userProfile)
       }
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
 
   const onRefresh = async (): Promise<void> => {
     setRefreshing(true)
@@ -95,12 +128,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       setUploadingImage(true)
 
       if (isConnected) {
+        // Create FormData from URI
+        const formData = new FormData()
+        // React Native FormData expects this specific format for file uploads
+        formData.append("file", {
+          uri: uri,
+          type: "image/jpeg",
+          name: "profile-picture.jpg",
+        } as unknown as Blob)
+
         // Télécharger l'image
-        const response = await uploadProfileImage(uri)
+        const response = await uploadProfileImage(formData)
 
         // Mettre à jour le profil avec la nouvelle URL d'image
         if (response && response.image_url) {
-          const updatedProfile = { ...profile, profile_picture: response.image_url } as UserProfile
+          const updatedProfile: UserProfile = { 
+            ...profile,
+            profile_picture: response.image_url 
+          } as UserProfile
           setProfile(updatedProfile)
           setEditedProfile(updatedProfile)
           updateUserData({ profile_picture: response.image_url })
@@ -110,7 +155,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         addPendingUpload({
           type: "profile_image",
           data: { uri },
-          timestamp: new Date().toISOString(),
         })
 
         Alert.alert(t("profile.offlineImageSaved"), t("profile.offlineImageSavedMessage"))
@@ -142,15 +186,32 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       if (isConnected) {
         // Mettre à jour le profil en ligne
-        const updatedProfile = await updateUserProfile(editedProfile)
+        const updatedUser = await updateUserProfile(editedProfile)
+        // Convert User to UserProfile
+        const updatedProfile: UserProfile = {
+          user_id: updatedUser.id,
+          address: updatedUser.address || "",
+          city: updatedUser.city || "",
+          country: updatedUser.country || "",
+          phone: updatedUser.phone,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          commune: updatedUser.commune,
+          vehicle_type: updatedUser.vehicle_type,
+          license_plate: updatedUser.license_plate,
+          business_name: updatedUser.business_name,
+          business_address: updatedUser.business_address,
+          profile_picture: updatedUser.profile_picture,
+          full_name: updatedUser.full_name,
+          created_at: updatedUser.created_at,
+        }
         setProfile(updatedProfile)
-        updateUserData(updatedProfile)
+        updateUserData(updatedUser)
       } else {
         // Stocker pour synchronisation ultérieure
         addPendingUpload({
           type: "profile_update",
           data: editedProfile,
-          timestamp: new Date().toISOString(),
         })
 
         // Mettre à jour localement
@@ -184,12 +245,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <IconButton icon="arrow-left" size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("profile.title")}</Text>
         {!editing ? (
           <TouchableOpacity onPress={handleEdit}>
-            <IconButton icon="pencil" size={24} color="#212121" />
+            <IconButton icon="pencil" size={24} />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
@@ -206,7 +267,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           ) : profile?.profile_picture ? (
             <Avatar.Image source={{ uri: profile.profile_picture }} size={120} />
           ) : (
-            <Avatar.Icon size={120} icon="account" backgroundColor="#FF6B00" />
+            <Avatar.Icon size={120} icon="account" style={{ backgroundColor: "#FF6B00" }} />
           )}
 
           <TouchableOpacity style={styles.changePhotoButton} onPress={handlePickImage} disabled={uploadingImage}>

@@ -443,7 +443,6 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
         navigation.navigate("DeliveryDetails", { deliveryId: response.id })
       } else {
         addPendingUpload({
-          id: Date.now().toString(),
           type: "create_delivery",
           data: deliveryData,
         })

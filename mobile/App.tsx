@@ -12,7 +12,8 @@ import { I18nextProvider } from "react-i18next"
 import i18n from "./i18n"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as SplashScreen from "expo-splash-screen"
-import * as Sentry from "sentry-expo"
+// Optionnel: Sentry peut être commenté en développement
+// import * as Sentry from "sentry-expo"
 
 // Contextes
 import { AuthProvider } from "./contexts/AuthContext"
@@ -33,9 +34,9 @@ import CreateDeliveryScreen from "./screens/client/CreateDeliveryScreen"
 import BidsScreen from "./screens/client/BidsScreen"
 import TrackDeliveryScreen from "./screens/client/TrackDeliveryScreen"
 import PaymentScreen from "./screens/client/PaymentScreen"
-import MarketplaceScreen from "./screens/client/MarketplaceScreen"
 import MerchantDetailsScreen from "./screens/client/MerchantDetailsScreen"
 import RateDeliveryScreen from "./screens/client/RateDeliveryScreen"
+import MarketplaceScreen from "./screens/client/MarketplaceScreen"
 
 // Écrans coursier
 import CourierHomeScreen from "./screens/courier/HomeScreen"
@@ -44,7 +45,6 @@ import CourierTrackDeliveryScreen from "./screens/courier/CourierTrackDeliverySc
 import CourierEarningsScreen from "./screens/courier/CourierEarningsScreen"
 import CourierStatusScreen from "./screens/courier/CourierStatusScreen"
 import CourierStatsScreen from "./screens/courier/CourierStatsScreen"
-import CollaborativeDeliveriesScreen from "./screens/courier/CollaborativeDeliveriesScreen"
 
 // Écrans communs
 import ProfileScreen from "./screens/profile/ProfileScreen"
@@ -65,14 +65,14 @@ import type {
   CourierDeliveriesParamList,
 } from "./types/navigation"
 
-// Initialiser Sentry
-if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    enableInExpoDevelopment: true,
-    debug: ENVIRONMENT !== "production",
-    environment: ENVIRONMENT,
-  })
+// Initialiser Sentry (optionnel en développement)
+if (SENTRY_DSN && ENVIRONMENT === "production") {
+  // Sentry.init({
+  //   dsn: SENTRY_DSN,
+  //   enableInExpoDevelopment: true,
+  //   debug: ENVIRONMENT !== "production",
+  //   environment: ENVIRONMENT,
+  // })
 }
 
 // Ignorer certains avertissements
@@ -82,7 +82,8 @@ LogBox.ignoreLogs(["ViewPropTypes will be removed", "ColorPropType will be remov
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
-const Tab = createBottomTabNavigator<ClientTabParamList | CourierTabParamList>()
+const ClientTab = createBottomTabNavigator<ClientTabParamList>()
+const CourierTab = createBottomTabNavigator<CourierTabParamList>()
 const ClientDeliveriesStack = createNativeStackNavigator<ClientDeliveriesParamList>()
 const CourierDeliveriesStack = createNativeStackNavigator<CourierDeliveriesParamList>()
 
@@ -106,24 +107,24 @@ const theme = {
 // Navigateur d'onglets pour les clients
 const ClientTabNavigator: React.FC = () => {
   return (
-    <Tab.Navigator
+    <ClientTab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ color, size }) => {
           let iconName: string
 
-          if (route.name === "Home") {
+          if (route.name === "ClientHome") {
             iconName = "home"
-          } else if (route.name === "Deliveries") {
-            iconName = "package"
           } else if (route.name === "Marketplace") {
-            iconName = "shopping"
-          } else if (route.name === "Profile") {
-            iconName = "account"
+            iconName = "store"
+          } else if (route.name === "DeliveryHistory") {
+            iconName = "package"
+          } else if (route.name === "Settings") {
+            iconName = "cog"
           } else {
             iconName = "circle"
           }
 
-          return <IconButton icon={iconName} size={size} color={color} />
+          return <IconButton icon={iconName} size={size} iconColor={color} />
         },
         tabBarActiveTintColor: "#FF6B00",
         tabBarInactiveTintColor: "#757575",
@@ -134,39 +135,39 @@ const ClientTabNavigator: React.FC = () => {
         },
       })}
     >
-      <Tab.Screen name="Home" component={ClientHomeScreen} options={{ title: i18n.t("tabs.home") }} />
-      <Tab.Screen
-        name="Deliveries"
-        component={ClientDeliveriesNavigator}
-        options={{ title: i18n.t("tabs.deliveries") }}
+      <ClientTab.Screen name="ClientHome" component={ClientHomeScreen} options={{ title: i18n.t("tabs.home") }} />
+      <ClientTab.Screen
+        name="Marketplace"
+        component={MarketplaceScreen}
+        options={{ title: i18n.t("tabs.marketplace") }}
       />
-      <Tab.Screen name="Marketplace" component={MarketplaceScreen} options={{ title: i18n.t("tabs.marketplace") }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") }} />
-    </Tab.Navigator>
+      <ClientTab.Screen name="DeliveryHistory" component={ClientDeliveriesNavigator} options={{ title: i18n.t("tabs.deliveries") }} />
+      <ClientTab.Screen name="Settings" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") }} />
+    </ClientTab.Navigator>
   )
 }
 
 // Navigateur d'onglets pour les coursiers
 const CourierTabNavigator: React.FC = () => {
   return (
-    <Tab.Navigator
+    <CourierTab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ color, size }) => {
           let iconName: string
 
-          if (route.name === "Home") {
+          if (route.name === "CourierHome") {
             iconName = "home"
-          } else if (route.name === "Deliveries") {
+          } else if (route.name === "CourierDeliveryHistory") {
             iconName = "package"
-          } else if (route.name === "Earnings") {
+          } else if (route.name === "CourierEarnings") {
             iconName = "cash"
-          } else if (route.name === "Profile") {
-            iconName = "account"
+          } else if (route.name === "Settings") {
+            iconName = "cog"
           } else {
             iconName = "circle"
           }
 
-          return <IconButton icon={iconName} size={size} color={color} />
+          return <IconButton icon={iconName} size={size} iconColor={color} />
         },
         tabBarActiveTintColor: "#FF6B00",
         tabBarInactiveTintColor: "#757575",
@@ -177,15 +178,15 @@ const CourierTabNavigator: React.FC = () => {
         },
       })}
     >
-      <Tab.Screen name="Home" component={CourierHomeScreen} options={{ title: i18n.t("tabs.home") }} />
-      <Tab.Screen
-        name="Deliveries"
+      <CourierTab.Screen name="CourierHome" component={CourierHomeScreen} options={{ title: i18n.t("tabs.home") }} />
+      <CourierTab.Screen
+        name="CourierDeliveryHistory"
         component={CourierDeliveriesNavigator}
         options={{ title: i18n.t("tabs.deliveries") }}
       />
-      <Tab.Screen name="Earnings" component={CourierEarningsScreen} options={{ title: i18n.t("tabs.earnings") }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") }} />
-    </Tab.Navigator>
+      <CourierTab.Screen name="CourierEarnings" component={CourierEarningsScreen} options={{ title: i18n.t("tabs.earnings") }} />
+      <CourierTab.Screen name="Settings" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") }} />
+    </CourierTab.Navigator>
   )
 }
 
@@ -211,8 +212,6 @@ const CourierDeliveriesNavigator: React.FC = () => {
       <CourierDeliveriesStack.Screen name="DeliveriesList" component={CourierDeliveriesScreen} />
       <CourierDeliveriesStack.Screen name="DeliveryDetails" component={CourierDeliveryDetailsScreen} />
       <CourierDeliveriesStack.Screen name="Bid" component={BidScreen} />
-      <CourierDeliveriesStack.Screen name="TrackDelivery" component={CourierTrackDeliveryScreen} />
-      <CourierDeliveriesStack.Screen name="CollaborativeDeliveries" component={CollaborativeDeliveriesScreen} />
     </CourierDeliveriesStack.Navigator>
   )
 }
@@ -246,7 +245,6 @@ const CourierDeliveryDetailsScreen: React.FC = () => (
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean>(false)
-  const [userType, setUserType] = useState<string | null>(null)
 
   useEffect(() => {
     // Vérifier s'il s'agit du premier lancement de l'application
@@ -266,14 +264,13 @@ const App: React.FC = () => {
       }
     }
 
-    // Charger le type d'utilisateur (client ou coursier)
+    // Charger le type d'utilisateur (client ou coursier) - pour usage futur
     const loadUserType = async (): Promise<void> => {
       try {
-        const type = await AsyncStorage.getItem("userType")
-        setUserType(type || "client") // Par défaut, l'utilisateur est un client
+        await AsyncStorage.getItem("userType")
+        // Type sera utilisé dans une future implémentation
       } catch (error) {
         console.error("Error loading user type:", error)
-        setUserType("client")
       }
     }
 

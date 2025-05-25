@@ -42,7 +42,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
   const [visible, setVisible] = useState<boolean>(false)
-  const [vehicleType, setVehicleType] = useState<VehicleType>("motorcycle")
+  const [vehicleType, setVehicleType] = useState<VehicleType>("motorcycle" as VehicleType)
   const [licensePlate, setLicensePlate] = useState<string>("")
 
   const communes: string[] = [
@@ -73,7 +73,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     }
 
     // If user is a courier, check license plate
-    if (role === "courier" && !licensePlate) {
+    if (role === "coursier" && !licensePlate) {
       setError(t("register.errorLicensePlateRequired"))
       setVisible(true)
       return
@@ -117,7 +117,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       }
 
       // Add vehicle information for couriers
-      if (role === "courier") {
+      if (role === "coursier") {
         userData.vehicle_type = vehicleType
         userData.license_plate = licensePlate
       }
@@ -259,7 +259,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             </Picker>
           </View>
 
-          {role === "courier" && (
+          {role === "coursier" && (
             <>
               <View style={styles.pickerContainer}>
                 <Text style={styles.pickerLabel}>{t("register.vehicleType")}</Text>

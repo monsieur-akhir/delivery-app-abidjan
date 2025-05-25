@@ -6,7 +6,8 @@ import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from "re
 import { useRoute, useNavigation, type RouteProp } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons"
-import { Card, Divider, Button, Avatar, Badge } from "react-native-elements"
+import { Avatar, Badge } from "react-native-elements"
+import { Card, Divider, Button } from "react-native-paper"
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import CollaborativeService from "../../services/CollaborativeService"
 import { formatCurrency, formatDate, formatTime } from "../../utils/formatters"
@@ -128,21 +129,29 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
     navigation.navigate("CollaborativeChat", { deliveryId })
   }
 
-  const getStatusLabel = (status: string): string => {
-    switch (status) {
-      case "pending":
-        return "En attente"
-      case "accepted":
-        return "Acceptée"
-      case "in_progress":
-        return "En cours"
-      case "completed":
-        return "Terminée"
-      case "cancelled":
-        return "Annulée"
-      default:
-        return status
-    }
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3498db" />
+        <Text style={styles.loadingText}>Chargement des détails...</Text>
+      </View>
+    )
+  }
+
+  if (error || !delivery) {
+    return (
+      <View style={styles.errorContainer}>
+        <MaterialIcons name="error" size={48} color="#e74c3c" />
+        <Text style={styles.errorText}>{error || "Une erreur est survenue"}</Text>
+        <Button
+          mode="contained"
+          onPress={loadDeliveryDetails}
+          style={styles.retryButton}
+        >
+          Réessayer
+        </Button>
+      </View>
+    )
   }
 
   const getStatusColor = (status: string): string => {
@@ -162,6 +171,23 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
     }
   }
 
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case "pending":
+        return "En attente"
+      case "accepted":
+        return "Acceptée"
+      case "in_progress":
+        return "En cours"
+      case "completed":
+        return "Terminée"
+      case "cancelled":
+        return "Annulée"
+      default:
+        return status
+    }
+  }
+
   const getRoleLabel = (role: CollaboratorRole): string => {
     switch (role) {
       case "primary":
@@ -171,34 +197,15 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
       case "support":
         return "Support"
       default:
-        return role
+        return "Membre"
     }
-  }
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Chargement des détails...</Text>
-      </View>
-    )
-  }
-
-  if (error || !delivery) {
-    return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle" size={50} color="#e74c3c" />
-        <Text style={styles.errorText}>{error || "Erreur inconnue"}</Text>
-        <Button title="Réessayer" onPress={loadDeliveryDetails} buttonStyle={styles.retryButton} />
-      </View>
-    )
   }
 
   return (
     <ScrollView style={styles.container}>
-      <Card containerStyle={styles.headerCard}>
-        <Card.Title>Livraison</Card.Title>
-        <Card.Divider />
+      <Card style={styles.headerCard}>
+        <Card.Title title={`Livraison collaborative #${delivery.id.substring(0, 8)}`} />
+        <Divider />
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.deliveryId}>ID: {delivery.id.substring(0, 8)}</Text>
@@ -213,9 +220,9 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
         <Text style={styles.date}>Créée le {formatDate(delivery.createdAt)}</Text>
       </Card>
 
-      <Card containerStyle={styles.card}>
-        <Card.Title>Trajet</Card.Title>
-        <Card.Divider />
+      <Card style={styles.card}>
+        <Card.Title title="Trajet" />
+        <Divider />
         <View style={styles.locationContainer}>
           <View style={styles.locationItem}>
             <Ionicons name="location-outline" size={24} color="#3498db" />
@@ -274,9 +281,9 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
         </View>
       </Card>
 
-      <Card containerStyle={styles.card}>
-        <Card.Title>Détails du colis</Card.Title>
-        <Card.Divider />
+      <Card style={styles.card}>
+        <Card.Title title="Détails du colis" />
+        <Divider />
         <View style={styles.packageDetails}>
           <Text style={styles.packageDescription}>{delivery.packageDescription}</Text>
           <View style={styles.packageRow}>
@@ -298,9 +305,9 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
         </View>
       </Card>
 
-      <Card containerStyle={styles.card}>
-        <Card.Title>Équipe de livraison</Card.Title>
-        <Card.Divider />
+      <Card style={styles.card}>
+        <Card.Title title="Équipe de livraison" />
+        <Divider />
         {delivery.collaborators.length > 0 ? (
           delivery.collaborators.map((collaborator: Collaborator, index: number) => (
             <View key={collaborator.id}>
@@ -336,16 +343,18 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
         )}
 
         <Button
-          title="Chat d'équipe"
-          icon={<Ionicons name="chatbubbles-outline" size={16} color="white" style={{ marginRight: 8 }} />}
+          mode="contained"
+          icon="chat"
           onPress={handleChatWithTeam}
-          buttonStyle={styles.chatButton}
-        />
+          style={styles.chatButton}
+        >
+          Chat d{"'"}équipe
+        </Button>
       </Card>
 
-      <Card containerStyle={styles.card}>
-        <Card.Title>Chronologie</Card.Title>
-        <Card.Divider />
+      <Card style={styles.card}>
+        <Card.Title title="Chronologie" />
+        <Divider />
         <View style={styles.timeline}>
           <View style={styles.timelineItem}>
             <View style={[styles.timelineDot, { backgroundColor: "#3498db" }]} />
@@ -410,42 +419,46 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
       <View style={styles.actionsContainer}>
         {delivery.status === "pending" && (
           <Button
-            title="Rejoindre la livraison"
+            mode="contained"
             onPress={handleJoinDelivery}
-            buttonStyle={styles.joinButton}
-            containerStyle={styles.buttonContainer}
+            style={styles.joinButton}
             disabled={joining}
-          />
+          >
+            Rejoindre la livraison
+          </Button>
         )}
 
         {delivery.status === "accepted" && (
           <Button
-            title="Commencer la livraison"
+            mode="contained"
             onPress={handleStartDelivery}
-            buttonStyle={styles.startButton}
-            containerStyle={styles.buttonContainer}
+            style={styles.startButton}
             disabled={joining}
-          />
+          >
+            Commencer la livraison
+          </Button>
         )}
 
         {delivery.status === "in_progress" && (
           <Button
-            title="Terminer la livraison"
+            mode="contained"
             onPress={handleCompleteDelivery}
-            buttonStyle={styles.completeButton}
-            containerStyle={styles.buttonContainer}
+            style={styles.completeButton}
             disabled={joining}
-          />
+          >
+            Terminer la livraison
+          </Button>
         )}
 
         {["pending", "accepted", "in_progress"].includes(delivery.status) && (
           <Button
-            title="Annuler"
+            mode="outlined"
             onPress={handleCancelDelivery}
-            buttonStyle={styles.cancelButton}
-            containerStyle={styles.buttonContainer}
+            style={styles.cancelButton}
             disabled={joining}
-          />
+          >
+            Annuler
+          </Button>
         )}
       </View>
     </ScrollView>

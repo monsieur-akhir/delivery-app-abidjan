@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
 import type React from "react"
@@ -6,13 +7,14 @@ import { View, StyleSheet, Switch, ScrollView, TouchableOpacity, Alert } from "r
 import { Text, Card, Button, Divider, ActivityIndicator, Avatar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
+import FeatherIcon, { type FeatherIconName } from "../../components/FeatherIcon"
 import * as Location from "expo-location"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { updateCourierStatus, fetchCourierProfile, fetchWeatherForecast } from "../../services/api"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
-import type { CourierProfile, Weather } from "../../types/models"
+import { UserProfile, Weather } from "../../types/models"
 
 type CourierStatusScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "CourierStatus">
@@ -25,7 +27,7 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
   const [isOnline, setIsOnline] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
   const [statusLoading, setStatusLoading] = useState<boolean>(false)
-  const [courierProfile, setCourierProfile] = useState<CourierProfile | null>(null)
+  const [courierProfile, setCourierProfile] = useState<UserProfile | null>(null)
   const [weather, setWeather] = useState<Weather | null>(null)
   const [locationPermissionDenied, setLocationPermissionDenied] = useState<boolean>(false)
 
@@ -120,7 +122,7 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
     }
   }
 
-  const getWeatherIcon = (condition: string): string => {
+  const getWeatherIcon = (condition: string): FeatherIconName => {
     switch (condition.toLowerCase()) {
       case "clear":
       case "sunny":
@@ -176,7 +178,7 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.permissionDeniedContainer}>
-          <Feather name="map-pin-off" size={64} color="#FF6B00" />
+          <FeatherIcon name="map-pin-off" size={64} color="#FF6B00" />
           <Text style={styles.permissionDeniedTitle}>Localisation requise</Text>
           <Text style={styles.permissionDeniedText}>
             Pour utiliser cette fonctionnalité, vous devez autoriser l'accès à votre position.
@@ -271,7 +273,7 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
               <Text style={styles.sectionTitle}>Conditions météo</Text>
               <View style={styles.weatherContent}>
                 <View style={styles.weatherIcon}>
-                  <Feather name={getWeatherIcon(weather.current.condition)} size={48} color="#FF6B00" />
+                  <FeatherIcon name={getWeatherIcon(weather.current.condition)} size={48} color="#FF6B00" />
                 </View>
                 <View style={styles.weatherInfo}>
                   <Text style={styles.temperature}>{weather.current.temperature}°C</Text>
@@ -290,12 +292,12 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
                 </View>
               </View>
 
-              {weather.alert && (
-                <View style={styles.weatherAlert}>
-                  <Feather name="alert-triangle" size={16} color="#F44336" />
-                  <Text style={styles.weatherAlertText}>{weather.alert}</Text>
-                </View>
-              )}
+              {weather.alerts && weather.alerts.length > 0 && (
+                      <View style={styles.weatherAlert}>
+                        <Feather name="alert-triangle" size={16} color="#F44336" />
+                        <Text style={styles.weatherAlertText}>{weather.alerts.map(alert => alert.message || alert.description).join(", ")}</Text>
+                      </View>
+                    )}
             </Card.Content>
           </Card>
         )}
@@ -341,21 +343,21 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
           <Card.Content>
             <Text style={styles.sectionTitle}>Actions rapides</Text>
             <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("CourierDeliveries")}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("AvailableDeliveries")}>
                 <View style={styles.actionIconContainer}>
                   <Feather name="package" size={24} color="#FFFFFF" />
                 </View>
                 <Text style={styles.actionText}>Mes livraisons</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("CourierEarnings")}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("CourierHome")}>
                 <View style={[styles.actionIconContainer, { backgroundColor: "#4CAF50" }]}>
                   <Feather name="dollar-sign" size={24} color="#FFFFFF" />
                 </View>
                 <Text style={styles.actionText}>Mes gains</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("CourierStats")}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("CourierHome")}>
                 <View style={[styles.actionIconContainer, { backgroundColor: "#2196F3" }]}>
                   <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
                 </View>
@@ -455,9 +457,6 @@ const styles = StyleSheet.create({
   },
   onlineText: {
     color: "#2E7D32",
-  },
-  offlineText: {
-    color: "#C62828",
   },
   weatherCard: {
     marginHorizontal: 16,

@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
 import { Text, Card, Button, Chip, Divider, ActivityIndicator, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { fetchDeliveryDetails, cancelDelivery } from "../../services/api"
 import { formatPrice, formatDate } from "../../utils/formatters"
@@ -33,7 +32,6 @@ interface StatusStep {
 const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, navigation }) => {
   const { deliveryId } = route.params
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { isConnected } = useNetwork()
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
@@ -41,11 +39,7 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
   const [cancelling, setCancelling] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
 
-  useEffect(() => {
-    loadDeliveryDetails()
-  }, [deliveryId])
-
-  const loadDeliveryDetails = async (): Promise<void> => {
+  const loadDeliveryDetails = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
       const data = await fetchDeliveryDetails(deliveryId)
@@ -56,7 +50,11 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
     } finally {
       setLoading(false)
     }
-  }
+  }, [deliveryId, t])
+
+  useEffect(() => {
+    loadDeliveryDetails()
+  }, [loadDeliveryDetails])
 
   const handleCancelDelivery = (): void => {
     Alert.alert(t("deliveryDetails.cancelDelivery"), t("deliveryDetails.cancelDeliveryConfirmation"), [
@@ -171,7 +169,7 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("deliveryDetails.title")}</Text>
           <View style={{ width: 48 }} />
@@ -190,14 +188,14 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} color="#212121" />
+            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("deliveryDetails.title")}</Text>
           <View style={{ width: 48 }} />
         </View>
 
         <View style={styles.errorContainer}>
-          <IconButton icon="alert-circle-outline" size={50} color="#F44336" />
+          <IconButton icon="alert-circle-outline" size={50} iconColor="#F44336" />
           <Text style={styles.errorText}>{error || t("deliveryDetails.deliveryNotFound")}</Text>
           <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
             {t("common.back")}
@@ -218,7 +216,7 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} color="#212121" />
+          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("deliveryDetails.title")}</Text>
         <View style={{ width: 48 }} />
@@ -261,7 +259,7 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
                         { backgroundColor: step.completed || step.current ? step.color : "#E0E0E0" },
                       ]}
                     >
-                      <IconButton icon={step.icon} size={16} color="#FFFFFF" style={styles.icon} />
+                      <IconButton icon={step.icon} size={16} iconColor="#FFFFFF" style={styles.icon} />
                     </View>
 
                     {index < statusSteps.length - 1 && (
@@ -284,7 +282,7 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
 
             <View style={styles.addressContainer}>
               <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} color="#FF6B00" style={styles.addressIcon} />
+                <IconButton icon="map-marker" size={20} iconColor="#FF6B00" style={styles.addressIcon} />
                 <View style={styles.addressContent}>
                   <Text style={styles.addressLabel}>{t("deliveryDetails.from")}</Text>
                   <Text style={styles.addressText}>{delivery.pickup_address}</Text>
@@ -297,7 +295,7 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
               </View>
 
               <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} color="#4CAF50" style={styles.addressIcon} />
+                <IconButton icon="map-marker" size={20} iconColor="#4CAF50" style={styles.addressIcon} />
                 <View style={styles.addressContent}>
                   <Text style={styles.addressLabel}>{t("deliveryDetails.to")}</Text>
                   <Text style={styles.addressText}>{delivery.delivery_address}</Text>
@@ -412,12 +410,12 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
               <Text style={styles.sectionTitle}>{t("deliveryDetails.courier")}</Text>
 
               <View style={styles.courierInfo}>
-                <IconButton icon="account" size={40} color="#FF6B00" style={styles.courierIcon} />
+                <IconButton icon="account" size={40} iconColor="#FF6B00" style={styles.courierIcon} />
                 <View style={styles.courierDetails}>
                   <Text style={styles.courierName}>{delivery.courier.full_name}</Text>
                   <View style={styles.courierMeta}>
-                    <IconButton icon="star" size={16} color="#FFC107" style={styles.ratingIcon} />
-                    <Text style={styles.ratingText}>{delivery.courier.rating.toFixed(1)}</Text>
+                    <IconButton icon="star" size={16} iconColor="#FFC107" style={styles.ratingIcon} />
+                    <Text style={styles.ratingText}>{delivery.courier.rating?.toFixed(1) ?? 'N/A'}</Text>
                     <Chip icon="motorbike" style={styles.vehicleChip}>
                       {delivery.courier.vehicle_type}
                     </Chip>
@@ -453,16 +451,20 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
                       key={star}
                       icon="star"
                       size={24}
-                      color={star <= delivery.rating.rating ? "#FFC107" : "#E0E0E0"}
+                      iconColor={star <= (typeof delivery.rating === 'number' ? delivery.rating : delivery.rating?.rating || 0) ? "#FFC107" : "#E0E0E0"}
                       style={styles.starIcon}
                     />
                   ))}
                 </View>
 
-                <Text style={styles.ratingValue}>{delivery.rating.rating.toFixed(1)}</Text>
+                <Text style={styles.ratingValue}>
+                  {typeof delivery.rating === 'number' 
+                    ? delivery.rating.toFixed(1) 
+                    : delivery.rating?.rating?.toFixed(1) || 'N/A'}
+                </Text>
               </View>
 
-              {delivery.rating.comment && (
+              {typeof delivery.rating === 'object' && delivery.rating?.comment && (
                 <View style={styles.commentContainer}>
                   <Text style={styles.commentLabel}>{t("deliveryDetails.yourComment")}</Text>
                   <Text style={styles.commentText}>{delivery.rating.comment}</Text>

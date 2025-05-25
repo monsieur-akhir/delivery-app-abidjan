@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -115,10 +116,8 @@ const VoiceAssistantScreen = () => {
   }
 
   const handleStopListening = async () => {
-    let isProcessing = false
     try {
       setIsListening(false)
-      isProcessing = true
 
       const command = await VoiceAssistantService.stopListening()
 
@@ -139,8 +138,6 @@ const VoiceAssistantScreen = () => {
     } catch (err) {
       console.error("Error stopping listening:", err)
       setError(t("voiceAssistant.errorProcessing"))
-    } finally {
-      isProcessing = false
     }
   }
 
@@ -175,36 +172,182 @@ const VoiceAssistantScreen = () => {
     }
   }
 
-  const executeAction = (action: string, data: any) => {
-    switch (action) {
-      case "navigate":
-        if (data && data.screen) {
-          navigation.navigate(data.screen as keyof RootStackParamList, data.params || {})
-        }
-        break
-      case "createDelivery":
-        navigation.navigate("CreateDelivery", data || {})
-        break
-      case "trackDelivery":
-        if (data && data.deliveryId) {
-          navigation.navigate("TrackDelivery", { deliveryId: data.deliveryId })
-        }
-        break
-      case "checkWeather":
-        navigation.navigate("WeatherScreen" as any, data || {})
-        break
-      case "findMerchants":
-        navigation.navigate("MarketplaceScreen" as any, data || {})
-        break
-      case "checkEarnings":
-        navigation.navigate("CourierEarnings" as any)
-        break
-      case "goOnline":
-      case "goOffline":
-        navigation.navigate("CourierStatus" as any, { initialStatus: action === "goOnline" })
-        break
-      default:
-        console.log("Unknown action:", action)
+  // Type guard to check if screen is a valid route
+  const isValidRoute = (screen: string): screen is keyof RootStackParamList => {
+    const validRoutes: (keyof RootStackParamList)[] = [
+      'Login', 'Register', 'VerifyOTP', 'ForgotPassword', 'ClientTabs', 'CourierTabs',
+      'Home', 'CreateDelivery', 'MerchantDetails', 'DeliveryDetails', 'Bids', 'TrackDelivery',
+      'Payment', 'RateDelivery', 'EnhancedRateDelivery', 'Bid', 'CourierTrackDelivery',
+      'CourierStatus', 'CourierStats', 'CollaborativeDeliveries', 'CollaborativeDeliveryDetails',
+      'JoinCollaborativeDelivery', 'CollaborativeChat', 'Gamification', 'CommunityWallet',
+      'VehicleManagement', 'CourierProfile', 'Notifications', 'Support', 'LanguageSettings',
+      'Main', 'ClientHome', 'Marketplace', 'DeliveryHistory', 'Settings', 'CourierHome',
+      'CourierEarnings', 'CourierDeliveryHistory', 'WebPayment', 'Cart', 'Profile',
+      'NotificationSettings', 'SecuritySettings', 'ChangePassword', 'SecurityQuestions',
+      'StorageManagementScreen', 'AutoSyncSettingsScreen', 'DataUsageSettingsScreen',
+      'WeatherScreen', 'GamificationScreen', 'AvailableDeliveries'
+    ]
+    return validRoutes.includes(screen as keyof RootStackParamList)
+  }
+
+  // Navigation helper with proper type safety
+  const navigateToScreen = (screenName: keyof RootStackParamList, params?: unknown) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const nav = navigation as any
+      
+      switch (screenName) {
+        case 'Login':
+        case 'Register':
+        case 'ForgotPassword':
+        case 'ClientTabs':
+        case 'CourierTabs':
+        case 'Home':
+        case 'CreateDelivery':
+        case 'CourierStats':
+        case 'CollaborativeDeliveries':
+        case 'Gamification':
+        case 'CommunityWallet':
+        case 'VehicleManagement':
+        case 'Notifications':
+        case 'Support':
+        case 'LanguageSettings':
+        case 'Main':
+        case 'ClientHome':
+        case 'DeliveryHistory':
+        case 'Settings':
+        case 'CourierHome':
+        case 'CourierEarnings':
+        case 'CourierDeliveryHistory':
+        case 'Profile':
+        case 'NotificationSettings':
+        case 'SecuritySettings':
+        case 'ChangePassword':
+        case 'SecurityQuestions':
+        case 'StorageManagementScreen':
+        case 'AutoSyncSettingsScreen':
+        case 'DataUsageSettingsScreen':
+        case 'GamificationScreen':
+        case 'AvailableDeliveries':
+          nav.navigate(screenName)
+          break
+        case 'Marketplace':
+          if (params && typeof params === 'object' && 'category' in params) {
+            nav.navigate(screenName, params)
+          } else {
+            nav.navigate(screenName)
+          }
+          break
+        case 'CourierStatus':
+          if (params && typeof params === 'object' && 'initialStatus' in params) {
+            nav.navigate(screenName, params)
+          } else {
+            nav.navigate(screenName)
+          }
+          break
+        case 'VerifyOTP':
+          if (params && typeof params === 'object' && 'phone' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'MerchantDetails':
+          if (params && typeof params === 'object' && 'merchantId' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'DeliveryDetails':
+        case 'Bids':
+        case 'TrackDelivery':
+        case 'Bid':
+        case 'CourierTrackDelivery':
+        case 'JoinCollaborativeDelivery':
+        case 'CollaborativeChat':
+        case 'RateDelivery':
+        case 'EnhancedRateDelivery':
+          if (params && typeof params === 'object' && 'deliveryId' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'CollaborativeDeliveryDetails':
+          if (params && typeof params === 'object' && 'deliveryId' in params && 'clientName' in params && 'finalPrice' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'Payment':
+          if (params && typeof params === 'object' && 'deliveryId' in params && 'amount' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'CourierProfile':
+          if (params && typeof params === 'object' && 'courierId' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'WebPayment':
+          if (params && typeof params === 'object' && 'paymentUrl' in params && 'transactionId' in params && 'onComplete' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'Cart':
+          if (params && typeof params === 'object' && 'merchantId' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        case 'WeatherScreen':
+          if (params && typeof params === 'object' && 'location' in params) {
+            nav.navigate(screenName, params)
+          }
+          break
+        default:
+          console.error("Unhandled navigation case:", screenName)
+      }
+    } catch (error) {
+      console.error("Navigation error:", error)
+      throw error
+    }
+  }
+
+  const executeAction = (action: string, data: { screen?: string; params?: unknown; deliveryId?: string; location?: string }) => {
+    try {
+      switch (action) {
+        case "navigate":
+          if (data?.screen && isValidRoute(data.screen)) {
+            navigateToScreen(data.screen, data.params)
+          } else {
+            console.error("Invalid navigation route:", data?.screen)
+          }
+          break
+        case "createDelivery":
+          navigateToScreen("CreateDelivery")
+          break
+        case "trackDelivery":
+          if (data?.deliveryId) {
+            navigateToScreen("TrackDelivery", { deliveryId: data.deliveryId })
+          }
+          break
+        case "checkWeather":
+          navigateToScreen("WeatherScreen", { location: data?.location || "Abidjan" })
+          break
+        case "findMerchants":
+          if (data?.params && typeof data.params === 'object' && 'category' in data.params) {
+            navigateToScreen("Marketplace", { category: (data.params as { category?: string }).category })
+          } else {
+            navigateToScreen("Marketplace")
+          }
+          break
+        case "checkEarnings":
+          navigateToScreen("CourierEarnings")
+          break
+        case "goOnline":
+        case "goOffline":
+          navigateToScreen("CourierStatus", { initialStatus: action === "goOnline" })
+          break
+        default:
+          console.error("Unknown action:", action)
+      }
+    } catch (error) {
+      console.error("Navigation error:", error)
+      setError(t("voiceAssistant.navigationError"))
     }
   }
 

@@ -7,9 +7,8 @@ import MapView, { Polyline, PROVIDER_GOOGLE, type Region, Marker, Callout } from
 
 import * as Location from "expo-location"
 import { useTranslation } from "react-i18next"
-import { useNetwork } from "../contexts/NetworkContext"
 import RouteOptimizationService from "../services/RouteOptimizationService"
-import FeatherIcon from "./FeatherIcon"
+import FeatherIcon, { FeatherIconName } from "./FeatherIcon"
 import type { Coordinates } from "../types/models"
 
 interface EnhancedMapProps {
@@ -76,7 +75,6 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
   children,
 }) => {
   const { t } = useTranslation()
-  const { isConnected } = useNetwork()
   const mapRef = useRef<MapView>(null)
 
   const [region, setRegion] = useState(initialRegion)
@@ -140,12 +138,6 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
     setRegion(newRegion)
     if (onRegionChange) {
       onRegionChange(newRegion)
-    }
-  }
-
-  const handleMarkerPress = (markerId: string | number) => {
-    if (onMarkerPress) {
-      onMarkerPress(markerId)
     }
   }
 
@@ -248,7 +240,7 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
           <Marker key={marker.id} coordinate={marker.coordinate} title={marker.title} description={marker.description} onPress={() => onMarkerPress?.(marker.id)}>
             {marker.icon && (
               <View style={[styles.customMarker, { backgroundColor: marker.color || "#FF6B00" }]}>
-                <FeatherIcon name={marker.icon} size={20} color="#FFFFFF" />
+                <FeatherIcon name={marker.icon as FeatherIconName} size={20} color="#FFFFFF" />
               </View>
             )}
           </Marker>

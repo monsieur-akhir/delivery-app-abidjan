@@ -2,10 +2,10 @@ import type React from "react"
 import { View, StyleSheet } from "react-native"
 import { Text, Button } from "react-native-paper"
 import { Feather } from "@expo/vector-icons"
-import type { FeatherIconName } from "./FeatherIcon"
+import type { Icon } from "@expo/vector-icons/build/createIconSet"
 
 export interface EmptyStateProps {
-  icon: keyof typeof Feather.glyphMap
+  icon: React.ComponentProps<typeof Feather>["name"]
   title: string
   message: string
   buttonText?: string

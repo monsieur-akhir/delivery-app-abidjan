@@ -9,7 +9,6 @@ export default {
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     splash: {
-      image: "./assets/splash.png",
       resizeMode: "contain",
       backgroundColor: "#FF6B00",
     },
@@ -33,7 +32,6 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#FF6B00",
       },
       package: "com.livraisonabidjan.app",

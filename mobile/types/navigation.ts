@@ -5,6 +5,9 @@ export type RootStackParamList = {
   Register: undefined
   VerifyOTP: { phone: string }
   ForgotPassword: undefined
+  Onboarding: undefined
+  ClientMain: undefined
+  CourierMain: undefined
   ClientTabs: undefined
   CourierTabs: undefined
   Home: undefined
@@ -66,6 +69,24 @@ export type CourierTabParamList = {
   CourierEarnings: undefined
   CourierDeliveryHistory: undefined
   Settings: undefined
+}
+
+// Types pour les stacks de livraisons
+export type ClientDeliveriesParamList = {
+  DeliveriesList: undefined
+  CreateDelivery: undefined
+  DeliveryDetails: { deliveryId: string }
+  Bids: { deliveryId: string }
+  TrackDelivery: { deliveryId: string }
+  Payment: { deliveryId: string; amount: number }
+  RateDelivery: { deliveryId: string }
+}
+
+export type CourierDeliveriesParamList = {
+  DeliveriesList: undefined
+  DeliveryDetails: { deliveryId: string }
+  Bid: { deliveryId: string }
+  TrackDelivery: { deliveryId: string }
 }
 
 export type ClientHomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "ClientHome">

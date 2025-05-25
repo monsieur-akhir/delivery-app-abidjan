@@ -16,7 +16,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 
 type CourierEarningsScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, "CourierMain">
+  navigation: NativeStackNavigationProp<RootStackParamList, "CourierEarnings">
 }
 
 interface EarningsSummary {
