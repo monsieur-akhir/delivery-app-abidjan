@@ -1,13 +1,46 @@
-import authApi from "./auth"
+import authApi from './auth'
+import { handleApiError } from '../services/errorHandler'
+import axios from 'axios'
+
+/**
+ * @typedef {Object} Delivery
+ * @property {number} id - ID de la livraison
+ * @property {string} status - Statut de la livraison
+ * @property {Object} pickup - Point de départ
+ * @property {Object} dropoff - Point d'arrivée
+ * @property {number} price - Prix de la livraison
+ */
+
+/**
+ * @typedef {Object} BusinessDashboard
+ * @property {number} totalDeliveries - Nombre total de livraisons
+ * @property {number} activeDeliveries - Livraisons en cours
+ * @property {number} completedDeliveries - Livraisons terminées
+ * @property {number} totalRevenue - Revenu total
+ */
 
 /**
  * Récupérer les données du tableau de bord pour une entreprise
  * @param {string} period - Période (week, month, year)
- * @returns {Promise<Object>} - Données du tableau de bord
+ * @returns {Promise<BusinessDashboard>} - Données du tableau de bord
  */
 export const fetchBusinessDashboard = async (period = "week") => {
   try {
     const response = await authApi.get(`/business/dashboard?period=${period}`)
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Récupérer les livraisons récentes pour une entreprise
+ * @param {number} limit - Nombre de livraisons à récupérer
+ * @returns {Promise<Object>} - Liste des livraisons récentes
+ */
+export const getRecentDeliveries = async (limit = 5) => {
+  try {
+    const response = await authApi.get(`/business/deliveries/recent?limit=${limit}`)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -50,14 +83,18 @@ export const fetchBusinessDeliveryDetails = async (deliveryId) => {
 /**
  * Créer une nouvelle livraison
  * @param {Object} deliveryData - Données de la livraison
- * @returns {Promise<Object>} - Livraison créée
+ * @param {Object} deliveryData.pickup - Point de départ
+ * @param {Object} deliveryData.dropoff - Point d'arrivée
+ * @param {string} deliveryData.description - Description de la livraison
+ * @param {number} deliveryData.price - Prix de la livraison
+ * @returns {Promise<Delivery>} - Livraison créée
  */
 export const createBusinessDelivery = async (deliveryData) => {
   try {
     const response = await authApi.post("/business/deliveries", deliveryData)
     return response.data
   } catch (error) {
-    handleApiError(error)
+    return handleApiError(error)
   }
 }
 
@@ -392,21 +429,21 @@ export const uploadBusinessLogo = async (file) => {
 }
 
 /**
- * Gérer les erreurs d'API
- * @param {Error} error - Erreur axios
- * @throws {Error} - Erreur formatée
+ * Récupère la liste des entreprises
+ * @param {Object} params - Paramètres de filtrage et pagination
+ * @returns {Promise<Object>} - Liste des entreprises
  */
-const handleApiError = (error) => {
-  if (error.response) {
-    // La requête a été faite et le serveur a répondu avec un code d'état
-    // qui n'est pas dans la plage 2xx
-    const errorMessage = error.response.data.detail || error.response.data.message || "Une erreur est survenue"
-    throw new Error(errorMessage)
-  } else if (error.request) {
-    // La requête a été faite mais aucune réponse n'a été reçue
-    throw new Error("Aucune réponse du serveur. Vérifiez votre connexion Internet.")
-  } else {
-    // Une erreur s'est produite lors de la configuration de la requête
-    throw new Error(error.message || "Une erreur est survenue")
+export async function fetchBusinesses(params = {}) {
+  try {
+    const response = await axios.get(`${BASE_URL}/businesses`, {
+      params,
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error("Erreur lors de la récupération des entreprises:", error)
+    throw error
   }
 }
+
+// Using imported handleApiError from auth.js

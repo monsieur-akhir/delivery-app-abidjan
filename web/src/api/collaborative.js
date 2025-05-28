@@ -1,8 +1,8 @@
 import axios from "axios"
 import { getAuthHeaders } from "./auth"
-import config from "@/config"
+import { API_URL } from "@/config"
 
-const BASE_URL = config.API_URL
+const BASE_URL = API_URL
 
 export default {
   // Récupérer toutes les livraisons collaboratives
@@ -272,4 +272,149 @@ export default {
       throw error
     }
   },
+}
+
+export async function getCollaborativeDeliveries(params = {}) {
+  try {
+    const response = await axios.get(`${BASE_URL}/collaborative-deliveries`, {
+      params,
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error("Error fetching collaborative deliveries:", error)
+    throw error
+  }
+}
+
+export async function getCollaborativeDelivery(id) {
+  try {
+    const response = await axios.get(`${BASE_URL}/collaborative-deliveries/${id}`, {
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching collaborative delivery ${id}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Récupère les gains d'une livraison collaborative
+ * @param {number|string} deliveryId - ID de la livraison collaborative
+ * @returns {Promise<Object>} - Détail des gains
+ */
+export async function getCollaborativeEarnings(deliveryId) {
+  try {
+    const response = await axios.get(`${BASE_URL}/collaborative-deliveries/${deliveryId}/earnings`, {
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des gains pour la livraison collaborative ${deliveryId}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Met à jour la part d'un participant pour une livraison collaborative
+ * @param {number|string} deliveryId - ID de la livraison collaborative
+ * @param {number|string} participantId - ID du participant
+ * @param {number} share - Nouvelle part du participant
+ * @returns {Promise<Object>} - Détail du participant mis à jour
+ */
+export async function updateParticipantShare(deliveryId, participantId, share) {
+  try {
+    const response = await axios.put(
+      `${BASE_URL}/collaborative-deliveries/${deliveryId}/participants/${participantId}/share`,
+      { share },
+      { headers: getAuthHeaders() }
+    )
+    return response.data
+  } catch (error) {
+    console.error(`Erreur lors de la mise à jour de la part du participant ${participantId} pour la livraison ${deliveryId}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Distribue les gains d'une livraison collaborative
+ * @param {number|string} deliveryId - ID de la livraison collaborative
+ * @returns {Promise<Object>} - Résultat de la distribution
+ */
+export async function distributeCollaborativeEarnings(deliveryId) {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/collaborative-deliveries/${deliveryId}/distribute-earnings`,
+      {},
+      { headers: getAuthHeaders() }
+    )
+    return response.data
+  } catch (error) {
+    console.error(`Erreur lors de la distribution des gains pour la livraison collaborative ${deliveryId}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Récupère les données d'une livraison collaborative au format CSV ou JSON
+ * @param {number|string} deliveryId - ID de la livraison collaborative
+ * @param {string} format - Format d'export ('csv' ou 'json')
+ * @returns {Promise<Blob>} - Données exportées
+ */
+export async function exportCollaborativeData(deliveryId, format = 'csv') {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/collaborative-deliveries/${deliveryId}/export`,
+      {
+        params: { format },
+        headers: getAuthHeaders(),
+        responseType: 'blob'
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error(`Erreur lors de l'export des données pour la livraison collaborative ${deliveryId}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Récupère la liste des participants d'une livraison collaborative
+ * @param {string} deliveryId - ID de la livraison
+ * @returns {Promise<Array>} Liste des participants
+ */
+export async function getCollaborativeParticipants(deliveryId) {
+  try {
+    const response = await axios.get(`${API_URL}/collaborative/${deliveryId}/participants`, {
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error("Erreur lors de la récupération des participants:", error)
+    throw error
+  }
+}
+
+/**
+ * Met à jour le statut d'un participant dans une livraison collaborative
+ * @param {string} deliveryId - ID de la livraison
+ * @param {string} participantId - ID du participant
+ * @param {string} status - Nouveau statut
+ * @returns {Promise<Object>} Participant mis à jour
+ */
+export async function updateParticipantStatus(deliveryId, participantId, status) {
+  try {
+    const response = await axios.put(
+      `${API_URL}/collaborative/${deliveryId}/participants/${participantId}`,
+      { status },
+      {
+        headers: getAuthHeaders(),
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du statut du participant:", error)
+    throw error
+  }
 }

@@ -1,10 +1,64 @@
 // Configuration de l'API
-export const API_URL = process.env.VUE_APP_API_URL || "http://localhost:8000/api"
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
+export const API_TIMEOUT = 30000 // 30 secondes
+export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL || "ws://localhost:8000/ws"
 
 // Configuration des tokens
 export const TOKEN_KEY = "auth_token"
 export const REFRESH_TOKEN_KEY = "refresh_token"
 export const TOKEN_EXPIRY_KEY = "token_expiry"
+
+// Configuration des rôles utilisateur
+export const USER_ROLES = {
+  admin: {
+    label: "Administrateur",
+    color: "#dc3545",
+    icon: "user-shield",
+  },
+  manager: {
+    label: "Gestionnaire",
+    color: "#6f42c1",
+    icon: "user-tie",
+  },
+  driver: {
+    label: "Livreur",
+    color: "#007bff",
+    icon: "truck",
+  },
+  customer: {
+    label: "Client",
+    color: "#28a745",
+    icon: "user",
+  },
+}
+
+// Configuration des statuts utilisateur
+export const USER_STATUSES = {
+  active: {
+    label: "Actif",
+    color: "#28a745",
+    icon: "check-circle",
+  },
+  inactive: {
+    label: "Inactif",
+    color: "#6c757d",
+    icon: "times-circle",
+  },
+  suspended: {
+    label: "Suspendu",
+    color: "#ffc107",
+    icon: "exclamation-circle",
+  },
+  blocked: {
+    label: "Bloqué",
+    color: "#dc3545",
+    icon: "ban",
+  },
+}
+
+// Configuration de la pagination
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
+export const DEFAULT_PAGE_SIZE = 20
 
 // Configuration des statuts de livraison
 export const DELIVERY_STATUSES = {

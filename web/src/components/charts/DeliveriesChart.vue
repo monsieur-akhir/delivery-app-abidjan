@@ -1,7 +1,7 @@
 <template>
   <div class="chart-container">
     <div class="chart-header">
-      <h3>{{ chartData.datasets[0].label }}</h3>
+      <h3>{{ title }}</h3>
       <div class="chart-actions">
         <button 
           class="btn-chart-action" 
@@ -22,29 +22,24 @@
       </div>
     </div>
     <div class="chart-content">
-      <Line v-if="chartType === 'line'" :data="chartData" :options="options" />
-      <Bar v-else :data="chartData" :options="options" />
+      <canvas ref="chartCanvas"></canvas>
     </div>
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Line, Bar } from 'vue-chartjs';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
 export default {
   name: 'DeliveriesChart',
-  components: {
-    Line,
-    Bar
-  },
   props: {
     chartData: {
       type: Object,
       required: true
+    },
+    title: {
+      type: String,
+      default: 'Graphique des livraisons'
     },
     options: {
       type: Object,
@@ -52,14 +47,61 @@ export default {
     }
   },
   setup(props) {
-    const chartType = ref('line');
+    const chartType = ref('line')
+    const chartCanvas = ref(null)
+    let chartInstance = null
 
     const changeChartType = (type) => {
-      chartType.value = type;
+      chartType.value = type
+      createChart()
     }
+
+    const createChart = async () => {
+      if (!chartCanvas.value) return
+
+      // Détruire le graphique existant
+      if (chartInstance) {
+        chartInstance.destroy()
+      }
+
+      try {
+        // Import dynamique de Chart.js
+        const { Chart, registerables } = await import('chart.js')
+        Chart.register(...registerables)
+
+        const ctx = chartCanvas.value.getContext('2d')
+        
+        chartInstance = new Chart(ctx, {
+          type: chartType.value,
+          data: props.chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            ...props.options
+          }
+        })
+      } catch (error) {
+        console.error('Erreur lors de la création du graphique:', error)
+      }
+    }
+
+    onMounted(() => {
+      createChart()
+    })
+
+    onUnmounted(() => {
+      if (chartInstance) {
+        chartInstance.destroy()
+      }
+    })
+
+    watch(() => props.chartData, () => {
+      createChart()
+    }, { deep: true })
 
     return {
       chartType,
+      chartCanvas,
       changeChartType
     }
   }
@@ -75,8 +117,6 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  position: relative;
-  width: 100%;
 }
 
 .chart-header {
@@ -117,8 +157,8 @@ export default {
 }
 
 .btn-chart-action.active {
-  background-color: #0056b3;
-  border-color: #0056b3;
+  background-color: #FF6B00;
+  border-color: #FF6B00;
   color: white;
 }
 

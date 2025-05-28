@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - keycloak
+      - rasa
+    volumes:
+      - ./uploads:/app/uploads
+    restart: always
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=livraison_abidjan
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  keycloak:
+    image: jboss/keycloak:16.1.1
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - DB_VENDOR=POSTGRES
+      - DB_ADDR=db
+      - DB_DATABASE=keycloak
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    volumes:
+      - keycloak_data:/opt/jboss/keycloak/standalone/data
+
+  rasa:
+    image: rasa/rasa:3.2.5
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./rasa:/app
+    command: run --enable-api --cors "*"
+
+volumes:
+  postgres_data:
+  redis_data:
+  keycloak_data:

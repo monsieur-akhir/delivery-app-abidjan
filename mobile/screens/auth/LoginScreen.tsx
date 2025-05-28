@@ -11,6 +11,7 @@ import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
+import i18n from "../../i18n"
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">
@@ -29,6 +30,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [error, setError] = useState<string>("")
   const [visible, setVisible] = useState<boolean>(false)
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
+  const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
 
   // Charger les identifiants sauvegardés
   useEffect(() => {
@@ -57,6 +59,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       setShowOfflineWarning(false)
     }
   }, [isConnected, isOfflineMode])
+
+  useEffect(() => {
+    if (!i18n.isInitialized) {
+      i18n.on("initialized", () => setIsI18nReady(true))
+    }
+  }, [])
+
+  if (!isI18nReady) {
+    return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
+  }
 
   const handleLogin = async (): Promise<void> => {
     if (phone.trim() === "" || password.trim() === "") {

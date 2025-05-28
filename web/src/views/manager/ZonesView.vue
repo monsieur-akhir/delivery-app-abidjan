@@ -243,7 +243,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import ZoneMap from '@/components/maps/ZoneMap.vue';
-import { getZones, addZone, deleteZone, getTrafficReports, deleteTrafficReport, getWeatherAlerts, addWeatherAlert, deleteWeatherAlert, getActiveCouriers } from '@/api/manager';
+import { fetchZones, addZone, deleteZone, getTrafficReports, deleteTrafficReport, getWeatherAlerts, addWeatherAlert, deleteWeatherAlert, getActiveCouriers } from '@/api/manager';
 import { formatDateTime, formatSeverity } from '@/utils/formatters';
 
 export default {
@@ -300,7 +300,7 @@ export default {
     
     const loadZones = async () => {
       try {
-        const data = await getZones();
+        const data = await fetchZones();
         zones.value = data;
       } catch (error) {
         console.error('Erreur lors du chargement des zones:', error);

@@ -29,7 +29,7 @@
 
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Pie } from 'vue-chartjs';
+import { Pie } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -64,18 +64,22 @@ export default {
       }
 
       // Générer des couleurs si elles ne sont pas fournies
-      const backgroundColor = props.chartData.colors || generatePaletteColors(props.chartData.datasets[0].data.length)
+      const colors = props.chartData.colors || generatePaletteColors(props.chartData.datasets[0].data.length)
+      
+      // Appliquer les couleurs au dataset
+      const chartDataCopy = JSON.parse(JSON.stringify(props.chartData));
+      chartDataCopy.datasets[0].backgroundColor = colors;
 
       if (chartType.value === 'pie') {
         chart.value = new ChartJS(document.getElementById(props.chartData.chartId), {
           type: 'pie',
-          data: props.chartData,
+          data: chartDataCopy,
           options: props.options
         })
       } else {
         chart.value = new ChartJS(document.getElementById(props.chartData.chartId), {
           type: 'doughnut',
-          data: props.chartData,
+          data: chartDataCopy,
           options: props.options
         })
       }
@@ -83,7 +87,7 @@ export default {
 
     const changeChartType = (type) => {
       chartType.value = type
-      props.chartData.type = type
+      // On évite de modifier directement la prop
       createChart()
       emit('type-changed', type)
     }

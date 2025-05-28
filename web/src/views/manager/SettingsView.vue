@@ -1,3 +1,4 @@
+<!-- eslint-disable prettier/prettier -->
 <template>
   <div class="settings-view">
     <div class="page-header">
@@ -584,7 +585,9 @@
               <option v-if="settings.payment.payoutSchedule === 'weekly' || settings.payment.payoutSchedule === 'biweekly'" value="friday">Vendredi</option>
               <option v-if="settings.payment.payoutSchedule === 'weekly' || settings.payment.payoutSchedule === 'biweekly'" value="saturday">Samedi</option>
               <option v-if="settings.payment.payoutSchedule === 'weekly' || settings.payment.payoutSchedule === 'biweekly'" value="sunday">Dimanche</option>
-              <option v-if="settings.payment.payoutSchedule === 'monthly'" v-for="day in 31" :key="day" :value="day">{{ day }}</option>
+              <template v-if="settings.payment.payoutSchedule === 'monthly'">
+                <option v-for="day in 31" :key="day" :value="day">{{ day }}</option>
+              </template>
             </select>
           </div>
           
@@ -1374,4 +1377,71 @@ export default {
               if (settings[section][key] !== undefined) {
                 settings[section][key] = response[section][key]
               }
-            }
+            })
+          }
+        })
+      } catch (error) {
+        console.error('Erreur lors du chargement des paramètres:', error)
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const markAsChanged = (section) => {
+      if (!changedSections.value.includes(section)) {
+        changedSections.value.push(section)
+      }
+    }
+
+    const saveAllSettings = async () => {
+      if (!hasChanges.value) return
+
+      saving.value = true
+      try {
+        const settingsToSave = {}
+        changedSections.value.forEach(section => {
+          settingsToSave[section] = settings[section]
+        })
+        
+        await updateSystemSettingsManager(settingsToSave)
+        changedSections.value = []
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde des paramètres:', error)
+      } finally {
+        saving.value = false
+      }
+    }
+
+    const refreshData = () => {
+      if (changedSections.value.length > 0) {
+        if (confirm('Vous avez des modifications non enregistrées. Voulez-vous vraiment actualiser?')) {
+          fetchData()
+          changedSections.value = []
+        }
+      } else {
+        fetchData()
+      }
+    }
+
+    // Propriétés calculées
+    const hasChanges = computed(() => changedSections.value.length > 0)
+
+    // Cycle de vie
+    onMounted(() => {
+      fetchData()
+    })
+
+    return {
+      loading,
+      saving,
+      settings,
+      activeTab,
+      tabs,
+      hasChanges,
+      markAsChanged,
+      saveAllSettings,
+      refreshData
+    }
+  }
+}
+</script>

@@ -358,3 +358,29 @@ export const getTransportStats = async () => {
     throw error
   }
 }
+
+export default {
+  fetchVehicles,
+  fetchVehicleDetails,
+  createVehicle,
+  updateVehicle,
+  deleteVehicle,
+  uploadVehicleDocument,
+  fetchCourierVehicles,
+  assignVehicleToCourier,
+  updateCourierVehicle,
+  removeCourierVehicle,
+  setPrimaryVehicle,
+  fetchTransportRules,
+  fetchTransportRuleDetails,
+  createTransportRule,
+  updateTransportRule,
+  deleteTransportRule,
+  getVehicleRecommendation,
+  fetchVehicleUsageStats,
+  fetchVehiclePerformanceStats,
+  fetchVehicleEnvironmentalStats,
+  getVehicleTypes,
+  getCargoCategories,
+  getTransportStats
+}

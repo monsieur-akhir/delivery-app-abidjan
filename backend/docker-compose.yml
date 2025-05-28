@@ -1,66 +1,71 @@
 version: '3.8'
 
 services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-      - keycloak
-      - rasa
-    volumes:
-      - ./uploads:/app/uploads
-    restart: always
-
   db:
     image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+    restart: always
     env_file:
-      - .env
+      - .env.dev
     environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=livraison_abidjan
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
   redis:
     image: redis:6
+    restart: always
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
 
-  keycloak:
-    image: jboss/keycloak:16.1.1
-    environment:
-      - KEYCLOAK_USER=admin
-      - KEYCLOAK_PASSWORD=admin
-      - DB_VENDOR=POSTGRES
-      - DB_ADDR=db
-      - DB_DATABASE=keycloak
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-    ports:
-      - "8080:8080"
+  backend:
+    build:
+      context: .
+    env_file:
+      - .env.dev
     depends_on:
       - db
+      - redis
+      - keycloak
+      - rasa
+    ports:
+      - "8000:8000"
     volumes:
-      - keycloak_data:/opt/jboss/keycloak/standalone/data
+      - .:/app
+      - ./uploads:/app/uploads
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    restart: always
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.5
+    env_file:
+      - .env.dev
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+    command: start-dev
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    restart: always
 
   rasa:
     image: rasa/rasa:3.2.5
+    command: run --enable-api --cors "*"
     ports:
       - "5005:5005"
     volumes:
       - ./rasa:/app
-    command: run --enable-api --cors "*"
+    restart: always
 
 volumes:
   postgres_data:

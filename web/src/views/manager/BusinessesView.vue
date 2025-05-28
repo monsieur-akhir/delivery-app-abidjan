@@ -1,3 +1,17 @@
+<template>
+  <div class="businesses-view">
+    <!-- Your template content here -->
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'BusinessesView',
+  // Your component options here
+}
+</script>
+
+<style scoped>
 .empty-state h3 {
   font-size: 1.25rem;
   font-weight: 600;

@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native"
 import { TextInput, Button, Text, Snackbar, Checkbox } from "react-native-paper"
@@ -8,24 +9,32 @@ import { useTranslation } from "react-i18next"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RootStackParamList } from "../../types/navigation"
+import i18n from "../../i18n"
 
-const LoginScreen = ({ navigation }) => {
+type LoginScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, "Login">
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { signIn } = useAuth()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
 
-  const [phone, setPhone] = useState("")
-  const [password, setPassword] = useState("")
-  const [secureTextEntry, setSecureTextEntry] = useState(true)
-  const [rememberMe, setRememberMe] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [visible, setVisible] = useState(false)
-  const [showOfflineWarning, setShowOfflineWarning] = useState(false)
+  const [phone, setPhone] = useState<string>("")
+  const [password, setPassword] = useState<string>("")
+  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(true)
+  const [rememberMe, setRememberMe] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string>("")
+  const [visible, setVisible] = useState<boolean>(false)
+  const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
+  const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
 
   // Charger les identifiants sauvegardés
   useEffect(() => {
-    const loadSavedCredentials = async () => {
+    const loadSavedCredentials = async (): Promise<void> => {
       try {
         const savedPhone = await AsyncStorage.getItem("savedPhone")
         const savedRememberMe = await AsyncStorage.getItem("rememberMe")
@@ -51,7 +60,17 @@ const LoginScreen = ({ navigation }) => {
     }
   }, [isConnected, isOfflineMode])
 
-  const handleLogin = async () => {
+  useEffect(() => {
+    if (!i18n.isInitialized) {
+      i18n.on("initialized", () => setIsI18nReady(true))
+    }
+  }, [])
+
+  if (!isI18nReady) {
+    return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
+  }
+
+  const handleLogin = async (): Promise<void> => {
     if (phone.trim() === "" || password.trim() === "") {
       setError(t("login.errorRequiredFields"))
       setVisible(true)
@@ -73,14 +92,14 @@ const LoginScreen = ({ navigation }) => {
       await signIn(phone, password)
     } catch (error) {
       console.error("Login error:", error)
-      setError(error.message || t("login.errorGeneric"))
+      setError(error instanceof Error ? error.message : t("login.errorGeneric"))
       setVisible(true)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleOfflineMode = () => {
+  const handleOfflineMode = (): void => {
     toggleOfflineMode(true)
     setShowOfflineWarning(false)
   }
