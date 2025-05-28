@@ -165,7 +165,8 @@
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
+import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification as apiDeleteNotification } from '@/api/notifications'
 import { formatRelativeTime, formatPrice } from '@/utils/formatters'
 
@@ -173,7 +174,8 @@ export default {
   name: 'NotificationsView',
   setup() {
     const router = useRouter()
-    const store = useStore()
+    const authStore = useAuthStore()
+    const notificationStore = useNotificationStore()
     
     const notifications = ref([])
     const loading = ref(true)
@@ -188,8 +190,7 @@ export default {
     let notificationSocket = null
     
     const userRole = computed(() => {
-      const user = store.state.auth.user
-      return user ? user.role : 'client'
+      return authStore.user ? authStore.user.role : 'client'
     })
     
     const notificationTypes = [
@@ -247,7 +248,7 @@ export default {
         
         // Mettre à jour le compteur de notifications non lues dans le store
         const unreadCount = notifications.value.filter(n => !n.read).length
-        store.commit('notifications/setUnreadCount', unreadCount)
+        notificationStore.setUnreadCount(unreadCount)
       } catch (error) {
         console.error('Error loading notifications:', error)
       } finally {
@@ -277,7 +278,7 @@ export default {
           
           // Mettre à jour le compteur de notifications non lues dans le store
           const unreadCount = notifications.value.filter(n => !n.read).length
-          store.commit('notifications/setUnreadCount', unreadCount)
+          notificationStore.setUnreadCount(unreadCount)
           
           // Rediriger vers la page appropriée en fonction du type de notification
           handleNotificationClick(notification)
@@ -303,7 +304,7 @@ export default {
         })
         
         // Mettre à jour le compteur de notifications non lues dans le store
-        store.commit('notifications/setUnreadCount', 0)
+        notificationStore.setUnreadCount(0)
       } catch (error) {
         console.error('Error marking all notifications as read:', error)
       }
@@ -323,7 +324,7 @@ export default {
           // Mettre à jour le compteur de notifications non lues dans le store si nécessaire
           if (wasUnread) {
             const unreadCount = notifications.value.filter(n => !n.read).length
-            store.commit('notifications/setUnreadCount', unreadCount)
+            notificationStore.setUnreadCount(unreadCount)
           }
         }
       } catch (error) {
@@ -343,7 +344,7 @@ export default {
           notifications.value = []
           
           // Mettre à jour le compteur de notifications non lues dans le store
-          store.commit('notifications/setUnreadCount', 0)
+          notificationStore.setUnreadCount(0)
         } catch (error) {
           console.error('Error clearing all notifications:', error)
         }
@@ -435,7 +436,7 @@ export default {
     
     // Initialiser la connexion WebSocket pour les notifications en temps réel
     const initWebSocket = () => {
-      const token = store.state.auth.token
+      const token = authStore.token
       if (!token) return
       
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -457,7 +458,7 @@ export default {
             
             // Mettre à jour le compteur de notifications non lues dans le store
             const unreadCount = notifications.value.filter(n => !n.read).length
-            store.commit('notifications/setUnreadCount', unreadCount)
+            notificationStore.setUnreadCount(unreadCount)
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error)

@@ -1,94 +1,149 @@
-import { login, logout, getUser } from "@/api/auth"
+import { defineStore } from "pinia"
+import { ref, computed } from "vue"
+import {
+  login as apiLogin,
+  register as apiRegister,
+  getUserProfile as apiGetUserProfile,
+  refreshToken as apiRefreshToken,
+  logout as apiLogout,
+} from "@/api/auth"
 
-const state = {
-  token: localStorage.getItem("auth_token") || "",
-  user: JSON.parse(localStorage.getItem("user_data")) || null,
-  role: localStorage.getItem("user_role") || null,
-  loading: false,
-  error: null,
-}
+export const useAuthStore = defineStore("auth", () => {
+  // État
+  const user = ref(null)
+  const token = ref(localStorage.getItem("token"))
+  const loading = ref(false)
+  const error = ref(null)
 
-const getters = {
-  isLoggedIn: (state) => !!state.token,
-  currentUser: (state) => state.user,
-  currentRole: (state) => state.role,
-  isLoading: (state) => state.loading,
-  authError: (state) => state.error,
-}
+  // Getters
+  const isAuthenticated = computed(() => !!token.value)
+  const userRole = computed(() => user.value?.role || null)
+  const userName = computed(() => user.value?.full_name || "")
+  const userInitials = computed(() => {
+    if (!user.value?.full_name) return ""
+    return user.value.full_name
+      .split(" ")
+      .map((name) => name[0])
+      .join("")
+      .toUpperCase()
+  })
 
-const mutations = {
-  setToken(state, token) {
-    state.token = token
-    localStorage.setItem("auth_token", token)
-  },
-  setUser(state, user) {
-    state.user = user
-    localStorage.setItem("user_data", JSON.stringify(user))
-  },
-  setRole(state, role) {
-    state.role = role
-    localStorage.setItem("user_role", role)
-  },
-  setLoading(state, loading) {
-    state.loading = loading
-  },
-  setError(state, error) {
-    state.error = error
-  },
-  clearAuth(state) {
-    state.token = ""
-    state.user = null
-    state.role = null
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_data")
-    localStorage.removeItem("user_role")
-  },
-}
+  // Actions
+  const login = (userData, userToken) => {
+    user.value = userData
+    token.value = userToken
+    localStorage.setItem("token", userToken)
+  }
 
-const actions = {
-  async login({ commit }, credentials) {
-    commit("setLoading", true)
+  const logout = () => {
+    apiLogout()
+    user.value = null
+    token.value = null
+    localStorage.removeItem("token")
+  }
+
+  const updateUser = (userData) => {
+    user.value = { ...user.value, ...userData }
+  }
+
+  async function initAuth() {
+    if (token.value) {
+      await fetchUserProfile()
+    }
+  }
+
+  async function loginUser(credentials) {
     try {
-      const response = await login(credentials)
-      const token = response.access_token
-      const user = response.user
-      const role = response.user.role
+      loading.value = true
+      error.value = null
 
-      commit("setToken", token)
-      commit("setUser", user)
-      commit("setRole", role)
-      commit("setError", null)
-    } catch (error) {
-      commit("setError", error.message)
-      throw error
+      const response = await apiLogin(credentials)
+      login(response.user, response.access_token)
+
+      await fetchUserProfile()
+
+      return true
+    } catch (err) {
+      error.value = err.message || "Erreur de connexion"
+      return false
     } finally {
-      commit("setLoading", false)
+      loading.value = false
     }
-  },
+  }
 
-  async logout({ commit }) {
+  async function registerUser(userData) {
     try {
-      await logout()
-      commit("clearAuth")
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
-  },
+      loading.value = true
+      error.value = null
 
-  async fetchUser({ commit }) {
+      await apiRegister(userData)
+
+      return true
+    } catch (err) {
+      error.value = err.message || "Erreur d'inscription"
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchUserProfile() {
     try {
-      const response = await getUser()
-      commit("setUser", response)
-    } catch (error) {
-      console.error("Fetch user error:", error)
-    }
-  },
-}
+      loading.value = true
+      error.value = null
 
-export default {
-  namespaced: true,
-  state,
-  getters,
-  mutations,
-  actions,
-}
+      const userData = await apiGetUserProfile()
+      updateUser(userData)
+
+      return userData
+    } catch (err) {
+      error.value = err.message || "Erreur de chargement du profil"
+      logout()
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function refreshUserToken() {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await apiRefreshToken()
+      login(user.value, response.access_token)
+
+      return true
+    } catch (err) {
+      error.value = err.message || "Erreur de rafraîchissement du token"
+      logout()
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return {
+    // État
+    user,
+    token,
+    loading,
+    error,
+
+    // Getters
+    isAuthenticated,
+    userRole,
+    userName,
+    userInitials,
+
+    // Actions
+    initAuth,
+    loginUser,
+    registerUser,
+    fetchUserProfile,
+    refreshUserToken,
+    login,
+    logout,
+    updateUser,
+  }
+})

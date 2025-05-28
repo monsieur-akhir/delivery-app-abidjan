@@ -12,22 +12,24 @@
         <div class="spinner"></div>
         <p>Chargement des messages...</p>
       </div>
-      
+
       <template v-else>
         <div v-for="(group, date) in groupedMessages" :key="date" class="message-group">
           <div class="date-header">
             <span>{{ formatDateHeader(date) }}</span>
           </div>
-          
-          <div v-for="message in group" :key="message.id" 
-               :class="['message', message.userId === currentUserId ? 'current-user' : 'other-user']">
+          <div
+            v-for="message in group"
+            :key="message.id"
+            :class="['message', message.userId === currentUserId ? 'current-user' : 'other-user']"
+          >
             <div v-if="message.userId !== currentUserId" class="avatar">
               <img v-if="message.userAvatar" :src="message.userAvatar" alt="Avatar" />
               <div v-else class="avatar-fallback">
                 {{ message.userName.charAt(0) }}
               </div>
             </div>
-            
+
             <div class="message-bubble">
               <div v-if="message.userId !== currentUserId" class="user-name">
                 {{ message.userName }} ({{ formatUserRole(message.userRole) }})
@@ -41,9 +43,9 @@
     </div>
 
     <div class="input-container">
-      <textarea 
-        v-model="newMessage" 
-        placeholder="Tapez votre message..." 
+      <textarea
+        v-model="newMessage"
+        placeholder="Tapez votre message..."
         @keydown.enter.prevent="sendMessage"
         :disabled="sending"
       ></textarea>
@@ -56,25 +58,25 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, watch, nextTick } from 'vue'
-import { useStore } from 'vuex'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+import { useSocketStore } from '@/stores/socket'
+import { useAuthStore } from '@/stores/auth'
 import collaborativeApi from '@/api/collaborative'
 
 export default {
   name: 'CollaborativeChatComponent',
-  
+
   props: {
     deliveryId: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
-  
+
   setup(props) {
-    const store = useStore()
-    const route = useRoute()
-    
+    const socketStore = useSocketStore()
+    const authStore = useAuthStore()
+
     const messages = ref([])
     const newMessage = ref('')
     const loading = ref(true)
@@ -82,17 +84,17 @@ export default {
     const error = ref(null)
     const delivery = ref(null)
     const messagesContainer = ref(null)
-    
-    const currentUserId = computed(() => store.getters['auth/userId'])
-    
+
+    const currentUserId = computed(() => authStore.user?.id || '')
+
     const deliveryIdShort = computed(() => {
       return props.deliveryId.substring(0, 8)
     })
-    
+
     // Grouper les messages par date
     const groupedMessages = computed(() => {
       const groups = {}
-      
+
       messages.value.forEach(message => {
         const date = new Date(message.createdAt).toDateString()
         if (!groups[date]) {
@@ -100,19 +102,19 @@ export default {
         }
         groups[date].push(message)
       })
-      
+
       return groups
     })
-    
+
     const fetchData = async () => {
       try {
         error.value = null
         loading.value = true
-        
+
         // Récupérer les détails de la livraison
         const deliveryData = await collaborativeApi.getCollaborativeDelivery(props.deliveryId)
         delivery.value = deliveryData
-        
+
         // Récupérer les messages du chat
         const messagesData = await collaborativeApi.getChatMessages(props.deliveryId)
         messages.value = messagesData
@@ -124,22 +126,22 @@ export default {
         scrollToBottom()
       }
     }
-    
+
     const sendMessage = async () => {
       if (!newMessage.value.trim() || sending.value) return
-      
+
       try {
         sending.value = true
         await collaborativeApi.sendChatMessage(props.deliveryId, newMessage.value.trim())
         newMessage.value = ''
       } catch (err) {
-        console.error('Erreur lors de l\'envoi du message:', err)
-        error.value = 'Impossible d\'envoyer le message. Veuillez réessayer.'
+        console.error("Erreur lors de l'envoi du message:", err)
+        error.value = "Impossible d'envoyer le message. Veuillez réessayer."
       } finally {
         sending.value = false
       }
     }
-    
+
     const scrollToBottom = () => {
       nextTick(() => {
         if (messagesContainer.value) {
@@ -147,35 +149,35 @@ export default {
         }
       })
     }
-    
-    const formatTime = (dateString) => {
+
+    const formatTime = dateString => {
       const date = new Date(dateString)
       return date.toLocaleTimeString('fr-FR', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
-    
-    const formatDateHeader = (dateString) => {
+
+    const formatDateHeader = dateString => {
       const date = new Date(dateString)
       const today = new Date()
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
-      
+
       if (date.toDateString() === today.toDateString()) {
-        return 'Aujourd\'hui'
+        return "Aujourd'hui"
       } else if (date.toDateString() === yesterday.toDateString()) {
         return 'Hier'
       } else {
         return date.toLocaleDateString('fr-FR', {
           day: '2-digit',
           month: '2-digit',
-          year: 'numeric'
+          year: 'numeric',
         })
       }
     }
-    
-    const formatUserRole = (role) => {
+
+    const formatUserRole = role => {
       switch (role) {
         case 'primary':
           return 'Principal'
@@ -187,38 +189,47 @@ export default {
           return role
       }
     }
-    
+
     // Configurer le WebSocket pour les messages en temps réel
     const setupWebSocket = () => {
-      const socket = store.getters['socket/instance']
-      
+      const socket = socketStore.instance
+
       if (socket) {
-        socket.on(`chat_message_${props.deliveryId}`, (message) => {
+        socket.on(`chat_message_${props.deliveryId}`, message => {
           messages.value.push(message)
           scrollToBottom()
         })
       }
     }
-    
+
     onMounted(() => {
       fetchData()
+      // S'assurer que la connexion WebSocket est initialisée
+      if (!socketStore.isConnected) {
+        socketStore.initSocket()
+      }
       setupWebSocket()
     })
-    
+
     // Nettoyer les écouteurs WebSocket lors de la destruction du composant
     const cleanupWebSocket = () => {
-      const socket = store.getters['socket/instance']
-      
+      const socket = socketStore.instance
+
       if (socket) {
         socket.off(`chat_message_${props.deliveryId}`)
       }
     }
-    
+
+    // Appeler le nettoyage lors de la destruction du composant
+    onUnmounted(() => {
+      cleanupWebSocket()
+    })
+
     // Surveiller les changements de messages pour faire défiler vers le bas
     watch(messages, () => {
       scrollToBottom()
     })
-    
+
     return {
       messages,
       newMessage,
@@ -233,9 +244,9 @@ export default {
       sendMessage,
       formatTime,
       formatDateHeader,
-      formatUserRole
+      formatUserRole,
     }
-  }
+  },
 }
 </script>
 
@@ -298,7 +309,9 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .date-header {

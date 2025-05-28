@@ -335,7 +335,6 @@
           
           <div class="form-actions">
             <button class="btn btn-primary" @click="saveNotificationSettings" :disabled="isSaving">
-              <font-awesome-icon icon="spinner" spin v-if="isS  :disabled="isSaving">
               <font-awesome-icon icon="spinner" spin v-if="isSaving" class="mr-1" />
               Enregistrer les paramètres de notification
             </button>
@@ -571,7 +570,7 @@
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
-import { useAuthStore } from '@/stores/auth'
+// import { useAuthStore } from '@/stores/auth'
 import { fetchBusinessSettings, updateBusinessSettings, changeBusinessPassword } from '@/api/business'
 import { COMMUNES, PAGE_SIZE_OPTIONS, DEFAULT_PAGE_SIZE } from '@/config'
 
@@ -579,7 +578,7 @@ export default {
   name: 'BusinessSettingsView',
   setup() {
     const themeStore = useThemeStore()
-    const authStore = useAuthStore()
+    // const authStore = useAuthStore()
     
     const loading = ref(true)
     const isSaving = ref(false)

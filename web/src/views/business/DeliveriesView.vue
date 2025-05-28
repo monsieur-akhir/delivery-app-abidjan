@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-parsing-error -->
 <template>
   <div class="deliveries-view">
     <div class="page-header">
@@ -345,7 +346,7 @@
             <div class="form-group">
               <label for="package_size">Taille du colis</label>
               <select id="package_size" v-model="newDelivery.package_size" class="form-control" required>
-                <option value="small">Petit (< 5kg)</option>
+                <option value="small">Petit (&lt; 5kg)</option>
                 <option value="medium">Moyen (5-10kg)</option>
                 <option value="large">Grand (> 10kg)</option>
               </select>
@@ -417,7 +418,7 @@
             <div class="form-group">
               <label for="edit_package_size">Taille du colis</label>
               <select id="edit_package_size" v-model="editDelivery.package_size" class="form-control" required>
-                <option value="small">Petit (< 5kg)</option>
+                <option value="small">Petit (&lt; 5kg)</option>
                 <option value="medium">Moyen (5-10kg)</option>
                 <option value="large">Grand (> 10kg)</option>
               </select>
@@ -447,7 +448,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { 
   fetchBusinessDeliveries, 
   createBusinessDelivery, 

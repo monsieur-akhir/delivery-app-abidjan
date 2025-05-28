@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from "react-native"
 import { Text, TextInput, Button, HelperText, Snackbar } from "react-native-paper"
 import { Picker } from "@react-native-picker/picker"
@@ -13,6 +13,7 @@ import { validatePhone, validateEmail, validatePassword } from "../../utils/vali
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import type { UserRole, VehicleType } from "../../types/models"
+import i18n from "../../i18n"
 
 type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Register">
@@ -44,6 +45,18 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [visible, setVisible] = useState<boolean>(false)
   const [vehicleType, setVehicleType] = useState<VehicleType>("motorcycle" as VehicleType)
   const [licensePlate, setLicensePlate] = useState<string>("")
+  const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
+
+
+  useEffect(() => {
+    if (!i18n.isInitialized) {
+      i18n.on("initialized", () => setIsI18nReady(true))
+    }
+  }, [])
+
+  if (!isI18nReady) {
+    return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
+  }
 
   const communes: string[] = [
     "Abobo",

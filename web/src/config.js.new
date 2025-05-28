@@ -1,0 +1,186 @@
+// filepath: e:\delivery-app\delivery-app-abidjan\web\src\config.js
+// Configuration de l'API
+export const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000/api'
+export const API_TIMEOUT = 30000 // 30 secondes
+export const WEBSOCKET_URL = process.env.VUE_APP_WEBSOCKET_URL || 'ws://localhost:8000/ws'
+
+// Configuration des tokens
+export const TOKEN_KEY = 'auth_token'
+export const REFRESH_TOKEN_KEY = 'refresh_token'
+export const TOKEN_EXPIRY_KEY = 'token_expiry'
+
+// Configuration de la pagination
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
+export const DEFAULT_PAGE_SIZE = 20
+
+// Configuration des statuts de livraison
+export const DELIVERY_STATUSES = {
+  pending: {
+    label: 'En attente',
+    color: '#ffc107',
+    icon: 'clock',
+  },
+  bidding: {
+    label: 'Enchères en cours',
+    color: '#17a2b8',
+    icon: 'gavel',
+  },
+  accepted: {
+    label: 'Acceptée',
+    color: '#6f42c1',
+    icon: 'check-circle',
+  },
+  in_progress: {
+    label: 'En cours',
+    color: '#007bff',
+    icon: 'truck',
+  },
+  delivered: {
+    label: 'Livrée',
+    color: '#28a745',
+    icon: 'box',
+  },
+  completed: {
+    label: 'Terminée',
+    color: '#28a745',
+    icon: 'check-double',
+  },
+  cancelled: {
+    label: 'Annulée',
+    color: '#dc3545',
+    icon: 'times-circle',
+  },
+}
+
+// Configuration des types de livraison
+export const DELIVERY_TYPES = {
+  standard: {
+    label: 'Standard',
+    color: '#6c757d',
+  },
+  express: {
+    label: 'Express',
+    color: '#fd7e14',
+  },
+  collaborative: {
+    label: 'Collaborative',
+    color: '#20c997',
+  },
+}
+
+// Configuration des tailles de colis
+export const PACKAGE_SIZES = [
+  { value: 'small', label: 'Petit (<5kg)', icon: 'box' },
+  { value: 'medium', label: 'Moyen (5-15kg)', icon: 'box' },
+  { value: 'large', label: 'Grand (> 15kg)', icon: 'box' },
+]
+
+// Configuration des types de véhicules
+export const VEHICLE_TYPES = [
+  { value: 'moto', label: 'Moto', icon: 'motorcycle' },
+  { value: 'van', label: 'Camionnette', icon: 'truck' },
+  { value: 'bicycle', label: 'Vélo', icon: 'bicycle' },
+]
+
+// Configuration des communes d'Abidjan
+export const COMMUNES = [
+  'Abobo',
+  'Adjamé',
+  'Attécoubé',
+  'Cocody',
+  'Koumassi',
+  'Marcory',
+  'Plateau',
+  'Port-Bouët',
+  'Treichville',
+  'Yopougon',
+  'Bingerville',
+  'Songon',
+  'Anyama',
+]
+
+// Configuration des catégories de produits
+export const categories = [
+  { value: 'food', label: 'Alimentation' },
+  { value: 'clothing', label: 'Vêtements' },
+  { value: 'electronics', label: 'Électronique' },
+  { value: 'beauty', label: 'Beauté' },
+  { value: 'other', label: 'Autre' },
+]
+
+// Configuration des thèmes
+export const THEMES = {
+  light: {
+    primary: '#007bff',
+    secondary: '#6c757d',
+    success: '#28a745',
+    danger: '#dc3545',
+    warning: '#ffc107',
+    info: '#17a2b8',
+    light: '#f8f9fa',
+    dark: '#343a40',
+    background: '#ffffff',
+    text: '#212529',
+  },
+  dark: {
+    primary: '#0d6efd',
+    secondary: '#6c757d',
+    success: '#198754',
+    danger: '#dc3545',
+    warning: '#ffc107',
+    info: '#0dcaf0',
+    light: '#f8f9fa',
+    dark: '#212529',
+    background: '#121212',
+    text: '#f8f9fa',
+  },
+}
+
+// Configuration des notifications
+export const NOTIFICATION_TYPES = {
+  delivery: {
+    label: 'Livraison',
+    icon: 'truck',
+    color: '#007bff',
+  },
+  payment: {
+    label: 'Paiement',
+    icon: 'credit-card',
+    color: '#28a745',
+  },
+  system: {
+    label: 'Système',
+    icon: 'bell',
+    color: '#6c757d',
+  },
+  alert: {
+    label: 'Alerte',
+    icon: 'exclamation-triangle',
+    color: '#dc3545',
+  },
+}
+
+// Configuration des options d'exportation
+export const EXPORT_OPTIONS = [
+  { value: 'csv', label: 'CSV', icon: 'file-csv' },
+  { value: 'excel', label: 'Excel', icon: 'file-excel' },
+  { value: 'pdf', label: 'PDF', icon: 'file-pdf' },
+]
+
+// Configuration des méthodes de paiement
+export const PAYMENT_METHODS = [
+  { value: 'orange_money', label: 'Orange Money', icon: 'mobile-alt' },
+  { value: 'mtn_money', label: 'MTN Mobile Money', icon: 'mobile-alt' },
+  { value: 'wave', label: 'Wave', icon: 'credit-card' },
+  { value: 'cash', label: 'Espèces', icon: 'money-bill-wave' },
+]
+
+// Configuration des options de tri
+export const SORT_OPTIONS = [
+  { value: 'created_at', label: 'Date (récent à ancien)' },
+  { value: '-created_at', label: 'Date (ancien à récent)' },
+  { value: 'price', label: 'Prix (croissant)' },
+  { value: '-price', label: 'Prix (décroissant)' },
+  { value: 'distance', label: 'Distance (croissant)' },
+  { value: '-distance', label: 'Distance (décroissant)' },
+]

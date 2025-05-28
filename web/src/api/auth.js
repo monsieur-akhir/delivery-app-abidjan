@@ -1,57 +1,9 @@
-import axios from "axios"
-import { API_URL, API_TIMEOUT } from "@/config"
+import axios from 'axios'
+import apiService, { handleApiError } from './apiService'
+import { API_URL } from '@/config'
 
-// Créer une instance axios avec une configuration de base
-const authApi = axios.create({
-  baseURL: API_URL,
-  timeout: API_TIMEOUT,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-})
-
-// Intercepteur pour ajouter le token d'authentification à chaque requête
-authApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("auth_token")
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  },
-)
-
-// Intercepteur pour gérer les erreurs d'authentification
-authApi.interceptors.response.use(
-  (response) => {
-    return response
-  },
-  (error) => {
-    // Si le token est expiré ou invalide (401)
-    if (error.response && error.response.status === 401) {
-      // Vérifier si l'erreur ne vient pas de la route de login
-      const isLoginRequest = error.config.url.includes("/auth/login")
-
-      if (!isLoginRequest) {
-        // Supprimer le token et rediriger vers la page de login
-        localStorage.removeItem("auth_token")
-        localStorage.removeItem("user_role")
-        localStorage.removeItem("user_data")
-
-        // Rediriger vers la page de login
-        window.location.href = "/login?session_expired=true"
-      }
-    }
-
-    return Promise.reject(error)
-  },
-)
-
-export default authApi
+// Export the apiService as default for backward compatibility
+export default apiService
 
 /**
  * Authentifier un utilisateur
@@ -60,12 +12,12 @@ export default authApi
  * @param {string} credentials.password - Mot de passe de l'utilisateur
  * @returns {Promise<Object>} - Données d'authentification
  */
-export const login = async (credentials) => {
+export const login = async credentials => {
   try {
     const response = await axios.post(`${API_URL}/auth/login`, credentials)
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
   }
 }
 
@@ -74,12 +26,12 @@ export const login = async (credentials) => {
  * @param {Object} userData - Données de l'utilisateur
  * @returns {Promise<Object>} - Données d'inscription
  */
-export const register = async (userData) => {
+export const register = async userData => {
   try {
     const response = await axios.post(`${API_URL}/auth/register`, userData)
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
   }
 }
 
@@ -89,12 +41,12 @@ export const register = async (userData) => {
  * @param {string} data.email - Email de l'utilisateur
  * @returns {Promise<Object>} - Résultat de la demande
  */
-export const forgotPassword = async (data) => {
+export const forgotPassword = async data => {
   try {
     const response = await axios.post(`${API_URL}/auth/forgot-password`, data)
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
   }
 }
 
@@ -106,12 +58,12 @@ export const forgotPassword = async (data) => {
  * @param {string} data.password_confirmation - Confirmation du nouveau mot de passe
  * @returns {Promise<Object>} - Résultat de la réinitialisation
  */
-export const resetPassword = async (data) => {
+export const resetPassword = async data => {
   try {
     const response = await axios.post(`${API_URL}/auth/reset-password`, data)
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
   }
 }
 
@@ -120,12 +72,12 @@ export const resetPassword = async (data) => {
  * @param {string} token - Token de réinitialisation
  * @returns {Promise<Object>} - Résultat de la vérification
  */
-export const verifyResetToken = async (token) => {
+export const verifyResetToken = async token => {
   try {
-    const response = await axios.get(`${API_URL}/auth/verify-reset-token/${token}`)
+    const response = await axios.post(`${API_URL}/auth/verify-reset-token`, { token })
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
   }
 }
 
@@ -135,21 +87,25 @@ export const verifyResetToken = async (token) => {
  */
 export const logout = async () => {
   try {
-    const response = await authApi.post(`${API_URL}/auth/logout`)
-
-    // Supprimer les données de session
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_role")
-    localStorage.removeItem("user_data")
-
+    const response = await apiService.post(`/auth/logout`)
     return response.data
   } catch (error) {
-    // Même en cas d'erreur, supprimer les données de session
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user_role")
-    localStorage.removeItem("user_data")
+    // Même en cas d'erreur, on considère l'utilisateur comme déconnecté
+    console.error('Erreur lors de la déconnexion:', error)
+    return { success: true }
+  }
+}
 
-    handleAuthError(error)
+/**
+ * Rafraîchir le token d'authentification
+ * @returns {Promise<Object>} - Nouveau token
+ */
+export const refreshToken = async () => {
+  try {
+    const response = await apiService.post(`/auth/refresh`)
+    return response.data
+  } catch (error) {
+    handleApiError(error)
   }
 }
 
@@ -159,10 +115,23 @@ export const logout = async () => {
  */
 export const getUser = async () => {
   try {
-    const response = await authApi.get(`${API_URL}/auth/user`)
+    const response = await apiService.get(`/auth/user`)
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
+  }
+}
+
+/**
+ * Récupérer le profil complet de l'utilisateur connecté
+ * @returns {Promise<Object>} - Profil de l'utilisateur
+ */
+export const getUserProfile = async () => {
+  try {
+    const response = await apiService.get(`/auth/profile`)
+    return response.data
+  } catch (error) {
+    handleApiError(error)
   }
 }
 
@@ -173,12 +142,12 @@ export const getUser = async () => {
  * @param {string} data.otp - Code OTP
  * @returns {Promise<Object>} - Résultat de la vérification
  */
-export const verifyOTP = async (data) => {
+export const verifyOTP = async data => {
   try {
     const response = await axios.post(`${API_URL}/auth/verify-otp`, data)
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
   }
 }
 
@@ -188,32 +157,65 @@ export const verifyOTP = async (data) => {
  * @param {string} data.email - Email de l'utilisateur
  * @returns {Promise<Object>} - Résultat du renvoi
  */
-export const resendOTP = async (data) => {
+export const resendOTP = async data => {
   try {
     const response = await axios.post(`${API_URL}/auth/resend-otp`, data)
     return response.data
   } catch (error) {
-    handleAuthError(error)
+    handleApiError(error)
   }
 }
 
 /**
- * Gérer les erreurs d'authentification
- * @param {Error} error - Erreur axios
- * @throws {Error} - Erreur formatée
+ * Récupère le token d'authentification depuis le localStorage
+ * @returns {string|null}
  */
-const handleAuthError = (error) => {
-  if (error.response) {
-    // La requête a été faite et le serveur a répondu avec un code d'état
-    // qui n'est pas dans la plage 2xx
-    const errorMessage =
-      error.response.data.detail || error.response.data.message || "Une erreur d'authentification est survenue"
-    throw new Error(errorMessage)
-  } else if (error.request) {
-    // La requête a été faite mais aucune réponse n'a été reçue
-    throw new Error("Aucune réponse du serveur. Vérifiez votre connexion Internet.")
-  } else {
-    // Une erreur s'est produite lors de la configuration de la requête
-    throw new Error(error.message || "Une erreur est survenue")
+export function getToken() {
+  return localStorage.getItem('auth_token')
+}
+
+/**
+ * Retourne les headers d'authentification pour les requêtes API
+ * @returns {Object} - Headers avec Authorization si le token existe
+ */
+export function getAuthHeaders() {
+  const token = localStorage.getItem('auth_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+/**
+ * Met à jour les informations du profil utilisateur
+ * @param {Object} profileData - Données du profil
+ * @returns {Promise<Object>} - Profil mis à jour
+ */
+export async function updateProfile(profileData) {
+  try {
+    const response = await axios.put(`${API_URL}/auth/profile`, profileData, {
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du profil:", error)
+    throw error
+  }
+}
+
+/**
+ * Change le mot de passe de l'utilisateur
+ * @param {Object} passwordData - Données du mot de passe
+ * @param {string} passwordData.current_password - Mot de passe actuel
+ * @param {string} passwordData.new_password - Nouveau mot de passe
+ * @param {string} passwordData.confirm_password - Confirmation du nouveau mot de passe
+ * @returns {Promise<Object>} - Résultat de l'opération
+ */
+export async function changePassword(passwordData) {
+  try {
+    const response = await axios.post(`${API_URL}/auth/change-password`, passwordData, {
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error("Erreur lors du changement de mot de passe:", error)
+    throw error
   }
 }

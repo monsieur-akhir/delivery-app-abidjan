@@ -61,7 +61,7 @@
     </div>
 
     <div v-else-if="filteredComplaints.length === 0" class="empty-state">
-      <img src="/images/empty-complaints.svg" alt="Aucune plainte" />
+      <img src="../../../assets/images/empty-complaints.svg" alt="Aucune plainte" />
       <h3>Aucune plainte trouvée</h3>
       <p>Vous n'avez pas encore soumis de plaintes ou aucune plainte ne correspond à vos filtres.</p>
       <button class="btn btn-primary" @click="showNewComplaintModal = true">

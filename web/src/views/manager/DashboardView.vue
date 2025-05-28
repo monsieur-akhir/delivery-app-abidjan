@@ -609,4 +609,12 @@ export default {
 .user-avatar {
   width: 36px;
   height: 36px;
-  border-
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+}
+</style>

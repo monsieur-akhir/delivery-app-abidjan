@@ -7,6 +7,7 @@
 <script>
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { useSocketStore } from '@/stores/socket'
 import { mapState } from 'pinia'
 
 export default {
@@ -17,6 +18,10 @@ export default {
   created() {
     const authStore = useAuthStore()
     authStore.initAuth()
+    
+    // Initialiser le store de WebSocket après l'authentification
+    const socketStore = useSocketStore()
+    socketStore.initSocket()
   }
 }
 </script>

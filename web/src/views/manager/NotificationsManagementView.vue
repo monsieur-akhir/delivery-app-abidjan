@@ -4,7 +4,7 @@
       <h1 class="page-title">Gestion des Notifications</h1>
       <div class="header-actions">
         <button class="btn btn-outline" @click="refreshNotifications">
-          <i class="fas fa-sync" :class="{ 'fa-spin': loading }" class="mr-2"></i>
+          <i class="fas fa-sync mr-2" :class="{ 'fa-spin': loading }"></i>
           Actualiser
         </button>
         <button class="btn btn-primary" @click="openCreateModal">

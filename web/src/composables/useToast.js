@@ -1,50 +1,12 @@
-"use client"
+import { useToast as useVueToast } from 'vue-toastification'
 
-import { ref, provide, inject } from "vue"
-
-const TOAST_SYMBOL = Symbol("toast")
-
-export function provideToast() {
-  const toasts = ref([])
-
-  const showToast = (message, type = "info", duration = 3000) => {
-    const id = Date.now()
-
-    toasts.value.push({
-      id,
-      message,
-      type,
-      duration,
-    })
-
-    setTimeout(() => {
-      removeToast(id)
-    }, duration)
-  }
-
-  const removeToast = (id) => {
-    toasts.value = toasts.value.filter((toast) => toast.id !== id)
-  }
-
-  provide(TOAST_SYMBOL, {
-    toasts,
-    showToast,
-    removeToast,
-  })
-
+export const useToast = () => {
+  const toast = useVueToast()
+  
   return {
-    toasts,
-    showToast,
-    removeToast,
+    success: (message) => toast.success(message),
+    error: (message) => toast.error(message),
+    warning: (message) => toast.warning(message),
+    info: (message) => toast.info(message)
   }
-}
-
-export function useToast() {
-  const toast = inject(TOAST_SYMBOL)
-
-  if (!toast) {
-    throw new Error("useToast() must be used within a component that has called provideToast()")
-  }
-
-  return toast
 }

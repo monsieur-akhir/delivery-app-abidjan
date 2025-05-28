@@ -114,7 +114,7 @@
             <div class="form-group">
               <label for="package-size">Taille du colis</label>
               <select id="package-size" v-model="form.packageSize" class="form-control">
-                <option value="small">Petit (< 30cm)</option>
+                <option value="small">Petit (&lt; 30cm)</option>
                 <option value="medium">Moyen (30-60cm)</option>
                 <option value="large">Grand (60-100cm)</option>
                 <option value="extra-large">Très grand (> 100cm)</option>

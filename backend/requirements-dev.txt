@@ -1,0 +1,27 @@
+-r requirements.txt
+
+# Scientific & ML tools
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+sympy
+scipy
+torch==2.6.0+cpu
+
+# Jupyter & debugging
+jupyterlab
+jupyterlab_git
+jupyterlab_server
+ipykernel
+ipywidgets
+notebook
+nbconvert
+nbformat
+debugpy
+
+# Git & extras
+GitPython
+psutil
+aiohttp

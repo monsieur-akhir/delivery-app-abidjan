@@ -1,8 +1,11 @@
+/* eslint-disable prettier/prettier */
 import { createApp } from "vue"
 import { createPinia } from "pinia"
 import App from "./App.vue"
 import router from "./router"
-import "./assets/css/main.css"
+import Toast from "vue-toastification"
+import "vue-toastification/dist/index.css"
+import "./../assets/css/main.css"
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
 import {
@@ -112,7 +115,6 @@ import {
   faFileUpload,
   faFileImport,
   faFileExport,
-  faFileSearch,
   faFileMedical,
   faFileInvoice,
   faFileSignature as faFileSignatureSolid,
@@ -131,147 +133,33 @@ import {
   faFileUpload as faFileUploadSolid,
   faFileImport as faFileImportSolid,
   faFileExport as faFileExportSolid,
-  faFileSearch as faFileSearchSolid,
   faFileMedical as faFileMedicalSolid,
   faFileInvoice as faFileInvoiceSolid,
 } from "@fortawesome/free-solid-svg-icons"
-
-// Ajouter les icônes à la bibliothèque
-library.add(
-  faUser,
-  faLock,
-  faEnvelope,
-  faPhone,
-  faHome,
-  faTruck,
-  faBox,
-  faMoneyBill,
-  faCog,
-  faSignOutAlt,
-  faBell,
-  faSearch,
-  faPlus,
-  faMinus,
-  faEdit,
-  faTrash,
-  faEye,
-  faCheck,
-  faTimes,
-  faBan,
-  faChevronLeft,
-  faChevronRight,
-  faChevronDown,
-  faChevronUp,
-  faSync,
-  faFilter,
-  faStar,
-  faMapMarkerAlt,
-  faCalendar,
-  faClock,
-  faExclamationTriangle,
-  faInfoCircle,
-  faCheckCircle,
-  faTimesCircle,
-  faArrowUp,
-  faArrowDown,
-  faMinusHorizontal,
-  faMotorcycle,
-  faCar,
-  faBicycle,
-  faWalking,
-  faTruckMoving,
-  faCrosshairs,
-  faDrawPolygon,
-  faUpload,
-  faEraser,
-  faChartLine,
-  faChartBar,
-  faChartPie,
-  faCircleNotch,
-  faPaperPlane,
-  faCopy,
-  faRedo,
-  faMobileAlt,
-  faSms,
-  faComment,
-  faUniversity,
-  faIdCard,
-  faFilePdf,
-  faDownload,
-  faUsers,
-  faUserPlus,
-  faUserMinus,
-  faUserCheck,
-  faUserTimes,
-  faUserCog,
-  faUserShield,
-  faUserTag,
-  faUserClock,
-  faUserEdit,
-  faMoneyBillWave,
-  faStore,
-  faStoreAlt,
-  faBuilding,
-  faCity,
-  faMapMarkedAlt,
-  faRoute,
-  faRoad,
-  faStreetView,
-  faCompass,
-  faDirections,
-  faLocationArrow,
-  faShippingFast,
-  faBoxOpen,
-  faClipboardList,
-  faClipboardCheck,
-  faListAlt,
-  faReceipt,
-  faFileInvoiceDollar,
-  faFileContract,
-  faFileSignature,
-  faFileAlt,
-  faFileCode,
-  faFileArchive,
-  faFileCsv,
-  faFileExcel,
-  faFilePowerpoint,
-  faFileWord,
-  faFileImage,
-  faFileVideo,
-  faFileAudio,
-  faFilePdfSolid,
-  faFileDownload,
-  faFileUpload,
-  faFileImport,
-  faFileExport,
-  faFileSearch,
-  faFileMedical,
-  faFileInvoice,
-  faFileSignatureSolid,
-  faFileContractSolid,
-  faFileAltSolid,
-  faFileCodeSolid,
-  faFileArchiveSolid,
-  faFileCsvSolid,
-  faFileExcelSolid,
-  faFilePowerpointSolid,
-  faFileWordSolid,
-  faFileImageSolid,
-  faFileVideoSolid,
-  faFileAudioSolid,
-  faFileDownloadSolid,
-  faFileUploadSolid,
-  faFileImportSolid,
-  faFileExportSolid,
-  faFileSearchSolid,
-  faFileMedicalSolid,
-  faFileInvoiceSolid,
-)
+import { initErrorHandler } from "./utils/errorHandler"
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
+app.use(Toast, {
+  position: "top-right",
+  timeout: 5000,
+  closeOnClick: true,
+  pauseOnFocusLoss: true,
+  pauseOnHover: true,
+  draggable: true,
+  draggablePercent: 0.6,
+  showCloseButtonOnHover: false,
+  hideProgressBar: true,
+  closeButton: "button",
+  icon: true,
+  rtl: false
+})
 app.component("font-awesome-icon", FontAwesomeIcon)
+
+// Initialiser le gestionnaire d'erreurs global avec l'instance de l'application
+initErrorHandler(app)
 
 app.mount("#app")

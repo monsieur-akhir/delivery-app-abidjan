@@ -59,7 +59,7 @@
     </div>
 
     <div v-else-if="filteredProducts.length === 0" class="empty-state">
-      <img src="/images/empty-products.svg" alt="Aucun produit" />
+      <img src="../../../assets/images/empty-products.svg" alt="Aucun produit" />
       <h3>Aucun produit trouvé</h3>
       <p>Ajoutez des produits à votre catalogue pour les rendre disponibles à la livraison.</p>
       <button class="btn btn-primary" @click="showAddProductModal = true">

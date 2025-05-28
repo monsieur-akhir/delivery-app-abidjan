@@ -181,8 +181,6 @@ async def bid_for_delivery(
     if delivery.status != "pending":
         raise HTTPException(status_code=400, detail="Cette livraison n'est plus disponible pour enchérir")
     
-    return crud.create  detail="Cette livraison n'est plus disponible pour enchérir")
-    
     return crud.create_bid(db=db, delivery_id=delivery_id, courier_id=current_user.id, bid=bid)
 
 @app.put("/deliveries/{delivery_id}/accept-bid/{courier_id}", response_model=schemas.DeliveryResponse)

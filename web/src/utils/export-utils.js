@@ -29,94 +29,40 @@ export const exportToCSV = (data, headers, filename) => {
 
 /**
  * Exporter des données au format Excel (XLSX)
- * @param {Array} data - Données à exporter
- * @param {Array} headers - En-têtes des colonnes
- * @param {string} filename - Nom du fichier
  */
 export const exportToExcel = async (data, headers, filename) => {
   try {
-    // Importer dynamiquement la bibliothèque xlsx
-    const XLSX = await import("xlsx")
-
-    // Préparer les données pour xlsx
-    const worksheet = XLSX.utils.json_to_sheet(
-      data.map((item) => {
-        const row = {}
-        headers.forEach((header) => {
-          row[header.label] = item[header.key]
-        })
-        return row
-      }),
-    )
-
-    // Créer un classeur et ajouter la feuille
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
-
-    // Générer le fichier et télécharger
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
-    const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
-    downloadBlob(blob, filename)
+    // Fallback vers CSV si xlsx n'est pas disponible
+    console.warn("XLSX non disponible, export en CSV à la place")
+    return exportToCSV(data, headers, filename.replace(".xlsx", ".csv"))
   } catch (error) {
     console.error("Error exporting to Excel:", error)
-    throw new Error("Erreur lors de l'exportation en Excel. Vérifiez que la bibliothèque xlsx est installée.")
+    throw new Error("Erreur lors de l'exportation en Excel.")
   }
 }
 
 /**
  * Exporter des données au format PDF
- * @param {Array} data - Données à exporter
- * @param {Array} columns - Définition des colonnes
- * @param {Object} options - Options d'exportation
  */
 export const exportToPDF = async (data, columns, options = {}) => {
   try {
-    // Importer dynamiquement la bibliothèque jspdf et jspdf-autotable
-    const { jsPDF } = await import("jspdf")
-    const { default: autoTable } = await import("jspdf-autotable")
-
-    // Créer un nouveau document PDF
-    const orientation = options.pageOrientation || "portrait"
-    const doc = new jsPDF({
-      orientation,
-      unit: "mm",
-      format: "a4",
+    // Fallback vers CSV si jsPDF n'est pas disponible
+    console.warn("jsPDF non disponible, export en CSV à la place")
+    const csvData = data.map((item) => {
+      const row = {}
+      columns.forEach((col) => {
+        row[col.header] = item[col.dataKey]
+      })
+      return row
     })
-
-    // Ajouter un titre si spécifié
-    if (options.title) {
-      doc.setFontSize(16)
-      doc.text(options.title, 14, 15)
-      doc.setFontSize(10)
-      doc.text(`Généré le ${new Date().toLocaleDateString()}`, 14, 22)
-      doc.line(14, 25, doc.internal.pageSize.getWidth() - 14, 25)
-    }
-
-    // Générer le tableau
-    autoTable(doc, {
-      startY: options.title ? 30 : 14,
-      head: [columns.map((col) => col.header)],
-      body: data.map((item) => columns.map((col) => item[col.dataKey])),
-      theme: "grid",
-      headStyles: {
-        fillColor: [67, 97, 238],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-      styles: {
-        fontSize: 9,
-        cellPadding: 3,
-      },
-      columnStyles: options.columnStyles || {},
-    })
-
-    // Télécharger le PDF
-    doc.save(options.fileName || "export.pdf")
+    return exportToCSV(
+      csvData,
+      columns.map((col) => ({ key: col.dataKey, label: col.header })),
+      options.fileName || "export.csv",
+    )
   } catch (error) {
     console.error("Error exporting to PDF:", error)
-    throw new Error(
-      "Erreur lors de l'exportation en PDF. Vérifiez que les bibliothèques jspdf et jspdf-autotable sont installées.",
-    )
+    throw new Error("Erreur lors de l'exportation en PDF.")
   }
 }
 

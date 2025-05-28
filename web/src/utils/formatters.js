@@ -12,6 +12,13 @@ export const formatPrice = (price, withSymbol = false) => {
 }
 
 /**
+ * Alias pour formatPrice avec symbole
+ */
+export const formatCurrency = (price) => {
+  return formatPrice(price, true)
+}
+
+/**
  * Formater une date (jour/mois/année)
  * @param {String|Date} date - Date à formater
  * @returns {String} - Date formatée
@@ -165,4 +172,123 @@ export const formatPercentage = (value, decimals = 1) => {
  */
 export const formatDeliveryStatus = (status) => {
   const statusMap = {
-    'pending\
+    pending: "En attente",
+    accepted: "Acceptée",
+    in_progress: "En cours",
+    completed: "Terminée",
+    cancelled: "Annulée",
+    disputed: "Litigieuse",
+  }
+  return statusMap[status] || status
+}
+
+/**
+ * Formater un type de véhicule
+ * @param {String} vehicleType - Type de véhicule
+ * @returns {String} - Type formaté
+ */
+export const formatVehicleType = (vehicleType) => {
+  const typeMap = {
+    bicycle: "Vélo",
+    scooter: "Scooter",
+    motorcycle: "Moto",
+    car: "Voiture",
+    van: "Camionnette",
+    truck: "Camion",
+  }
+  return typeMap[vehicleType] || vehicleType
+}
+
+/**
+ * Formater un statut de paiement
+ * @param {String} status - Statut de paiement
+ * @returns {String} - Statut formaté
+ */
+export const formatPaymentStatus = (status) => {
+  const statusMap = {
+    pending: "En attente",
+    completed: "Complété",
+    failed: "Échoué",
+    refunded: "Remboursé",
+    cancelled: "Annulé",
+  }
+  return statusMap[status] || status
+}
+
+/**
+ * Formate un nombre de minutes en une chaîne de caractères (ex: "2h 30min")
+ * @param {number} minutes - Nombre de minutes
+ * @returns {string} - Chaîne formatée
+ */
+export const formatMinutes = (minutes) => {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return `${hours}h ${mins}min`
+}
+
+/**
+ * Formate la sévérité en texte lisible
+ * @param {string} severity - Niveau de sévérité ('low', 'medium', 'high')
+ * @returns {string}
+ */
+export const formatSeverity = (severity) => {
+  switch (severity) {
+    case 'low':
+      return 'Faible';
+    case 'medium':
+      return 'Moyenne';
+    case 'high':
+      return 'Élevée';
+    default:
+      return severity;
+  }
+}
+
+/**
+ * Formate une date en temps relatif
+ * @param {Date|string} date - Date à formater
+ * @returns {string} - Temps relatif formaté
+ */
+export function formatRelativeTime(date) {
+  const now = new Date()
+  const past = new Date(date)
+  const diffInSeconds = Math.floor((now - past) / 1000)
+
+  if (diffInSeconds < 60) {
+    return "à l'instant"
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60)
+  if (diffInMinutes < 60) {
+    return `il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) {
+    return `il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24)
+  if (diffInDays < 30) {
+    return `il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`
+  }
+
+  const diffInMonths = Math.floor(diffInDays / 30)
+  if (diffInMonths < 12) {
+    return `il y a ${diffInMonths} mois`
+  }
+
+  const diffInYears = Math.floor(diffInMonths / 12)
+  return `il y a ${diffInYears} an${diffInYears > 1 ? 's' : ''}`
+}
+
+/**
+ * Formate un numéro de téléphone ivoirien (ex: 0102030405 => 01 02 03 04 05)
+ * @param {string|number} phone
+ * @returns {string}
+ */
+export function formatPhoneNumber(phone) {
+  if (!phone) return ''
+  const cleaned = phone.toString().replace(/\D/g, '')
+  return cleaned.replace(/(\d{2})(?=\d)/g, '$1 ').trim()
+}

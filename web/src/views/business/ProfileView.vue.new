@@ -1,0 +1,314 @@
+<template>
+  <div class="profile-view">
+    <div class="page-header">
+      <h1>Profil de l'entreprise</h1>
+      <div class="header-actions">
+        <button @click="saveProfile" :disabled="isSaving">Enregistrer les modifications</button>
+        <button @click="refreshData">Actualiser</button>
+      </div>
+    </div>
+    
+    <div v-if="loading" class="loading-state">
+      <span>Chargement...</span>
+    </div>
+    <div v-else class="profile-content">
+      <!-- Le contenu du profil sera affiché ici -->
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref, reactive, onMounted } from 'vue';
+import { COMMUNES } from '@/utils/constants';
+import { uploadBusinessDocument } from '@/services/api';
+import { formatDate } from '@/utils/formatters';
+
+export default {
+  name: 'ProfileView',
+  setup() {
+    // Déclaration des variables réactives
+    const loading = ref(false);
+    const isSaving = ref(false);
+    const profile = reactive({
+      logo: null,
+      kyc: {
+        siret_verified: false,
+        kbis_verified: false,
+        id_verified: false
+      },
+      ratings_breakdown: {},
+      ratings_count: 0
+    });
+    const businessHours = ref([]);
+    const logoInput = ref(null);
+    const siretInput = ref(null);
+    const kbisInput = ref(null);
+    const idInput = ref(null);
+    
+    // Fonctions pour charger et sauvegarder le profil
+    const loadProfile = async () => {
+      loading.value = true;
+      // Implémentation à faire
+      loading.value = false;
+    };
+    
+    const saveProfile = async () => {
+      isSaving.value = true;
+      // Implémentation à faire
+      isSaving.value = false;
+    };
+    
+    const refreshData = () => {
+      loadProfile();
+    };
+    
+    const getInitials = (name) => {
+      // Implémentation pour obtenir les initiales
+      return name ? name.charAt(0).toUpperCase() : '?';
+    };
+    
+    const triggerLogoUpload = () => {
+      logoInput.value.click();
+    };
+    
+    const handleLogoUpload = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Vérifier le type de fichier
+      if (!file.type.match('image.*')) {
+        alert('Veuillez sélectionner une image');
+        return;
+      }
+      
+      // Vérifier la taille du fichier (max 1MB)
+      if (file.size > 1024 * 1024) {
+        alert('La taille du fichier ne doit pas dépasser 1MB');
+        return;
+      }
+      
+      // Lire le fichier
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        profile.logo = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+    
+    // Déclencher l'upload d'un document
+    const triggerDocumentUpload = (type) => {
+      if (type === 'siret') {
+        siretInput.value.click();
+      } else if (type === 'kbis') {
+        kbisInput.value.click();
+      } else if (type === 'id') {
+        idInput.value.click();
+      }
+    };
+    
+    // Gérer l'upload d'un document
+    const handleDocumentUpload = async (type, event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Vérifier le type de fichier
+      if (!file.type.match('image.*') && !file.type.match('application/pdf')) {
+        alert('Veuillez sélectionner une image ou un PDF');
+        return;
+      }
+      
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La taille du fichier ne doit pas dépasser 5MB');
+        return;
+      }
+      
+      try {
+        // Uploader le document
+        await uploadBusinessDocument(type, file);
+        
+        // Mettre à jour le statut de vérification
+        if (type === 'siret') {
+          profile.kyc.siret_verified = true;
+        } else if (type === 'kbis') {
+          profile.kyc.kbis_verified = true;
+        } else if (type === 'id') {
+          profile.kyc.id_verified = true;
+        }
+        
+        // Afficher un message de succès
+        alert('Document téléchargé avec succès');
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        alert(`Erreur lors du téléchargement du document: ${error.message}`);
+      }
+    };
+    
+    // Obtenir le pourcentage pour une note
+    const getRatingPercentage = (rating) => {
+      if (!profile.ratings_breakdown || !profile.ratings_count) return 0;
+      
+      const count = profile.ratings_breakdown[rating] || 0;
+      return (count / profile.ratings_count) * 100;
+    };
+    
+    // Obtenir le nombre d'évaluations pour une note
+    const getRatingCount = (rating) => {
+      if (!profile.ratings_breakdown) return 0;
+      
+      return profile.ratings_breakdown[rating] || 0;
+    };
+    
+    // Obtenir la classe CSS pour un statut
+    const getStatusClass = (status) => {
+      const statusClasses = {
+        'active': 'status-active',
+        'pending_verification': 'status-pending',
+        'suspended': 'status-suspended',
+        'inactive': 'status-inactive'
+      };
+      
+      return statusClasses[status] || '';
+    };
+    
+    // Obtenir le libellé pour un statut
+    const getStatusLabel = (status) => {
+      const statusLabels = {
+        'active': 'Actif',
+        'pending_verification': 'En attente de vérification',
+        'suspended': 'Suspendu',
+        'inactive': 'Inactif'
+      };
+      
+      return statusLabels[status] || status;
+    };
+    
+    onMounted(() => {
+      loadProfile();
+    });
+    
+    return {
+      loading,
+      isSaving,
+      profile,
+      businessHours,
+      logoInput,
+      siretInput,
+      kbisInput,
+      idInput,
+      communes: COMMUNES,
+      loadProfile,
+      saveProfile,
+      refreshData,
+      triggerLogoUpload,
+      handleLogoUpload,
+      triggerDocumentUpload,
+      handleDocumentUpload,
+      getRatingPercentage,
+      getRatingCount,
+      getStatusClass,
+      getStatusLabel,
+      formatDate,
+      getInitials
+    };
+  }
+};
+</script>
+
+<style scoped>
+.profile-view {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  color: var(--text-secondary);
+}
+
+/* Autres styles... */
+@media (max-width: 992px) {
+  .profile-content {
+    flex-direction: column;
+  }
+  
+  .profile-sidebar {
+    width: 100%;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .ratings-summary {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .rating-overview {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .header-actions .btn {
+    flex: 1;
+  }
+  
+  .business-day {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .day-name {
+    width: 100%;
+  }
+  
+  .time-input {
+    width: 100%;
+  }
+  
+  .rating-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+</style>

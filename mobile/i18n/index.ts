@@ -14,6 +14,10 @@ const detectUserLanguage = async () => {
     }
 
     // Sinon, utiliser la langue du système
+    if (!Localization.locale) {
+      console.error("Localization.locale is undefined. Falling back to default language.");
+      return "fr"; // Langue par défaut
+    }
     const deviceLocale = Localization.locale.split("-")[0] // Obtenir juste le code de langue (ex: 'fr' de 'fr-FR')
 
     // Vérifier si la langue du système est prise en charge

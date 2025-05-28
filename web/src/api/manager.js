@@ -1,5 +1,7 @@
 import axios from "axios"
 import { API_URL } from "@/config"
+import authApi from './auth'
+import { handleApiError } from '../services/errorHandler'
 
 // Configuration de l'instance axios
 const apiClient = axios.create({
@@ -423,18 +425,8 @@ export const resolveDeliveryDispute = async (deliveryId, resolutionData) => {
 }
 
 // API pour les finances
-export const fetchFinances = async (params = {}) => {
-  const response = await apiClient.get("/finances", { params })
-  return response.data
-}
-
 export const fetchFinancialReports = async (params = {}) => {
   const response = await apiClient.get("/finances/reports", { params })
-  return response.data
-}
-
-export const fetchTransactions = async (params = {}) => {
-  const response = await apiClient.get("/finances/transactions", { params })
   return response.data
 }
 
@@ -758,6 +750,140 @@ export const deleteWeatherAlert = async (alertId) => {
     return response.data
   } catch (error) {
     console.error("Error deleting weather alert:", error)
+    throw error
+  }
+}
+
+/**
+ * @typedef {Object} ManagerDashboard
+ * @property {number} totalDeliveries - Nombre total de livraisons
+ * @property {number} activeDeliveries - Livraisons en cours
+ * @property {number} completedDeliveries - Livraisons terminées
+ * @property {number} totalRevenue - Revenu total
+ * @property {Object} statistics - Statistiques détaillées
+ */
+
+/**
+ * @typedef {Object} Transaction
+ * @property {number} id - ID de la transaction
+ * @property {string} type - Type de transaction
+ * @property {number} amount - Montant
+ * @property {string} status - Statut
+ * @property {string} date - Date
+ */
+
+/**
+ * Récupérer les données du tableau de bord pour un manager
+ * @param {string} period - Période (week, month, year)
+ * @returns {Promise<ManagerDashboard>} - Données du tableau de bord
+ */
+export const fetchManagerDashboard = async (period = "week") => {
+  try {
+    const response = await authApi.get(`/manager/dashboard?period=${period}`)
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Récupérer les données financières
+ * @param {Object} params - Paramètres de filtrage
+ * @returns {Promise<Object>} - Données financières
+ */
+export const fetchFinances = async (params = {}) => {
+  try {
+    const response = await authApi.get('/manager/finances', { params })
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Récupérer la liste des transactions
+ * @param {Object} params - Paramètres de filtrage
+ * @returns {Promise<Array<Transaction>>} - Liste des transactions
+ */
+export const fetchTransactions = async (params = {}) => {
+  try {
+    const response = await authApi.get('/manager/transactions', { params })
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Récupérer les détails d'une transaction
+ * @param {number} transactionId - ID de la transaction
+ * @returns {Promise<Transaction>} - Détails de la transaction
+ */
+export const fetchTransactionDetails = async (transactionId) => {
+  try {
+    const response = await authApi.get(`/manager/transactions/${transactionId}`)
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Traiter une transaction
+ * @param {number} transactionId - ID de la transaction
+ * @param {Object} data - Données de traitement
+ * @returns {Promise<Transaction>} - Transaction mise à jour
+ */
+export const processTransaction = async (transactionId, data) => {
+  try {
+    const response = await authApi.post(`/manager/transactions/${transactionId}/process`, data)
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Supprimer un rapport
+ * @param {number} reportId - ID du rapport à supprimer
+ * @returns {Promise<Object>} - Résultat de la suppression
+ */
+export const deleteReport = async (reportId) => {
+  try {
+    const response = await authApi.delete(`/manager/reports/${reportId}`)
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Récupérer les logs d'audit
+ * @param {Object} params - Paramètres de filtrage (optionnel)
+ * @returns {Promise<Array>} - Liste des logs d'audit
+ */
+export const fetchAuditLogs = async (params = {}) => {
+  try {
+    const response = await authApi.get('/manager/audit-logs', { params })
+    return response.data
+  } catch (error) {
+    return handleApiError(error)
+  }
+}
+
+/**
+ * Ajoute une nouvelle zone
+ * @param {Object} zoneData - Données de la zone à ajouter
+ * @returns {Promise<Object>} Zone créée
+ */
+export async function addZone(zoneData) {
+  try {
+    const response = await axios.post(`${API_URL}/manager/zones`, zoneData, {
+      headers: getAuthHeaders(),
+    })
+    return response.data
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de la zone:", error)
     throw error
   }
 }

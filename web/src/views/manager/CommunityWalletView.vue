@@ -1409,5 +1409,4 @@ export default {
   align-items: center;
   margin-bottom: 1.5rem;
 }
-
-.page-
+</style>
