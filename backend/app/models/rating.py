@@ -26,6 +26,6 @@ class Rating(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relations
-    delivery = relationship("Delivery", back_populates="ratings")
-    rater = relationship("User", back_populates="ratings_given", foreign_keys=[rater_id])
-    rated_user = relationship("User", back_populates="ratings_received", foreign_keys=[rated_user_id])
+    delivery = relationship("Delivery")
+    rater = relationship("User", foreign_keys=[rater_id])
+    rated_user = relationship("User", foreign_keys=[rated_user_id])

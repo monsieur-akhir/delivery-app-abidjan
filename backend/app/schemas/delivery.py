@@ -1,4 +1,3 @@
-# Ajouter ces imports si nécessaire
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -6,6 +5,8 @@ import enum
 
 from .user import UserResponse
 from .transport import VehicleType, CargoCategory
+
+# === ENUMS ===
 
 class DeliveryStatus(str, enum.Enum):
     pending = "pending"
@@ -21,7 +22,9 @@ class DeliveryType(str, enum.Enum):
     express = "express"
     collaborative = "collaborative"
 
-# Schémas de base pour les livraisons
+
+# === BASE SCHEMAS ===
+
 class DeliveryBase(BaseModel):
     pickup_address: str
     pickup_commune: str
@@ -44,7 +47,9 @@ class DeliveryBase(BaseModel):
     proposed_price: float
     delivery_type: DeliveryType = DeliveryType.standard
 
-# Schéma pour la création d'une livraison
+
+# === CREATE / UPDATE ===
+
 class DeliveryCreate(DeliveryBase):
     @validator('proposed_price')
     def price_must_be_positive(cls, v):
@@ -52,7 +57,6 @@ class DeliveryCreate(DeliveryBase):
             raise ValueError('Le prix proposé doit être positif')
         return v
 
-# Schéma pour la mise à jour d'une livraison
 class DeliveryUpdate(BaseModel):
     pickup_address: Optional[str] = None
     pickup_commune: Optional[str] = None
@@ -75,7 +79,9 @@ class DeliveryUpdate(BaseModel):
     proposed_price: Optional[float] = None
     delivery_type: Optional[DeliveryType] = None
 
-# Schéma pour la réponse de livraison
+
+# === RESPONSE ===
+
 class DeliveryResponse(DeliveryBase):
     id: int
     client_id: int
@@ -92,11 +98,59 @@ class DeliveryResponse(DeliveryBase):
     completed_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     vehicle_id: Optional[int] = None
-    
-    # Informations supplémentaires
+
+    # Relations
     client: Optional[Dict[str, Any]] = None
     courier: Optional[Dict[str, Any]] = None
     vehicle: Optional[Dict[str, Any]] = None
-    
+
+class BidResponse(BaseModel):
+    id: int
+    delivery_id: int
+    courier_id: int
+    price: float
+    estimated_time: Optional[int] = None
+    created_at: datetime   
+
+class TrackingPointResponse(BaseModel):
+    id: int
+    delivery_id: int
+    latitude: float
+    longitude: float
+    timestamp: datetime
+
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
+
+
+# === AUTRES SCHÉMAS UTILES ===
+
+class StatusUpdate(BaseModel):
+    status: DeliveryStatus
+    cancellation_reason: Optional[str] = None
+
+class BidCreate(BaseModel):
+    price: float
+    estimated_time: Optional[int] = None  # En minutes
+
+class TrackingPointCreate(BaseModel):
+    latitude: float
+    longitude: float
+    timestamp: Optional[datetime] = None
+
+class CollaborativeDeliveryCreate(BaseModel):
+    delivery_id: int
+    participant_ids: List[int]
+
+class CollaborativeDeliveryResponse(BaseModel):
+    id: int
+    delivery_id: int
+    participant_ids: List[int]
+    created_at: datetime
+
+class ExpressDeliveryCreate(DeliveryCreate):
+    is_priority: Optional[bool] = True
+
+class ExpressDeliveryResponse(DeliveryResponse):
+    is_priority: bool    

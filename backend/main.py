@@ -13,7 +13,7 @@ import time
 from .database import get_db, engine
 from . import models, schemas, crud, auth
 from .config import settings
-from .websockets import ConnectionManager
+from .websocket_server import ConnectionManager, WebSocketMessage
 
 # Initialiser les logs
 logging.basicConfig(level=logging.INFO)
@@ -369,6 +369,30 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     except WebSocketDisconnect:
         manager.disconnect(client_id)
 
+@app.post("/send-notification/{user_id}")
+async def send_notification(user_id: str, message: WebSocketMessage):
+    await manager.send_to_user(message, user_id)
+    return {"status": "sent", "recipient": user_id}
+
+@app.post("/broadcast/{room}")
+async def broadcast_message(room: str, message: WebSocketMessage):
+    await manager.broadcast(message, room)
+    return {"status": "broadcasted", "room": room}
+
+
+@app.get("/docs/ws")
+async def websocket_docs():
+    return {
+        "description": "WebSocket endpoint disponible sur /ws/{user_id}?room=optional_room",
+        "message_format": {
+            "type": "chat | tracking_update | heartbeat",
+            "payload": {"key": "value"},
+            "room": "optional_room",
+            "sender_id": "user_id",
+            "timestamp": "ISO-8601 format (auto)"
+        }
+    }
+
 # Route pour obtenir la dernière position connue d'un coursier
 @app.get("/tracking/{delivery_id}")
 async def get_courier_location(
@@ -464,6 +488,8 @@ async def update_user_status(
         raise HTTPException(status_code=403, detail="Accès réservé aux gestionnaires")
     
     return crud.update_user_status(db, user_id=user_id, status=status_update.status)
+
+
 
 if __name__ == "__main__":
     import uvicorn

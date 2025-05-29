@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     ]
     
     # Keycloak
+    USE_KEYCLOAK: bool = os.getenv("USE_KEYCLOAK", "False").lower() == "true"
     KEYCLOAK_URL: str = os.getenv("KEYCLOAK_URL", "")
     KEYCLOAK_REALM: str = os.getenv("KEYCLOAK_REALM", "livraison-abidjan")
     KEYCLOAK_CLIENT_ID: str = os.getenv("KEYCLOAK_CLIENT_ID", "backend")

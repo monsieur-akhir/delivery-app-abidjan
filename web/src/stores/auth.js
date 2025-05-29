@@ -37,15 +37,29 @@ export const useAuthStore = defineStore("auth", () => {
       error.value = null
 
       const response = await login(credentials)
-      token.value = response.access_token
-      localStorage.setItem("token", response.access_token)
+      
+      // Si l'API renvoie un access_token, l'authentification est immédiate
+      if (response.access_token) {
+        token.value = response.access_token
+        localStorage.setItem("token", response.access_token)
+        await fetchUserProfile()
+        return { success: true }
+      } 
+      
+      // Si l'API renvoie un besoin de vérification OTP
+      if (response.require_otp) {
+        return { 
+          success: true, 
+          require_otp: true, 
+          phone: credentials.phone,
+          user_id: response.user_id
+        }
+      }
 
-      await fetchUserProfile()
-
-      return true
+      return { success: true }
     } catch (err) {
       error.value = err.message || "Erreur de connexion"
-      return false
+      return { success: false, error: error.value }
     } finally {
       loading.value = false
     }
@@ -56,12 +70,22 @@ export const useAuthStore = defineStore("auth", () => {
       loading.value = true
       error.value = null
 
-      await register(userData)
+      const response = await register(userData)
+      
+      // Si l'inscription nécessite une vérification OTP
+      if (response?.require_otp) {
+        return { 
+          success: true, 
+          require_otp: true, 
+          phone: userData.phone,
+          user_id: response.user_id
+        }
+      }
 
-      return true
+      return { success: true }
     } catch (err) {
       error.value = err.message || "Erreur d'inscription"
-      return false
+      return { success: false, error: error.value }
     } finally {
       loading.value = false
     }

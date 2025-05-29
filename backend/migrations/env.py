@@ -7,13 +7,15 @@ from alembic import context
 
 # Importer les modèles pour Alembic
 from app.models.user import User, BusinessProfile, CourierProfile
-from app.models.delivery import Delivery, Bid, TrackingPoint, CollaborativeDelivery
 from app.models.rating import Rating
+from app.models.collaborative_delivery import CollaborativeDelivery
+from app.models.delivery import Delivery, Bid, TrackingPoint
 from app.models.gamification import CourierPoints, PointTransaction, Reward
 from app.models.market import Product
 from app.models.wallet import Wallet, Transaction, Loan
 from app.models.notification import Notification
 from app.models.traffic import TrafficReport, WeatherAlert
+from app.models.transport import Vehicle, CourierVehicle, TransportRule, VehicleUsage
 from app.db.base import Base
 
 # Importer la configuration

@@ -26,7 +26,7 @@ class CourierPoints(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relations
-    courier = relationship("User", back_populates="courier_points")
+    courier = relationship("User")
     point_transactions = relationship("PointTransaction", back_populates="courier_points")
     rewards = relationship("Reward", back_populates="courier_points")
 

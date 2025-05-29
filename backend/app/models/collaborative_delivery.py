@@ -37,7 +37,7 @@ class CollaborativeDelivery(Base):
     notes = Column(Text, nullable=True)
     
     # Relations
-    delivery = relationship("Delivery", back_populates="collaborative_couriers")
+    delivery = relationship("Delivery")
     courier = relationship("User", foreign_keys=[courier_id])
 
 
@@ -49,7 +49,7 @@ class CollaborativeMessage(Base):
     courier_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     message = Column(Text, nullable=False)
     message_type = Column(String(20), default="text", nullable=False)  # text, location, image
-    metadata = Column(Text, nullable=True)  # JSON pour données supplémentaires
+    message_metadata = Column(Text, nullable=True)  # JSON pour données supplémentaires
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relations

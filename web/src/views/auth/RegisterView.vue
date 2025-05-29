@@ -276,16 +276,30 @@ export default {
         delete userData.confirm_password
         delete userData.terms
         
-        const success = await authStore.registerUser(userData)
+        const result = await authStore.registerUser(userData)
         
-        if (success) {
-          // Rediriger vers la page de connexion avec un message de succès
-          router.push({ 
-            path: '/login', 
-            query: { registered: 'true' } 
-          })
+        if (result.success) {
+          if (result.require_otp) {
+            // Rediriger vers la page de vérification OTP
+            router.push({
+              name: 'otp-verification',
+              params: { 
+                phone: result.phone,
+                userId: result.user_id
+              },
+              query: {
+                redirect: '/login?registered=true'
+              }
+            })
+          } else {
+            // Rediriger vers la page de connexion avec un message de succès
+            router.push({ 
+              path: '/login', 
+              query: { registered: 'true' } 
+            })
+          }
         } else {
-          error.value = "Échec de l'inscription. Veuillez réessayer."
+          error.value = result.error || "Échec de l'inscription. Veuillez réessayer."
         }
       } catch (err) {
         error.value = err.message || "Une erreur s'est produite lors de l'inscription."

@@ -64,12 +64,12 @@ class Vehicle(Base):
     photo_url = Column(String(255), nullable=True)
     status = Column(String(30), default=VehicleStatus.ACTIVE.value, nullable=False)
     is_electric = Column(Boolean, default=False, nullable=False)
-    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=True)
+    business_id = Column(Integer, ForeignKey("business_profiles.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relations
-    business = relationship("Business", back_populates="vehicles")
+    business = relationship("BusinessProfile")
     courier_vehicles = relationship("CourierVehicle", back_populates="vehicle", cascade="all, delete-orphan")
     transport_rules = relationship("TransportRule", back_populates="vehicle", cascade="all, delete-orphan")
 
@@ -88,7 +88,7 @@ class CourierVehicle(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relations
-    courier = relationship("User", back_populates="vehicles")
+    courier = relationship("User", back_populates="courier_vehicles")
     vehicle = relationship("Vehicle", back_populates="courier_vehicles")
 
     # Contrainte d'unicité
@@ -134,7 +134,6 @@ class VehicleUsage(Base):
 
     # Relations
     courier_vehicle = relationship("CourierVehicle")
-    delivery = relationship("Delivery")
 
     # Contrainte d'unicité
     __table_args__ = (UniqueConstraint("courier_vehicle_id", "delivery_id", name="uq_vehicle_usage_delivery"),)

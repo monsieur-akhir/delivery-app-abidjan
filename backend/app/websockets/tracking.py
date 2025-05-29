@@ -1,12 +1,14 @@
-from fastapi import WebSocket, WebSocketDisconnect, Depends, HTTPException
+from fastapi import WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Dict, List, Any, Optional
 import json
 import asyncio
 from datetime import datetime
+from jose import jwt
 
 from ..db.session import get_db
-from ..core.dependencies import get_current_user_ws
+from ..core.config import settings
+from ..core.websocket_auth import get_current_user_ws
 from ..models.delivery import Delivery, TrackingPoint
 from ..models.user import User, UserRole
 
