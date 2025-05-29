@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from ..core.config import settings
 from ..models.user import User, UserRole, UserStatus, BusinessProfile, CourierProfile
-from ..models.delivery import Delivery, Bid, TrackingPoint, CollaborativeDelivery
+from ..models.delivery import Delivery, Bid, TrackingPoint
+from ..models.collaborative_delivery import CollaborativeDelivery
 from ..models.rating import Rating
 from ..models.gamification import CourierPoints, PointTransaction, Reward
 from ..models.market import Product

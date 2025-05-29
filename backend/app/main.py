@@ -49,6 +49,9 @@ app.include_router(transport.router)
 async def websocket_tracking(websocket: WebSocket, delivery_id: int, db = Depends(get_db)):
     await tracking.tracking_endpoint(websocket, delivery_id, db)
 
+# Import all models to initialize them correctly
+from .models import *
+
 # Événement de démarrage
 @app.on_event("startup")
 async def startup_event():

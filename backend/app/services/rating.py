@@ -107,7 +107,7 @@ def get_average_rating(db: Session, user_id: int) -> float:
     
     return float(result) if result else 0.0
 
-def get_rating_counts(db: Session, user_id: int) -> Dict[int, int]:
+def get_rating_counts(db: Session, user_id: int) -> dict[int, int]:
     counts = {}
     for i in range(1, 6):
         count = db.query(func.count(Rating.id)).filter(
@@ -118,3 +118,52 @@ def get_rating_counts(db: Session, user_id: int) -> Dict[int, int]:
         counts[i] = count
     
     return counts
+
+def get_ratings(
+    db: Session,
+    delivery_id: Optional[int] = None,
+    user_id: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 100
+) -> List[Rating]:
+    """
+    Récupère les évaluations avec options de filtrage par livraison ou utilisateur.
+    Utilisé par les gestionnaires pour consulter toutes les évaluations.
+    """
+    query = db.query(Rating).filter(Rating.moderation_status == ModerationStatus.approved)
+
+    if delivery_id is not None:
+        query = query.filter(Rating.delivery_id == delivery_id)
+
+    if user_id is not None:
+        query = query.filter(Rating.rated_user_id == user_id)
+
+    return query.order_by(Rating.created_at.desc()).offset(skip).limit(limit).all()
+
+def get_user_ratings(
+    db: Session,
+    current_user_id: int,
+    delivery_id: Optional[int] = None,
+    user_id: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 100
+) -> List[Rating]:
+    """
+    Récupérer les évaluations concernant un utilisateur (comme évaluateur ou évalué),
+    avec options de filtrage par livraison ou par utilisateur évalué.
+    """
+    query = db.query(Rating).filter(
+        Rating.moderation_status == ModerationStatus.approved
+    ).filter(
+        (Rating.rater_id == current_user_id) | (Rating.rated_user_id == current_user_id)
+    )
+
+    if delivery_id is not None:
+        query = query.filter(Rating.delivery_id == delivery_id)
+
+    if user_id is not None:
+        query = query.filter(Rating.rated_user_id == user_id)
+
+    return query.order_by(Rating.created_at.desc()).offset(skip).limit(limit).all()
+
+

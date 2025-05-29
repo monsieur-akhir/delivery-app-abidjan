@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -92,7 +92,7 @@ def add_points_for_collaborative(db: Session, courier_id: int, delivery_id: int)
         delivery_id
     )
 
-def get_leaderboard(db: Session, commune: Optional[str] = None, limit: int = 10) -> List[Dict]:
+def get_leaderboard(db: Session, commune: Optional[str] = None, limit: int = 10) -> List[dict]:
     query = db.query(
         CourierPoints.courier_id,
         User.full_name.label("courier_name"),
@@ -158,6 +158,28 @@ def process_reward(db: Session, reward_id: int, status: RewardStatus, transactio
     
     return reward
 
-def get_rewards(db: Session, courier_id: int) -> List[Reward]:
+def get_rewards(db: Session, courier_id: Optional[int] = None, status: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[Reward]:
+    """
+    Récupère les récompenses selon les critères spécifiés.
+    """
+    query = db.query(Reward)
+    
+    if courier_id:
+        courier_points = get_courier_points(db, courier_id)
+        query = query.filter(Reward.courier_points_id == courier_points.id)
+    
+    if status:
+        query = query.filter(Reward.status == status)
+    
+    return query.order_by(desc(Reward.created_at)).offset(skip).limit(limit).all()
+
+def get_point_transactions(db: Session, courier_id: int, skip: int = 0, limit: int = 100) -> List[PointTransaction]:
+    """
+    Récupère les transactions de points pour un coursier donné.
+    """
+    # Récupérer les points du coursier (utilise get_courier_points pour la cohérence)
     courier_points = get_courier_points(db, courier_id)
-    return db.query(Reward).filter(Reward.courier_points_id == courier_points.id).order_by(desc(Reward.created_at)).all()
+
+    return db.query(PointTransaction).filter(
+        PointTransaction.courier_points_id == courier_points.id
+    ).order_by(desc(PointTransaction.created_at)).offset(skip).limit(limit).all()

@@ -391,6 +391,7 @@ class SmsNotificationService:
             template = template.replace(f"{{{key}}}", str(value))
         
         # Remplacer les variables non définies par des placeholders
-        template = template.replace(/{([^}]+)}/g, "[Variable $1]")
+        import re
+        template = re.sub(r'{([^}]+)}', r'[Variable \1]', template)
         
         return template

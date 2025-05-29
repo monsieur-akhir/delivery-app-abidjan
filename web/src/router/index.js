@@ -7,6 +7,7 @@ import LoginView from "@/views/auth/LoginView.vue"
 import RegisterView from "@/views/auth/RegisterView.vue"
 import ForgotPasswordView from "@/views/auth/ForgotPasswordView.vue"
 import ResetPasswordView from "@/views/auth/ResetPasswordView.vue"
+import OTPVerificationView from "@/views/auth/OTPVerificationView.vue"
 import NotFoundView from "@/views/NotFoundView.vue"
 
 // Vues business
@@ -81,6 +82,13 @@ const routes = [
     name: "reset-password",
     component: ResetPasswordView,
     meta: { requiresAuth: false },
+  },
+  {
+    path: "/otp-verification/:phone/:userId?",
+    name: "otp-verification",
+    component: OTPVerificationView,
+    meta: { requiresAuth: false },
+    props: true,
   },
 
   // Routes business

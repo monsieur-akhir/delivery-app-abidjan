@@ -17,6 +17,12 @@ class DeliveryStatus(str, enum.Enum):
     completed = "completed"  # Terminé et confirmé
     cancelled = "cancelled"  # Annulé
 
+class BidStatus(str, enum.Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+    expired = "expired"
+
 class DeliveryType(str, enum.Enum):
     standard = "standard"
     express = "express"
@@ -82,12 +88,37 @@ class Delivery(Base):
     client = relationship("User", back_populates="client_deliveries", foreign_keys=[client_id])
     courier = relationship("User", back_populates="courier_deliveries", foreign_keys=[courier_id])
     bids = relationship("Bid", back_populates="delivery")
-    ratings = relationship("Rating", back_populates="delivery")
     tracking_points = relationship("TrackingPoint", back_populates="delivery")
     
-    # Pour les livraisons collaboratives
-    collaborative_couriers = relationship("CollaborativeDelivery", back_populates="delivery")
-
     # Nouveau champ pour le véhicule utilisé
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=True)
     vehicle = relationship("Vehicle")
+
+class Bid(Base):
+    __tablename__ = "bids"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    delivery_id = Column(Integer, ForeignKey("deliveries.id"))
+    courier_id = Column(Integer, ForeignKey("users.id"))
+    price = Column(Float, nullable=False)
+    proposed_pickup_time = Column(DateTime(timezone=True), nullable=True)
+    proposed_delivery_time = Column(DateTime(timezone=True), nullable=True)
+    status = Column(Enum(BidStatus), default=BidStatus.pending)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relations
+    delivery = relationship("Delivery", back_populates="bids")
+    courier = relationship("User")
+
+class TrackingPoint(Base):
+    __tablename__ = "tracking_points"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    delivery_id = Column(Integer, ForeignKey("deliveries.id"))
+    lat = Column(Float, nullable=False)
+    lng = Column(Float, nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relations
+    delivery = relationship("Delivery", back_populates="tracking_points")

@@ -91,7 +91,8 @@ class ModerationRuleResponse(ModerationRuleBase):
     updated_by_id: Optional[int] = Field(None, description="ID de l'utilisateur modificateur")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 # Refund Criteria Schemas
 class RefundCriteriaBase(BaseModel):
@@ -123,7 +124,8 @@ class RefundCriteriaResponse(RefundCriteriaBase):
     updated_by_id: Optional[int] = Field(None, description="ID de l'utilisateur modificateur")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 # Sanction Parameter Schemas
 class SanctionParameterBase(BaseModel):
@@ -159,7 +161,8 @@ class SanctionParameterResponse(SanctionParameterBase):
     updated_by_id: Optional[int] = Field(None, description="ID de l'utilisateur modificateur")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 # SMS Template Schemas
 class SmsTemplateBase(BaseModel):
@@ -189,7 +192,8 @@ class SmsTemplateResponse(SmsTemplateBase):
     updated_by_id: Optional[int] = Field(None, description="ID de l'utilisateur modificateur")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 # Policy Schemas
 class PolicyBase(BaseModel):
@@ -218,7 +222,8 @@ class PolicyResponse(PolicyBase):
     updated_by_id: Optional[int] = Field(None, description="ID de l'utilisateur modificateur")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 class PolicyHistoryResponse(BaseModel):
     id: int = Field(..., description="ID de l'historique")

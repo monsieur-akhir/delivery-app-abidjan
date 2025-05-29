@@ -3,7 +3,8 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 
-from ..models.delivery import Delivery, DeliveryStatus, DeliveryType, Bid, TrackingPoint, CollaborativeDelivery
+from ..models.delivery import Delivery, DeliveryStatus, DeliveryType, Bid, TrackingPoint
+from ..models.collaborative_delivery import CollaborativeDelivery
 from ..models.user import User, UserRole
 from ..schemas.delivery import DeliveryCreate, DeliveryUpdate, StatusUpdate, BidCreate, TrackingPointCreate, CollaborativeDeliveryCreate, ExpressDeliveryCreate
 from ..schemas.transport import VehicleRecommendationRequest, CargoCategory
@@ -356,3 +357,143 @@ def create_express_delivery(db: Session, express_data: ExpressDeliveryCreate) ->
     donation_amount = settings.EXPRESS_DELIVERY_SURCHARGE * (express_data.donation_percentage / 100)
     
     return delivery
+
+def delete_delivery(db: Session, delivery_id: int) -> None:
+    from app.models.delivery import Delivery
+
+    delivery = db.query(Delivery).filter(Delivery.id == delivery_id).first()
+    if not delivery:
+        raise ValueError("Delivery not found")
+
+    db.delete(delivery)
+    db.commit()
+
+
+def get_user_deliveries(db: Session, user_id: int, role: UserRole, status: Optional[DeliveryStatus] = None) -> List[Delivery]:
+    if role == UserRole.client:
+        return get_deliveries_by_client(db, user_id, status=status)
+    elif role == UserRole.courier:
+        return get_deliveries_by_courier(db, user_id, status=status)
+    else:
+        raise ForbiddenError("Rôle non autorisé pour consulter les livraisons")
+
+def get_bids(db: Session, delivery_id: Optional[int] = None, courier_id: Optional[int] = None) -> List[Bid]:
+    query = db.query(Bid)
+    if delivery_id:
+        query = query.filter(Bid.delivery_id == delivery_id)
+    if courier_id:
+        query = query.filter(Bid.courier_id == courier_id)
+    return query.all()
+
+def get_bid(db: Session, bid_id: int) -> Bid:
+    bid = db.query(Bid).filter(Bid.id == bid_id).first()
+    if not bid:
+        raise NotFoundError("Enchère non trouvée")
+    return bid
+
+def get_collaborative_deliveries(db: Session, delivery_id: int) -> List[CollaborativeDelivery]:
+    return db.query(CollaborativeDelivery).filter(CollaborativeDelivery.delivery_id == delivery_id).all()
+
+def join_collaborative_delivery(db: Session, delivery_id: int, courier_id: int, share_percentage: float = 0.0) -> CollaborativeDelivery:
+    delivery = get_delivery(db, delivery_id)
+    if delivery.delivery_type != DeliveryType.collaborative:
+        raise BadRequestError("Cette livraison n'est pas de type collaborative")
+
+    existing = db.query(CollaborativeDelivery).filter(
+        CollaborativeDelivery.delivery_id == delivery_id,
+        CollaborativeDelivery.courier_id == courier_id
+    ).first()
+    if existing:
+        raise ConflictError("Ce coursier a déjà rejoint cette livraison collaborative")
+
+    participant = CollaborativeDelivery(
+        delivery_id=delivery_id,
+        courier_id=courier_id,
+        role="participant",
+        share_percentage=share_percentage
+    )
+    db.add(participant)
+    db.commit()
+    db.refresh(participant)
+    return participant
+
+def get_collaborative_delivery(db: Session, delivery_id: int, courier_id: int) -> CollaborativeDelivery:
+    """
+    Récupère une participation spécifique à une livraison collaborative.
+    """
+    collaborative_delivery = db.query(CollaborativeDelivery).filter(
+        CollaborativeDelivery.delivery_id == delivery_id,
+        CollaborativeDelivery.courier_id == courier_id
+    ).first()
+    if not collaborative_delivery:
+        raise NotFoundError("Participation à la livraison collaborative non trouvée")
+    return collaborative_delivery
+
+def update_collaborative_delivery_status(db: Session, delivery_id: int, courier_id: int, status: str) -> CollaborativeDelivery:
+    """
+    Met à jour le statut d'un participant à une livraison collaborative.
+    """
+    collaborative_delivery = get_collaborative_delivery(db, delivery_id, courier_id)
+    
+    # TODO: Add validation for allowed status transitions if necessary
+    collaborative_delivery.status = status 
+    db.commit()
+    db.refresh(collaborative_delivery)
+    return collaborative_delivery
+
+def calculate_collaborative_earnings(db: Session, delivery_id: int) -> Dict[str, Any]:
+    """
+    Calcule les gains pour chaque participant à une livraison collaborative.
+    """
+    delivery = get_delivery(db, delivery_id)
+    if delivery.delivery_type != DeliveryType.collaborative:
+        raise BadRequestError("Cette livraison n'est pas collaborative.")
+    if delivery.status != DeliveryStatus.completed:
+        raise BadRequestError("Les gains ne peuvent être calculés que pour les livraisons complétées.")
+    if not delivery.final_price:
+        raise BadRequestError("Le prix final de la livraison n'est pas défini.")
+
+    participants = db.query(CollaborativeDelivery).filter(
+        CollaborativeDelivery.delivery_id == delivery_id,
+        CollaborativeDelivery.status == "completed" # Consider only completed participations
+    ).all()
+
+    if not participants:
+        return {"total_earnings": 0, "participant_earnings": {}, "platform_fee": 0}
+
+    total_share_percentage = sum(p.share_percentage for p in participants if p.share_percentage is not None)
+    
+    # If total_share_percentage is 0 or not well-defined, distribute equally or handle as an error
+    # For now, let's assume shares are defined. If not, this logic might need adjustment.
+    # Or, if shares are not defined, perhaps the earnings are not distributed via this mechanism.
+
+    participant_earnings = {}
+    total_distributed_amount = 0
+
+    for p in participants:
+        if p.share_percentage is not None and total_share_percentage > 0:
+            # Ensure courier_id is a string for the dictionary key, as it might be an int
+            participant_earnings[str(p.courier_id)] = (p.share_percentage / total_share_percentage) * delivery.final_price
+            total_distributed_amount += participant_earnings[str(p.courier_id)]
+        elif total_share_percentage == 0 and len(participants) > 0: # Equal distribution if no shares defined
+             participant_earnings[str(p.courier_id)] = delivery.final_price / len(participants)
+             total_distributed_amount += participant_earnings[str(p.courier_id)]
+        else:
+            participant_earnings[str(p.courier_id)] = 0
+
+
+    # This is a simplified calculation. Platform fees, bonuses, etc., would make this more complex.
+    # The current logic assumes the sum of share_percentage might not be 100%, 
+    # and distributes proportionally to the defined shares.
+    # If share_percentage is intended to be exact, validation for sum=100% should be elsewhere.
+
+    return {
+        "delivery_id": delivery_id,
+        "total_delivery_price": delivery.final_price,
+        "total_share_percentage_defined": total_share_percentage,
+        "participant_earnings": participant_earnings,
+        "total_distributed_to_participants": total_distributed_amount,
+        "remaining_for_platform_or_adjustment": delivery.final_price - total_distributed_amount
+    }
+
+

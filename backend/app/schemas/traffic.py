@@ -30,7 +30,8 @@ class TrafficReportResponse(TrafficReportBase):
     expires_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 # Schémas pour les alertes météo
 class WeatherAlertBase(BaseModel):

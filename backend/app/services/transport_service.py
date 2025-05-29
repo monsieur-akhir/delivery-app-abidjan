@@ -724,3 +724,50 @@ def get_vehicle_environmental_stats(
         }
     
     return stats
+
+class TransportService:
+    @staticmethod
+    def create_vehicle(db, vehicle):
+        from app.services import transport_service
+        return transport_service.create_vehicle(db, vehicle)
+
+    @staticmethod
+    def get_vehicle(db, vehicle_id):
+        from app.services import transport_service
+        return transport_service.get_vehicle(db, vehicle_id)
+
+    @staticmethod
+    def get_vehicle_recommendation(db, request):
+        from app.services import transport_service
+        return transport_service.get_vehicle_recommendation(db, request)
+
+    @staticmethod
+    def assign_vehicle_to_courier(db, courier_id, vehicle):
+        from app.services import transport_service
+        return transport_service.assign_vehicle_to_courier(db, courier_id, vehicle)
+
+    @staticmethod
+    def upload_vehicle_document(db, vehicle_id, document_type, document_url):
+        from app.services import transport_service
+        return transport_service.upload_vehicle_document(db, vehicle_id, document_type, document_url)
+
+    @staticmethod
+    def create_vehicle_usage(db, usage):
+        from app.services import transport_service
+        return transport_service.create_vehicle_usage(db, usage)
+
+    @staticmethod
+    def get_vehicle_usage_stats(db, start_date=None, end_date=None, vehicle_type=None):
+        from app.services import transport_service
+        return transport_service.get_vehicle_usage_stats(db, start_date, end_date, vehicle_type)
+
+    @staticmethod
+    def get_vehicle_performance_stats(db, start_date=None, end_date=None, vehicle_type=None):
+        from app.services import transport_service
+        return transport_service.get_vehicle_performance_stats(db, start_date, end_date, vehicle_type)
+
+    @staticmethod
+    def get_vehicle_environmental_stats(db, start_date=None, end_date=None, vehicle_type=None):
+        from app.services import transport_service
+        return transport_service.get_vehicle_environmental_stats(db, start_date, end_date, vehicle_type)
+

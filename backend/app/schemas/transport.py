@@ -95,7 +95,8 @@ class Vehicle(VehicleBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 
 # CourierVehicle schemas
@@ -134,7 +135,8 @@ class CourierVehicle(BaseModel):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 
 # TransportRule schemas
@@ -184,7 +186,8 @@ class VehicleInfo(BaseModel):
     type: VehicleType
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 
 class TransportRule(TransportRuleBase):
@@ -194,7 +197,8 @@ class TransportRule(TransportRuleBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 
 # VehicleRecommendation schemas
@@ -256,7 +260,8 @@ class VehicleUsage(VehicleUsageBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 
 # Document upload schema

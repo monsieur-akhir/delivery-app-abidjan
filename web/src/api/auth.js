@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import axios from 'axios'
 import apiService, { handleApiError } from './apiService'
 import { API_URL } from '@/config'
@@ -14,7 +15,7 @@ export default apiService
  */
 export const login = async credentials => {
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, credentials)
+    const response = await axios.post(`${API_URL}/api/auth/auth/login`, credentials)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -138,9 +139,10 @@ export const getUserProfile = async () => {
 /**
  * Vérifier un code OTP
  * @param {Object} data - Données de vérification
- * @param {string} data.email - Email de l'utilisateur
+ * @param {string} data.phone - Numéro de téléphone de l'utilisateur
  * @param {string} data.otp - Code OTP
- * @returns {Promise<Object>} - Résultat de la vérification
+ * @param {string} data.user_id - ID de l'utilisateur (optionnel)
+ * @returns {Promise<Object>} - Résultat de la vérification avec token d'accès
  */
 export const verifyOTP = async data => {
   try {
@@ -153,9 +155,11 @@ export const verifyOTP = async data => {
 
 /**
  * Renvoyer un code OTP
- * @param {Object} data - Données de renvoi
- * @param {string} data.email - Email de l'utilisateur
- * @returns {Promise<Object>} - Résultat du renvoi
+ * @param {Object} data - Données pour renvoyer l'OTP
+ * @param {string} data.phone - Numéro de téléphone de l'utilisateur
+ * @param {string} data.email - Email de l'utilisateur (optionnel)
+ * @param {string} data.user_id - ID de l'utilisateur (optionnel)
+ * @returns {Promise<Object>} - Résultat de l'envoi
  */
 export const resendOTP = async data => {
   try {

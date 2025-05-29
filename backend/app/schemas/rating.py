@@ -37,4 +37,5 @@ class RatingResponse(RatingBase):
     rated_user: Optional[Dict[str, Any]] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility

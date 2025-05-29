@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadForm, Query
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
@@ -16,14 +16,14 @@ from app.schemas.transport import (
 )
 from app.services.transport_service import (
     create_vehicle, get_vehicle, get_vehicles, update_vehicle, delete_vehicle,
-    get_courier_vehicles, assign_vehicle_to_courier, update_courier_vehicle, remove_courier_vehicle, set_primary_vehicle,
+    get_courier_vehicle, get_courier_vehicles, assign_vehicle_to_courier, update_courier_vehicle, remove_courier_vehicle, set_primary_vehicle,
     create_transport_rule, get_transport_rule, get_transport_rules, update_transport_rule, delete_transport_rule,
     get_vehicle_recommendation,
     create_vehicle_usage, get_vehicle_usage, update_vehicle_usage,
-    upload_vehicle_document,
+    upload_vehicle_document, upload_courier_vehicle_document,
     get_vehicle_usage_stats, get_vehicle_performance_stats, get_vehicle_environmental_stats
 )
-from app.services.storage import upload_file_to_storage
+from app.services.storage import upload_file
 
 router = APIRouter(prefix="/transport", tags=["transport"])
 
@@ -46,10 +46,6 @@ def get_vehicle_endpoint(
     vehicle = get_vehicle(db=db, vehicle_id=vehicle_id)
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
-    return vehicle
-
-
-@router.get("/vehicles", response_model=  detail="Vehicle not found")
     return vehicle
 
 
@@ -100,7 +96,7 @@ def delete_vehicle_endpoint(
 
 
 @router.post("/vehicles/{vehicle_id}/documents", response_model=Vehicle)
-def upload_vehicle_document_endpoint(
+async def upload_vehicle_document_endpoint(
     vehicle_id: int,
     document_type: DocumentType,
     file: UploadFile = File(...),
@@ -112,8 +108,11 @@ def upload_vehicle_document_endpoint(
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
     # Upload file to storage
-    file_path = f"vehicles/{vehicle_id}/{document_type.value}/{file.filename}"
-    file_url = upload_file_to_storage(file=file, path=file_path)
+    folder = f"vehicles/{vehicle_id}/{document_type.value}"
+    file_url = await upload_file(file=file, folder=folder)
+    
+    if not file_url:
+        raise HTTPException(status_code=500, detail="Failed to upload file")
     
     # Update vehicle with document URL
     return upload_vehicle_document(db=db, vehicle_id=vehicle_id, document_type=document_type, document_url=file_url)
@@ -204,7 +203,7 @@ def set_primary_vehicle_endpoint(
 
 
 @router.post("/courier/vehicles/{courier_vehicle_id}/documents", response_model=CourierVehicle)
-def upload_courier_vehicle_document_endpoint(
+async def upload_courier_vehicle_document_endpoint(
     courier_vehicle_id: int,
     document_type: DocumentType,
     file: UploadFile = File(...),
@@ -221,11 +220,14 @@ def upload_courier_vehicle_document_endpoint(
         raise HTTPException(status_code=403, detail="Not authorized to access this resource")
     
     # Upload file to storage
-    file_path = f"courier_vehicles/{courier_vehicle_id}/{document_type.value}/{file.filename}"
-    file_url = upload_file_to_storage(file=file, path=file_path)
+    folder = f"courier_vehicles/{courier_vehicle_id}/{document_type.value}"
+    file_url = await upload_file(file=file, folder=folder)
+    
+    if not file_url:
+        raise HTTPException(status_code=500, detail="Failed to upload file")
     
     # Update courier vehicle with document URL
-    return upload_vehicle_document(db=db, courier_vehicle_id=courier_vehicle_id, document_type=document_type, document_url=file_url)
+    return upload_courier_vehicle_document(db=db, courier_vehicle_id=courier_vehicle_id, document_type=document_type, document_url=file_url)
 
 
 # Transport Rule endpoints

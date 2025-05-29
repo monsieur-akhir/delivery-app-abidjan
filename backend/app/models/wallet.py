@@ -30,7 +30,7 @@ class Wallet(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relations
-    user = relationship("User", back_populates="wallet")
+    user = relationship("User")
     transactions = relationship("Transaction", back_populates="wallet")
     loans = relationship("Loan", back_populates="wallet")
 

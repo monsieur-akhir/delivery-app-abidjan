@@ -12,6 +12,11 @@ from ..db.session import get_db
 from ..models.user import User
 
 # Configuration de la sécurité
+# Handle bcrypt version issue by suppressing the warning
+import logging
+logging.getLogger("passlib").setLevel(logging.ERROR)
+
+# Using bcrypt with no compatibility warnings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 

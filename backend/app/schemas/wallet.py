@@ -28,7 +28,8 @@ class WalletResponse(WalletBase):
     updated_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 # Schémas pour les transactions
 class TransactionBase(BaseModel):
@@ -53,7 +54,8 @@ class TransactionResponse(TransactionBase):
     completed_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
 
 # Schémas pour les prêts
 class LoanBase(BaseModel):
@@ -81,4 +83,5 @@ class LoanResponse(LoanBase):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility

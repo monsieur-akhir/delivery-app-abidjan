@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import enum
 
-from .transport import VehicleType, VehicleResponse, CourierVehicleResponse
+from .transport import VehicleType, Vehicle, CourierVehicle
 
 class UserRole(str, enum.Enum):
     client = "client"
@@ -25,7 +25,7 @@ class KYCStatus(str, enum.Enum):
 
 # Schémas pour le profil coursier
 class CourierProfileBase(BaseModel):
-    vehicle_type: VehicleType = VehicleType.motorcycle
+    vehicle_type: VehicleType = VehicleType.MOTORCYCLE
     license_plate: Optional[str] = None
 
 class CourierProfileCreate(CourierProfileBase):
@@ -56,7 +56,93 @@ class CourierProfileResponse(CourierProfileBase):
     last_location_updated: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    vehicles: Optional[List[CourierVehicleResponse]] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
+
+# Base user schemas
+class UserBase(BaseModel):
+    phone: str = Field(..., description="Phone number (primary identifier)")
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: UserRole = UserRole.client
+    commune: Optional[str] = None
+    is_active: bool = True
+
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6, description="Password (min 6 characters)")
+
+class UserLogin(BaseModel):
+    phone: str = Field(..., description="Phone number")
+    password: str = Field(..., description="Password")
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    commune: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class UserResponse(UserBase):
+    id: int
+    status: UserStatus
+    kyc_status: KYCStatus
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: Optional[datetime] = None  # Changed from expires_in to match what's used in the code
+    refresh_token: Optional[str] = None  # Added to match what's used in the code
+    user: Optional['UserResponse'] = None  # Added to match what's used in the code
+    
+    class Config:
+        from_attributes = True
+
+class TokenData(BaseModel):
+    phone: Optional[str] = None
+    role: Optional[UserRole] = None
+
+# Business profile schemas
+class BusinessProfileBase(BaseModel):
+    business_name: str
+    business_type: Optional[str] = None
+    siret: Optional[str] = None
+    address: Optional[str] = None
+    commune: Optional[str] = None
+
+class BusinessProfileCreate(BusinessProfileBase):
+    pass
+
+class BusinessProfileUpdate(BaseModel):
+    business_name: Optional[str] = None
+    business_type: Optional[str] = None
+    siret: Optional[str] = None
+    address: Optional[str] = None
+    commune: Optional[str] = None
+
+class BusinessProfileResponse(BusinessProfileBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+class UserStatusUpdate(BaseModel):
+    status: UserStatus
+
+class KYCUpdate(BaseModel):
+    kyc_status: KYCStatus
+    kyc_rejection_reason: Optional[str] = None
+
+    
+    class Config:
+        from_attributes = True
+        orm_mode = True  # Keeping for backwards compatibility

@@ -97,14 +97,28 @@ export default {
         loading.value = true
         error.value = null
         
-        const success = await authStore.loginUser(formData)
+        const result = await authStore.loginUser(formData)
         
-        if (success) {
-          // Rediriger vers la page demandée ou le tableau de bord approprié
-          const redirectPath = route.query.redirect || getDefaultRedirect()
-          router.push(redirectPath)
+        if (result.success) {
+          if (result.require_otp) {
+            // Rediriger vers la page de vérification OTP
+            router.push({
+              name: 'otp-verification',
+              params: { 
+                phone: result.phone,
+                userId: result.user_id
+              },
+              query: {
+                redirect: route.query.redirect
+              }
+            })
+          } else {
+            // Rediriger vers la page demandée ou le tableau de bord approprié
+            const redirectPath = route.query.redirect || getDefaultRedirect()
+            router.push(redirectPath)
+          }
         } else {
-          error.value = "Échec de la connexion. Veuillez vérifier vos identifiants."
+          error.value = result.error || "Échec de la connexion. Veuillez vérifier vos identifiants."
         }
       } catch (err) {
         error.value = err.message || "Une erreur s'est produite lors de la connexion."
