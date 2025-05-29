@@ -12,6 +12,7 @@ import { useNetwork } from "../../contexts/NetworkContext"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import i18n from "../../i18n"
+import LoginConnexionSvg from "../../assets/login-connexion.svg"
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">
@@ -67,7 +68,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   }, [])
 
   if (!isI18nReady) {
-    return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
+    return (
+      <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
+        <Text>Chargement...</Text>
+      </View>
+    );
   }
 
   const handleLogin = async (): Promise<void> => {
@@ -107,88 +112,93 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Animatable.View animation="fadeIn" duration={1000} style={styles.logoContainer}>
-          <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
-        </Animatable.View>
+        <View style={styles.illustrationContainer}>
+          <LoginConnexionSvg width={180} height={140} />
+        </View>
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>Login</Text>
+          <Text style={styles.subtitle}>Sign to your account</Text>
 
-        <Animatable.View animation="fadeInUp" duration={800} delay={300} style={styles.formContainer}>
-          <Text style={styles.title}>{t("login.welcome")}</Text>
-          <Text style={styles.subtitle}>{t("login.subtitle")}</Text>
-
-          {showOfflineWarning && (
-            <View style={styles.offlineWarning}>
-              <Text style={styles.offlineText}>{t("login.offlineWarning")}</Text>
-              <Button mode="contained" onPress={handleOfflineMode} style={styles.offlineButton}>
-                {t("login.useOfflineMode")}
-              </Button>
-            </View>
-          )}
-
+          <View style={styles.inputLabelContainer}>
+            <Text style={styles.inputLabel}>Your Email</Text>
+          </View>
           <TextInput
-            label={t("login.phone")}
+            label={" "}
             value={phone}
             onChangeText={setPhone}
             style={styles.input}
-            keyboardType="phone-pad"
-            left={<TextInput.Icon icon="phone" />}
-            mode="outlined"
+            keyboardType="email-address"
+            left={<TextInput.Icon icon="email" color="#BDBDBD" />}
+            mode="flat"
+            placeholder="enas@gmail.com"
+            underlineColor="transparent"
+            activeUnderlineColor="transparent"
+            theme={{ colors: { background: '#F5F5F5' } }}
           />
 
+          <View style={styles.inputLabelContainer}>
+            <Text style={styles.inputLabel}>Password</Text>
+          </View>
           <TextInput
-            label={t("login.password")}
+            label={" "}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={secureTextEntry}
             style={styles.input}
-            left={<TextInput.Icon icon="lock" />}
-            right={
-              <TextInput.Icon
-                icon={secureTextEntry ? "eye-off" : "eye"}
-                onPress={() => setSecureTextEntry(!secureTextEntry)}
-              />
-            }
-            mode="outlined"
+            left={<TextInput.Icon icon="lock" color="#BDBDBD" />}
+            right={<TextInput.Icon icon={secureTextEntry ? "eye-off" : "eye"} color="#BDBDBD" onPress={() => setSecureTextEntry(!secureTextEntry)} />}
+            mode="flat"
+            placeholder="••••••••••"
+            underlineColor="transparent"
+            activeUnderlineColor="transparent"
+            theme={{ colors: { background: '#F5F5F5' } }}
           />
 
-          <View style={styles.rememberContainer}>
-            <Checkbox.Item
-              label={t("login.rememberMe")}
-              status={rememberMe ? "checked" : "unchecked"}
-              onPress={() => setRememberMe(!rememberMe)}
-              labelStyle={styles.checkboxLabel}
-              position="leading"
-              style={styles.checkbox}
-            />
-            <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-              <Text style={styles.forgotPassword}>{t("login.forgotPassword")}</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.forgotPasswordContainer} onPress={() => navigation.navigate("ForgotPassword")}> 
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+          </TouchableOpacity>
 
           <Button
             mode="contained"
             onPress={handleLogin}
             style={styles.button}
-            loading={loading}
-            disabled={loading || (!isConnected && !isOfflineMode)}
+            labelStyle={styles.buttonLabel}
+            contentStyle={styles.buttonContent}
           >
-            {t("login.submit")}
+            Login
           </Button>
 
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>{t("login.noAccount")}</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={styles.registerLink}>{t("login.register")}</Text>
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>Or</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <View style={styles.socialContainer}>
+            <TouchableOpacity style={styles.socialButton}>
+              <Image source={require('../../assets/google.png')} style={styles.socialIcon} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialButton}>
+              <Image source={require('../../assets/facebook.png')} style={styles.socialIcon} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialButton}>
+              <Image source={require('../../assets/apple.png')} style={styles.socialIcon} />
             </TouchableOpacity>
           </View>
-        </Animatable.View>
 
+          <TouchableOpacity style={styles.noAccountContainer} onPress={() => navigation.navigate("Register")}> 
+            <Text style={styles.noAccountText}>I don't have account</Text>
+          </TouchableOpacity>
+        </View>
         <Snackbar
           visible={visible}
           onDismiss={() => setVisible(false)}
           duration={3000}
+          style={styles.snackbar}
           action={{
             label: "OK",
             onPress: () => setVisible(false),
+            textColor: "#FFFFFF"
           }}
         >
           {error}
@@ -201,88 +211,132 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: 20,
+    padding: 24,
   },
-  logoContainer: {
+  illustrationContainer: {
     alignItems: "center",
-    marginBottom: 40,
-  },
-  logo: {
-    width: 150,
-    height: 150,
+    marginTop: 24,
+    marginBottom: 8,
   },
   formContainer: {
     width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 0,
+    padding: 0,
+    marginTop: 0,
+    marginBottom: 0,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
-    color: "#FF6B00",
+    color: "#222",
+    marginBottom: 2,
+    marginTop: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
+    color: "#9E9E9E",
+    marginBottom: 16,
+  },
+  inputLabelContainer: {
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  inputLabel: {
+    fontSize: 13,
     color: "#757575",
-    marginBottom: 30,
+    marginLeft: 2,
   },
   input: {
-    marginBottom: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    fontSize: 15,
+    marginBottom: 8,
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    height: 48,
   },
-  rememberContainer: {
+  forgotPasswordContainer: {
+    alignSelf: "flex-end",
+    marginBottom: 16,
+  },
+  forgotPassword: {
+    color: "#757575",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  button: {
+    backgroundColor: "#FF6B00",
+    borderRadius: 8,
+    marginTop: 0,
+    marginBottom: 16,
+    height: 48,
+    justifyContent: "center",
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  buttonContent: {
+    height: 48,
+  },
+  dividerContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 8,
+    marginBottom: 16,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E0E0E0",
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    color: "#757575",
+    fontSize: 13,
+  },
+  socialContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
   },
-  checkbox: {
-    padding: 0,
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  forgotPassword: {
-    color: "#FF6B00",
-    fontSize: 14,
-  },
-  button: {
-    marginTop: 10,
-    paddingVertical: 8,
-    backgroundColor: "#FF6B00",
-  },
-  registerContainer: {
-    flexDirection: "row",
+  socialButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
     justifyContent: "center",
-    marginTop: 20,
+    alignItems: "center",
+    marginHorizontal: 8,
   },
-  registerText: {
+  socialIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: "contain",
+  },
+  noAccountContainer: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  noAccountText: {
     color: "#757575",
+    fontSize: 13,
+    textDecorationLine: "underline",
   },
-  registerLink: {
-    color: "#FF6B00",
-    fontWeight: "bold",
-    marginLeft: 5,
-  },
-  offlineWarning: {
-    backgroundColor: "#FFF3E0",
-    padding: 16,
+  snackbar: {
+    backgroundColor: "#323232",
     borderRadius: 8,
     marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: "#FF9800",
-  },
-  offlineText: {
-    color: "#E65100",
-    marginBottom: 8,
-  },
-  offlineButton: {
-    backgroundColor: "#FF9800",
   },
 })
 
