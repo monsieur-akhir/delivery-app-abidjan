@@ -15,7 +15,7 @@ export default apiService
  */
 export const login = async credentials => {
   try {
-    const response = await axios.post(`${API_URL}/api/auth/auth/login`, credentials)
+    const response = await axios.post(`${API_URL}/auth/login`, credentials)
     return response.data
   } catch (error) {
     handleApiError(error)

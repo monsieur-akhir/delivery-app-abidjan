@@ -14,13 +14,8 @@ import { useNetwork } from "../../contexts/NetworkContext"
 import { useWebSocket } from "../../contexts/WebSocketContext"
 import { useNotification } from "../../contexts/NotificationContext"
 import { useTranslation } from "react-i18next"
+import { useDelivery, useUser } from "../../hooks"
 import Icon from "react-native-vector-icons/MaterialCommunityIcons"
-import {
-  fetchAvailableDeliveries,
-  fetchCourierProfile,
-  updateCourierStatus,
-  fetchWeatherForecast,
-} from "../../services/api"
 import { formatPrice, formatDistance, formatDate } from "../../utils/formatters"
 import type { CourierHomeScreenNavigationProp } from "../../types/navigation"
 import type { Delivery } from "../../types/models"
@@ -38,6 +33,8 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
   const { sendMessage } = useWebSocket()
   const { unreadCount } = useNotification()
   const { t } = useTranslation()
+  const { getAvailableDeliveries } = useDelivery()
+  const { getCourierProfile, updateCourierStatus, getWeatherForecast } = useUser()
 
   const [refreshing, setRefreshing] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
@@ -67,22 +64,22 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
       setCurrentLocation(location)
 
       // Charger le profil du coursier
-      const profileData = await fetchCourierProfile()
-      setIsOnline(profileData.is_online)
+      const profileData = await getCourierProfile()
+      setIsOnline(profileData?.is_online || false)
 
       // Charger les livraisons disponibles
-      const deliveries = await fetchAvailableDeliveries()
+      const deliveries = await getAvailableDeliveries()
       setAvailableDeliveries(deliveries)
 
       // Charger les données météo
-      const weatherData = await fetchWeatherForecast(location.coords.latitude, location.coords.longitude)
+      const weatherData = await getWeatherForecast(location.coords.latitude, location.coords.longitude)
       setWeather(weatherData)
     } catch (error) {
       console.error("Error loading initial data:", error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [getAvailableDeliveries, getCourierProfile, getWeatherForecast])
 
   useEffect(() => {
     loadInitialData()
@@ -150,7 +147,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
     } finally {
       setStatusLoading(false)
     }
-  }, [isConnected, isOfflineMode, isOnline, updateUserData, user?.id, sendMessage, currentLocation])
+  }, [isConnected, isOfflineMode, isOnline, updateCourierStatus, updateUserData, user?.id, sendMessage, currentLocation])
 
   const getWeatherIcon = (condition: string): FeatherIconName => {
     switch (condition.toLowerCase()) {
@@ -301,7 +298,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
               <Card style={styles.weatherCard}>
                 <Card.Content>
                   <View style={styles.weatherContainer}>
-                    <FeatherIcon name={getWeatherIcon(weather.current.condition) as any} size={36} color="#FF6B00" />
+                    <FeatherIcon name={getWeatherIcon(weather.current.condition)} size={36} color="#FF6B00" />
                     <View style={styles.weatherInfo}>
                       <Text style={styles.weatherTemperature}>{weather.current.temperature}°C</Text>
                       <Text style={styles.weatherCondition}>{weather.current.condition}</Text>
@@ -373,7 +370,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
                   <Card
                     key={delivery.id}
                     style={styles.deliveryCard}
-                    onPress={() => navigation.navigate("Bid", { deliveryId: delivery.id })}
+                    onPress={() => navigation.navigate("Bid", { deliveryId: delivery.id.toString() })}
                   >
                     <Card.Content>
                       <View style={styles.deliveryHeader}>

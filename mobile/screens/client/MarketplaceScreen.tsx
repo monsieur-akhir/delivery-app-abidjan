@@ -117,7 +117,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
   )
 
   const renderMerchantItem = ({ item }: { item: Merchant }): React.ReactElement => (
-    <Card style={styles.merchantCard} onPress={() => navigation.navigate("MerchantDetails", { merchantId: item.id })}>
+    <Card style={styles.merchantCard} onPress={() => navigation.navigate("MerchantDetails", { merchantId: item.id.toString() })}>
       <Card.Cover
         source={{ uri: item.cover_image || "https://via.placeholder.com/300x150?text=Boutique" }}
         style={styles.merchantImage}

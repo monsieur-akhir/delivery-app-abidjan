@@ -4,15 +4,14 @@ import { View, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } f
 import { Text, Card, Button, Avatar, Chip, Divider, ActivityIndicator, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchDeliveryBids, acceptBid, rejectBid } from "../../services/api"
+import { useDelivery } from "../../hooks"
 import { formatPrice, formatDate } from "../../utils/formatters"
 import StarRating from "../../components/StarRating"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
-import type { Bid, Courier } from "../../types/models"
+import type { Bid } from "../../types/models"
 
 type BidsScreenProps = {
   route: RouteProp<RootStackParamList, "Bids">
@@ -23,6 +22,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
   const { deliveryId } = route.params
   const { t } = useTranslation()
   const { isConnected } = useNetwork()
+  const { getDeliveryBids, acceptBid, rejectBid } = useDelivery()
 
   const [bids, setBids] = useState<Bid[]>([])
   const [loading, setLoading] = useState<boolean>(true)
@@ -32,7 +32,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
   const loadBids = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-      const data = await fetchDeliveryBids(deliveryId)
+      const data = await getDeliveryBids(Number(deliveryId))
       setBids(data)
     } catch (error) {
       console.error("Error loading bids:", error)
@@ -40,7 +40,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
     } finally {
       setLoading(false)
     }
-  }, [deliveryId, t])
+  }, [deliveryId, getDeliveryBids, t])
 
   useEffect(() => {
     loadBids()
@@ -63,7 +63,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
         },
         {
           text: t("common.accept"),
-          onPress: () => confirmAcceptBid(bid.id),
+          onPress: () => confirmAcceptBid(bid.id.toString()),
         },
       ],
     )
@@ -77,10 +77,10 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
 
     try {
       setProcessingBidId(bidId)
-      await acceptBid(bidId, deliveryId)
+      await acceptBid(Number(deliveryId), Number(bidId))
 
       const updatedBids = bids.map((bid) => {
-        if (bid.id === bidId) {
+        if (bid.id.toString() === bidId) {
           return { ...bid, status: "accepted" as const }
         } else {
           return { ...bid, status: "rejected" as const }
@@ -114,7 +114,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
         },
         {
           text: t("common.reject"),
-          onPress: () => confirmRejectBid(bid.id),
+          onPress: () => confirmRejectBid(bid.id.toString()),
           style: "destructive",
         },
       ]
@@ -129,10 +129,10 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
 
     try {
       setProcessingBidId(bidId)
-      await rejectBid(bidId, deliveryId)
+      await rejectBid(Number(deliveryId), Number(bidId))
 
       const updatedBids = bids.map((bid) => {
-        if (bid.id === bidId) {
+        if (bid.id.toString() === bidId) {
           return { ...bid, status: "rejected" as const }
         }
         return bid
@@ -157,7 +157,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
         <View style={styles.bidHeader}>
           <TouchableOpacity 
             style={styles.courierInfo} 
-            onPress={() => viewCourierProfile(item.courier_id)}
+            onPress={() => viewCourierProfile(item.courier_id.toString())}
           >
             <Avatar.Image
               size={50}
@@ -165,7 +165,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
             />
             <View style={styles.courierDetails}>
               <Text style={styles.courierName}>
-                {item.courier?.name || `${t("bids.courier")} ${item.courier_id.substring(0, 4)}`}
+                {item.courier?.name || `${t("bids.courier")} ${item.courier_id.toString().substring(0, 4)}`}
               </Text>
               <View style={styles.ratingContainer}>
                 <StarRating rating={item.courier?.rating || 0} size={16} />
@@ -213,7 +213,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
               mode="outlined"
               onPress={() => handleRejectBid(item)}
               style={styles.rejectButton}
-              loading={processingBidId === item.id}
+              loading={processingBidId === item.id.toString()}
               disabled={processingBidId !== null}
             >
               {t("bids.reject")}
@@ -223,7 +223,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
               mode="contained"
               onPress={() => handleAcceptBid(item)}
               style={styles.acceptButton}
-              loading={processingBidId === item.id}
+              loading={processingBidId === item.id.toString()}
               disabled={processingBidId !== null}
             >
               {t("bids.accept")}
@@ -277,7 +277,7 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
         <FlatList
           data={bids}
           renderItem={renderBidItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.bidsList}
           ListEmptyComponent={renderEmptyList}
           refreshControl={

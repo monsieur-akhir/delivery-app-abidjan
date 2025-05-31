@@ -7,8 +7,9 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshContr
 import { useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { Feather } from "@expo/vector-icons"
-import VehicleService from "../../services/VehicleService"
+import { useVehicle } from "../../hooks/useVehicle"
 import type { Vehicle } from "../../types/models"
+import { VehicleType } from "../../types/models"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
 import { useNetworkContext } from "../../contexts/NetworkContext"
@@ -17,38 +18,30 @@ import EmptyState from "../../components/EmptyState"
 import { useTranslation } from "react-i18next"
 
 const VehicleManagementScreen: React.FC = () => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const { t } = useTranslation()
 
   const navigation = useNavigation()
   const { user } = useAuth()
   const { colors } = useTheme()
   const { isConnected } = useNetworkContext()
-
-  const fetchVehicles = async () => {
-    try {
-      setError(null)
-      const data = await VehicleService.getVehicles()
-      setVehicles(data)
-    } catch (err) {
-      console.error("Error fetching vehicles:", err)
-      setError("Impossible de charger les véhicules. Veuillez réessayer.")
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+  
+  const {
+    vehicles,
+    isLoading,
+    error,
+    getVehicles,
+    deleteVehicle
+  } = useVehicle()
 
   useEffect(() => {
-    fetchVehicles()
-  }, [])
+    getVehicles()
+  }, [getVehicles])
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true)
-    fetchVehicles()
+    await getVehicles()
+    setRefreshing(false)
   }
 
   const handleAddVehicle = () => {
@@ -67,15 +60,14 @@ const VehicleManagementScreen: React.FC = () => {
   }
 
   const handleDeleteVehicle = (vehicle: Vehicle) => {
-    Alert.alert("Supprimer le véhicule", `Êtes-vous sûr de vouloir supprimer ${vehicle.name} ?`, [
+    Alert.alert("Supprimer le véhicule", `Êtes-vous sûr de vouloir supprimer ${vehicle.license_plate} ?`, [
       { text: "Annuler", style: "cancel" },
       {
         text: "Supprimer",
         style: "destructive",
         onPress: async () => {
           try {
-            await VehicleService.deleteVehicle(vehicle.id)
-            setVehicles(vehicles.filter((v) => v.id !== vehicle.id))
+            await deleteVehicle(vehicle.id)
             Alert.alert("Succès", "Véhicule supprimé avec succès")
           } catch (err) {
             Alert.alert("Erreur", "Impossible de supprimer le véhicule")
@@ -111,7 +103,7 @@ const VehicleManagementScreen: React.FC = () => {
     >
       <View style={styles.vehicleHeader}>
         <Text style={[styles.vehiclePlate, { color: colors.text }]}>
-          {item.licensePlate || item.license_plate || "N/A"}
+          {item.license_plate || "N/A"}
         </Text>
         <View
           style={[
@@ -138,36 +130,29 @@ const VehicleManagementScreen: React.FC = () => {
         <View style={styles.vehicleDetail}>
           <Feather name="truck" size={16} color={colors.text} />
           <Text style={[styles.detailText, { color: colors.text }]}>
-            {item.type === "car"
+            {item.type === VehicleType.PICKUP
               ? t("vehicle.car")
-              : item.type === "motorcycle"
+              : item.type === VehicleType.MOTORCYCLE
                 ? t("vehicle.motorcycle")
-                : item.type === "bicycle"
+                : item.type === VehicleType.BICYCLE
                   ? t("vehicle.bicycle")
-                  : item.type === "truck"
+                  : item.type === VehicleType.MOVING_TRUCK
                     ? t("vehicle.truck")
-                    : item.customType || "Autre"}
+                    : "Autre"}
           </Text>
         </View>
 
-        {(item.maxWeight || item.max_weight) && (
+        {item.max_weight && (
           <View style={styles.vehicleDetail}>
             <Feather name="package" size={16} color={colors.text} />
-            <Text style={[styles.detailText, { color: colors.text }]}>{item.maxWeight || item.max_weight} kg</Text>
-          </View>
-        )}
-
-        {item.maxDistance && (
-          <View style={styles.vehicleDetail}>
-            <Feather name="map" size={16} color={colors.text} />
-            <Text style={[styles.detailText, { color: colors.text }]}>{item.maxDistance} km</Text>
+            <Text style={[styles.detailText, { color: colors.text }]}>{item.max_weight} kg</Text>
           </View>
         )}
 
         <View style={styles.vehicleDetail}>
-          <Ionicons name={item.isElectric ? "flash-outline" : "water-outline"} size={16} color={colors.text} />
+          <Ionicons name="water-outline" size={16} color={colors.text} />
           <Text style={[styles.detailText, { color: colors.text }]}>
-            {item.isElectric ? "Électrique" : "Thermique"}
+            {item.fuel_type || "Thermique"}
           </Text>
         </View>
       </View>
@@ -193,7 +178,7 @@ const VehicleManagementScreen: React.FC = () => {
   )
 
   if (error) {
-    return <ErrorView message={error} onRetry={fetchVehicles} />
+    return <ErrorView message={error} onRetry={getVehicles} />
   }
 
   return (
@@ -206,7 +191,7 @@ const VehicleManagementScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {vehicles.length === 0 && !loading ? (
+      {vehicles.length === 0 && !isLoading ? (
         <EmptyState
           icon="truck"
           title="Aucun véhicule"
@@ -218,7 +203,7 @@ const VehicleManagementScreen: React.FC = () => {
         <FlatList
           data={vehicles}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
         />

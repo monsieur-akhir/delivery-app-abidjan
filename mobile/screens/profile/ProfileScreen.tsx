@@ -37,7 +37,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       const profileData = await getUserProfile()
       // Convert User to UserProfile by adding user_id and ensuring required fields
       const userProfile: UserProfile = {
-        user_id: profileData.id || '',
+        user_id: typeof profileData.id === 'number' ? profileData.id : parseInt(profileData.id || '0'),
         address: profileData.address || "",
         city: profileData.city || "",
         country: profileData.country || "",

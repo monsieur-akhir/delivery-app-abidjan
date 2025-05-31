@@ -5,13 +5,17 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { View, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, StyleSheet } from "react-native"
 import { Text, TextInput, Button, Divider, Chip, HelperText, Snackbar, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
-import MapView, { Marker } from "react-native-maps"
+import MapView from "react-native-maps"
 import * as Location from "expo-location"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { createDelivery, geocodeAddress, getRecommendedPrice, getVehicleRecommendation, getWeatherData } from "../../services/api"
+import { useDelivery } from "../../hooks"
+import { geocodeAddress, getRecommendedPrice, getVehicleRecommendation, getWeatherData } from "../../services/api"
 import { formatPrice } from "../../utils/formatters"
 import WeatherInfo from "../../components/WeatherInfo"
+import { CustomMapView } from "../../components"
+import type { Coordinates, Route, TrafficInfo } from "../../components"
+import AddressAutocomplete, { Address } from "../../components/AddressAutocomplete"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import { Weather, CargoCategory, VehicleType } from "../../types/models"
@@ -42,6 +46,11 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   const { t } = useTranslation()
   const { isConnected, addPendingUpload } = useNetwork()
   const mapRef = useRef<MapView | null>(null)
+  
+  const {
+    createDelivery: submitDeliveryData,
+    loading: deliveryLoading
+  } = useDelivery()
 
   const [pickupAddress, setPickupAddress] = useState<string>("")
   const [pickupCommune, setPickupCommune] = useState<string>("")
@@ -74,6 +83,16 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   const [error, setError] = useState<string>("")
   const [visible, setVisible] = useState<boolean>(false)
   const [showWeather, setShowWeather] = useState<boolean>(false)
+  const [routeInfo, setRouteInfo] = useState<{
+    distance: number
+    duration: number
+    instructions: string[]
+  } | null>(null)
+  const [trafficInfo, setTrafficInfo] = useState<{
+    level: 'low' | 'moderate' | 'high' | 'severe'
+    delay: number
+    description: string
+  } | null>(null)
 
   const communes: string[] = [
     "Abobo",
@@ -439,8 +458,8 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
       }
 
       if (isConnected) {
-        const response = await createDelivery(deliveryData)
-        navigation.navigate("DeliveryDetails", { deliveryId: response.id })
+        const response = await submitDeliveryData(deliveryData)
+        navigation.navigate("DeliveryDetails", { deliveryId: response.id.toString() })
       } else {
         addPendingUpload({
           type: "create_delivery",
@@ -482,8 +501,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.mapContainer}>
-            <MapView
-              ref={mapRef}
+            <CustomMapView
               style={styles.map}
               initialRegion={{
                 latitude: 5.3599517,
@@ -491,31 +509,57 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
                 latitudeDelta: 0.1,
                 longitudeDelta: 0.1,
               }}
-              provider="google"
-              showsUserLocation
-              showsMyLocationButton
-            >
-              {pickupLocation && (
-                <Marker
-                  coordinate={{
-                    latitude: pickupLocation.coords.latitude,
-                    longitude: pickupLocation.coords.longitude,
-                  }}
-                  title={t("createDelivery.pickupPoint")}
-                  pinColor="#FF6B00"
-                />
-              )}
-              {deliveryLocation && (
-                <Marker
-                  coordinate={{
-                    latitude: deliveryLocation.coords.latitude,
-                    longitude: deliveryLocation.coords.longitude,
-                  }}
-                  title={t("createDelivery.deliveryPoint")}
-                  pinColor="#4CAF50"
-                />
-              )}
-            </MapView>
+              pickupPoint={pickupLocation ? {
+                latitude: pickupLocation.coords.latitude,
+                longitude: pickupLocation.coords.longitude,
+                title: t("createDelivery.pickupPoint"),
+                description: pickupAddress
+              } : undefined}
+              deliveryPoint={deliveryLocation ? {
+                latitude: deliveryLocation.coords.latitude,
+                longitude: deliveryLocation.coords.longitude,
+                title: t("createDelivery.deliveryPoint"),
+                description: deliveryAddress
+              } : undefined}
+              onPickupPointSelected={(coordinate: Coordinates) => {
+                setPickupLocation({
+                  coords: {
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude,
+                    altitude: null,
+                    accuracy: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null
+                  },
+                  timestamp: Date.now()
+                });
+              }}
+              onDeliveryPointSelected={(coordinate: Coordinates) => {
+                setDeliveryLocation({
+                  coords: {
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude,
+                    altitude: null,
+                    accuracy: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null
+                  },
+                  timestamp: Date.now()
+                });
+              }}
+              onRouteCalculated={(route: Route) => {
+                setRouteInfo(route);
+                setEstimatedDistance(route.distance);
+                setEstimatedDuration(route.duration);
+              }}
+              onTrafficUpdate={(traffic: TrafficInfo) => {
+                setTrafficInfo(traffic);
+              }}
+              showsTraffic={true}
+              showsUserLocation={true}
+            />
 
             {weatherData && (
               <TouchableOpacity style={styles.weatherButton} onPress={() => setShowWeather(!showWeather)}>
@@ -530,19 +574,59 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
                 <WeatherInfo weather={weatherData} />
               </View>
             )}
+
+            {routeInfo && (
+              <View style={styles.routeInfoContainer}>
+                <Text style={styles.routeInfoTitle}>{t("createDelivery.routeInformation")}</Text>
+                <View style={styles.routeInfoRow}>
+                  <Text style={styles.routeInfoLabel}>{t("createDelivery.distance")}:</Text>
+                  <Text style={styles.routeInfoValue}>{(routeInfo.distance / 1000).toFixed(1)} km</Text>
+                </View>
+                <View style={styles.routeInfoRow}>
+                  <Text style={styles.routeInfoLabel}>{t("createDelivery.estimatedTime")}:</Text>
+                  <Text style={styles.routeInfoValue}>{Math.round(routeInfo.duration / 60)} min</Text>
+                </View>
+                {trafficInfo && (
+                  <View style={styles.routeInfoRow}>
+                    <Text style={styles.routeInfoLabel}>{t("createDelivery.traffic")}:</Text>
+                    <Text style={[styles.routeInfoValue, { 
+                      color: trafficInfo.level === 'high' || trafficInfo.level === 'severe' ? '#f44336' : 
+                             trafficInfo.level === 'moderate' ? '#ff9800' : '#4caf50' 
+                    }]}>
+                      {t(`createDelivery.trafficLevels.${trafficInfo.level}`)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.pickupAddress")}</Text>
 
-            <TextInput
+            <AddressAutocomplete
               label={t("createDelivery.address")}
               value={pickupAddress}
               onChangeText={setPickupAddress}
-              onBlur={searchPickupLocation}
+              onAddressSelect={(address: Address) => {
+                setPickupAddress(address.description);
+                setPickupCommune(address.commune || '');
+                setPickupLocation({
+                  coords: {
+                    latitude: address.latitude,
+                    longitude: address.longitude,
+                    altitude: null,
+                    accuracy: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null
+                  },
+                  timestamp: Date.now()
+                });
+              }}
+              placeholder={t("createDelivery.enterAddress")}
               style={styles.input}
-              mode="outlined"
-              left={<TextInput.Icon icon="map-marker" />}
+              showCurrentLocation={true}
             />
 
             <View style={styles.communeContainer}>
@@ -571,14 +655,29 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.deliveryAddress")}</Text>
 
-            <TextInput
+            <AddressAutocomplete
               label={t("createDelivery.address")}
               value={deliveryAddress}
               onChangeText={setDeliveryAddress}
-              onBlur={searchDeliveryLocation}
+              onAddressSelect={(address: Address) => {
+                setDeliveryAddress(address.description);
+                setDeliveryCommune(address.commune || '');
+                setDeliveryLocation({
+                  coords: {
+                    latitude: address.latitude,
+                    longitude: address.longitude,
+                    altitude: null,
+                    accuracy: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null
+                  },
+                  timestamp: Date.now()
+                });
+              }}
+              placeholder={t("createDelivery.enterAddress")}
               style={styles.input}
-              mode="outlined"
-              left={<TextInput.Icon icon="map-marker" />}
+              showCurrentLocation={false}
             />
 
             <View style={styles.communeContainer}>
@@ -783,8 +882,8 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
             mode="contained"
             onPress={handleSubmit}
             style={styles.submitButton}
-            loading={loading}
-            disabled={loading || geocoding}
+            loading={loading || deliveryLoading}
+            disabled={loading || deliveryLoading || geocoding}
           >
             {t("createDelivery.submit")}
           </Button>
@@ -984,6 +1083,33 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     paddingVertical: 8,
     backgroundColor: "#FF6B00",
+  },
+  routeInfoContainer: {
+    backgroundColor: "#F5F5F5",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  routeInfoTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#212121",
+    marginBottom: 8,
+  },
+  routeInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  routeInfoLabel: {
+    fontSize: 12,
+    color: "#757575",
+  },
+  routeInfoValue: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#212121",
   },
 })
 

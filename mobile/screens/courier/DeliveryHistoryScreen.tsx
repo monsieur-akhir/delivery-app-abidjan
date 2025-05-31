@@ -75,7 +75,7 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
         (delivery) =>
           delivery.pickup_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
           delivery.delivery_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          delivery.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          delivery.id.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
           (delivery.client?.full_name && delivery.client.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     }
@@ -187,7 +187,7 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   // Rendu d'un élément de livraison
   const renderDeliveryItem = ({ item, index }: { item: Delivery; index: number }): React.ReactElement => (
     <Animated.View entering={FadeInUp.delay(index * 100).springify()} exiting={FadeOutDown.springify()}>
-      <Card style={styles.deliveryCard} onPress={() => viewDeliveryDetails(item.id)} mode="elevated">
+      <Card style={styles.deliveryCard} onPress={() => viewDeliveryDetails(item.id.toString())} mode="elevated">
         <Card.Content>
           <View style={styles.deliveryHeader}>
             <View style={styles.deliveryInfo}>

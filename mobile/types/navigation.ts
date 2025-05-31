@@ -55,6 +55,9 @@ export type RootStackParamList = {
   WeatherScreen: { location: string }
   GamificationScreen: undefined
   AvailableDeliveries: undefined
+  KYCVerification: undefined
+  PaymentMethods: undefined
+  PrivacySettings: undefined
 }
 
 export type ClientTabParamList = {

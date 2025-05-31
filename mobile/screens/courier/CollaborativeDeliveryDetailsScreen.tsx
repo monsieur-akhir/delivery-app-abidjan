@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from "re
 import { useRoute, useNavigation, type RouteProp } from "@react-navigation/native"
 import type { StackNavigationProp } from "@react-navigation/stack"
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons"
-import { Avatar, Badge } from "react-native-elements"
+import { Avatar, Badge } from "react-native-paper"
 import { Card, Divider, Button } from "react-native-paper"
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import CollaborativeService from "../../services/CollaborativeService"
@@ -204,16 +204,16 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.headerCard}>
-        <Card.Title title={`Livraison collaborative #${delivery.id.substring(0, 8)}`} />
+        <Card.Title title={`Livraison collaborative #${delivery.id.toString().substring(0, 8)}`} />
         <Divider />
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.deliveryId}>ID: {delivery.id.substring(0, 8)}</Text>
+            <Text style={styles.deliveryId}>ID: {delivery.id.toString().substring(0, 8)}</Text>
             <Badge
-              value={getStatusLabel(delivery.status)}
-              badgeStyle={{ backgroundColor: getStatusColor(delivery.status) }}
-              containerStyle={styles.statusBadge}
-            />
+              style={{ backgroundColor: getStatusColor(delivery.status) }}
+            >
+              {getStatusLabel(delivery.status)}
+            </Badge>
           </View>
           <Text style={styles.price}>{formatCurrency(delivery.proposedPrice || 0)}</Text>
         </View>
@@ -312,28 +312,23 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
           delivery.collaborators.map((collaborator: Collaborator, index: number) => (
             <View key={collaborator.id}>
               <View style={styles.collaboratorItem}>
-                <Avatar
-                  rounded
-                  title={collaborator.courierName.charAt(0)}
-                  source={collaborator.profilePicture ? { uri: collaborator.profilePicture } : undefined}
-                  containerStyle={{ backgroundColor: "#3498db" }}
+                <Avatar.Text 
+                  size={40}
+                  label={collaborator.courierName.charAt(0)}
+                  style={{ backgroundColor: "#3498db" }}
                 />
                 <View style={styles.collaboratorInfo}>
                   <Text style={styles.collaboratorName}>{collaborator.courierName}</Text>
                   <View style={styles.collaboratorDetails}>
-                    <Badge
-                      value={getRoleLabel(collaborator.role)}
-                      badgeStyle={{ backgroundColor: "#3498db" }}
-                      textStyle={{ fontSize: 10 }}
-                    />
+                    <Badge style={{ backgroundColor: "#3498db" }}>
+                      {getRoleLabel(collaborator.role)}
+                    </Badge>
                     <Text style={styles.collaboratorShare}>{collaborator.sharePercentage}%</Text>
                   </View>
                 </View>
-                <Badge
-                  value={getStatusLabel(collaborator.status)}
-                  badgeStyle={{ backgroundColor: getStatusColor(collaborator.status) }}
-                  textStyle={{ fontSize: 10 }}
-                />
+                <Badge style={{ backgroundColor: getStatusColor(collaborator.status) }}>
+                  {getStatusLabel(collaborator.status)}
+                </Badge>
               </View>
               {index < delivery.collaborators.length - 1 && <Divider style={styles.divider} />}
             </View>

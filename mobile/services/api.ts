@@ -44,6 +44,21 @@ export interface DeliveryData {
   required_vehicle_type?: string
 }
 
+export const getCollaborativeDeliveryDetails = async (deliveryId: string): Promise<any> => {
+  const response = await api.get(`/collaborative-deliveries/${deliveryId}`)
+  return response.data
+}
+
+export const getCollaborativeDeliveryChatHistory = async (deliveryId: string): Promise<any[]> => {
+  const response = await api.get(`/collaborative-deliveries/${deliveryId}/chat`)
+  return response.data
+}
+
+export const sendCollaborativeDeliveryMessage = async (deliveryId: string, message: string): Promise<any> => {
+  const response = await api.post(`/collaborative-deliveries/${deliveryId}/chat`, { message })
+  return response.data
+}
+
 export interface PriceEstimateData {
   distance: number
   package_size: string
@@ -161,7 +176,7 @@ const api = axios.create({
 // Intercepteur pour ajouter le token d'authentification à chaque requête
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("authToken")
+    const token = await AsyncStorage.getItem("token")
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -189,7 +204,8 @@ api.interceptors.response.use(
         const refreshToken = await AsyncStorage.getItem("refreshToken")
         if (!refreshToken) {
           // Si pas de refresh token, rediriger vers la connexion
-          await AsyncStorage.removeItem("authToken")
+          await AsyncStorage.removeItem("token")
+          await AsyncStorage.removeItem("user")
           return Promise.reject(error)
         }
 
@@ -200,7 +216,7 @@ api.interceptors.response.use(
         const { access_token, refresh_token } = response.data
 
         // Sauvegarder les nouveaux tokens
-        await AsyncStorage.setItem("authToken", access_token)
+        await AsyncStorage.setItem("token", access_token)
         await AsyncStorage.setItem("refreshToken", refresh_token)
 
         // Réessayer la requête originale avec le nouveau token
@@ -208,8 +224,9 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         // Si le rafraîchissement échoue, déconnecter l'utilisateur
-        await AsyncStorage.removeItem("authToken")
+        await AsyncStorage.removeItem("token")
         await AsyncStorage.removeItem("refreshToken")
+        await AsyncStorage.removeItem("user")
         return Promise.reject(refreshError)
       }
     }
@@ -220,22 +237,55 @@ api.interceptors.response.use(
 
 // API d'authentification
 export const login = async (phone: string, password: string): Promise<{ token: string; user: User }> => {
-  const response = await api.post("/auth/login", { phone, password })
-  return response.data
+  try {
+    const response = await api.post("/auth/login/access-token", { 
+      username: phone,  // FastAPI OAuth expects "username" field
+      password: password 
+    }, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+    
+    const access_token = response.data.access_token;
+    
+    // Get user profile with the token
+    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+    const userResponse = await api.get("/users/me");
+    
+    return {
+      token: access_token,
+      user: userResponse.data
+    };
+  } catch (error: any) {
+    console.error("Login error:", error);
+    if (error.response?.status === 401) {
+      throw new Error("Identifiants invalides");
+    }
+    throw new Error("Erreur de connexion");
+  }
 }
 
 // Inscription
 export const register = async (userData: RegisterUserData): Promise<void> => {
-  const response = await api.post("/auth/register", userData)
-  return response.data
+  try {
+    const response = await api.post("/auth/register", userData)
+    return response.data
+  } catch (error: any) {
+    console.error("Registration error:", error);
+    if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+    throw new Error("Erreur d'inscription");
+  }
 }
 
 // Vérification du token
 export const verifyToken = async (token: string): Promise<boolean> => {
   try {
-    const response = await api.post("/auth/verify", { token })
+    const response = await api.post("/auth/verify-token", { token })
     return response.status === 200
-  } catch (error) {
+  } catch (error: any) {
     console.error("Token verification error:", error)
     return false
   }
@@ -243,38 +293,54 @@ export const verifyToken = async (token: string): Promise<boolean> => {
 
 // Vérification OTP
 export const verifyOTP = async (phone: string, otp: string): Promise<void> => {
-  const response = await api.post("/auth/verify-otp", { phone, otp })
-  return response.data
+  try {
+    const response = await api.post("/auth/verify-otp", { phone, otp })
+    return response.data
+  } catch (error: any) {
+    console.error("OTP verification error:", error);
+    if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+    throw new Error("Erreur de vérification OTP");
+  }
 }
 
 // Renvoyer OTP
 export const resendOTP = async (phone: string): Promise<void> => {
-  const response = await api.post("/auth/resend-otp", { phone })
-  return response.data
+  try {
+    const response = await api.post("/auth/resend-otp", { phone })
+    return response.data
+  } catch (error: any) {
+    console.error("OTP resend error:", error);
+    if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+    throw new Error("Erreur d'envoi OTP");
+  }
 }
 
 // Réinitialisation du mot de passe
 export const resetPassword = async (phone: string): Promise<void> => {
-  const response = await api.post("/auth/reset-password", { phone })
+  const response = await api.post("/api/auth/reset-password", { phone })
   return response.data
 }
 
 // Profil utilisateur
 export const getUserProfile = async (): Promise<User> => {
-  const response = await api.get("/users/profile")
+  const response = await api.get("/api/users/profile")
   return response.data
 }
 
 // Mise à jour du profil
 export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
-  const response = await api.put("/users/profile", userData)
+  const response = await api.put("/api/users/profile", userData)
   return response.data
 }
 
 // Upload de photo de profil
 export const uploadProfilePicture = async (formData: FormData): Promise<any> => {
   const token = await AsyncStorage.getItem("authToken")
-  const response = await api.post("/users/profile-picture", formData, {
+  const response = await api.post("/api/users/profile-picture", formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",
@@ -287,7 +353,7 @@ export const uploadProfileImage = uploadProfilePicture
 
 // Enregistrement du token push
 export const registerPushToken = async (token: string, userId: string): Promise<void> => {
-  const response = await api.post("/users/push-token", { token, user_id: userId })
+  const response = await api.post("/api/users/push-token", { token, user_id: userId })
   return response.data
 }
 
@@ -311,13 +377,13 @@ export const getRecommendedPrice = async (data: PriceEstimateData): Promise<numb
     }
     payload.weather_condition = conditionMap[payload.weather_condition.toLowerCase()] || 1000
   }
-  const response = await api.post("/deliveries/price-estimate", payload)
+  const response = await api.post("/api/deliveries/price-estimate", payload)
   return response.data
 }
 
 // Créer une livraison
 export const createDelivery = async (deliveryData: DeliveryData): Promise<any> => {
-  const response = await api.post("/deliveries", deliveryData)
+  const response = await api.post("/api/deliveries", deliveryData)
   return response.data
 }
 
@@ -365,7 +431,7 @@ export const fetchDeliveryBids = async (deliveryId: string): Promise<Bid[]> => {
         ...bid,
         courier: courierResponse.data,
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Erreur lors de la récupération du coursier pour l'offre ${bid.id}:`, error)
       return {
         ...bid,
@@ -384,7 +450,7 @@ export const fetchDeliveryBids = async (deliveryId: string): Promise<Bid[]> => {
 
 // Créer une enchère
 export const createBid = async (bidData: BidData): Promise<any> => {
-  const response = await api.post("/bids", bidData)
+  const response = await api.post("/api/bids", bidData)
   return response.data
 }
 
@@ -402,7 +468,7 @@ export const getCourierLocation = async (deliveryId: string): Promise<any> => {
 
 // Mettre à jour le statut de la livraison
 export const updateDeliveryStatus = async (deliveryId: string, status: DeliveryStatus): Promise<void> => {
-  const response = await api.put(`/deliveries/${deliveryId}/status`, { status })
+  const response = await api.put(`/api/deliveries/${deliveryId}/status`, { status })
   return response.data
 }
 
@@ -420,7 +486,7 @@ export const getTrafficInfo = async (
   endLng: number,
 ): Promise<any> => {
   const response = await api.get(
-    `/geo/traffic?startLat=${startLat}&startLng=${startLng}&endLat=${endLat}&endLng=${endLng}`,
+    `/api/geo/traffic?startLat=${startLat}&startLng=${startLng}&endLat=${endLat}&endLng=${endLng}`,
   )
   return response.data
 }
@@ -470,17 +536,17 @@ export const fetchMerchantProducts = async (merchantId: string): Promise<any[]> 
 
 // Fonctions d'API pour les coursiers
 export const fetchCourierEarnings = async (period = "month") => {
-  const response = await api.get(`/courier/earnings?period=${period}`)
+  const response = await api.get(`/api/courier/earnings?period=${period}`)
   return response.data
 }
 
 export const withdrawFunds = async (amount: number) => {
-  const response = await api.post("/courier/withdraw", { amount })
+  const response = await api.post("/api/courier/withdraw", { amount })
   return response.data
 }
 
 export const fetchCourierProfile = async (): Promise<any> => {
-  const response = await api.get("/courier/profile")
+  const response = await api.get("/api/courier/profile")
   return response.data
 }
 
@@ -494,50 +560,50 @@ export const updateCourierStatus = async (
     data.latitude = lat
     data.longitude = lng
   }
-  const response = await api.post("/courier/status", data)
+  const response = await api.post("/api/courier/status", data)
   return response.data
 }
 
 export const fetchCourierStats = async (period = "month") => {
-  const response = await api.get(`/courier/stats?period=${period}`)
+  const response = await api.get(`/api/courier/stats?period=${period}`)
   return response.data
 }
 
 export const fetchCourierRatings = async (period = "month") => {
-  const response = await api.get(`/courier/ratings?period=${period}`)
+  const response = await api.get(`/api/courier/ratings?period=${period}`)
   return response.data
 }
 
 export const fetchCollaborativeDeliveries = async () => {
-  const response = await api.get("/courier/collaborative-deliveries")
+  const response = await api.get("/api/courier/collaborative-deliveries")
   return response.data
 }
 
 export const joinCollaborativeDelivery = async (deliveryId: string, data: any) => {
-  const response = await api.post(`/courier/collaborative-deliveries/${deliveryId}/join`, data)
+  const response = await api.post(`/api/courier/collaborative-deliveries/${deliveryId}/join`, data)
   return response.data
 }
 
 export const sendTrackingPoint = async (data: any) => {
-  const response = await api.post("/tracking/point", data)
+  const response = await api.post("/api/tracking/point", data)
   return response.data
 }
 
 export const getDirections = async (startLat: number, startLng: number, endLat: number, endLng: number) => {
   const response = await api.get(
-    `/directions?start_lat=${startLat}&start_lng=${startLng}&end_lat=${endLat}&end_lng=${endLng}`,
+    `/api/directions?start_lat=${startLat}&start_lng=${startLng}&end_lat=${endLat}&end_lng=${endLng}`,
   )
   return response.data
 }
 
 export const sendDeliveryNotification = async (userId: string, notification: any) => {
-  const response = await api.post(`/notifications/user/${userId}`, notification)
+  const response = await api.post(`/api/notifications/user/${userId}`, notification)
   return response.data
 }
 
 // Récupérer l'historique des livraisons pour un client
 export const fetchClientDeliveryHistory = async (filter?: string): Promise<Delivery[]> => {
-  let url = "/client/deliveries/history"
+  let url = "/api/client/deliveries/history"
   if (filter) {
     url += `?status=${filter}`
   }
@@ -547,7 +613,7 @@ export const fetchClientDeliveryHistory = async (filter?: string): Promise<Deliv
 
 // Récupérer l'historique des livraisons pour un coursier
 export const fetchCourierDeliveryHistory = async (filter?: string): Promise<Delivery[]> => {
-  let url = "/courier/deliveries/history"
+  let url = "/api/courier/deliveries/history"
   if (filter) {
     url += `?status=${filter}`
   }
@@ -557,7 +623,7 @@ export const fetchCourierDeliveryHistory = async (filter?: string): Promise<Deli
 
 // Récupérer les livraisons disponibles pour un coursier
 export const fetchAvailableDeliveries = async (commune?: string): Promise<Delivery[]> => {
-  let url = "/courier/deliveries/available"
+  let url = "/api/courier/deliveries/available"
   if (commune) {
     url += `?commune=${encodeURIComponent(commune)}`
   }
@@ -567,13 +633,13 @@ export const fetchAvailableDeliveries = async (commune?: string): Promise<Delive
 
 // Récupérer les livraisons actives pour un client
 export const fetchActiveDeliveries = async (): Promise<Delivery[]> => {
-  const response = await api.get("/client/deliveries/active")
+  const response = await api.get("/api/client/deliveries/active")
   return response.data
 }
 
 // Récupérer les prévisions météo
 export const fetchWeatherForecast = async (latitude: number, longitude: number, commune?: string): Promise<Weather> => {
-  let url = `/weather?lat=${latitude}&lng=${longitude}`
+  let url = `/api/weather?lat=${latitude}&lng=${longitude}`
   if (commune) {
     url += `&commune=${encodeURIComponent(commune)}`
   }
@@ -588,7 +654,7 @@ export const fetchWeatherForecast = async (latitude: number, longitude: number, 
 
 // Récupérer les alertes météo
 export const fetchWeatherAlerts = async (latitude: number, longitude: number, commune?: string): Promise<any[]> => {
-  let url = `/weather/alerts?lat=${latitude}&lng=${longitude}`
+  let url = `/api/weather/alerts?lat=${latitude}&lng=${longitude}`
   if (commune) {
     url += `&commune=${encodeURIComponent(commune)}`
   }
@@ -598,36 +664,36 @@ export const fetchWeatherAlerts = async (latitude: number, longitude: number, co
 
 // Transcription audio pour évaluation
 export const transcribeVoiceRating = async (audioBase64: string): Promise<{ text: string }> => {
-  const response = await api.post("/ratings/transcribe", { audio: audioBase64 })
+  const response = await api.post("/api/ratings/transcribe", { audio: audioBase64 })
   return response.data
 }
 
 // Traitement des commandes vocales
 export const processVoiceCommand = async (audioBase64: string): Promise<VoiceCommandResponse> => {
-  const response = await api.post("/assistant/voice", { audio: audioBase64 })
+  const response = await api.post("/api/assistant/voice", { audio: audioBase64 })
   return response.data
 }
 
 // Obtenir une réponse du chatbot
 export const getChatbotResponse = async (message: string): Promise<{ message: string; action?: string }> => {
-  const response = await api.post("/assistant/chat", { message })
+  const response = await api.post("/api/assistant/chat", { message })
   return response.data
 }
 
 // Obtenir une recommandation de véhicule
 export const getVehicleRecommendation = async (data: VehicleRecommendationData): Promise<VehicleRecommendation> => {
-  const response = await api.post("/transport/recommend", data)
+  const response = await api.post("/api/transport/recommend", data)
   return response.data
 }
 
 // Fonctions pour la gamification
 export const fetchGamificationProfile = async (): Promise<any> => {
-  const response = await api.get("/gamification/profile")
+  const response = await api.get("/api/gamification/profile")
   return response.data
 }
 
 export const fetchRankings = async (commune?: string): Promise<any[]> => {
-  let url = "/gamification/rankings"
+  let url = "/api/gamification/rankings"
   if (commune) {
     url += `?commune=${encodeURIComponent(commune)}`
   }
@@ -636,18 +702,18 @@ export const fetchRankings = async (commune?: string): Promise<any[]> => {
 }
 
 export const claimReward = async (rewardId: string): Promise<any> => {
-  const response = await api.post(`/gamification/rewards/${rewardId}/claim`)
+  const response = await api.post(`/api/gamification/rewards/${rewardId}/claim`)
   return response.data
 }
 
 // Fonctions pour le portefeuille communautaire
 export const fetchWalletBalance = async (): Promise<any> => {
-  const response = await api.get("/community-wallet/balance")
+  const response = await api.get("/api/community-wallet/balance")
   return response.data
 }
 
 export const fetchWalletTransactions = async (type?: string): Promise<any[]> => {
-  let url = "/community-wallet/transactions"
+  let url = "/api/community-wallet/transactions"
   if (type) {
     url += `?type=${type}`
   }
@@ -656,38 +722,38 @@ export const fetchWalletTransactions = async (type?: string): Promise<any[]> => 
 }
 
 export const requestLoan = async (amount: number, reason: string): Promise<any> => {
-  const response = await api.post("/community-wallet/loans/request", { amount, reason })
+  const response = await api.post("/api/community-wallet/loans/request", { amount, reason })
   return response.data
 }
 
 export const repayLoan = async (loanId: string): Promise<any> => {
-  const response = await api.post(`/community-wallet/loans/${loanId}/repay`)
+  const response = await api.post(`/api/community-wallet/loans/${loanId}/repay`)
   return response.data
 }
 
 export const fetchActiveLoan = async (): Promise<any> => {
-  const response = await api.get("/community-wallet/loans/active")
+  const response = await api.get("/api/community-wallet/loans/active")
   return response.data
 }
 
 export const fetchLoanHistory = async (): Promise<any[]> => {
-  const response = await api.get("/community-wallet/loans/history")
+  const response = await api.get("/api/community-wallet/loans/history")
   return response.data
 }
 
 // Fonctions pour le support
 export const fetchSupportTickets = async (): Promise<any[]> => {
-  const response = await api.get("/support/tickets")
+  const response = await api.get("/api/support/tickets")
   return response.data
 }
 
 export const createSupportTicket = async (subject: string, message: string): Promise<any> => {
-  const response = await api.post("/support/tickets", { subject, message })
+  const response = await api.post("/api/support/tickets", { subject, message })
   return response.data
 }
 
 export const addMessageToTicket = async (ticketId: string, message: string): Promise<any> => {
-  const response = await api.post(`/support/tickets/${ticketId}/messages`, { message })
+  const response = await api.post(`/api/support/tickets/${ticketId}/messages`, { message })
   return response.data
 }
 
@@ -703,7 +769,7 @@ export const uploadTicketImage = async (ticketId: string, imageUri: string): Pro
     type,
   } as any)
 
-  const response = await api.post(`/support/tickets/${ticketId}/attachments`, formData, {
+  const response = await api.post(`/api/support/tickets/${ticketId}/attachments`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -754,7 +820,7 @@ export const getWeatherData = async (latitude: number, longitude: number, commun
     if (commune) {
       params.append("commune", commune)
     }
-    const url = `/weather?${params.toString()}`
+    const url = `/api/weather?${params.toString()}`
 
     // Effectuer la requête API
     const response = await api.get(url)
@@ -775,7 +841,7 @@ export const getWeatherData = async (latitude: number, longitude: number, commun
     await AsyncStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
 
     return weatherData as Weather
-  } catch (error) {
+  } catch (error: any) {
     // Gestion des erreurs
     console.error("Error fetching weather data:", error) // eslint-disable-next-line no-console
     const cachedData = await AsyncStorage.getItem(`weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`)
@@ -794,7 +860,7 @@ export const clearApiCache = async (): Promise<boolean> => {
     const cacheKeys = keys.filter((key) => key.startsWith("api_cache_"))
     await AsyncStorage.multiRemove(cacheKeys)
     return true
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error clearing API cache:", error)
     return false
   }

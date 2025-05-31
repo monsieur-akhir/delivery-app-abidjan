@@ -93,6 +93,15 @@ const TERMINAL_COLORS = {
  * @returns {Object} - L'erreur formatée
  */
 function formatError(error, type = ERROR_TYPES.UNKNOWN, severity = SEVERITY_LEVELS.MEDIUM) {
+  // Get current route safely without relying on global router instance
+  let currentRoute = null;
+  try {
+    const currentPath = window.location.pathname + window.location.search;
+    currentRoute = currentPath;
+  } catch (e) {
+    console.warn("Could not determine current route", e);
+  }
+
   return {
     id: generateErrorId(),
     timestamp: new Date().toISOString(),
@@ -102,7 +111,7 @@ function formatError(error, type = ERROR_TYPES.UNKNOWN, severity = SEVERITY_LEVE
     stack: error.stack,
     url: window.location.href,
     userAgent: navigator.userAgent,
-    route: router?.currentRoute?.value?.fullPath,
+    route: currentRoute,
     component: error?.componentName,
     props: error?.propsData,
     // Ajouter d'autres informations utiles ici
@@ -368,7 +377,7 @@ export function initErrorHandler(app) {
 
   // Gestionnaire d'erreurs Vue
   if (app) {
-    app.config.errorHandler = (error, instance, info) => {
+    app.config.errorHandler = (error) => {
       handleError(error, ERROR_TYPES.VUE, SEVERITY_LEVELS.HIGH)
     }
   }

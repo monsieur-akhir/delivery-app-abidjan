@@ -40,6 +40,7 @@ import {
   faCalendar,
   faClock,
   faExclamationTriangle,
+  faArrowLeft,
   faInfoCircle,
   faCheckCircle,
   faTimesCircle,
@@ -137,6 +138,32 @@ import {
   faFileInvoice as faFileInvoiceSolid,
 } from "@fortawesome/free-solid-svg-icons"
 import { initErrorHandler } from "./utils/errorHandler"
+
+// Add all icons to the library
+library.add(
+  faUser, faLock, faEnvelope, faPhone, faHome, faTruck, faBox, faMoneyBill, 
+  faCog, faSignOutAlt, faBell, faSearch, faPlus, faMinus, faEdit, faTrash, 
+  faEye, faCheck, faTimes, faBan, faChevronLeft, faChevronRight, faChevronDown, 
+  faChevronUp, faSync, faFilter, faStar, faMapMarkerAlt, faCalendar, faClock,
+  faExclamationTriangle, faInfoCircle, faCheckCircle, faTimesCircle, faArrowUp, 
+  faArrowDown, faArrowLeft, faMinusHorizontal, faMotorcycle, faCar, faBicycle, faWalking,
+  faTruckMoving, faCrosshairs, faDrawPolygon, faUpload, faEraser, faChartLine,
+  faChartBar, faChartPie, faCircleNotch, faPaperPlane, faCopy, faRedo, faMobileAlt,
+  faSms, faComment, faUniversity, faIdCard, faFilePdf, faDownload, faUsers,
+  faUserPlus, faUserMinus, faUserCheck, faUserTimes, faUserCog, faUserShield,
+  faUserTag, faUserClock, faUserEdit, faMoneyBillWave, faStore, faStoreAlt,
+  faBuilding, faCity, faMapMarkedAlt, faRoute, faRoad, faStreetView, faCompass,
+  faDirections, faLocationArrow, faShippingFast, faBoxOpen, faClipboardList,
+  faClipboardCheck, faListAlt, faReceipt, faFileInvoiceDollar, faFileContract,
+  faFileSignature, faFileAlt, faFileCode, faFileArchive, faFileCsv, faFileExcel,
+  faFilePowerpoint, faFileWord, faFileImage, faFileVideo, faFileAudio, faFilePdfSolid,
+  faFileDownload, faFileUpload, faFileImport, faFileExport, faFileMedical, faFileInvoice,
+  faFileSignatureSolid, faFileContractSolid, faFileAltSolid, faFileCodeSolid,
+  faFileArchiveSolid, faFileCsvSolid, faFileExcelSolid, faFilePowerpointSolid,
+  faFileWordSolid, faFileImageSolid, faFileVideoSolid, faFileAudioSolid,
+  faFileDownloadSolid, faFileUploadSolid, faFileImportSolid, faFileExportSolid,
+  faFileMedicalSolid, faFileInvoiceSolid
+)
 
 const app = createApp(App)
 const pinia = createPinia()

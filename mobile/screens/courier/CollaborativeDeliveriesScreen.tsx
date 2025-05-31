@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react"
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
-import CollaborativeService from "../../services/CollaborativeService"
+import { useDelivery } from "../../hooks"
 import type { CollaborativeDelivery, DeliveryStatus } from "../../types/models"
 import { useTheme } from "../../contexts/ThemeContext"
 import ErrorView from "../../components/ErrorView"
@@ -23,6 +23,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { colors } = useTheme()
+  const { getCollaborativeDeliveries } = useDelivery()
 
   const fetchDeliveries = useCallback(async () => {
     try {
@@ -30,11 +31,11 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
       let data: CollaborativeDelivery[] = []
 
       if (activeTab === "active") {
-        data = await CollaborativeService.getMyCourierCollaborativeDeliveries("active")
+        data = await getCollaborativeDeliveries({ status: "in_progress" })
       } else if (activeTab === "available") {
-        data = await CollaborativeService.getAvailableCollaborativeDeliveries()
+        data = await getCollaborativeDeliveries({ status: "pending" })
       } else if (activeTab === "completed") {
-        data = await CollaborativeService.getMyCourierCollaborativeDeliveries("completed")
+        data = await getCollaborativeDeliveries({ status: "completed" })
       }
 
       setDeliveries(data)
@@ -45,7 +46,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [activeTab])
+  }, [activeTab, getCollaborativeDeliveries])
 
   useEffect(() => {
     fetchDeliveries()
@@ -58,18 +59,18 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
 
   const handleViewDelivery = (delivery: CollaborativeDelivery) => {
     navigation.navigate("CollaborativeDeliveryDetails", {
-      deliveryId: delivery.id,
+      deliveryId: delivery.id.toString(),
       clientName: delivery.clientName,
       finalPrice: delivery.finalPrice || 0, // Default to 0 if finalPrice is undefined
     })
   }
 
   const handleJoinDelivery = (delivery: CollaborativeDelivery) => {
-    navigation.navigate("JoinCollaborativeDelivery", { deliveryId: delivery.id })
+    navigation.navigate("JoinCollaborativeDelivery", { deliveryId: delivery.id.toString() })
   }
 
   const handleChatDelivery = (delivery: CollaborativeDelivery) => {
-    navigation.navigate("CollaborativeChat", { deliveryId: delivery.id })
+    navigation.navigate("CollaborativeChat", { deliveryId: delivery.id.toString() })
   }
 
   const formatCurrency = (amount: number) => {
@@ -98,7 +99,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
     >
       <View style={styles.deliveryHeader}>
         <View>
-          <Text style={[styles.deliveryId, { color: colors.text }]}>#{item.id.substring(0, 8)}</Text>
+          <Text style={[styles.deliveryId, { color: colors.text }]}>#{item.id.toString().substring(0, 8)}</Text>
           <Text style={[styles.clientName, { color: colors.text }]}>{item.clientName}</Text>
         </View>
         <DeliveryStatusBadge status={item.status as DeliveryStatus} />
@@ -225,7 +226,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
         <FlatList
           data={deliveries}
           renderItem={renderDeliveryItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
         />
