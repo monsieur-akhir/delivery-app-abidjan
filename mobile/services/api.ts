@@ -238,7 +238,7 @@ api.interceptors.response.use(
 // API d'authentification
 export const login = async (phone: string, password: string): Promise<{ token: string; user: User }> => {
   try {
-    const response = await api.post("/auth/login/access-token", { 
+    const response = await api.post("/api/auth/send-otp", { 
       username: phone,  // FastAPI OAuth expects "username" field
       password: password 
     }, {
