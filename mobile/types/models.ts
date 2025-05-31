@@ -1,5 +1,4 @@
 import { ReactNode } from "react"
-import { Double } from "react-native/Libraries/Types/CodegenTypes"
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Weather {
@@ -48,7 +47,7 @@ export interface WeatherForecastDay {
 
 export interface WeatherAlert {
   message: string
-  id: string
+  id: number
   type: string
   severity: "low" | "medium" | "high"
   title: string
@@ -77,13 +76,13 @@ export interface CollaborativeDelivery {
   acceptedAt?: string
   cancelledAt?: string
   createdBy: string
-  deliveryId: string
+  deliveryId: number
   deliveryStatus: string
   deliveryType: string
   createdAt: string
   updatedAt: string
   deliveryPrice: number
-  id: string
+  id: number
   title: string
   description: string
   status: string
@@ -99,13 +98,13 @@ export interface CollaborativeDelivery {
 }
 
 export interface ChatMessage {
-  id: string
-  delivery_id: string
-  user_id: string
+  id: number
+  delivery_id: number
+  user_id: number
   message: string
   timestamp: string
   createdAt: string
-  userId: string
+  userId: number
   userName: string
   userRole: string
   userAvatar?: string
@@ -113,9 +112,9 @@ export interface ChatMessage {
 }
 
 export interface EarningsDistribution {
-  id: string
-  delivery_id: string
-  user_id: string
+  id: number
+  delivery_id: number
+  user_id: number
   amount: number
   percentage: number
   // Add other properties as needed
@@ -126,9 +125,9 @@ export type UserRole = "client" | "coursier" | "vendeur" | "collaborator"
 export interface Collaborator {
   courierName: any
   profilePicture: any
-  id: string
-  user_id: string
-  delivery_id: string
+  id: number
+  user_id: number
+  delivery_id: number
   role: CollaboratorRole
   sharePercentage: number
   status: string
@@ -136,74 +135,102 @@ export interface Collaborator {
   joined_at: string
 }
 
-export interface Vehicle {
-  id: string
-  name: string
-  licensePlate?: string
-  license_plate?: string
-  maxWeight?: number
-  max_weight?: number
-  maxDistance?: number
-  isElectric?: boolean
-  type?: "car" | "motorcycle" | "bicycle" | "truck"
-  status?: "active" | "maintenance" | "inactive" | "pending_verification"
-  customType?: string
+export enum VehicleStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  MAINTENANCE = "maintenance",
+  RETIRED = "retired"
 }
 
-export interface VehicleDocument {
-  id: string
-  // Add other properties as needed
-}
-
-// Déprécié : Utilisez l'interface Weather à la place
-/*
-export interface WeatherData {
-  current: {
-    temperature: number
-    condition: string
-    humidity: number
-    wind_speed: number
-  }
-  forecast?: {
-    forecastday: {
-      date: string
-      day: {
-        maxtemp_c: number
-        mintemp_c: number
-        condition: string
-      }
-    }[]
-  }
-}
-*/
 export enum VehicleType {
-  BICYCLE = "bicycle",
-  MOTORCYCLE = "motorcycle",
-  CAR = "car",
-  VAN = "van",
-  TRUCK = "truck",
-  ON_FOOT = "on_foot",
-  CUSTOM = "custom",
   SCOOTER = "scooter",
+  BICYCLE = "bicycle", 
+  MOTORCYCLE = "motorcycle",
+  VAN = "van",
   PICKUP = "pickup",
   KIA_TRUCK = "kia_truck",
   MOVING_TRUCK = "moving_truck",
+  CUSTOM = "custom"
+}
+
+export enum UserStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  SUSPENDED = "suspended",
+  PENDING_VERIFICATION = "pending_verification"
+}
+
+export enum DocumentType {
+  INSURANCE = "insurance",
+  REGISTRATION = "registration",
+  PERMIT = "permit",
+  LICENSE = "license",
+  INSPECTION = "inspection"
+}
+
+export enum DocumentStatus {
+  PENDING = "pending",
+  VERIFIED = "verified",
+  REJECTED = "rejected",
+  EXPIRED = "expired"
+}
+
+export interface Vehicle {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  type: VehicleType;
+  max_weight: number;
+  max_volume: number;
+  fuel_type: string;
+  license_plate: string;
+  status: VehicleStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleDocument {
+  id: number;
+  courier_vehicle_id: number;
+  type: DocumentType;
+  document_url: string;
+  expiry_date?: string;
+  status: DocumentStatus;
+  verified_at?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface MaintenanceRecord {
-  id: string
-  // Add other properties as needed
+  id: number;
+  courier_vehicle_id: number;
+  type: string;
+  description: string;
+  cost: number;
+  date: string;
+  next_service_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TransportRule {
-  id: string
-  name: string
-  description: string
-  // Add other properties as needed
+  id: number;
+  commune: string;
+  vehicle_type: VehicleType;
+  max_weight: number;
+  max_volume: number;
+  restricted_hours: string[];
+  special_permits_required: boolean;
+  environmental_restrictions: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserProfile {
-  user_id: string
+  user_id: number
   full_name?: string
   address: string
   city: string
@@ -222,16 +249,16 @@ export interface UserProfile {
 }
 
 export interface Notification {
-  id: string
-  user_id: string
+  id: number
+  user_id: number
   title: string | null
   message: string | null
   read: boolean
   date: string | null
   data?: {
     type?: string | number
-    deliveryId?: string
-    paymentId?: string
+    deliveryId?: number
+    paymentId?: number
     // Other data properties...
   }
   // Other existing properties...
@@ -239,9 +266,9 @@ export interface Notification {
 
 // This is a legacy interface, renamed to avoid conflicts
 export interface CollaboratorOld {
-  id: string
-  user_id: string
-  delivery_id: string
+  id: number
+  user_id: number
+  delivery_id: number
   role: string
   status: string
   notes?: string // Add this property
@@ -249,7 +276,7 @@ export interface CollaboratorOld {
 }
 
 export interface PendingOperation {
-  id: string
+  id: number
   type:
     | "create_delivery"
     | "submit_rating"
@@ -265,13 +292,13 @@ export interface PendingOperation {
     | "collaborative_delivery"
     |"register"
   data: any // Consider replacing with a more specific type later
-  delivery_id?: string // Added to support tracking data
+  delivery_id?: number // Added to support tracking data
   status?: DeliveryStatus // Added to support status updates
   timestamp?: Date | string // Make timestamp optional since it can be added automatically
 }
 
 export interface ProfileUpdateData {
-  user_id: string
+  user_id: number
   name?: string
   address?: string
   city?: string
@@ -287,7 +314,7 @@ export interface ProfileUpdateData {
 }
 
 export interface TrackingData {
-  delivery_id: string
+  delivery_id: number
   latitude: number
   longitude: number
   status?: DeliveryStatus
@@ -296,11 +323,11 @@ export interface TrackingData {
 }
 
 export interface SupportRequestData {
-  user_id: string
+  user_id: number
   subject: string
   message: string
   type: string
-  related_id?: string
+  related_id?: number
   attachments?: string[]
 }
 
@@ -327,20 +354,20 @@ export interface Delivery {
   pickup_location: ReactNode
   delivery_location: ReactNode
   final_price: number
-  id: string
-  user_id: string
+  id: number
+  user_id: number
   user_name: string
   user_phone: string
   user_email: string
   user?: User
-  client_id?: string
+  client_id?: number
   client?: User
-  delivery_id?: string
+  delivery_id?: number
   delivery_type?: string
   delivery_name?: string
   delivery_phone?: string
   delivery_email?: string
-  courier_id?: string
+  courier_id?: number
   courier?: Courier
   pickup_address: string
   pickup_commune: string
@@ -375,7 +402,9 @@ export interface Delivery {
 }
 
 export interface User {
-  id: string
+  date_of_birth: any
+  nationality: any
+  id: number
   name: string
   email: string
   phone?: string
@@ -395,13 +424,17 @@ export interface User {
   profile_picture?: string
   full_name?: string
   is_online?: boolean;
+  // Courier-specific properties
+  wallet_balance?: number;
+  monthly_earnings?: number;
+  completed_deliveries?: number;
 }
 
 export interface Merchant {
   business_name: string | undefined
   category: string | undefined
   logo_url: any
-  id: string
+  id: number
   name: string
   logo: string
   cover_image?: string
@@ -447,7 +480,7 @@ export interface DeliveryRequest {
   notes?: string
   cargo_category?: string // Added to support cargo categories
   required_vehicle_type?: string // Added to support required vehicle types     
-  delivery_id?: string // Added to support delivery ID
+  delivery_id?: number // Added to support delivery ID
   delivery_commune?: string // Added to support delivery commune
   pickup_commune?: string // Added to support pickup commune
   }
@@ -469,9 +502,9 @@ export enum CargoCategory {
 }
 
 export interface Bid {
-  id: string
-  delivery_id: string
-  courier_id: string
+  id: number
+  delivery_id: number
+  courier_id: number
   amount: number
   price?: number // Pour la compatibilité avec l'ancien code
   note?: string
@@ -487,7 +520,7 @@ export interface Bid {
 }
 
 export interface Courier {
-  id: string
+  id: number
   name: string
   phone: string
   email: string
@@ -506,16 +539,16 @@ export interface Courier {
 }
 
 export interface Rating {
-  id: string
+  id: number
   rating: number
   comment?: string
-  delivery_id: string
-  courier_id: string
+  delivery_id: number
+  courier_id: number
   created_at: string
 }
 
 export interface Badge {
-  id: string;
+  id: number;
   name: string;
   description: string;
   icon?: string;
@@ -535,3 +568,487 @@ export interface CourierStats {
 
 // Added FeatherIconName type for better type safety
 export type FeatherIconName = 'package' | 'tag' | 'credit-card' | 'star' | 'gift' | 'bell' | 'dots-vertical' | 'delete';
+
+export interface Vehicle {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  type: VehicleType;
+  max_weight: number;
+  max_volume: number;
+  fuel_type: string;
+  license_plate: string;
+  status: VehicleStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourierVehicle {
+  id: number;
+  courier_id: number;
+  vehicle_id: number;
+  is_primary: boolean;
+  assigned_at: string;
+  status: VehicleStatus;
+  vehicle: Vehicle;
+  documents: VehicleDocument[];
+  maintenance_records: MaintenanceRecord[];
+}
+
+export interface VehicleDocument {
+  id: number;
+  courier_vehicle_id: number;
+  type: DocumentType;
+  document_url: string;
+  expiry_date?: string;
+  status: DocumentStatus;
+  verified_at?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaintenanceRecord {
+  id: number;
+  courier_vehicle_id: number;
+  type: string;
+  description: string;
+  cost: number;
+  date: string;
+  next_service_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransportRule {
+  id: number;
+  commune: string;
+  vehicle_type: VehicleType;
+  max_weight: number;
+  max_volume: number;
+  restricted_hours: string[];
+  special_permits_required: boolean;
+  environmental_restrictions: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleRecommendation {
+  vehicle_type: VehicleType;
+  confidence_score: number;
+  reasons: string[];
+  estimated_efficiency: number;
+  cost_analysis: {
+    fuel_cost: number;
+    maintenance_cost: number;
+    total_cost: number;
+  };
+  environmental_impact: {
+    carbon_footprint: number;
+    emission_level: string;
+  };
+}
+
+export interface VehicleUsage {
+  id: number;
+  courier_vehicle_id: number;
+  delivery_id: number;
+  distance_km: number;
+  fuel_consumed: number;
+  duration_minutes: number;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleStats {
+  total_distance: number;
+  total_deliveries: number;
+  average_efficiency: number;
+  maintenance_cost: number;
+  fuel_cost: number;
+  uptime_percentage: number;
+  last_maintenance_date?: string;
+  next_maintenance_due?: string;
+}
+
+// Request/Response Types
+export interface CourierVehicleCreateRequest {
+  vehicle_id: number;
+  documents?: {
+    type: DocumentType;
+    document_url: string;
+    expiry_date?: string;
+  }[];
+}
+
+export interface VehicleRecommendationRequest {
+  cargo_category: CargoCategory;
+  package_weight: number;
+  package_volume: number;
+  pickup_commune: string;
+  delivery_commune: string;
+  delivery_time?: string;
+  budget_range?: {
+    min: number;
+    max: number;
+  };
+}
+
+export interface VehicleUsageCreateRequest {
+  courier_vehicle_id: number;
+  delivery_id: number;
+  distance_km: number;
+  fuel_consumed: number;
+  duration_minutes: number;
+  start_time: string;
+  end_time: string;
+}
+
+// Stats and Analytics Types
+export interface VehicleUsageStats {
+  total_distance: number;
+  total_fuel_consumed: number;
+  total_duration_hours: number;
+  average_speed: number;
+  most_used_vehicle_type: VehicleType;
+  usage_by_vehicle_type: Record<VehicleType, number>;
+  usage_by_time_period: {
+    date: string;
+    distance: number;
+    fuel_consumed: number;
+    duration_hours: number;
+  }[];
+}
+
+export interface VehiclePerformanceStats {
+  efficiency_score: number;
+  maintenance_cost_per_km: number;
+  fuel_efficiency: number;
+  uptime_percentage: number;
+  delivery_success_rate: number;
+  average_delivery_time: number;
+  performance_by_vehicle: {
+    vehicle_id: number;
+    vehicle_type: VehicleType;
+    efficiency_score: number;
+    total_deliveries: number;
+    success_rate: number;
+  }[];
+}
+
+export interface VehicleEnvironmentalStats {
+  total_carbon_emissions: number;
+  carbon_per_km: number;
+  eco_friendly_percentage: number;
+  fuel_consumption_trend: {
+    date: string;
+    consumption: number;
+    emissions: number;
+  }[];
+  vehicle_environmental_impact: {
+    vehicle_type: VehicleType;
+    avg_emissions_per_km: number;
+    eco_rating: string;
+  }[];
+}
+
+// === TYPES MANQUANTS POUR LES HOOKS ===
+
+// Types pour l'authentification
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  full_name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  role: UserRole;
+  commune?: string;
+  phone?: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+  new_password_confirmation: string;
+}
+
+export interface TwoFactorSetupResponse {
+  secret: string;
+  qr_code: string;
+  backup_codes: string[];
+}
+
+// Types pour les livraisons avancées
+export interface DeliveryTracking {
+  id: number;
+  delivery_id: number;
+  current_location: Coordinates;
+  estimated_arrival: string;
+  status: DeliveryStatus;
+  tracking_points: TrackingPoint[];
+  courier_info?: {
+    name: string;
+    phone: string;
+    vehicle_type: string;
+    profile_picture?: string;
+  };
+  real_time_updates: boolean;
+}
+
+export interface ExpressDelivery extends Delivery {
+  express_priority: 'standard' | 'urgent' | 'emergency'
+  estimated_pickup_time: string
+  guaranteed_delivery_time: string
+  express_fee: number
+  auto_assignment: boolean
+}
+
+export interface DeliveryEstimate {
+  estimated_price: number;
+  estimated_duration: number; // minutes
+  estimated_distance: number; // km
+  pricing_breakdown: {
+    base_price: number;
+    distance_fee: number;
+    time_fee: number;
+    size_fee: number;
+    urgency_fee: number;
+    total: number;
+  };
+  vehicle_recommendations: VehicleRecommendation[];
+}
+
+// Types KYC
+export interface KYCDocument {
+  id: number;
+  user_id: number;
+  type: 'id_card' | 'driving_license' | 'vehicle_registration' | 'insurance' | 'business_license';
+  document_type: 'id_card' | 'driving_license' | 'vehicle_registration' | 'insurance' | 'business_license';
+  document_url: string;
+  url: string;
+  status: KYCStatus;
+  submitted_at: string;
+  reviewed_at?: string;
+  notes?: string;
+}
+
+export interface KYCStatus {
+  status: 'pending' | 'verified' | 'rejected' | 'expired';
+  documents_required: string[];
+  documents_submitted: string[];
+  verification_level: 'basic' | 'enhanced' | 'premium';
+  last_review_date?: string;
+}
+
+// Types utilisateur étendus
+export interface UserType {
+  client: 'client';
+  courier: 'courier';
+  business: 'business';
+  manager: 'manager';
+}
+
+export interface NotificationSettings {
+  push_notifications: boolean;
+  email_notifications: boolean;
+  sms_notifications: boolean;
+  marketing_emails: boolean;
+  delivery_updates: boolean;
+  delivery_notifications: boolean;
+  promotional_notifications: boolean;
+  bid_notifications: boolean;
+  promotion_alerts: boolean;
+  security_alerts: boolean;
+}
+
+export interface UserPreferences {
+  language: string;
+  currency: string;
+  theme: 'light' | 'dark' | 'auto';
+  notification_settings: NotificationSettings;
+  location_sharing: boolean;
+  auto_accept_express: boolean;
+  auto_accept_bids: boolean;
+  prioritize_nearby_couriers: boolean;
+  allow_express_delivery: boolean;
+  allow_courier_calls: boolean;
+  allow_courier_messages: boolean;
+  preferred_delivery_time: string;
+  preferred_vehicle_types: VehicleType[];
+}
+
+export interface UserStats {
+  total_deliveries: number;
+  successful_deliveries: number;
+  cancelled_deliveries: number;
+  total_earnings: number;
+  average_rating: number;
+  total_distance: number;
+  join_date: string;
+  last_active: string;
+  completion_rate: number;
+  on_time_percentage: number;
+}
+
+// Profile spécialisé pour les hooks
+export interface UserProfileExtended {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  status?: "online" | "offline";
+  profile_image?: string;
+  created_at: string;
+  updated_at: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  commune?: string;
+  vehicle_type?: string;
+  license_plate?: string;
+  business_name?: string;
+  business_address?: string;
+  profile_picture?: string;
+  full_name?: string;
+  is_online?: boolean;
+  user_id: number;
+  kyc_status: KYCStatus;
+  preferences: UserPreferences;
+  stats: UserStats;
+  notification_settings: NotificationSettings;
+}
+
+// Missing profile types for services
+export interface CourierProfile {
+  id: number;
+  user_id: number;
+  vehicle_type: VehicleType;
+  license_plate?: string;
+  id_card_number?: string;
+  id_card_url?: string;
+  driving_license_url?: string;
+  insurance_url?: string;
+  is_online: boolean;
+  last_location_lat?: number;
+  last_location_lng?: number;
+  last_location_updated?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface BusinessProfile {
+  id: number;
+  user_id: number;
+  business_name: string;
+  business_type?: string;
+  siret?: string;
+  kbis_url?: string;
+  address: string;
+  commune: string;
+  lat?: number;
+  lng?: number;
+  logo_url?: string;
+  description?: string;
+  commission_rate?: number;
+  created_at: string;
+  updated_at?: string;
+}
+
+// Missing KYC types
+export interface KYCVerification {
+  id: number;
+  user_id: number;
+  document_type: 'id_card' | 'driving_license' | 'vehicle_registration' | 'insurance' | 'business_license';
+  document_url: string;
+  status: 'pending' | 'verified' | 'rejected' | 'expired';
+  submitted_at: string;
+  reviewed_at?: string;
+  notes?: string;
+  documents?: KYCDocument[];
+}
+
+// Types pour les filtres de livraison
+export interface DeliveryFilters {
+  status?: DeliveryStatus;
+  commune?: string;
+  date_from?: string;
+  date_to?: string;
+  min_price?: number;
+  max_price?: number;
+  vehicle_type?: VehicleType;
+  skip?: number;
+  limit?: number;
+}
+
+// Type for tracking points during delivery
+export interface TrackingPoint {
+  id: number
+  delivery_id: number
+  latitude: number
+  longitude: number
+  accuracy?: number
+  speed?: number
+  bearing?: number
+  timestamp: string
+  created_at: string
+}
+
+// Courier Earnings and Wallet Types
+export interface EarningsSummary {
+  total_earnings: number
+  available_balance: number
+  pending_balance: number
+  total_deliveries: number
+  total_distance: number
+  average_rating: number
+}
+
+export interface EarningsHistory {
+  date: string
+  amount: number
+  deliveries: number
+}
+
+export interface Transaction {
+  id: string
+  type: "earning" | "withdrawal" | "bonus" | "fee"
+  amount: number
+  status: "completed" | "pending" | "failed"
+  delivery_id?: string
+  description: string
+  created_at: string
+}
+
+export interface CourierEarningsData {
+  summary: EarningsSummary
+  history: EarningsHistory[]
+  transactions: Transaction[]
+}
+
+export interface WalletTransaction extends Transaction {
+  reference?: string
+  payment_method?: string
+  fees?: number
+}
+
+export interface PayoutRequest {
+  amount: number
+  payment_method: string
+  account_details?: Record<string, any>
+}

@@ -55,7 +55,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
   const handleNotificationPress = (notification: Notification) => {
     if (!notification.data) return
 
-    const deliveryId = notification.data.deliveryId as string
+    const deliveryId = String(notification.data.deliveryId || '')
 
     if (notification.data.type === "delivery_assigned" || notification.data.type === "delivery_status") {
       navigation.navigate("DeliveryDetails", { deliveryId })
@@ -135,7 +135,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
           <Text style={styles.notificationMessage}>{item.message}</Text>
           <Text style={styles.notificationTime}>{formatRelativeTime(item.date || new Date().toISOString())}</Text>
         </View>
-        <TouchableOpacity onPress={() => handleDeleteNotification(item.id)}>
+        <TouchableOpacity onPress={() => handleDeleteNotification(item.id.toString())}>
           <FeatherIcon name="delete" size={20} color="#757575" />
         </TouchableOpacity>
       </View>
@@ -185,7 +185,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
       <FlatList
         data={notifications}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={renderEmptyList}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

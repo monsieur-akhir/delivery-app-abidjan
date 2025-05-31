@@ -52,8 +52,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       // Ajouter la notification à la liste
       const newNotification: Notification = {
-        user_id: user?.id || "",
-        id: notification.request.identifier,
+        user_id: user?.id || 0,
+        id: parseInt(notification.request.identifier) || Date.now(),
         title: notification.request.content.title,
         message: notification.request.content.body,
         data: notification.request.content.data,
@@ -87,7 +87,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Enregistrer le token sur le serveur lorsque l'utilisateur est connecté
   useEffect(() => {
     if (token && expoPushToken && user) {
-      registerPushToken(expoPushToken, user.id)
+      registerPushToken(expoPushToken, user.id.toString())
     }
   }, [token, expoPushToken, user])
 
@@ -159,7 +159,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Marquer une notification comme lue
   const markNotificationAsRead = (id: string): void => {
     setNotifications((prevNotifications) => {
-      const updatedNotifications = prevNotifications.map((item) => (item.id === id ? { ...item, read: true } : item))
+      const updatedNotifications = prevNotifications.map((item) => (item.id.toString() === id ? { ...item, read: true } : item))
       saveNotifications(updatedNotifications)
       return updatedNotifications
     })
@@ -177,7 +177,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Supprimer une notification
   const deleteNotification = (id: string): void => {
     setNotifications((prevNotifications) => {
-      const updatedNotifications = prevNotifications.filter((item) => item.id !== id)
+      const updatedNotifications = prevNotifications.filter((item) => item.id.toString() !== id)
       saveNotifications(updatedNotifications)
       return updatedNotifications
     })

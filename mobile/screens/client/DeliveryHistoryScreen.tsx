@@ -7,13 +7,14 @@ import { Text, Card, Chip, Divider, IconButton, Searchbar, Button, Menu } from "
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
 import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
+// Removed unused import: import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchClientDeliveryHistory } from "../../services/api"
+import { useDelivery } from "../../hooks"
 import { formatPrice, formatRelativeTime } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery } from "../../types/models"
+import type { DeliveryFilters } from "../../services/DeliveryService"
 import EmptyState from "../../components/EmptyState"
 import DeliveryStatusBadge from "../../components/DeliveryStatusBadge"
 import ErrorView from "../../components/ErrorView"
@@ -28,8 +29,8 @@ type FilterOption = "all" | "completed" | "cancelled" | "in_progress"
 
 const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { user } = useAuth()
   const { isConnected, isOfflineMode } = useNetwork()
+  const { getClientDeliveryHistory } = useDelivery()
 
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
   const [filteredDeliveries, setFilteredDeliveries] = useState<Delivery[]>([])
@@ -45,18 +46,8 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   const [hasMoreData, setHasMoreData] = useState<boolean>(true)
   const [loadingMore, setLoadingMore] = useState<boolean>(false)
 
-  // Charger les données initiales lorsque l'écran est affiché
-  useFocusEffect(
-    useCallback(() => {
-      loadDeliveryHistory()
-      return () => {
-        // Nettoyage si nécessaire
-      }
-    }, []),
-  )
-
   // Charger l'historique des livraisons
-  const loadDeliveryHistory = async (refresh = true): Promise<void> => {
+  const loadDeliveryHistory = useCallback(async (refresh = true): Promise<void> => {
     if (refresh) {
       setLoading(true)
       setPage(1)
@@ -70,36 +61,61 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
         return
       }
 
-      // Convertir le filtre pour l'API
-      let apiFilter = ""
-      if (currentFilter === "completed") apiFilter = "completed"
-      else if (currentFilter === "cancelled") apiFilter = "cancelled"
-      else if (currentFilter === "in_progress") apiFilter = "in_progress"
+      // Prepare filter object for API
+      const filterObj: DeliveryFilters = {};
+      
+      // Add status filter
+      if (currentFilter === "completed") filterObj.status = "completed";
+      else if (currentFilter === "cancelled") filterObj.status = "cancelled";
+      else if (currentFilter === "in_progress") {
+        // For in_progress, we'll just use the in_progress status
+        // The backend logic handles including relevant statuses
+        filterObj.status = "in_progress";
+      }
+      
+      // Add search term if present
+      if (searchQuery) {
+        filterObj.search = searchQuery;
+      }
+      
+      // Add pagination
+      filterObj.skip = (page - 1) * 10;
+      filterObj.limit = 10;
 
-      const data = await fetchClientDeliveryHistory(apiFilter)
+      const data = await getClientDeliveryHistory(filterObj);
 
       if (refresh) {
-        setDeliveries(data)
-        setFilteredDeliveries(data)
+        setDeliveries(data || []);
+        setFilteredDeliveries(data || []);
       } else {
-        if (data.length === 0) {
-          setHasMoreData(false)
+        if (!data || data.length === 0) {
+          setHasMoreData(false);
         } else {
-          setDeliveries((prev) => [...prev, ...data])
-          setFilteredDeliveries((prev) => [...prev, ...data])
+          setDeliveries((prev) => [...prev, ...data]);
+          setFilteredDeliveries((prev) => [...prev, ...data]);
         }
       }
 
-      setError(null)
+      setError(null);
     } catch (error) {
-      console.error("Error loading delivery history:", error)
-      setError(t("deliveryHistory.errorLoading"))
+      console.error("Error loading delivery history:", error);
+      setError(t("deliveryHistory.errorLoading"));
     } finally {
-      setLoading(false)
-      setRefreshing(false)
-      setLoadingMore(false)
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
     }
-  }
+  }, [currentFilter, getClientDeliveryHistory, isConnected, isOfflineMode, t, page, searchQuery])
+
+  // Charger les données initiales lorsque l'écran est affiché
+  useFocusEffect(
+    useCallback(() => {
+      loadDeliveryHistory()
+      return () => {
+        // Nettoyage si nécessaire
+      }
+    }, [loadDeliveryHistory]),
+  )
 
   // Actualiser les données
   const onRefresh = async (): Promise<void> => {
@@ -117,11 +133,7 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   }
 
   // Filtrer les livraisons
-  useEffect(() => {
-    filterDeliveries()
-  }, [searchQuery, currentFilter, sortOrder, deliveries])
-
-  const filterDeliveries = (): void => {
+  const filterDeliveries = useCallback((): void => {
     let filtered = [...deliveries]
 
     // Filtrer par recherche
@@ -161,7 +173,12 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
     })
 
     setFilteredDeliveries(filtered)
-  }
+  }, [searchQuery, currentFilter, sortOrder, deliveries])
+  
+  // Apply filters when dependencies change
+  useEffect(() => {
+    filterDeliveries()
+  }, [filterDeliveries])
 
   // Afficher les détails d'une livraison
   const viewDeliveryDetails = (deliveryId: string): void => {
@@ -171,7 +188,7 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   // Rendu d'un élément de livraison
   const renderDeliveryItem = ({ item, index }: { item: Delivery; index: number }): React.ReactElement => (
     <Animated.View entering={FadeInUp.delay(index * 100).springify()} exiting={FadeOutDown.springify()}>
-      <Card style={styles.deliveryCard} onPress={() => viewDeliveryDetails(item.id)} mode="elevated">
+      <Card style={styles.deliveryCard} onPress={() => viewDeliveryDetails(item.id.toString())} mode="elevated">
         <Card.Content>
           <View style={styles.deliveryHeader}>
             <View style={styles.deliveryInfo}>

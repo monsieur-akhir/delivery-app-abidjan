@@ -9,7 +9,6 @@ import { Feather } from "@expo/vector-icons"
 import MapView, { Marker } from "react-native-maps"
 import * as Location from "expo-location"
 import { useAuth } from "../../contexts/AuthContext"
-import { useNetwork } from "../../contexts/NetworkContext"
 import { fetchActiveDeliveries, fetchNearbyMerchants } from "../../services/api"
 import { formatPrice } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
@@ -22,7 +21,7 @@ type HomeScreenProps = {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user } = useAuth()
-  const { isConnected } = useNetwork()
+  // const { isConnected } = useNetwork() // Removed unused variable
 
   const [refreshing, setRefreshing] = useState<boolean>(false)
   const [activeDeliveries, setActiveDeliveries] = useState<Delivery[]>([])
@@ -126,7 +125,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <Card
                   key={delivery.id}
                   style={styles.deliveryCard}
-                  onPress={() => navigation.navigate("DeliveryDetails", { deliveryId: delivery.id })}
+                  onPress={() => navigation.navigate("DeliveryDetails", { deliveryId: delivery.id.toString() })}
                 >
                   <Card.Content>
                     <View style={styles.deliveryStatus}>
@@ -154,7 +153,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   <Card.Actions>
                     <Button
                       mode="text"
-                      onPress={() => navigation.navigate("TrackDelivery", { deliveryId: delivery.id })}
+                      onPress={() => navigation.navigate("TrackDelivery", { deliveryId: delivery.id.toString() })}
                       color="#FF6B00"
                     >
                       Suivre
@@ -229,7 +228,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       }}
                       title={merchant.business_name}
                       description={merchant.category}
-                      onPress={() => navigation.navigate("MerchantDetails", { merchantId: merchant.id })}
+                      onPress={() => navigation.navigate("MerchantDetails", { merchantId: merchant.id.toString() })}
                     />
                   ) : null,
                 )}
@@ -248,7 +247,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <Card
                   key={merchant.id}
                   style={styles.merchantCard}
-                  onPress={() => navigation.navigate("MerchantDetails", { merchantId: merchant.id })}
+                  onPress={() => navigation.navigate("MerchantDetails", { merchantId: merchant.id.toString() })}
                 >
                   {merchant.logo_url ? (
                     <Image source={{ uri: merchant.logo_url }} style={styles.merchantLogo} />

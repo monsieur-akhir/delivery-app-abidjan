@@ -308,67 +308,67 @@ export const getCourierPerformance = async (params = {}) => {
 
 // API pour les utilisateurs
 export const fetchUsers = async (params = {}) => {
-  const response = await apiClient.get("/users", { params })
+  const response = await apiClient.get("/api/users", { params })
   return response.data
 }
 
 export const fetchUserDetails = async (userId) => {
-  const response = await apiClient.get(`/users/${userId}`)
+  const response = await apiClient.get(`/api/users/${userId}`)
   return response.data
 }
 
 export const fetchUserActivity = async (userId) => {
-  const response = await apiClient.get(`/users/${userId}/activity`)
+  const response = await apiClient.get(`/api/users/${userId}/activity`)
   return response.data
 }
 
 export const fetchUserDeliveries = async (userId) => {
-  const response = await apiClient.get(`/users/${userId}/deliveries`)
+  const response = await apiClient.get(`/api/users/${userId}/deliveries`)
   return response.data
 }
 
 export const fetchUserPayments = async (userId) => {
-  const response = await apiClient.get(`/users/${userId}/payments`)
+  const response = await apiClient.get(`/api/users/${userId}/payments`)
   return response.data
 }
 
 export const addUser = async (userData) => {
-  const response = await apiClient.post("/users", userData)
+  const response = await apiClient.post("/api/users", userData)
   return response.data
 }
 
 export const updateUser = async (userId, userData) => {
-  const response = await apiClient.put(`/users/${userId}`, userData)
+  const response = await apiClient.put(`/api/users/${userId}`, userData)
   return response.data
 }
 
 export const deleteUser = async (userId) => {
-  const response = await apiClient.delete(`/users/${userId}`)
+  const response = await apiClient.delete(`/api/users/${userId}`)
   return response.data
 }
 
 export const updateUserStatus = async (userId, status) => {
-  const response = await apiClient.patch(`/users/${userId}/status`, { status })
+  const response = await apiClient.patch(`/api/users/${userId}/status`, { status })
   return response.data
 }
 
 export const verifyUserDocument = async (userId, documentType) => {
-  const response = await apiClient.post(`/users/${userId}/verify-document`, { document_type: documentType })
+  const response = await apiClient.post(`/api/users/${userId}/verify-document`, { document_type: documentType })
   return response.data
 }
 
 export const rejectUserDocument = async (userId, documentType) => {
-  const response = await apiClient.post(`/users/${userId}/reject-document`, { document_type: documentType })
+  const response = await apiClient.post(`/api/users/${userId}/reject-document`, { document_type: documentType })
   return response.data
 }
 
 export const verifyUserKyc = async (userId) => {
-  const response = await apiClient.post(`/users/${userId}/verify-kyc`)
+  const response = await apiClient.post(`/api/users/${userId}/verify-kyc`)
   return response.data
 }
 
 export const rejectUserKyc = async (userId, reason) => {
-  const response = await apiClient.post(`/users/${userId}/reject-kyc`, { reason })
+  const response = await apiClient.post(`/api/users/${userId}/reject-kyc`, { reason })
   return response.data
 }
 

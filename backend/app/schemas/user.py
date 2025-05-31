@@ -65,11 +65,10 @@ class CourierProfileResponse(CourierProfileBase):
 class UserBase(BaseModel):
     phone: str = Field(..., description="Phone number (primary identifier)")
     email: Optional[EmailStr] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    full_name: str = Field(..., description="Full name")
     role: UserRole = UserRole.client
     commune: Optional[str] = None
-    is_active: bool = True
+    language_preference: Optional[str] = "fr"
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6, description="Password (min 6 characters)")
@@ -80,10 +79,9 @@ class UserLogin(BaseModel):
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    full_name: Optional[str] = None
     commune: Optional[str] = None
-    is_active: Optional[bool] = None
+    language_preference: Optional[str] = None
 
 class UserResponse(UserBase):
     id: int
@@ -142,7 +140,36 @@ class KYCUpdate(BaseModel):
     kyc_status: KYCStatus
     kyc_rejection_reason: Optional[str] = None
 
+# Password related schemas
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(..., description="Current password")
+    new_password: str = Field(..., min_length=6, description="New password (min 6 characters)")
+    confirm_password: str = Field(..., description="Confirm new password")
     
-    class Config:
-        from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+    @validator('confirm_password')
+    def passwords_match(cls, v, values, **kwargs):
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError('Les mots de passe ne correspondent pas')
+        return v
+
+class PasswordResetRequest(BaseModel):
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    
+    @validator('phone')
+    def email_or_phone_required(cls, v, values, **kwargs):
+        if not v and not values.get('email'):
+            raise ValueError('Email ou numéro de téléphone requis')
+        return v
+
+class PasswordResetConfirm(BaseModel):
+    phone: str = Field(..., description="Phone number")
+    code: str = Field(..., description="OTP code")
+    new_password: str = Field(..., min_length=6, description="New password (min 6 characters)")
+    confirm_password: str = Field(..., description="Confirm new password")
+    
+    @validator('confirm_password')
+    def passwords_match(cls, v, values, **kwargs):
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError('Les mots de passe ne correspondent pas')
+        return v

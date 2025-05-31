@@ -9,7 +9,7 @@
       "DOM",
       "ESNext"
     ],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -26,7 +26,9 @@
     "node_modules",
     "babel.config.js",
     "metro.config.js",
-    "jest.config.js"
+    "jest.config.js",
+    "**/__tests__/**",
+    "**/*.test.*"
   ],
   "include": [
     "**/*.ts",

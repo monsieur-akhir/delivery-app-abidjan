@@ -277,7 +277,7 @@ const CourierDashboardScreen = () => {
                   <React.Fragment key={delivery.id}>
                     <TouchableOpacity
                       style={styles.deliveryItem}
-                      onPress={() => navigateToDeliveryDetails(delivery.id)}
+                      onPress={() => navigateToDeliveryDetails(delivery.id.toString())}
                     >
                       <View style={styles.deliveryInfo}>
                         <View style={styles.deliveryAddresses}>

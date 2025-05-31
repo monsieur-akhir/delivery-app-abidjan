@@ -5,11 +5,13 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { View, StyleSheet, TouchableOpacity, Alert, Linking, Platform } from "react-native"
 import { Text, Card, Button, Avatar, Chip, Divider, ActivityIndicator, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
-import MapView, { Marker, Polyline } from "react-native-maps"
+import MapView from "react-native-maps"
+import { CustomMapView } from "../../components"
+import type { Route as MapRoute } from "../../components"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { useWebSocket } from "../../contexts/WebSocketContext"
-import { fetchDeliveryDetails } from "../../services/api"
+import { useDelivery } from "../../hooks"
 import { formatPrice, formatDate } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
@@ -17,10 +19,15 @@ import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery, Courier, Coordinates, DeliveryStatus } from "../../types/models"
 
 // Define the missing API functions
-const fetchDeliveryRoute = async (_deliveryId: string): Promise<Coordinates[]> => {
+const fetchDeliveryRoute = async (_deliveryId: string): Promise<MapRoute> => {
   // Implementation would call the actual API
-  // This is a placeholder that returns an empty array
-  return []
+  // This is a placeholder that returns a default route
+  return {
+    coordinates: [],
+    distance: 0,
+    duration: 0,
+    instructions: []
+  }
 }
 
 const getETA = async (_deliveryId: string): Promise<{ eta_minutes: number }> => {
@@ -46,12 +53,13 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
   const { t } = useTranslation()
   const { isConnected } = useNetwork()
   const { subscribe } = useWebSocket()
+  const { getDeliveryDetails } = useDelivery()
   const mapRef = useRef<MapView | null>(null)
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
   const [courier, setCourier] = useState<Courier | null>(null)
   const [courierLocation, setCourierLocation] = useState<Coordinates | null>(null)
-  const [routeCoordinates, setRouteCoordinates] = useState<Coordinates[]>([])
+  const [deliveryRoute, setDeliveryRoute] = useState<MapRoute | null>(null)
   const [eta, setEta] = useState<number | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>("")
@@ -104,15 +112,15 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
   const loadRouteAndEta = useCallback(async (deliveryData: Delivery): Promise<void> => {
     try {
       // Charger l'itinéraire
-      const route = await fetchDeliveryRoute(deliveryId)
-      setRouteCoordinates(route)
+      const routeData = await fetchDeliveryRoute(deliveryId)
+      setDeliveryRoute(routeData)
 
       // Charger l'ETA
       const etaData = await getETA(deliveryId)
       setEta(etaData.eta_minutes)
 
       // Centrer la carte sur l'itinéraire
-      if (route.length > 0 && mapRef.current) {
+      if (routeData.coordinates.length > 0 && mapRef.current) {
         const coordinates = [
           {
             latitude: deliveryData.pickup_lat || 0,
@@ -124,8 +132,8 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
           },
         ]
 
-        if (route.length > 0) {
-          coordinates.push(...route)
+        if (routeData.coordinates.length > 0) {
+          coordinates.push(...routeData.coordinates)
         }
 
         mapRef.current.fitToCoordinates(coordinates, {
@@ -142,17 +150,19 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
     try {
       setLoading(true)
 
-      // Charger les détails de la livraison
-      const deliveryData = await fetchDeliveryDetails(deliveryId)
-      setDelivery(deliveryData)
+      // Charger les détails de la livraison avec le hook
+      const deliveryData = await getDeliveryDetails(Number(deliveryId))
+      if (deliveryData) {
+        setDelivery(deliveryData)
 
-      // Si un coursier est assigné, charger ses informations
-      if (deliveryData.courier) {
-        setCourier(deliveryData.courier)
+        // Si un coursier est assigné, charger ses informations
+        if (deliveryData.courier) {
+          setCourier(deliveryData.courier)
 
-        // Si la livraison est en cours, charger l'itinéraire et l'ETA
-        if (deliveryData.status === "in_progress" || deliveryData.status === "picked_up") {
-          await loadRouteAndEta(deliveryData)
+          // Si la livraison est en cours, charger l'itinéraire et l'ETA
+          if (deliveryData.status === "in_progress" || deliveryData.status === "picked_up") {
+            await loadRouteAndEta(deliveryData)
+          }
         }
       }
     } catch (error) {
@@ -161,7 +171,7 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
     } finally {
       setLoading(false)
     }
-  }, [deliveryId, loadRouteAndEta, t])
+  }, [deliveryId, getDeliveryDetails, loadRouteAndEta, t])
   
   useEffect(() => {
     loadDeliveryDetails()
@@ -333,8 +343,7 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
       </View>
 
       <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
+        <CustomMapView
           style={styles.map}
           initialRegion={{
             latitude: delivery.pickup_lat || 5.3599517,
@@ -342,51 +351,26 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}
-        >
-          {/* Marqueur du point de ramassage */}
-          {delivery.pickup_lat && delivery.pickup_lng && (
-            <Marker
-              coordinate={{
-                latitude: delivery.pickup_lat,
-                longitude: delivery.pickup_lng,
-              }}
-              title={t("trackDelivery.pickupPoint")}
-              description={delivery.pickup_address}
-              pinColor="#FF6B00"
-            />
-          )}
-
-          {/* Marqueur du point de livraison */}
-          {delivery.delivery_lat && delivery.delivery_lng && (
-            <Marker
-              coordinate={{
-                latitude: delivery.delivery_lat,
-                longitude: delivery.delivery_lng,
-              }}
-              title={t("trackDelivery.deliveryPoint")}
-              description={delivery.delivery_address}
-              pinColor="#4CAF50"
-            />
-          )}
-
-          {/* Marqueur de la position du coursier */}
-          {courierLocation && (
-            <Marker
-              coordinate={courierLocation}
-              title={t("trackDelivery.courierLocation")}
-              description={courier?.full_name || ""}
-            >
-              <View style={styles.courierMarker}>
-                <IconButton icon="motorbike" size={20} iconColor="#FFFFFF" />
-              </View>
-            </Marker>
-          )}
-
-          {/* Tracé de l'itinéraire */}
-          {routeCoordinates.length > 0 && (
-            <Polyline coordinates={routeCoordinates} strokeWidth={4} strokeColor="#FF6B00" />
-          )}
-        </MapView>
+          pickupPoint={delivery.pickup_lat && delivery.pickup_lng ? {
+            latitude: delivery.pickup_lat,
+            longitude: delivery.pickup_lng,
+            title: t("trackDelivery.pickupPoint"),
+            description: delivery.pickup_address
+          } : undefined}
+          deliveryPoint={delivery.delivery_lat && delivery.delivery_lng ? {
+            latitude: delivery.delivery_lat,
+            longitude: delivery.delivery_lng,
+            title: t("trackDelivery.deliveryPoint"),
+            description: delivery.delivery_address
+          } : undefined}
+          courierLocation={courierLocation ? {
+            latitude: courierLocation.latitude,
+            longitude: courierLocation.longitude
+          } : undefined}
+          route={deliveryRoute || undefined}
+          showsTraffic={true}
+          showsUserLocation={false}
+        />
 
         {/* Indicateur d'ETA */}
         {eta !== null && (delivery.status === "in_progress" || delivery.status === "picked_up") && (

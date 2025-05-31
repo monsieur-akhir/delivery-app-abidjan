@@ -5,8 +5,13 @@ const __DEV__ = process.env.NODE_ENV === "development"
 
 // URL de base de l'API
 export const API_URL = __DEV__
-  ? "http://192.168.1.100:8000" // URL de développement local
+  ? "http://10.0.2.2:8000" // URL de développement local pour Android emulator
   : "https://api.livraison-abidjan.com" // URL de production
+
+// URL pour WebSocket
+export const WS_URL = __DEV__
+  ? "ws://10.0.2.2:8000/ws" // WebSocket URL for development
+  : "wss://api.livraison-abidjan.com/ws" // WebSocket URL for production
 
 // Clés d'API
 export const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"
@@ -18,9 +23,6 @@ export const ENVIRONMENT = __DEV__ ? "development" : "production"
 
 // Configuration des timeouts
 export const API_TIMEOUT = 30000 // 30 secondes
-
-// Configuration des websockets
-export const WEBSOCKET_URL = __DEV__ ? "ws://192.168.1.100:8000/ws" : "wss://api.livraison-abidjan.com/ws"
 
 // Configuration des notifications
 export const NOTIFICATION_CHANNEL_ID = "livraison-abidjan-notifications"
@@ -49,19 +51,16 @@ export const APP_SETTINGS = {
   maxUploadRetries: 3,
   offlineDataExpirationDays: 7,
 }
-export const WS_URL = __DEV__
-  ? "ws://192.168.1.100:8000/ws"
-  : "wss://api.livraison-abidjan.com/ws"
 
 // Endpoints de l'API
 export const API_ENDPOINTS = {
   auth: {
-    login: "/api/auth/login",
-    register: "/api/auth/register",
-    verifyOtp: "/api/auth/verify-otp",
-    refreshToken: "/api/auth/refresh-token",
-    forgotPassword: "/api/auth/forgot-password",
-    resetPassword: "/api/auth/reset-password",
+    login: "/auth/login",
+    register: "/auth/register",
+    verifyOtp: "/auth/verify-otp",
+    refreshToken: "/auth/refresh-token",
+    forgotPassword: "/auth/forgot-password",
+    resetPassword: "/auth/reset-password",
   },
   user: {
     profile: "/api/users/profile",

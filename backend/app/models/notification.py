@@ -15,6 +15,7 @@ class NotificationType(str, enum.Enum):
     loan_status = "loan_status"
     system = "system"
     weather_alert = "weather_alert"
+    otp = "otp"
 
 class NotificationStatus(str, enum.Enum):
     sent = "sent"

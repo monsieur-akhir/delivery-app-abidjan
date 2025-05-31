@@ -106,7 +106,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       const timer = setInterval(() => {
         setRecordingDuration((prev) => prev + 1)
       }, 1000)
-      setDurationTimer(timer)
+      setDurationTimer(timer as unknown as number)
     } catch (error) {
       console.error("Error starting recording:", error)
       setIsRecording(false)

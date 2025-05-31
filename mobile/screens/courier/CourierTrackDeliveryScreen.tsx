@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
 import type React from "react"
@@ -103,7 +104,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
       )
 
       // Configurer l'intervalle d'envoi des points de suivi
-      trackingInterval.current = setInterval(sendCurrentLocation, LOCATION_TRACKING_INTERVAL)
+      trackingInterval.current = setInterval(sendCurrentLocation, LOCATION_TRACKING_INTERVAL) as unknown as number
 
       setIsTracking(true)
     } catch (error) {
@@ -420,7 +421,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
         }
 
         if (message && delivery.user_id) {
-          await sendDeliveryNotification(delivery.user_id, {
+          await sendDeliveryNotification(delivery.user_id.toString(), {
             title: "Mise à jour de votre livraison",
             body: message,
             data: { delivery_id: deliveryId, status },

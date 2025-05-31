@@ -14,7 +14,7 @@ import {
 import { useRoute, useNavigation } from "@react-navigation/native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import Slider from "@react-native-community/slider"
-import { Button } from "react-native-elements"
+import { Button } from "react-native-paper"
 import { Card } from "react-native-paper"
 import CollaborativeService from "../../services/CollaborativeService"
 import type { CollaborativeDelivery, CollaboratorRole, Collaborator } from "../../types/models"
@@ -342,12 +342,14 @@ const JoinCollaborativeDeliveryScreen: React.FC = () => {
 
       <View style={styles.actionContainer}>
         <Button
-          title="Rejoindre la livraison"
+          mode="contained"
           onPress={handleJoinDelivery}
-          buttonStyle={[styles.joinButton, { backgroundColor: colors.primary }]}
+          style={[styles.joinButton, { backgroundColor: colors.primary }]}
           disabled={joining || remainingPercentage <= 0}
           loading={joining}
-        />
+        >
+          Rejoindre la livraison
+        </Button>
 
         <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
           <Text style={[styles.cancelButtonText, { color: colors.muted }]}>Annuler</Text>

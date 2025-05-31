@@ -1,54 +1,46 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, FlatList, ActivityIndicator, ScrollView } from "react-native"
-import { Text, Card, Chip, Divider, Button, IconButton, Searchbar } from "react-native-paper"
+import { Text, Card, Chip, Divider, Button, Searchbar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNavigation } from "@react-navigation/native"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
+import { useDelivery } from "../../hooks"
 import type { Delivery } from "../../types/models"
-import api from "../../services/api"
+import type { RootStackParamList } from "../../types/navigation"
 import DeliveryStatusBadge from "../../components/DeliveryStatusBadge"
 import EmptyState from "../../components/EmptyState"
 import ErrorView from "../../components/ErrorView"
 import { formatDate, formatPrice } from "../../utils/formatters"
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>
+
 const CourierDeliveryHistoryScreen: React.FC = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation<any>()
+  const navigation = useNavigation<NavigationProp>()
   const { user } = useAuth()
   const { isConnected } = useNetwork()
-
-  const [deliveries, setDeliveries] = useState<Delivery[]>([])
+    const {
+    deliveries,
+    isLoading,
+    error,
+    getCourierDeliveryHistory  } = useDelivery()
   const [filteredDeliveries, setFilteredDeliveries] = useState<Delivery[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterStatus, setFilterStatus] = useState<string | null>(null)
+  
+  const loadDeliveryHistory = useCallback(async () => {
+    if (!user?.id) return
+    await getCourierDeliveryHistory()
+  }, [user?.id, getCourierDeliveryHistory])
 
   useEffect(() => {
     loadDeliveryHistory()
-  }, [])
-
-  const loadDeliveryHistory = async () => {
-    if (!user?.id) return
-
-    try {
-      setLoading(true)
-      setError(null)
-
-      const { data } = await api.get(`/couriers/${user.id}/deliveries`)
-      setDeliveries(data)
-      setFilteredDeliveries(data)
-    } catch (err) {
-      setError(t("errors.failedToLoadDeliveries"))
-      console.error("Failed to load delivery history:", err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [loadDeliveryHistory])
 
   const onRefresh = () => {
     loadDeliveryHistory()
@@ -69,25 +61,24 @@ const CourierDeliveryHistoryScreen: React.FC = () => {
 
     if (query) {
       filtered = filtered.filter(
-        (delivery) =>
+        (delivery: Delivery) =>
           delivery.pickup_address.toLowerCase().includes(query.toLowerCase()) ||
           delivery.delivery_address.toLowerCase().includes(query.toLowerCase()) ||
-          delivery.id.toLowerCase().includes(query.toLowerCase())
+          delivery.id.toString().toLowerCase().includes(query.toLowerCase())
       )
     }
 
     if (status) {
-      filtered = filtered.filter((delivery) => delivery.status === status)
+      filtered = filtered.filter((delivery: Delivery) => delivery.status === status)
     }
 
     setFilteredDeliveries(filtered)
   }
-
   const renderDeliveryItem = ({ item }: { item: Delivery }) => (
-    <Card style={styles.deliveryCard} onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id })}>
+    <Card style={styles.deliveryCard} onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id.toString() })}>
       <Card.Content>
         <View style={styles.deliveryHeader}>
-          <Text style={styles.deliveryId}>#{item.id.slice(-6)}</Text>
+          <Text style={styles.deliveryId}>#{item.id.toString().slice(-6)}</Text>
           <DeliveryStatusBadge status={item.status} />
         </View>
 
@@ -113,7 +104,7 @@ const CourierDeliveryHistoryScreen: React.FC = () => {
           <Text style={styles.deliveryPrice}>{formatPrice(item.actual_price || item.proposed_price)} FCFA</Text>
           <Button
             mode="outlined"
-            onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id })}
+            onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id.toString() })}
             style={styles.detailsButton}
           >
             {t("delivery.details")}
@@ -122,9 +113,8 @@ const CourierDeliveryHistoryScreen: React.FC = () => {
       </Card.Content>
     </Card>
   )
-
   const renderContent = () => {
-    if (loading) {
+    if (isLoading) {
       return (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#FF6B00" />
@@ -160,10 +150,9 @@ const CourierDeliveryHistoryScreen: React.FC = () => {
       <FlatList
         data={filteredDeliveries}
         renderItem={renderDeliveryItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        onRefresh={onRefresh}
-        refreshing={loading}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContent}        onRefresh={onRefresh}
+        refreshing={isLoading}
       />
     )
   }

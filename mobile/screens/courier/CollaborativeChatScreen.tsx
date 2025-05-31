@@ -17,6 +17,7 @@ import {
 import { useRoute } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import CollaborativeService from "../../services/CollaborativeService"
+import { useDelivery } from "../../hooks"
 import type { ChatMessage, CollaborativeDelivery } from "../../types/models"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
@@ -80,10 +81,10 @@ const CollaborativeChatScreen: React.FC = () => {
       // Check if the message is for our current chat
       if (lastMessage.data.delivery_id === deliveryId) {
         const chatMsg: ChatMessage = {
-          id: lastMessage.data.id?.toString() || Math.random().toString(),
-          delivery_id: lastMessage.data.delivery_id,
-          user_id: lastMessage.data.user_id?.toString() || '',
-          userId: lastMessage.data.user_id?.toString() || '',
+          id: parseInt(lastMessage.data.id?.toString() || Math.random().toString()) || Math.floor(Math.random() * 1000000),
+          delivery_id: parseInt(lastMessage.data.delivery_id) || 0,
+          user_id: parseInt(lastMessage.data.user_id?.toString() || '0') || 0,
+          userId: parseInt(lastMessage.data.user_id?.toString() || '0') || 0,
           message: typeof lastMessage.data.message === 'string' ? lastMessage.data.message : "",
           timestamp: lastMessage.data.timestamp?.toString() || new Date().toISOString(),
           createdAt: lastMessage.data.createdAt?.toString() || lastMessage.data.timestamp?.toString() || new Date().toISOString(),
@@ -260,7 +261,7 @@ const CollaborativeChatScreen: React.FC = () => {
         ref={flatListRef}
         data={messages}
         renderItem={renderMessageItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.messagesList}
       />
 

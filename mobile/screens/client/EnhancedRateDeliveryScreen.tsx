@@ -210,7 +210,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
 
       const ratingData = {
         delivery_id: deliveryId,
-        courier_id: delivery.courier.id,
+        courier_id: delivery.courier.id.toString(),
         rating: finalRating,
         comment,
         aspects: ratingAspects,

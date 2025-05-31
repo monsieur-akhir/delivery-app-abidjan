@@ -15,7 +15,6 @@ import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery } from "../../types/models"
 import { StyleSheet } from "react-native"
-import { API_URL } from "../../config/environment"
 
 type RateDeliveryScreenProps = {
   route: RouteProp<RootStackParamList, "RateDelivery">
@@ -80,7 +79,7 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
 
       const ratingData = {
         delivery_id: deliveryId,
-        courier_id: delivery.courier.id,
+        courier_id: delivery.courier.id.toString(),
         rating,
         comment,
       }
@@ -96,12 +95,9 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
         ])
       } else {
         addPendingUpload({
-          id: Date.now().toString(),
           type: "submit_rating",
           data: ratingData,
-          delivery_id: deliveryId, // Added to match PendingOperation
-          timestamp: Date.now().toString(),
-        } as any)
+        })
 
         Alert.alert(t("rateDelivery.thankYou"), t("rateDelivery.offlineRatingSubmitted"), [
           {

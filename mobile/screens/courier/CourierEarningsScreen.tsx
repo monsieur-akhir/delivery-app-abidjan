@@ -8,9 +8,8 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
 import { LineChart } from "react-native-chart-kit"
 import { Dimensions } from "react-native"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchCourierEarnings, withdrawFunds } from "../../services/api"
+import { useUser } from "../../hooks"
 import { formatPrice, formatDate } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
@@ -46,9 +45,9 @@ interface Transaction {
 
 const screenWidth = Dimensions.get("window").width
 
-const CourierEarningsScreen: React.FC<CourierEarningsScreenProps> = ({ navigation }) => {
-  const { user } = useAuth()
-  const { isConnected, isOfflineMode } = useNetwork()
+const CourierEarningsScreen: React.FC<CourierEarningsScreenProps> = ({ navigation: _navigation }) => {
+  const { isOfflineMode } = useNetwork()
+  const { getCourierEarnings, withdrawFunds } = useUser()
 
   const [refreshing, setRefreshing] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
@@ -59,14 +58,10 @@ const CourierEarningsScreen: React.FC<CourierEarningsScreenProps> = ({ navigatio
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
   const [withdrawalLoading, setWithdrawalLoading] = useState<boolean>(false)
 
-  useEffect(() => {
-    loadData()
-  }, [selectedPeriod])
-
-  const loadData = async (): Promise<void> => {
+  const loadData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-      const data = await fetchCourierEarnings(selectedPeriod)
+      const data = await getCourierEarnings(selectedPeriod)
       setEarningsSummary(data.summary)
       setEarningsHistory(data.history)
       setTransactions(data.transactions)
@@ -75,13 +70,17 @@ const CourierEarningsScreen: React.FC<CourierEarningsScreenProps> = ({ navigatio
     } finally {
       setLoading(false)
     }
-  }
+  }, [getCourierEarnings, selectedPeriod])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     await loadData()
     setRefreshing(false)
-  }, [selectedPeriod])
+  }, [loadData])
 
   const handleWithdraw = async (): Promise<void> => {
     if (!earningsSummary || earningsSummary.available_balance <= 0) {
@@ -90,7 +89,7 @@ const CourierEarningsScreen: React.FC<CourierEarningsScreenProps> = ({ navigatio
 
     try {
       setWithdrawalLoading(true)
-      await withdrawFunds(earningsSummary.available_balance)
+      await withdrawFunds(earningsSummary.available_balance, 'bank_transfer')
 
       // Mettre à jour les données après le retrait
       await loadData()

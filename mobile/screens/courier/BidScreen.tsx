@@ -2,16 +2,15 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
 import { Text, TextInput, Button, Card, Divider, Snackbar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
 import MapView, { Marker, Polyline } from "react-native-maps"
 import * as Location from "expo-location"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchDeliveryDetails, getBidsForDelivery, bidForDelivery } from "../../services/api"
+import { useDelivery } from "../../hooks"
 import { formatPrice, formatDate } from "../../utils/formatters"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
@@ -30,8 +29,8 @@ interface RouteCoordinate {
 
 const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
   const { deliveryId } = route.params
-  const { user } = useAuth()
   const { isConnected, isOfflineMode, addPendingUpload } = useNetwork()
+  const { getDeliveryDetails, placeBid } = useDelivery()
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
   const [bidAmount, setBidAmount] = useState<string>("")
@@ -44,50 +43,47 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null)
   const [routeCoordinates, setRouteCoordinates] = useState<RouteCoordinate[]>([])
 
-  useEffect(() => {
-    loadDeliveryDetails()
-    getCurrentLocation()
-  }, [deliveryId])
+  // Helper functions first
+  const deg2rad = useCallback((deg: number): number => {
+    return deg * (Math.PI / 180)
+  }, [])
 
-  const loadDeliveryDetails = async (): Promise<void> => {
-    try {
-      setLoading(true)
-      const data = await fetchDeliveryDetails(deliveryId)
-      setDelivery(data)
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371 // Rayon de la Terre en km
+    const dLat = deg2rad(lat2 - lat1)
+    const dLon = deg2rad(lon2 - lon1)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    const distance = R * c // Distance en km
+    return Math.round(distance * 10) / 10 // Arrondir à 1 décimale
+  }, [deg2rad])
 
-      // Définir un montant d'enchère par défaut légèrement inférieur au prix proposé
-      const defaultBid = Math.round(((data.actual_price ?? data.price ?? 0) * 0.9))
-      setBidAmount(defaultBid.toString())
-    } catch (error) {
-      setError("Erreur lors du chargement des détails de la livraison")
-      setVisible(true)
-    } finally {
-      setLoading(false)
+  const generateSimulatedRoute = useCallback((
+    start: { latitude: number; longitude: number },
+    end: { latitude: number; longitude: number },
+  ): RouteCoordinate[] => {
+    // Générer quelques points intermédiaires pour simuler une route
+    const points: RouteCoordinate[] = []
+    const steps = 5
+
+    for (let i = 0; i <= steps; i++) {
+      const fraction = i / steps
+
+      // Ajouter un peu de variation aléatoire pour simuler une route réelle
+      const jitter = i > 0 && i < steps ? (Math.random() - 0.5) * 0.005 : 0
+
+      points.push({
+        latitude: start.latitude + (end.latitude - start.latitude) * fraction + jitter,
+        longitude: start.longitude + (end.longitude - start.longitude) * fraction + jitter,
+      })
     }
-  }
 
-  const getCurrentLocation = async (): Promise<void> => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status !== "granted") {
-        console.log("Permission to access location was denied")
-        return
-      }
+    return points
+  }, [])
 
-      const location = await Location.getCurrentPositionAsync({})
-      setCurrentLocation(location)
-    } catch (error) {
-      console.error("Error getting current location:", error)
-    }
-  }
-
-  useEffect(() => {
-    if (delivery && currentLocation) {
-      calculateRouteDetails()
-    }
-  }, [delivery, currentLocation])
-
-  const calculateRouteDetails = async (): Promise<void> => {
+  const calculateRouteDetails = useCallback(async (): Promise<void> => {
     if (!delivery?.pickup_lat || !delivery?.pickup_lng || !currentLocation) return
 
     try {
@@ -118,46 +114,52 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
     } catch (error) {
       console.error("Error calculating route:", error)
     }
-  }
+  }, [delivery, currentLocation, calculateDistance, generateSimulatedRoute])
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371 // Rayon de la Terre en km
-    const dLat = deg2rad(lat2 - lat1)
-    const dLon = deg2rad(lon2 - lon1)
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    const distance = R * c // Distance en km
-    return Math.round(distance * 10) / 10 // Arrondir à 1 décimale
-  }
+  const loadDeliveryDetails = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true)
+      const data = await getDeliveryDetails(Number(deliveryId))
+      setDelivery(data)
 
-  const deg2rad = (deg: number): number => {
-    return deg * (Math.PI / 180)
-  }
-
-  const generateSimulatedRoute = (
-    start: { latitude: number; longitude: number },
-    end: { latitude: number; longitude: number },
-  ): RouteCoordinate[] => {
-    // Générer quelques points intermédiaires pour simuler une route
-    const points: RouteCoordinate[] = []
-    const steps = 5
-
-    for (let i = 0; i <= steps; i++) {
-      const fraction = i / steps
-
-      // Ajouter un peu de variation aléatoire pour simuler une route réelle
-      const jitter = i > 0 && i < steps ? (Math.random() - 0.5) * 0.005 : 0
-
-      points.push({
-        latitude: start.latitude + (end.latitude - start.latitude) * fraction + jitter,
-        longitude: start.longitude + (end.longitude - start.longitude) * fraction + jitter,
-      })
+      // Définir un montant d'enchère par défaut légèrement inférieur au prix proposé
+      if (data) {
+        const defaultBid = Math.round(((data.actual_price ?? data.price ?? 0) * 0.9))
+        setBidAmount(defaultBid.toString())
+      }
+    } catch (error) {
+      setError("Erreur lors du chargement des détails de la livraison")
+      setVisible(true)
+    } finally {
+      setLoading(false)
     }
+  }, [deliveryId, getDeliveryDetails])
 
-    return points
-  }
+  const getCurrentLocation = useCallback(async (): Promise<void> => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== "granted") {
+        setError("Permission to access location was denied")
+        return
+      }
+
+      const location = await Location.getCurrentPositionAsync({})
+      setCurrentLocation(location)
+    } catch (error) {
+      console.error("Error getting current location:", error)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadDeliveryDetails()
+    getCurrentLocation()
+  }, [loadDeliveryDetails, getCurrentLocation])
+
+  useEffect(() => {
+    if (delivery && currentLocation) {
+      calculateRouteDetails()
+    }
+  }, [delivery, currentLocation, calculateRouteDetails])
 
   const handleBid = async (): Promise<void> => {
     if (!isConnected && !isOfflineMode) {
@@ -211,8 +213,9 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
         addPendingUpload({
           type: "bid",
           data: {
-            delivery_id: deliveryId,
-            amount,
+            delivery_id: Number(deliveryId),
+            proposed_price: amount,
+            estimated_duration: estimatedTime || undefined
           },
         })
 
@@ -223,9 +226,11 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
         )
       } else {
         // Soumettre l'enchère immédiatement
-        // Note: Changed from getBidsForDelivery to a more appropriate function
-        // You need to implement or import a submitBidForDelivery function
-        await bidForDelivery(deliveryId, amount)
+        await placeBid({
+          delivery_id: Number(deliveryId),
+          proposed_price: amount,
+          estimated_duration: estimatedTime || undefined
+        })
 
         Alert.alert(
           "Enchère soumise",

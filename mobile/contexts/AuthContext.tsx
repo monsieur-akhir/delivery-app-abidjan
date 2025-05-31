@@ -77,11 +77,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fonction utilitaire locale pour rafraîchir le token
   const tryRefreshToken = async (): Promise<string | null> => {
     try {
+      const refreshToken = await AsyncStorage.getItem("refreshToken")
+      if (!refreshToken) return null
+      
       const response = await axios.post(`${API_URL}/auth/refresh`, {
-        refresh_token: await AsyncStorage.getItem("refreshToken"),
+        refresh_token: refreshToken,
       })
       const { access_token, refresh_token } = response.data
-      await AsyncStorage.setItem("authToken", access_token)
+      await AsyncStorage.setItem("token", access_token) // Standardize token key
       await AsyncStorage.setItem("refreshToken", refresh_token)
       return access_token
     } catch (error) {
