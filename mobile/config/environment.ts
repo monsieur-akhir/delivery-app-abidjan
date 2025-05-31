@@ -5,13 +5,13 @@ const __DEV__ = process.env.NODE_ENV === "development"
 
 // URL de base de l'API
 export const API_URL = __DEV__
-  ? "http://10.0.2.2:8000" // URL de développement local pour Android emulator
-  : "https://api.livraison-abidjan.com" // URL de production
+  ? "http://192.168.1.2:8000" // URL de développement local pour Android emulator
+  : "https://192.168.1.2:8000" // URL de production
 
 // URL pour WebSocket
 export const WS_URL = __DEV__
-  ? "ws://10.0.2.2:8000/ws" // WebSocket URL for development
-  : "wss://api.livraison-abidjan.com/ws" // WebSocket URL for production
+  ? "ws://192.168.1.2:8000/ws" // WebSocket URL for development
+  : "wss://192.168.1.2:8000/ws" // WebSocket URL for production
 
 // Clés d'API
 export const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"
