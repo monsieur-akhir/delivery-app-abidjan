@@ -79,8 +79,10 @@ const CourierWalletScreen: React.FC = () => {
       await requestPayout({
         amount,
         payment_method: 'bank_transfer',
-        account_number: '',
-        account_name: userProfile?.name || ''
+        account_details: {
+          account_number: '',
+          account_name: userProfile?.name || ''
+        }
       })
       setShowWithdrawModal(false)
       setWithdrawAmount("")
