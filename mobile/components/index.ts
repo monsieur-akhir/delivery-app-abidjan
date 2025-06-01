@@ -1,7 +1,9 @@
 // components/index.ts - Barrel exports
 
 // Import and re-export MapView component and types
-import CustomMapView, { Coordinates, Route, TrafficInfo, MapPoint, MapViewProps } from './MapView'
+import CustomMapView from './MapView'
+import type { Coordinates, Route, TrafficInfo, MapPoint, MapViewProps } from './MapView'
+
 export { CustomMapView }
 export type { Coordinates, Route, TrafficInfo, MapPoint, MapViewProps }
 

@@ -638,8 +638,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                     {[
                       { value: "bicycle", icon: "bike" },
                       { value: "motorcycle", icon: "motorcycle" },
-                      { value: "scooter", icon: "scooter-electric" },
-                      { value: "van", icon: "van-utility" },
+                      { value: "scooter", icon: "scooter" },
+                      { value: "van", icon: "truck-delivery" },
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.value}

@@ -556,6 +556,13 @@ export const translations = {
         courier: "Coursier",
         business: "Entreprise",
       },
+      tabs: {
+        home: "Accueil",
+        deliveries: "Livraisons",
+        earnings: "Gains",
+        profile: "Profil",
+        marketplace: "Marché",
+      },
       forgotPassword: {
         title: "Mot de passe oublié", 
         subtitle: "Entrez votre numéro de téléphone pour réinitialiser votre mot de passe",

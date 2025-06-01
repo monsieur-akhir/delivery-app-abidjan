@@ -19,6 +19,7 @@ interface AuthContextType {
   verify: (phone: string, otp: string) => Promise<void>
   signOut: () => Promise<void>
   updateUserData: (data: Partial<User>) => void
+  setAuthData: (user: User, token: string) => void
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   verify: async () => {},
   signOut: async () => {},
   updateUserData: () => {},
+  setAuthData: () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -154,8 +156,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const setAuthData = (user: User, token: string) => {
+    setUser(user)
+    setToken(token)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, error, signIn, signUp, verify, signOut, updateUserData }}>
+    <AuthContext.Provider value={{ user, token, loading, error, signIn, signUp, verify, signOut, updateUserData, setAuthData }}>
       {children}
     </AuthContext.Provider>
   )

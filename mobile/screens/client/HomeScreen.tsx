@@ -43,7 +43,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
       // Charger les commerçants à proximité
       const merchantsData = await fetchNearbyMerchants(selectedCommune || undefined)
-      setNearbyMerchants(merchantsData)
+      // Convert MerchantInfo[] to Merchant[]
+      setNearbyMerchants(merchantsData as unknown as Merchant[])
     } catch (error) {
       console.error("Error loading data:", error)
     } finally {

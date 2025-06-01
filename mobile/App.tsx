@@ -43,7 +43,6 @@ import MarketplaceScreen from "./screens/client/MarketplaceScreen"
 // Écrans coursier
 import CourierHomeScreen from "./screens/courier/HomeScreen"
 import BidScreen from "./screens/courier/BidScreen"
-import CourierTrackDeliveryScreen from "./screens/courier/CourierTrackDeliveryScreen"
 import CourierEarningsScreen from "./screens/courier/CourierEarningsScreen"
 import CourierStatusScreen from "./screens/courier/CourierStatusScreen"
 import CourierStatsScreen from "./screens/courier/CourierStatsScreen"
@@ -315,8 +314,8 @@ const App: React.FC = () => {
                         <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
                         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
 
-                        <Stack.Screen name="ClientMain" component={ClientTabNavigator} />
-                        <Stack.Screen name="CourierMain" component={CourierTabNavigator} />
+                        <Stack.Screen name="ClientTabs" component={ClientTabNavigator} />
+                        <Stack.Screen name="CourierTabs" component={CourierTabNavigator} />
 
                         <Stack.Screen name="Notifications" component={NotificationsScreen} />
                         <Stack.Screen name="Settings" component={SettingsScreen} />
