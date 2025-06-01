@@ -13,7 +13,7 @@ from ..schemas.collaborative import (
     CollaborativeDeliveryCreate, CollaborativeMessageCreate,
     JoinDeliveryRequest
 )
-from ..services.delivery import get_delivery, get_courier_deliveries
+from ..services.delivery import get_delivery
 from ..services.collaborative_service import (
     get_collaborative_deliveries, get_collaborative_delivery_details,
     join_collaborative_delivery, send_collaborative_message,

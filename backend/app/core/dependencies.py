@@ -70,7 +70,7 @@ async def get_current_business_or_manager(
 
 async def get_current_user_ws(
     websocket: WebSocket,
-    db: Session = Depends(get_db)
+    db: Session
 ) -> User:
     """
     Authentifier un utilisateur via WebSocket en utilisant un token JWT passé en header Authorization ou paramètre de requête.

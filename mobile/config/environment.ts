@@ -10,8 +10,8 @@ export const API_URL = __DEV__
 
 // URL pour WebSocket
 export const WS_URL = __DEV__
-  ? "ws://192.168.1.2:8000/ws" // WebSocket URL for development
-  : "wss://192.168.1.2:8000/ws" // WebSocket URL for production
+  ? "ws://192.168.1.2:8001/ws" // WebSocket URL for development
+  : "wss://192.168.1.2:8001/ws" // WebSocket URL for production
 
 // Clés d'API
 export const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY"

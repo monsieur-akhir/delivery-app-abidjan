@@ -19,7 +19,7 @@ import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 # Configuration du logging
 logging.basicConfig(
@@ -47,7 +47,7 @@ app.add_middleware(
 )
 
 # Configuration Redis
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 redis_pool = None
 
 
@@ -59,7 +59,8 @@ class WebSocketMessage(BaseModel):
     sender_id: Optional[str] = None
     timestamp: Optional[datetime] = None
 
-    @validator("timestamp", pre=True, always=True)
+    @field_validator("timestamp", mode="before")
+    @classmethod
     def set_timestamp(cls, v):
         return v or datetime.utcnow()
 
@@ -105,7 +106,7 @@ class ConnectionManager:
         )
         
         # S'abonner au canal Redis si pas déjà fait
-        if not self.listening:
+        if redis_pool and not self.listening:
             await self.start_redis_listener()
 
     async def disconnect(self, websocket: WebSocket, user_id: str, room: Optional[str] = None):
@@ -153,12 +154,22 @@ class ConnectionManager:
         if self.listening:
             return
         
-        self.listening = True
-        self.redis_subscriber = await redis_pool.subscribe("notifications", "tracking", "chat")
-        
-        # Démarrer la tâche d'écoute
-        asyncio.create_task(self.redis_listener())
-        logger.info("Écoute Redis démarrée")
+        try:
+            self.listening = True
+            if redis_pool:
+                # Utiliser pubsub correctement avec redis.from_url
+                pubsub = redis_pool.pubsub()
+                await pubsub.subscribe("notifications", "tracking", "chat")
+                self.redis_subscriber = pubsub
+                
+                # Démarrer la tâche d'écoute
+                asyncio.create_task(self.redis_listener())
+                logger.info("Écoute Redis démarrée")
+            else:
+                logger.info("Redis non disponible, mode WebSocket seul")
+        except Exception as e:
+            logger.warning(f"Redis non disponible, mode WebSocket seul: {str(e)}")
+            self.listening = False
 
     async def redis_listener(self):
         """Écoute les messages Redis et les transmet aux clients WebSocket."""
@@ -199,11 +210,18 @@ async def startup_event():
     """Initialisation au démarrage du serveur."""
     global redis_pool
     logger.info("Démarrage du serveur WebSocket")
-    redis_pool = redis.ConnectionPool.from_url(REDIS_URL)
+    try:
+        # Créer la connection pool Redis correctement
+        redis_pool = redis.from_url(REDIS_URL, decode_responses=True)
+        # Test de la connexion Redis
+        await redis_pool.ping()
+        logger.info("Connexion Redis établie")
+    except Exception as e:
+        logger.warning(f"Redis non disponible, mode WebSocket seul: {str(e)}")
+        redis_pool = None
     
-    # Configurer la gestion des signaux pour l'arrêt propre
-    for sig in (signal.SIGTERM, signal.SIGINT):
-        asyncio.get_event_loop().add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown_event(s)))
+    # Note: Signal handlers ne sont pas supportés sur Windows avec asyncio
+    # La gestion des signaux est gérée par uvicorn directement
 
 
 @app.on_event("shutdown")
@@ -229,6 +247,34 @@ async def shutdown_event(sig=None):
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, room: Optional[str] = None):
     """Point d'entrée WebSocket principal."""
+    
+    # Authentification WebSocket
+    from app.core.dependencies import get_current_user_ws
+    from app.db.session import get_db
+    
+    db = None
+    try:
+        # Obtenir une session de base de données
+        db_gen = get_db()
+        db = next(db_gen)
+        
+        # Vérifier l'authentification
+        user = await get_current_user_ws(websocket, db)
+        
+        # Vérifier que l'utilisateur correspond à l'ID fourni
+        if str(user.id) != user_id:
+            await websocket.close(code=1008, reason="User ID mismatch")
+            return
+            
+    except Exception as e:
+        logger.error(f"Erreur d'authentification WebSocket: {str(e)}")
+        await websocket.close(code=1008, reason="Authentication failed")
+        return
+    finally:
+        # Fermer la session de base de données proprement
+        if db:
+            db.close()
+    
     await manager.connect(websocket, user_id, room)
     
     try:
@@ -241,8 +287,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, room: Optional[
                 # Traiter le message selon son type
                 if message.type == "chat":
                     # Stocker le message dans Redis et diffuser
-                    async with redis.Redis.from_pool(redis_pool) as r:
-                        await r.publish("chat", message.json())
+                    if redis_pool:
+                        await redis_pool.publish("chat", message.json())
                     
                     # Diffuser directement
                     if message.room:
@@ -250,8 +296,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, room: Optional[
                 
                 elif message.type == "tracking_update":
                     # Mettre à jour le suivi et diffuser
-                    async with redis.Redis.from_pool(redis_pool) as r:
-                        await r.publish("tracking", message.json())
+                    if redis_pool:
+                        await redis_pool.publish("tracking", message.json())
                 
                 elif message.type == "heartbeat":
                     # Répondre au heartbeat

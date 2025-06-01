@@ -17,7 +17,7 @@ from ..schemas.user import (
     CourierProfileCreate, CourierProfileUpdate, CourierProfileResponse
 )
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(tags=["users"])
 
 @router.get("/me", response_model=UserResponse)
 def read_user_me(
