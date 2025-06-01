@@ -6,12 +6,37 @@ import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from "re
 import { Text, Card, Chip, Searchbar, ActivityIndicator } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
-import { fetchNearbyMerchants } from "../../services/api"
+import { fetchNearbyMerchants, type MerchantInfo } from "../../services/api"
 import IconButton from "../../components/IconButton"
 import { Feather } from "@expo/vector-icons"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Merchant } from "../../types/models"
+
+// Type adapter to transform API MerchantInfo to component Merchant interface
+const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
+  id: parseInt(merchantInfo.id),
+  name: merchantInfo.name,
+  business_name: merchantInfo.name,
+  description: merchantInfo.description || '',
+  address: merchantInfo.address,
+  commune: merchantInfo.commune,
+  category: merchantInfo.category,
+  categories: [merchantInfo.category],
+  rating: merchantInfo.rating || 0,
+  review_count: 0,
+  is_open: merchantInfo.is_open,
+  opening_hours: merchantInfo.opening_hours || '',
+  phone: merchantInfo.phone,
+  lat: merchantInfo.lat || 0,
+  lng: merchantInfo.lng || 0,
+  logo: '',
+  logo_url: undefined,
+  cover_image: '',
+  created_at: '',
+  updated_at: '',
+  delivery_time: '30'
+})
 
 type MarketplaceScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Marketplace">
@@ -49,8 +74,9 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
     try {
       setLoading(true)
       const data = await fetchNearbyMerchants(selectedCommune || undefined, selectedCategory || undefined)
-      setMerchants(data)
-      setFilteredMerchants(data)
+      const adaptedMerchants = data.map(adaptMerchantInfo)
+      setMerchants(adaptedMerchants)
+      setFilteredMerchants(adaptedMerchants)
     } catch (error) {
       console.error("Error loading merchants:", error)
     } finally {

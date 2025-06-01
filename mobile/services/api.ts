@@ -2,7 +2,331 @@
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { API_URL } from "../config/environment"
-import type { Delivery, User, DeliveryStatus, Weather, VehicleType, CargoCategory, Bid, Courier } from "../types/models"
+import type { Delivery, User, DeliveryStatus, Weather, VehicleType, CargoCategory } from "../types/models"
+
+// API Response Interfaces
+export interface ApiError {
+  detail?: string
+  message?: string
+  error?: string
+}
+
+export interface CollaborativeDeliveryDetails {
+  id: string
+  delivery_id: string
+  participants: Array<{
+    courier_id: string
+    courier_name: string
+    role: string
+    status: string
+  }>
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatMessage {
+  id: string
+  delivery_id: string
+  sender_id: string
+  sender_name: string
+  message: string
+  created_at: string
+}
+
+export interface MessageResponse {
+  id: string
+  message: string
+  sender_id: string
+  created_at: string
+}
+
+export interface GeocodeResult {
+  latitude: number
+  longitude: number
+  address: string
+  commune?: string
+  confidence: number
+}
+
+export interface CourierInfo {
+  id: string
+  full_name: string
+  phone: string
+  rating?: number
+  vehicle_type?: string
+  profile_picture?: string
+}
+
+export interface BidWithCourier {
+  id: string
+  delivery_id: string
+  courier_id: string
+  amount: number
+  note?: string
+  estimated_time?: number
+  status: string
+  created_at: string
+  courier: CourierInfo
+}
+
+export interface BidResponse {
+  id: string
+  delivery_id: string
+  courier_id: string
+  amount: number
+  note?: string
+  estimated_time?: number
+  status: string
+  created_at: string
+}
+
+export interface CourierLocation {
+  lat: number
+  lng: number
+  last_updated: string
+  courier_id: string
+}
+
+export interface RatingResponse {
+  id: string
+  delivery_id: string
+  courier_id: string
+  rating: number
+  comment?: string
+  created_at: string
+}
+
+export interface PaymentResponse {
+  id: string
+  delivery_id: string
+  amount: number
+  status: string
+  payment_method: string
+  reference?: string
+  created_at: string
+}
+
+export interface PaymentVerificationResponse {
+  success: boolean
+  payment_id: string
+  status: string
+  message?: string
+}
+
+export interface MerchantInfo {
+  id: string
+  name: string
+  description?: string
+  address: string
+  commune: string
+  category: string
+  rating?: number
+  phone?: string
+  lat?: number
+  lng?: number
+  is_open: boolean
+  opening_hours?: string
+}
+
+export interface Product {
+  id: string
+  merchant_id: string
+  name: string
+  description?: string
+  price: number
+  category: string
+  image_url?: string
+  is_available: boolean
+}
+
+export interface CourierProfile {
+  id: string
+  full_name: string
+  phone: string
+  email?: string
+  rating: number
+  total_deliveries: number
+  vehicle_type?: string
+  license_plate?: string
+  is_online: boolean
+  earnings_total?: number
+  profile_picture?: string
+}
+
+export interface ProfileUpdateResponse {
+  success: boolean
+  message: string
+  profile?: CourierProfile
+}
+
+export interface OnlineStatusData {
+  is_online: boolean
+  location?: {
+    lat: number
+    lng: number
+  }
+}
+
+export interface TrackingPoint {
+  lat: number
+  lng: number
+  timestamp: string
+  speed?: number
+  heading?: number
+}
+
+export interface DeliveryNotification {
+  type: string
+  title: string
+  body: string
+  message: string
+  data?: Record<string, unknown>
+}
+
+export interface WeatherAlert {
+  id: string
+  type: string
+  severity: string
+  title: string
+  description: string
+  area: string
+  start_time: string
+  end_time?: string
+}
+
+export interface GamificationProfile {
+  user_id: string
+  level: number
+  experience_points: number
+  badges: Array<{
+    id: string
+    name: string
+    description: string
+    earned_at: string
+  }>
+  achievements: Array<{
+    id: string
+    name: string
+    description: string
+    progress: number
+    target: number
+  }>
+  ranking: {
+    position: number
+    commune_position?: number
+  }
+}
+
+export interface Ranking {
+  position: number
+  courier_id: string
+  courier_name: string
+  points: number
+  level: number
+  commune?: string
+}
+
+export interface Reward {
+  id: string
+  name: string
+  description: string
+  points_required: number
+  type: string
+  value?: number
+  is_available: boolean
+}
+
+export interface RewardClaimResponse {
+  success: boolean
+  message: string
+  reward_id: string
+  claimed_at: string
+}
+
+export interface WalletBalance {
+  balance: number
+  currency: string
+  pending_balance?: number
+  last_updated: string
+}
+
+export interface WalletTransaction {
+  id: string
+  type: string
+  amount: number
+  description: string
+  reference?: string
+  status: string
+  created_at: string
+}
+
+export interface LoanRequest {
+  amount: number
+  reason: string
+  monthly_income?: number
+  employment_status?: string
+}
+
+export interface LoanResponse {
+  id: string
+  amount: number
+  status: string
+  interest_rate: number
+  monthly_payment: number
+  due_date: string
+  created_at: string
+}
+
+export interface ActiveLoan {
+  id: string
+  amount: number
+  remaining_balance: number
+  monthly_payment: number
+  next_payment_date: string
+  status: string
+  interest_rate: number
+}
+
+export interface SupportTicket {
+  id: string
+  subject: string
+  status: string
+  priority: string
+  created_at: string
+  last_message?: string
+}
+
+export interface TicketResponse {
+  id: string
+  subject: string
+  message: string
+  status: string
+  created_at: string
+}
+
+export interface TicketMessage {
+  id: string
+  ticket_id: string
+  message: string
+  sender_type: string
+  created_at: string
+}
+
+export interface UploadResponse {
+  success: boolean
+  file_url: string
+  image_url: string
+  message?: string
+}
+
+export interface FAQ {
+  id: string
+  question: string
+  answer: string
+  category: string
+  order?: number
+}
 
 // Types pour les réponses de l'API
 export interface LoginResponse {
@@ -44,17 +368,34 @@ export interface DeliveryData {
   required_vehicle_type?: string
 }
 
-export const getCollaborativeDeliveryDetails = async (deliveryId: string): Promise<any> => {
+// Helper function for error handling
+// const handleApiError = (error: unknown): never => {
+//   if (axios.isAxiosError(error) && error.response?.data) {
+//     const apiError = error.response.data as ApiError
+//     if (apiError.detail) {
+//       throw new Error(apiError.detail)
+//     }
+//     if (apiError.message) {
+//       throw new Error(apiError.message)
+//     }
+//     if (apiError.error) {
+//       throw new Error(apiError.error)
+//     }
+//   }
+//   throw new Error('Une erreur inattendue s\'est produite')
+// }
+
+export const getCollaborativeDeliveryDetails = async (deliveryId: string): Promise<CollaborativeDeliveryDetails> => {
   const response = await api.get(`/api/courier/collaborative-deliveries/${deliveryId}`)
   return response.data
 }
 
-export const getCollaborativeDeliveryChatHistory = async (deliveryId: string): Promise<any[]> => {
+export const getCollaborativeDeliveryChatHistory = async (deliveryId: string): Promise<ChatMessage[]> => {
   const response = await api.get(`/api/courier/collaborative-deliveries/${deliveryId}/messages`)
   return response.data
 }
 
-export const sendCollaborativeDeliveryMessage = async (deliveryId: string, message: string): Promise<any> => {
+export const sendCollaborativeDeliveryMessage = async (deliveryId: string, message: string): Promise<MessageResponse> => {
   const response = await api.post(`/api/courier/collaborative-deliveries/${deliveryId}/message`, { message })
   return response.data
 }
@@ -265,9 +606,9 @@ export const loginWithOTP = async (phone: string, otp: string): Promise<{ token:
     } else {
       throw new Error("Échec de la vérification OTP");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OTP Login error:", error);
-    if (error.response?.status === 401) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
       throw new Error("Code OTP invalide ou expiré");
     }
     throw new Error("Erreur de connexion avec OTP");
@@ -296,9 +637,9 @@ export const login = async (phone: string, password: string): Promise<{ token: s
       token: access_token,
       user: userResponse.data
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Login error:", error);
-    if (error.response?.status === 401) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
       throw new Error("Identifiants invalides");
     }
     throw new Error("Erreur de connexion");
@@ -310,9 +651,9 @@ export const register = async (userData: RegisterUserData): Promise<void> => {
   try {
     const response = await api.post("/api/auth/register", userData)
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Registration error:", error);
-    if (error.response?.data?.detail) {
+    if (axios.isAxiosError(error) && error.response?.data?.detail) {
       throw new Error(error.response.data.detail);
     }
     throw new Error("Erreur d'inscription");
@@ -324,20 +665,24 @@ export const verifyToken = async (token: string): Promise<boolean> => {
   try {
     const response = await api.post("/auth/verify-token", { token })
     return response.status === 200
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Token verification error:", error)
     return false
   }
 }
 
 // Vérification OTP
-export const verifyOTP = async (phone: string, otp: string): Promise<void> => {
+export const verifyOTP = async (phone: string, otp: string): Promise<{ success: boolean; token?: string; user?: User }> => {
   try {
-    const response = await api.post("/api/auth/verify-otp", { phone, otp })
+    const response = await api.post("/api/auth/verify-otp", { 
+      phone, 
+      code: otp,  // Backend expects 'code', not 'otp'
+      otp_type: "login"  // Required parameter
+    })
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OTP verification error:", error);
-    if (error.response?.data?.detail) {
+    if (axios.isAxiosError(error) && error.response?.data?.detail) {
       throw new Error(error.response.data.detail);
     }
     throw new Error("Erreur de vérification OTP");
@@ -351,11 +696,10 @@ export const sendOTP = async (phone: string, otpType: 'registration' | 'login' |
       phone: phone,
       otp_type: otpType
     })
-    console.log("OTP send success:", response.data)
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OTP send error:", error);
-    if (error.response?.data?.detail) {
+    if (axios.isAxiosError(error) && error.response?.data?.detail) {
       throw new Error(error.response.data.detail);
     }
     throw new Error("Erreur d'envoi OTP");
@@ -363,13 +707,16 @@ export const sendOTP = async (phone: string, otpType: 'registration' | 'login' |
 }
 
 // Renvoyer OTP
-export const resendOTP = async (phone: string): Promise<void> => {
+export const resendOTP = async (phone: string, otpType: 'login' | 'registration' | 'password_reset' = 'login'): Promise<void> => {
   try {
-    const response = await api.post("/auth/resend-otp", { phone })
+    const response = await api.post("/api/auth/resend-otp", { 
+      phone,
+      otp_type: otpType  // Backend requires otp_type parameter
+    })
     return response.data
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OTP resend error:", error);
-    if (error.response?.data?.detail) {
+    if (axios.isAxiosError(error) && error.response?.data?.detail) {
       throw new Error(error.response.data.detail);
     }
     throw new Error("Erreur d'envoi OTP");
@@ -395,7 +742,7 @@ export const updateUserProfile = async (userData: Partial<User>): Promise<User> 
 }
 
 // Upload de photo de profil
-export const uploadProfilePicture = async (formData: FormData): Promise<any> => {
+export const uploadProfilePicture = async (formData: FormData): Promise<UploadResponse> => {
   const token = await AsyncStorage.getItem("authToken")
   const response = await api.post("/api/users/profile-picture", formData, {
     headers: {
@@ -415,7 +762,7 @@ export const registerPushToken = async (token: string, userId: string): Promise<
 }
 
 // Géocodage d'adresse
-export const geocodeAddress = async (address: string): Promise<any[]> => {
+export const geocodeAddress = async (address: string): Promise<GeocodeResult[]> => {
   const response = await api.get(`/api/traffic/geocode?address=${encodeURIComponent(address)}`)
   return response.data
 }
@@ -439,7 +786,7 @@ export const getRecommendedPrice = async (data: PriceEstimateData): Promise<numb
 }
 
 // Créer une livraison
-export const createDelivery = async (deliveryData: DeliveryData): Promise<any> => {
+export const createDelivery = async (deliveryData: DeliveryData): Promise<Delivery> => {
   const response = await api.post("/api/deliveries", deliveryData)
   return response.data
 }
@@ -451,7 +798,7 @@ export const fetchDeliveryDetails = async (deliveryId: string): Promise<Delivery
 }
 
 // Obtenir les enchères pour une livraison
-export const getBidsForDelivery = async (deliveryId: string): Promise<any[]> => {
+export const getBidsForDelivery = async (deliveryId: string): Promise<BidResponse[]> => {
   const response = await api.get(`/api/deliveries/${deliveryId}/bids`)
   return response.data
 }
@@ -479,24 +826,24 @@ export const rejectBid = async (bidId: string, deliveryId?: string): Promise<voi
 }
 
 // Obtenir les offres pour une livraison
-export const fetchDeliveryBids = async (deliveryId: string): Promise<Bid[]> => {
+export const fetchDeliveryBids = async (deliveryId: string): Promise<BidWithCourier[]> => {
   const response = await api.get(`/api/deliveries/${deliveryId}/bids`)
-  const bidsWithCourierPromises = response.data.map(async (bid: any) => {
+  const bidsWithCourierPromises = response.data.map(async (bid: BidResponse) => {
     try {
       const courierResponse = await api.get(`/api/users/${bid.courier_id}`)
       return {
         ...bid,
         courier: courierResponse.data,
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Erreur lors de la récupération du coursier pour l'offre ${bid.id}:`, error)
       return {
         ...bid,
         courier: {
           id: bid.courier_id,
-          name: "Unknown",
+          full_name: "Unknown",
+          phone: "",
           rating: 0,
-          rating_count: 0,
         },
       }
     }
@@ -506,19 +853,19 @@ export const fetchDeliveryBids = async (deliveryId: string): Promise<Bid[]> => {
 }
 
 // Créer une enchère
-export const createBid = async (bidData: BidData): Promise<any> => {
+export const createBid = async (bidData: BidData): Promise<BidResponse> => {
   const response = await api.post("/api/bids", bidData)
   return response.data
 }
 
 // Enchérir pour une livraison
-export const bidForDelivery = async (deliveryId: string, amount: number): Promise<any> => {
+export const bidForDelivery = async (deliveryId: string, amount: number): Promise<BidResponse> => {
   const response = await api.post(`/api/deliveries/${deliveryId}/bid`, { amount })
   return response.data
 }
 
 // Obtenir la position du coursier
-export const getCourierLocation = async (deliveryId: string): Promise<any> => {
+export const getCourierLocation = async (deliveryId: string): Promise<CourierLocation> => {
   const response = await api.get(`/api/deliveries/${deliveryId}/courier-location`)
   return response.data
 }
@@ -541,7 +888,7 @@ export const getTrafficInfo = async (
   startLng: number,
   endLat: number,
   endLng: number,
-): Promise<any> => {
+): Promise<{ distance: number; duration: number; route: Array<{ lat: number; lng: number }> }> => {
   const response = await api.get(
     `/api/geo/traffic?startLat=${startLat}&startLng=${startLng}&endLat=${endLat}&endLng=${endLng}`,
   )
@@ -549,25 +896,25 @@ export const getTrafficInfo = async (
 }
 
 // Créer une évaluation
-export const submitRating = async (ratingData: RatingData): Promise<any> => {
+export const submitRating = async (ratingData: RatingData): Promise<RatingResponse> => {
   const response = await api.post("/api/ratings", ratingData)
   return response.data
 }
 
 // Initier un paiement
-export const initiatePayment = async (paymentData: PaymentData): Promise<any> => {
+export const initiatePayment = async (paymentData: PaymentData): Promise<PaymentResponse> => {
   const response = await api.post("/api/payments/initiate", paymentData)
   return response.data
 }
 
 // Vérifier un paiement
-export const verifyPayment = async (verificationData: PaymentVerificationData): Promise<any> => {
+export const verifyPayment = async (verificationData: PaymentVerificationData): Promise<PaymentVerificationResponse> => {
   const response = await api.post("/api/payments/verify", verificationData)
   return response.data
 }
 
 // Obtenir les commerçants à proximité
-export const fetchNearbyMerchants = async (commune?: string, category?: string): Promise<any[]> => {
+export const fetchNearbyMerchants = async (commune?: string, category?: string): Promise<MerchantInfo[]> => {
   let url = "/merchants/nearby"
   const params = []
   if (commune) params.push(`commune=${encodeURIComponent(commune)}`)
@@ -580,13 +927,13 @@ export const fetchNearbyMerchants = async (commune?: string, category?: string):
 }
 
 // Obtenir les détails d'un commerçant
-export const fetchMerchantDetails = async (merchantId: string): Promise<any> => {
+export const fetchMerchantDetails = async (merchantId: string): Promise<MerchantInfo> => {
   const response = await api.get(`/api/market/merchants/${merchantId}`)
   return response.data
 }
 
 // Obtenir les produits d'un commerçant
-export const fetchMerchantProducts = async (merchantId: string): Promise<any[]> => {
+export const fetchMerchantProducts = async (merchantId: string): Promise<Product[]> => {
   const response = await api.get(`/api/market/merchants/${merchantId}/products`)
   return response.data
 }
@@ -602,7 +949,7 @@ export const withdrawFunds = async (amount: number) => {
   return response.data
 }
 
-export const fetchCourierProfile = async (): Promise<any> => {
+export const fetchCourierProfile = async (): Promise<CourierProfile> => {
   const response = await api.get("/api/courier/profile")
   return response.data
 }
@@ -611,11 +958,13 @@ export const updateCourierStatus = async (
   isOnline: boolean,
   lat?: number | null,
   lng?: number | null,
-): Promise<any> => {
-  const data: Record<string, any> = { is_online: isOnline }
-  if (lat !== null && lng !== null) {
-    data.latitude = lat
-    data.longitude = lng
+): Promise<ProfileUpdateResponse> => {
+  const data: OnlineStatusData = { is_online: isOnline }
+  if (lat !== null && lng !== null && lat !== undefined && lng !== undefined) {
+    data.location = {
+      lat: lat,
+      lng: lng
+    }
   }
   const response = await api.post("/api/courier/status", data)
   return response.data
@@ -636,12 +985,12 @@ export const fetchCollaborativeDeliveries = async () => {
   return response.data
 }
 
-export const joinCollaborativeDelivery = async (deliveryId: string, data: any) => {
+export const joinCollaborativeDelivery = async (deliveryId: string, data: { role?: string; message?: string }) => {
   const response = await api.post(`/api/courier/collaborative-deliveries/${deliveryId}/join`, data)
   return response.data
 }
 
-export const sendTrackingPoint = async (data: any) => {
+export const sendTrackingPoint = async (data: TrackingPoint) => {
   const response = await api.post("/api/tracking/point", data)
   return response.data
 }
@@ -653,7 +1002,7 @@ export const getDirections = async (startLat: number, startLng: number, endLat: 
   return response.data
 }
 
-export const sendDeliveryNotification = async (userId: string, notification: any) => {
+export const sendDeliveryNotification = async (userId: string, notification: DeliveryNotification) => {
   const response = await api.post(`/api/notifications/user/${userId}`, notification)
   return response.data
 }
@@ -710,7 +1059,7 @@ export const fetchWeatherForecast = async (latitude: number, longitude: number, 
 }
 
 // Récupérer les alertes météo
-export const fetchWeatherAlerts = async (latitude: number, longitude: number, commune?: string): Promise<any[]> => {
+export const fetchWeatherAlerts = async (latitude: number, longitude: number, commune?: string): Promise<WeatherAlert[]> => {
   let url = `/api/weather/alerts?lat=${latitude}&lng=${longitude}`
   if (commune) {
     url += `&commune=${encodeURIComponent(commune)}`
@@ -744,12 +1093,12 @@ export const getVehicleRecommendation = async (data: VehicleRecommendationData):
 }
 
 // Fonctions pour la gamification
-export const fetchGamificationProfile = async (): Promise<any> => {
+export const fetchGamificationProfile = async (): Promise<GamificationProfile> => {
   const response = await api.get("/api/gamification/profile")
   return response.data
 }
 
-export const fetchRankings = async (commune?: string): Promise<any[]> => {
+export const fetchRankings = async (commune?: string): Promise<Ranking[]> => {
   let url = "/api/gamification/rankings"
   if (commune) {
     url += `?commune=${encodeURIComponent(commune)}`
@@ -758,18 +1107,18 @@ export const fetchRankings = async (commune?: string): Promise<any[]> => {
   return response.data
 }
 
-export const claimReward = async (rewardId: string): Promise<any> => {
+export const claimReward = async (rewardId: string): Promise<RewardClaimResponse> => {
   const response = await api.post(`/api/gamification/rewards/${rewardId}/claim`)
   return response.data
 }
 
 // Fonctions pour le portefeuille communautaire
-export const fetchWalletBalance = async (): Promise<any> => {
+export const fetchWalletBalance = async (): Promise<WalletBalance> => {
   const response = await api.get("/api/community-wallet/balance")
   return response.data
 }
 
-export const fetchWalletTransactions = async (type?: string): Promise<any[]> => {
+export const fetchWalletTransactions = async (type?: string): Promise<WalletTransaction[]> => {
   let url = "/api/community-wallet/transactions"
   if (type) {
     url += `?type=${type}`
@@ -778,43 +1127,43 @@ export const fetchWalletTransactions = async (type?: string): Promise<any[]> => 
   return response.data
 }
 
-export const requestLoan = async (amount: number, reason: string): Promise<any> => {
+export const requestLoan = async (amount: number, reason: string): Promise<LoanResponse> => {
   const response = await api.post("/api/community-wallet/loans/request", { amount, reason })
   return response.data
 }
 
-export const repayLoan = async (loanId: string): Promise<any> => {
+export const repayLoan = async (loanId: string): Promise<{ success: boolean; message: string }> => {
   const response = await api.post(`/api/community-wallet/loans/${loanId}/repay`)
   return response.data
 }
 
-export const fetchActiveLoan = async (): Promise<any> => {
+export const fetchActiveLoan = async (): Promise<ActiveLoan> => {
   const response = await api.get("/api/community-wallet/loans/active")
   return response.data
 }
 
-export const fetchLoanHistory = async (): Promise<any[]> => {
+export const fetchLoanHistory = async (): Promise<LoanResponse[]> => {
   const response = await api.get("/api/community-wallet/loans/history")
   return response.data
 }
 
 // Fonctions pour le support
-export const fetchSupportTickets = async (): Promise<any[]> => {
+export const fetchSupportTickets = async (): Promise<SupportTicket[]> => {
   const response = await api.get("/api/support/tickets")
   return response.data
 }
 
-export const createSupportTicket = async (subject: string, message: string): Promise<any> => {
+export const createSupportTicket = async (subject: string, message: string): Promise<TicketResponse> => {
   const response = await api.post("/api/support/tickets", { subject, message })
   return response.data
 }
 
-export const addMessageToTicket = async (ticketId: string, message: string): Promise<any> => {
+export const addMessageToTicket = async (ticketId: string, message: string): Promise<TicketMessage> => {
   const response = await api.post(`/api/support/tickets/${ticketId}/messages`, { message })
   return response.data
 }
 
-export const uploadTicketImage = async (ticketId: string, imageUri: string): Promise<any> => {
+export const uploadTicketImage = async (ticketId: string, imageUri: string): Promise<UploadResponse> => {
   const formData = new FormData()
   const filename = imageUri.split("/").pop()
   const match = /\.(\w+)$/.exec(filename || "")
@@ -824,7 +1173,7 @@ export const uploadTicketImage = async (ticketId: string, imageUri: string): Pro
     uri: imageUri,
     name: filename,
     type,
-  } as any)
+  } as unknown as Blob)
 
   const response = await api.post(`/api/support/tickets/${ticketId}/attachments`, formData, {
     headers: {
@@ -834,7 +1183,7 @@ export const uploadTicketImage = async (ticketId: string, imageUri: string): Pro
   return response.data
 }
 
-export const fetchFAQs = async (): Promise<any[]> => {
+export const fetchFAQs = async (): Promise<FAQ[]> => {
   const response = await api.get("/api/support/faqs")
   return response.data
 }
@@ -882,7 +1231,7 @@ export const getWeatherData = async (latitude: number, longitude: number, commun
     await AsyncStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
 
     return weatherData as Weather
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Gestion des erreurs
     console.error("Error fetching weather data:", error) // eslint-disable-next-line no-console
     const cachedData = await AsyncStorage.getItem(`weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`)
@@ -901,7 +1250,7 @@ export const clearApiCache = async (): Promise<boolean> => {
     const cacheKeys = keys.filter((key) => key.startsWith("api_cache_"))
     await AsyncStorage.multiRemove(cacheKeys)
     return true
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error clearing API cache:", error)
     return false
   }

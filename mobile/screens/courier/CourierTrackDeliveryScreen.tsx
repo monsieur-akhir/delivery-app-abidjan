@@ -356,6 +356,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
         lng: currentLocation.coords.longitude,
         accuracy: currentLocation.coords.accuracy || 0,
         speed: currentLocation.coords.speed || 0,
+        timestamp: new Date().toISOString(),
       }
       if (isOfflineMode) {
         addPendingUpload({
@@ -425,6 +426,8 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
             title: "Mise à jour de votre livraison",
             body: message,
             data: { delivery_id: deliveryId, status },
+            type: "",
+            message: ""
           })
         }
 

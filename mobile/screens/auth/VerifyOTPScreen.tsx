@@ -13,7 +13,6 @@ import {
   TextInputKeyPressEventData,
   Image,
   StatusBar,
-  Dimensions,
 } from "react-native"
 import { Text, Button, Snackbar, Card } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
@@ -23,11 +22,7 @@ import { verifyOTP, resendOTP } from "../../services/api"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
-
-type VerifyOTPScreenRouteParams = {
-  phone: string
-  isReset?: boolean
-}
+import type { User } from "../../types/models"
 
 type VerifyOTPScreenProps = {
   route: RouteProp<RootStackParamList, "VerifyOTP">
@@ -36,15 +31,15 @@ type VerifyOTPScreenProps = {
 
 interface AuthContextType {
   completeRegistration?: () => Promise<void>
-  // Ajoutez ici les autres propriétés de votre contexte si nécessaire
+  setAuthData?: (user: User, token: string) => void
 }
 
 const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) => {
   const { t } = useTranslation()
   const { phone } = route.params
-  const { completeRegistration } = useAuth() as AuthContextType
+  const { completeRegistration, setAuthData } = useAuth() as AuthContextType
 
-  const [otp, setOtp] = useState<string[]>(["", "", "", ""])
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""])  // 6-digit OTP
   const [loading, setLoading] = useState<boolean>(false)
   const [resendLoading, setResendLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
@@ -72,7 +67,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
     setOtp(newOtp)
 
     // Automatically move to next field
-    if (value && index < 3 && inputRefs.current[index + 1]) {
+    if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1]?.focus()
     }
   }
@@ -89,7 +84,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
 
   const handleVerify = async (): Promise<void> => {
     const otpCode = otp.join("")
-    if (otpCode.length !== 4) {
+    if (otpCode.length !== 6) {  // Change to 6-digit validation
       setError(t("verifyOTP.errorIncompleteOTP"))
       setVisible(true)
       return
@@ -97,16 +92,22 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
 
     setLoading(true)
     try {
-      await verifyOTP(phone, otpCode)
-      if (completeRegistration) {
-        await completeRegistration()
-      }
+      const result = await verifyOTP(phone, otpCode)
+      
+      if (result.success) {
+        // Use setAuthData if available and we have token/user data
+        if (setAuthData && result.token && result.user) {
+          setAuthData(result.user, result.token)
+        } else if (completeRegistration) {
+          await completeRegistration()
+        }
 
-      // Navigate to appropriate screen
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "ClientTabs" }],
-      })
+        // Navigate to appropriate screen
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "ClientTabs" }],
+        })
+      }
     } catch (error) {
       console.error("OTP verification error:", error)
       setError(error instanceof Error ? error.message : t("verifyOTP.errorInvalidOTP"))
@@ -119,7 +120,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
   const handleResend = async (): Promise<void> => {
     setResendLoading(true)
     try {
-      await resendOTP(phone)
+      await resendOTP(phone, 'login')  // Add otp_type parameter
       setCountdown(60)
       setError(t("verifyOTP.otpResent"))
       setVisible(true)
@@ -131,8 +132,6 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
       setResendLoading(false)
     }
   }
-
-  const { width: screenWidth } = Dimensions.get('window')
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
@@ -191,7 +190,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
                 style={styles.button}
                 labelStyle={styles.buttonLabel}
                 loading={loading}
-                disabled={loading || otp.join("").length !== 4}
+                disabled={loading || otp.join("").length !== 6}  // Change to 6-digit validation
               >
                 {t("verifyOTP.verify")}
               </Button>

@@ -835,11 +835,10 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
                           : recommendedVehicle.type === VehicleType.BICYCLE
                             ? "bicycle"
                             : recommendedVehicle.type === VehicleType.MOTORCYCLE
-                              ? "motorcycle"
-                              : recommendedVehicle.type === VehicleType.VAN
-                                ? "van-utility"
-                                : recommendedVehicle.type === VehicleType.PICKUP
-                                  ? "truck-pickup"
+                              ? "motorbike"                              : recommendedVehicle.type === VehicleType.VAN
+                                ? "truck-delivery"
+                              : recommendedVehicle.type === VehicleType.PICKUP
+                                ? "truck"
                                   : recommendedVehicle.type === VehicleType.KIA_TRUCK ||
                                       recommendedVehicle.type === VehicleType.MOVING_TRUCK
                                     ? "truck"

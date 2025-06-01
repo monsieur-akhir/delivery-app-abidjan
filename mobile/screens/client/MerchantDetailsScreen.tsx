@@ -7,7 +7,7 @@ import { Text, Card, Button, Chip, Divider, ActivityIndicator, IconButton, Badge
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchMerchantDetails, fetchMerchantProducts,  } from "../../services/api" // Adjustez si nécessaire
+import { fetchMerchantDetails, fetchMerchantProducts, type MerchantInfo, type Product as APIProduct } from "../../services/api" // Adjustez si nécessaire
 import fetchCart from "../../services/api"
 import addToCart from "../../services/api"
 import { formatPrice } from "../../utils/formatters"
@@ -15,6 +15,41 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Merchant } from "../../types/models"
+
+// Type adapters to transform API responses to match component interfaces
+const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
+  id: parseInt(merchantInfo.id),
+  name: merchantInfo.name,
+  business_name: merchantInfo.name,
+  description: merchantInfo.description || '',
+  address: merchantInfo.address,
+  commune: merchantInfo.commune,
+  category: merchantInfo.category,
+  categories: [merchantInfo.category],
+  rating: merchantInfo.rating || 0,
+  review_count: 0,
+  is_open: merchantInfo.is_open,
+  opening_hours: merchantInfo.opening_hours || '',
+  phone: merchantInfo.phone,
+  lat: merchantInfo.lat || 0,
+  lng: merchantInfo.lng || 0,
+  logo: '',
+  logo_url: undefined,
+  cover_image: '',
+  created_at: '',
+  updated_at: '',
+  delivery_time: '30'
+})
+
+const adaptProduct = (apiProduct: APIProduct): Product => ({
+  id: apiProduct.id,
+  name: apiProduct.name,
+  description: apiProduct.description || '',
+  price: apiProduct.price,
+  category: apiProduct.category,
+  image_url: apiProduct.image_url,
+  is_popular: false
+})
 
 interface Product {
   id: string
@@ -63,11 +98,12 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
     try {
       setLoading(true)
       const merchantData = await fetchMerchantDetails(merchantId)
-      setMerchant(merchantData)
+      setMerchant(adaptMerchantInfo(merchantData))
       const productsData = await fetchMerchantProducts(merchantId)
-      setProducts(productsData)
-      setFilteredProducts(productsData)
-      const uniqueCategories = Array.from(new Set(productsData.map((product) => product.category))).map((category) => ({
+      const adaptedProducts = productsData.map(adaptProduct)
+      setProducts(adaptedProducts)
+      setFilteredProducts(adaptedProducts)
+      const uniqueCategories = Array.from(new Set(adaptedProducts.map((product) => product.category))).map((category) => ({
         id: category,
         name: category,
       }))

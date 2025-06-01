@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { sendOTP, loginWithOTP } from "../../services/api"
+import { useAuth } from "../../contexts/AuthContext"
 import LoginIllustration from "../../assets/login-connexion.svg"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
@@ -18,8 +19,10 @@ type OTPLoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "OTPLogin">
 }
 
-const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {  const { t } = useTranslation()
+const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
+  const { t } = useTranslation()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
+  const { setAuthData } = useAuth()
 
   const [phone, setPhone] = useState<string>("")
   const [otp, setOTP] = useState<string>("")
@@ -114,7 +117,6 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {  con
       setLoading(false)
     }
   }
-
   const handleVerifyOTP = async (): Promise<void> => {
     if (otp.trim() === "") {
       setError(t("otpLogin.errorOtpRequired"))
@@ -126,7 +128,9 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {  con
       setError(t("otpLogin.errorOtpInvalid"))
       setVisible(true)
       return
-    }    setLoading(true)
+    }
+
+    setLoading(true)
     try {
       // Connexion avec OTP
       const result = await loginWithOTP(phone, otp)
@@ -136,18 +140,18 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {  con
       await AsyncStorage.setItem("user", JSON.stringify(result.user))
       
       // Mettre à jour le contexte d'authentification
-      // signIn sera appelé automatiquement par le contexte en détectant les données dans AsyncStorage
-      // Mais nous devons forcer la mise à jour du contexte
-        // Redirection basée sur le rôle utilisateur
+      setAuthData(result.user, result.token)
+      
+      // Redirection basée sur le rôle utilisateur
       if (result.user.role === 'courier') {
         navigation.reset({
           index: 0,
-          routes: [{ name: 'CourierMain' }],
+          routes: [{ name: 'CourierTabs' }],
         })
       } else {
         navigation.reset({
           index: 0,
-          routes: [{ name: 'ClientMain' }],
+          routes: [{ name: 'ClientTabs' }],
         })
       }
     } catch (err: unknown) {
