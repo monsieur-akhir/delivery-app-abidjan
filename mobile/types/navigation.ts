@@ -2,6 +2,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 export type RootStackParamList = {
   Login: undefined
+  OTPLogin: undefined
+  ClassicLogin: undefined
   Register: undefined
   VerifyOTP: { phone: string }
   ForgotPassword: undefined

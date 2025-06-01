@@ -189,6 +189,55 @@ export const translations = {
         loginWithFacebook: "Se connecter avec Facebook",
         loginWithApple: "Se connecter avec Apple",
       },
+
+      // Traductions pour l'authentification OTP
+      otpLogin: {
+        title: "Connexion sécurisée",
+        subtitle: "Entrez votre numéro de téléphone pour recevoir un code de vérification",
+        phone: "Numéro de téléphone",
+        sendOtp: "Envoyer le code",
+        enterOtp: "Entrer le code de vérification",
+        otpCode: "Code de vérification",
+        otpSubtitle: "Nous avons envoyé un code à 6 chiffres à votre numéro",
+        verify: "Vérifier",
+        resendCode: "Renvoyer le code",
+        resendIn: "Renvoyer dans",
+        seconds: "secondes",
+        backToPhone: "Modifier le numéro",
+        errorPhoneRequired: "Le numéro de téléphone est obligatoire",
+        errorPhoneInvalid: "Le numéro de téléphone est invalide",
+        errorOtpRequired: "Le code de vérification est obligatoire",
+        errorOtpInvalid: "Le code de vérification est invalide",
+        errorOtpExpired: "Le code de vérification a expiré",
+        errorSendingOtp: "Erreur lors de l'envoi du code",
+        errorVerifyingOtp: "Erreur lors de la vérification du code",
+        otpSent: "Code envoyé avec succès",
+        otpResent: "Code renvoyé avec succès",
+      },
+
+      // Traductions pour la connexion classique (fallback)
+      classicLogin: {
+        title: "Connexion classique",
+        subtitle: "Connectez-vous avec votre mot de passe",
+        backToOtp: "Retour à la connexion sécurisée",
+        switchToOtp: "Utiliser la connexion sécurisée",
+        otpRecommended: "Nous recommandons la connexion sécurisée par code",
+        whyClassic: "Pourquoi utiliser l'ancienne méthode?",
+        securityNote: "La connexion par code est plus sécurisée",
+      },
+
+      // Traductions pour la transition d'authentification
+      authTransition: {
+        title: "Nouvelle méthode de connexion",
+        subtitle: "Pour votre sécurité, nous utilisons maintenant un code de vérification",
+        continueWithOtp: "Continuer avec un code",
+        useClassicLogin: "Utiliser l'ancienne méthode",
+        securityBenefit: "Plus sécurisé et plus rapide",
+        nomoreForgotten: "Plus de mots de passe oubliés",
+        instant: "Connexion instantanée",
+        learnMore: "En savoir plus",
+      },
+
       forgotPassword: {
         title: "Mot de passe oublié",
         subtitle: "Entrez votre numéro de téléphone pour réinitialiser votre mot de passe",
@@ -308,6 +357,54 @@ export const translations = {
         noAccount: "A tɛ sigi?",
         register: "Ka sigi ka fɔlɔ",
       },
+
+      // Traductions pour l'authentification OTP
+      otpLogin: {
+        title: "Lakana kɛcogo",
+        subtitle: "I ka nimɛro tigɛ walasa ka kɔlɔsi sɔrɔ",
+        phone: "Nimɛro",
+        sendOtp: "Kɔlɔsi ci",
+        enterOtp: "Kɔlɔsi tigɛ",
+        otpCode: "Kɔlɔsi",
+        otpSubtitle: "An ye kɔlɔsi 6 ci i ka nimɛro kan",
+        verify: "Kɔlɔsi lajɛ",
+        resendCode: "Kɔlɔsi ci kokura",
+        resendIn: "Ci kokura",
+        seconds: "segɔndi",
+        backToPhone: "Nimɛro changer",
+        errorPhoneRequired: "Nimɛro ka kan ka kɛ",
+        errorPhoneInvalid: "Nimɛro ma nɔgɔn",
+        errorOtpRequired: "Kɔlɔsi ka kan ka kɛ",
+        errorOtpInvalid: "Kɔlɔsi ma nɔgɔn",
+        errorOtpExpired: "Kɔlɔsi bannen",
+        errorSendingOtp: "Kɔlɔsi ci ma se ka kɛ",
+        errorVerifyingOtp: "Kɔlɔsi lajɛli ma se ka kɛ",
+        otpSent: "Kɔlɔsi cilenma",
+        otpResent: "Kɔlɔsi ci kokura ma",
+      },
+
+      // Traductions pour la connexion classique
+      classicLogin: {
+        title: "Donkili cogo kɔrɔ",
+        subtitle: "Ka don ni i ka tuguni ye",
+        backToOtp: "Segin ka taa lakana kɛcogo kan",
+        switchToOtp: "Lakana kɛcogo baara",
+        otpRecommended: "An b'a ladɔn ko lakana kɛcogo ka fisa",
+        whyClassic: "Mun na cogo kɔrɔ baara?",
+        securityNote: "Kɔlɔsi fɛ don ka lakana",
+      },
+
+      // Traductions pour la transition d'authentification
+      authTransition: {
+        title: "Don cogo kura",
+        subtitle: "I ka lakana kama, an bɛ kɔlɔsi baara",
+        continueWithOtp: "Taa ɲɛ ni kɔlɔsi ye",
+        useClassicLogin: "Cogo kɔrɔ baara",
+        securityBenefit: "A ka lakana ani a ka teliya",
+        nomoreForgotten: "Tuguni ɲinini ban",
+        instant: "Don fɛɛrɛ",
+        learnMore: "Kunnafoni wɛrɛw",
+      },
     }
   },
 
@@ -382,6 +479,67 @@ export const translations = {
         errorUploadingDocument: "Flɛ fa su a ti kpa",
         cannotAddVehicleOffline: "A lé lori fa kun sɛ a lé internet",
         selectVehicle: "Yi lori kun",
+      },
+
+      // Traductions pour la connexion
+      login: {
+        welcome: "Akwaba",
+        subtitle: "Signe ka fa fɔlɔ",
+        phone: "Nimɛro telefɔnɛ",
+        password: "Tuguni",
+        rememberMe: "Ka sigi ka fɔlɔ",
+        forgotPassword: "Tuguni bɔ",
+        submit: "Ka sigi",
+        noAccount: "A tɛ sigi?",
+        register: "Ka sigi ka fɔlɔ",
+      },
+
+      // Traductions pour l'authentification OTP
+      otpLogin: {
+        title: "Connexion sûr",
+        subtitle: "Fa nimɛro ka sɔrɔ kɔlɔsi",
+        phone: "Nimɛro telefɔnɛ",
+        sendOtp: "Ci kɔlɔsi",
+        enterOtp: "Fa kɔlɔsi",
+        otpCode: "Kɔlɔsi",
+        otpSubtitle: "An ci kɔlɔsi 6 i nimɛro kan",
+        verify: "Lajɛ kɔlɔsi",
+        resendCode: "Ci kɔlɔsi kokura",
+        resendIn: "Ci kokura",
+        seconds: "segɔndi",
+        backToPhone: "Changé nimɛro",
+        errorPhoneRequired: "Nimɛro ka kan ka kɛ",
+        errorPhoneInvalid: "Nimɛro ma nɔgɔn",
+        errorOtpRequired: "Kɔlɔsi ka kan ka kɛ",
+        errorOtpInvalid: "Kɔlɔsi ma nɔgɔn",
+        errorOtpExpired: "Kɔlɔsi bannen",
+        errorSendingOtp: "Kɔlɔsi ci ma se ka kɛ",
+        errorVerifyingOtp: "Kɔlɔsi lajɛli ma se ka kɛ",
+        otpSent: "Kɔlɔsi cilenma",
+        otpResent: "Kɔlɔsi ci kokura ma",
+      },
+
+      // Traductions pour la connexion classique
+      classicLogin: {
+        title: "Connexion cogo kɔrɔ",
+        subtitle: "Signe ni tuguni ye",
+        backToOtp: "Segin connexion sûr kan",
+        switchToOtp: "Connexion sûr baara",
+        otpRecommended: "An ladɔn connexion sûr ka fisa",
+        whyClassic: "Mun na cogo kɔrɔ baara?",
+        securityNote: "Kɔlɔsi connexion ka lakana",
+      },
+
+      // Traductions pour la transition d'authentification
+      authTransition: {
+        title: "Connexion fɛɛrɛ kura",
+        subtitle: "I ka lakana kama, an bɛ kɔlɔsi baara",
+        continueWithOtp: "Taa ɲɛ ni kɔlɔsi ye",
+        useClassicLogin: "Cogo kɔrɔ baara",
+        securityBenefit: "A ka lakana ani a teliya",
+        nomoreForgotten: "Tuguni ɲinini ban",
+        instant: "Connexion fɛɛrɛ",
+        learnMore: "Kunnafoni wɛrɛw",
       },
 
       // Traductions pour l'inscription
