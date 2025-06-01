@@ -258,3 +258,175 @@ class EmailService:
         except Exception as e:
             logger.error("Error sending push notification: %s", str(e))
             return False
+    
+    def send_otp_email(self, to_email: str, otp_code: str, otp_type: str, expires_in_minutes: int = 5) -> bool:
+        """
+        Send OTP code via email with a beautiful template.
+        """
+        type_subjects = {
+            "registration": "🔐 Code de vérification - Inscription",
+            "login": "🔐 Code de vérification - Connexion", 
+            "password_reset": "🔑 Code de réinitialisation du mot de passe",
+            "two_factor": "🛡️ Code d'authentification à deux facteurs"
+        }
+        
+        type_titles = {
+            "registration": "Bienvenue ! Vérifiez votre compte",
+            "login": "Vérification de connexion",
+            "password_reset": "Réinitialisation de mot de passe",
+            "two_factor": "Authentification à deux facteurs"
+        }
+        
+        subject = type_subjects.get(otp_type, "🔐 Code de vérification")
+        title = type_titles.get(otp_type, "Vérification de votre compte")
+        
+        # HTML template for OTP email
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{subject}</title>
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }}
+                .container {{ max-width: 600px; margin: 0 auto; background-color: white; }}
+                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }}
+                .header h1 {{ margin: 0; font-size: 24px; }}
+                .content {{ padding: 30px; }}
+                .otp-box {{ background-color: #f8f9fa; border: 2px dashed #007bff; border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0; }}
+                .otp-code {{ font-size: 36px; font-weight: bold; color: #007bff; letter-spacing: 8px; margin: 10px 0; }}
+                .warning {{ background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0; color: #856404; }}
+                .footer {{ background-color: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 12px; }}
+                .btn {{ display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🚚 Delivery App Abidjan</h1>
+                    <p>{title}</p>
+                </div>
+                
+                <div class="content">
+                    <h2>Bonjour,</h2>
+                    <p>Voici votre code de vérification :</p>
+                    
+                    <div class="otp-box">
+                        <p>Votre code de vérification</p>
+                        <div class="otp-code">{otp_code}</div>
+                        <p>Valide pendant {expires_in_minutes} minutes</p>
+                    </div>
+                    
+                    <div class="warning">
+                        ⚠️ <strong>Important :</strong>
+                        <ul>
+                            <li>Ce code expire dans {expires_in_minutes} minutes</li>
+                            <li>Ne partagez jamais ce code avec quelqu'un d'autre</li>
+                            <li>Si vous n'avez pas demandé ce code, ignorez ce message</li>
+                        </ul>
+                    </div>
+                    
+                    <p>Merci de votre confiance !</p>
+                    <p><strong>L'équipe Delivery App Abidjan</strong></p>
+                </div>
+                
+                <div class="footer">
+                    <p>© 2024 Delivery App Abidjan. Tous droits réservés.</p>
+                    <p>Ceci est un message automatique, merci de ne pas y répondre.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text version
+        text_content = f"""
+        Delivery App Abidjan - {title}
+        
+        Bonjour,
+        
+        Votre code de vérification est : {otp_code}
+        
+        Ce code expire dans {expires_in_minutes} minutes.
+        
+        Important :
+        - Ne partagez jamais ce code avec quelqu'un d'autre
+        - Si vous n'avez pas demandé ce code, ignorez ce message
+        
+        Merci de votre confiance !
+        L'équipe Delivery App Abidjan
+        
+        ---
+        Ceci est un message automatique, merci de ne pas y répondre.
+        """
+        
+        return self.send_email(to_email, subject, text_content, html_content)
+    
+    def send_otp_push_notification(
+        self, 
+        player_ids: list, 
+        otp_code: str, 
+        otp_type: str
+    ) -> bool:
+        """
+        Send OTP code via push notification.
+        """
+        type_titles = {
+            "registration": "🔐 Code d'inscription",
+            "login": "🔐 Code de connexion",
+            "password_reset": "🔑 Code de réinitialisation",
+            "two_factor": "🛡️ Code d'authentification"
+        }
+        
+        title = type_titles.get(otp_type, "🔐 Code de vérification")
+        message = f"Votre code : {otp_code} (valide 5 min)"
+        
+        data = {
+            "type": "otp",
+            "otp_type": otp_type,
+            "code": otp_code,
+            "action": "otp_received"
+        }
+        
+        return self.send_push_notification(player_ids, title, message, data)
+    
+    def send_otp_by_user_tag(
+        self, 
+        user_id: str, 
+        otp_code: str, 
+        otp_type: str
+    ) -> bool:
+        """
+        Send OTP to a specific user by their user_id tag.
+        """
+        return self.send_otp_push_notification_by_tag("user_id", user_id, otp_code, otp_type)
+    
+    def send_otp_push_notification_by_tag(
+        self, 
+        tag_key: str, 
+        tag_value: str, 
+        otp_code: str, 
+        otp_type: str
+    ) -> bool:
+        """
+        Send OTP code via push notification to users with specific tag.
+        """
+        type_titles = {
+            "registration": "🔐 Code d'inscription",
+            "login": "🔐 Code de connexion", 
+            "password_reset": "🔑 Code de réinitialisation",
+            "two_factor": "🛡️ Code d'authentification"
+        }
+        
+        title = type_titles.get(otp_type, "🔐 Code de vérification")
+        message = f"Votre code : {otp_code} (valide 5 min)"
+        
+        data = {
+            "type": "otp",
+            "otp_type": otp_type,
+            "code": otp_code,
+            "action": "otp_received"
+        }
+        
+        return self.send_push_by_tag(tag_key, tag_value, title, message, data)

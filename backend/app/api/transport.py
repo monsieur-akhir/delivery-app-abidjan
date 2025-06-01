@@ -25,7 +25,7 @@ from app.services.transport_service import (
 )
 from app.services.storage import upload_file
 
-router = APIRouter(prefix="/transport", tags=["transport"])
+router = APIRouter(tags=["transport"])
 
 # Vehicle endpoints
 @router.post("/vehicles", response_model=Vehicle)

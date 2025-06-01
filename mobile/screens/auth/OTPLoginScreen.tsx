@@ -126,9 +126,7 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {  con
       setError(t("otpLogin.errorOtpInvalid"))
       setVisible(true)
       return
-    }
-
-    setLoading(true)
+    }    setLoading(true)
     try {
       // Connexion avec OTP
       const result = await loginWithOTP(phone, otp)
@@ -138,7 +136,20 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {  con
       await AsyncStorage.setItem("user", JSON.stringify(result.user))
       
       // Mettre à jour le contexte d'authentification
-      // signIn sera appelé automatiquement par le contexte    
+      // signIn sera appelé automatiquement par le contexte en détectant les données dans AsyncStorage
+      // Mais nous devons forcer la mise à jour du contexte
+        // Redirection basée sur le rôle utilisateur
+      if (result.user.role === 'courier') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'CourierMain' }],
+        })
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'ClientMain' }],
+        })
+      }
     } catch (err: unknown) {
       const error = err as Error;
       console.error("OTP Login error:", error)

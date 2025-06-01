@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, E
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from ..db.base import Base
 
@@ -34,12 +34,12 @@ class OTP(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     verified_at = Column(DateTime(timezone=True), nullable=True)
     
-    # Relations
+        # Relations
     user = relationship("User", backref="otps")
     
     def is_expired(self) -> bool:
         """Check if the OTP has expired."""
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(timezone.utc) > self.expires_at
     
     def can_attempt(self) -> bool:
         """Check if more attempts are allowed."""
@@ -54,13 +54,13 @@ class OTP(Base):
     def mark_as_verified(self) -> None:
         """Mark the OTP as verified."""
         self.status = OTPStatus.VERIFIED
-        self.verified_at = datetime.utcnow()
+        self.verified_at = datetime.now(timezone.utc)
     
     def mark_as_expired(self) -> None:
         """Mark the OTP as expired."""
         self.status = OTPStatus.EXPIRED
-
+    
     @classmethod
     def generate_expiry_time(cls, minutes: int = 5) -> datetime:
         """Generate expiry time for OTP (default 5 minutes)."""
-        return datetime.utcnow() + timedelta(minutes=minutes)
+        return datetime.now(timezone.utc) + timedelta(minutes=minutes)

@@ -45,17 +45,17 @@ export interface DeliveryData {
 }
 
 export const getCollaborativeDeliveryDetails = async (deliveryId: string): Promise<any> => {
-  const response = await api.get(`/collaborative-deliveries/${deliveryId}`)
+  const response = await api.get(`/api/courier/collaborative-deliveries/${deliveryId}`)
   return response.data
 }
 
 export const getCollaborativeDeliveryChatHistory = async (deliveryId: string): Promise<any[]> => {
-  const response = await api.get(`/collaborative-deliveries/${deliveryId}/chat`)
+  const response = await api.get(`/api/courier/collaborative-deliveries/${deliveryId}/messages`)
   return response.data
 }
 
 export const sendCollaborativeDeliveryMessage = async (deliveryId: string, message: string): Promise<any> => {
-  const response = await api.post(`/collaborative-deliveries/${deliveryId}/chat`, { message })
+  const response = await api.post(`/api/courier/collaborative-deliveries/${deliveryId}/message`, { message })
   return response.data
 }
 
@@ -240,25 +240,31 @@ api.interceptors.response.use(
 // Nouvelle fonction de connexion par OTP uniquement
 export const loginWithOTP = async (phone: string, otp: string): Promise<{ token: string; user: User }> => {
   try {
-    const response = await api.post("/api/auth/login-otp", { 
+    // Utiliser l'endpoint correct pour vérifier l'OTP de login
+    const response = await api.post("/api/auth/verify-otp", { 
       phone: phone,
-      otp: otp
+      code: otp,
+      otp_type: "login"
     }, {
       headers: {
         'Content-Type': 'application/json'
       }
     })
     
-    const access_token = response.data.access_token;
-    
-    // Get user profile with the token
-    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    const userResponse = await api.get("/users/me");
-    
-    return {
-      token: access_token,
-      user: userResponse.data
-    };
+    if (response.data.success && response.data.token) {
+      // Token directement disponible dans la réponse
+      const access_token = response.data.token;
+      
+      // Set authorization header for future requests
+      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      
+      return {
+        token: access_token,
+        user: response.data.user
+      };
+    } else {
+      throw new Error("Échec de la vérification OTP");
+    }
   } catch (error: any) {
     console.error("OTP Login error:", error);
     if (error.response?.status === 401) {
@@ -284,7 +290,7 @@ export const login = async (phone: string, password: string): Promise<{ token: s
     
     // Get user profile with the token
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-    const userResponse = await api.get("/users/me");
+    const userResponse = await api.get("/api/users/me");
     
     return {
       token: access_token,
@@ -302,7 +308,7 @@ export const login = async (phone: string, password: string): Promise<{ token: s
 // Inscription
 export const register = async (userData: RegisterUserData): Promise<void> => {
   try {
-    const response = await api.post("/auth/register", userData)
+    const response = await api.post("/api/auth/register", userData)
     return response.data
   } catch (error: any) {
     console.error("Registration error:", error);
@@ -410,7 +416,7 @@ export const registerPushToken = async (token: string, userId: string): Promise<
 
 // Géocodage d'adresse
 export const geocodeAddress = async (address: string): Promise<any[]> => {
-  const response = await api.get(`/geo/geocode?address=${encodeURIComponent(address)}`)
+  const response = await api.get(`/api/traffic/geocode?address=${encodeURIComponent(address)}`)
   return response.data
 }
 
@@ -440,13 +446,13 @@ export const createDelivery = async (deliveryData: DeliveryData): Promise<any> =
 
 // Obtenir les détails d'une livraison
 export const fetchDeliveryDetails = async (deliveryId: string): Promise<Delivery> => {
-  const response = await api.get(`/deliveries/${deliveryId}`)
+  const response = await api.get(`/api/deliveries/${deliveryId}`)
   return response.data
 }
 
 // Obtenir les enchères pour une livraison
 export const getBidsForDelivery = async (deliveryId: string): Promise<any[]> => {
-  const response = await api.get(`/deliveries/${deliveryId}/bids`)
+  const response = await api.get(`/api/deliveries/${deliveryId}/bids`)
   return response.data
 }
 
@@ -454,10 +460,10 @@ export const getBidsForDelivery = async (deliveryId: string): Promise<any[]> => 
 export const acceptBid = async (bidId: string, deliveryId?: string): Promise<void> => {
   let targetDeliveryId = deliveryId
   if (!targetDeliveryId) {
-    const bidDetails = await api.get(`/bids/${bidId}`)
+    const bidDetails = await api.get(`/api/deliveries/bids/${bidId}`)
     targetDeliveryId = bidDetails.data.delivery_id
   }
-  const response = await api.post(`/deliveries/${targetDeliveryId}/bids/${bidId}/accept`)
+  const response = await api.post(`/api/deliveries/${targetDeliveryId}/bids/${bidId}/accept`)
   return response.data
 }
 
@@ -465,19 +471,19 @@ export const acceptBid = async (bidId: string, deliveryId?: string): Promise<voi
 export const rejectBid = async (bidId: string, deliveryId?: string): Promise<void> => {
   let targetDeliveryId = deliveryId
   if (!targetDeliveryId) {
-    const bidDetails = await api.get(`/bids/${bidId}`)
+    const bidDetails = await api.get(`/api/deliveries/bids/${bidId}`)
     targetDeliveryId = bidDetails.data.delivery_id
   }
-  const response = await api.post(`/deliveries/${targetDeliveryId}/bids/${bidId}/reject`)
+  const response = await api.post(`/api/deliveries/${targetDeliveryId}/bids/${bidId}/reject`)
   return response.data
 }
 
 // Obtenir les offres pour une livraison
 export const fetchDeliveryBids = async (deliveryId: string): Promise<Bid[]> => {
-  const response = await api.get(`/deliveries/${deliveryId}/bids`)
+  const response = await api.get(`/api/deliveries/${deliveryId}/bids`)
   const bidsWithCourierPromises = response.data.map(async (bid: any) => {
     try {
-      const courierResponse = await api.get(`/couriers/${bid.courier_id}`)
+      const courierResponse = await api.get(`/api/users/${bid.courier_id}`)
       return {
         ...bid,
         courier: courierResponse.data,
@@ -507,13 +513,13 @@ export const createBid = async (bidData: BidData): Promise<any> => {
 
 // Enchérir pour une livraison
 export const bidForDelivery = async (deliveryId: string, amount: number): Promise<any> => {
-  const response = await api.post(`/deliveries/${deliveryId}/bid`, { amount })
+  const response = await api.post(`/api/deliveries/${deliveryId}/bid`, { amount })
   return response.data
 }
 
 // Obtenir la position du coursier
 export const getCourierLocation = async (deliveryId: string): Promise<any> => {
-  const response = await api.get(`/deliveries/${deliveryId}/courier-location`)
+  const response = await api.get(`/api/deliveries/${deliveryId}/courier-location`)
   return response.data
 }
 
@@ -525,7 +531,7 @@ export const updateDeliveryStatus = async (deliveryId: string, status: DeliveryS
 
 // Annuler une livraison
 export const cancelDelivery = async (deliveryId: string): Promise<void> => {
-  const response = await api.post(`/deliveries/${deliveryId}/cancel`)
+  const response = await api.post(`/api/deliveries/${deliveryId}/cancel`)
   return response.data
 }
 
@@ -544,19 +550,19 @@ export const getTrafficInfo = async (
 
 // Créer une évaluation
 export const submitRating = async (ratingData: RatingData): Promise<any> => {
-  const response = await api.post("/ratings", ratingData)
+  const response = await api.post("/api/ratings", ratingData)
   return response.data
 }
 
 // Initier un paiement
 export const initiatePayment = async (paymentData: PaymentData): Promise<any> => {
-  const response = await api.post("/payments/initiate", paymentData)
+  const response = await api.post("/api/payments/initiate", paymentData)
   return response.data
 }
 
 // Vérifier un paiement
 export const verifyPayment = async (verificationData: PaymentVerificationData): Promise<any> => {
-  const response = await api.post("/payments/verify", verificationData)
+  const response = await api.post("/api/payments/verify", verificationData)
   return response.data
 }
 
@@ -575,13 +581,13 @@ export const fetchNearbyMerchants = async (commune?: string, category?: string):
 
 // Obtenir les détails d'un commerçant
 export const fetchMerchantDetails = async (merchantId: string): Promise<any> => {
-  const response = await api.get(`/merchants/${merchantId}`)
+  const response = await api.get(`/api/market/merchants/${merchantId}`)
   return response.data
 }
 
 // Obtenir les produits d'un commerçant
 export const fetchMerchantProducts = async (merchantId: string): Promise<any[]> => {
-  const response = await api.get(`/merchants/${merchantId}/products`)
+  const response = await api.get(`/api/market/merchants/${merchantId}/products`)
   return response.data
 }
 
@@ -829,23 +835,7 @@ export const uploadTicketImage = async (ticketId: string, imageUri: string): Pro
 }
 
 export const fetchFAQs = async (): Promise<any[]> => {
-  const response = await api.get("/support/faqs")
-  return response.data
-}
-
-// Fonctions pour les livraisons collaboratives
-export const fetchCollaborativeDeliveryDetails = async (deliveryId: string): Promise<any> => {
-  const response = await api.get(`/collaborative-deliveries/${deliveryId}`)
-  return response.data
-}
-
-export const fetchCollaborativeChat = async (deliveryId: string): Promise<any[]> => {
-  const response = await api.get(`/collaborative-deliveries/${deliveryId}/chat`)
-  return response.data
-}
-
-export const sendCollaborativeMessage = async (deliveryId: string, message: string): Promise<any> => {
-  const response = await api.post(`/collaborative-deliveries/${deliveryId}/chat`, { message })
+  const response = await api.get("/api/support/faqs")
   return response.data
 }
 

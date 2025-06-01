@@ -7,7 +7,7 @@ from .core.config import settings
 from .db.base import Base
 from .db.session import get_db
 from .db.init_db import init_db
-from .api import auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport
+from .api import auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport, assistant, courier
 from .websockets import tracking
 
 # Créer l'application FastAPI
@@ -42,7 +42,9 @@ app.include_router(market.router, prefix=f"{settings.API_V1_STR}/market", tags=[
 app.include_router(wallet.router, prefix=f"{settings.API_V1_STR}/wallet", tags=["Portefeuille"])
 app.include_router(traffic.router, prefix=f"{settings.API_V1_STR}/traffic", tags=["Trafic et Météo"])
 app.include_router(manager.router, prefix=f"{settings.API_V1_STR}/manager", tags=["Gestionnaires"])
-app.include_router(transport.router)
+app.include_router(transport.router, prefix=f"{settings.API_V1_STR}/transport", tags=["Transport"])
+app.include_router(assistant.router, prefix=f"{settings.API_V1_STR}/assistant", tags=["Assistant"])
+app.include_router(courier.router, prefix=f"{settings.API_V1_STR}/courier", tags=["Coursiers"])
 
 # Endpoint WebSocket pour le tracking en temps réel
 @app.websocket("/ws/tracking/{delivery_id}")

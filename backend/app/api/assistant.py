@@ -10,7 +10,7 @@ from ..services.assistant import (
 )
 from ..models.user import User, UserRole
 
-router = APIRouter(prefix="/assistant", tags=["assistant"])
+router = APIRouter(tags=["assistant"])
 
 @router.post("/chat")
 async def chat_with_assistant(

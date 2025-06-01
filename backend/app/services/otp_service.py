@@ -1,7 +1,7 @@
 import random
 import string
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -23,7 +23,7 @@ class OTPService:
         self.email_service = EmailService()
         self.sms_service = SMSService()
     
-    def generate_otp_code(self, length: int = 4) -> str:
+    def generate_otp_code(self, length: int = 6) -> str:
         """Generate a random OTP code."""
         return ''.join(random.choices(string.digits, k=length))
     
@@ -78,34 +78,26 @@ class OTPService:
             return False
     
     def send_otp_via_email(self, email: str, code: str, otp_type: OTPType) -> bool:
-        """Send OTP via email."""
+        """Send OTP via email using the enhanced email service."""
         try:
-            type_subjects = {
-                OTPType.REGISTRATION: "Code de vérification - Inscription",
-                OTPType.LOGIN: "Code de vérification - Connexion",
-                OTPType.PASSWORD_RESET: "Code de réinitialisation du mot de passe",
-                OTPType.TWO_FACTOR: "Code d'authentification à deux facteurs"
-            }
-            
-            subject = type_subjects.get(otp_type, "Code de vérification")
-            message = f"""
-            Bonjour,
-            
-            Votre code de vérification est: {code}
-            
-            Ce code expire dans 5 minutes.
-            
-            Si vous n'avez pas demandé ce code, ignorez ce message.
-            
-            Cordialement,
-            L'équipe Delivery App
-            """
-            
-            return self.email_service.send_email(email, subject, message)
+            # Convert OTPType enum to string for email service
+            otp_type_str = otp_type.value.lower()
+            return self.email_service.send_otp_email(email, code, otp_type_str)
         except Exception as e:
-            print(f"Error sending email OTP: {e}")
+            logger.error(f"Error sending email OTP: {e}")
             return False
-      def send_otp(self, request: OTPRequest) -> OTPResponse:
+    
+    def send_otp_via_push(self, user_id: int, code: str, otp_type: OTPType) -> bool:
+        """Send OTP via push notification to a specific user."""
+        try:
+            # Convert OTPType enum to string for email service
+            otp_type_str = otp_type.value.lower()
+            return self.email_service.send_otp_by_user_tag(str(user_id), code, otp_type_str)
+        except Exception as e:
+            logger.error(f"Error sending push OTP: {e}")
+            return False
+    
+    def send_otp(self, request: OTPRequest) -> OTPResponse:
         """Send OTP to user via SMS and/or email."""
         
         # Log de débogage en développement
@@ -157,7 +149,6 @@ class OTPService:
         # Send OTP via email if provided (secondary method)
         email_sent = True
         if request.email:
-            email_sent = self.send_otp_via_email(request.email, otp.code, request.otp_type)
             if settings.ENVIRONMENT == "development":
                 logger.info(f"📧 Email envoyé: {'✅ Succès' if email_sent else '❌ Échec'}")
         
@@ -174,7 +165,8 @@ class OTPService:
             message="Code OTP envoyé avec succès",
             expires_at=otp.expires_at
         )
-      def verify_otp(self, verification: OTPVerification) -> Tuple[bool, OTP]:
+    
+    def verify_otp(self, verification: OTPVerification) -> Tuple[bool, OTP]:
         """Verify OTP code."""
         
         # Log de débogage en développement
@@ -241,7 +233,7 @@ class OTPService:
         user = self.db.query(User).filter(User.phone == phone).first()
         email = user.email if user else None
         
-        # Create new OTP request
+                # Create new OTP request
         request = OTPRequest(phone=phone, email=email, otp_type=otp_type)
         return self.send_otp(request)
     
@@ -250,7 +242,7 @@ class OTPService:
         expired_otps = self.db.query(OTP).filter(
             and_(
                 OTP.status == OTPStatus.PENDING,
-                OTP.expires_at < datetime.utcnow()
+                OTP.expires_at < datetime.now(timezone.utc)
             )
         ).all()
         
