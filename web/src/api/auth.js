@@ -154,6 +154,23 @@ export const verifyOTP = async data => {
 }
 
 /**
+ * Envoyer un code OTP
+ * @param {Object} data - Données pour envoyer l'OTP
+ * @param {string} data.phone - Numéro de téléphone de l'utilisateur
+ * @param {string} data.email - Email de l'utilisateur (optionnel)
+ * @param {string} data.otp_type - Type d'OTP ('registration', 'login', 'password_reset')
+ * @returns {Promise<Object>} - Résultat de l'envoi
+ */
+export const sendOTP = async data => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/send-otp`, data)
+    return response.data
+  } catch (error) {
+    handleApiError(error)
+  }
+}
+
+/**
  * Renvoyer un code OTP
  * @param {Object} data - Données pour renvoyer l'OTP
  * @param {string} data.phone - Numéro de téléphone de l'utilisateur

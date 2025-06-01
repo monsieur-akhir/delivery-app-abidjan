@@ -24,6 +24,8 @@ import { NotificationProvider } from "./contexts/NotificationContext"
 
 // Écrans d'authentification
 import LoginScreen from "./screens/auth/LoginScreen"
+import OTPLoginScreen from "./screens/auth/OTPLoginScreen"
+import ClassicLoginScreen from "./screens/auth/ClassicLoginScreen"
 import RegisterScreen from "./screens/auth/RegisterScreen"
 import VerifyOTPScreen from "./screens/auth/VerifyOTPScreen"
 import ForgotPasswordScreen from "./screens/auth/ForgotPasswordScreen"
@@ -307,6 +309,8 @@ const App: React.FC = () => {
                         {isFirstLaunch && <Stack.Screen name="Onboarding" component={OnboardingScreen} />}
 
                         <Stack.Screen name="Login" component={LoginScreen} />
+                        <Stack.Screen name="OTPLogin" component={OTPLoginScreen} />
+                        <Stack.Screen name="ClassicLogin" component={ClassicLoginScreen} />
                         <Stack.Screen name="Register" component={RegisterScreen} />
                         <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
                         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />

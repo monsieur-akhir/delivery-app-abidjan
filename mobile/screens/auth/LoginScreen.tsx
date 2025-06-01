@@ -3,11 +3,9 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native"
-import { TextInput, Button, Text, Snackbar } from "react-native-paper"
+import { Button, Text, Snackbar } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
 import { useTranslation } from "react-i18next"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
 import LoginIllustration from "../../assets/login-connexion.svg"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
@@ -20,34 +18,14 @@ type LoginScreenProps = {
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { signIn } = useAuth()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
 
-  const [phone, setPhone] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
-  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(true)
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
+  const [error] = useState<string>("")
   const [visible, setVisible] = useState<boolean>(false)
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
 
-  // Charger les identifiants sauvegardés
-  useEffect(() => {
-    const loadSavedCredentials = async (): Promise<void> => {
-      try {
-        const savedPhone = await AsyncStorage.getItem("savedPhone")
-        
-        if (savedPhone) {
-          setPhone(savedPhone)
-        }
-      } catch (error) {
-        console.error("Error loading saved credentials:", error)
-      }
-    }
-
-    loadSavedCredentials()
-  }, [])
+  // No need for saved credentials in transition screen
 
   // Vérifier la connectivité
   useEffect(() => {
@@ -68,29 +46,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
   }
 
-  const handleLogin = async (): Promise<void> => {
-    if (phone.trim() === "" || password.trim() === "") {
-      setError(t("login.errorRequiredFields"))
-      setVisible(true)
-      return
-    }
-
-    setLoading(true)
-    try {
-      // Sauvegarder automatiquement le numéro de téléphone
-      await AsyncStorage.setItem("savedPhone", phone)
-
-      // Connexion
-      await signIn(phone, password)
-    } catch (error) {
-      console.error("Login error:", error)
-      setError(error instanceof Error ? error.message : t("login.errorGeneric"))
-      setVisible(true)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleOfflineMode = (): void => {
     toggleOfflineMode(true)
     setShowOfflineWarning(false)
@@ -106,8 +61,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
         <Animatable.View animation="fadeInUp" duration={800} style={styles.formContainer}>
           {/* Titre de connexion */}
-          <Text style={styles.title}>{t("login.welcome")}</Text>
-          <Text style={styles.subtitle}>{t("login.subtitle")}</Text>
+          <Text style={styles.title}>{t("authTransition.title")}</Text>
+          <Text style={styles.subtitle}>{t("authTransition.subtitle")}</Text>
 
           {showOfflineWarning && (
             <View style={styles.offlineWarning}>
@@ -118,70 +73,45 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </View>
           )}
 
-          {/* Champ de numéro de téléphone */}
-          <Animatable.View animation="fadeInLeft" duration={800} delay={300} style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t("login.phone")}</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                value={phone}
-                onChangeText={setPhone}
-                style={styles.input}
-                keyboardType="phone-pad"
-                left={<TextInput.Icon icon="phone" color={focused => focused ? "#FF6C37" : "#757575"} />}
-                mode="outlined"
-                placeholder={t("login.phonePlaceholder")}
-                outlineColor="#E0E0E0"
-                activeOutlineColor="#FF6C37"
-                theme={{ roundness: 12 }}
-              />
-            </View>
+          {/* Message de transition vers OTP */}
+          <Animatable.View animation="fadeIn" duration={800} delay={300} style={styles.transitionContainer}>
+            <Text style={styles.transitionTitle}>{t("authTransition.securityBenefit")}</Text>
+            <Text style={styles.transitionText}>{t("authTransition.nomoreForgotten")}</Text>
+            <Text style={styles.transitionText}>{t("authTransition.instant")}</Text>
           </Animatable.View>
 
-          {/* Champ de mot de passe */}
-          <Animatable.View animation="fadeInRight" duration={800} delay={500} style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t("login.password")}</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={secureTextEntry}
-                style={styles.input}
-                left={<TextInput.Icon icon="lock" color={focused => focused ? "#FF6C37" : "#757575"} />}
-                right={
-                  <TextInput.Icon
-                    icon={secureTextEntry ? "eye-off" : "eye"}
-                    color={focused => focused ? "#FF6C37" : "#757575"}
-                    onPress={() => setSecureTextEntry(!secureTextEntry)}
-                  />
-                }
-                mode="outlined"
-                placeholder="••••••••"
-                outlineColor="#E0E0E0"
-                activeOutlineColor="#FF6C37"
-                theme={{ roundness: 12 }}
-              />
-            </View>
-          </Animatable.View>
-
-          {/* Mot de passe oublié */}
-          <Animatable.View animation="fadeIn" duration={800} delay={600} style={styles.forgotContainer}>
-            <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-              <Text style={styles.forgotPassword}>{t("login.forgotPassword")}</Text>
-            </TouchableOpacity>
-          </Animatable.View>
-
-          {/* Bouton de connexion */}
-          <Animatable.View animation="bounceIn" duration={1000} delay={800}>
+          {/* Bouton de connexion avec OTP */}
+          <Animatable.View animation="bounceIn" duration={1000} delay={500}>
             <Button
               mode="contained"
-              onPress={handleLogin}
+              onPress={() => navigation.navigate("OTPLogin")}
               style={styles.button}
               contentStyle={styles.buttonContent}
               labelStyle={styles.buttonLabel}
-              loading={loading}
-              disabled={loading || (!isConnected && !isOfflineMode)}
+              icon="shield-key"
             >
-              {t("login.submit")}
+              {t("authTransition.continueWithOtp")}
+            </Button>
+          </Animatable.View>
+
+          {/* Ou utilisez l'ancienne méthode */}
+          <Animatable.View animation="fadeIn" duration={800} delay={700} style={styles.orContainer}>
+            <View style={styles.orLine} />
+            <Text style={styles.orText}>{t("login.or")}</Text>
+            <View style={styles.orLine} />
+          </Animatable.View>
+
+          {/* Bouton connexion classique */}
+          <Animatable.View animation="fadeIn" duration={800} delay={900}>
+            <Button
+              mode="outlined"
+              onPress={() => navigation.navigate("ClassicLogin")}
+              style={styles.classicButton}
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.classicButtonLabel}
+              icon="lock"
+            >
+              {t("authTransition.useClassicLogin")}
             </Button>
           </Animatable.View>
 
@@ -260,6 +190,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#757575",
     marginBottom: 25,
+  },
+  transitionContainer: {
+    backgroundColor: "#F0F8FF",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6C37",
+  },
+  transitionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FF6C37",
+    marginBottom: 8,
+  },
+  transitionText: {
+    fontSize: 14,
+    color: "#333333",
+    lineHeight: 20,
   },
   inputContainer: {
     marginBottom: 16,
@@ -373,6 +322,17 @@ const styles = StyleSheet.create({
   },
   offlineButton: {
     backgroundColor: "#FF9800",
+  },
+  classicButton: {
+    borderColor: "#FF6C37",
+    borderRadius: 12,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  classicButtonLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#FF6C37",
   },
 })
 

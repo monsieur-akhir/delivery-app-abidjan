@@ -236,14 +236,47 @@ api.interceptors.response.use(
 )
 
 // API d'authentification
+
+// Nouvelle fonction de connexion par OTP uniquement
+export const loginWithOTP = async (phone: string, otp: string): Promise<{ token: string; user: User }> => {
+  try {
+    const response = await api.post("/api/auth/login-otp", { 
+      phone: phone,
+      otp: otp
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    const access_token = response.data.access_token;
+    
+    // Get user profile with the token
+    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+    const userResponse = await api.get("/users/me");
+    
+    return {
+      token: access_token,
+      user: userResponse.data
+    };
+  } catch (error: any) {
+    console.error("OTP Login error:", error);
+    if (error.response?.status === 401) {
+      throw new Error("Code OTP invalide ou expiré");
+    }
+    throw new Error("Erreur de connexion avec OTP");
+  }
+}
+
 export const login = async (phone: string, password: string): Promise<{ token: string; user: User }> => {
   try {
-    const response = await api.post("/api/auth/send-otp", { 
-      username: phone,  // FastAPI OAuth expects "username" field
+    // Utiliser l'endpoint de login correct, pas send-otp
+    const response = await api.post("/api/auth/login", { 
+      phone: phone,      // Utiliser le bon nom de champ
       password: password 
     }, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/json'
       }
     })
     
@@ -294,7 +327,7 @@ export const verifyToken = async (token: string): Promise<boolean> => {
 // Vérification OTP
 export const verifyOTP = async (phone: string, otp: string): Promise<void> => {
   try {
-    const response = await api.post("/auth/verify-otp", { phone, otp })
+    const response = await api.post("/api/auth/verify-otp", { phone, otp })
     return response.data
   } catch (error: any) {
     console.error("OTP verification error:", error);
@@ -302,6 +335,24 @@ export const verifyOTP = async (phone: string, otp: string): Promise<void> => {
       throw new Error(error.response.data.detail);
     }
     throw new Error("Erreur de vérification OTP");
+  }
+}
+
+// Envoyer OTP
+export const sendOTP = async (phone: string, otpType: 'registration' | 'login' | 'password_reset' = 'login'): Promise<{message: string, success: boolean}> => {
+  try {
+    const response = await api.post("/api/auth/send-otp", { 
+      phone: phone,
+      otp_type: otpType
+    })
+    console.log("OTP send success:", response.data)
+    return response.data
+  } catch (error: any) {
+    console.error("OTP send error:", error);
+    if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+    throw new Error("Erreur d'envoi OTP");
   }
 }
 
