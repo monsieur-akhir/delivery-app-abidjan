@@ -171,3 +171,101 @@ def search_products(
     query = query.filter(Product.is_available == True)
     
     return query.order_by(Product.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def get_nearby_merchants(db: Session, lat: float, lng: float, radius: float = 5.0, category: str = None) -> List[dict]:
+    """
+    Récupérer les marchands à proximité d'une position
+    """
+    try:
+        # Pour l'instant, retourner tous les marchands avec des profils business
+        query = db.query(User).join(BusinessProfile).filter(
+            User.role == "business",
+            User.is_active == True
+        )
+        
+        # Filtrer par catégorie si fournie
+        if category:
+            query = query.filter(BusinessProfile.business_type == category)
+        
+        merchants = query.limit(20).all()
+        
+        result = []
+        for merchant in merchants:
+            # Calculer une distance simulée basée sur la commune
+            distance = 2.5  # Distance par défaut en km
+            
+            result.append({
+                "id": merchant.id,
+                "name": merchant.business_profile.business_name if merchant.business_profile else merchant.full_name,
+                "category": merchant.business_profile.business_type if merchant.business_profile else "general",
+                "rating": 4.2,  # Rating simulé
+                "distance": distance,
+                "is_open": True,
+                "image_url": merchant.business_profile.logo_url if merchant.business_profile else None,
+                "commune": merchant.commune,
+                "address": merchant.business_profile.address if merchant.business_profile else "",
+                "phone": merchant.phone
+            })
+        
+        return result
+    except Exception as e:
+        return []
+
+def get_merchant(db: Session, merchant_id: int) -> Optional[dict]:
+    """
+    Récupérer les détails d'un marchand
+    """
+    try:
+        merchant = db.query(User).filter(
+            User.id == merchant_id,
+            User.role == "business",
+            User.is_active == True
+        ).first()
+        
+        if not merchant:
+            return None
+            
+        return {
+            "id": merchant.id,
+            "name": merchant.business_profile.business_name if merchant.business_profile else merchant.full_name,
+            "category": merchant.business_profile.business_type if merchant.business_profile else "general",
+            "description": merchant.business_profile.description if merchant.business_profile else "",
+            "rating": 4.2,
+            "reviews_count": 150,
+            "is_open": True,
+            "opening_hours": "8:00 - 18:00",
+            "image_url": merchant.business_profile.logo_url if merchant.business_profile else None,
+            "commune": merchant.commune,
+            "address": merchant.business_profile.address if merchant.business_profile else "",
+            "phone": merchant.phone,
+            "email": merchant.email
+        }
+    except Exception as e:
+        return None
+
+def get_merchant_products(db: Session, merchant_id: int, skip: int = 0, limit: int = 20) -> List[dict]:
+    """
+    Récupérer les produits d'un marchand
+    """
+    try:
+        products = db.query(Product).filter(
+            Product.business_id == merchant_id,
+            Product.is_available == True
+        ).offset(skip).limit(limit).all()
+        
+        result = []
+        for product in products:
+            result.append({
+                "id": product.id,
+                "name": product.name,
+                "description": product.description,
+                "price": product.price,
+                "category": product.category,
+                "image_url": product.image_url,
+                "is_available": product.is_available
+            })
+        
+        return result
+    except Exception as e:
+        return []

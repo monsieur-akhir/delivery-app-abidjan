@@ -90,51 +90,20 @@ async def get_active_client_deliveries(
     if current_user.role != "client":
         raise HTTPException(status_code=403, detail="Accès réservé aux clients")
     
-    from .services.delivery import get_user_active_deliveries
-    return get_user_active_deliveries(db, current_user.id)
+    from .services.delivery import get_user_deliveries
+    return get_user_deliveries(db, current_user.id, status="active")
 
 # Endpoints pour les marchands
 @app.get("/merchants/nearby")
 async def get_nearby_merchants(
-    commune: str = None,
-    category: str = None,
-    lat: float = None,
-    lng: float = None,
+    lat: float,
+    lng: float,
     radius: float = 5.0,
     db: Session = Depends(get_db)
 ):
     """Récupérer les marchands à proximité"""
     from .services.market import get_nearby_merchants as get_merchants
-    
-    # Si commune est fournie, convertir en coordonnées
-    if commune and not lat and not lng:
-        commune_coordinates = {
-            "Abobo": {"lat": 5.4414, "lng": -4.0444},
-            "Adjamé": {"lat": 5.3667, "lng": -4.0167},
-            "Attécoubé": {"lat": 5.3333, "lng": -4.0333},
-            "Cocody": {"lat": 5.3600, "lng": -3.9678},
-            "Koumassi": {"lat": 5.3000, "lng": -3.9500},
-            "Marcory": {"lat": 5.3000, "lng": -3.9833},
-            "Plateau": {"lat": 5.3167, "lng": -4.0167},
-            "Port-Bouët": {"lat": 5.2500, "lng": -3.9333},
-            "Treichville": {"lat": 5.2833, "lng": -4.0000},
-            "Yopougon": {"lat": 5.3167, "lng": -4.0833}
-        }
-        
-        if commune in commune_coordinates:
-            lat = commune_coordinates[commune]["lat"]
-            lng = commune_coordinates[commune]["lng"]
-        else:
-            # Coordonnées par défaut (centre d'Abidjan)
-            lat = 5.3167
-            lng = -4.0167
-    
-    # Si aucune coordonnée n'est fournie, utiliser le centre d'Abidjan
-    if not lat or not lng:
-        lat = 5.3167
-        lng = -4.0167
-    
-    return get_merchants(db, lat, lng, radius, category)
+    return get_merchants(db, lat, lng, radius)
 
 @app.get("/merchants/{merchant_id}")
 async def get_merchant_details(
@@ -166,9 +135,9 @@ async def get_weather(
     lng: float,
     db: Session = Depends(get_db)
 ):
-    """Récupérer les données météo actuelles"""
+    """Récupérer les données météo"""
     from .services.weather import get_current_weather
-    return await get_current_weather(lat, lng)
+    return get_current_weather(lat, lng)
 
 @app.get("/api/weather/current")
 async def get_current_weather_detailed(
@@ -178,7 +147,7 @@ async def get_current_weather_detailed(
 ):
     """Récupérer les données météo actuelles détaillées"""
     from .services.weather import get_current_weather
-    return await get_current_weather(lat, lng)
+    return get_current_weather(lat, lng)
 
 @app.get("/api/weather/forecast")
 async def get_weather_forecast(
@@ -192,14 +161,14 @@ async def get_weather_forecast(
     return await get_weather_forecast_by_coordinates(lat, lng, days)
 
 @app.get("/api/weather/alerts")
-async def get_weather_alerts_endpoint(
+async def get_weather_alerts(
     lat: float,
     lng: float,
     db: Session = Depends(get_db)
 ):
     """Récupérer les alertes météo"""
     from .services.weather import get_weather_alerts
-    return await get_weather_alerts(db, lat, lng)
+    return get_weather_alerts(lat, lng)
 
 # Endpoints pour les directions
 @app.get("/api/directions")
@@ -212,38 +181,14 @@ async def get_directions(
 ):
     """Récupérer les directions entre deux points"""
     from .services.directions import get_route_directions
-    return await get_route_directions(start_lat, start_lng, end_lat, end_lng)
+    return get_route_directions(start_lat, start_lng, end_lat, end_lng)
 
 # Endpoint pour l'estimation de prix
 @app.post("/api/deliveries/price-estimate")
-async def estimate_delivery_price_endpoint(
+async def estimate_delivery_price(
     request: dict,
     db: Session = Depends(get_db)
 ):
     """Estimer le prix d'une livraison"""
     from .services.delivery import estimate_delivery_price
-    
-    # Extraire les paramètres de la requête
-    pickup_lat = request.get("pickup_lat")
-    pickup_lng = request.get("pickup_lng") 
-    delivery_lat = request.get("delivery_lat")
-    delivery_lng = request.get("delivery_lng")
-    package_weight = request.get("package_weight")
-    cargo_category = request.get("cargo_category") 
-    is_fragile = request.get("is_fragile", False)
-    is_express = request.get("is_express", False)
-    
-    # Vérifier les paramètres obligatoires
-    if not all([pickup_lat, pickup_lng, delivery_lat, delivery_lng]):
-        raise HTTPException(status_code=400, detail="Coordonnées de pickup et delivery requises")
-    
-    return estimate_delivery_price(
-        pickup_lat,
-        pickup_lng, 
-        delivery_lat,
-        delivery_lng,
-        package_weight,
-        cargo_category,
-        is_fragile,
-        is_express
-    )
+    return estimate_delivery_price(db, request)

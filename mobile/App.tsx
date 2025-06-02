@@ -320,6 +320,11 @@ const App: React.FC = () => {
                         <Stack.Screen name="Notifications" component={NotificationsScreen} />
                         <Stack.Screen name="Settings" component={SettingsScreen} />
                         <Stack.Screen name="MerchantDetails" component={MerchantDetailsScreen} />
+                        <Stack.Screen name="CreateDelivery" component={CreateDeliveryScreen} />
+                        <Stack.Screen name="Bids" component={BidsScreen} />
+                        <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
+                        <Stack.Screen name="Payment" component={PaymentScreen} />
+                        <Stack.Screen name="RateDelivery" component={RateDeliveryScreen} />
 
                         {/* Écrans supplémentaires pour les coursiers */}
                         <Stack.Screen name="CourierStatus" component={CourierStatusScreen} />
