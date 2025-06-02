@@ -159,13 +159,12 @@ class UserService {
       throw this.handleError(error)
     }
   }
-
   /**
    * Mise à jour du profil utilisateur
    */
   async updateProfile(updateData: UserUpdateRequest): Promise<User> {
     try {
-      const response = await this.api.put('/users/profile', updateData)
+      const response = await this.api.put('/users/me', updateData)
       return response.data
     } catch (error) {
       console.error('Update profile error:', error)
@@ -188,7 +187,7 @@ class UserService {
         type,
       } as unknown as Blob)
 
-      const response = await this.api.post('/users/profile-picture', formData, {
+      const response = await this.api.post('/users/me/profile-picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -200,12 +199,12 @@ class UserService {
     }
   }
 
-  /**
+    /**
    * Suppression de la photo de profil
    */
   async deleteProfilePicture(): Promise<void> {
     try {
-      await this.api.delete('/users/profile-picture')
+      await this.api.delete('/users/me/profile-picture')
     } catch (error) {
       console.error('Delete profile picture error:', error)
       throw this.handleError(error)

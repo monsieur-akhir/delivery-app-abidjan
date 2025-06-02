@@ -731,20 +731,20 @@ export const resetPassword = async (phone: string): Promise<void> => {
 
 // Profil utilisateur
 export const getUserProfile = async (): Promise<User> => {
-  const response = await api.get("/api/users/profile")
+  const response = await api.get("/api/users/me")
   return response.data
 }
 
 // Mise à jour du profil
 export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
-  const response = await api.put("/api/users/profile", userData)
+  const response = await api.put("/api/users/me", userData)
   return response.data
 }
 
 // Upload de photo de profil
 export const uploadProfilePicture = async (formData: FormData): Promise<UploadResponse> => {
   const token = await AsyncStorage.getItem("authToken")
-  const response = await api.post("/api/users/profile-picture", formData, {
+  const response = await api.post("/api/users/me/profile-picture", formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",

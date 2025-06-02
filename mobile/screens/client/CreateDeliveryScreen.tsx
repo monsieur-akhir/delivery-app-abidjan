@@ -56,6 +56,8 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   const [pickupCommune, setPickupCommune] = useState<string>("")
   const [deliveryAddress, setDeliveryAddress] = useState<string>("")
   const [deliveryCommune, setDeliveryCommune] = useState<string>("")
+  const [recipientName, setRecipientName] = useState<string>("")
+  const [recipientPhone, setRecipientPhone] = useState<string>("")
   const [description, setDescription] = useState<string>("")
   const [packageSize, setPackageSize] = useState<PackageSize>("medium")
   const [packageType, setPackageType] = useState<PackageType | "">("")
@@ -404,11 +406,26 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
       return
     }
 
-    if (!cargoCategory) {
-      setError(t("createDelivery.errorCargoCategoryRequired"))
+    if (!recipientPhone || recipientPhone.trim().length === 0) {
+      setError(t("createDelivery.errorRecipientPhoneRequired"))
       setVisible(true)
       return
     }
+
+    // Validation du numéro de téléphone ivoirien
+    const phoneRegex = /^(\+225)?[0-9]{8,10}$/
+    if (!phoneRegex.test(recipientPhone.replace(/\s/g, ''))) {
+      setError(t("createDelivery.errorInvalidPhoneNumber"))
+      setVisible(true)
+      return
+    }
+
+    // Cargo category is now optional
+    // if (!cargoCategory) {
+    //   setError(t("createDelivery.errorCargoCategoryRequired"))
+    //   setVisible(true)
+    //   return
+    // }
 
     if (isNaN(Number.parseFloat(proposedPrice)) || Number.parseFloat(proposedPrice) <= 0) {
       setError(t("createDelivery.errorInvalidPrice"))
@@ -444,10 +461,12 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
         delivery_commune: deliveryCommune,
         delivery_lat: deliveryLocation?.coords.latitude,
         delivery_lng: deliveryLocation?.coords.longitude,
+        delivery_contact_name: recipientName.trim() || undefined,
+        delivery_contact_phone: recipientPhone.trim(),
         description,
         package_size: packageSize,
         package_type: packageType,
-        cargo_category: cargoCategory as CargoCategory,
+        cargo_category: cargoCategory || undefined,
         is_fragile: isFragile,
         is_urgent: isUrgent,
         proposed_price: Number.parseFloat(proposedPrice),
@@ -703,6 +722,40 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
 
           <Divider style={styles.divider} />
 
+          {/* Section Destinataire */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t("createDelivery.recipientInfo")}</Text>
+            
+            <TextInput
+              label={`${t("createDelivery.recipientPhone")} *`}
+              value={recipientPhone}
+              onChangeText={setRecipientPhone}
+              style={styles.input}
+              mode="outlined"
+              keyboardType="phone-pad"
+              placeholder="01 02 03 04 05"
+              left={<TextInput.Icon icon="phone" />}
+            />
+            <HelperText type="info" visible={true}>
+              {t("createDelivery.recipientPhoneRequired")}
+            </HelperText>
+
+            <TextInput
+              label={t("createDelivery.recipientName")}
+              value={recipientName}
+              onChangeText={setRecipientName}
+              style={styles.input}
+              mode="outlined"
+              placeholder={t("createDelivery.recipientNamePlaceholder")}
+              left={<TextInput.Icon icon="account" />}
+            />
+            <HelperText type="info" visible={true}>
+              {t("createDelivery.recipientNameOptional")}
+            </HelperText>
+          </View>
+
+          <Divider style={styles.divider} />
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.packageDetails")}</Text>
 
@@ -750,7 +803,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
               ))}
             </View>
 
-            <Text style={styles.optionLabel}>{t("createDelivery.cargoCategory")}</Text>
+            <Text style={styles.optionLabel}>{t("createDelivery.cargoCategory")} ({t("common.optional")})</Text>
             <View style={styles.optionsContainer}>
               {cargoCategories.map((category) => (
                 <Chip

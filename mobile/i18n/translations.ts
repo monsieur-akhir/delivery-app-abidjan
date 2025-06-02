@@ -1,5 +1,7 @@
 // Ajouter ces traductions au fichier existant
 
+import { submitRating } from "@/services/api";
+
 export const translations = {
   fr: {
     translation: {
@@ -20,10 +22,37 @@ export const translations = {
       // Traductions pour les catégories de marchandises
       createDelivery: {
         // Traductions existantes...
+        title: "Nouvelle livraison",
+        subtitle: "Créez une nouvelle demande de livraison",
+        pickupAddress: "Adresse de ramassage",
+        deliveryAddress: "Adresse de livraison",
+        address: "Adresse",
+        commune: "Commune",
+        enterAddress: "Entrez l'adresse",
+        packageDetails: "Détails du colis",
+        description: "Description",
+        packageSize: "Taille du colis",
+        packageType: "Type de colis",
+        recipientInfo: "Informations du destinataire",
+        recipientName: "Nom du destinataire",
+        recipientPhone: "Numéro de téléphone du destinataire",
+        recipientNamePlaceholder: "Nom complet du destinataire",
+        recipientNameOptional: "Le nom du destinataire est optionnel",
+        recipientPhoneRequired: "Le numéro de téléphone du destinataire est obligatoire pour toutes les livraisons",
+        errorRecipientPhoneRequired: "Le numéro de téléphone du destinataire est obligatoire",
+        errorInvalidPhoneNumber: "Le numéro de téléphone n'est pas valide (format: 01 02 03 04 05)",
+        errorRequiredFields: "Veuillez remplir tous les champs obligatoires",
         cargoCategory: "Catégorie de marchandises",
         errorCargoCategoryRequired: "Veuillez sélectionner une catégorie de marchandises",
         recommendedVehicle: "Véhicule recommandé",
         priceMultiplier: "Multiplicateur de prix",
+        proposedPrice: "Prix proposé",
+        priceAndEstimates: "Prix et estimation",
+        isFragile: "Objet fragile",
+        isUrgent: "Objet urgent",
+        notes: "Notes supplémentaires",
+        submitRating: "Soumettre une évaluation",
+        submit: "Soumettre",
         cargoCategories: {
           documents: "Documents",
           smallPackages: "Petits colis",
@@ -37,7 +66,49 @@ export const translations = {
           construction: "Matériaux de construction",
           custom: "Autre",
         },
+        packageSizes: {
+          small: "Petit",
+          medium: "Moyen", 
+          large: "Grand",
+        },
+        packageTypes: {
+          document: "Document",
+          food: "Nourriture",
+          clothing: "Vêtements",
+          electronics: "Électronique",
+          other: "Autre",
+        },
       },
+      cargoCategories: {
+          documents: "Documents",
+          smallPackages: "Petits colis",
+          mediumPackages: "Colis moyens",
+          largePackages: "Grands colis",
+          fragile: "Objets fragiles",
+          food: "Nourriture",
+          electronics: "Électronique",
+          furniture: "Meubles",
+          appliances: "Électroménager",
+          construction: "Matériaux de construction",
+          custom: "Autre",
+        },
+
+        tabs: {
+          details: "Détails",
+          pricing: "Tarification",
+          settings: "Paramètres",
+          history: "Historique",
+          notifications: "Notifications",
+          support: "Support",
+          legal: "Mentions légales",
+          privacy: "Confidentialité",
+          home: "Accueil",
+          deliveries: "Livraisons",
+          earnings: "Gains",
+          profile: "Profil",
+          marketplace: "Marché",
+
+        },
 
       // Traductions pour la gestion des véhicules
       vehicleManagement: {
@@ -123,9 +194,25 @@ export const translations = {
         errorPhoneAlreadyUsed: "Ce numéro de téléphone est déjà utilisé par un autre compte",
         errorAccountExists: "Un compte existe déjà avec ce numéro de téléphone",
         or: "ou",
-
-
       },
+
+      // VTC-style map translations
+      vtcMap: {
+        searching: "Recherche d'un coursier",
+        searchingSubtitle: "Nous cherchons le meilleur coursier pour vous",
+        courierAssigned: "Coursier assigné",
+        courierAtPickup: "Le coursier arrive au point de ramassage",
+        pickingUp: "Ramassage en cours",
+        inTransit: "En route vers la destination",
+        delivered: "Livraison terminée",
+        deliveryComplete: "Votre colis a été livré avec succès",
+        unknown: "Statut inconnu",
+        estimatedArrival: "Arrivée estimée",
+        routeDistance: "Distance",
+        routeDuration: "Durée",
+        estimatedPrice: "Prix estimé",
+      },
+
       common:{
         loading: "Chargement...",
         noData: "Aucune donnée disponible",
@@ -141,6 +228,7 @@ export const translations = {
         update: "Mettre à jour",
         view: "Voir",
         search: "Rechercher",
+        optional: "optionnel",
         clear: "Effacer",
         select: "Sélectionner",
         selectLanguage: "Sélectionner la langue",
@@ -258,6 +346,7 @@ export const translations = {
         errorPhoneAlreadyUsed: "Le numéro de téléphone est déjà utilisé",
 
       },
+
     }
   },
 
@@ -281,6 +370,26 @@ export const translations = {
       // Traductions pour les catégories de marchandises
       createDelivery: {
         // Traductions existantes...
+        title: "Fèn ci kura",
+        subtitle: "Fèn ci ɲɛman dɔ da",
+        pickupAddress: "Fèn ta yɔrɔ",
+        deliveryAddress: "Fèn ci yɔrɔ",
+        address: "Yɔrɔ",
+        commune: "Sigida",
+        enterAddress: "Yɔrɔ sɛbɛn",
+        packageDetails: "Fèn kunnafoniw",
+        description: "Ɲɛfɔli",
+        packageSize: "Fèn bonya",
+        packageType: "Fèn suguya",
+        recipientInfo: "Fèn sɔrɔla kunnafoniw",
+        recipientName: "Fèn sɔrɔla tɔgɔ",
+        recipientPhone: "Fèn sɔrɔla telefɔni",
+        recipientNamePlaceholder: "Fèn sɔrɔla tɔgɔ kɛrɛnkɛrɛnnen",
+        recipientNameOptional: "Fèn sɔrɔla tɔgɔ tɛ wajibi ye",
+        recipientPhoneRequired: "Fèn sɔrɔla telefɔni wajibi don fèn ci bɛɛ la",
+        errorRecipientPhoneRequired: "Fèn sɔrɔla telefɔni wajibi don",
+        errorInvalidPhoneNumber: "Telefɔni nimɛro ma ɲɛ (misali: 01 02 03 04 05)",
+        errorRequiredFields: "Yɔrɔ wajibiw bɛɛ fa",
         cargoCategory: "Fèn suguyali",
         errorCargoCategoryRequired: "I ka fèn suguyali dɔ sugandi",
         recommendedVehicle: "Mobili min ka ɲi",
@@ -297,6 +406,18 @@ export const translations = {
           appliances: "Mansin baw",
           construction: "Bonni fèn",
           custom: "Wèrè",
+        },
+        packageSizes: {
+          small: "Fitinin",
+          medium: "Cɛman", 
+          large: "Belebele",
+        },
+        packageTypes: {
+          document: "Sɛbɛn",
+          food: "Dumuni",
+          clothing: "Finw",
+          electronics: "Mansin",
+          other: "Wèrè",
         },
       },
 
@@ -405,6 +526,46 @@ export const translations = {
         instant: "Don fɛɛrɛ",
         learnMore: "Kunnafoni wɛrɛw",
       },
+
+      common: {
+        loading: "Labɛn...",
+        noData: "Kunnafoni si tɛ yen",
+        error: "Fili dɔ kɛra",
+        retry: "A lajɛ kokura",
+        save: "A mara",
+        cancel: "A ban",
+        next: "Nata",
+        back: "Ka segin",
+        delete: "A bɔ",
+        confirm: "A lajɛ",
+        edit: "A changé",
+        update: "A kura",
+        view: "A lajɛ",
+        search: "Ɲini",
+        optional: "tɛ wajibi",
+        clear: "A jɔsi",
+        select: "A sugandi",
+        selectLanguage: "Kan dɔ sugandi",
+        selectRole: "Baarakɛcogo dɔ sugandi",
+        selectVehicleType: "Mobili suguya dɔ sugandi",
+      },
+
+      // VTC-style map translations
+      vtcMap: {
+        searching: "Coursier ɲini",
+        searchingSubtitle: "An bɛ coursier ɲuman ɲini i ye",
+        courierAssigned: "Coursier dira",
+        courierAtPickup: "Coursier bɛ na fèn ta yɔrɔ la",
+        pickingUp: "Fèn ta kɛ",
+        inTransit: "A bɛ taa yɔrɔ la",
+        delivered: "Fèn ci ban",
+        deliveryComplete: "I ka fèn ci ra kosɛbɛ",
+        unknown: "Kunnafoni tɛ dɔn",
+        estimatedArrival: "Sɛgɛsɛgɛli waati",
+        routeDistance: "Janya",
+        routeDuration: "Waati janya",
+        estimatedPrice: "Sɔngɔ jateminɛnen",
+      },
     }
   },
 
@@ -427,6 +588,26 @@ export const translations = {
       // Traductions pour les catégories de marchandises
       createDelivery: {
         // Traductions existantes...
+        title: "Nuan ci ɛkoa",
+        subtitle: "Nuan ci ngla kura yo",
+        pickupAddress: "Nuan yi yɔwo",
+        deliveryAddress: "Nuan ci yɔwo",
+        address: "Yɔwo",
+        commune: "Kpli",
+        enterAddress: "Yɔwo flɛ",
+        packageDetails: "Nuan kunnafoni",
+        description: "Ngua kangli",
+        packageSize: "Nuan nglo",
+        packageType: "Nuan nglo yi",
+        recipientInfo: "Nuan sɔli kunnafoni",
+        recipientName: "Nuan sɔli kun",
+        recipientPhone: "Nuan sɔli telefɔn",
+        recipientNamePlaceholder: "Nuan sɔli kun kplɛ",
+        recipientNameOptional: "Nuan sɔli kun ka wajibi",
+        recipientPhoneRequired: "Nuan sɔli telefɔn wajibi nuan ci bɛɛ",
+        errorRecipientPhoneRequired: "Nuan sɔli telefɔn wajibi",
+        errorInvalidPhoneNumber: "Telefɔn nimɛro ka ɲɛ (ngua: 01 02 03 04 05)",
+        errorRequiredFields: "Yɔwo wajibi bɛɛ fa",
         cargoCategory: "Nuan ti nglo",
         errorCargoCategoryRequired: "Fa nuan ti nglo kun yi",
         recommendedVehicle: "Lori ti é klɔ",
@@ -443,6 +624,18 @@ export const translations = {
           appliances: "Mansin kpli",
           construction: "Sua nuan",
           custom: "Wɔfɛ",
+        },
+        packageSizes: {
+          small: "Wawla",
+          medium: "Nglo", 
+          large: "Kpli",
+        },
+        packageTypes: {
+          document: "Flɛ",
+          food: "Aliɛ",
+          clothing: "Aluɛ",
+          electronics: "Mansin",
+          other: "Wɔfɛ",
         },
       },
 
@@ -571,7 +764,47 @@ export const translations = {
         reset: "Réinitialiser",
         send: "Envoyer",
         code: "Code",
+      },
+
+      common: {
+        loading: "Ɔ wo mu...",
+        noData: "Kunnafoni kpa",
+        error: "Fili kpa",
+        retry: "A fa kokura",
+        save: "A meni",
+        cancel: "A ban",
+        next: "Nata wɔ",
+        back: "A segin",
+        delete: "A yi fite",
+        confirm: "A lajɛ",
+        edit: "A changé",
+        update: "A kura",
+        view: "A lajɛ",
+        search: "A ɲini",
+        optional: "ka wajibi",
+        clear: "A jɔsi",
+        select: "A fa",
+        selectLanguage: "Fa kan kun",
+        selectRole: "Fa baarakɛ suguya kun",
+        selectVehicleType: "Fa lori suguya kun",
+      },
+
+      // VTC-style map translations
+      vtcMap: {
+        searching: "Coursier ma ɲini",
+        searchingSubtitle: "Ɔn do coursier me nua wo",
+        courierAssigned: "Coursier wo ya",
+        courierAtPickup: "Coursier nan ba fɛn ta yɔrɔ mɛ",
+        pickingUp: "Fɛn ta wo",
+        inTransit: "Wo nan taga",
+        delivered: "Fɛn ci bisa",
+        deliveryComplete: "Wu ka fɛn ci ra yɛlɛ yɛlɛ",
+        unknown: "Kunnafoni tɛ lon",
+        estimatedArrival: "Waati ma lajɛ",
+        routeDistance: "Janya",
+        routeDuration: "Waati janya",
+        estimatedPrice: "Sɔngɔ ma lajɛ",
+      },
     }
-  }
   },
 }

@@ -496,4 +496,161 @@ def calculate_collaborative_earnings(db: Session, delivery_id: int) -> Dict[str,
         "remaining_for_platform_or_adjustment": delivery.final_price - total_distributed_amount
     }
 
+def estimate_delivery_price(
+    pickup_latitude: float,
+    pickup_longitude: float,
+    delivery_latitude: float,
+    delivery_longitude: float,
+    package_weight: Optional[float] = None,
+    cargo_category: Optional[str] = None,
+    is_fragile: bool = False,
+    is_express: bool = False
+) -> Dict[str, Any]:
+    """
+    Estime le prix de livraison basé sur la distance et d'autres facteurs.
+    """
+    try:
+        # Calculer la distance en utilisant la formule de Haversine
+        import math
+        
+        def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+            """Calcule la distance entre deux points géographiques en kilomètres."""
+            R = 6371  # Rayon de la Terre en kilomètres
+            
+            lat1_rad = math.radians(lat1)
+            lon1_rad = math.radians(lon1)
+            lat2_rad = math.radians(lat2)
+            lon2_rad = math.radians(lon2)
+            
+            dlat = lat2_rad - lat1_rad
+            dlon = lon2_rad - lon1_rad
+            
+            a = (math.sin(dlat/2)**2 + 
+                 math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon/2)**2)
+            c = 2 * math.asin(math.sqrt(a))
+            
+            return R * c
+        
+        distance_km = haversine_distance(
+            pickup_latitude, pickup_longitude,
+            delivery_latitude, delivery_longitude
+        )
+        
+        # Prix de base (FCFA)
+        base_price = settings.MIN_DELIVERY_PRICE or 1000  # 1000 FCFA minimum
+        
+        # Prix par kilomètre
+        price_per_km = 200  # 200 FCFA par km
+        
+        # Calcul du prix de base
+        estimated_price = base_price + (distance_km * price_per_km)
+        
+        # Multiplicateurs selon les caractéristiques
+        multipliers = {
+            "base": 1.0,
+            "weight": 1.0,
+            "fragile": 1.0,
+            "express": 1.0,
+            "cargo_category": 1.0
+        }
+        
+        # Multiplicateur pour le poids
+        if package_weight:
+            if package_weight > 20:  # Plus de 20kg
+                multipliers["weight"] = 1.5
+            elif package_weight > 10:  # Plus de 10kg
+                multipliers["weight"] = 1.3
+            elif package_weight > 5:  # Plus de 5kg
+                multipliers["weight"] = 1.1
+        
+        # Multiplicateur pour objets fragiles
+        if is_fragile:
+            multipliers["fragile"] = 1.2
+        
+        # Multiplicateur pour livraison express
+        if is_express:
+            multipliers["express"] = 1.5
+        
+        # Multiplicateur selon la catégorie de cargo
+        cargo_multipliers = {
+            "FOOD": 1.1,
+            "MEDICINE": 1.3,
+            "ELECTRONICS": 1.2,
+            "DOCUMENTS": 1.0,
+            "CLOTHING": 1.0,
+            "FURNITURE": 1.4,
+            "OTHER": 1.0
+        }
+        
+        if cargo_category and cargo_category in cargo_multipliers:
+            multipliers["cargo_category"] = cargo_multipliers[cargo_category]
+        
+        # Appliquer tous les multiplicateurs
+        total_multiplier = 1.0
+        for key, multiplier in multipliers.items():
+            total_multiplier *= multiplier
+        
+        final_price = estimated_price * total_multiplier
+        
+        # Arrondir au multiple de 50 FCFA supérieur
+        final_price = math.ceil(final_price / 50) * 50
+        
+        # Estimation du temps de livraison (en minutes)
+        # Vitesse moyenne en ville: 25 km/h
+        estimated_time_minutes = max(15, int((distance_km / 25) * 60))
+        
+        # Ajouter du temps selon les facteurs
+        if is_fragile:
+            estimated_time_minutes += 10
+        if package_weight and package_weight > 10:
+            estimated_time_minutes += 5
+        
+        return {
+            "estimated_price": int(final_price),
+            "distance_km": round(distance_km, 2),
+            "estimated_time_minutes": estimated_time_minutes,
+            "price_breakdown": {
+                "base_price": base_price,
+                "distance_price": distance_km * price_per_km,
+                "multipliers_applied": multipliers,
+                "total_multiplier": round(total_multiplier, 2)
+            },
+            "factors": {
+                "weight_kg": package_weight,
+                "is_fragile": is_fragile,
+                "is_express": is_express,
+                "cargo_category": cargo_category
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Erreur lors de l'estimation du prix: {str(e)}")
+        # Retourner un prix par défaut en cas d'erreur
+        return {
+            "estimated_price": settings.MIN_DELIVERY_PRICE or 1000,
+            "distance_km": 0,
+            "estimated_time_minutes": 30,
+            "error": "Impossible de calculer l'estimation précise",
+            "price_breakdown": {},
+            "factors": {}
+        }
+
+def get_active_deliveries_for_client(db: Session, client_id: int) -> List[Delivery]:
+    """
+    Récupère toutes les livraisons actives d'un client.
+    Les livraisons actives sont celles qui ne sont pas annulées ou complétées.
+    """
+    active_statuses = [
+        DeliveryStatus.PENDING,
+        DeliveryStatus.CONFIRMED,
+        DeliveryStatus.PICKED_UP,
+        DeliveryStatus.IN_TRANSIT,
+        DeliveryStatus.NEAR_DESTINATION
+    ]
+    
+    return db.query(Delivery).filter(
+        Delivery.client_id == client_id,
+        Delivery.status.in_(active_statuses)
+    ).order_by(desc(Delivery.created_at)).all()
+
 
