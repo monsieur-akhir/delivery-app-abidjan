@@ -194,6 +194,72 @@ def register_user(db: Session, user_data: UserCreate) -> User:
         
         return db_user
 
+def register_user_admin(db: Session, user_data: UserCreate) -> User:
+    """
+    Enregistre un nouvel utilisateur via l'interface d'administration.
+    Les utilisateurs créés par les administrateurs sont automatiquement actifs.
+    """
+    # Vérifier si l'utilisateur existe déjà
+    existing_user = db.query(User).filter(User.phone == user_data.phone).first()
+    if existing_user:
+        raise ConflictError("Un utilisateur avec ce numéro de téléphone existe déjà")
+    
+    if user_data.email:
+        existing_email = db.query(User).filter(User.email == user_data.email).first()
+        if existing_email:
+            raise ConflictError("Un utilisateur avec cette adresse email existe déjà")
+    
+    # Créer l'utilisateur avec un statut actif (bypass Keycloak pour les admins)
+    hashed_password = get_password_hash(user_data.password)
+    db_user = User(
+        phone=user_data.phone,
+        email=user_data.email,
+        hashed_password=hashed_password,
+        full_name=user_data.full_name,
+        role=user_data.role,
+        commune=user_data.commune,
+        language_preference=user_data.language_preference,
+        status=UserStatus.active  # Toujours actif pour les créations admin
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    # Créer un portefeuille pour l'utilisateur
+    from ..models.wallet import Wallet
+    wallet = Wallet(user_id=db_user.id)
+    db.add(wallet)
+    
+    # Si c'est un coursier, créer un profil de coursier et des points
+    if db_user.role == UserRole.courier:
+        from ..models.user import CourierProfile
+        from ..models.gamification import CourierPoints
+        
+        courier_profile = CourierProfile(user_id=db_user.id)
+        db.add(courier_profile)
+        
+        courier_points = CourierPoints(courier_id=db_user.id)
+        db.add(courier_points)
+    
+    # Si c'est une entreprise, créer un profil d'entreprise
+    elif db_user.role == UserRole.business:
+        from ..models.user import BusinessProfile
+        
+        business_profile = BusinessProfile(
+            user_id=db_user.id,
+            business_name=db_user.full_name,
+            business_type="other",
+            address="",
+            commune=db_user.commune or ""
+        )
+        db.add(business_profile)
+    
+    db.commit()
+    db.refresh(db_user)
+    
+    return db_user
+
 def login_user(db: Session, login_data: UserLogin) -> Token:
     """
     Authentifie un utilisateur et génère un token.

@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     # Sécurité
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 30 jours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1800"))  # 30 minutes par défaut
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))  # 7 jours par défaut
     
     # Base de données
     DATABASE_URL: str = os.getenv("DATABASE_URL", "")
@@ -33,6 +34,10 @@ class Settings(BaseSettings):
         "https://livraison-abidjan.com",
         "https://admin.livraison-abidjan.com"
     ]
+    
+    # Upload Configuration
+    MAX_UPLOAD_SIZE: int = int(os.getenv("MAX_UPLOAD_SIZE", "10485760"))  # 10MB par défaut
+    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
     
     # Keycloak
     USE_KEYCLOAK: bool = os.getenv("USE_KEYCLOAK", "False").lower() == "true"
