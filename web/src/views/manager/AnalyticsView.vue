@@ -1,586 +1,626 @@
+
 <template>
-  <div class="analytics-dashboard">
-    <h1 class="page-title">Tableau de bord analytique</h1>
-    
-    <div class="date-filter">
-      <div class="date-range">
-        <label>Période:</label>
-        <select v-model="dateRange" @change="loadAnalytics">
-          <option value="today">Aujourd'hui</option>
-          <option value="yesterday">Hier</option>
-          <option value="week">Cette semaine</option>
-          <option value="month">Ce mois</option>
-          <option value="quarter">Ce trimestre</option>
-          <option value="year">Cette année</option>
-          <option value="custom">Personnalisé</option>
-        </select>
-      </div>
-      
-      <div v-if="dateRange === 'custom'" class="custom-date-range">
-        <div class="date-input">
-          <label>Du:</label>
-          <input type="date" v-model="startDate" @change="loadAnalytics">
-        </div>
-        <div class="date-input">
-          <label>Au:</label>
-          <input type="date" v-model="endDate" @change="loadAnalytics">
-        </div>
-      </div>
-      
-      <div class="commune-filter">
-        <label>Commune:</label>
-        <select v-model="selectedCommune" @change="loadAnalytics">
-          <option value="">Toutes les communes</option>
-          <option v-for="commune in communes" :key="commune" :value="commune">
-            {{ commune }}
-          </option>
+  <div class="analytics-view">
+    <div class="header">
+      <h1>{{ $t('analytics.title') }}</h1>
+      <div class="period-selector">
+        <select v-model="selectedPeriod" @change="loadData" class="period-select">
+          <option value="day">{{ $t('analytics.periods.day') }}</option>
+          <option value="week">{{ $t('analytics.periods.week') }}</option>
+          <option value="month">{{ $t('analytics.periods.month') }}</option>
+          <option value="year">{{ $t('analytics.periods.year') }}</option>
         </select>
       </div>
     </div>
-    
-    <div class="metrics-cards">
-      <div class="metric-card">
-        <div class="metric-icon">
-          <font-awesome-icon icon="box" />
-        </div>
-        <div class="metric-content">
-          <h3>Livraisons</h3>
-          <div class="metric-value">{{ metrics.deliveries.total }}</div>
-          <div class="metric-change" :class="getChangeClass(metrics.deliveries.change)">
-            <font-awesome-icon :icon="getChangeIcon(metrics.deliveries.change)" />
-            {{ formatPercentage(metrics.deliveries.change) }}
-          </div>
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-icon">
-          <font-awesome-icon icon="money-bill-wave" />
-        </div>
-        <div class="metric-content">
-          <h3>Revenus</h3>
-          <div class="metric-value">{{ formatCurrency(metrics.revenue.total) }}</div>
-          <div class="metric-change" :class="getChangeClass(metrics.revenue.change)">
-            <font-awesome-icon :icon="getChangeIcon(metrics.revenue.change)" />
-            {{ formatPercentage(metrics.revenue.change) }}
-          </div>
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-icon">
-          <font-awesome-icon icon="users" />
-        </div>
-        <div class="metric-content">
-          <h3>Nouveaux utilisateurs</h3>
-          <div class="metric-value">{{ metrics.newUsers.total }}</div>
-          <div class="metric-change" :class="getChangeClass(metrics.newUsers.change)">
-            <font-awesome-icon :icon="getChangeIcon(metrics.newUsers.change)" />
-            {{ formatPercentage(metrics.newUsers.change) }}
-          </div>
-        </div>
-      </div>
-      
-      <div class="metric-card">
-        <div class="metric-icon">
-          <font-awesome-icon icon="star" />
-        </div>
-        <div class="metric-content">
-          <h3>Satisfaction</h3>
-          <div class="metric-value">{{ formatRating(metrics.satisfaction.total) }}</div>
-          <div class="metric-change" :class="getChangeClass(metrics.satisfaction.change)">
-            <font-awesome-icon :icon="getChangeIcon(metrics.satisfaction.change)" />
-            {{ formatPercentage(metrics.satisfaction.change) }}
-          </div>
-        </div>
-      </div>
+
+    <div v-if="loading" class="loading">
+      <i class="fas fa-spinner fa-spin"></i>
+      {{ $t('common.loading') }}
     </div>
-    
-    <div class="charts-container">
-      <div class="chart-card">
-        <h3>Livraisons par jour</h3>
-        <deliveries-chart 
-          :chart-data="deliveriesChartData" 
-          :options="deliveriesChartOptions"
-        />
+
+    <div v-else class="analytics-content">
+      <!-- KPIs principaux -->
+      <div class="kpi-grid">
+        <div class="kpi-card users">
+          <div class="kpi-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">{{ stats.users?.total || 0 }}</div>
+            <div class="kpi-label">{{ $t('analytics.totalUsers') }}</div>
+            <div class="kpi-growth" :class="getGrowthClass(stats.users?.growth_rate)">
+              <i :class="getGrowthIcon(stats.users?.growth_rate)"></i>
+              {{ Math.abs(stats.users?.growth_rate || 0).toFixed(1) }}%
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card deliveries">
+          <div class="kpi-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">{{ stats.deliveries?.total || 0 }}</div>
+            <div class="kpi-label">{{ $t('analytics.totalDeliveries') }}</div>
+            <div class="kpi-growth positive">
+              <i class="fas fa-arrow-up"></i>
+              {{ stats.deliveries?.period || 0 }} {{ $t(`analytics.periods.${selectedPeriod}`) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card revenue">
+          <div class="kpi-icon">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">{{ formatCurrency(stats.revenue?.total || 0) }}</div>
+            <div class="kpi-label">{{ $t('analytics.totalRevenue') }}</div>
+            <div class="kpi-growth positive">
+              <i class="fas fa-arrow-up"></i>
+              {{ formatCurrency(stats.revenue?.period || 0) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card kyc">
+          <div class="kpi-icon">
+            <i class="fas fa-id-card"></i>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">{{ kycStats.pending || 0 }}</div>
+            <div class="kpi-label">{{ $t('analytics.pendingKyc') }}</div>
+            <div class="kpi-growth neutral">
+              {{ Math.round((kycStats.verified / kycStats.total) * 100) }}% {{ $t('analytics.verified') }}
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <div class="chart-card">
-        <h3>Répartition par statut</h3>
-        <pie-chart 
-          :chart-data="statusChartData" 
-          :options="statusChartOptions"
-        />
+
+      <!-- Graphiques -->
+      <div class="charts-grid">
+        <!-- Répartition des utilisateurs par rôle -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>{{ $t('analytics.usersByRole') }}</h3>
+          </div>
+          <div class="chart-content">
+            <PieChart :data="userRoleData" :options="chartOptions" />
+          </div>
+        </div>
+
+        <!-- Évolution des livraisons -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>{{ $t('analytics.deliveryTrend') }}</h3>
+          </div>
+          <div class="chart-content">
+            <canvas ref="deliveryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Statut KYC -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>{{ $t('analytics.kycStatus') }}</h3>
+          </div>
+          <div class="chart-content">
+            <HorizontalBarChart :data="kycChartData" :options="kycChartOptions" />
+          </div>
+        </div>
+
+        <!-- Revenus par commune -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>{{ $t('analytics.revenueByCommune') }}</h3>
+          </div>
+          <div class="chart-content">
+            <canvas ref="revenueChart"></canvas>
+          </div>
+        </div>
       </div>
-      
-      <div class="chart-card">
-        <h3>Livraisons par commune</h3>
-        <horizontal-bar-chart 
-          :chart-data="communeChartData" 
-          :options="communeChartOptions"
-        />
-      </div>
-      
-      <div class="chart-card">
-        <h3>Revenus par jour</h3>
-        <deliveries-chart 
-          :chart-data="revenueChartData" 
-          :options="revenueChartOptions"
-        />
-      </div>
-    </div>
-    
-    <div class="performance-section">
-      <h2>Performance des coursiers</h2>
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Coursier</th>
-              <th>Livraisons</th>
-              <th>Taux de complétion</th>
-              <th>Temps moyen</th>
-              <th>Évaluation</th>
-              <th>Revenus</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="courier in topCouriers" :key="courier.id">
-              <td>
-                <div class="courier-info">
-                  <img :src="courier.profilePicture || '/img/default-avatar.png'" alt="Avatar">
-                  <span>{{ courier.name }}</span>
+
+      <!-- Tableaux de données -->
+      <div class="data-tables">
+        <!-- Top coursiers -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>{{ $t('analytics.topCouriers') }}</h3>
+          </div>
+          <div class="table-content">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ $t('courier.name') }}</th>
+                  <th>{{ $t('stats.deliveries') }}</th>
+                  <th>{{ $t('stats.rating') }}</th>
+                  <th>{{ $t('stats.earnings') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="courier in topCouriers" :key="courier.id">
+                  <td>
+                    <div class="user-cell">
+                      <img :src="courier.profile_picture || '/default-avatar.png'" :alt="courier.name" class="user-avatar-sm">
+                      {{ courier.name }}
+                    </div>
+                  </td>
+                  <td>{{ courier.deliveries_completed }}</td>
+                  <td>
+                    <div class="rating-cell">
+                      <i class="fas fa-star"></i>
+                      {{ courier.average_rating }}/5
+                    </div>
+                  </td>
+                  <td>{{ formatCurrency(courier.total_earnings) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activité récente -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>{{ $t('analytics.recentActivity') }}</h3>
+          </div>
+          <div class="table-content">
+            <div class="activity-list">
+              <div v-for="activity in recentActivity" :key="activity.id" class="activity-item">
+                <div class="activity-icon">
+                  <i :class="getActivityIcon(activity.type)"></i>
                 </div>
-              </td>
-              <td>{{ courier.deliveries }}</td>
-              <td>
-                <div class="progress-bar">
-                  <div class="progress" :style="{ width: courier.completionRate + '%' }"></div>
-                  <span>{{ courier.completionRate }}%</span>
+                <div class="activity-content">
+                  <div class="activity-description">{{ activity.description }}</div>
+                  <div class="activity-time">{{ formatTime(activity.created_at) }}</div>
                 </div>
-              </td>
-              <td>{{ formatDuration(courier.averageTime) }}</td>
-              <td>
-                <div class="rating">
-                  <span class="stars">
-                    <font-awesome-icon v-for="n in Math.floor(courier.rating)" :key="n" icon="star" class="star-filled" />
-                    <font-awesome-icon v-if="courier.rating % 1 > 0" icon="star-half-alt" class="star-filled" />
-                    <font-awesome-icon v-for="n in (5 - Math.ceil(courier.rating))" :key="n + Math.ceil(courier.rating)" icon="star" class="star-empty" />
-                  </span>
-                  <span class="rating-value">{{ courier.rating.toFixed(1) }}</span>
-                </div>
-              </td>
-              <td>{{ formatCurrency(courier.revenue) }}</td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertes et notifications -->
+      <div class="alerts-section">
+        <h3>{{ $t('analytics.alerts') }}</h3>
+        <div class="alerts-grid">
+          <div v-if="kycStats.pending > 10" class="alert-card warning">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-content">
+              <div class="alert-title">{{ $t('alerts.highPendingKyc') }}</div>
+              <div class="alert-description">
+                {{ kycStats.pending }} {{ $t('alerts.kycPendingMessage') }}
+              </div>
+            </div>
+            <div class="alert-action">
+              <button @click="$router.push('/manager/kyc')" class="btn btn-sm btn-warning">
+                {{ $t('alerts.review') }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="stats.users?.growth_rate < 0" class="alert-card danger">
+            <div class="alert-icon">
+              <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="alert-content">
+              <div class="alert-title">{{ $t('alerts.userGrowthDecline') }}</div>
+              <div class="alert-description">
+                {{ $t('alerts.userGrowthMessage') }}
+              </div>
+            </div>
+          </div>
+
+          <div v-if="!alerts.length" class="alert-card success">
+            <div class="alert-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="alert-content">
+              <div class="alert-title">{{ $t('alerts.allGood') }}</div>
+              <div class="alert-description">{{ $t('alerts.noIssues') }}</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
-import DeliveriesChart from '@/components/charts/DeliveriesChart.vue';
-import PieChart from '@/components/charts/PieChart.vue';
-import HorizontalBarChart from '@/components/charts/HorizontalBarChart.vue';
-import { getAnalyticsData, getCourierPerformance } from '@/api/manager';
-import { formatCurrency, formatPercentage, formatDuration } from '@/utils/formatters';
-import { generateChartColors } from '@/utils/chart-helpers';
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { useToast } from '@/composables/useToast'
+import managerApi from '@/api/manager'
+import PieChart from '@/components/charts/PieChart.vue'
+import HorizontalBarChart from '@/components/charts/HorizontalBarChart.vue'
+import Chart from 'chart.js/auto'
 
 export default {
   name: 'AnalyticsView',
   components: {
-    DeliveriesChart,
     PieChart,
     HorizontalBarChart
   },
   setup() {
-    const dateRange = ref('week');
-    const startDate = ref(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().substr(0, 10));
-    const endDate = ref(new Date().toISOString().substr(0, 10));
-    const selectedCommune = ref('');
-    const communes = ref([
-      'Abobo', 'Adjamé', 'Attécoubé', 'Cocody', 'Koumassi',
-      'Marcory', 'Plateau', 'Port-Bouët', 'Treichville', 'Yopougon'
-    ]);
+    const { showToast } = useToast()
     
-    const metrics = ref({
-      deliveries: { total: 0, change: 0 },
-      revenue: { total: 0, change: 0 },
-      newUsers: { total: 0, change: 0 },
-      satisfaction: { total: 0, change: 0 }
-    });
+    const loading = ref(false)
+    const selectedPeriod = ref('month')
+    const deliveryChart = ref(null)
+    const revenueChart = ref(null)
     
-    const deliveriesChartData = ref({
-      labels: [],
-      datasets: []
-    });
+    const stats = reactive({})
+    const kycStats = reactive({})
+    const topCouriers = ref([])
+    const recentActivity = ref([])
+    const alerts = ref([])
     
-    const statusChartData = ref({
-      labels: [],
-      datasets: []
-    });
+    let deliveryChartInstance = null
+    let revenueChartInstance = null
     
-    const communeChartData = ref({
-      labels: [],
-      datasets: []
-    });
+    // Computed
+    const userRoleData = computed(() => ({
+      labels: ['Clients', 'Coursiers', 'Entreprises'],
+      datasets: [{
+        data: [
+          stats.usersByRole?.client || 0,
+          stats.usersByRole?.courier || 0,
+          stats.usersByRole?.business || 0
+        ],
+        backgroundColor: ['#2196F3', '#4CAF50', '#FF9800']
+      }]
+    }))
     
-    const revenueChartData = ref({
-      labels: [],
-      datasets: []
-    });
+    const kycChartData = computed(() => ({
+      labels: ['Vérifié', 'En attente', 'Rejeté'],
+      datasets: [{
+        data: [
+          kycStats.verified || 0,
+          kycStats.pending || 0,
+          kycStats.rejected || 0
+        ],
+        backgroundColor: ['#4CAF50', '#FF9800', '#F44336']
+      }]
+    }))
     
-    const topCouriers = ref([]);
-    
-    const deliveriesChartOptions = {
+    const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'top',
-        },
-        title: {
-          display: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            precision: 0
-          }
+          position: 'bottom'
         }
       }
-    };
+    }
     
-    const statusChartOptions = {
+    const kycChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'right',
-        }
-      }
-    };
-    
-    const communeChartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: {
-          display: false
-        }
-      },
       scales: {
         x: {
-          beginAtZero: true,
-          ticks: {
-            precision: 0
-          }
+          beginAtZero: true
         }
       }
-    };
+    }
     
-    const revenueChartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-        title: {
-          display: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function(value) {
-              return formatCurrency(value);
-            }
-          }
-        }
-      }
-    };
-    
-    const loadAnalytics = async () => {
+    // Méthodes
+    const loadData = async () => {
       try {
-        // Préparer les paramètres de date
-        let params = {};
+        loading.value = true
         
-        if (dateRange.value === 'custom') {
-          params.startDate = startDate.value;
-          params.endDate = endDate.value;
-        } else {
-          params.dateRange = dateRange.value;
-        }
+        // Charger les statistiques avancées
+        const statsResponse = await managerApi.getAdvancedStats(selectedPeriod.value)
+        Object.assign(stats, statsResponse.data)
         
-        if (selectedCommune.value) {
-          params.commune = selectedCommune.value;
-        }
+        // Charger les stats KYC
+        const kycResponse = await managerApi.getKycStats()
+        Object.assign(kycStats, kycResponse.data)
         
-        // Charger les données analytiques
-        const data = await getAnalyticsData(params);
+        // Charger les top coursiers
+        const couriersResponse = await managerApi.getCouriers({ limit: 5, sort: 'earnings' })
+        topCouriers.value = couriersResponse.data
         
-        // Mettre à jour les métriques
-        metrics.value = data.metrics;
+        // Charger l'activité récente
+        const activityResponse = await managerApi.getRecentActivity()
+        recentActivity.value = activityResponse.data
         
-        // Mettre à jour les données des graphiques
-        deliveriesChartData.value = {
-          labels: data.deliveriesByDay.labels,
-          datasets: [{
-            label: 'Livraisons',
-            data: data.deliveriesByDay.data,
-            backgroundColor: '#4CAF50',
-            borderColor: '#4CAF50',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: false
-          }]
-        };
-        
-        statusChartData.value = {
-          labels: data.deliveriesByStatus.labels,
-          datasets: [{
-            data: data.deliveriesByStatus.data,
-            backgroundColor: generateChartColors(data.deliveriesByStatus.labels.length),
-            borderWidth: 1
-          }]
-        };
-        
-        communeChartData.value = {
-          labels: data.deliveriesByCommune.labels,
-          datasets: [{
-            label: 'Livraisons',
-            data: data.deliveriesByCommune.data,
-            backgroundColor: '#2196F3',
-            borderColor: '#2196F3',
-            borderWidth: 1
-          }]
-        };
-        
-        revenueChartData.value = {
-          labels: data.revenueByDay.labels,
-          datasets: [{
-            label: 'Revenus',
-            data: data.revenueByDay.data,
-            backgroundColor: '#FF9800',
-            borderColor: '#FF9800',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: false
-          }]
-        };
-        
-        // Charger les performances des coursiers
-        const courierData = await getCourierPerformance(params);
-        topCouriers.value = courierData.topCouriers;
+        // Mettre à jour les graphiques
+        await nextTick()
+        updateCharts()
         
       } catch (error) {
-        console.error('Erreur lors du chargement des données analytiques:', error);
+        showToast(error.message, 'error')
+      } finally {
+        loading.value = false
       }
-    };
+    }
     
-    const getChangeClass = (change) => {
-      if (change > 0) return 'positive';
-      if (change < 0) return 'negative';
-      return 'neutral';
-    };
+    const updateCharts = () => {
+      // Graphique d'évolution des livraisons
+      if (deliveryChart.value) {
+        const ctx = deliveryChart.value.getContext('2d')
+        
+        if (deliveryChartInstance) {
+          deliveryChartInstance.destroy()
+        }
+        
+        deliveryChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: stats.deliveryTrend?.labels || [],
+            datasets: [{
+              label: 'Livraisons',
+              data: stats.deliveryTrend?.data || [],
+              borderColor: '#2196F3',
+              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        })
+      }
+      
+      // Graphique des revenus par commune
+      if (revenueChart.value) {
+        const ctx = revenueChart.value.getContext('2d')
+        
+        if (revenueChartInstance) {
+          revenueChartInstance.destroy()
+        }
+        
+        revenueChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: stats.revenueByCommune?.labels || [],
+            datasets: [{
+              label: 'Revenus (XOF)',
+              data: stats.revenueByCommune?.data || [],
+              backgroundColor: '#4CAF50'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        })
+      }
+    }
     
-    const getChangeIcon = (change) => {
-      if (change > 0) return 'arrow-up';
-      if (change < 0) return 'arrow-down';
-      return 'minus';
-    };
+    const getGrowthClass = (rate) => {
+      if (rate > 0) return 'positive'
+      if (rate < 0) return 'negative'
+      return 'neutral'
+    }
     
-    const formatRating = (rating) => {
-      return rating.toFixed(1) + '/5';
-    };
+    const getGrowthIcon = (rate) => {
+      if (rate > 0) return 'fas fa-arrow-up'
+      if (rate < 0) return 'fas fa-arrow-down'
+      return 'fas fa-minus'
+    }
     
+    const getActivityIcon = (type) => {
+      const icons = {
+        user_registered: 'fas fa-user-plus',
+        delivery_completed: 'fas fa-check-circle',
+        kyc_submitted: 'fas fa-id-card',
+        payment_processed: 'fas fa-credit-card'
+      }
+      return icons[type] || 'fas fa-circle'
+    }
+    
+    const formatCurrency = (amount) => {
+      return new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'XOF'
+      }).format(amount)
+    }
+    
+    const formatTime = (dateString) => {
+      const now = new Date()
+      const date = new Date(dateString)
+      const diffMs = now - date
+      const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMins / 60)
+      const diffDays = Math.floor(diffHours / 24)
+      
+      if (diffMins < 60) return `Il y a ${diffMins} min`
+      if (diffHours < 24) return `Il y a ${diffHours}h`
+      return `Il y a ${diffDays}j`
+    }
+    
+    // Lifecycle
     onMounted(() => {
-      loadAnalytics();
-    });
+      loadData()
+    })
     
     return {
-      dateRange,
-      startDate,
-      endDate,
-      selectedCommune,
-      communes,
-      metrics,
-      deliveriesChartData,
-      statusChartData,
-      communeChartData,
-      revenueChartData,
-      deliveriesChartOptions,
-      statusChartOptions,
-      communeChartOptions,
-      revenueChartOptions,
+      loading,
+      selectedPeriod,
+      deliveryChart,
+      revenueChart,
+      stats,
+      kycStats,
       topCouriers,
-      loadAnalytics,
-      getChangeClass,
-      getChangeIcon,
+      recentActivity,
+      alerts,
+      userRoleData,
+      kycChartData,
+      chartOptions,
+      kycChartOptions,
+      loadData,
+      getGrowthClass,
+      getGrowthIcon,
+      getActivityIcon,
       formatCurrency,
-      formatPercentage,
-      formatDuration,
-      formatRating
-    };
+      formatTime
+    }
   }
-};
+}
 </script>
 
 <style scoped>
-.analytics-dashboard {
+.analytics-view {
   padding: 20px;
 }
 
-.page-title {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.date-filter {
+.header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 30px;
-  padding: 15px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
 }
 
-.date-range, .custom-date-range, .commune-filter {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.custom-date-range {
-  display: flex;
-  gap: 15px;
-}
-
-.date-input {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-select, input[type="date"] {
+.period-select {
   padding: 8px 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
+  border-radius: 6px;
+  background: white;
 }
 
-.metrics-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.metric-card {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.metric-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
-  margin-right: 15px;
-  background-color: #f0f4ff;
-  border-radius: 50%;
-  color: #4361ee;
-  font-size: 20px;
-}
-
-.metric-content {
-  flex: 1;
-}
-
-.metric-content h3 {
-  margin: 0 0 5px 0;
-  font-size: 14px;
+.loading {
+  text-align: center;
+  padding: 40px;
   color: #666;
 }
 
-.metric-value {
-  font-size: 24px;
-  font-weight: 600;
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.kpi-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.kpi-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+}
+
+.kpi-card.users .kpi-icon { background: #2196F3; }
+.kpi-card.deliveries .kpi-icon { background: #4CAF50; }
+.kpi-card.revenue .kpi-icon { background: #FF9800; }
+.kpi-card.kyc .kpi-icon { background: #9C27B0; }
+
+.kpi-content {
+  flex: 1;
+}
+
+.kpi-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
   margin-bottom: 5px;
 }
 
-.metric-change {
+.kpi-label {
+  color: #666;
   font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.kpi-growth {
+  font-size: 12px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-.metric-change.positive {
-  color: #4CAF50;
-}
+.kpi-growth.positive { color: #4CAF50; }
+.kpi-growth.negative { color: #F44336; }
+.kpi-growth.neutral { color: #666; }
 
-.metric-change.negative {
-  color: #F44336;
-}
-
-.metric-change.neutral {
-  color: #9E9E9E;
-}
-
-.charts-container {
+.charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
 
 .chart-card {
-  background-color: white;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  height: 350px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 
-.chart-card h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 16px;
+.chart-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.chart-header h3 {
+  margin: 0;
   color: #333;
 }
 
-.performance-section {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.chart-content {
   padding: 20px;
+  height: 300px;
+}
+
+.chart-content canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.data-tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
   margin-bottom: 30px;
 }
 
-.performance-section h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 18px;
+.table-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.table-header h3 {
+  margin: 0;
   color: #333;
 }
 
-.table-responsive {
-  overflow-x: auto;
+.table-content {
+  padding: 20px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .data-table {
@@ -588,77 +628,174 @@ select, input[type="date"] {
   border-collapse: collapse;
 }
 
-.data-table th, .data-table td {
-  padding: 12px 15px;
+.data-table th,
+.data-table td {
+  padding: 12px;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
 
 .data-table th {
-  background-color: #f9f9f9;
   font-weight: 600;
+  color: #333;
 }
 
-.courier-info {
+.user-cell {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.courier-info img {
-  width: 30px;
-  height: 30px;
+.user-avatar-sm {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.progress-bar {
-  position: relative;
-  width: 100%;
-  height: 8px;
-  background-color: #eee;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress {
-  height: 100%;
-  background-color: #4CAF50;
-  border-radius: 4px;
-}
-
-.progress-bar span {
-  position: absolute;
-  top: 10px;
-  left: 0;
-  font-size: 12px;
-}
-
-.rating {
+.rating-cell {
   display: flex;
   align-items: center;
   gap: 5px;
+  color: #FF9800;
 }
 
-.stars {
-  color: #FFD700;
+.activity-list {
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-.star-empty {
-  color: #ddd;
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
 }
 
-.rating-value {
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e3f2fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2196F3;
+  font-size: 14px;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-description {
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.activity-time {
+  color: #666;
+  font-size: 12px;
+}
+
+.alerts-section h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.alerts-grid {
+  display: grid;
+  gap: 15px;
+}
+
+.alert-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.alert-card.warning {
+  border-left-color: #FF9800;
+  background: #fff8e1;
+}
+
+.alert-card.danger {
+  border-left-color: #F44336;
+  background: #ffebee;
+}
+
+.alert-card.success {
+  border-left-color: #4CAF50;
+  background: #e8f5e8;
+}
+
+.alert-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.alert-card.warning .alert-icon {
+  background: #FF9800;
+  color: white;
+}
+
+.alert-card.danger .alert-icon {
+  background: #F44336;
+  color: white;
+}
+
+.alert-card.success .alert-icon {
+  background: #4CAF50;
+  color: white;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-title {
   font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
 }
 
-@media (max-width: 768px) {
-  .charts-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .metrics-cards {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
+.alert-description {
+  color: #666;
+  font-size: 14px;
+}
+
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.btn-warning {
+  background: #FF9800;
+  color: white;
 }
 </style>
