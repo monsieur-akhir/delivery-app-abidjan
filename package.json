@@ -27,7 +27,15 @@
     "docker:down": "docker-compose -f docker-compose.dev.yml down",
     "docker:logs": "docker-compose -f docker-compose.dev.yml logs -f"
   },
-  "keywords": ["delivery", "logistics", "abidjan", "collaborative", "fastapi", "vue", "react-native"],
+  "keywords": [
+    "delivery",
+    "logistics",
+    "abidjan",
+    "collaborative",
+    "fastapi",
+    "vue",
+    "react-native"
+  ],
   "author": "Livraison Abidjan Team",
   "license": "MIT",
   "devDependencies": {
@@ -36,5 +44,8 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "expo-linear-gradient": "^14.1.5"
   }
 }
