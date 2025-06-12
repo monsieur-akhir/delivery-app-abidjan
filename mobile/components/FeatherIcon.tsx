@@ -1,10 +1,6 @@
-"use client"
-
-import type React from "react"
-import { View, TouchableOpacity } from "react-native"
+import React from "react"
 import { Feather } from "@expo/vector-icons"
 
-// Liste des noms d'icônes disponibles dans Feather
 export type FeatherIconName =
   | "activity"
   | "airplay"
@@ -288,7 +284,6 @@ export type FeatherIconName =
   | "zap-off"
   | "zoom-in"
   | "zoom-out"
-  // Ajoutez ces icônes personnalisées qui sont utilisées dans votre code
   | "map-pin-off"
   | "package-up"
   | "progress-clock"
@@ -299,30 +294,15 @@ export type FeatherIconName =
   | "package-variant"
   | "weather-cloudy-alert"
 
-interface FeatherIconProps {
+export interface FeatherIconProps {
   name: FeatherIconName
-  size: number
-  color: string
-  style?: object
-  onPress?: () => void
+  size?: number
+  color?: string
+  style?: any
 }
 
-/**
- * Custom wrapper for Feather icons to handle TypeScript compatibility
- */
-const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size, color, style, onPress }) => {
-  if (onPress) {
-    return (
-      <TouchableOpacity style={style} onPress={onPress}>
-        <Feather name={name as any} size={size} color={color} />
-      </TouchableOpacity>
-    );
-  }
-  return (
-    <View style={style}>
-      <Feather name={name as any} size={size} color={color} />
-    </View>
-  )
+const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size = 24, color = "#000000", style }) => {
+  return <Feather name={name} size={size} color={color} style={style} />
 }
 
 export default FeatherIcon

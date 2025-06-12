@@ -7,7 +7,7 @@ import { Button, Text, Snackbar } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../../contexts/NetworkContext"
-import LoginIllustration from "../../assets/login-connexion.svg"
+import { Feather } from "@expo/vector-icons"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import i18n from "../../i18n"
@@ -56,7 +56,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Image d'illustration de connexion */}
         <Animatable.View animation="fadeIn" duration={1000} style={styles.illustrationContainer}>
-          <LoginIllustration width="100%" height={220} />
+          <View style={styles.illustrationPlaceholder}>
+            <Feather name="smartphone" size={80} color="#FF6B00" />
+            <Text style={styles.illustrationText}>Livraison Abidjan</Text>
+          </View>
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" duration={800} style={styles.formContainer}>
@@ -173,9 +176,17 @@ const styles = StyleSheet.create({
     marginTop: 30,
     marginBottom: 30,
   },
-  illustration: {
-    width: "100%",
+  illustrationPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
     height: 220,
+    width: "100%",
+  },
+  illustrationText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#FF6B00",
+    marginTop: 16,
   },
   formContainer: {
     width: "100%",

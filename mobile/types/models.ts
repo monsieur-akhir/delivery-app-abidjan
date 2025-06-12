@@ -1052,3 +1052,47 @@ export interface PayoutRequest {
   payment_method: string
   account_details?: Record<string, any>
 }
+
+export interface Achievement {
+  id: number
+  title: string
+  description: string
+  type: string
+  points: number
+  unlocked_at?: string
+  progress?: number
+  required_value?: number
+}
+
+export interface CourierStats {
+  total_points: number
+  total_deliveries: number
+  average_rating?: number
+  completion_rate?: number
+  average_delivery_time?: string
+  daily_deliveries: number
+  daily_rating?: number
+  level: number
+  rank_position?: number
+}
+
+export interface Leaderboard {
+  courier_id: number
+  name: string
+  profile_picture?: string
+  points: number
+  deliveries_count: number
+  rank: number
+}
+
+export interface Challenge {
+  id: number
+  title: string
+  description: string
+  type: string
+  target_value: number
+  current_progress: number
+  reward_points: number
+  expires_at: string
+  is_completed: boolean
+}
