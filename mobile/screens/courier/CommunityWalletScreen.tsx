@@ -1,844 +1,667 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect } from "react"
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
+import React, { useState, useEffect } from 'react';
 import {
+  View,
   Text,
-  Card,
-  Button,
-  Divider,
-  IconButton,
-  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   TextInput,
-  Chip,
-  Dialog,
-  Portal,
-} from "react-native-paper"
-import { useTranslation } from "react-i18next"
-import { useNavigation } from "@react-navigation/native"
-import { useNetwork } from "../../contexts/NetworkContext"
-import {
-  fetchWalletBalance,
-  fetchWalletTransactions,
-  requestLoan,
-  repayLoan,
-  fetchActiveLoan,
-  fetchLoanHistory,
-} from "../../services/api"
+  Alert,
+  RefreshControl,
+  Modal,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import { CommunityWalletService } from '../../services/CommunityWalletService';
+import type { WalletBalance, WalletTransaction, LoanResponse, ActiveLoan } from '../../types/models';
 
-interface Transaction {
-  id: string
-  amount: number
-  type: "deposit" | "withdrawal" | "payment" | "refund" | "bonus" | "loan" | "repayment" | "contribution"
-  status: "pending" | "completed" | "failed"
-  reference?: string
-  description?: string
-  created_at: string
+interface LoanRequest {
+  amount: number;
+  reason: string;
+  monthly_income?: number;
+  employment_status?: string;
 }
 
-interface Loan {
-  id: string
-  user_id: string
-  amount: number
-  reason: string
-  status: "pending" | "approved" | "rejected" | "repaid"
-  approved_at?: string
-  repaid_at?: string
-  due_date?: string
-  created_at: string
-}
+export const CommunityWalletScreen: React.FC = () => {
+  const [balance, setBalance] = useState<WalletBalance | null>(null);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [activeLoan, setActiveLoan] = useState<ActiveLoan | null>(null);
+  const [loanHistory, setLoanHistory] = useState<LoanResponse[]>([]);
+  const [activeTab, setActiveTab] = useState<'balance' | 'transactions' | 'loans'>('balance');
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-interface WalletBalance {
-  balance: number
-  currency: string
-  total_contributed: number
-  total_borrowed: number
-  available_credit: number
-}
+  // Modal states
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const [loanAmount, setLoanAmount] = useState('');
+  const [loanReason, setLoanReason] = useState('');
+  const [monthlyIncome, setMonthlyIncome] = useState('');
 
-const CommunityWalletScreen: React.FC = () => {
-  const { t } = useTranslation()
-  const navigation = useNavigation()
-  const { isConnected } = useNetwork()
-
-  const [balance, setBalance] = useState<WalletBalance | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [activeLoan, setActiveLoan] = useState<Loan | null>(null)
-  const [loanHistory, setLoanHistory] = useState<Loan[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<string>("wallet")
-  const [transactionFilter, setTransactionFilter] = useState<string>("all")
-  const [loanAmount, setLoanAmount] = useState<string>("")
-  const [loanReason, setLoanReason] = useState<string>("")
-  const [requestingLoan, setRequestingLoan] = useState<boolean>(false)
-  const [repayingLoan, setRepayingLoan] = useState<boolean>(false)
-  const [loanDialogVisible, setLoanDialogVisible] = useState<boolean>(false)
+  const walletService = new CommunityWalletService();
 
   useEffect(() => {
-    loadData()
-  }, [isConnected])
+    loadData();
+  }, []);
 
   const loadData = async () => {
-    if (!isConnected) {
-      setError(t("common.offline"))
-      setLoading(false)
-      return
-    }
-
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      const [balanceData, transactionsData, activeLoanData, historyData] = await Promise.all([
+        walletService.getBalance(),
+        walletService.getTransactions(),
+        walletService.getActiveLoan().catch(() => null),
+        walletService.getLoanHistory(),
+      ]);
 
-      const balanceData = await fetchWalletBalance()
-      setBalance(balanceData)
-
-      const transactionsData = await fetchWalletTransactions()
-      setTransactions(transactionsData)
-
-      const activeLoanData = await fetchActiveLoan()
-      setActiveLoan(activeLoanData)
-
-      const loanHistoryData = await fetchLoanHistory()
-      setLoanHistory(loanHistoryData)
+      setBalance(balanceData);
+      setTransactions(transactionsData);
+      setActiveLoan(activeLoanData);
+      setLoanHistory(historyData);
     } catch (error) {
-      console.error("Error loading wallet data:", error)
-      setError(t("communityWallet.errorLoading"))
+      console.error('Error loading wallet data:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleRequestLoan = async () => {
-    if (!isConnected) {
-      setError(t("common.offline"))
-      return
-    }
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
+  const requestLoan = async () => {
     if (!loanAmount || !loanReason) {
-      Alert.alert(t("common.error"), t("communityWallet.missingLoanInfo"))
-      return
-    }
-
-    const amount = Number.parseFloat(loanAmount)
-    if (isNaN(amount) || amount <= 0) {
-      Alert.alert(t("common.error"), t("communityWallet.invalidAmount"))
-      return
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      return;
     }
 
     try {
-      setRequestingLoan(true)
-      await requestLoan(amount, loanReason)
+      const loanRequest: LoanRequest = {
+        amount: parseFloat(loanAmount),
+        reason: loanReason,
+        monthly_income: monthlyIncome ? parseFloat(monthlyIncome) : undefined,
+        employment_status: 'courier',
+      };
 
-      // Mettre à jour l'état local
-      setLoanDialogVisible(false)
-      setLoanAmount("")
-      setLoanReason("")
+      await walletService.requestLoan(loanRequest.amount, loanRequest.reason);
 
-      // Recharger les données
-      loadData()
+      Alert.alert(
+        'Demande soumise',
+        'Votre demande de prêt a été soumise et sera examinée dans les plus brefs délais.',
+        [{ text: 'OK', onPress: () => setShowLoanModal(false) }]
+      );
+
+      // Reset form
+      setLoanAmount('');
+      setLoanReason('');
+      setMonthlyIncome('');
+
+      // Refresh data
+      await loadData();
     } catch (error) {
-      console.error("Error requesting loan:", error)
-      setError(t("communityWallet.errorRequestingLoan"))
-    } finally {
-      setRequestingLoan(false)
+      Alert.alert('Erreur', 'Impossible de soumettre la demande de prêt');
+      console.error('Loan request error:', error);
     }
-  }
+  };
 
-  const handleRepayLoan = async () => {
-    if (!isConnected) {
-      setError(t("common.offline"))
-      return
-    }
+  const repayLoan = async () => {
+    if (!activeLoan) return;
 
-    if (!activeLoan) {
-      return
-    }
+    Alert.alert(
+      'Confirmer le remboursement',
+      `Êtes-vous sûr de vouloir rembourser ${activeLoan.remaining_balance} FCFA ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Confirmer',
+          onPress: async () => {
+            try {
+              await walletService.repayLoan(activeLoan.id);
+              Alert.alert('Succès', 'Prêt remboursé avec succès');
+              await loadData();
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de rembourser le prêt');
+              console.error('Repay loan error:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
-    try {
-      setRepayingLoan(true)
-      await repayLoan(activeLoan.id)
+  const renderBalanceTab = () => (
+    <ScrollView style={styles.tabContent}>
+      {balance && (
+        <>
+          {/* Balance Card */}
+          <View style={styles.balanceCard}>
+            <Text style={styles.balanceLabel}>Solde Disponible</Text>
+            <Text style={styles.balanceAmount}>
+              {balance.balance.toLocaleString()} {balance.currency}
+            </Text>
+            {balance.pending_balance && balance.pending_balance > 0 && (
+              <Text style={styles.pendingBalance}>
+                En attente: {balance.pending_balance.toLocaleString()} {balance.currency}
+              </Text>
+            )}
+            <Text style={styles.lastUpdated}>
+              Mis à jour: {new Date(balance.last_updated).toLocaleDateString()}
+            </Text>
+          </View>
 
-      // Recharger les données
-      loadData()
-    } catch (error) {
-      console.error("Error repaying loan:", error)
-      setError(t("communityWallet.errorRepayingLoan"))
-    } finally {
-      setRepayingLoan(false)
-    }
-  }
+          {/* Quick Actions */}
+          <View style={styles.actionsCard}>
+            <Text style={styles.sectionTitle}>Actions Rapides</Text>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => setShowLoanModal(true)}
+                disabled={!!activeLoan}
+              >
+                <Feather name="plus-circle" size={24} color="#007AFF" />
+                <Text style={styles.actionButtonText}>Demander un prêt</Text>
+              </TouchableOpacity>
 
-  const handleTransactionFilterChange = async (filter: string) => {
-    setTransactionFilter(filter)
+              {activeLoan && (
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={repayLoan}
+                >
+                  <Feather name="credit-card" size={24} color="#28a745" />
+                  <Text style={styles.actionButtonText}>Rembourser</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
 
-    if (!isConnected) {
-      setError(t("common.offline"))
-      return
-    }
-
-    try {
-      const transactionsData = await fetchWalletTransactions(filter !== "all" ? filter : undefined)
-      setTransactions(transactionsData)
-    } catch (error) {
-      console.error("Error filtering transactions:", error)
-      setError(t("communityWallet.errorLoading"))
-    }
-  }
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString()
-  }
-
-  const formatCurrency = (amount: number): string => {
-    return `${amount.toFixed(2)} ${balance?.currency || "XOF"}`
-  }
-
-  const getTransactionIcon = (type: string): string => {
-    switch (type) {
-      case "deposit":
-        return "arrow-down-circle"
-      case "withdrawal":
-        return "arrow-up-circle"
-      case "payment":
-        return "credit-card"
-      case "refund":
-        return "refresh-cw"
-      case "bonus":
-        return "gift"
-      case "loan":
-        return "trending-up"
-      case "repayment":
-        return "trending-down"
-      case "contribution":
-        return "users"
-      default:
-        return "dollar-sign"
-    }
-  }
-
-  const getTransactionColor = (type: string): string => {
-    switch (type) {
-      case "deposit":
-      case "refund":
-      case "bonus":
-        return "#4CAF50"
-      case "withdrawal":
-      case "payment":
-        return "#F44336"
-      case "loan":
-        return "#2196F3"
-      case "repayment":
-        return "#FF9800"
-      case "contribution":
-        return "#9C27B0"
-      default:
-        return "#757575"
-    }
-  }
-
-  const renderWalletTab = () => {
-    if (!balance) return null
-
-    return (
-      <View style={styles.tabContent}>
-        <Card style={styles.balanceCard}>
-          <Card.Content>
-            <Text style={styles.balanceLabel}>{t("communityWallet.balance")}</Text>
-            <Text style={styles.balanceValue}>{formatCurrency(balance.balance)}</Text>
-
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>{t("communityWallet.totalContributed")}</Text>
-                <Text style={styles.statValue}>{formatCurrency(balance.total_contributed)}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>{t("communityWallet.totalBorrowed")}</Text>
-                <Text style={styles.statValue}>{formatCurrency(balance.total_borrowed)}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>{t("communityWallet.availableCredit")}</Text>
-                <Text style={styles.statValue}>{formatCurrency(balance.available_credit)}</Text>
+          {/* Active Loan */}
+          {activeLoan && (
+            <View style={styles.loanCard}>
+              <Text style={styles.sectionTitle}>Prêt Actif</Text>
+              <View style={styles.loanDetails}>
+                <View style={styles.loanRow}>
+                  <Text style={styles.loanLabel}>Montant restant:</Text>
+                  <Text style={styles.loanValue}>
+                    {activeLoan.remaining_balance.toLocaleString()} FCFA
+                  </Text>
+                </View>
+                <View style={styles.loanRow}>
+                  <Text style={styles.loanLabel}>Paiement mensuel:</Text>
+                  <Text style={styles.loanValue}>
+                    {activeLoan.monthly_payment.toLocaleString()} FCFA
+                  </Text>
+                </View>
+                <View style={styles.loanRow}>
+                  <Text style={styles.loanLabel}>Prochaine échéance:</Text>
+                  <Text style={styles.loanValue}>
+                    {new Date(activeLoan.next_payment_date).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.loanRow}>
+                  <Text style={styles.loanLabel}>Taux d'intérêt:</Text>
+                  <Text style={styles.loanValue}>{activeLoan.interest_rate}%</Text>
+                </View>
               </View>
             </View>
-          </Card.Content>
-        </Card>
+          )}
+        </>
+      )}
+    </ScrollView>
+  );
 
-        {activeLoan && (
-          <Card style={styles.activeLoanCard}>
-            <Card.Content>
-              <View style={styles.activeLoanHeader}>
-                <Text style={styles.activeLoanTitle}>{t("communityWallet.activeLoan")}</Text>
-                <Chip icon="calendar" style={styles.dueDateChip}>
-                  {activeLoan.due_date ? formatDate(activeLoan.due_date).split(" ")[0] : t("common.notAvailable")}
-                </Chip>
-              </View>
-
-              <View style={styles.loanDetailsContainer}>
-                <View style={styles.loanDetailItem}>
-                  <Text style={styles.loanDetailLabel}>{t("communityWallet.loanAmount")}</Text>
-                  <Text style={styles.loanDetailValue}>{formatCurrency(activeLoan.amount)}</Text>
-                </View>
-                <View style={styles.loanDetailItem}>
-                  <Text style={styles.loanDetailLabel}>{t("communityWallet.loanReason")}</Text>
-                  <Text style={styles.loanDetailValue}>{activeLoan.reason}</Text>
-                </View>
-                <View style={styles.loanDetailItem}>
-                  <Text style={styles.loanDetailLabel}>{t("communityWallet.loanStatus")}</Text>
-                  <Chip style={styles.statusChip}>{t(`communityWallet.${activeLoan.status}`)}</Chip>
-                </View>
-              </View>
-
-              <Button
-                mode="contained"
-                onPress={handleRepayLoan}
-                loading={repayingLoan}
-                disabled={repayingLoan || activeLoan.status !== "approved"}
-                style={styles.repayButton}
-              >
-                {t("communityWallet.repayLoan")}
-              </Button>
-            </Card.Content>
-          </Card>
-        )}
-
-        <View style={styles.transactionsHeader}>
-          <Text style={styles.transactionsTitle}>{t("communityWallet.transactions")}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersContainer}>
-            <Chip
-              selected={transactionFilter === "all"}
-              onPress={() => handleTransactionFilterChange("all")}
-              style={styles.filterChip}
-            >
-              {t("communityWallet.all")}
-            </Chip>
-            <Chip
-              selected={transactionFilter === "deposit"}
-              onPress={() => handleTransactionFilterChange("deposit")}
-              style={styles.filterChip}
-            >
-              {t("communityWallet.deposit")}
-            </Chip>
-            <Chip
-              selected={transactionFilter === "withdrawal"}
-              onPress={() => handleTransactionFilterChange("withdrawal")}
-              style={styles.filterChip}
-            >
-              {t("communityWallet.withdrawal")}
-            </Chip>
-            <Chip
-              selected={transactionFilter === "loan"}
-              onPress={() => handleTransactionFilterChange("loan")}
-              style={styles.filterChip}
-            >
-              {t("communityWallet.loan")}
-            </Chip>
-            <Chip
-              selected={transactionFilter === "repayment"}
-              onPress={() => handleTransactionFilterChange("repayment")}
-              style={styles.filterChip}
-            >
-              {t("communityWallet.repayment")}
-            </Chip>
-            <Chip
-              selected={transactionFilter === "contribution"}
-              onPress={() => handleTransactionFilterChange("contribution")}
-              style={styles.filterChip}
-            >
-              {t("communityWallet.contribution")}
-            </Chip>
-          </ScrollView>
+  const renderTransactionsTab = () => (
+    <ScrollView style={styles.tabContent}>
+      <Text style={styles.sectionTitle}>Historique des Transactions</Text>
+      {transactions.map((transaction) => (
+        <View key={transaction.id} style={styles.transactionCard}>
+          <View style={styles.transactionHeader}>
+            <Text style={styles.transactionType}>{transaction.type}</Text>
+            <Text style={[
+              styles.transactionAmount,
+              transaction.amount > 0 ? styles.positiveAmount : styles.negativeAmount
+            ]}>
+              {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()} FCFA
+            </Text>
+          </View>
+          <Text style={styles.transactionDescription}>{transaction.description}</Text>
+          <View style={styles.transactionFooter}>
+            <Text style={styles.transactionDate}>
+              {new Date(transaction.created_at).toLocaleDateString()}
+            </Text>
+            <View style={[
+              styles.statusBadge,
+              transaction.status === 'completed' ? styles.completedStatus : styles.pendingStatus
+            ]}>
+              <Text style={styles.statusText}>{transaction.status}</Text>
+            </View>
+          </View>
         </View>
+      ))}
+    </ScrollView>
+  );
 
-        {transactions.length > 0 ? (
-          <View style={styles.transactionsContainer}>
-            {transactions.map((transaction) => (
-              <Card key={transaction.id} style={styles.transactionCard}>
-                <Card.Content style={styles.transactionContent}>
-                  <View style={styles.transactionIconContainer}>
-                    <IconButton
-                      icon={getTransactionIcon(transaction.type)}
-                      size={24}
-                      iconColor={getTransactionColor(transaction.type)}
-                      style={styles.transactionIcon}
-                    />
-                  </View>
-                  <View style={styles.transactionDetails}>
-                    <Text style={styles.transactionType}>{t(`communityWallet.${transaction.type}`)}</Text>
-                    {transaction.description && (
-                      <Text style={styles.transactionDescription}>{transaction.description}</Text>
-                    )}
-                    <Text style={styles.transactionDate}>{formatDate(transaction.created_at)}</Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      {
-                        color: getTransactionColor(transaction.type),
-                      },
-                    ]}
-                  >
-                    {transaction.type === "deposit" ||
-                    transaction.type === "refund" ||
-                    transaction.type === "bonus" ||
-                    transaction.type === "loan"
-                      ? "+"
-                      : "-"}
-                    {formatCurrency(transaction.amount)}
-                  </Text>
-                </Card.Content>
-              </Card>
-            ))}
+  const renderLoansTab = () => (
+    <ScrollView style={styles.tabContent}>
+      <Text style={styles.sectionTitle}>Historique des Prêts</Text>
+      {loanHistory.map((loan) => (
+        <View key={loan.id} style={styles.loanHistoryCard}>
+          <View style={styles.loanHistoryHeader}>
+            <Text style={styles.loanAmount}>{loan.amount.toLocaleString()} FCFA</Text>
+            <View style={[
+              styles.statusBadge,
+              loan.status === 'approved' ? styles.approvedStatus :
+              loan.status === 'rejected' ? styles.rejectedStatus : styles.pendingStatus
+            ]}>
+              <Text style={styles.statusText}>{loan.status}</Text>
+            </View>
           </View>
-        ) : (
-          <Text style={styles.noDataText}>{t("communityWallet.noTransactions")}</Text>
-        )}
-
-        {!activeLoan && (
-          <Button
-            mode="contained"
-            onPress={() => setLoanDialogVisible(true)}
-            style={styles.requestLoanButton}
-            icon="cash-plus"
-          >
-            {t("communityWallet.requestLoan")}
-          </Button>
-        )}
-      </View>
-    )
-  }
-
-  const renderLoansTab = () => {
-    return (
-      <View style={styles.tabContent}>
-        <Text style={styles.loansHistoryTitle}>{t("communityWallet.loanHistory")}</Text>
-
-        {loanHistory.length > 0 ? (
-          <View style={styles.loansContainer}>
-            {loanHistory.map((loan) => (
-              <Card key={loan.id} style={styles.loanCard}>
-                <Card.Content>
-                  <View style={styles.loanHeader}>
-                    <View>
-                      <Text style={styles.loanAmount}>{formatCurrency(loan.amount)}</Text>
-                      <Text style={styles.loanDate}>{formatDate(loan.created_at).split(" ")[0]}</Text>
-                    </View>
-                    <Chip
-                      style={[
-                        styles.loanStatusChip,
-                        {
-                          backgroundColor:
-                            loan.status === "approved"
-                              ? "#4CAF5020"
-                              : loan.status === "rejected"
-                                ? "#F4433620"
-                                : loan.status === "repaid"
-                                  ? "#2196F320"
-                                  : "#FF980020",
-                        },
-                      ]}
-                    >
-                      {t(`communityWallet.${loan.status}`)}
-                    </Chip>
-                  </View>
-
-                  <Divider style={styles.loanDivider} />
-
-                  <View style={styles.loanReasonContainer}>
-                    <Text style={styles.loanReasonLabel}>{t("communityWallet.loanReason")}</Text>
-                    <Text style={styles.loanReasonText}>{loan.reason}</Text>
-                  </View>
-
-                  {loan.due_date && (
-                    <View style={styles.loanDueDateContainer}>
-                      <Text style={styles.loanDueDateLabel}>{t("communityWallet.dueDate")}</Text>
-                      <Text style={styles.loanDueDateText}>{formatDate(loan.due_date).split(" ")[0]}</Text>
-                    </View>
-                  )}
-
-                  {loan.repaid_at && (
-                    <View style={styles.loanRepaidContainer}>
-                      <Text style={styles.loanRepaidLabel}>{t("communityWallet.repaidDate")}</Text>
-                      <Text style={styles.loanRepaidText}>{formatDate(loan.repaid_at).split(" ")[0]}</Text>
-                    </View>
-                  )}
-                </Card.Content>
-              </Card>
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.noDataText}>{t("communityWallet.noLoans")}</Text>
-        )}
-      </View>
-    )
-  }
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6B00" />
-        <Text style={styles.loadingText}>{t("communityWallet.loading")}</Text>
-      </View>
-    )
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <IconButton icon="alert-circle" size={48} iconColor="#F44336" />
-        <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={loadData} style={styles.retryButton}>
-          {t("common.retry")}
-        </Button>
-      </View>
-    )
-  }
+          <Text style={styles.loanDate}>
+            Demandé le: {new Date(loan.created_at).toLocaleDateString()}
+          </Text>
+          {loan.due_date && (
+            <Text style={styles.loanDueDate}>
+              Échéance: {new Date(loan.due_date).toLocaleDateString()}
+            </Text>
+          )}
+          <Text style={styles.loanInterest}>
+            Taux: {loan.interest_rate}% - Paiement mensuel: {loan.monthly_payment.toLocaleString()} FCFA
+          </Text>
+        </View>
+      ))}
+    </ScrollView>
+  );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabsContainer}>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Portefeuille Communautaire</Text>
+        <TouchableOpacity onPress={onRefresh}>
+          <Feather name="refresh-cw" size={24} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "wallet" && styles.activeTab]}
-          onPress={() => setActiveTab("wallet")}
+          style={[styles.tab, activeTab === 'balance' && styles.activeTab]}
+          onPress={() => setActiveTab('balance')}
         >
-          <Text style={[styles.tabText, activeTab === "wallet" && styles.activeTabText]}>
-            {t("communityWallet.title")}
+          <Text style={[styles.tabText, activeTab === 'balance' && styles.activeTabText]}>
+            Solde
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "loans" && styles.activeTab]}
-          onPress={() => setActiveTab("loans")}
+          style={[styles.tab, activeTab === 'transactions' && styles.activeTab]}
+          onPress={() => setActiveTab('transactions')}
         >
-          <Text style={[styles.tabText, activeTab === "loans" && styles.activeTabText]}>
-            {t("communityWallet.loans")}
+          <Text style={[styles.tabText, activeTab === 'transactions' && styles.activeTabText]}>
+            Transactions
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'loans' && styles.activeTab]}
+          onPress={() => setActiveTab('loans')}
+        >
+          <Text style={[styles.tabText, activeTab === 'loans' && styles.activeTabText]}>
+            Prêts
           </Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {activeTab === "wallet" && renderWalletTab()}
-        {activeTab === "loans" && renderLoansTab()}
-      </ScrollView>
+      {/* Content */}
+      <View style={styles.content}>
+        {activeTab === 'balance' && renderBalanceTab()}
+        {activeTab === 'transactions' && renderTransactionsTab()}
+        {activeTab === 'loans' && renderLoansTab()}
+      </View>
 
-      <Portal>
-        <Dialog visible={loanDialogVisible} onDismiss={() => setLoanDialogVisible(false)}>
-          <Dialog.Title>{t("communityWallet.requestLoan")}</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label={t("communityWallet.loanAmount")}
-              value={loanAmount}
-              onChangeText={setLoanAmount}
-              keyboardType="numeric"
-              style={styles.dialogInput}
-            />
-            <TextInput
-              label={t("communityWallet.loanReason")}
-              value={loanReason}
-              onChangeText={setLoanReason}
-              multiline
-              numberOfLines={3}
-              style={styles.dialogInput}
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setLoanDialogVisible(false)}>{t("common.cancel")}</Button>
-            <Button
-              onPress={handleRequestLoan}
-              loading={requestingLoan}
-              disabled={requestingLoan || !loanAmount || !loanReason}
+      {/* Loan Request Modal */}
+      <Modal
+        visible={showLoanModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Demande de Prêt</Text>
+            <TouchableOpacity onPress={() => setShowLoanModal(false)}>
+              <Feather name="x" size={24} color="#6c757d" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Montant (FCFA) *</Text>
+              <TextInput
+                style={styles.input}
+                value={loanAmount}
+                onChangeText={setLoanAmount}
+                placeholder="Ex: 50000"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Raison du prêt *</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={loanReason}
+                onChangeText={setLoanReason}
+                placeholder="Expliquez pourquoi vous avez besoin de ce prêt"
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Revenus mensuels (FCFA)</Text>
+              <TextInput
+                style={styles.input}
+                value={monthlyIncome}
+                onChangeText={setMonthlyIncome}
+                placeholder="Ex: 200000"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={requestLoan}
             >
-              {t("common.submit")}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-    </View>
-  )
-}
+              <Text style={styles.submitButtonText}>Soumettre la Demande</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#f8f9fa',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#757575",
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#212529',
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    padding: 24,
-  },
-  errorText: {
-    marginTop: 16,
-    marginBottom: 24,
-    fontSize: 16,
-    color: "#757575",
-    textAlign: "center",
-  },
-  retryButton: {
-    backgroundColor: "#FF6B00",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    elevation: 2,
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
   },
   tab: {
     flex: 1,
     paddingVertical: 16,
-    alignItems: "center",
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#FF6B00",
+    borderBottomColor: '#007AFF',
   },
   tabText: {
-    fontSize: 14,
-    color: "#757575",
+    fontSize: 16,
+    color: '#6c757d',
   },
   activeTabText: {
-    color: "#FF6B00",
-    fontWeight: "bold",
+    color: '#007AFF',
+    fontWeight: '600',
   },
-  scrollContainer: {
+  content: {
     flex: 1,
   },
   tabContent: {
-    padding: 16,
+    flex: 1,
+    padding: 20,
   },
   balanceCard: {
-    marginBottom: 16,
-    elevation: 2,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: 'center',
   },
   balanceLabel: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  balanceValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#FF6B00",
-    marginBottom: 16,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#757575",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  activeLoanCard: {
-    marginBottom: 16,
-    elevation: 2,
-    backgroundColor: "#FFF3E0",
-  },
-  activeLoanHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  activeLoanTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FF6B00",
-  },
-  dueDateChip: {
-    backgroundColor: "#FFFFFF",
-  },
-  loanDetailsContainer: {
-    marginBottom: 16,
-  },
-  loanDetailItem: {
-    marginBottom: 8,
-  },
-  loanDetailLabel: {
-    fontSize: 14,
-    color: "#757575",
-    marginBottom: 4,
-  },
-  loanDetailValue: {
     fontSize: 16,
-    color: "#212121",
+    color: '#6c757d',
+    marginBottom: 8,
   },
-  statusChip: {
-    alignSelf: "flex-start",
+  balanceAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 8,
   },
-  repayButton: {
-    backgroundColor: "#FF6B00",
+  pendingBalance: {
+    fontSize: 14,
+    color: '#ffc107',
+    marginBottom: 4,
   },
-  transactionsHeader: {
-    marginBottom: 16,
+  lastUpdated: {
+    fontSize: 12,
+    color: '#6c757d',
   },
-  transactionsTitle: {
+  actionsCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+  },
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 8,
-  },
-  filtersContainer: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  filterChip: {
-    marginRight: 8,
-  },
-  transactionsContainer: {
+    fontWeight: 'bold',
+    color: '#212529',
     marginBottom: 16,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  actionButton: {
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+    minWidth: 120,
+  },
+  actionButtonText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#007AFF',
+    textAlign: 'center',
+  },
+  loanCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+  },
+  loanDetails: {
+    gap: 12,
+  },
+  loanRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  loanLabel: {
+    fontSize: 16,
+    color: '#6c757d',
+  },
+  loanValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
   },
   transactionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+  },
+  transactionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
-    elevation: 1,
-  },
-  transactionContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  transactionIconContainer: {
-    marginRight: 12,
-  },
-  transactionIcon: {
-    margin: 0,
-  },
-  transactionDetails: {
-    flex: 1,
   },
   transactionType: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  transactionDescription: {
-    fontSize: 12,
-    color: "#757575",
-  },
-  transactionDate: {
-    fontSize: 12,
-    color: "#757575",
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    textTransform: 'capitalize',
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
-  noDataText: {
+  positiveAmount: {
+    color: '#28a745',
+  },
+  negativeAmount: {
+    color: '#dc3545',
+  },
+  transactionDescription: {
     fontSize: 14,
-    color: "#757575",
-    textAlign: "center",
-    marginTop: 24,
-  },
-  requestLoanButton: {
-    backgroundColor: "#FF6B00",
-    marginTop: 16,
-  },
-  loansHistoryTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 16,
-  },
-  loansContainer: {
-    marginBottom: 16,
-  },
-  loanCard: {
+    color: '#6c757d',
     marginBottom: 8,
-    elevation: 1,
   },
-  loanHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  transactionFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: '#6c757d',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  completedStatus: {
+    backgroundColor: '#28a745',
+  },
+  pendingStatus: {
+    backgroundColor: '#ffc107',
+  },
+  approvedStatus: {
+    backgroundColor: '#007AFF',
+  },
+  rejectedStatus: {
+    backgroundColor: '#dc3545',
+  },
+  loanHistoryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+  },
+  loanHistoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   loanAmount: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: 'bold',
+    color: '#212529',
   },
   loanDate: {
-    fontSize: 12,
-    color: "#757575",
-  },
-  loanStatusChip: {
-    height: 28,
-  },
-  loanDivider: {
-    marginVertical: 8,
-  },
-  loanReasonContainer: {
-    marginBottom: 8,
-  },
-  loanReasonLabel: {
-    fontSize: 12,
-    color: "#757575",
+    fontSize: 14,
+    color: '#6c757d',
     marginBottom: 4,
   },
-  loanReasonText: {
+  loanDueDate: {
     fontSize: 14,
-    color: "#212121",
-  },
-  loanDueDateContainer: {
-    marginBottom: 8,
-  },
-  loanDueDateLabel: {
-    fontSize: 12,
-    color: "#757575",
+    color: '#dc3545',
     marginBottom: 4,
   },
-  loanDueDateText: {
+  loanInterest: {
     fontSize: 14,
-    color: "#212121",
+    color: '#007AFF',
   },
-  loanRepaidContainer: {
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#212529',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
     marginBottom: 8,
   },
-  loanRepaidLabel: {
-    fontSize: 12,
-    color: "#757575",
-    marginBottom: 4,
+  input: {
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#fff',
   },
-  loanRepaidText: {
-    fontSize: 14,
-    color: "#212121",
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
-  dialogInput: {
-    marginBottom: 16,
+  submitButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
   },
-  totalContributed: {
-    fontSize: 14,
-    color: "#757575",
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  totalBorrowed: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  availableCredit: {
-    fontSize: 14,
-    color: "#757575",
-  },
-})
-
-export default CommunityWalletScreen
+});

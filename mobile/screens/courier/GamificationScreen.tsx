@@ -1,769 +1,449 @@
-"use client"
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Animated,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import { GamificationService } from '../../services/GamificationService';
+import { GamificationBadge } from '../../components/GamificationBadge';
+import type { GamificationProfile, Ranking, Reward } from '../../types/models';
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from "react-native"
-import { Text, Card, Button, ProgressBar, IconButton, ActivityIndicator, Chip } from "react-native-paper"
-import { useTranslation } from "react-i18next"
-import { useNavigation } from "@react-navigation/native"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchGamificationProfile, fetchRankings, claimReward } from "../../services/api"
-import GamificationBadge from "../../components/GamificationBadge"
+export const GamificationScreen: React.FC = () => {
+  const [profile, setProfile] = useState<GamificationProfile | null>(null);
+  const [rankings, setRankings] = useState<Ranking[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [activeTab, setActiveTab] = useState<'profile' | 'leaderboard' | 'rewards'>('profile');
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-const { width } = Dimensions.get("window")
-
-interface Badge {
-  id: string
-  name: string
-  description: string
-  icon: string
-  unlocked: boolean
-  unlocked_at?: string
-}
-
-interface Achievement {
-  id: string
-  name: string
-  description: string
-  progress: number
-  max_progress: number
-  completed: boolean
-  completed_at?: string
-}
-
-interface Reward {
-  id: string
-  name: string
-  description: string
-  points_cost: number
-  available: boolean
-  claimed: boolean
-  claimed_at?: string
-  expires_at?: string
-}
-
-interface RankingUser {
-  id: string
-  full_name: string
-  profile_picture?: string
-  level: number
-  points: number
-  rank: number
-}
-
-interface GamificationProfile {
-  user_id: string
-  level: number
-  points: number
-  points_to_next_level: number
-  badges: Badge[]
-  achievements: Achievement[]
-  rewards: Reward[]
-  daily_streak: number
-  daily_bonus_claimed: boolean
-  last_active: string
-}
-
-const GamificationScreen: React.FC = () => {
-  const { t } = useTranslation()
-  const navigation = useNavigation()
-  const { isConnected } = useNetwork()
-
-  const [profile, setProfile] = useState<GamificationProfile | null>(null)
-  const [rankings, setRankings] = useState<RankingUser[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [claimingReward, setClaimingReward] = useState<string | null>(null)
-  const [claimingDailyBonus, setClaimingDailyBonus] = useState<boolean>(false)
-  const [activeTab, setActiveTab] = useState<string>("profile")
+  const gamificationService = new GamificationService();
 
   useEffect(() => {
-    loadData()
-  }, [isConnected])
+    loadData();
+  }, []);
 
   const loadData = async () => {
-    if (!isConnected) {
-      setError(t("common.offline"))
-      setLoading(false)
-      return
-    }
-
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      const [profileData, rankingsData, rewardsData] = await Promise.all([
+        gamificationService.getProfile(),
+        gamificationService.getRankings(),
+        gamificationService.getAvailableRewards(),
+      ]);
 
-      const profileData = await fetchGamificationProfile()
-      setProfile(profileData)
-
-      const rankingsData = await fetchRankings()
-      setRankings(rankingsData)
+      setProfile(profileData);
+      setRankings(rankingsData);
+      setRewards(rewardsData);
     } catch (error) {
-      console.error("Error loading gamification data:", error)
-      setError(t("gamification.errorLoading"))
+      console.error('Error loading gamification data:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleClaimReward = async (rewardId: string) => {
-    if (!isConnected) {
-      setError(t("common.offline"))
-      return
-    }
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
+  const claimReward = async (rewardId: string) => {
     try {
-      setClaimingReward(rewardId)
-      await claimReward(rewardId)
-
-      // Mettre à jour l'état local
-      setProfile((prevProfile) => {
-        if (!prevProfile) return null
-
-        return {
-          ...prevProfile,
-          rewards: prevProfile.rewards.map((reward) =>
-            reward.id === rewardId ? { ...reward, claimed: true, claimed_at: new Date().toISOString() } : reward,
-          ),
-        }
-      })
-
-      // Recharger les données pour obtenir les points mis à jour
-      loadData()
+      await gamificationService.claimReward(rewardId);
+      await loadData(); // Refresh data
     } catch (error) {
-      console.error("Error claiming reward:", error)
-      setError(t("gamification.errorClaimingReward"))
-    } finally {
-      setClaimingReward(null)
+      console.error('Error claiming reward:', error);
     }
-  }
+  };
 
-  const handleClaimDailyBonus = async () => {
-    if (!isConnected) {
-      setError(t("common.offline"))
-      return
-    }
-
-    try {
-      setClaimingDailyBonus(true)
-      // Simuler l'appel API pour réclamer le bonus quotidien
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Mettre à jour l'état local
-      setProfile((prevProfile) => {
-        if (!prevProfile) return null
-
-        return {
-          ...prevProfile,
-          daily_bonus_claimed: true,
-          points: prevProfile.points + 50, // Ajouter 50 points pour le bonus quotidien
-        }
-      })
-    } catch (error) {
-      console.error("Error claiming daily bonus:", error)
-      setError(t("gamification.errorClaimingReward"))
-    } finally {
-      setClaimingDailyBonus(false)
-    }
-  }
-
-  const renderProfileTab = () => {
-    if (!profile) return null
-
-    const progressToNextLevel = (profile.points / (profile.points + profile.points_to_next_level)) * 100
-
-    return (
-      <View style={styles.tabContent}>
-        <Card style={styles.levelCard}>
-          <Card.Content>
+  const renderProfileTab = () => (
+    <ScrollView style={styles.tabContent}>
+      {profile && (
+        <>
+          {/* Level Progress */}
+          <View style={styles.levelCard}>
             <View style={styles.levelHeader}>
-              <View>
-                <Text style={styles.levelLabel}>{t("gamification.level")}</Text>
-                <Text style={styles.levelValue}>{profile.level}</Text>
-              </View>
-              <View style={styles.pointsContainer}>
-                <Text style={styles.pointsLabel}>{t("gamification.points")}</Text>
-                <Text style={styles.pointsValue}>{profile.points}</Text>
-              </View>
+              <Text style={styles.levelTitle}>Niveau {profile.level}</Text>
+              <Text style={styles.xpText}>{profile.experience_points} XP</Text>
             </View>
-
-            <View style={styles.progressContainer}>
-              <ProgressBar progress={progressToNextLevel / 100} color="#FF6B00" style={styles.progressBar} />
-              <Text style={styles.progressText}>
-                {profile.points_to_next_level} {t("gamification.nextLevel")}
-              </Text>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${(profile.experience_points % 1000) / 10}%` }
+                ]} 
+              />
             </View>
-          </Card.Content>
-        </Card>
+            <Text style={styles.progressText}>
+              {1000 - (profile.experience_points % 1000)} XP jusqu'au niveau suivant
+            </Text>
+          </View>
 
-        <Card style={styles.streakCard}>
-          <Card.Content>
-            <View style={styles.streakHeader}>
-              <View>
-                <Text style={styles.streakLabel}>{t("gamification.dailyStreak")}</Text>
-                <View style={styles.streakValueContainer}>
-                  <Text style={styles.streakValue}>{profile.daily_streak}</Text>
-                  <Text style={styles.streakDays}> {t("gamification.days")}</Text>
+          {/* Badges */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mes Badges</Text>
+            <View style={styles.badgesGrid}>
+              {profile.badges.map((badge) => (
+                <GamificationBadge
+                  key={badge.id}
+                  badge={badge}
+                  size="large"
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Achievements */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Objectifs</Text>
+            {profile.achievements.map((achievement) => (
+              <View key={achievement.id} style={styles.achievementCard}>
+                <View style={styles.achievementInfo}>
+                  <Text style={styles.achievementName}>{achievement.name}</Text>
+                  <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                </View>
+                <View style={styles.achievementProgress}>
+                  <Text style={styles.progressText}>
+                    {achievement.progress}/{achievement.target}
+                  </Text>
+                  <View style={styles.progressBar}>
+                    <View 
+                      style={[
+                        styles.progressFill, 
+                        { width: `${(achievement.progress / achievement.target) * 100}%` }
+                      ]} 
+                    />
+                  </View>
                 </View>
               </View>
-
-              <Button
-                mode="contained"
-                onPress={handleClaimDailyBonus}
-                disabled={profile.daily_bonus_claimed || claimingDailyBonus}
-                loading={claimingDailyBonus}
-                style={[styles.claimButton, profile.daily_bonus_claimed && styles.claimedButton]}
-              >
-                {profile.daily_bonus_claimed ? t("common.claimed") : t("gamification.claim")}
-              </Button>
-            </View>
-
-            <Text style={styles.bonusText}>{t("gamification.dailyBonus")}: +50 points</Text>
-          </Card.Content>
-        </Card>
-
-        {profile.badges && profile.badges.length > 0 && (
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>{t("gamification.badges")}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesContainer}>
-              {profile.badges.map((badge) => (
-                <GamificationBadge key={badge.id} badge={badge} />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {profile.achievements && profile.achievements.length > 0 && (
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>{t("gamification.achievements")}</Text>
-            <View style={styles.achievementsContainer}>
-              {profile.achievements.map((achievement) => (
-                <Card key={achievement.id} style={styles.achievementCard}>
-                  <Card.Content>
-                    <View style={styles.achievementHeader}>
-                      <Text style={styles.achievementName}>{achievement.name}</Text>
-                      {achievement.completed && (
-                        <IconButton icon="check-circle" size={20} iconColor="#4CAF50" style={styles.completedIcon} />
-                      )}
-                    </View>
-                    <Text style={styles.achievementDescription}>{achievement.description}</Text>
-                    <View style={styles.achievementProgressContainer}>
-                      <ProgressBar
-                        progress={achievement.progress / achievement.max_progress}
-                        color={achievement.completed ? "#4CAF50" : "#FF6B00"}
-                        style={styles.achievementProgressBar}
-                      />
-                      <Text style={styles.achievementProgressText}>
-                        {achievement.progress}/{achievement.max_progress}
-                      </Text>
-                    </View>
-                  </Card.Content>
-                </Card>
-              ))}
-            </View>
-          </View>
-        )}
-      </View>
-    )
-  }
-
-  const renderRewardsTab = () => {
-    if (!profile) return null
-
-    return (
-      <View style={styles.tabContent}>
-        <View style={styles.rewardsHeader}>
-          <Text style={styles.rewardsTitle}>{t("gamification.rewards")}</Text>
-          <Chip icon="star" style={styles.pointsChip}>
-            {profile.points} {t("gamification.points")}
-          </Chip>
-        </View>
-
-        <View style={styles.rewardsContainer}>
-          {profile.rewards && profile.rewards.length > 0 ? (
-            profile.rewards.map((reward) => (
-              <Card key={reward.id} style={styles.rewardCard}>
-                <Card.Content>
-                  <View style={styles.rewardHeader}>
-                    <Text style={styles.rewardName}>{reward.name}</Text>
-                    <Chip icon="star" style={styles.rewardPointsChip}>
-                      {reward.points_cost}
-                    </Chip>
-                  </View>
-                  <Text style={styles.rewardDescription}>{reward.description}</Text>
-
-                  {reward.expires_at && (
-                    <Text style={styles.rewardExpiry}>
-                      {t("common.expires")}: {new Date(reward.expires_at).toLocaleDateString()}
-                    </Text>
-                  )}
-
-                  <Button
-                    mode="contained"
-                    onPress={() => handleClaimReward(reward.id)}
-                    disabled={
-                      reward.claimed ||
-                      !reward.available ||
-                      profile.points < reward.points_cost ||
-                      claimingReward === reward.id
-                    }
-                    loading={claimingReward === reward.id}
-                    style={[
-                      styles.rewardButton,
-                      reward.claimed && styles.claimedButton,
-                      !reward.available && styles.unavailableButton,
-                    ]}
-                  >
-                    {reward.claimed
-                      ? t("common.claimed")
-                      : !reward.available
-                        ? t("common.unavailable")
-                        : t("gamification.claimReward")}
-                  </Button>
-                </Card.Content>
-              </Card>
-            ))
-          ) : (
-            <Text style={styles.noDataText}>{t("gamification.noRewards")}</Text>
-          )}
-        </View>
-      </View>
-    )
-  }
-
-  const renderLeaderboardTab = () => {
-    return (
-      <View style={styles.tabContent}>
-        <Text style={styles.leaderboardTitle}>{t("gamification.leaderboard")}</Text>
-
-        {rankings && rankings.length > 0 ? (
-          <View style={styles.rankingsContainer}>
-            {rankings.map((user, index) => (
-              <Card key={user.id} style={styles.rankingCard}>
-                <Card.Content style={styles.rankingContent}>
-                  <Text style={styles.rankingPosition}>{user.rank}</Text>
-                  <View style={styles.rankingAvatarContainer}>
-                    {user.profile_picture ? (
-                      <Image source={{ uri: user.profile_picture }} style={styles.rankingAvatar} />
-                    ) : (
-                      <View style={[styles.rankingAvatar, styles.rankingAvatarPlaceholder]}>
-                        <Text style={styles.rankingAvatarText}>
-                          {user.full_name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  <View style={styles.rankingUserInfo}>
-                    <Text style={styles.rankingName}>{user.full_name}</Text>
-                    <View style={styles.rankingLevelContainer}>
-                      <Text style={styles.rankingLevelLabel}>{t("gamification.level")}</Text>
-                      <Text style={styles.rankingLevelValue}>{user.level}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.rankingPointsContainer}>
-                    <Text style={styles.rankingPointsValue}>{user.points}</Text>
-                    <Text style={styles.rankingPointsLabel}>{t("gamification.points")}</Text>
-                  </View>
-                </Card.Content>
-              </Card>
             ))}
           </View>
-        ) : (
-          <Text style={styles.noDataText}>{t("gamification.noLeaderboardData")}</Text>
-        )}
-      </View>
-    )
-  }
+        </>
+      )}
+    </ScrollView>
+  );
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6B00" />
-        <Text style={styles.loadingText}>{t("gamification.loading")}</Text>
+  const renderLeaderboardTab = () => (
+    <ScrollView style={styles.tabContent}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Classement Général</Text>
+        {rankings.map((ranking, index) => (
+          <View key={ranking.courier_id} style={styles.rankingCard}>
+            <View style={styles.rankingPosition}>
+              <Text style={styles.positionText}>#{ranking.position}</Text>
+            </View>
+            <View style={styles.rankingInfo}>
+              <Text style={styles.courierName}>{ranking.courier_name}</Text>
+              <Text style={styles.courierPoints}>{ranking.points} points</Text>
+            </View>
+            <View style={styles.rankingLevel}>
+              <Text style={styles.levelBadge}>Niv. {ranking.level}</Text>
+            </View>
+          </View>
+        ))}
       </View>
-    )
-  }
+    </ScrollView>
+  );
 
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <IconButton icon="alert-circle" size={48} iconColor="#F44336" />
-        <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={loadData} style={styles.retryButton}>
-          {t("common.retry")}
-        </Button>
+  const renderRewardsTab = () => (
+    <ScrollView style={styles.tabContent}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Récompenses Disponibles</Text>
+        {rewards.map((reward) => (
+          <View key={reward.id} style={styles.rewardCard}>
+            <View style={styles.rewardInfo}>
+              <Text style={styles.rewardName}>{reward.name}</Text>
+              <Text style={styles.rewardDesc}>{reward.description}</Text>
+              <Text style={styles.rewardPoints}>{reward.points_required} points requis</Text>
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.claimButton,
+                !reward.is_available && styles.claimButtonDisabled
+              ]}
+              onPress={() => claimReward(reward.id)}
+              disabled={!reward.is_available}
+            >
+              <Text style={styles.claimButtonText}>
+                {reward.is_available ? 'Réclamer' : 'Indisponible'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ))}
       </View>
-    )
-  }
+    </ScrollView>
+  );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabsContainer}>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Gamification</Text>
+        <TouchableOpacity onPress={onRefresh}>
+          <Feather name="refresh-cw" size={24} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "profile" && styles.activeTab]}
-          onPress={() => setActiveTab("profile")}
+          style={[styles.tab, activeTab === 'profile' && styles.activeTab]}
+          onPress={() => setActiveTab('profile')}
         >
-          <Text style={[styles.tabText, activeTab === "profile" && styles.activeTabText]}>
-            {t("gamification.title")}
+          <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>
+            Profil
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "rewards" && styles.activeTab]}
-          onPress={() => setActiveTab("rewards")}
+          style={[styles.tab, activeTab === 'leaderboard' && styles.activeTab]}
+          onPress={() => setActiveTab('leaderboard')}
         >
-          <Text style={[styles.tabText, activeTab === "rewards" && styles.activeTabText]}>
-            {t("gamification.rewards")}
+          <Text style={[styles.tabText, activeTab === 'leaderboard' && styles.activeTabText]}>
+            Classement
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "leaderboard" && styles.activeTab]}
-          onPress={() => setActiveTab("leaderboard")}
+          style={[styles.tab, activeTab === 'rewards' && styles.activeTab]}
+          onPress={() => setActiveTab('rewards')}
         >
-          <Text style={[styles.tabText, activeTab === "leaderboard" && styles.activeTabText]}>
-            {t("gamification.leaderboard")}
+          <Text style={[styles.tabText, activeTab === 'rewards' && styles.activeTabText]}>
+            Récompenses
           </Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {activeTab === "profile" && renderProfileTab()}
-        {activeTab === "rewards" && renderRewardsTab()}
-        {activeTab === "leaderboard" && renderLeaderboardTab()}
-      </ScrollView>
-    </View>
-  )
-}
+      {/* Content */}
+      <View style={styles.content}>
+        {activeTab === 'profile' && renderProfileTab()}
+        {activeTab === 'leaderboard' && renderLeaderboardTab()}
+        {activeTab === 'rewards' && renderRewardsTab()}
+      </View>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#f8f9fa',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#757575",
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#212529',
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    padding: 24,
-  },
-  errorText: {
-    marginTop: 16,
-    marginBottom: 24,
-    fontSize: 16,
-    color: "#757575",
-    textAlign: "center",
-  },
-  retryButton: {
-    backgroundColor: "#FF6B00",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    elevation: 2,
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
   },
   tab: {
     flex: 1,
     paddingVertical: 16,
-    alignItems: "center",
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#FF6B00",
+    borderBottomColor: '#007AFF',
   },
   tabText: {
-    fontSize: 14,
-    color: "#757575",
+    fontSize: 16,
+    color: '#6c757d',
   },
   activeTabText: {
-    color: "#FF6B00",
-    fontWeight: "bold",
+    color: '#007AFF',
+    fontWeight: '600',
   },
-  scrollContainer: {
+  content: {
     flex: 1,
   },
   tabContent: {
-    padding: 16,
+    flex: 1,
+    padding: 20,
   },
   levelCard: {
-    marginBottom: 16,
-    elevation: 2,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   levelHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  levelLabel: {
-    fontSize: 14,
-    color: "#757575",
+  levelTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#212529',
   },
-  levelValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#FF6B00",
-  },
-  pointsContainer: {
-    alignItems: "flex-end",
-  },
-  pointsLabel: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  pointsValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  progressContainer: {
-    marginTop: 8,
+  xpText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
   progressBar: {
     height: 8,
+    backgroundColor: '#e9ecef',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#007AFF',
     borderRadius: 4,
   },
   progressText: {
-    fontSize: 12,
-    color: "#757575",
-    marginTop: 4,
-    textAlign: "right",
-  },
-  streakCard: {
-    marginBottom: 16,
-    elevation: 2,
-  },
-  streakHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  streakLabel: {
     fontSize: 14,
-    color: "#757575",
+    color: '#6c757d',
+    textAlign: 'center',
   },
-  streakValueContainer: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-  streakValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#FF6B00",
-  },
-  streakDays: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  claimButton: {
-    backgroundColor: "#FF6B00",
-  },
-  claimedButton: {
-    backgroundColor: "#BDBDBD",
-  },
-  bonusText: {
-    fontSize: 14,
-    color: "#757575",
-    marginTop: 8,
-  },
-  sectionContainer: {
-    marginBottom: 16,
+  section: {
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 12,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 16,
   },
-  badgesContainer: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  achievementsContainer: {
-    marginBottom: 8,
+  badgesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   achievementCard: {
-    marginBottom: 8,
-    elevation: 1,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  achievementHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  achievementInfo: {
+    flex: 1,
+    marginRight: 12,
   },
   achievementName: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 4,
   },
-  completedIcon: {
-    margin: 0,
-  },
-  achievementDescription: {
+  achievementDesc: {
     fontSize: 14,
-    color: "#757575",
-    marginVertical: 4,
+    color: '#6c757d',
   },
-  achievementProgressContainer: {
-    marginTop: 8,
+  achievementProgress: {
+    alignItems: 'flex-end',
+    minWidth: 80,
   },
-  achievementProgressBar: {
-    height: 6,
-    borderRadius: 3,
+  rankingCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  achievementProgressText: {
-    fontSize: 12,
-    color: "#757575",
-    marginTop: 4,
-    textAlign: "right",
+  rankingPosition: {
+    width: 40,
+    alignItems: 'center',
   },
-  rewardsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  rewardsTitle: {
+  positionText: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
-  pointsChip: {
-    backgroundColor: "#FFF3E0",
+  rankingInfo: {
+    flex: 1,
+    marginLeft: 16,
   },
-  rewardsContainer: {
-    marginBottom: 8,
+  courierName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+  },
+  courierPoints: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
+  rankingLevel: {
+    alignItems: 'flex-end',
+  },
+  levelBadge: {
+    backgroundColor: '#007AFF',
+    color: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: '600',
   },
   rewardCard: {
-    marginBottom: 8,
-    elevation: 1,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  rewardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
+  rewardInfo: {
+    flex: 1,
+    marginRight: 12,
   },
   rewardName: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-    flex: 1,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 4,
   },
-  rewardPointsChip: {
-    backgroundColor: "#FFF3E0",
-  },
-  rewardDescription: {
+  rewardDesc: {
     fontSize: 14,
-    color: "#757575",
-    marginBottom: 12,
+    color: '#6c757d',
+    marginBottom: 4,
   },
-  rewardExpiry: {
-    fontSize: 12,
-    color: "#F44336",
-    marginBottom: 12,
-  },
-  rewardButton: {
-    backgroundColor: "#FF6B00",
-  },
-  unavailableButton: {
-    backgroundColor: "#BDBDBD",
-  },
-  leaderboardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 16,
-  },
-  rankingsContainer: {
-    marginBottom: 8,
-  },
-  rankingCard: {
-    marginBottom: 8,
-    elevation: 1,
-  },
-  rankingContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  rankingPosition: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    width: 30,
-    textAlign: "center",
-  },
-  rankingAvatarContainer: {
-    marginRight: 12,
-  },
-  rankingAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  rankingAvatarPlaceholder: {
-    backgroundColor: "#FF6B00",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  rankingAvatarText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  rankingUserInfo: {
-    flex: 1,
-  },
-  rankingName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  rankingLevelContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  rankingLevelLabel: {
-    fontSize: 12,
-    color: "#757575",
-    marginRight: 4,
-  },
-  rankingLevelValue: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#FF6B00",
-  },
-  rankingPointsContainer: {
-    alignItems: "center",
-  },
-  rankingPointsValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  rankingPointsLabel: {
-    fontSize: 12,
-    color: "#757575",
-  },
-  noDataText: {
+  rewardPoints: {
     fontSize: 14,
-    color: "#757575",
-    textAlign: "center",
-    marginTop: 24,
+    color: '#007AFF',
+    fontWeight: '600',
   },
-})
-
-export default GamificationScreen
+  claimButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  claimButtonDisabled: {
+    backgroundColor: '#6c757d',
+  },
+  claimButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+});

@@ -1,217 +1,235 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import api from "./api"
 
-interface Badge {
-  id: string
-  name: string
-  description: string
-  icon: string
-  unlocked: boolean
-  unlocked_at?: string
+import axios, { AxiosInstance } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config/environment';
+import type { GamificationProfile, Ranking, Reward, Badge, Achievement } from '../types/models';
+
+interface ApiError {
+  response?: {
+    data?: {
+      detail?: string;
+      message?: string;
+    };
+  };
+  message?: string;
 }
 
-interface Achievement {
-  id: string
-  name: string
-  description: string
-  progress: number
-  max_progress: number
-  completed: boolean
-  completed_at?: string
-}
+export class GamificationService {
+  private api: AxiosInstance;
 
-interface Reward {
-  id: string
-  name: string
-  description: string
-  points_cost: number
-  available: boolean
-  claimed: boolean
-  claimed_at?: string
-  expires_at?: string
-}
+  constructor() {
+    this.api = axios.create({
+      baseURL: `${API_URL}/api`,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-interface RankingUser {
-  id: string
-  full_name: string
-  profile_picture?: string
-  level: number
-  points: number
-  rank: number
-}
-
-interface GamificationProfile {
-  user_id: string
-  level: number
-  points: number
-  points_to_next_level: number
-  badges: Badge[]
-  achievements: Achievement[]
-  rewards: Reward[]
-  daily_streak: number
-  daily_bonus_claimed: boolean
-  last_active: string
-}
-
-class GamificationService {
-  // Clé pour le cache
-  private CACHE_KEY = "gamification_cache"
-  private CACHE_DURATION = 30 * 60 * 1000 // 30 minutes
-
-  /**
-   * Récupère le profil de gamification de l'utilisateur
-   */
-  async getProfile(): Promise<GamificationProfile | null> {
-    try {
-      // Vérifier si les données sont en cache et valides
-      const cachedData = await this.getCachedProfile()
-      if (cachedData) {
-        return cachedData
-      }
-
-      // Récupérer les données depuis l'API
-      const response = await api.get("/gamification/profile")
-      const profile = response.data
-
-      // Mettre en cache les données
-      await this.cacheProfile(profile)
-
-      return profile
-    } catch (error) {
-      console.error("Error fetching gamification profile:", error)
-      return null
-    }
-  }
-
-  /**
-   * Récupère le classement des utilisateurs
-   */
-  async getRankings(commune?: string): Promise<RankingUser[]> {
-    try {
-      let url = "/gamification/rankings"
-      if (commune) {
-        url += `?commune=${encodeURIComponent(commune)}`
-      }
-
-      const response = await api.get(url)
-      return response.data
-    } catch (error) {
-      console.error("Error fetching rankings:", error)
-      return []
-    }
-  }
-
-  /**
-   * Réclame une récompense
-   */
-  async claimReward(rewardId: string): Promise<boolean> {
-    try {
-      const response = await api.post(`/gamification/rewards/${rewardId}/claim`)
-
-      // Invalider le cache
-      await this.invalidateCache()
-
-      return response.data.success
-    } catch (error) {
-      console.error("Error claiming reward:", error)
-      return false
-    }
-  }
-
-  /**
-   * Réclame le bonus quotidien
-   */
-  async claimDailyBonus(): Promise<boolean> {
-    try {
-      const response = await api.post("/gamification/daily-bonus/claim")
-
-      // Invalider le cache
-      await this.invalidateCache()
-
-      return response.data.success
-    } catch (error) {
-      console.error("Error claiming daily bonus:", error)
-      return false
-    }
-  }
-
-  /**
-   * Enregistre un événement de gamification
-   */
-  async trackEvent(eventType: string, metadata?: any): Promise<boolean> {
-    try {
-      const response = await api.post("/gamification/events", {
-        event_type: eventType,
-        metadata,
-      })
-
-      // Invalider le cache
-      await this.invalidateCache()
-
-      return response.data.success
-    } catch (error) {
-      console.error("Error tracking gamification event:", error)
-      return false
-    }
-  }
-
-  /**
-   * Récupère les données en cache
-   */
-  private async getCachedProfile(): Promise<GamificationProfile | null> {
-    try {
-      const cachedData = await AsyncStorage.getItem(this.CACHE_KEY)
-
-      if (cachedData) {
-        const { data, timestamp } = JSON.parse(cachedData)
-        const now = Date.now()
-
-        // Vérifier si les données sont encore valides
-        if (now - timestamp < this.CACHE_DURATION) {
-          return data
+    // Intercepteur pour ajouter le token d'authentification
+    this.api.interceptors.request.use(
+      async (config) => {
+        const token = await AsyncStorage.getItem('auth_token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
         }
-      }
-
-      return null
-    } catch (error) {
-      console.error("Error getting cached gamification profile:", error)
-      return null
-    }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
   }
 
   /**
-   * Met en cache les données
+   * Récupération du profil gamification
    */
-  private async cacheProfile(data: GamificationProfile): Promise<void> {
+  async getProfile(): Promise<GamificationProfile> {
     try {
-      const cacheData = {
-        data,
-        timestamp: Date.now(),
-      }
-
-      await AsyncStorage.setItem(this.CACHE_KEY, JSON.stringify(cacheData))
+      const response = await this.api.get('/gamification/profile');
+      return response.data;
     } catch (error) {
-      console.error("Error caching gamification profile:", error)
+      console.error('Get gamification profile error:', error);
+      throw this.handleError(error);
     }
   }
 
   /**
-   * Invalide le cache
+   * Récupération des classements
    */
-  private async invalidateCache(): Promise<void> {
+  async getRankings(commune?: string): Promise<Ranking[]> {
     try {
-      await AsyncStorage.removeItem(this.CACHE_KEY)
+      const params = commune ? { commune } : undefined;
+      const response = await this.api.get('/gamification/rankings', { params });
+      return response.data;
     } catch (error) {
-      console.error("Error invalidating gamification cache:", error)
+      console.error('Get rankings error:', error);
+      throw this.handleError(error);
     }
   }
 
   /**
-   * Vide le cache
+   * Récupération des récompenses disponibles
    */
-  async clearCache(): Promise<void> {
-    await this.invalidateCache()
+  async getAvailableRewards(): Promise<Reward[]> {
+    try {
+      const response = await this.api.get('/gamification/rewards');
+      return response.data;
+    } catch (error) {
+      console.error('Get available rewards error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Réclamation d'une récompense
+   */
+  async claimReward(rewardId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.api.post(`/gamification/rewards/${rewardId}/claim`);
+      return response.data;
+    } catch (error) {
+      console.error('Claim reward error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Récupération des badges utilisateur
+   */
+  async getUserBadges(): Promise<Badge[]> {
+    try {
+      const response = await this.api.get('/gamification/badges');
+      return response.data;
+    } catch (error) {
+      console.error('Get user badges error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Récupération des objectifs/achievements
+   */
+  async getAchievements(): Promise<Achievement[]> {
+    try {
+      const response = await this.api.get('/gamification/achievements');
+      return response.data;
+    } catch (error) {
+      console.error('Get achievements error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Attribution de points pour une action
+   */
+  async awardPoints(action: string, deliveryId?: string): Promise<{ points: number; newLevel?: number }> {
+    try {
+      const data = { action };
+      if (deliveryId) {
+        data.delivery_id = deliveryId;
+      }
+      const response = await this.api.post('/gamification/award-points', data);
+      return response.data;
+    } catch (error) {
+      console.error('Award points error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Récupération des statistiques détaillées
+   */
+  async getDetailedStats(period: 'week' | 'month' | 'year' = 'month'): Promise<{
+    total_deliveries: number;
+    total_points: number;
+    average_rating: number;
+    badges_count: number;
+    rank_position: number;
+    level_progress: {
+      current_level: number;
+      current_xp: number;
+      next_level_xp: number;
+      progress_percentage: number;
+    };
+  }> {
+    try {
+      const response = await this.api.get(`/gamification/stats?period=${period}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get detailed stats error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Récupération du leaderboard par commune
+   */
+  async getCommuneLeaderboard(commune: string): Promise<Ranking[]> {
+    try {
+      const response = await this.api.get(`/gamification/rankings/commune/${commune}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get commune leaderboard error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Participation à un défi
+   */
+  async joinChallenge(challengeId: string): Promise<{ success: boolean; challenge: any }> {
+    try {
+      const response = await this.api.post(`/gamification/challenges/${challengeId}/join`);
+      return response.data;
+    } catch (error) {
+      console.error('Join challenge error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Récupération des défis actifs
+   */
+  async getActiveChallenges(): Promise<any[]> {
+    try {
+      const response = await this.api.get('/gamification/challenges/active');
+      return response.data;
+    } catch (error) {
+      console.error('Get active challenges error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Partage d'un badge sur les réseaux sociaux
+   */
+  async shareBadge(badgeId: string, platform: 'facebook' | 'twitter' | 'whatsapp'): Promise<{ share_url: string }> {
+    try {
+      const response = await this.api.post(`/gamification/badges/${badgeId}/share`, { platform });
+      return response.data;
+    } catch (error) {
+      console.error('Share badge error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Gestion des erreurs
+   */
+  private handleError(error: unknown): Error {
+    let message = 'Une erreur est survenue';
+
+    if (error && typeof error === 'object') {
+      const errorObj = error as ApiError;
+      if (errorObj.response?.data?.detail) {
+        message = errorObj.response.data.detail;
+      } else if (errorObj.response?.data?.message) {
+        message = errorObj.response.data.message;
+      } else if (errorObj.message) {
+        message = errorObj.message;
+      }
+    }
+
+    return new Error(message);
   }
 }
 
-export default new GamificationService()
+export default GamificationService;
