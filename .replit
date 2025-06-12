@@ -28,7 +28,7 @@ args = "python -m pip install -r requirements.txt"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -c \"import asyncio; from app.db.init_db import init_db; asyncio.run(init_db())\""
+args = "python -c \"from app.db.init_db import init_db; import asyncio; asyncio.run(init_db())\""
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
