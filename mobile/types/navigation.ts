@@ -33,7 +33,10 @@ export type RootStackParamList = {
   Gamification: undefined
   CommunityWallet: undefined
   VehicleManagement: undefined
-  CourierProfile: { courierId: string }
+  CourierProfile: undefined
+  CourierDeliveryHistory: undefined
+  AvailableDeliveries: undefined
+  DeliveryDetails: { deliveryId: number }
   Notifications: undefined
   Support: undefined
   LanguageSettings: undefined
@@ -89,7 +92,7 @@ export type ClientDeliveriesParamList = {
   CreateDelivery: undefined
   DeliveryDetails: { deliveryId: string }
   Bids: { deliveryId: string }
-  TrackDelivery: { deliveryId: string }
+  TrackDelivery: undefined
   Payment: { deliveryId: string; amount: number }
   RateDelivery: { deliveryId: string }
 }
@@ -98,7 +101,7 @@ export type CourierDeliveriesParamList = {
   DeliveriesList: undefined
   DeliveryDetails: { deliveryId: string }
   Bid: { deliveryId: string }
-  TrackDelivery: { deliveryId: string }
+  TrackDelivery: undefined
 }
 
 export type ClientHomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "ClientHome">
