@@ -1,364 +1,262 @@
-"use client"
+import React, { useState, useEffect } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Image,
+  ScrollView
+} from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
+import { TextInput } from 'react-native-paper'
+import { PaymentService } from '../../services/PaymentService'
+import { DeliveryService } from '../../services/DeliveryService'
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from "react-native"
-import { Text, Card, Button, RadioButton, TextInput, Divider, ActivityIndicator } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchDeliveryDetails, initiatePayment, verifyPayment } from "../../services/api"
-import { formatPrice } from "../../utils/formatters"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RouteProp } from "@react-navigation/native"
-import type { RootStackParamList } from "../../types/navigation"
-import type { Delivery } from "../../types/models"
-
-type PaymentScreenProps = {
-  route: RouteProp<RootStackParamList, "Payment">
-  navigation: NativeStackNavigationProp<RootStackParamList, "Payment">
+interface PaymentMethod {
+  id: string
+  name: string
+  type: 'mobile_money' | 'card' | 'wallet'
+  icon: string
+  description: string
 }
 
-type PaymentMethod = "orange_money" | "mtn_momo" | "cash"
-type PaymentStep = "select_method" | "enter_otp" | "success"
+interface PaymentScreenProps {
+  route: {
+    params: {
+      deliveryId: number
+      amount: number
+      description?: string
+    }
+  }
+  navigation: any
+}
 
-const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
-  const { deliveryId, amount } = route.params
-  const { t } = useTranslation()
-  const { user } = useAuth()
-  const { isConnected } = useNetwork()
+const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
+  const { deliveryId, amount, description } = route.params
+  const [selectedMethod, setSelectedMethod] = useState<string>('')
+  const [phoneNumber, setPhoneNumber] = useState<string>('')
+  const [processing, setProcessing] = useState(false)
+  const [walletBalance, setWalletBalance] = useState<number>(0)
 
-  const [delivery, setDelivery] = useState<Delivery | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("orange_money")
-  const [phoneNumber, setPhoneNumber] = useState<string>(user?.phone || "")
-  const [otp, setOtp] = useState<string>("")
-  const [loading, setLoading] = useState<boolean>(true)
-  const [processingPayment, setProcessingPayment] = useState<boolean>(false)
-  const [paymentStep, setPaymentStep] = useState<PaymentStep>("select_method")
-  const [paymentReference, setPaymentReference] = useState<string | null>(null)
-  const [error, setError] = useState<string>("")
+  const paymentMethods: PaymentMethod[] = [
+    {
+      id: 'orange_money',
+      name: 'Orange Money',
+      type: 'mobile_money',
+      icon: 'phone-portrait',
+      description: 'Paiement via Orange Money'
+    },
+    {
+      id: 'mtn_momo',
+      name: 'MTN Mobile Money',
+      type: 'mobile_money',
+      icon: 'phone-portrait',
+      description: 'Paiement via MTN MoMo'
+    },
+    {
+      id: 'wallet',
+      name: 'Mon Portefeuille',
+      type: 'wallet',
+      icon: 'wallet',
+      description: `Solde disponible: ${formatPrice(walletBalance)} FCFA`
+    },
+    {
+      id: 'card',
+      name: 'Carte bancaire',
+      type: 'card',
+      icon: 'card',
+      description: 'Visa, Mastercard'
+    }
+  ]
 
   useEffect(() => {
-    loadDeliveryDetails()
-  }, [deliveryId])
+    loadWalletBalance()
+  }, [])
 
-  const loadDeliveryDetails = async (): Promise<void> => {
+  const loadWalletBalance = async () => {
     try {
-      setLoading(true)
-      const data = await fetchDeliveryDetails(deliveryId)
-      setDelivery(data)
+      // Charger le solde du portefeuille
+      // const balance = await PaymentService.getWalletBalance()
+      // setWalletBalance(balance)
+      setWalletBalance(15000) // Valeur par défaut pour la démo
     } catch (error) {
-      console.error("Error loading delivery details:", error)
-      setError(t("payment.errorLoadingDelivery"))
-    } finally {
-      setLoading(false)
+      console.error('Erreur lors du chargement du solde:', error)
     }
   }
 
-  const handleInitiatePayment = async (): Promise<void> => {
-    if (!isConnected) {
-      Alert.alert(t("payment.offlineTitle"), t("payment.offlinePayment"))
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR').format(price)
+  }
+
+  const handlePayment = async () => {
+    if (!selectedMethod) {
+      Alert.alert('Erreur', 'Veuillez sélectionner une méthode de paiement')
       return
     }
 
-    if (!phoneNumber) {
-      setError(t("payment.errorPhoneRequired"))
+    if ((selectedMethod === 'orange_money' || selectedMethod === 'mtn_momo') && !phoneNumber) {
+      Alert.alert('Erreur', 'Veuillez entrer votre numéro de téléphone')
       return
     }
+
+    if (selectedMethod === 'wallet' && walletBalance < amount) {
+      Alert.alert('Solde insuffisant', 'Votre solde est insuffisant pour effectuer ce paiement')
+      return
+    }
+
+    setProcessing(true)
 
     try {
-      setProcessingPayment(true)
-
       const paymentData = {
         delivery_id: deliveryId,
-        amount: amount || delivery?.proposed_price || 0,
-        payment_method: paymentMethod,
-        phone_number: phoneNumber,
+        amount,
+        payment_method: selectedMethod,
+        phone_number: phoneNumber || undefined,
+        description: description || `Paiement pour livraison #${deliveryId}`
       }
 
-      const response = await initiatePayment(paymentData)
+      // Simulation du paiement
+      await new Promise(resolve => setTimeout(resolve, 3000))
 
-      if (response && response.reference) {
-        setPaymentReference(response.reference)
-        setPaymentStep("enter_otp")
-      } else {
-        throw new Error(t("payment.errorInitiatingPayment"))
-      }
+      // const result = await PaymentService.processPayment(paymentData)
+
+      Alert.alert(
+        'Paiement réussi',
+        'Votre paiement a été traité avec succès!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('PaymentSuccess', { 
+              deliveryId,
+              amount,
+              paymentMethod: selectedMethod
+            })
+          }
+        ]
+      )
     } catch (error) {
-      console.error("Error initiating payment:", error)
-      setError(error instanceof Error ? error.message : t("payment.errorInitiatingPayment"))
+      console.error('Erreur lors du paiement:', error)
+      Alert.alert('Erreur de paiement', 'Une erreur est survenue lors du traitement du paiement')
     } finally {
-      setProcessingPayment(false)
+      setProcessing(false)
     }
   }
 
-  const handleVerifyPayment = async (): Promise<void> => {
-    if (!otp) {
-      setError(t("payment.errorOtpRequired"))
-      return
-    }
-
-    try {
-      setProcessingPayment(true)
-
-      if (!paymentReference) {
-        setError(t("payment.errorPaymentReference"))
-        return
-      }
-
-      const verificationData = {
-        reference: paymentReference,
-        otp: otp,
-      }
-
-      const response = await verifyPayment(verificationData)
-
-      if (response && response.status === "success") {
-        setPaymentStep("success")
-      } else {
-        throw new Error(response.message || t("payment.errorVerifyingPayment"))
-      }
-    } catch (error) {
-      console.error("Error verifying payment:", error)
-      setError(error instanceof Error ? error.message : t("payment.errorVerifyingPayment"))
-    } finally {
-      setProcessingPayment(false)
-    }
-  }
-
-  const handleCashPayment = (): void => {
-    Alert.alert(t("payment.cashPaymentTitle"), t("payment.cashPaymentMessage"), [
-      {
-        text: t("common.cancel"),
-        style: "cancel",
-      },
-      {
-        text: t("common.confirm"),
-        onPress: () => {
-          // Simuler un paiement en espèces réussi
-          setPaymentStep("success")
-        },
-      },
-    ])
-  }
-
-  const renderPaymentMethodSelection = (): React.ReactElement => (
-    <Card style={styles.card}>
-      <Card.Content>
-        <Text style={styles.sectionTitle}>{t("payment.selectMethod")}</Text>
-
-        <RadioButton.Group onValueChange={(value) => setPaymentMethod(value as PaymentMethod)} value={paymentMethod}>
-          <View style={styles.paymentOption}>
-            <Image source={require("../../assets/orange-money.png")} style={styles.paymentLogo} resizeMode="contain" />
-            <View style={styles.paymentOptionContent}>
-              <Text style={styles.paymentOptionTitle}>Orange Money</Text>
-              <Text style={styles.paymentOptionDescription}>{t("payment.orangeMoneyDescription")}</Text>
-            </View>
-            <RadioButton value="orange_money" />
+  const renderPaymentMethod = (method: PaymentMethod) => (
+    <TouchableOpacity
+      key={method.id}
+      style={[
+        styles.paymentMethodCard,
+        selectedMethod === method.id && styles.selectedPaymentMethod
+      ]}
+      onPress={() => setSelectedMethod(method.id)}
+    >
+      <View style={styles.paymentMethodContent}>
+        <View style={styles.paymentMethodLeft}>
+          <View style={[
+            styles.paymentMethodIcon,
+            selectedMethod === method.id && styles.selectedPaymentMethodIcon
+          ]}>
+            <Ionicons 
+              name={method.icon as any} 
+              size={24} 
+              color={selectedMethod === method.id ? '#ffffff' : '#007AFF'} 
+            />
           </View>
-
-          <Divider style={styles.divider} />
-
-          <View style={styles.paymentOption}>
-            <Image source={require("../../assets/mtn-momo.png")} style={styles.paymentLogo} resizeMode="contain" />
-            <View style={styles.paymentOptionContent}>
-              <Text style={styles.paymentOptionTitle}>MTN Mobile Money</Text>
-              <Text style={styles.paymentOptionDescription}>{t("payment.mtnMomoDescription")}</Text>
-            </View>
-            <RadioButton value="mtn_momo" />
+          <View style={styles.paymentMethodDetails}>
+            <Text style={styles.paymentMethodName}>{method.name}</Text>
+            <Text style={styles.paymentMethodDescription}>{method.description}</Text>
           </View>
+        </View>
 
-          <Divider style={styles.divider} />
-
-          <View style={styles.paymentOption}>
-            <Image source={require("../../assets/cash.png")} style={styles.paymentLogo} resizeMode="contain" />
-            <View style={styles.paymentOptionContent}>
-              <Text style={styles.paymentOptionTitle}>{t("payment.cash")}</Text>
-              <Text style={styles.paymentOptionDescription}>{t("payment.cashDescription")}</Text>
-            </View>
-            <RadioButton value="cash" />
-          </View>
-        </RadioButton.Group>
-
-        <TextInput
-          label={t("payment.phoneNumber")}
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          keyboardType="phone-pad"
-          style={styles.input}
-          disabled={paymentMethod === "cash"}
-        />
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <Button
-          mode="contained"
-          onPress={paymentMethod === "cash" ? handleCashPayment : handleInitiatePayment}
-          style={styles.button}
-          loading={processingPayment}
-          disabled={processingPayment}
-        >
-          {t("payment.proceed")}
-        </Button>
-      </Card.Content>
-    </Card>
+        {selectedMethod === method.id && (
+          <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+        )}
+      </View>
+    </TouchableOpacity>
   )
-
-  const renderOtpVerification = (): React.ReactElement => (
-    <Card style={styles.card}>
-      <Card.Content>
-        <Text style={styles.sectionTitle}>{t("payment.enterOtp")}</Text>
-
-        <Text style={styles.otpInstructions}>{t("payment.otpInstructions", { phoneNumber })}</Text>
-
-        <TextInput
-          label={t("payment.otp")}
-          value={otp}
-          onChangeText={setOtp}
-          keyboardType="number-pad"
-          style={styles.input}
-          maxLength={6}
-        />
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <View style={styles.buttonRow}>
-          <Button
-            mode="outlined"
-            onPress={() => setPaymentStep("select_method")}
-            style={[styles.button, styles.cancelButton]}
-            disabled={processingPayment}
-          >
-            {t("common.back")}
-          </Button>
-
-          <Button
-            mode="contained"
-            onPress={handleVerifyPayment}
-            style={[styles.button, styles.confirmButton]}
-            loading={processingPayment}
-            disabled={processingPayment}
-          >
-            {t("payment.verify")}
-          </Button>
-        </View>
-      </Card.Content>
-    </Card>
-  )
-
-  const renderPaymentSuccess = (): React.ReactElement => (
-    <Card style={styles.card}>
-      <Card.Content style={styles.successContent}>
-        <Image source={require("../../assets/payment-success.png")} style={styles.successImage} resizeMode="contain" />
-
-        <Text style={styles.successTitle}>{t("payment.paymentSuccessful")}</Text>
-
-        <Text style={styles.successMessage}>{t("payment.successMessage")}</Text>
-
-        <View style={styles.paymentDetails}>
-          <View style={styles.paymentDetailRow}>
-            <Text style={styles.paymentDetailLabel}>{t("payment.amount")}</Text>
-            <Text style={styles.paymentDetailValue}>{formatPrice(amount || delivery?.proposed_price || 0)} FCFA</Text>
-          </View>
-
-          <View style={styles.paymentDetailRow}>
-            <Text style={styles.paymentDetailLabel}>{t("payment.method")}</Text>
-            <Text style={styles.paymentDetailValue}>
-              {paymentMethod === "orange_money"
-                ? "Orange Money"
-                : paymentMethod === "mtn_momo"
-                  ? "MTN Mobile Money"
-                  : t("payment.cash")}
-            </Text>
-          </View>
-
-          <View style={styles.paymentDetailRow}>
-            <Text style={styles.paymentDetailLabel}>{t("payment.reference")}</Text>
-            <Text style={styles.paymentDetailValue}>
-              {paymentReference || "CASH-" + Date.now().toString().substring(6)}
-            </Text>
-          </View>
-
-          <View style={styles.paymentDetailRow}>
-            <Text style={styles.paymentDetailLabel}>{t("payment.date")}</Text>
-            <Text style={styles.paymentDetailValue}>{new Date().toLocaleDateString()}</Text>
-          </View>
-        </View>
-
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate("DeliveryDetails", { deliveryId })}
-          style={styles.button}
-        >
-          {t("payment.backToDelivery")}
-        </Button>
-      </Card.Content>
-    </Card>
-  )
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>{t("common.back")}</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("payment.title")}</Text>
-          <View style={{ width: 50 }} />
-        </View>
-
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("payment.loading")}</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>{t("common.back")}</Text>
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("payment.title")}</Text>
-        <View style={{ width: 50 }} />
-      </View>
+        <Text style={styles.headerTitle}>Paiement</Text>
+        <View style={styles.placeholder} />
+      </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Card style={styles.summaryCard}>
-          <Card.Content>
-            <Text style={styles.summaryTitle}>{t("payment.summary")}</Text>
+      <ScrollView style={styles.content}>
+        <View style={styles.amountCard}>
+          <Text style={styles.amountLabel}>Montant à payer</Text>
+          <Text style={styles.amountValue}>{formatPrice(amount)} FCFA</Text>
+          {description && (
+            <Text style={styles.amountDescription}>{description}</Text>
+          )}
+        </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Méthode de paiement</Text>
+          {paymentMethods.map(renderPaymentMethod)}
+        </View>
+
+        {(selectedMethod === 'orange_money' || selectedMethod === 'mtn_momo') && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Numéro de téléphone</Text>
+            <TextInput
+              label="Numéro de téléphone"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              style={styles.input}
+              mode="outlined"
+              keyboardType="phone-pad"
+              placeholder="01 02 03 04 05"
+              left={<TextInput.Icon icon="phone" />}
+            />
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Résumé</Text>
+          <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t("payment.delivery")}</Text>
-              <Text style={styles.summaryValue}>#{deliveryId}</Text>
+              <Text style={styles.summaryLabel}>Livraison #</Text>
+              <Text style={styles.summaryValue}>{deliveryId}</Text>
             </View>
-
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t("payment.from")}</Text>
-              <Text style={styles.summaryValue}>{delivery?.pickup_commune}</Text>
+              <Text style={styles.summaryLabel}>Montant</Text>
+              <Text style={styles.summaryValue}>{formatPrice(amount)} FCFA</Text>
             </View>
-
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t("payment.to")}</Text>
-              <Text style={styles.summaryValue}>{delivery?.delivery_commune}</Text>
+            <View style={[styles.summaryRow, styles.summaryTotal]}>
+              <Text style={styles.summaryLabelTotal}>Total</Text>
+              <Text style={styles.summaryValueTotal}>{formatPrice(amount)} FCFA</Text>
             </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{t("payment.total")}</Text>
-              <Text style={styles.totalValue}>{formatPrice(amount || delivery?.proposed_price || 0)} FCFA</Text>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {paymentStep === "select_method" && renderPaymentMethodSelection()}
-        {paymentStep === "enter_otp" && renderOtpVerification()}
-        {paymentStep === "success" && renderPaymentSuccess()}
+          </View>
+        </View>
       </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.payButton, processing && styles.payButtonDisabled]}
+          onPress={handlePayment}
+          disabled={processing || !selectedMethod}
+        >
+          {processing ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <>
+              <Ionicons name="card" size={20} color="#ffffff" />
+              <Text style={styles.payButtonText}>
+                Payer {formatPrice(amount)} FCFA
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   )
 }
@@ -366,183 +264,183 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   headerTitle: {
+    color: '#ffffff',
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: 'bold',
   },
-  backButton: {
-    color: "#FF6B00",
-    fontSize: 16,
+  placeholder: {
+    width: 24,
   },
-  loadingContainer: {
+  content: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    color: "#757575",
-  },
-  scrollContainer: {
     padding: 16,
   },
-  summaryCard: {
+  amountCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  amountLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  amountValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 8,
+  },
+  amountDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 16,
   },
-  summaryTitle: {
+  paymentMethodCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectedPaymentMethod: {
+    borderColor: '#007AFF',
+    backgroundColor: '#f0f8ff',
+  },
+  paymentMethodContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  paymentMethodLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  paymentMethodIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f0f8ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  selectedPaymentMethodIcon: {
+    backgroundColor: '#007AFF',
+  },
+  paymentMethodDetails: {
+    flex: 1,
+  },
+  paymentMethodName: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  paymentMethodDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  input: {
+    backgroundColor: '#ffffff',
     marginBottom: 16,
+  },
+  summaryCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   summaryLabel: {
     fontSize: 14,
-    color: "#757575",
+    color: '#666',
   },
   summaryValue: {
     fontSize: 14,
-    color: "#212121",
+    color: '#333',
+    fontWeight: '500',
   },
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  summaryTotal: {
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
     marginTop: 8,
+    paddingTop: 16,
   },
-  totalLabel: {
+  summaryLabelTotal: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: 'bold',
+    color: '#333',
   },
-  totalValue: {
+  summaryValueTotal: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#FF6B00",
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
-  card: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 16,
-  },
-  paymentOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-  paymentLogo: {
-    width: 40,
-    height: 40,
-    marginRight: 12,
-  },
-  paymentOptionContent: {
-    flex: 1,
-  },
-  paymentOptionTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  paymentOptionDescription: {
-    fontSize: 12,
-    color: "#757575",
-  },
-  divider: {
-    marginVertical: 8,
-  },
-  input: {
-    marginTop: 16,
-    backgroundColor: "#FFFFFF",
-  },
-  errorText: {
-    color: "#F44336",
-    fontSize: 14,
-    marginTop: 8,
-  },
-  button: {
-    marginTop: 16,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 16,
-  },
-  cancelButton: {
-    flex: 1,
-    marginRight: 8,
-    borderColor: "#757575",
-  },
-  confirmButton: {
-    flex: 1,
-    marginLeft: 8,
-    backgroundColor: "#FF6B00",
-  },
-  otpInstructions: {
-    fontSize: 14,
-    color: "#757575",
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  successContent: {
-    alignItems: "center",
-  },
-  successImage: {
-    width: 120,
-    height: 120,
-    marginBottom: 16,
-  },
-  successTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#4CAF50",
-    marginBottom: 8,
-  },
-  successMessage: {
-    fontSize: 14,
-    color: "#757575",
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  paymentDetails: {
-    width: "100%",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 8,
+  footer: {
     padding: 16,
-    marginBottom: 16,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
-  paymentDetailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
+  payButton: {
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
   },
-  paymentDetailLabel: {
-    fontSize: 14,
-    color: "#757575",
+  payButtonDisabled: {
+    backgroundColor: '#ccc',
   },
-  paymentDetailValue: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#212121",
+  payButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 })
 

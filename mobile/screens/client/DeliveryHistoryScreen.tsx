@@ -1,204 +1,331 @@
-import React, { useState, useEffect, useCallback } from "react"
-import { View, StyleSheet, ScrollView, RefreshControl } from "react-native"
-import { Text, Card, Button, Chip, ActivityIndicator, Searchbar, FAB } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Feather } from "@expo/vector-icons"
-import { useNavigation } from "@react-navigation/native"
-import { useAuth } from "../../contexts/AuthContext"
-import DeliveryService from "../../services/DeliveryService"
-import { formatPrice, formatDate } from "../../utils/formatters"
-import type { Delivery, DeliveryStatus } from "../../types/models"
-import type { ClientTabParamList } from "../../types/navigation"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
-type NavigationProp = NativeStackNavigationProp<ClientTabParamList, "DeliveryHistory">
+import React, { useState, useEffect } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  Modal,
+  ScrollView
+} from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
+import { TextInput, Button, Chip } from 'react-native-paper'
+import { DeliveryService } from '../../services/DeliveryService'
+import { DeliveryStatusBadge } from '../../components/DeliveryStatusBadge'
+import { useAuth } from '../../contexts/AuthContext'
 
-const DeliveryHistoryScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>()
+interface DeliveryHistoryScreenProps {
+  navigation: any
+}
+
+const DeliveryHistoryScreen = ({ navigation }: DeliveryHistoryScreenProps) => {
   const { user } = useAuth()
+  const [deliveries, setDeliveries] = useState<any[]>([])
+  const [filteredDeliveries, setFilteredDeliveries] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState<string>('')
+  const [showFilters, setShowFilters] = useState(false)
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
 
-  const [deliveries, setDeliveries] = useState<Delivery[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [refreshing, setRefreshing] = useState<boolean>(false)
-  const [searchQuery, setSearchQuery] = useState<string>("")
-  const [selectedStatus, setSelectedStatus] = useState<DeliveryStatus | "all">("all")
-
-  const statusFilters: Array<{ key: DeliveryStatus | "all"; label: string; color: string }> = [
-    { key: "all", label: "Toutes", color: "#757575" },
-    { key: "pending", label: "En attente", color: "#FF9800" },
-    { key: "accepted", label: "Acceptées", color: "#2196F3" },
-    { key: "in_progress", label: "En cours", color: "#FF6B00" },
-    { key: "delivered", label: "Livrées", color: "#4CAF50" },
-    { key: "cancelled", label: "Annulées", color: "#F44336" },
+  const statusOptions = [
+    { value: '', label: 'Tous les statuts' },
+    { value: 'pending', label: 'En attente' },
+    { value: 'accepted', label: 'Acceptée' },
+    { value: 'picked_up', label: 'Collectée' },
+    { value: 'in_progress', label: 'En cours' },
+    { value: 'delivered', label: 'Livrée' },
+    { value: 'completed', label: 'Terminée' },
+    { value: 'cancelled', label: 'Annulée' }
   ]
 
-  const loadDeliveries = useCallback(async () => {
-    try {
-      setLoading(true)
-      const filters = {
-        status: selectedStatus !== "all" ? selectedStatus : undefined,
-        search: searchQuery || undefined,
-      }
-      const data = await DeliveryService.getClientDeliveryHistory(filters)
-      setDeliveries(data)
-    } catch (error) {
-      console.error("Error loading deliveries:", error)
-    } finally {
-      setLoading(false)
-    }
-  }, [selectedStatus, searchQuery])
+  const dateOptions = [
+    { value: 'all', label: 'Toutes les dates' },
+    { value: 'today', label: 'Aujourd\'hui' },
+    { value: 'week', label: 'Cette semaine' },
+    { value: 'month', label: 'Ce mois' }
+  ]
 
   useEffect(() => {
     loadDeliveries()
-  }, [loadDeliveries])
+  }, [])
 
-  const onRefresh = async () => {
+  useEffect(() => {
+    filterDeliveries()
+  }, [deliveries, searchQuery, selectedStatus, dateFilter])
+
+  const loadDeliveries = async () => {
+    if (!user) return
+
+    try {
+      const response = await DeliveryService.getUserDeliveries(user.id)
+      setDeliveries(response)
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique:', error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  const filterDeliveries = () => {
+    let filtered = [...deliveries]
+
+    // Filtrage par recherche
+    if (searchQuery) {
+      filtered = filtered.filter(delivery =>
+        delivery.id.toString().includes(searchQuery) ||
+        delivery.pickup_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        delivery.delivery_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        delivery.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Filtrage par statut
+    if (selectedStatus) {
+      filtered = filtered.filter(delivery => delivery.status === selectedStatus)
+    }
+
+    // Filtrage par date
+    if (dateFilter !== 'all') {
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      
+      filtered = filtered.filter(delivery => {
+        const deliveryDate = new Date(delivery.created_at)
+        
+        switch (dateFilter) {
+          case 'today':
+            return deliveryDate >= today
+          case 'week':
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+            return deliveryDate >= weekAgo
+          case 'month':
+            const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate())
+            return deliveryDate >= monthAgo
+          default:
+            return true
+        }
+      })
+    }
+
+    // Trier par date de création (plus récent en premier)
+    filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+    setFilteredDeliveries(filtered)
+  }
+
+  const handleRefresh = () => {
     setRefreshing(true)
-    await loadDeliveries()
-    setRefreshing(false)
+    loadDeliveries()
   }
 
-  const getStatusColor = (status: DeliveryStatus): string => {
-    const statusFilter = statusFilters.find(f => f.key === status)
-    return statusFilter?.color || "#757575"
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR').format(price)
   }
 
-  const getStatusLabel = (status: DeliveryStatus): string => {
-    const statusFilter = statusFilters.find(f => f.key === status)
-    return statusFilter?.label || status
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
-  const filteredDeliveries = deliveries.filter(delivery => 
-    searchQuery === "" || 
-    delivery.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    delivery.pickup_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    delivery.delivery_address.toLowerCase().includes(searchQuery.toLowerCase())
+  const clearFilters = () => {
+    setSearchQuery('')
+    setSelectedStatus('')
+    setDateFilter('all')
+    setShowFilters(false)
+  }
+
+  const renderDeliveryItem = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      style={styles.deliveryCard}
+      onPress={() => navigation.navigate('DeliveryDetails', { deliveryId: item.id })}
+    >
+      <View style={styles.deliveryHeader}>
+        <View style={styles.deliveryInfo}>
+          <Text style={styles.deliveryId}>Livraison #{item.id}</Text>
+          <Text style={styles.deliveryDate}>{formatDate(item.created_at)}</Text>
+        </View>
+        <DeliveryStatusBadge status={item.status} />
+      </View>
+
+      <View style={styles.deliveryBody}>
+        <View style={styles.addressContainer}>
+          <View style={styles.addressRow}>
+            <Ionicons name="location" size={16} color="#4CAF50" />
+            <Text style={styles.addressText} numberOfLines={1}>
+              {item.pickup_address}
+            </Text>
+          </View>
+          <View style={styles.addressRow}>
+            <Ionicons name="flag" size={16} color="#f44336" />
+            <Text style={styles.addressText} numberOfLines={1}>
+              {item.delivery_address}
+            </Text>
+          </View>
+        </View>
+
+        {item.description && (
+          <Text style={styles.deliveryDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.deliveryFooter}>
+        <Text style={styles.deliveryPrice}>
+          {formatPrice(item.total_price || item.proposed_price)} FCFA
+        </Text>
+        {item.courier && (
+          <Text style={styles.courierName}>
+            Par {item.courier.full_name}
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  )
+
+  const renderFilterModal = () => (
+    <Modal
+      visible={showFilters}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowFilters(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.filterModal}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Filtres</Text>
+            <TouchableOpacity onPress={() => setShowFilters(false)}>
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.filterSection}>
+              <Text style={styles.filterLabel}>Statut</Text>
+              <View style={styles.chipContainer}>
+                {statusOptions.map((option) => (
+                  <Chip
+                    key={option.value}
+                    selected={selectedStatus === option.value}
+                    onPress={() => setSelectedStatus(option.value)}
+                    style={styles.filterChip}
+                  >
+                    {option.label}
+                  </Chip>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.filterSection}>
+              <Text style={styles.filterLabel}>Période</Text>
+              <View style={styles.chipContainer}>
+                {dateOptions.map((option) => (
+                  <Chip
+                    key={option.value}
+                    selected={dateFilter === option.value}
+                    onPress={() => setDateFilter(option.value)}
+                    style={styles.filterChip}
+                  >
+                    {option.label}
+                  </Chip>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+
+          <View style={styles.modalActions}>
+            <Button
+              mode="outlined"
+              onPress={clearFilters}
+              style={styles.clearButton}
+            >
+              Effacer
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => setShowFilters(false)}
+              style={styles.applyButton}
+            >
+              Appliquer
+            </Button>
+          </View>
+        </View>
+      </View>
+    </Modal>
   )
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mes livraisons</Text>
+      <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Historique des livraisons</Text>
+        <TouchableOpacity onPress={() => setShowFilters(true)}>
+          <Ionicons name="filter" size={24} color="#ffffff" />
+        </TouchableOpacity>
+      </LinearGradient>
+
+      <View style={styles.searchContainer}>
+        <TextInput
+          label="Rechercher..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
+          mode="outlined"
+          left={<TextInput.Icon icon="magnify" />}
+          placeholder="ID, adresse, description..."
+        />
       </View>
 
-      <Searchbar
-        placeholder="Rechercher une livraison..."
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-        style={styles.searchbar}
-        iconColor="#FF6B00"
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : filteredDeliveries.length > 0 ? (
+        <FlatList
+          data={filteredDeliveries}
+          renderItem={renderDeliveryItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.emptyState}>
+          <Ionicons name="document-text-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyTitle}>
+            {searchQuery || selectedStatus || dateFilter !== 'all'
+              ? 'Aucun résultat'
+              : 'Aucune livraison'
+            }
+          </Text>
+          <Text style={styles.emptyMessage}>
+            {searchQuery || selectedStatus || dateFilter !== 'all'
+              ? 'Aucune livraison ne correspond à vos critères'
+              : 'Vous n\'avez pas encore effectué de livraisons'
+            }
+          </Text>
+        </View>
+      )}
 
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        style={styles.filtersContainer}
-      >
-        {statusFilters.map((filter) => (
-          <Chip
-            key={filter.key}
-            selected={selectedStatus === filter.key}
-            onPress={() => setSelectedStatus(filter.key)}
-            style={[
-              styles.filterChip, 
-              selectedStatus === filter.key && { backgroundColor: filter.color }
-            ]}
-            textStyle={selectedStatus === filter.key ? styles.selectedChipText : {}}
-          >
-            {filter.label}
-          </Chip>
-        ))}
-      </ScrollView>
-
-      <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />
-        }
-      >
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF6B00" />
-            <Text style={styles.loadingText}>Chargement...</Text>
-          </View>
-        ) : filteredDeliveries.length > 0 ? (
-          filteredDeliveries.map((delivery) => (
-            <Card
-              key={delivery.id}
-              style={styles.deliveryCard}
-              onPress={() => navigation.navigate("DeliveryDetails", { deliveryId: delivery.id.toString() })}
-            >
-              <Card.Content>
-                <View style={styles.deliveryHeader}>
-                  <View style={styles.deliveryInfo}>
-                    <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
-                    <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
-                  </View>
-                  <Chip 
-                    style={[styles.statusChip, { backgroundColor: getStatusColor(delivery.status) }]}
-                    textStyle={styles.statusText}
-                  >
-                    {getStatusLabel(delivery.status)}
-                  </Chip>
-                </View>
-
-                <Text style={styles.deliveryDescription} numberOfLines={2}>
-                  {delivery.description}
-                </Text>
-
-                <View style={styles.addressContainer}>
-                  <View style={styles.addressRow}>
-                    <Feather name="map-pin" size={16} color="#FF6B00" />
-                    <Text style={styles.addressText} numberOfLines={1}>
-                      De: {delivery.pickup_address}
-                    </Text>
-                  </View>
-                  <View style={styles.addressRow}>
-                    <Feather name="flag" size={16} color="#4CAF50" />
-                    <Text style={styles.addressText} numberOfLines={1}>
-                      À: {delivery.delivery_address}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.deliveryFooter}>
-                  <Text style={styles.priceText}>
-                    {formatPrice(delivery.final_price || delivery.proposed_price)} FCFA
-                  </Text>
-                  {delivery.status === "in_progress" && (
-                    <Button
-                      mode="contained"
-                      size="small"
-                      onPress={() => navigation.navigate("TrackDelivery", { deliveryId: delivery.id.toString() })}
-                      style={styles.trackButton}
-                    >
-                      Suivre
-                    </Button>
-                  )}
-                </View>
-              </Card.Content>
-            </Card>
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Feather name="package" size={64} color="#CCCCCC" />
-            <Text style={styles.emptyStateTitle}>Aucune livraison trouvée</Text>
-            <Text style={styles.emptyStateText}>
-              {searchQuery 
-                ? "Aucune livraison ne correspond à votre recherche"
-                : "Vous n'avez encore aucune livraison"
-              }
-            </Text>
-          </View>
-        )}
-      </ScrollView>
-
-      <FAB
-        style={styles.fab}
-        icon="plus"
-        color="#FFFFFF"
-        onPress={() => navigation.navigate("CreateDelivery")}
-      />
+      {renderFilterModal()}
     </SafeAreaView>
   )
 }
@@ -206,135 +333,185 @@ const DeliveryHistoryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#f8f9fa',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  searchContainer: {
     padding: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: '#e0e0e0',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  searchbar: {
-    margin: 16,
-    elevation: 2,
-    backgroundColor: "#FFFFFF",
-  },
-  filtersContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  filterChip: {
-    marginRight: 8,
-    backgroundColor: "#FFFFFF",
-  },
-  selectedChipText: {
-    color: "#FFFFFF",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
+  searchInput: {
+    backgroundColor: '#f8f9fa',
   },
   loadingContainer: {
-    padding: 40,
-    alignItems: "center",
-    justifyContent: "center",
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 16,
-    color: "#757575",
+  listContainer: {
+    padding: 16,
   },
   deliveryCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 12,
-    elevation: 2,
-    backgroundColor: "#FFFFFF",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   deliveryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   deliveryInfo: {
     flex: 1,
   },
   deliveryId: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: 'bold',
+    color: '#333',
   },
   deliveryDate: {
     fontSize: 12,
-    color: "#757575",
+    color: '#666',
     marginTop: 2,
   },
-  statusChip: {
-    alignSelf: "flex-start",
-  },
-  statusText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  deliveryDescription: {
-    fontSize: 14,
-    color: "#424242",
+  deliveryBody: {
     marginBottom: 12,
   },
   addressContainer: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   addressRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
   },
   addressText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#616161",
     marginLeft: 8,
+    fontSize: 14,
+    color: '#666',
+    flex: 1,
+  },
+  deliveryDescription: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
   },
   deliveryFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingTop: 12,
   },
-  priceText: {
+  deliveryPrice: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#FF6B00",
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
-  trackButton: {
-    backgroundColor: "#FF6B00",
+  courierName: {
+    fontSize: 12,
+    color: '#666',
   },
   emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 40,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
   },
-  emptyStateTitle: {
+  emptyTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#757575",
+    fontWeight: '600',
+    color: '#333',
     marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  filterModal: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalContent: {
+    maxHeight: 400,
+    padding: 20,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  filterLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  chipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  filterChip: {
+    marginRight: 8,
     marginBottom: 8,
   },
-  emptyStateText: {
-    fontSize: 14,
-    color: "#757575",
-    textAlign: "center",
+  modalActions: {
+    flexDirection: 'row',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
-  fab: {
-    position: "absolute",
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#FF6B00",
+  clearButton: {
+    flex: 1,
+    marginRight: 8,
+  },
+  applyButton: {
+    flex: 1,
+    marginLeft: 8,
+    backgroundColor: '#007AFF',
   },
 })
 

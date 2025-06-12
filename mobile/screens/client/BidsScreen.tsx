@@ -1,293 +1,240 @@
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { View, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from "react-native"
-import { Text, Card, Button, Avatar, Chip, Divider, ActivityIndicator, IconButton } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useTranslation } from "react-i18next"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { useDelivery } from "../../hooks"
-import { formatPrice, formatDate } from "../../utils/formatters"
-import StarRating from "../../components/StarRating"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RouteProp } from "@react-navigation/native"
-import type { RootStackParamList } from "../../types/navigation"
-import type { Bid } from "../../types/models"
+import React, { useState, useEffect } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+  Image
+} from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
+import { DeliveryService } from '../../services/DeliveryService'
 
-type BidsScreenProps = {
-  route: RouteProp<RootStackParamList, "Bids">
-  navigation: NativeStackNavigationProp<RootStackParamList, "Bids">
+interface Bid {
+  id: number
+  courier: {
+    id: number
+    full_name: string
+    phone: string
+    profile_image?: string
+    average_rating: number
+    total_deliveries: number
+  }
+  amount: number
+  estimated_time: number
+  message?: string
+  created_at: string
+  status: 'pending' | 'accepted' | 'rejected'
 }
 
-const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
-  const { deliveryId } = route.params
-  const { t } = useTranslation()
-  const { isConnected } = useNetwork()
-  const { getDeliveryBids, acceptBid, rejectBid } = useDelivery()
-
-  const [bids, setBids] = useState<Bid[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [refreshing, setRefreshing] = useState<boolean>(false)
-  const [processingBidId, setProcessingBidId] = useState<string | null>(null)
-
-  const loadBids = useCallback(async (): Promise<void> => {
-    try {
-      setLoading(true)
-      const data = await getDeliveryBids(Number(deliveryId))
-      setBids(data)
-    } catch (error) {
-      console.error("Error loading bids:", error)
-      Alert.alert(t("bids.errorTitle"), t("bids.errorLoadingBids"))
-    } finally {
-      setLoading(false)
+interface BidsScreenProps {
+  route: {
+    params: {
+      deliveryId: number
     }
-  }, [deliveryId, getDeliveryBids, t])
+  }
+  navigation: any
+}
+
+const BidsScreen = ({ route, navigation }: BidsScreenProps) => {
+  const { deliveryId } = route.params
+  const [bids, setBids] = useState<Bid[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [acceptingBid, setAcceptingBid] = useState<number | null>(null)
 
   useEffect(() => {
     loadBids()
-  }, [loadBids])
+  }, [deliveryId])
 
-  const onRefresh = async (): Promise<void> => {
-    setRefreshing(true)
-    await loadBids()
-    setRefreshing(false)
-  }
-
-  const handleAcceptBid = (bid: Bid): void => {
-    Alert.alert(
-      t("bids.acceptBidTitle"),
-      t("bids.acceptBidMessage", { price: formatPrice(bid.amount), courierName: bid.courier?.name || t("bids.unknownCourier") }),
-      [
-        {
-          text: t("common.cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("common.accept"),
-          onPress: () => confirmAcceptBid(bid.id.toString()),
-        },
-      ],
-    )
-  }
-
-  const confirmAcceptBid = async (bidId: string): Promise<void> => {
-    if (!isConnected) {
-      Alert.alert(t("common.offlineTitle"), t("bids.offlineAcceptBid"))
-      return
-    }
-
+  const loadBids = async () => {
     try {
-      setProcessingBidId(bidId)
-      await acceptBid(Number(deliveryId), Number(bidId))
-
-      const updatedBids = bids.map((bid) => {
-        if (bid.id.toString() === bidId) {
-          return { ...bid, status: "accepted" as const }
-        } else {
-          return { ...bid, status: "rejected" as const }
-        }
-      })
-
-      setBids(updatedBids)
-
-      Alert.alert(t("bids.bidAcceptedTitle"), t("bids.bidAcceptedMessage"), [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("DeliveryDetails", { deliveryId }),
-        },
-      ])
+      const response = await DeliveryService.getDeliveryBids(deliveryId)
+      setBids(response)
     } catch (error) {
-      console.error("Error accepting bid:", error)
-      Alert.alert(t("bids.errorTitle"), t("bids.errorAcceptingBid"))
+      console.error('Erreur lors du chargement des enchères:', error)
+      Alert.alert('Erreur', 'Impossible de charger les enchères')
     } finally {
-      setProcessingBidId(null)
+      setLoading(false)
+      setRefreshing(false)
     }
   }
 
-  const handleRejectBid = (bid: Bid): void => {
+  const handleRefresh = () => {
+    setRefreshing(true)
+    loadBids()
+  }
+
+  const handleAcceptBid = async (bidId: number) => {
     Alert.alert(
-      t("bids.rejectBidTitle"), 
-      t("bids.rejectBidMessage", { courierName: bid.courier?.name || t("bids.unknownCourier") }), 
+      'Accepter cette enchère',
+      'Voulez-vous vraiment accepter cette enchère ? Cette action est irréversible.',
       [
+        { text: 'Annuler', style: 'cancel' },
         {
-          text: t("common.cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("common.reject"),
-          onPress: () => confirmRejectBid(bid.id.toString()),
-          style: "destructive",
-        },
+          text: 'Accepter',
+          onPress: async () => {
+            setAcceptingBid(bidId)
+            try {
+              await DeliveryService.acceptBid(deliveryId, bidId)
+              Alert.alert('Succès', 'Enchère acceptée! Le coursier a été assigné.', [
+                {
+                  text: 'OK',
+                  onPress: () => navigation.navigate('ActiveOrderTracking', { deliveryId })
+                }
+              ])
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
+            } finally {
+              setAcceptingBid(null)
+            }
+          }
+        }
       ]
     )
   }
 
-  const confirmRejectBid = async (bidId: string): Promise<void> => {
-    if (!isConnected) {
-      Alert.alert(t("common.offlineTitle"), t("bids.offlineRejectBid"))
-      return
-    }
-
-    try {
-      setProcessingBidId(bidId)
-      await rejectBid(Number(deliveryId), Number(bidId))
-
-      const updatedBids = bids.map((bid) => {
-        if (bid.id.toString() === bidId) {
-          return { ...bid, status: "rejected" as const }
-        }
-        return bid
-      })
-
-      setBids(updatedBids)
-    } catch (error) {
-      console.error("Error rejecting bid:", error)
-      Alert.alert(t("bids.errorTitle"), t("bids.errorRejectingBid"))
-    } finally {
-      setProcessingBidId(null)
-    }
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR').format(price)
   }
 
-  const viewCourierProfile = (courierId: string): void => {
-    navigation.navigate("CourierProfile", { courierId })
+  const formatTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours > 0) {
+      return `${hours}h ${mins}min`
+    }
+    return `${mins} min`
   }
 
-  const renderBidItem = ({ item }: { item: Bid }): React.ReactElement => (
-    <Card style={styles.bidCard}>
-      <Card.Content>
-        <View style={styles.bidHeader}>
-          <TouchableOpacity 
-            style={styles.courierInfo} 
-            onPress={() => viewCourierProfile(item.courier_id.toString())}
-          >
-            <Avatar.Image
-              size={50}
-              source={{ uri: item.courier?.photo_url || "https://via.placeholder.com/50" }}
-            />
-            <View style={styles.courierDetails}>
-              <Text style={styles.courierName}>
-                {item.courier?.name || `${t("bids.courier")} ${item.courier_id.toString().substring(0, 4)}`}
+  const renderBidItem = ({ item }: { item: Bid }) => (
+    <View style={styles.bidCard}>
+      <View style={styles.bidHeader}>
+        <View style={styles.courierInfo}>
+          <Image
+            source={
+              item.courier.profile_image
+                ? { uri: item.courier.profile_image }
+                : require('../../assets/default-avatar.png')
+            }
+            style={styles.courierAvatar}
+          />
+          <View style={styles.courierDetails}>
+            <Text style={styles.courierName}>{item.courier.full_name}</Text>
+            <View style={styles.ratingContainer}>
+              <Ionicons name="star" size={14} color="#FFD700" />
+              <Text style={styles.ratingText}>
+                {item.courier.average_rating.toFixed(1)} ({item.courier.total_deliveries} livraisons)
               </Text>
-              <View style={styles.ratingContainer}>
-                <StarRating rating={item.courier?.rating || 0} size={16} />
-                <Text style={styles.ratingText}>({item.courier?.rating_count || 0})</Text>
-              </View>
             </View>
-          </TouchableOpacity>
-
-          <View style={styles.bidPriceContainer}>
-            <Text style={styles.bidPriceLabel}>{t("bids.bidPrice")}</Text>
-            <Text style={styles.bidPrice}>{formatPrice(item.amount)} FCFA</Text>
           </View>
         </View>
 
-        <Divider style={styles.divider} />
-
-        <View style={styles.bidDetails}>
-          <View style={styles.bidDetail}>
-            <Text style={styles.bidDetailLabel}>{t("bids.vehicleType")}</Text>
-            <Chip icon="motorbike" style={styles.bidDetailChip}>
-              {item.courier?.vehicle_type || t("bids.unknownVehicle")}
-            </Chip>
-          </View>
-
-          <View style={styles.bidDetail}>
-            <Text style={styles.bidDetailLabel}>{t("bids.estimatedTime")}</Text>
-            <Chip icon="clock-outline" style={styles.bidDetailChip}>
-              {item.estimated_time} {t("common.minutes")}
-            </Chip>
-          </View>
+        <View style={styles.bidAmount}>
+          <Text style={styles.amountText}>{formatPrice(item.amount)} FCFA</Text>
+          <Text style={styles.timeText}>{formatTime(item.estimated_time)}</Text>
         </View>
+      </View>
 
-        {item.note && (
-          <View style={styles.bidNote}>
-            <Text style={styles.bidNoteLabel}>{t("bids.courierNote")}</Text>
-            <Text style={styles.bidNoteText}>{item.note}</Text>
-          </View>
-        )}
+      {item.message && (
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>{item.message}</Text>
+        </View>
+      )}
 
-        <Text style={styles.bidTimestamp}>{formatDate(item.created_at)}</Text>
+      <View style={styles.bidFooter}>
+        <Text style={styles.bidTime}>
+          Enchère placée {new Date(item.created_at).toLocaleDateString('fr-FR')} à{' '}
+          {new Date(item.created_at).toLocaleTimeString('fr-FR')}
+        </Text>
 
-        {item.status === "pending" ? (
-          <View style={styles.bidActions}>
-            <Button
-              mode="outlined"
-              onPress={() => handleRejectBid(item)}
-              style={styles.rejectButton}
-              loading={processingBidId === item.id.toString()}
-              disabled={processingBidId !== null}
-            >
-              {t("bids.reject")}
-            </Button>
-
-            <Button
-              mode="contained"
-              onPress={() => handleAcceptBid(item)}
-              style={styles.acceptButton}
-              loading={processingBidId === item.id.toString()}
-              disabled={processingBidId !== null}
-            >
-              {t("bids.accept")}
-            </Button>
-          </View>
-        ) : (
-          <Chip
-            icon={item.status === "accepted" ? "check-circle" : "close-circle"}
+        {item.status === 'pending' && (
+          <TouchableOpacity
             style={[
-              styles.statusChip, 
-              item.status === "accepted" ? styles.acceptedChip : styles.rejectedChip
+              styles.acceptButton,
+              acceptingBid === item.id && styles.acceptButtonDisabled
             ]}
+            onPress={() => handleAcceptBid(item.id)}
+            disabled={acceptingBid === item.id}
           >
-            {item.status === "accepted" ? t("bids.accepted") : t("bids.rejected")}
-          </Chip>
+            {acceptingBid === item.id ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+                <Text style={styles.acceptButtonText}>Accepter</Text>
+              </>
+            )}
+          </TouchableOpacity>
         )}
-      </Card.Content>
-    </Card>
-  )
 
-  const renderEmptyList = (): React.ReactElement => (
-    <View style={styles.emptyContainer}>
-      <IconButton icon="gavel" size={50} iconColor="#CCCCCC" />
-      <Text style={styles.emptyText}>{t("bids.noBids")}</Text>
-      <Text style={styles.emptySubtext}>{t("bids.waitingForBids")}</Text>
+        {item.status === 'accepted' && (
+          <View style={styles.statusBadge}>
+            <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+            <Text style={styles.statusText}>Acceptée</Text>
+          </View>
+        )}
+
+        {item.status === 'rejected' && (
+          <View style={[styles.statusBadge, { backgroundColor: '#ffebee' }]}>
+            <Ionicons name="close-circle" size={16} color="#f44336" />
+            <Text style={[styles.statusText, { color: '#f44336' }]}>Rejetée</Text>
+          </View>
+        )}
+      </View>
     </View>
   )
 
+  const sortedBids = bids.sort((a, b) => {
+    // Les enchères acceptées en premier
+    if (a.status === 'accepted' && b.status !== 'accepted') return -1
+    if (b.status === 'accepted' && a.status !== 'accepted') return 1
+
+    // Puis par prix croissant
+    return a.amount - b.amount
+  })
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("bids.title")}</Text>
-        <View style={{ width: 48 }} />
-      </View>
+        <Text style={styles.headerTitle}>Enchères reçues</Text>
+        <TouchableOpacity onPress={handleRefresh}>
+          <Ionicons name="refresh" size={24} color="#ffffff" />
+        </TouchableOpacity>
+      </LinearGradient>
 
-      <View style={styles.deliveryInfo}>
-        <Text style={styles.deliveryId}>
-          {t("bids.deliveryId")}: #{deliveryId}
-        </Text>
-      </View>
-
-      {loading && !refreshing ? (
+      {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("bids.loading")}</Text>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Chargement des enchères...</Text>
         </View>
-      ) : (
+      ) : bids.length > 0 ? (
         <FlatList
-          data={bids}
+          data={sortedBids}
           renderItem={renderBidItem}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.bidsList}
-          ListEmptyComponent={renderEmptyList}
+          contentContainerStyle={styles.listContainer}
           refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh} 
-              colors={["#FF6B00"]} 
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
+          showsVerticalScrollIndicator={false}
         />
+      ) : (
+        <View style={styles.emptyState}>
+          <Ionicons name="folder-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyTitle}>Aucune enchère reçue</Text>
+          <Text style={styles.emptyMessage}>
+            Les coursiers n'ont pas encore placé d'enchères pour cette livraison
+          </Text>
+        </View>
       )}
     </SafeAreaView>
   )
@@ -296,171 +243,163 @@ const BidsScreen: React.FC<BidsScreenProps> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   headerTitle: {
+    color: '#ffffff',
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  deliveryInfo: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-  },
-  deliveryId: {
-    fontSize: 14,
-    color: "#757575",
+    fontWeight: 'bold',
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     marginTop: 16,
-    color: "#757575",
+    fontSize: 16,
+    color: '#666',
   },
-  bidsList: {
+  listContainer: {
     padding: 16,
   },
   bidCard: {
-    marginBottom: 16,
-    elevation: 2,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bidHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   courierInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
+  courierAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
   courierDetails: {
-    marginLeft: 12,
+    flex: 1,
   },
   courierName: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: '600',
+    color: '#333',
   },
   ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 4,
   },
   ratingText: {
-    fontSize: 12,
-    color: "#757575",
     marginLeft: 4,
-  },
-  bidPriceContainer: {
-    alignItems: "flex-end",
-  },
-  bidPriceLabel: {
     fontSize: 12,
-    color: "#757575",
+    color: '#666',
   },
-  bidPrice: {
+  bidAmount: {
+    alignItems: 'flex-end',
+  },
+  amountText: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#FF6B00",
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
-  divider: {
-    marginVertical: 12,
-  },
-  bidDetails: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  bidDetail: {
-    flex: 1,
-  },
-  bidDetailLabel: {
+  timeText: {
     fontSize: 12,
-    color: "#757575",
-    marginBottom: 4,
+    color: '#666',
+    marginTop: 2,
   },
-  bidDetailChip: {
-    backgroundColor: "#F5F5F5",
-    height: 28,
-  },
-  bidNote: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 8,
+  messageContainer: {
+    backgroundColor: '#f8f9fa',
     padding: 12,
+    borderRadius: 8,
     marginBottom: 12,
   },
-  bidNoteLabel: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  bidNoteText: {
+  messageText: {
     fontSize: 14,
-    color: "#212121",
+    color: '#333',
+    fontStyle: 'italic',
   },
-  bidTimestamp: {
+  bidFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  bidTime: {
     fontSize: 12,
-    color: "#9E9E9E",
-    marginBottom: 12,
-    textAlign: "right",
-  },
-  bidActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  rejectButton: {
+    color: '#666',
     flex: 1,
-    marginRight: 8,
-    borderColor: "#F44336",
   },
   acceptButton: {
-    flex: 1,
-    marginLeft: 8,
-    backgroundColor: "#4CAF50",
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  statusChip: {
-    alignSelf: "flex-end",
+  acceptButtonDisabled: {
+    backgroundColor: '#ccc',
   },
-  acceptedChip: {
-    backgroundColor: "#E8F5E9",
-  },
-  rejectedChip: {
-    backgroundColor: "#FFEBEE",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 40,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#757575",
-    marginTop: 16,
-  },
-  emptySubtext: {
+  acceptButtonText: {
+    color: '#ffffff',
     fontSize: 14,
-    color: "#9E9E9E",
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e8',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  statusText: {
+    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
     marginTop: 8,
-    textAlign: "center",
+    lineHeight: 20,
   },
 })
 
