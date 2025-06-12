@@ -8,7 +8,9 @@ from .core.config import settings
 from .db.base import Base
 from .db.session import get_db
 from .db.init_db import init_db
-from .api import auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport, assistant, courier, complaints
+from .api import (
+    auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport, assistant, courier, complaints
+)
 from .websockets import tracking
 
 # Créer l'application FastAPI
@@ -248,3 +250,6 @@ async def estimate_delivery_price_endpoint(
         is_fragile,
         is_express
     )
+from .api import business_analytics
+app.include_router(business.router, prefix="/api/v1/business", tags=["business"])
+app.include_router(business_analytics.router, prefix="/api/v1/business/analytics", tags=["business-analytics"])

@@ -17,13 +17,19 @@ from ..schemas.delivery import DeliveryResponse, DeliveryCreate
 from ..schemas.business import (
     BusinessDashboardResponse, BusinessCourierResponse, 
     BusinessInviteRequest, BusinessSettingsResponse,
-    BusinessFinancesResponse
+    BusinessFinancesResponse, BusinessVehicleCreate,
+    BusinessVehicleUpdate
 )
 from ..services.business import (
     get_business_dashboard, get_business_couriers,
     invite_courier, toggle_courier_favorite,
     get_business_deliveries, create_business_delivery,
     get_business_finances, update_business_settings
+)
+from ..services.business_vehicles import (
+    create_business_vehicle, get_business_vehicles,
+    update_business_vehicle, delete_business_vehicle,
+    assign_vehicle_to_courier
 )
 from ..services.notification import send_notification
 
@@ -242,7 +248,7 @@ async def toggle_courier_favorite_endpoint(
     """
     return toggle_courier_favorite(db, current_user.id, courier_id, is_favorite)
 
-@router.get("/vehicles", response_model=List[Dict[str, Any]])
+@router.get("/vehicles")
 async def get_vehicles(
     current_user: User = Depends(get_current_business_or_manager),
     db: Session = Depends(get_db)
@@ -253,9 +259,7 @@ async def get_vehicles(
     if not current_user.business_profile:
         raise HTTPException(status_code=404, detail="Profil d'entreprise non trouvé")
     
-    vehicles = db.query(Vehicle).filter(
-        Vehicle.business_id == current_user.business_profile.id
-    ).all()
+    vehicles = get_business_vehicles(db, current_user.business_profile.id)
     
     return [
         {
@@ -267,7 +271,7 @@ async def get_vehicles(
 
 @router.post("/vehicles")
 async def create_vehicle(
-    vehicle_data: Dict[str, Any],
+    vehicle_data: BusinessVehicleCreate,
     current_user: User = Depends(get_current_business_or_manager),
     db: Session = Depends(get_db)
 ):
@@ -277,42 +281,22 @@ async def create_vehicle(
     if not current_user.business_profile:
         raise HTTPException(status_code=404, detail="Profil d'entreprise non trouvé")
     
-    vehicle = Vehicle(
-        business_id=current_user.business_profile.id,
-        **vehicle_data
-    )
-    
-    db.add(vehicle)
-    db.commit()
-    db.refresh(vehicle)
-    
-    return vehicle
+    return create_business_vehicle(db, current_user.business_profile.id, vehicle_data)
 
 @router.put("/vehicles/{vehicle_id}")
 async def update_vehicle(
     vehicle_id: int,
-    vehicle_data: Dict[str, Any],
+    vehicle_data: BusinessVehicleUpdate,
     current_user: User = Depends(get_current_business_or_manager),
     db: Session = Depends(get_db)
 ):
     """
     Mettre à jour un véhicule
     """
-    vehicle = db.query(Vehicle).filter(
-        Vehicle.id == vehicle_id,
-        Vehicle.business_id == current_user.business_profile.id
-    ).first()
+    if not current_user.business_profile:
+        raise HTTPException(status_code=404, detail="Profil d'entreprise non trouvé")
     
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
-    
-    for field, value in vehicle_data.items():
-        if hasattr(vehicle, field):
-            setattr(vehicle, field, value)
-    
-    db.commit()
-    db.refresh(vehicle)
-    return vehicle
+    return update_business_vehicle(db, current_user.business_profile.id, vehicle_id, vehicle_data)
 
 @router.delete("/vehicles/{vehicle_id}")
 async def delete_vehicle(
@@ -323,29 +307,34 @@ async def delete_vehicle(
     """
     Supprimer un véhicule
     """
-    vehicle = db.query(Vehicle).filter(
-        Vehicle.id == vehicle_id,
-        Vehicle.business_id == current_user.business_profile.id
-    ).first()
+    if not current_user.business_profile:
+        raise HTTPException(status_code=404, detail="Profil d'entreprise non trouvé")
     
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
-    
-    # Vérifier qu'aucun coursier n'utilise ce véhicule
-    active_assignments = db.query(CourierVehicle).filter(
-        CourierVehicle.vehicle_id == vehicle_id
-    ).count()
-    
-    if active_assignments > 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Ce véhicule est encore assigné à des coursiers"
-        )
-    
-    db.delete(vehicle)
-    db.commit()
+    delete_business_vehicle(db, current_user.business_profile.id, vehicle_id)
     
     return {"message": "Véhicule supprimé avec succès"}
+
+@router.post("/vehicles/{vehicle_id}/assign/{courier_id}")
+async def assign_vehicle(
+    vehicle_id: int,
+    courier_id: int,
+    current_user: User = Depends(get_current_business_or_manager),
+    db: Session = Depends(get_db)
+):
+    """
+    Assigner un véhicule à un coursier
+    """
+    if not current_user.business_profile:
+        raise HTTPException(status_code=404, detail="Profil d'entreprise non trouvé")
+    
+    assignment = assign_vehicle_to_courier(
+        db, current_user.business_profile.id, vehicle_id, courier_id
+    )
+    
+    return {
+        "message": "Véhicule assigné avec succès",
+        "assignment_id": assignment.id
+    }
 
 @router.get("/finances", response_model=BusinessFinancesResponse)
 async def get_finances(
