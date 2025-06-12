@@ -102,3 +102,29 @@ async def get_current_user_ws(
             detail="Compte inactif",
         )
     return user
+
+def get_current_manager(
+    current_user: User = Depends(get_current_active_user)
+) -> User:
+    """
+    Vérifier que l'utilisateur actuel est un gestionnaire
+    """
+    if current_user.role != UserRole.manager:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux gestionnaires"
+        )
+    return current_user
+
+def get_current_business_or_manager(
+    current_user: User = Depends(get_current_active_user)
+) -> User:
+    """
+    Vérifier que l'utilisateur actuel est une entreprise ou un gestionnaire
+    """
+    if current_user.role not in [UserRole.business, UserRole.manager]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux entreprises et gestionnaires"
+        )
+    return current_user

@@ -88,6 +88,7 @@ class BusinessProfile(Base):
     
     # Relations
     user = relationship("User", back_populates="business_profile")
+    vehicles = relationship("Vehicle", back_populates="business")
     products = relationship("Product", back_populates="business")
     
     # TODO: Re-add vehicle relationships after fixing circular imports
