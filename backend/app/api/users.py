@@ -10,9 +10,10 @@ from ..services.user import (
     create_business_profile, update_business_profile, get_courier_profile,
     create_courier_profile, update_courier_profile, update_courier_location
 )
+from ..services.auth import register_user, register_user_admin
 from ..models.user import User, UserRole
 from ..schemas.user import (
-    UserResponse, UserUpdate, UserStatusUpdate, KYCUpdate,
+    UserResponse, UserCreate, UserUpdate, UserStatusUpdate, KYCUpdate,
     BusinessProfileCreate, BusinessProfileUpdate, BusinessProfileResponse,
     CourierProfileCreate, CourierProfileUpdate, CourierProfileResponse
 )
@@ -237,3 +238,15 @@ def update_courier_location_endpoint(
         )
     
     return update_courier_location(db, current_user.id, lat, lng)
+
+# Route pour la création d'utilisateur (admin uniquement)
+@router.post("/", response_model=UserResponse)
+def create_user(
+    user_data: UserCreate,
+    current_user: User = Depends(get_current_manager),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Créer un nouvel utilisateur (gestionnaires uniquement).
+    """
+    return register_user_admin(db, user_data)

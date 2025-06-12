@@ -291,7 +291,6 @@ export type FeatherIconName =
   // Ajoutez ces icônes personnalisées qui sont utilisées dans votre code
   | "map-pin-off"
   | "package-up"
-  | "motorbike"
   | "progress-clock"
   | "gavel"
   | "map-marker-path"

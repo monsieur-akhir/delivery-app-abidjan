@@ -72,17 +72,17 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
         })
       }      // Convert courier data if available
       if (deliveryData.courier) {
-        const courier = deliveryData.courier;
-        setVtcCourier({
+        const courier = deliveryData.courier;        setVtcCourier({
           id: String(courier.id),
           name: courier.name || courier?.full_name || "Coursier",
           rating: courier.rating || 4.5,
           photo: courier?.profile_picture,
           vehicle: {
-            type: courier.vehicle_type || "motorcycle",
+            type: (courier.vehicle_type as "car" | "motorcycle" | "bicycle" | "truck" | "van") || "motorcycle",
             model: "Unknown",
             plate: courier.license_plate || "N/A"
-          },          location: pickupLocation || {
+          },
+          location: pickupLocation || {
             latitude: 5.3599517,
             longitude: -4.0082563
           }

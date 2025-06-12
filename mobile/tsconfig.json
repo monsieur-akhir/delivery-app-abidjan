@@ -20,18 +20,21 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "types": ["jest", "@testing-library/jest-native"]
   },
   "exclude": [
     "node_modules",
     "babel.config.js",
     "metro.config.js",
-    "jest.config.js",
-    "**/__tests__/**",
-    "**/*.test.*"
+    "jest.config.js"
   ],
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "**/__tests__/**/*.ts",
+    "**/__tests__/**/*.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

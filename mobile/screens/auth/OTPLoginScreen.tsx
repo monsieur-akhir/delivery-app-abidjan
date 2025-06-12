@@ -63,10 +63,9 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
       i18n.on("initialized", () => setIsI18nReady(true))
     }
   }, [])
-
   // Gérer le compte à rebours pour renvoyer l'OTP
   useEffect(() => {
-    let interval: NodeJS.Timeout
+    let interval: ReturnType<typeof setInterval>
     if (countdown > 0) {
       interval = setInterval(() => {
         setCountdown(countdown - 1)

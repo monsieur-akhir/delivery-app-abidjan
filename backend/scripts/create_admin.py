@@ -3,9 +3,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import Session
-from database import engine, SessionLocal
-from models import User, UserRole, UserStatus
-from auth import get_password_hash
+from app.db.database import engine, SessionLocal
+from app.models.user import User, UserRole, UserStatus
+from app.core.security import get_password_hash
 import argparse
 
 def create_admin(phone, email, password, full_name):
