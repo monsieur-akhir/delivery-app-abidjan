@@ -361,6 +361,123 @@ async def confirm_delivery(
     
     return updated_delivery
 
+@router.post("/{delivery_id}/client-confirm", response_model=DeliveryResponse)
+async def client_confirm_delivery(
+    delivery_id: int,
+    rating: int = Query(..., ge=1, le=5, description="Note de 1 à 5"),
+    comment: Optional[str] = None,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Confirmer la réception par le client et noter le coursier"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+    
+    if delivery.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Vous n'êtes pas le client de cette livraison")
+    
+    if delivery.status != DeliveryStatus.DELIVERED:
+        raise HTTPException(status_code=400, detail="La livraison doit être livrée avant confirmation")
+    
+    # Marquer comme complétée
+    delivery_update = DeliveryUpdate(
+        status=DeliveryStatus.COMPLETED,
+        completed_at=datetime.utcnow()
+    )
+    updated_delivery = update_delivery(db, delivery_id, delivery_update)
+    
+    # Créer la note pour le coursier
+    if delivery.courier_id:
+        from ..models.rating import Rating
+        
+        rating_entry = Rating(
+            delivery_id=delivery_id,
+            rater_id=current_user.id,
+            rated_user_id=delivery.courier_id,
+            rating=rating,
+            comment=comment,
+            rating_type="delivery"
+        )
+        db.add(rating_entry)
+        db.commit()
+        
+        # Mettre à jour la note moyenne du coursier
+        from ..services.rating import update_user_average_rating
+        update_user_average_rating(db, delivery.courier_id)
+    
+    # Notification au coursier
+    background_tasks.add_task(
+        send_delivery_notification,
+        delivery_id,
+        "delivery_rated",
+        f"Le client a confirmé la livraison #{delivery_id} et vous a donné {rating}/5 étoiles"
+    )
+    
+    return updated_delivery
+
+@router.get("/{delivery_id}/status-timeline")
+async def get_delivery_status_timeline(
+    delivery_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer la timeline des statuts de livraison"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+    
+    # Vérifier les permissions
+    if (current_user.id != delivery.client_id and 
+        current_user.id != delivery.courier_id and 
+        current_user.role not in ["manager", "admin"]):
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    timeline = []
+    
+    if delivery.created_at:
+        timeline.append({
+            "status": "pending",
+            "timestamp": delivery.created_at,
+            "title": "Commande créée",
+            "description": "Votre demande de livraison a été créée"
+        })
+    
+    if delivery.accepted_at:
+        timeline.append({
+            "status": "accepted",
+            "timestamp": delivery.accepted_at,
+            "title": "Coursier assigné",
+            "description": "Un coursier a accepté votre livraison"
+        })
+    
+    if delivery.pickup_at:
+        timeline.append({
+            "status": "picked_up",
+            "timestamp": delivery.pickup_at,
+            "title": "Colis collecté",
+            "description": "Le coursier a récupéré votre colis"
+        })
+    
+    if delivery.delivered_at:
+        timeline.append({
+            "status": "delivered",
+            "timestamp": delivery.delivered_at,
+            "title": "Colis livré",
+            "description": "Votre colis a été livré"
+        })
+    
+    if delivery.completed_at:
+        timeline.append({
+            "status": "completed",
+            "timestamp": delivery.completed_at,
+            "title": "Livraison complétée",
+            "description": "Livraison confirmée et notée"
+        })
+    
+    return {"timeline": timeline, "current_status": delivery.status}
+
 @router.post("/{delivery_id}/cancel", response_model=DeliveryResponse)
 async def cancel_delivery(
     delivery_id: int,

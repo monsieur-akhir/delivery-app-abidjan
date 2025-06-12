@@ -18,6 +18,7 @@ export type RootStackParamList = {
   DeliveryDetails: { deliveryId: string }
   Bids: { deliveryId: string }
   TrackDelivery: { deliveryId: string }
+  ActiveOrderTracking: { deliveryId: string }
   Payment: { deliveryId: string; amount: number }
   RateDelivery: { deliveryId: string }
   EnhancedRateDelivery: { deliveryId: string }

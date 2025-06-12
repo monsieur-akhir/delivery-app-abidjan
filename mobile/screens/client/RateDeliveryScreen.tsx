@@ -1,168 +1,137 @@
-"use client"
 
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { View, ScrollView, TouchableOpacity, Alert } from "react-native"
-import { Text, Card, Button, TextInput, Divider, ActivityIndicator } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useTranslation } from "react-i18next"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchDeliveryDetails, submitRating } from "../../services/api"
-import StarRating from "../../components/StarRating"
-import { Feather } from "@expo/vector-icons"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RouteProp } from "@react-navigation/native"
-import type { RootStackParamList } from "../../types/navigation"
-import type { Delivery } from "../../types/models"
-import { StyleSheet } from "react-native"
+import React, { useState, useEffect } from 'react'
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
+import { Text, TextInput, Button, Card, Avatar, Divider } from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useRoute, useNavigation } from '@react-navigation/native'
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
+import * as Haptics from 'expo-haptics'
+import { useTranslation } from 'react-i18next'
 
-type RateDeliveryScreenProps = {
-  route: RouteProp<RootStackParamList, "RateDelivery">
-  navigation: NativeStackNavigationProp<RootStackParamList, "RateDelivery">
-}
+import { DeliveryService } from '../../services/DeliveryService'
+import { StarRating } from '../../components/StarRating'
+import { Delivery } from '../../types/models'
+import { formatPrice, formatDate } from '../../utils/formatters'
 
-const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigation }) => {
-  const { deliveryId } = route.params
+const RateDeliveryScreen: React.FC = () => {
   const { t } = useTranslation()
-  const { isConnected, addPendingUpload } = useNetwork()
-
+  const navigation = useNavigation()
+  const route = useRoute()
+  
+  const { deliveryId } = route.params as { deliveryId: string }
+  
   const [delivery, setDelivery] = useState<Delivery | null>(null)
-  const [rating, setRating] = useState<number>(5)
-  const [comment, setComment] = useState<string>("")
-  const [loading, setLoading] = useState<boolean>(true)
-  const [submitting, setSubmitting] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
-  const loadDeliveryDetails = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await fetchDeliveryDetails(deliveryId)
-      setDelivery(data)
+  // Critères de notation prédéfinis
+  const [criteria, setCriteria] = useState({
+    punctuality: 5,
+    packaging: 5,
+    communication: 5,
+    professionalism: 5,
+  })
 
-      // Vérifier si la livraison a déjà été évaluée
-      if (typeof data.rating === "number") {
-        setRating(data.rating)
-        // Note: Comment is not stored in Delivery.rating; it’s part of the Rating interface
-        // If comments are fetched separately, update this logic
-        setComment("") // Default to empty since comment isn’t in Delivery
-        Alert.alert(t("rateDelivery.alreadyRated"), t("rateDelivery.alreadyRatedMessage"), [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("DeliveryDetails", { deliveryId }),
-          },
-        ])
-      }
-    } catch (error) {
-      console.error("Error loading delivery details:", error)
-      setError(t("rateDelivery.errorLoadingDelivery"))
-    } finally {
-      setLoading(false)
-    }
-  }, [deliveryId, navigation, t])
+  // Commentaires suggérés
+  const suggestedComments = [
+    'Service excellent, très professionnel',
+    'Livraison rapide et soignée',
+    'Coursier très aimable et ponctuel',
+    'Colis bien protégé, merci !',
+    'Communication parfaite tout au long',
+  ]
 
+  // Charger les détails de la livraison
   useEffect(() => {
-    loadDeliveryDetails()
-  }, [loadDeliveryDetails])
+    const loadDelivery = async () => {
+      try {
+        setLoading(true)
+        const deliveryData = await DeliveryService.getDeliveryById(Number(deliveryId))
+        setDelivery(deliveryData)
+      } catch (error) {
+        console.error('Erreur lors du chargement:', error)
+        Alert.alert('Erreur', 'Impossible de charger les détails de la livraison')
+        navigation.goBack()
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const handleRatingChange = (value: number) => {
-    setRating(value)
-  }
+    loadDelivery()
+  }, [deliveryId, navigation])
 
+  // Calculer la note globale en fonction des critères
+  useEffect(() => {
+    const averageRating = Math.round(
+      (criteria.punctuality + criteria.packaging + criteria.communication + criteria.professionalism) / 4
+    )
+    setRating(averageRating)
+  }, [criteria])
+
+  // Gérer la soumission de la notation
   const handleSubmit = async () => {
-    if (!delivery || !delivery.courier) {
-      setError(t("rateDelivery.errorDeliveryNotFound"))
+    if (rating === 0) {
+      Alert.alert('Attention', 'Veuillez donner une note au coursier')
       return
     }
 
     try {
       setSubmitting(true)
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
-      const ratingData = {
-        delivery_id: deliveryId,
-        courier_id: delivery.courier.id.toString(),
-        rating,
-        comment,
-      }
+      // Confirmer la livraison et noter le coursier
+      await DeliveryService.clientConfirmDelivery(Number(deliveryId), rating, comment || undefined)
 
-      if (isConnected) {
-        await submitRating(ratingData)
-
-        Alert.alert(t("rateDelivery.thankYou"), t("rateDelivery.ratingSubmitted"), [
+      Alert.alert(
+        'Merci !',
+        'Votre notation a été prise en compte. La livraison est maintenant terminée.',
+        [
           {
-            text: "OK",
-            onPress: () => navigation.navigate("Home"),
-          },
-        ])
-      } else {
-        addPendingUpload({
-          type: "submit_rating",
-          data: ratingData,
-        })
-
-        Alert.alert(t("rateDelivery.thankYou"), t("rateDelivery.offlineRatingSubmitted"), [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("Home"),
-          },
-        ])
-      }
+            text: 'OK',
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'ClientHome' }],
+              })
+            }
+          }
+        ]
+      )
     } catch (error) {
-      console.error("Error submitting rating:", error)
-      setError(error instanceof Error ? error.message : t("rateDelivery.errorSubmittingRating"))
+      console.error('Erreur lors de la notation:', error)
+      Alert.alert('Erreur', 'Impossible de soumettre votre notation')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleSkip = () => {
-    Alert.alert(t("rateDelivery.skipRating"), t("rateDelivery.skipRatingMessage"), [
-      {
-        text: t("common.cancel"),
-        style: "cancel",
-      },
-      {
-        text: t("common.skip"),
-        onPress: () => navigation.navigate("Home"),
-      },
-    ])
+  // Gérer la sélection d'un commentaire suggéré
+  const selectSuggestedComment = (suggestedComment: string) => {
+    setComment(suggestedComment)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }
 
-  if (loading) {
+  // Gérer la modification d'un critère
+  const updateCriteria = (criterion: keyof typeof criteria, value: number) => {
+    setCriteria(prev => ({ ...prev, [criterion]: value }))
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }
+
+  if (loading || !delivery) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Feather name="arrow-left" size={24} color="#212121" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
-          <View style={{ width: 48 }} />
-        </View>
-
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("rateDelivery.loading")}</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  if (!delivery || !delivery.courier) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Feather name="arrow-left" size={24} color="#212121" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
-          <View style={{ width: 48 }} />
-        </View>
-
-        <View style={styles.errorContainer}>
-          <Feather name="alert-circle" size={50} color="#F44336" />
-          <Text style={styles.errorText}>{error || t("rateDelivery.deliveryNotFound")}</Text>
-          <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
-            {t("common.back")}
-          </Button>
+          <Text>Chargement...</Text>
         </View>
       </SafeAreaView>
     )
@@ -170,283 +139,409 @@ const RateDeliveryScreen: React.FC<RateDeliveryScreenProps> = ({ route, navigati
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Feather name="arrow-left" size={24} color="#212121" />
+          <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("rateDelivery.title")}</Text>
-        <View style={{ width: 48 }} />
+        <Text style={styles.headerTitle}>Noter la livraison</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Card style={styles.deliveryCard}>
-          <Card.Content>
-            <Text style={styles.deliveryTitle}>{t("rateDelivery.deliveryCompleted")}</Text>
-            <Text style={styles.deliverySubtitle}>
-              {t("rateDelivery.deliveryId")}: #{deliveryId}
-            </Text>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.courierInfo}>
-              <View style={styles.courierIcon}>
-                <Feather name="user" size={40} color="#FF6B00" />
-              </View>
-              <View style={styles.courierDetails}>
-                <Text style={styles.courierName}>{delivery.courier.name}</Text>
-                <Text style={styles.courierVehicle}>{delivery.courier.vehicle_type}</Text>
-              </View>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.addressContainer}>
-              <View style={styles.addressItem}>
-                <View style={styles.addressIcon}>
-                  <Feather name="map-pin" size={20} color="#FF6B00" />
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Informations de la livraison */}
+          <Card style={styles.deliveryCard}>
+            <Card.Content>
+              <View style={styles.deliveryHeader}>
+                <MaterialCommunityIcons name="check-circle" size={32} color="#4CAF50" />
+                <View style={styles.deliveryInfo}>
+                  <Text style={styles.deliveryTitle}>Livraison terminée !</Text>
+                  <Text style={styles.deliverySubtitle}>
+                    Livraison #{delivery.id} • {formatDate(delivery.delivered_at || new Date())}
+                  </Text>
                 </View>
-                <View style={styles.addressContent}>
-                  <Text style={styles.addressLabel}>{t("rateDelivery.from")}</Text>
+              </View>
+
+              <Divider style={styles.divider} />
+
+              <View style={styles.addressInfo}>
+                <View style={styles.addressRow}>
+                  <MaterialCommunityIcons name="map-marker" size={20} color="#4CAF50" />
                   <Text style={styles.addressText}>{delivery.pickup_address}</Text>
                 </View>
-              </View>
-
-              <View style={styles.addressDivider}>
-                <View style={styles.addressDividerLine} />
-              </View>
-
-              <View style={styles.addressItem}>
-                <View style={styles.addressIcon}>
-                  <Feather name="map-pin" size={20} color="#4CAF50" />
-                </View>
-                <View style={styles.addressContent}>
-                  <Text style={styles.addressLabel}>{t("rateDelivery.to")}</Text>
+                <View style={styles.addressRow}>
+                  <MaterialCommunityIcons name="map-marker-check" size={20} color="#F44336" />
                   <Text style={styles.addressText}>{delivery.delivery_address}</Text>
                 </View>
               </View>
-            </View>
-          </Card.Content>
-        </Card>
 
-        <Card style={styles.ratingCard}>
-          <Card.Content>
-            <Text style={styles.ratingTitle}>{t("rateDelivery.rateExperience")}</Text>
-            <Text style={styles.ratingSubtitle}>{t("rateDelivery.rateExperienceDescription")}</Text>
+              <View style={styles.priceContainer}>
+                <Text style={styles.priceLabel}>Prix total</Text>
+                <Text style={styles.priceValue}>
+                  {formatPrice(delivery.final_price || delivery.proposed_price)} FCFA
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
 
-            <View style={styles.starsContainer}>
-              <StarRating rating={rating} onRatingChange={handleRatingChange} size={40} editable />
-              <Text style={styles.ratingText}>
-                {rating === 1
-                  ? t("rateDelivery.terrible")
-                  : rating === 2
-                    ? t("rateDelivery.bad")
-                    : rating === 3
-                      ? t("rateDelivery.okay")
-                      : rating === 4
-                        ? t("rateDelivery.good")
-                        : t("rateDelivery.excellent")}
-              </Text>
-            </View>
+          {/* Informations du coursier */}
+          {delivery.courier && (
+            <Card style={styles.courierCard}>
+              <Card.Content>
+                <View style={styles.courierHeader}>
+                  <Avatar.Image 
+                    size={60} 
+                    source={{ uri: delivery.courier.avatar || 'https://via.placeholder.com/60' }} 
+                  />
+                  <View style={styles.courierInfo}>
+                    <Text style={styles.courierName}>{delivery.courier.full_name}</Text>
+                    <View style={styles.courierStats}>
+                      <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
+                      <Text style={styles.courierRating}>
+                        {delivery.courier.average_rating?.toFixed(1) || 'N/A'}
+                      </Text>
+                      <Text style={styles.courierDeliveries}>
+                        • {delivery.courier.total_deliveries || 0} livraisons
+                      </Text>
+                    </View>
+                    <Text style={styles.courierVehicle}>
+                      {delivery.courier.vehicle_type || 'Véhicule non spécifié'}
+                    </Text>
+                  </View>
+                </View>
 
-            <TextInput
-              label={t("rateDelivery.comment")}
-              value={comment}
-              onChangeText={setComment}
-              multiline
-              numberOfLines={4}
-              style={styles.commentInput}
-              placeholder={t("rateDelivery.commentPlaceholder")}
-            />
+                <Text style={styles.ratingTitle}>Comment évaluez-vous cette livraison ?</Text>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                {/* Note globale */}
+                <View style={styles.globalRatingContainer}>
+                  <Text style={styles.globalRatingLabel}>Note globale</Text>
+                  <StarRating
+                    rating={rating}
+                    onRatingChange={setRating}
+                    size={32}
+                    style={styles.globalRating}
+                  />
+                  <Text style={styles.ratingText}>{rating}/5</Text>
+                </View>
 
-            <View style={styles.buttonContainer}>
-              <Button mode="outlined" onPress={handleSkip} style={styles.skipButton} disabled={submitting}>
-                {t("rateDelivery.skip")}
-              </Button>
+                {/* Critères détaillés */}
+                <View style={styles.criteriaContainer}>
+                  <Text style={styles.criteriaTitle}>Évaluation détaillée</Text>
+                  
+                  <View style={styles.criteriaItem}>
+                    <Text style={styles.criteriaLabel}>Ponctualité</Text>
+                    <StarRating
+                      rating={criteria.punctuality}
+                      onRatingChange={(value) => updateCriteria('punctuality', value)}
+                      size={20}
+                    />
+                  </View>
 
-              <Button
-                mode="contained"
-                onPress={handleSubmit}
-                style={styles.submitButton}
-                loading={submitting}
-                disabled={submitting}
-              >
-                {t("rateDelivery.submit")}
-              </Button>
-            </View>
-          </Card.Content>
-        </Card>
-      </ScrollView>
+                  <View style={styles.criteriaItem}>
+                    <Text style={styles.criteriaLabel}>Soin du colis</Text>
+                    <StarRating
+                      rating={criteria.packaging}
+                      onRatingChange={(value) => updateCriteria('packaging', value)}
+                      size={20}
+                    />
+                  </View>
+
+                  <View style={styles.criteriaItem}>
+                    <Text style={styles.criteriaLabel}>Communication</Text>
+                    <StarRating
+                      rating={criteria.communication}
+                      onRatingChange={(value) => updateCriteria('communication', value)}
+                      size={20}
+                    />
+                  </View>
+
+                  <View style={styles.criteriaItem}>
+                    <Text style={styles.criteriaLabel}>Professionnalisme</Text>
+                    <StarRating
+                      rating={criteria.professionalism}
+                      onRatingChange={(value) => updateCriteria('professionalism', value)}
+                      size={20}
+                    />
+                  </View>
+                </View>
+
+                {/* Commentaires suggérés */}
+                <View style={styles.suggestedCommentsContainer}>
+                  <Text style={styles.suggestedCommentsTitle}>Commentaires suggérés</Text>
+                  <View style={styles.suggestedComments}>
+                    {suggestedComments.map((suggestion, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[
+                          styles.suggestionChip,
+                          comment === suggestion && styles.suggestionChipSelected
+                        ]}
+                        onPress={() => selectSuggestedComment(suggestion)}
+                      >
+                        <Text style={[
+                          styles.suggestionText,
+                          comment === suggestion && styles.suggestionTextSelected
+                        ]}>
+                          {suggestion}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Commentaire personnalisé */}
+                <TextInput
+                  label="Commentaire (optionnel)"
+                  value={comment}
+                  onChangeText={setComment}
+                  style={styles.commentInput}
+                  mode="outlined"
+                  multiline
+                  numberOfLines={3}
+                  placeholder="Partagez votre expérience avec ce coursier..."
+                />
+              </Card.Content>
+            </Card>
+          )}
+
+          {/* Bouton de soumission */}
+          <Button
+            mode="contained"
+            onPress={handleSubmit}
+            style={styles.submitButton}
+            loading={submitting}
+            disabled={submitting}
+            icon="check"
+          >
+            Confirmer et terminer
+          </Button>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
 
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#F8F9FA',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FFFFFF",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    borderBottomColor: '#E0E0E0',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#212121',
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 16,
-    color: "#757575",
-  },
-  errorContainer: {
+  keyboardAvoidingView: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
   },
-  errorText: {
-    fontSize: 16,
-    color: "#F44336",
-    textAlign: "center",
-    marginVertical: 16,
-  },
-  backButton: {
-    marginTop: 16,
-    backgroundColor: "#FF6B00",
-  },
-  scrollContainer: {
+  scrollView: {
+    flex: 1,
     padding: 16,
   },
   deliveryCard: {
     marginBottom: 16,
+    borderRadius: 12,
+  },
+  deliveryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  deliveryInfo: {
+    flex: 1,
+    marginLeft: 16,
   },
   deliveryTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#4CAF50",
-    marginBottom: 4,
+    fontWeight: 'bold',
+    color: '#212121',
   },
   deliverySubtitle: {
     fontSize: 14,
-    color: "#757575",
+    color: '#757575',
+    marginTop: 4,
   },
   divider: {
     marginVertical: 16,
   },
-  courierInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+  addressInfo: {
+    marginBottom: 16,
   },
-  courierIcon: {
-    backgroundColor: "#FFF3E0",
-    borderRadius: 20,
-    padding: 8,
-    marginRight: 16,
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  courierDetails: {
+  addressText: {
     flex: 1,
+    fontSize: 14,
+    color: '#212121',
+    marginLeft: 12,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    padding: 16,
+    borderRadius: 8,
+  },
+  priceLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+  },
+  priceValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  courierCard: {
+    marginBottom: 16,
+    borderRadius: 12,
+  },
+  courierHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  courierInfo: {
+    flex: 1,
+    marginLeft: 16,
   },
   courierName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#212121',
+  },
+  courierStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  courierRating: {
+    fontSize: 14,
+    color: '#757575',
+    marginLeft: 4,
+  },
+  courierDeliveries: {
+    fontSize: 14,
+    color: '#757575',
   },
   courierVehicle: {
     fontSize: 14,
-    color: "#757575",
-    marginTop: 4,
-  },
-  addressContainer: {
-    marginBottom: 8,
-  },
-  addressItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  addressIcon: {
-    marginRight: 8,
+    color: '#757575',
     marginTop: 2,
-  },
-  addressContent: {
-    flex: 1,
-  },
-  addressLabel: {
-    fontSize: 12,
-    color: "#757575",
-  },
-  addressText: {
-    fontSize: 14,
-    color: "#212121",
-    marginTop: 2,
-  },
-  addressDivider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 28,
-    marginVertical: 4,
-  },
-  addressDividerLine: {
-    flex: 1,
-    height: 20,
-    borderLeftWidth: 1,
-    borderLeftColor: "#E0E0E0",
-    marginLeft: 10,
-  },
-  ratingCard: {
-    marginBottom: 16,
   },
   ratingTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  ratingSubtitle: {
-    fontSize: 14,
-    color: "#757575",
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
     marginBottom: 16,
   },
-  starsContainer: {
-    alignItems: "center",
-    marginBottom: 24,
+  globalRatingContainer: {
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  globalRatingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 12,
+  },
+  globalRating: {
+    marginBottom: 8,
   },
   ratingText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FF6B00",
-    marginTop: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF6B00',
   },
-  commentInput: {
-    backgroundColor: "#FFFFFF",
+  criteriaContainer: {
+    marginBottom: 20,
+  },
+  criteriaTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
     marginBottom: 16,
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  criteriaItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  skipButton: {
+  criteriaLabel: {
+    fontSize: 14,
+    color: '#212121',
     flex: 1,
+  },
+  suggestedCommentsContainer: {
+    marginBottom: 20,
+  },
+  suggestedCommentsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 12,
+  },
+  suggestedComments: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  suggestionChip: {
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
     marginRight: 8,
-    borderColor: "#757575",
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  suggestionChipSelected: {
+    backgroundColor: '#FF6B00',
+    borderColor: '#FF6B00',
+  },
+  suggestionText: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  suggestionTextSelected: {
+    color: 'white',
+  },
+  commentInput: {
+    backgroundColor: '#F8F9FA',
   },
   submitButton: {
-    flex: 1,
-    marginLeft: 8,
-    backgroundColor: "#FF6B00",
+    marginBottom: 20,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
   },
 })
 

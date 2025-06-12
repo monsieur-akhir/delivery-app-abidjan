@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react'
 import { 
   View, 
@@ -214,7 +213,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               {getStatusText(delivery.status)}
             </Chip>
           </View>
-          
+
           <View style={styles.activeDeliveryRoute}>
             <View style={styles.routePoint}>
               <Feather name="map-pin" size={16} color="#FFFFFF" />
@@ -305,7 +304,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
-      
+
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
         <View style={styles.headerLeft}>
@@ -321,7 +320,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Text style={styles.userName}>{user?.first_name || 'Utilisateur'}</Text>
           </View>
         </View>
-        
+
         <View style={styles.headerRight}>
           {!connected && (
             <Chip 
