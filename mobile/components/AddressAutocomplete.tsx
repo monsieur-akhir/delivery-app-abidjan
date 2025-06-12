@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -8,7 +7,9 @@ import {
   Keyboard,
   ActivityIndicator,
   Animated,
-  Platform
+  Platform,
+  Dimensions,
+  Modal
 } from 'react-native';
 import {
   TextInput,
@@ -16,11 +17,14 @@ import {
   Card,
   Text,
   HelperText,
-  Divider
+  Divider,
+  IconButton,
+  Surface
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { LinearGradient } from 'expo-linear-gradient';
+import { debounce } from "lodash";
 
 export interface Address {
   id: string;
@@ -44,6 +48,8 @@ interface AddressAutocompleteProps {
   disabled?: boolean;
   showCurrentLocation?: boolean;
   maxSuggestions?: number;
+  onFocus?: () => void;
+  showSuggestions?: boolean;
 }
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -56,15 +62,18 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   style,
   disabled = false,
   showCurrentLocation = true,
-  maxSuggestions = 8
+  maxSuggestions = 8,
+  onFocus,
+  showSuggestions = false,
 }) => {
   const [suggestions, setSuggestions] = useState<Address[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSuggestionsState, setShowSuggestionsState] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [recentAddresses, setRecentAddresses] = useState<Address[]>([]);
   const [isFocused, setIsFocused] = useState(false);
-  
+  const [inputValue, setInputValue] = useState(value);
+
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-10)).current;
@@ -130,7 +139,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Animation d'entrée
   useEffect(() => {
-    if (showSuggestions) {
+    if (showSuggestionsState) {
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -147,7 +156,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       fadeAnim.setValue(0);
       slideAnim.setValue(-10);
     }
-  }, [showSuggestions, fadeAnim, slideAnim]);
+  }, [showSuggestionsState, fadeAnim, slideAnim]);
 
   // Obtenir la position actuelle
   useEffect(() => {
@@ -228,7 +237,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           const prefix = streetPrefixes[Math.floor(Math.random() * streetPrefixes.length)];
           const suffix = randomStreets[Math.floor(Math.random() * randomStreets.length)];
           const commune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
-          
+
           results.push({
             id: `street_${i}_${Date.now()}`,
             description: `${prefix} ${query} ${suffix}, ${commune.name}`,
@@ -279,7 +288,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   // Gestionnaires d'événements
   const handleTextChange = useCallback((text: string) => {
     onChangeText(text);
-    setShowSuggestions(true);
+    setShowSuggestionsState(true);
 
     // Debounce search
     if (timeoutRef.current) {
@@ -293,7 +302,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const handleAddressSelect = useCallback((address: Address) => {
     onChangeText(address.description);
     onAddressSelect(address);
-    setShowSuggestions(false);
+    setShowSuggestionsState(false);
     setSuggestions([]);
     Keyboard.dismiss();
 
@@ -324,25 +333,27 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const handleFocus = useCallback(() => {
     setIsFocused(true);
     if (value.length >= 2 || recentAddresses.length > 0) {
-      setShowSuggestions(true);
+      setShowSuggestionsState(true);
       if (value.length >= 2) {
         searchAddresses(value);
       }
     }
-  }, [value, recentAddresses.length, searchAddresses]);
+    onFocus?.()
+    setSuggestions([...recentAddresses, ...popularPlaces])
+  }, [value, recentAddresses.length, searchAddresses, onFocus, popularPlaces]);
 
   const handleBlur = useCallback(() => {
     setIsFocused(false);
     // Délai pour permettre la sélection
     setTimeout(() => {
-      setShowSuggestions(false);
+      setShowSuggestionsState(false);
     }, 200);
   }, []);
 
   const clearInput = useCallback(() => {
     onChangeText('');
     setSuggestions([]);
-    setShowSuggestions(false);
+    setShowSuggestionsState(false);
   }, [onChangeText]);
 
   // Icônes pour différents types de suggestions
@@ -371,6 +382,59 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         return '#666';
     }
   };
+
+  const getIconForType2 = (type: string) => {
+    switch (type) {
+      case "airport": return "airplane"
+      case "university": return "school"
+      case "market": return "shopping"
+      case "mall": return "shopping-outline"
+      case "transport": return "train"
+      case "recent": return "history"
+      default: return "map-marker"
+    }
+  }
+
+  const renderSuggestion = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      style={styles.suggestionItem}
+      onPress={() => {
+        setInputValue(item.description)
+        onAddressSelect(item)
+
+        // Ajouter aux adresses récentes
+        const newRecent = {
+          ...item,
+          type: "recent",
+          timestamp: Date.now()
+        }
+        setRecentAddresses(prev => [newRecent, ...prev.filter(addr => addr.id !== item.id)].slice(0, 3))
+      }}
+    >
+      <View style={styles.suggestionContent}>
+        <IconButton 
+          icon={getIconForType2(item.type)} 
+          size={20} 
+          iconColor={item.type === "recent" ? "#757575" : "#FF6B00"}
+        />
+        <View style={styles.suggestionTextContainer}>
+          <Text style={styles.suggestionTitle}>{item.description}</Text>
+          <Text style={styles.suggestionSubtitle}>{item.commune}</Text>
+        </View>
+        {item.type === "recent" && (
+          <IconButton 
+            icon="close" 
+            size={16} 
+            iconColor="#BDBDBD"
+            onPress={(e) => {
+              e.stopPropagation()
+              setRecentAddresses(prev => prev.filter(addr => addr.id !== item.id))
+            }}
+          />
+        )}
+      </View>
+    </TouchableOpacity>
+  )
 
   return (
     <View style={[styles.container, style]}>
@@ -406,14 +470,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           }}
         />
       </View>
-      
+
       {error && (
         <HelperText type="error" visible={!!error} style={styles.errorText}>
           {error}
         </HelperText>
       )}
 
-      {showSuggestions && (
+      {showSuggestionsState && (
         <Animated.View
           style={[
             styles.suggestionsContainer,
@@ -547,6 +611,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   );
 };
 
+const { width, height } = Dimensions.get('window')
+
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
@@ -557,6 +623,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#FFFFFF',
+    fontSize: 16,
   },
   inputFocused: {
     backgroundColor: '#FFFFFF',
@@ -671,6 +738,24 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     marginTop: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "flex-start",
+    paddingTop: 120,
+  },
+  sectionDivider: {
+    marginVertical: 8,
+  },
+  suggestionTextContainer: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  suggestionCommune: {
+    fontSize: 12,
+    color: "#757575",
+    marginTop: 2,
   },
 });
 
