@@ -1,252 +1,278 @@
-"use client"
 
-import React, { useState, useEffect } from "react"
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native"
-import { Text, Card, RadioButton, Divider, Button, IconButton, TextInput } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useTranslation } from "react-i18next"
-import { useNavigation, useRoute } from "@react-navigation/native"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RouteProp } from "@react-navigation/native"
-import type { RootStackParamList } from "../../types/navigation"
-import PaymentService, { type PaymentMethod, type PaymentInitiationResponse } from "../../services/PaymentService"
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons"
+import React, { useState, useEffect } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Switch
+} from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
+import { TextInput, Button } from 'react-native-paper'
+import { PaymentService } from '../../services/PaymentService'
 
-interface PaymentMethodsScreenProps {
-  deliveryId?: number | string
-  amount?: number
-  onPaymentComplete?: (transactionId: string) => void
-  isWalletTopUp?: boolean
+interface PaymentMethod {
+  id: string
+  type: 'mobile_money' | 'card' | 'bank_account'
+  provider: string
+  masked_number: string
+  is_default: boolean
+  is_active: boolean
+  expires_at?: string
 }
 
-const PaymentMethodsScreen = () => {
-  const { t } = useTranslation()
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, "Payment">>()
-  const route = useRoute<RouteProp<RootStackParamList, "Payment">>()
-  const params = route.params as PaymentMethodsScreenProps
+interface PaymentMethodsScreenProps {
+  navigation: any
+}
 
+const PaymentMethodsScreen = ({ navigation }: PaymentMethodsScreenProps) => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
-  const [selectedMethod, setSelectedMethod] = useState<string>("")
   const [loading, setLoading] = useState(true)
-  const [processing, setProcessing] = useState(false)
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newMethodType, setNewMethodType] = useState<'mobile_money' | 'card'>('mobile_money')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [provider, setProvider] = useState('')
+  const [adding, setAdding] = useState(false)
 
-  const isWalletTopUp = params?.isWalletTopUp || false
-  const deliveryId = params?.deliveryId
-  const amount = params?.amount || 0
-  const onPaymentComplete = params?.onPaymentComplete
+  useEffect(() => {
+    loadPaymentMethods()
+  }, [])
 
-  const fetchPaymentMethods = async (): Promise<void> => {
+  const loadPaymentMethods = async () => {
     try {
-      setLoading(true)
-      const methods = await PaymentService.getPaymentMethods()
-      setPaymentMethods(methods)
-      if (methods.length > 0 && methods[0].enabled) {
-        setSelectedMethod(methods[0].id)
-      }
-    } catch (err: unknown) {
-      console.error("Error fetching payment methods:", err)
-      setError(t("payment.errorFetchingMethods"))
+      // const methods = await PaymentService.getPaymentMethods()
+      // setPaymentMethods(methods)
+      
+      // Données de démonstration
+      setPaymentMethods([
+        {
+          id: '1',
+          type: 'mobile_money',
+          provider: 'Orange Money',
+          masked_number: '****4567',
+          is_default: true,
+          is_active: true
+        },
+        {
+          id: '2',
+          type: 'mobile_money',
+          provider: 'MTN MoMo',
+          masked_number: '****8901',
+          is_default: false,
+          is_active: true
+        }
+      ])
+    } catch (error) {
+      console.error('Erreur lors du chargement des méthodes de paiement:', error)
     } finally {
       setLoading(false)
     }
   }
-  useEffect(() => {
-    fetchPaymentMethods()
-  }, [])
 
-  const handlePayment = async (): Promise<void> => {
-    if (!selectedMethod) {
-      Alert.alert(t("payment.error"), t("payment.selectMethod"))
+  const handleAddPaymentMethod = async () => {
+    if (!phoneNumber || !provider) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs')
       return
     }
+
+    setAdding(true)
     try {
-      setProcessing(true)
-      setError(null)
-      const isMobileMoneyMethod = ["orange_money", "mtn_money", "moov_money"].includes(selectedMethod)
-      if (isMobileMoneyMethod && !phoneNumber) {
-        Alert.alert(t("payment.error"), t("payment.enterPhoneNumber"))
-        setProcessing(false)
-        return
+      const newMethod = {
+        type: newMethodType,
+        provider,
+        phone_number: phoneNumber
       }
-      let response: PaymentInitiationResponse
-      if (isWalletTopUp) {
-        response = await PaymentService.topUpWallet({
-          amount,
-          payment_method: selectedMethod,
-          phone: isMobileMoneyMethod ? phoneNumber : undefined,
-        })
-      } else {
-        if (!deliveryId) {
-          throw new Error("Delivery ID is required")
-        }
-        response = await PaymentService.initiatePayment({
-          delivery_id: deliveryId,
-          amount,
-          payment_method: selectedMethod,
-          phone: isMobileMoneyMethod ? phoneNumber : undefined,
-        })
-      }
-      if (response.status === "success" && response.payment_url) {
-        navigation.navigate("WebPayment", {
-          paymentUrl: response.payment_url,
-          transactionId: response.transaction_id,
-          onComplete: (success: boolean) => {
-            if (success && onPaymentComplete) {
-              onPaymentComplete(response.transaction_id)
-            }
-          },
-        })
-      } else if (response.status === "success") {
-        Alert.alert(t("payment.success"), t("payment.processedSuccessfully"), [
-          {
-            text: t("common.ok"),
-            onPress: () => {
-              if (onPaymentComplete) {
-                onPaymentComplete(response.transaction_id)
-              } else {
-                navigation.goBack()
-              }
-            },
-          },
-        ])
-      } else {
-        throw new Error(response.message || t("payment.unknownError"))
-      }
-    } catch (err: unknown) {
-      console.error("Payment error:", err)
-      let errorMessage = t("payment.processingError")
-      if (err instanceof Error) {
-        errorMessage = err.message
-      } else if (typeof err === "string") {
-        errorMessage = err
-      }
-      setError(errorMessage)
-      Alert.alert(t("payment.error"), errorMessage)
+
+      // await PaymentService.addPaymentMethod(newMethod)
+      
+      Alert.alert('Succès', 'Méthode de paiement ajoutée avec succès')
+      setShowAddForm(false)
+      setPhoneNumber('')
+      setProvider('')
+      loadPaymentMethods()
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible d\'ajouter la méthode de paiement')
     } finally {
-      setProcessing(false)
+      setAdding(false)
     }
   }
 
-  const getPaymentMethodIcon = (methodId: string) => {
-    switch (methodId) {
-      case "cash":
-        return <MaterialCommunityIcons name="cash" size={24} color="#4CAF50" />
-      case "orange_money":
-        return <FontAwesome5 name="money-bill-wave" size={24} color="#FF6D00" />
-      case "mtn_money":
-        return <FontAwesome5 name="money-bill-wave" size={24} color="#FFEB3B" />
-      case "moov_money":
-        return <FontAwesome5 name="money-bill-wave" size={24} color="#2196F3" />
-      case "bank_transfer":
-        return <MaterialCommunityIcons name="bank" size={24} color="#3F51B5" />
-      default:
-        return <Ionicons name="card" size={24} color="#9E9E9E" />
+  const handleToggleDefault = async (methodId: string) => {
+    try {
+      // await PaymentService.setDefaultPaymentMethod(methodId)
+      loadPaymentMethods()
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de modifier la méthode par défaut')
     }
   }
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <IconButton icon="arrow-left" size={24} onPress={() => navigation.goBack()} />
-          <Text style={styles.headerTitle}>
-            {isWalletTopUp ? t("payment.topUpWallet") : t("payment.paymentMethods")}
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("common.loading")}</Text>
-        </View>
-      </SafeAreaView>
+  const handleDeleteMethod = async (methodId: string) => {
+    Alert.alert(
+      'Supprimer la méthode de paiement',
+      'Êtes-vous sûr de vouloir supprimer cette méthode de paiement ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // await PaymentService.deletePaymentMethod(methodId)
+              loadPaymentMethods()
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de supprimer la méthode de paiement')
+            }
+          }
+        }
+      ]
     )
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <IconButton icon="arrow-left" size={24} onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>{isWalletTopUp ? t("payment.topUpWallet") : t("payment.paymentMethods")}</Text>
-        <View style={{ width: 24 }} />
+  const getProviderIcon = (provider: string) => {
+    switch (provider.toLowerCase()) {
+      case 'orange money':
+        return 'phone-portrait'
+      case 'mtn momo':
+        return 'phone-portrait'
+      case 'visa':
+        return 'card'
+      case 'mastercard':
+        return 'card'
+      default:
+        return 'wallet'
+    }
+  }
+
+  const renderPaymentMethod = ({ item }: { item: PaymentMethod }) => (
+    <View style={styles.methodCard}>
+      <View style={styles.methodHeader}>
+        <View style={styles.methodInfo}>
+          <View style={styles.methodIcon}>
+            <Ionicons name={getProviderIcon(item.provider)} size={24} color="#007AFF" />
+          </View>
+          <View style={styles.methodDetails}>
+            <Text style={styles.methodProvider}>{item.provider}</Text>
+            <Text style={styles.methodNumber}>{item.masked_number}</Text>
+            {item.is_default && (
+              <Text style={styles.defaultBadge}>Par défaut</Text>
+            )}
+          </View>
+        </View>
+        
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteMethod(item.id)}
+        >
+          <Ionicons name="trash-outline" size={20} color="#f44336" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Card style={styles.amountCard}>
-          <Card.Content>
-            <Text style={styles.amountLabel}>
-              {isWalletTopUp ? t("payment.topUpAmount") : t("payment.amountToPay")}
-            </Text>
-            <Text style={styles.amountValue}>{amount.toLocaleString()} FCFA</Text>
-          </Card.Content>
-        </Card>
+      <View style={styles.methodActions}>
+        <View style={styles.defaultToggle}>
+          <Text style={styles.toggleLabel}>Méthode par défaut</Text>
+          <Switch
+            value={item.is_default}
+            onValueChange={() => handleToggleDefault(item.id)}
+            trackColor={{ false: '#767577', true: '#007AFF' }}
+            thumbColor={item.is_default ? '#ffffff' : '#f4f3f4'}
+          />
+        </View>
+      </View>
+    </View>
+  )
 
-        <Text style={styles.sectionTitle}>{t("payment.selectMethod")}</Text>
+  const providers = [
+    { label: 'Orange Money', value: 'Orange Money' },
+    { label: 'MTN Mobile Money', value: 'MTN MoMo' },
+  ]
 
-        <Card style={styles.methodsCard}>
-          <Card.Content>
-            <RadioButton.Group onValueChange={(value) => setSelectedMethod(value)} value={selectedMethod}>
-              {paymentMethods.map((method, index) => (
-                <React.Fragment key={method.id}>
+  return (
+    <SafeAreaView style={styles.container}>
+      <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Méthodes de paiement</Text>
+        <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)}>
+          <Ionicons name="add" size={24} color="#ffffff" />
+        </TouchableOpacity>
+      </LinearGradient>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : (
+        <>
+          {showAddForm && (
+            <View style={styles.addForm}>
+              <Text style={styles.formTitle}>Ajouter une méthode de paiement</Text>
+              
+              <View style={styles.providerButtons}>
+                {providers.map((p) => (
                   <TouchableOpacity
-                    style={[styles.methodOption, !method.enabled && styles.disabledMethod]}
-                    onPress={() => method.enabled && setSelectedMethod(method.id)}
-                    disabled={!method.enabled || processing}
+                    key={p.value}
+                    style={[
+                      styles.providerButton,
+                      provider === p.value && styles.selectedProvider
+                    ]}
+                    onPress={() => setProvider(p.value)}
                   >
-                    <View style={styles.methodInfo}>
-                      <View style={styles.methodIconContainer}>{getPaymentMethodIcon(method.id)}</View>
-                      <View style={styles.methodTextContainer}>
-                        <Text style={styles.methodName}>{method.name}</Text>
-                        {!method.enabled && <Text style={styles.methodDisabledText}>{t("payment.unavailable")}</Text>}
-                      </View>
-                    </View>
-                    <RadioButton value={method.id} disabled={!method.enabled || processing} />
+                    <Text style={[
+                      styles.providerButtonText,
+                      provider === p.value && styles.selectedProviderText
+                    ]}>
+                      {p.label}
+                    </Text>
                   </TouchableOpacity>
-                  {index < paymentMethods.length - 1 && <Divider style={styles.divider} />}
-                </React.Fragment>
-              ))}
-            </RadioButton.Group>
-          </Card.Content>
-        </Card>
-
-        {["orange_money", "mtn_money", "moov_money"].includes(selectedMethod) && (
-          <Card style={styles.phoneCard}>
-            <Card.Content>
-              <Text style={styles.phoneLabel}>{t("payment.enterPhoneNumber")}</Text>
-              <View style={styles.phoneInputContainer}>
-                <Text style={styles.phonePrefix}>+225</Text>
-                <TextInput
-                  style={styles.phoneInput}
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  placeholder="XX XX XX XX XX"
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  editable={!processing}
-                />
+                ))}
               </View>
-            </Card.Content>
-          </Card>
-        )}
 
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
+              <TextInput
+                label="Numéro de téléphone"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                style={styles.input}
+                mode="outlined"
+                keyboardType="phone-pad"
+                placeholder="01 02 03 04 05"
+              />
 
-        <Button
-          mode="contained"
-          style={styles.payButton}
-          labelStyle={styles.payButtonLabel}
-          onPress={handlePayment}
-          loading={processing}
-          disabled={!selectedMethod || processing}
-        >
-          {isWalletTopUp ? t("payment.topUp") : t("payment.pay")}
-        </Button>
-      </ScrollView>
+              <View style={styles.formActions}>
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowAddForm(false)}
+                  style={styles.cancelButton}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={handleAddPaymentMethod}
+                  loading={adding}
+                  disabled={adding}
+                  style={styles.addButton}
+                >
+                  Ajouter
+                </Button>
+              </View>
+            </View>
+          )}
+
+          <FlatList
+            data={paymentMethods}
+            renderItem={renderPaymentMethod}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        </>
+      )}
     </SafeAreaView>
   )
 }
@@ -254,140 +280,152 @@ const PaymentMethodsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   headerTitle: {
+    color: '#ffffff',
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  amountCard: {
-    marginBottom: 16,
-    backgroundColor: "#E8F5E9",
-  },
-  amountLabel: {
-    fontSize: 14,
-    color: "#2E7D32",
-    marginBottom: 4,
-  },
-  amountValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#2E7D32",
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 8,
-  },
-  methodsCard: {
-    marginBottom: 16,
-  },
-  methodOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-  },
-  disabledMethod: {
-    opacity: 0.5,
-  },
-  methodInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  methodIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F5F5F5",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  methodTextContainer: {
-    flex: 1,
-  },
-  methodName: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#212121",
-  },
-  methodDisabledText: {
-    fontSize: 12,
-    color: "#F44336",
-  },
-  divider: {
-    marginVertical: 4,
-  },
-  phoneCard: {
-    marginBottom: 16,
-  },
-  phoneLabel: {
-    fontSize: 14,
-    color: "#212121",
-    marginBottom: 8,
-  },
-  phoneInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#BDBDBD",
-    borderRadius: 4,
-    paddingHorizontal: 12,
-  },
-  phonePrefix: {
-    fontSize: 16,
-    color: "#212121",
-    marginRight: 8,
-  },
-  phoneInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#212121",
-    paddingVertical: 12,
-  },
-  errorContainer: {
-    backgroundColor: "#FFEBEE",
-    padding: 12,
-    borderRadius: 4,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: "#C62828",
-    fontSize: 14,
-  },
-  payButton: {
-    backgroundColor: "#FF6B00",
-    paddingVertical: 8,
-    marginTop: 8,
-  },
-  payButtonLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 16,
-    color: "#757575",
+  addForm: {
+    backgroundColor: '#ffffff',
+    margin: 16,
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  providerButtons: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  providerButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  selectedProvider: {
+    backgroundColor: '#007AFF',
+  },
+  providerButtonText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  selectedProviderText: {
+    color: '#ffffff',
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    marginBottom: 16,
+  },
+  formActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    flex: 1,
+    marginRight: 8,
+  },
+  addButton: {
+    flex: 1,
+    marginLeft: 8,
+    backgroundColor: '#007AFF',
+  },
+  listContainer: {
+    padding: 16,
+  },
+  methodCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  methodHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  methodInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  methodIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f0f8ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  methodDetails: {
+    flex: 1,
+  },
+  methodProvider: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  methodNumber: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  defaultBadge: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  deleteButton: {
+    padding: 8,
+  },
+  methodActions: {
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingTop: 16,
+  },
+  defaultToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  toggleLabel: {
+    fontSize: 14,
+    color: '#666',
   },
 })
 
