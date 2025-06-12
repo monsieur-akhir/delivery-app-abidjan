@@ -355,6 +355,34 @@ export class DeliveryService {
     }
   }
 
+  // Obtenir les coursiers suggérés pour une livraison
+  static async getSuggestedCouriers(
+    deliveryId: number,
+    maxDistance: number = 10,
+    limit: number = 5
+  ): Promise<any> {
+    try {
+      const response = await api.get(`/api/v1/deliveries/${deliveryId}/suggested-couriers`, {
+        params: { max_distance: maxDistance, limit }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error getting suggested couriers:', error)
+      throw error
+    }
+  }
+
+  // Assignment automatique de livraison
+  static async autoAssignDelivery(deliveryId: number): Promise<any> {
+    try {
+      const response = await api.post(`/api/v1/deliveries/${deliveryId}/auto-assign`)
+      return response.data
+    } catch (error) {
+      console.error('Error auto-assigning delivery:', error)
+      throw error
+    }
+  }
+
   // Récupérer la timeline des statuts
   static async getDeliveryStatusTimeline(deliveryId: number): Promise<any> {
     try {
