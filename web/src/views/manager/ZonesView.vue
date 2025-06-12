@@ -1,770 +1,933 @@
+
 <template>
-  <div class="zones-view">
-    <h1 class="page-title">Gestion des zones</h1>
-    
-    <div class="controls">
-      <div class="filters">
-        <div class="filter-group">
-          <label>Type de zone:</label>
-          <select v-model="selectedZoneType">
-            <option value="all">Toutes les zones</option>
-            <option value="traffic">Zones de trafic</option>
-            <option value="delivery">Zones de livraison</option>
-            <option value="restricted">Zones restreintes</option>
-          </select>
+  <div class="zones-management">
+    <!-- En-tête -->
+    <div class="page-header">
+      <h1>Gestion des Zones de Livraison</h1>
+      <button @click="showCreateModal = true" class="btn-primary">
+        <i class="fas fa-plus"></i>
+        Nouvelle Zone
+      </button>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-map"></i>
         </div>
-        
-        <div class="filter-group">
-          <label>Commune:</label>
-          <select v-model="selectedCommune">
-            <option value="">Toutes les communes</option>
-            <option v-for="commune in communes" :key="commune" :value="commune">
-              {{ commune }}
-            </option>
-          </select>
+        <div class="stat-content">
+          <div class="stat-number">{{ analytics.total_zones }}</div>
+          <div class="stat-label">Total Zones</div>
         </div>
       </div>
       
-      <div class="actions">
-        <button class="btn btn-primary" @click="showAddZoneModal = true">
-          <font-awesome-icon icon="plus" /> Ajouter une zone
-        </button>
-        <button class="btn btn-secondary" @click="refreshZones">
-          <font-awesome-icon icon="sync" /> Actualiser
-        </button>
-      </div>
-    </div>
-    
-    <div class="map-container">
-      <zone-map 
-        :zones="filteredZones" 
-        :traffic-reports="trafficReports"
-        :weather-alerts="weatherAlerts"
-        :couriers="activeCouriers"
-        @zone-click="handleZoneClick"
-        @map-click="handleMapClick"
-      />
-    </div>
-    
-    <div class="data-panels">
-      <div class="panel traffic-panel">
-        <h3>Rapports de trafic récents</h3>
-        <div class="panel-content">
-          <div v-if="trafficReports.length === 0" class="empty-state">
-            Aucun rapport de trafic récent
-          </div>
-          <ul v-else class="report-list">
-            <li v-for="report in trafficReports" :key="report.id" class="report-item" :class="'severity-' + report.severity">
-              <div class="report-header">
-                <span class="report-severity">{{ formatSeverity(report.severity) }}</span>
-                <span class="report-time">{{ formatDateTime(report.created_at) }}</span>
-              </div>
-              <div class="report-location">{{ report.commune }} - {{ report.description }}</div>
-              <div class="report-actions">
-                <button class="btn btn-sm" @click="centerMapOn(report.lat, report.lng)">
-                  <font-awesome-icon icon="map-marker-alt" /> Voir sur la carte
-                </button>
-                <button class="btn btn-sm btn-danger" @click="deleteTrafficReport(report.id)">
-                  <font-awesome-icon icon="trash" />
-                </button>
-              </div>
-            </li>
-          </ul>
+      <div class="stat-card">
+        <div class="stat-icon active">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ analytics.active_zones }}</div>
+          <div class="stat-label">Zones Actives</div>
         </div>
       </div>
       
-      <div class="panel weather-panel">
-        <h3>Alertes météo</h3>
-        <div class="panel-content">
-          <div v-if="weatherAlerts.length === 0" class="empty-state">
-            Aucune alerte météo active
-          </div>
-          <ul v-else class="alert-list">
-            <li v-for="alert in weatherAlerts" :key="alert.id" class="alert-item" :class="'severity-' + alert.severity">
-              <div class="alert-header">
-                <span class="alert-type">{{ alert.alert_type }}</span>
-                <span class="alert-severity">{{ formatSeverity(alert.severity) }}</span>
-              </div>
-              <div class="alert-location">{{ alert.commune }}</div>
-              <div class="alert-description">{{ alert.description }}</div>
-              <div class="alert-footer">
-                <span class="alert-expiry">Expire: {{ formatDateTime(alert.expires_at) }}</span>
-                <button class="btn btn-sm btn-danger" @click="deleteWeatherAlert(alert.id)">
-                  <font-awesome-icon icon="trash" />
-                </button>
-              </div>
-            </li>
-          </ul>
-          <div class="panel-actions">
-            <button class="btn btn-primary" @click="showAddWeatherAlertModal = true">
-              <font-awesome-icon icon="plus" /> Ajouter une alerte
-            </button>
-          </div>
+      <div class="stat-card">
+        <div class="stat-icon revenue">
+          <i class="fas fa-coins"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ formatCurrency(totalRevenue) }}</div>
+          <div class="stat-label">Revenus Total</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon deliveries">
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalDeliveries }}</div>
+          <div class="stat-label">Livraisons</div>
         </div>
       </div>
     </div>
-    
-    <!-- Modal pour ajouter une zone -->
-    <div v-if="showAddZoneModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Ajouter une nouvelle zone</h3>
-          <button class="close-btn" @click="showAddZoneModal = false">
-            <font-awesome-icon icon="times" />
-          </button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="addZone">
-            <div class="form-group">
-              <label for="zone-name">Nom de la zone</label>
-              <input id="zone-name" v-model="newZone.name" type="text" required>
-            </div>
-            
-            <div class="form-group">
-              <label for="zone-type">Type de zone</label>
-              <select id="zone-type" v-model="newZone.type" required>
-                <option value="traffic">Zone de trafic</option>
-                <option value="delivery">Zone de livraison</option>
-                <option value="restricted">Zone restreinte</option>
+
+    <!-- Onglets -->
+    <div class="tabs">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab.id"
+        :class="['tab-button', { active: activeTab === tab.id }]"
+        @click="activeTab = tab.id"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content">
+      <!-- Liste des zones avec carte -->
+      <div v-if="activeTab === 'zones'" class="zones-content">
+        <div class="zones-layout">
+          <!-- Liste des zones -->
+          <div class="zones-list">
+            <div class="filters">
+              <select v-model="filters.type" @change="loadZones">
+                <option value="">Tous les types</option>
+                <option value="city">Ville</option>
+                <option value="district">District</option>
+                <option value="custom">Personnalisée</option>
+                <option value="exclusion">Exclusion</option>
+              </select>
+              
+              <select v-model="filters.active" @change="loadZones">
+                <option value="">Toutes</option>
+                <option value="true">Actives</option>
+                <option value="false">Inactives</option>
               </select>
             </div>
-            
-            <div class="form-group">
-              <label for="zone-commune">Commune</label>
-              <select id="zone-commune" v-model="newZone.commune" required>
-                <option value="">Sélectionner une commune</option>
-                <option v-for="commune in communes" :key="commune" :value="commune">
-                  {{ commune }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="zone-description">Description</label>
-              <textarea id="zone-description" v-model="newZone.description" rows="3"></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label>Coordonnées</label>
-              <p class="help-text">Cliquez sur la carte pour définir les coordonnées de la zone</p>
-              <div class="coordinates-list">
-                <div v-for="(point, index) in newZone.coordinates" :key="index" class="coordinate-item">
-                  <span>Point {{ index + 1 }}: {{ point.lat.toFixed(6) }}, {{ point.lng.toFixed(6) }}</span>
-                  <button type="button" class="btn btn-sm btn-danger" @click="removeCoordinate(index)">
-                    <font-awesome-icon icon="trash" />
+
+            <div class="zone-items">
+              <div 
+                v-for="zone in zones" 
+                :key="zone.id"
+                :class="['zone-item', { selected: selectedZone?.id === zone.id, inactive: !zone.is_active }]"
+                @click="selectZone(zone)"
+              >
+                <div class="zone-header">
+                  <h4>{{ zone.name }}</h4>
+                  <span :class="['zone-type', zone.zone_type]">
+                    {{ getZoneTypeLabel(zone.zone_type) }}
+                  </span>
+                </div>
+                
+                <p v-if="zone.description" class="zone-description">
+                  {{ zone.description }}
+                </p>
+                
+                <div class="zone-details">
+                  <div class="detail">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>{{ formatCurrency(zone.base_price || 0) }} base</span>
+                  </div>
+                  <div class="detail">
+                    <i class="fas fa-road"></i>
+                    <span>{{ zone.price_per_km || 0 }} XOF/km</span>
+                  </div>
+                  <div v-if="zone.max_delivery_time" class="detail">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ zone.max_delivery_time }}min max</span>
+                  </div>
+                </div>
+                
+                <div class="zone-actions">
+                  <button @click.stop="editZone(zone)" class="btn-icon">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button 
+                    @click.stop="toggleZoneStatus(zone)" 
+                    :class="['btn-icon', zone.is_active ? 'danger' : 'success']"
+                  >
+                    <i :class="zone.is_active ? 'fas fa-pause' : 'fas fa-play'"></i>
+                  </button>
+                  <button @click.stop="deleteZone(zone.id)" class="btn-icon danger">
+                    <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </div>
-              <button type="button" class="btn btn-secondary" @click="clearCoordinates">
-                Effacer les coordonnées
+            </div>
+          </div>
+
+          <!-- Carte interactive -->
+          <div class="map-container">
+            <ZoneMap 
+              :zones="zones"
+              :selected-zone="selectedZone"
+              @zone-selected="selectZone"
+              @zone-created="onZoneCreated"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarification -->
+      <div v-if="activeTab === 'pricing'" class="pricing-content">
+        <div v-if="selectedZone" class="pricing-details">
+          <h3>Tarification - {{ selectedZone.name }}</h3>
+          
+          <!-- Paramètres de base -->
+          <div class="pricing-section">
+            <h4>Paramètres de Base</h4>
+            <div class="pricing-grid">
+              <div class="form-group">
+                <label>Prix de base (XOF)</label>
+                <input 
+                  type="number" 
+                  v-model="selectedZone.base_price" 
+                  @change="updateZonePricing"
+                >
+              </div>
+              
+              <div class="form-group">
+                <label>Prix par km (XOF)</label>
+                <input 
+                  type="number" 
+                  v-model="selectedZone.price_per_km" 
+                  @change="updateZonePricing"
+                >
+              </div>
+              
+              <div class="form-group">
+                <label>Prix minimum (XOF)</label>
+                <input 
+                  type="number" 
+                  v-model="selectedZone.min_delivery_fee" 
+                  @change="updateZonePricing"
+                >
+              </div>
+              
+              <div class="form-group">
+                <label>Prix maximum (XOF)</label>
+                <input 
+                  type="number" 
+                  v-model="selectedZone.max_delivery_fee" 
+                  @change="updateZonePricing"
+                >
+              </div>
+              
+              <div class="form-group">
+                <label>Multiplicateur heure de pointe</label>
+                <input 
+                  type="number" 
+                  step="0.1"
+                  v-model="selectedZone.peak_hour_multiplier" 
+                  @change="updateZonePricing"
+                >
+              </div>
+              
+              <div class="form-group">
+                <label>Temps max livraison (min)</label>
+                <input 
+                  type="number" 
+                  v-model="selectedZone.max_delivery_time" 
+                  @change="updateZonePricing"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Règles de tarification -->
+          <div class="pricing-section">
+            <div class="section-header">
+              <h4>Règles de Tarification</h4>
+              <button @click="showPricingRuleModal = true" class="btn-secondary">
+                <i class="fas fa-plus"></i>
+                Ajouter Règle
               </button>
             </div>
             
-            <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="showAddZoneModal = false">
-                Annuler
-              </button>
-              <button type="submit" class="btn btn-primary" :disabled="newZone.coordinates.length < 3">
-                Ajouter la zone
+            <div class="pricing-rules">
+              <div 
+                v-for="rule in selectedZone.pricing_rules" 
+                :key="rule.id"
+                class="pricing-rule"
+              >
+                <div class="rule-content">
+                  <h5>{{ rule.name }}</h5>
+                  <p>{{ rule.condition_type }} {{ rule.operator }} {{ rule.condition_value }}</p>
+                  <span class="adjustment">
+                    {{ rule.adjustment_type === 'percentage' ? rule.price_adjustment + '%' : formatCurrency(rule.price_adjustment) }}
+                  </span>
+                </div>
+                
+                <div class="rule-actions">
+                  <label class="toggle">
+                    <input 
+                      type="checkbox" 
+                      :checked="rule.is_active"
+                      @change="togglePricingRule(rule)"
+                    >
+                    <span class="slider"></span>
+                  </label>
+                  <button @click="deletePricingRule(rule.id)" class="btn-icon danger">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Restrictions -->
+          <div class="pricing-section">
+            <div class="section-header">
+              <h4>Restrictions</h4>
+              <button @click="showRestrictionModal = true" class="btn-secondary">
+                <i class="fas fa-plus"></i>
+                Ajouter Restriction
               </button>
             </div>
-          </form>
+            
+            <div class="restrictions">
+              <div 
+                v-for="restriction in selectedZone.restrictions" 
+                :key="restriction.id"
+                class="restriction-item"
+              >
+                <div class="restriction-content">
+                  <h5>{{ restriction.restriction_type }}</h5>
+                  <p>{{ restriction.description }}</p>
+                  <span class="restriction-value">{{ restriction.restriction_value }}</span>
+                </div>
+                
+                <div class="restriction-actions">
+                  <label class="toggle">
+                    <input 
+                      type="checkbox" 
+                      :checked="restriction.is_active"
+                      @change="toggleRestriction(restriction)"
+                    >
+                    <span class="slider"></span>
+                  </label>
+                  <button @click="deleteRestriction(restriction.id)" class="btn-icon danger">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div v-else class="no-zone-selected">
+          <i class="fas fa-map-marker-alt"></i>
+          <h3>Sélectionnez une zone</h3>
+          <p>Choisissez une zone dans la liste pour configurer sa tarification</p>
+        </div>
+      </div>
+
+      <!-- Analyses -->
+      <div v-if="activeTab === 'analytics'" class="analytics">
+        <div class="charts-grid">
+          <div class="chart-container">
+            <h4>Revenus par Zone</h4>
+            <HorizontalBarChart :data="revenueByZoneChart" />
+          </div>
+          
+          <div class="chart-container">
+            <h4>Livraisons par Zone</h4>
+            <PieChart :data="deliveriesByZoneChart" />
+          </div>
+          
+          <div class="chart-container">
+            <h4>Prix Moyen par Zone</h4>
+            <AreaChart :data="avgPriceByZoneChart" />
+          </div>
+          
+          <div class="chart-container">
+            <h4>Performance des Zones</h4>
+            <LineChart :data="zonePerformanceChart" />
+          </div>
         </div>
       </div>
     </div>
-    
-    <!-- Modal pour ajouter une alerte météo -->
-    <div v-if="showAddWeatherAlertModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Ajouter une alerte météo</h3>
-          <button class="close-btn" @click="showAddWeatherAlertModal = false">
-            <font-awesome-icon icon="times" />
-          </button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="addWeatherAlert">
+
+    <!-- Modal de création/édition de zone -->
+    <Modal v-if="showCreateModal || editingZone" @close="closeZoneModal">
+      <div class="zone-form">
+        <h3>{{ editingZone ? 'Modifier' : 'Créer' }} une Zone</h3>
+        
+        <form @submit.prevent="saveZone">
+          <div class="form-grid">
             <div class="form-group">
-              <label for="alert-type">Type d'alerte</label>
-              <select id="alert-type" v-model="newWeatherAlert.alert_type" required>
-                <option value="rain">Pluie</option>
-                <option value="flood">Inondation</option>
-                <option value="storm">Orage</option>
-                <option value="wind">Vent fort</option>
-                <option value="fog">Brouillard</option>
-                <option value="other">Autre</option>
+              <label>Nom de la zone *</label>
+              <input type="text" v-model="zoneForm.name" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Type de zone *</label>
+              <select v-model="zoneForm.zone_type" required>
+                <option value="city">Ville</option>
+                <option value="district">District</option>
+                <option value="custom">Personnalisée</option>
+                <option value="exclusion">Zone d'exclusion</option>
               </select>
             </div>
             
             <div class="form-group">
-              <label for="alert-severity">Sévérité</label>
-              <select id="alert-severity" v-model="newWeatherAlert.severity" required>
-                <option value="low">Faible</option>
-                <option value="medium">Moyenne</option>
-                <option value="high">Élevée</option>
-              </select>
+              <label>Prix de base (XOF)</label>
+              <input type="number" v-model="zoneForm.base_price" min="0">
             </div>
             
             <div class="form-group">
-              <label for="alert-commune">Commune</label>
-              <select id="alert-commune" v-model="newWeatherAlert.commune" required>
-                <option value="">Sélectionner une commune</option>
-                <option v-for="commune in communes" :key="commune" :value="commune">
-                  {{ commune }}
-                </option>
-              </select>
+              <label>Prix par km (XOF)</label>
+              <input type="number" v-model="zoneForm.price_per_km" min="0">
             </div>
             
             <div class="form-group">
-              <label for="alert-description">Description</label>
-              <textarea id="alert-description" v-model="newWeatherAlert.description" rows="3" required></textarea>
+              <label>Temps max livraison (min)</label>
+              <input type="number" v-model="zoneForm.max_delivery_time" min="1">
             </div>
             
             <div class="form-group">
-              <label for="alert-expires">Expire le</label>
-              <input id="alert-expires" v-model="newWeatherAlert.expires_at" type="datetime-local" required>
+              <label>Note minimum coursier</label>
+              <input type="number" step="0.1" min="1" max="5" v-model="zoneForm.min_courier_rating">
             </div>
-            
-            <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="showAddWeatherAlertModal = false">
-                Annuler
-              </button>
-              <button type="submit" class="btn btn-primary">
-                Ajouter l'alerte
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Description</label>
+            <textarea v-model="zoneForm.description" rows="3"></textarea>
+          </div>
+          
+          <div class="form-options">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="zoneForm.requires_special_vehicle">
+              Nécessite un véhicule spécialisé
+            </label>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" @click="closeZoneModal">Annuler</button>
+            <button type="submit" class="btn-primary">
+              {{ editingZone ? 'Modifier' : 'Créer' }}
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
+    </Modal>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import ZoneMap from '@/components/maps/ZoneMap.vue';
-import { fetchZones, addZone, deleteZone, getTrafficReports, deleteTrafficReport, getWeatherAlerts, addWeatherAlert, deleteWeatherAlert, getActiveCouriers } from '@/api/manager';
-import { formatDateTime, formatSeverity } from '@/utils/formatters';
+import { ref, reactive, onMounted, computed } from 'vue'
+import { zonesAPI } from '../../api/zones'
+import Modal from '../../components/ui/Modal.vue'
+import ZoneMap from '../../components/maps/ZoneMap.vue'
+import HorizontalBarChart from '../../components/charts/HorizontalBarChart.vue'
+import LineChart from '../../components/charts/LineChart.vue'
+import PieChart from '../../components/charts/PieChart.vue'
+import AreaChart from '../../components/charts/AreaChart.vue'
 
 export default {
   name: 'ZonesView',
   components: {
-    ZoneMap
+    Modal,
+    ZoneMap,
+    HorizontalBarChart,
+    LineChart,
+    PieChart,
+    AreaChart
   },
   setup() {
-    const zones = ref([]);
-    const trafficReports = ref([]);
-    const weatherAlerts = ref([]);
-    const activeCouriers = ref([]);
-    const selectedZoneType = ref('all');
-    const selectedCommune = ref('');
-    const showAddZoneModal = ref(false);
-    const showAddWeatherAlertModal = ref(false);
-    const mapCenter = ref(null);
+    const activeTab = ref('zones')
+    const zones = ref([])
+    const selectedZone = ref(null)
+    const analytics = ref({
+      total_zones: 0,
+      active_zones: 0,
+      revenue_by_zone: []
+    })
     
-    const communes = ref([
-      'Abobo', 'Adjamé', 'Attécoubé', 'Cocody', 'Koumassi',
-      'Marcory', 'Plateau', 'Port-Bouët', 'Treichville', 'Yopougon'
-    ]);
+    const showCreateModal = ref(false)
+    const editingZone = ref(null)
+    const showPricingRuleModal = ref(false)
+    const showRestrictionModal = ref(false)
     
-    const newZone = ref({
+    const filters = reactive({
+      type: '',
+      active: ''
+    })
+    
+    const zoneForm = reactive({
       name: '',
-      type: 'traffic',
-      commune: '',
       description: '',
-      coordinates: []
-    });
-    
-    const newWeatherAlert = ref({
-      alert_type: 'rain',
-      severity: 'medium',
-      commune: '',
-      description: '',
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
-      source: 'manual'
-    });
-    
-    const filteredZones = computed(() => {
-      let filtered = [...zones.value];
-      
-      if (selectedZoneType.value !== 'all') {
-        filtered = filtered.filter(zone => zone.type === selectedZoneType.value);
-      }
-      
-      if (selectedCommune.value) {
-        filtered = filtered.filter(zone => zone.commune === selectedCommune.value);
-      }
-      
-      return filtered;
-    });
-    
+      zone_type: 'city',
+      base_price: null,
+      price_per_km: null,
+      max_delivery_time: null,
+      min_courier_rating: null,
+      requires_special_vehicle: false
+    })
+
+    const tabs = [
+      { id: 'zones', label: 'Zones' },
+      { id: 'pricing', label: 'Tarification' },
+      { id: 'analytics', label: 'Analyses' }
+    ]
+
+    const totalRevenue = computed(() => {
+      return analytics.value.revenue_by_zone.reduce((sum, zone) => sum + zone.revenue, 0)
+    })
+
+    const totalDeliveries = computed(() => {
+      return analytics.value.revenue_by_zone.reduce((sum, zone) => sum + zone.deliveries, 0)
+    })
+
     const loadZones = async () => {
       try {
-        const data = await fetchZones();
-        zones.value = data;
+        const response = await zonesAPI.getZones({
+          zone_type: filters.type,
+          is_active: filters.active
+        })
+        zones.value = response.data
       } catch (error) {
-        console.error('Erreur lors du chargement des zones:', error);
+        console.error('Erreur lors du chargement des zones:', error)
       }
-    };
-    
-    const loadTrafficReports = async () => {
+    }
+
+    const loadAnalytics = async () => {
       try {
-        const data = await getTrafficReports({ active_only: true });
-        trafficReports.value = data;
+        const response = await zonesAPI.getAnalytics()
+        analytics.value = response.data
       } catch (error) {
-        console.error('Erreur lors du chargement des rapports de trafic:', error);
+        console.error('Erreur lors du chargement des analyses:', error)
       }
-    };
-    
-    const loadWeatherAlerts = async () => {
+    }
+
+    const selectZone = (zone) => {
+      selectedZone.value = zone
+    }
+
+    const saveZone = async () => {
       try {
-        const data = await getWeatherAlerts({ active_only: true });
-        weatherAlerts.value = data;
-      } catch (error) {
-        console.error('Erreur lors du chargement des alertes météo:', error);
-      }
-    };
-    
-    const loadActiveCouriers = async () => {
-      try {
-        const data = await getActiveCouriers();
-        activeCouriers.value = data;
-      } catch (error) {
-        console.error('Erreur lors du chargement des coursiers actifs:', error);
-      }
-    };
-    
-    const refreshZones = () => {
-      loadZones();
-      loadTrafficReports();
-      loadWeatherAlerts();
-      loadActiveCouriers();
-    };
-    
-    const handleMapClick = (event) => {
-      if (showAddZoneModal.value) {
-        newZone.value.coordinates.push({
-          lat: event.latlng.lat,
-          lng: event.latlng.lng
-        });
-      }
-    };
-    
-    const handleZoneClick = (zone) => {
-      // Afficher les détails de la zone
-      console.log('Zone cliquée:', zone);
-    };
-    
-    const removeCoordinate = (index) => {
-      newZone.value.coordinates.splice(index, 1);
-    };
-    
-    const clearCoordinates = () => {
-      newZone.value.coordinates = [];
-    };
-    
-    const addZone = async () => {
-      try {
-        await addZone(newZone.value);
-        showAddZoneModal.value = false;
+        if (editingZone.value) {
+          await zonesAPI.updateZone(editingZone.value.id, zoneForm)
+        } else {
+          await zonesAPI.createZone(zoneForm)
+        }
         
-        // Réinitialiser le formulaire
-        newZone.value = {
-          name: '',
-          type: 'traffic',
-          commune: '',
-          description: '',
-          coordinates: []
-        };
-        
-        // Recharger les zones
-        loadZones();
+        closeZoneModal()
+        loadZones()
+        loadAnalytics()
       } catch (error) {
-        console.error('Erreur lors de l\'ajout de la zone:', error);
+        console.error('Erreur lors de la sauvegarde:', error)
       }
-    };
-    
-    const deleteTrafficReport = async (reportId) => {
-      if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport de trafic ?')) {
+    }
+
+    const editZone = (zone) => {
+      editingZone.value = zone
+      Object.keys(zoneForm).forEach(key => {
+        if (zone[key] !== undefined) {
+          zoneForm[key] = zone[key]
+        }
+      })
+      showCreateModal.value = true
+    }
+
+    const deleteZone = async (id) => {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette zone ?')) {
         try {
-          await deleteTrafficReport(reportId);
-          loadTrafficReports();
+          await zonesAPI.deleteZone(id)
+          loadZones()
+          if (selectedZone.value?.id === id) {
+            selectedZone.value = null
+          }
         } catch (error) {
-          console.error('Erreur lors de la suppression du rapport de trafic:', error);
+          console.error('Erreur lors de la suppression:', error)
         }
       }
-    };
-    
-    const addWeatherAlert = async () => {
+    }
+
+    const toggleZoneStatus = async (zone) => {
       try {
-        await addWeatherAlert(newWeatherAlert.value);
-        showAddWeatherAlertModal.value = false;
-        
-        // Réinitialiser le formulaire
-        newWeatherAlert.value = {
-          alert_type: 'rain',
-          severity: 'medium',
-          commune: '',
-          description: '',
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
-          source: 'manual'
-        };
-        
-        // Recharger les alertes
-        loadWeatherAlerts();
+        await zonesAPI.updateZone(zone.id, { is_active: !zone.is_active })
+        loadZones()
       } catch (error) {
-        console.error('Erreur lors de l\'ajout de l\'alerte météo:', error);
+        console.error('Erreur lors de la modification du statut:', error)
       }
-    };
-    
-    const deleteWeatherAlert = async (alertId) => {
-      if (confirm('Êtes-vous sûr de vouloir supprimer cette alerte météo ?')) {
-        try {
-          await deleteWeatherAlert(alertId);
-          loadWeatherAlerts();
-        } catch (error) {
-          console.error('Erreur lors de la suppression de l\'alerte météo:', error);
-        }
+    }
+
+    const closeZoneModal = () => {
+      showCreateModal.value = false
+      editingZone.value = null
+      Object.keys(zoneForm).forEach(key => {
+        zoneForm[key] = ''
+      })
+    }
+
+    const getZoneTypeLabel = (type) => {
+      const labels = {
+        'city': 'Ville',
+        'district': 'District',
+        'custom': 'Personnalisée',
+        'exclusion': 'Exclusion'
       }
-    };
-    
-    const centerMapOn = (lat, lng) => {
-      mapCenter.value = { lat, lng };
-    };
-    
+      return labels[type] || type
+    }
+
+    const formatCurrency = (amount) => {
+      return new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'XOF'
+      }).format(amount || 0)
+    }
+
     onMounted(() => {
-      loadZones();
-      loadTrafficReports();
-      loadWeatherAlerts();
-      loadActiveCouriers();
-      
-      // Rafraîchir les données toutes les 30 secondes
-      const interval = setInterval(refreshZones, 30000);
-      
-      // Nettoyer l'intervalle lors de la destruction du composant
-      return () => clearInterval(interval);
-    });
-    
+      loadZones()
+      loadAnalytics()
+    })
+
     return {
+      activeTab,
       zones,
-      trafficReports,
-      weatherAlerts,
-      activeCouriers,
-      selectedZoneType,
-      selectedCommune,
-      communes,
-      filteredZones,
-      showAddZoneModal,
-      showAddWeatherAlertModal,
-      newZone,
-      newWeatherAlert,
-      mapCenter,
-      handleMapClick,
-      handleZoneClick,
-      removeCoordinate,
-      clearCoordinates,
-      addZone,
-      deleteTrafficReport,
-      addWeatherAlert,
-      deleteWeatherAlert,
-      refreshZones,
-      centerMapOn,
-      formatDateTime,
-      formatSeverity
-    };
+      selectedZone,
+      analytics,
+      showCreateModal,
+      editingZone,
+      filters,
+      zoneForm,
+      tabs,
+      totalRevenue,
+      totalDeliveries,
+      loadZones,
+      selectZone,
+      saveZone,
+      editZone,
+      deleteZone,
+      toggleZoneStatus,
+      closeZoneModal,
+      getZoneTypeLabel,
+      formatCurrency
+    }
   }
-};
+}
 </script>
 
 <style scoped>
-.zones-view {
+.zones-management {
   padding: 20px;
 }
 
-.page-title {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.controls {
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.stat-icon.active { background: #dcfce7; color: #16a34a; }
+.stat-icon.revenue { background: #fef3c7; color: #d97706; }
+.stat-icon.deliveries { background: #dbeafe; color: #2563eb; }
+
+.zones-layout {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 20px;
+  height: 600px;
+}
+
+.zones-list {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .filters {
+  padding: 15px;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
-  gap: 20px;
+  gap: 10px;
 }
 
-.filter-group {
+.filters select {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.zone-items {
+  height: calc(100% - 60px);
+  overflow-y: auto;
+}
+
+.zone-item {
+  padding: 15px;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.zone-item:hover {
+  background: #f9fafb;
+}
+
+.zone-item.selected {
+  background: #eff6ff;
+  border-left: 4px solid #2563eb;
+}
+
+.zone-item.inactive {
+  opacity: 0.6;
+}
+
+.zone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.zone-header h4 {
+  margin: 0;
+  color: #111827;
+}
+
+.zone-type {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.zone-type.city { background: #dbeafe; color: #1e40af; }
+.zone-type.district { background: #dcfce7; color: #15803d; }
+.zone-type.custom { background: #f3e8ff; color: #7c3aed; }
+.zone-type.exclusion { background: #fee2e2; color: #dc2626; }
+
+.zone-description {
+  color: #6b7280;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.zone-details {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.detail {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
+  font-size: 0.85em;
+  color: #6b7280;
 }
 
-.actions {
+.zone-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .map-container {
-  height: 500px;
-  margin-bottom: 20px;
+  background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.data-panels {
+.pricing-content {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.pricing-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 20px;
 }
 
-.panel {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+.pricing-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.panel h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 18px;
-  color: #333;
-}
-
-.panel-content {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.empty-state {
-  padding: 20px;
-  text-align: center;
-  color: #666;
-}
-
-.report-list, .alert-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.report-item, .alert-item {
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  background-color: #f9f9f9;
-}
-
-.report-item.severity-high, .alert-item.severity-high {
-  border-left: 4px solid #F44336;
-}
-
-.report-item.severity-medium, .alert-item.severity-medium {
-  border-left: 4px solid #FF9800;
-}
-
-.report-item.severity-low, .alert-item.severity-low {
-  border-left: 4px solid #4CAF50;
-}
-
-.report-header, .alert-header {
+.section-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 5px;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
-.report-severity, .alert-severity {
-  font-weight: 600;
+.pricing-rules,
+.restrictions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.report-time, .alert-expiry {
-  font-size: 12px;
-  color: #666;
-}
-
-.report-location, .alert-location {
-  margin-bottom: 10px;
-  font-weight: 500;
-}
-
-.alert-description {
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.report-actions, .alert-footer {
+.pricing-rule,
+.restriction-item {
+  background: #f9fafb;
+  padding: 15px;
+  border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.panel-actions {
-  margin-top: 15px;
-  text-align: center;
+.rule-content,
+.restriction-content {
+  flex: 1;
 }
 
-.btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+.rule-content h5,
+.restriction-content h5 {
+  margin: 0 0 5px 0;
+  color: #111827;
 }
 
-.btn-sm {
+.rule-content p,
+.restriction-content p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9em;
+}
+
+.adjustment,
+.restriction-value {
+  background: #2563eb;
+  color: white;
   padding: 4px 8px;
-  font-size: 12px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9em;
 }
+
+.rule-actions,
+.restriction-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2563eb;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.no-zone-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #6b7280;
+}
+
+.no-zone-selected i {
+  font-size: 4em;
+  margin-bottom: 20px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.btn-icon:hover { background: #e5e7eb; }
+.btn-icon.success { background: #dcfce7; color: #15803d; }
+.btn-icon.danger { background: #fee2e2; color: #dc2626; }
 
 .btn-primary {
-  background-color: #4361ee;
+  background: #2563eb;
   color: white;
-}
-
-.btn-primary:hover {
-  background-color: #3a56d4;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .btn-secondary {
-  background-color: #e0e0e0;
-  color: #333;
-}
-
-.btn-secondary:hover {
-  background-color: #d0d0d0;
-}
-
-.btn-danger {
-  background-color: #F44336;
+  background: #6b7280;
   color: white;
-}
-
-.btn-danger:hover {
-  background-color: #d32f2f;
-}
-
-.btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.close-btn {
-  background: none;
   border: none;
-  font-size: 18px;
+  padding: 8px 16px;
+  border-radius: 4px;
   cursor: pointer;
-  color: #666;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.form-group input, .form-group select, .form-group textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.help-text {
-  font-size: 12px;
-  color: #666;
-  margin-top: 5px;
-}
-
-.coordinates-list {
-  margin: 10px 0;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.coordinate-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 10px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  margin-bottom: 5px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-@media (max-width: 768px) {
-  .controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-  }
-  
-  .filters {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .data-panels {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
