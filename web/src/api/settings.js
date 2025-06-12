@@ -1,134 +1,81 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
 
-/**
- * Récupérer les paramètres généraux
- * @returns {Promise} - Promesse avec les paramètres généraux
- */
-export const getGeneralSettings = () => {
-  return axios.get(`${API_URL}/settings/general`)
-}
+const API_BASE_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000'
 
-/**
- * Mettre à jour les paramètres généraux
- * @param {Object} settings - Paramètres généraux
- * @returns {Promise} - Promesse avec les paramètres mis à jour
- */
-export const updateGeneralSettings = (settings) => {
-  return axios.put(`${API_URL}/settings/general`, settings)
-}
+const settingsApi = axios.create({
+  baseURL: `${API_BASE_URL}/api/v1/settings`,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
 
-/**
- * Récupérer les paramètres de notification
- * @returns {Promise} - Promesse avec les paramètres de notification
- */
-export const getNotificationSettings = () => {
-  return axios.get(`${API_URL}/settings/notifications`)
-}
+// Intercepteur pour ajouter le token d'authentification
+settingsApi.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  error => Promise.reject(error)
+)
 
-/**
- * Mettre à jour les paramètres de notification
- * @param {Object} settings - Paramètres de notification
- * @returns {Promise} - Promesse avec les paramètres mis à jour
- */
-export const updateNotificationSettings = (settings) => {
-  return axios.put(`${API_URL}/settings/notifications`, settings)
-}
+export default {
+  // Récupérer tous les paramètres
+  async getSettings() {
+    const response = await settingsApi.get('/')
+    return response.data
+  },
 
-/**
- * Récupérer les paramètres linguistiques
- * @returns {Promise} - Promesse avec les paramètres linguistiques
- */
-export const getLanguageSettings = () => {
-  return axios.get(`${API_URL}/settings/language`)
-}
+  // Mettre à jour les paramètres
+  async updateSettings(settings) {
+    const response = await settingsApi.put('/', settings)
+    return response.data
+  },
 
-/**
- * Mettre à jour les paramètres linguistiques
- * @param {Object} settings - Paramètres linguistiques
- * @returns {Promise} - Promesse avec les paramètres mis à jour
- */
-export const updateLanguageSettings = (settings) => {
-  return axios.put(`${API_URL}/settings/language`, settings)
-}
+  // Réinitialiser aux paramètres par défaut
+  async resetSettings() {
+    const response = await settingsApi.post('/reset')
+    return response.data
+  },
 
-/**
- * Récupérer les paramètres de sécurité
- * @returns {Promise} - Promesse avec les paramètres de sécurité
- */
-export const getSecuritySettings = () => {
-  return axios.get(`${API_URL}/settings/security`)
-}
+  // Récupérer l'historique des modifications
+  async getSettingsHistory() {
+    const response = await settingsApi.get('/history')
+    return response.data
+  },
 
-/**
- * Mettre à jour les paramètres de sécurité
- * @param {Object} settings - Paramètres de sécurité
- * @returns {Promise} - Promesse avec les paramètres mis à jour
- */
-export const updateSecuritySettings = (settings) => {
-  return axios.put(`${API_URL}/settings/security`, settings)
-}
+  // Exporter la configuration
+  async exportSettings() {
+    const response = await settingsApi.get('/export', {
+      responseType: 'blob'
+    })
+    return response
+  },
 
-/**
- * Récupérer les paramètres d'intégration
- * @returns {Promise} - Promesse avec les paramètres d'intégration
- */
-export const getIntegrationSettings = () => {
-  return axios.get(`${API_URL}/settings/integrations`)
-}
+  // Importer la configuration
+  async importSettings(file) {
+    const formData = new FormData()
+    formData.append('file', file)
 
-/**
- * Mettre à jour les paramètres d'intégration
- * @param {Object} settings - Paramètres d'intégration
- * @returns {Promise} - Promesse avec les paramètres mis à jour
- */
-export const updateIntegrationSettings = (settings) => {
-  return axios.put(`${API_URL}/settings/integrations`, settings)
-}
+    const response = await settingsApi.post('/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
 
-/**
- * Tester une intégration
- * @param {String} integration - Nom de l'intégration
- * @param {Object} credentials - Identifiants de l'intégration
- * @returns {Promise} - Promesse avec le résultat du test
- */
-export const testIntegration = (integration, credentials) => {
-  return axios.post(`${API_URL}/settings/integrations/test`, {
-    integration,
-    credentials,
-  })
-}
+  // Valider la configuration
+  async validateSettings(settings) {
+    const response = await settingsApi.post('/validate', settings)
+    return response.data
+  },
 
-/**
- * Récupérer les paramètres de livraison
- * @returns {Promise} - Promesse avec les paramètres de livraison
- */
-export const getDeliverySettings = () => {
-  return axios.get(`${API_URL}/settings/delivery`)
-}
-
-/**
- * Mettre à jour les paramètres de livraison
- * @param {Object} settings - Paramètres de livraison
- * @returns {Promise} - Promesse avec les paramètres mis à jour
- */
-export const updateDeliverySettings = (settings) => {
-  return axios.put(`${API_URL}/settings/delivery`, settings)
-}
-
-/**
- * Récupérer les paramètres de l'entreprise
- * @returns {Promise} - Promesse avec les paramètres de l'entreprise
- */
-export const getBusinessSettings = () => {
-  return axios.get(`${API_URL}/settings/business`)
-}
-
-/**
- * Mettre à jour les paramètres de l'entreprise
- * @param {Object} settings - Paramètres de l'entreprise
- * @returns {Promise} - Promesse avec les paramètres mis à jour
- */
-export const updateBusinessSettings = (settings) => {
-  return axios.put(`${API_URL}/settings/business`, settings)
+  // Tester la connectivité des services externes
+  async testConnections() {
+    const response = await settingsApi.post('/test-connections')
+    return response.data
+  }
 }
