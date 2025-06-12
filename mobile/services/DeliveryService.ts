@@ -336,6 +336,75 @@ export class DeliveryService {
       throw error
     }
   }
+
+  // Confirmer la livraison côté client avec notation
+  static async clientConfirmDelivery(
+    deliveryId: number,
+    rating: number,
+    comment?: string
+  ): Promise<Delivery> {
+    try {
+      const response = await api.post(`/api/v1/deliveries/${deliveryId}/client-confirm`, {
+        rating,
+        comment
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error confirming delivery:', error)
+      throw error
+    }
+  }
+
+  // Récupérer la timeline des statuts
+  static async getDeliveryStatusTimeline(deliveryId: number): Promise<any> {
+    try {
+      const response = await api.get(`/api/v1/deliveries/${deliveryId}/status-timeline`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching status timeline:', error)
+      throw error
+    }
+  }
+
+  // Placer une enchère sur une livraison
+  static async placeBid(bidData: {
+    delivery_id: number
+    proposed_price: number
+    estimated_duration?: number
+  }): Promise<any> {
+    try {
+      const response = await api.post(`/api/v1/deliveries/${bidData.delivery_id}/bid`, {
+        amount: bidData.proposed_price,
+        estimated_time: bidData.estimated_duration
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error placing bid:', error)
+      throw error
+    }
+  }
+
+  // Récupérer les enchères pour une livraison
+  static async getDeliveryBids(deliveryId: number): Promise<any[]> {
+    try {
+      const response = await api.get(`/api/v1/deliveries/${deliveryId}/bids`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching delivery bids:', error)
+      throw error
+    }
+  }
+
+  // Accepter une enchère
+  static async acceptBid(deliveryId: number, bidId: number): Promise<Delivery> {
+    try {
+      const response = await api.post(`/api/v1/deliveries/${deliveryId}/accept-bid/${bidId}`)
+      return response.data
+    } catch (error) {
+      console.error('Error accepting bid:', error)
+      throw error
+    }
+  }
 }
 
 export default DeliveryService
