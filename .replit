@@ -1,0 +1,10 @@
+modules = ["vue-node-18", "nodejs-18", "python-3.12", "bash"]
+compile = "make dev"
+run = "chmod +x start-local.sh && ./start-local.sh"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+build = ["sh", "-c", "make dev"]
+run = ["sh", "-c", "chmod +x start-local.sh && ./start-local.sh"]
