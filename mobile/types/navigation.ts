@@ -60,6 +60,12 @@ export type RootStackParamList = {
   KYCVerification: undefined
   PaymentMethods: undefined
   PrivacySettings: undefined
+  Wallet: undefined
+  AddFunds: undefined
+  TransactionHistory: undefined
+  ClientWallet: undefined
+  ComplaintsScreen: undefined
+  SupportChat: undefined
 }
 
 export type ClientTabParamList = {

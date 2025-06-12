@@ -8,7 +8,7 @@ from .core.config import settings
 from .db.base import Base
 from .db.session import get_db
 from .db.init_db import init_db
-from .api import auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport, assistant, courier
+from .api import auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport, assistant, courier, complaints
 from .websockets import tracking
 
 # Créer l'application FastAPI
@@ -46,6 +46,7 @@ app.include_router(manager.router, prefix=f"{settings.API_V1_STR}/manager", tags
 app.include_router(transport.router, prefix=f"{settings.API_V1_STR}/transport", tags=["Transport"])
 app.include_router(assistant.router, prefix=f"{settings.API_V1_STR}/assistant", tags=["Assistant"])
 app.include_router(courier.router, prefix=f"{settings.API_V1_STR}/courier", tags=["Coursiers"])
+app.include_router(complaints.router, prefix=f"{settings.API_V1_STR}/complaints", tags=["complaints"])
 
 # Endpoint WebSocket pour le tracking en temps réel
 @app.websocket("/ws/tracking/{delivery_id}")
@@ -61,7 +62,7 @@ async def startup_event():
     # Créer les tables dans la base de données si elles n'existent pas
     from .db.base import engine
     Base.metadata.create_all(bind=engine)
-    
+
     # Initialiser la base de données avec les données de base
     db = next(get_db())
     init_db(db)
@@ -89,7 +90,7 @@ async def get_active_client_deliveries(
     """Récupérer les livraisons actives du client"""
     if current_user.role != "client":
         raise HTTPException(status_code=403, detail="Accès réservé aux clients")
-    
+
     from .services.delivery import get_user_active_deliveries
     return get_user_active_deliveries(db, current_user.id)
 
@@ -105,7 +106,7 @@ async def get_nearby_merchants(
 ):
     """Récupérer les marchands à proximité"""
     from .services.market import get_nearby_merchants as get_merchants
-    
+
     # Si commune est fournie, convertir en coordonnées
     if commune and not lat and not lng:
         commune_coordinates = {
@@ -120,7 +121,7 @@ async def get_nearby_merchants(
             "Treichville": {"lat": 5.2833, "lng": -4.0000},
             "Yopougon": {"lat": 5.3167, "lng": -4.0833}
         }
-        
+
         if commune in commune_coordinates:
             lat = commune_coordinates[commune]["lat"]
             lng = commune_coordinates[commune]["lng"]
@@ -128,12 +129,12 @@ async def get_nearby_merchants(
             # Coordonnées par défaut (centre d'Abidjan)
             lat = 5.3167
             lng = -4.0167
-    
+
     # Si aucune coordonnée n'est fournie, utiliser le centre d'Abidjan
     if not lat or not lng:
         lat = 5.3167
         lng = -4.0167
-    
+
     return get_merchants(db, lat, lng, radius, category)
 
 @app.get("/merchants/{merchant_id}")
@@ -222,7 +223,7 @@ async def estimate_delivery_price_endpoint(
 ):
     """Estimer le prix d'une livraison"""
     from .services.delivery import estimate_delivery_price
-    
+
     # Extraire les paramètres de la requête
     pickup_lat = request.get("pickup_lat")
     pickup_lng = request.get("pickup_lng") 
@@ -232,11 +233,11 @@ async def estimate_delivery_price_endpoint(
     cargo_category = request.get("cargo_category") 
     is_fragile = request.get("is_fragile", False)
     is_express = request.get("is_express", False)
-    
+
     # Vérifier les paramètres obligatoires
     if not all([pickup_lat, pickup_lng, delivery_lat, delivery_lng]):
         raise HTTPException(status_code=400, detail="Coordonnées de pickup et delivery requises")
-    
+
     return estimate_delivery_price(
         pickup_lat,
         pickup_lng, 
