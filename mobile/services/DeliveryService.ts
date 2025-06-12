@@ -143,7 +143,7 @@ class DeliveryService {
     })    // Intercepteur pour ajouter le token d'authentification
     this.api.interceptors.request.use(
       async (config) => {
-        const token = await AsyncStorage.getItem('token')
+        const token = await AsyncStorage.getItem('@livraison_abidjan:auth_token')
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }

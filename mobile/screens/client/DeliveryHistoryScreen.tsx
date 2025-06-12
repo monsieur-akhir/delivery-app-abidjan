@@ -1,431 +1,204 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native"
-import { Text, Card, Chip, Divider, IconButton, Searchbar, Button, Menu } from "react-native-paper"
+import React, { useState, useEffect, useCallback } from "react"
+import { View, StyleSheet, ScrollView, RefreshControl } from "react-native"
+import { Text, Card, Button, Chip, ActivityIndicator, Searchbar, FAB } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
-import { useTranslation } from "react-i18next"
-// Removed unused import: import { useAuth } from "../../contexts/AuthContext"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { useDelivery } from "../../hooks"
-import { formatPrice, formatRelativeTime } from "../../utils/formatters"
+import { useNavigation } from "@react-navigation/native"
+import { useAuth } from "../../contexts/AuthContext"
+import DeliveryService from "../../services/DeliveryService"
+import { formatPrice, formatDate } from "../../utils/formatters"
+import type { Delivery, DeliveryStatus } from "../../types/models"
+import type { ClientTabParamList } from "../../types/navigation"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RootStackParamList } from "../../types/navigation"
-import type { Delivery } from "../../types/models"
-import type { DeliveryFilters } from "../../services/DeliveryService"
-import EmptyState from "../../components/EmptyState"
-import DeliveryStatusBadge from "../../components/DeliveryStatusBadge"
-import ErrorView from "../../components/ErrorView"
-import { useFocusEffect } from "@react-navigation/native"
-import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated"
 
-type DeliveryHistoryScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, "DeliveryHistory">
-}
+type NavigationProp = NativeStackNavigationProp<ClientTabParamList, "DeliveryHistory">
 
-type FilterOption = "all" | "completed" | "cancelled" | "in_progress"
-
-const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigation }) => {
-  const { t } = useTranslation()
-  const { isConnected, isOfflineMode } = useNetwork()
-  const { getClientDeliveryHistory } = useDelivery()
+const DeliveryHistoryScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>()
+  const { user } = useAuth()
 
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
-  const [filteredDeliveries, setFilteredDeliveries] = useState<Delivery[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [refreshing, setRefreshing] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>("")
-  const [currentFilter, setCurrentFilter] = useState<FilterOption>("all")
-  const [filterMenuVisible, setFilterMenuVisible] = useState<boolean>(false)
-  const [sortMenuVisible, setSortMenuVisible] = useState<boolean>(false)
-  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "price_high" | "price_low">("newest")
-  const [page, setPage] = useState<number>(1)
-  const [hasMoreData, setHasMoreData] = useState<boolean>(true)
-  const [loadingMore, setLoadingMore] = useState<boolean>(false)
+  const [selectedStatus, setSelectedStatus] = useState<DeliveryStatus | "all">("all")
 
-  // Charger l'historique des livraisons
-  const loadDeliveryHistory = useCallback(async (refresh = true): Promise<void> => {
-    if (refresh) {
-      setLoading(true)
-      setPage(1)
-      setHasMoreData(true)
-    }
+  const statusFilters: Array<{ key: DeliveryStatus | "all"; label: string; color: string }> = [
+    { key: "all", label: "Toutes", color: "#757575" },
+    { key: "pending", label: "En attente", color: "#FF9800" },
+    { key: "accepted", label: "Acceptées", color: "#2196F3" },
+    { key: "in_progress", label: "En cours", color: "#FF6B00" },
+    { key: "delivered", label: "Livrées", color: "#4CAF50" },
+    { key: "cancelled", label: "Annulées", color: "#F44336" },
+  ]
 
+  const loadDeliveries = useCallback(async () => {
     try {
-      if (!isConnected && !isOfflineMode) {
-        setError(t("common.offlineError"))
-        setLoading(false)
-        return
+      setLoading(true)
+      const filters = {
+        status: selectedStatus !== "all" ? selectedStatus : undefined,
+        search: searchQuery || undefined,
       }
-
-      // Prepare filter object for API
-      const filterObj: DeliveryFilters = {};
-      
-      // Add status filter
-      if (currentFilter === "completed") filterObj.status = "completed";
-      else if (currentFilter === "cancelled") filterObj.status = "cancelled";
-      else if (currentFilter === "in_progress") {
-        // For in_progress, we'll just use the in_progress status
-        // The backend logic handles including relevant statuses
-        filterObj.status = "in_progress";
-      }
-      
-      // Add search term if present
-      if (searchQuery) {
-        filterObj.search = searchQuery;
-      }
-      
-      // Add pagination
-      filterObj.skip = (page - 1) * 10;
-      filterObj.limit = 10;
-
-      const data = await getClientDeliveryHistory(filterObj);
-
-      if (refresh) {
-        setDeliveries(data || []);
-        setFilteredDeliveries(data || []);
-      } else {
-        if (!data || data.length === 0) {
-          setHasMoreData(false);
-        } else {
-          setDeliveries((prev) => [...prev, ...data]);
-          setFilteredDeliveries((prev) => [...prev, ...data]);
-        }
-      }
-
-      setError(null);
+      const data = await DeliveryService.getClientDeliveryHistory(filters)
+      setDeliveries(data)
     } catch (error) {
-      console.error("Error loading delivery history:", error);
-      setError(t("deliveryHistory.errorLoading"));
+      console.error("Error loading deliveries:", error)
     } finally {
-      setLoading(false);
-      setRefreshing(false);
-      setLoadingMore(false);
+      setLoading(false)
     }
-  }, [currentFilter, getClientDeliveryHistory, isConnected, isOfflineMode, t, page, searchQuery])
+  }, [selectedStatus, searchQuery])
 
-  // Charger les données initiales lorsque l'écran est affiché
-  useFocusEffect(
-    useCallback(() => {
-      loadDeliveryHistory()
-      return () => {
-        // Nettoyage si nécessaire
-      }
-    }, [loadDeliveryHistory]),
-  )
-
-  // Actualiser les données
-  const onRefresh = async (): Promise<void> => {
-    setRefreshing(true)
-    await loadDeliveryHistory()
-  }
-
-  // Charger plus de données
-  const loadMoreData = async (): Promise<void> => {
-    if (loadingMore || !hasMoreData) return
-
-    setLoadingMore(true)
-    setPage((prev) => prev + 1)
-    await loadDeliveryHistory(false)
-  }
-
-  // Filtrer les livraisons
-  const filterDeliveries = useCallback((): void => {
-    let filtered = [...deliveries]
-
-    // Filtrer par recherche
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (delivery) =>
-          delivery.id.toString().includes(query) ||
-          delivery.pickup_address.toLowerCase().includes(query) ||
-          delivery.delivery_address.toLowerCase().includes(query) ||
-          (delivery.courier?.full_name && delivery.courier.full_name.toLowerCase().includes(query)),
-      )
-    }
-
-    // Filtrer par statut
-    if (currentFilter !== "all") {
-      filtered = filtered.filter((delivery) => {
-        if (currentFilter === "completed") return delivery.status === "completed"
-        if (currentFilter === "cancelled") return delivery.status === "cancelled"
-        if (currentFilter === "in_progress") return ["accepted", "in_progress", "picked_up"].includes(delivery.status)
-        return true
-      })
-    }
-
-    // Trier les résultats
-    filtered.sort((a, b) => {
-      if (sortOrder === "newest") {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      } else if (sortOrder === "oldest") {
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      } else if (sortOrder === "price_high") {
-        return (b.final_price || b.proposed_price) - (a.final_price || a.proposed_price)
-      } else if (sortOrder === "price_low") {
-        return (a.final_price || a.proposed_price) - (b.final_price || b.proposed_price)
-      }
-      return 0
-    })
-
-    setFilteredDeliveries(filtered)
-  }, [searchQuery, currentFilter, sortOrder, deliveries])
-  
-  // Apply filters when dependencies change
   useEffect(() => {
-    filterDeliveries()
-  }, [filterDeliveries])
+    loadDeliveries()
+  }, [loadDeliveries])
 
-  // Afficher les détails d'une livraison
-  const viewDeliveryDetails = (deliveryId: string): void => {
-    navigation.navigate("DeliveryDetails", { deliveryId })
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await loadDeliveries()
+    setRefreshing(false)
   }
 
-  // Rendu d'un élément de livraison
-  const renderDeliveryItem = ({ item, index }: { item: Delivery; index: number }): React.ReactElement => (
-    <Animated.View entering={FadeInUp.delay(index * 100).springify()} exiting={FadeOutDown.springify()}>
-      <Card style={styles.deliveryCard} onPress={() => viewDeliveryDetails(item.id.toString())} mode="elevated">
-        <Card.Content>
-          <View style={styles.deliveryHeader}>
-            <View style={styles.deliveryInfo}>
-              <Text style={styles.deliveryId}>Livraison #{item.id}</Text>
-              <Text style={styles.deliveryDate}>{formatRelativeTime(item.created_at)}</Text>
-            </View>
-            <DeliveryStatusBadge status={item.status} />
-          </View>
+  const getStatusColor = (status: DeliveryStatus): string => {
+    const statusFilter = statusFilters.find(f => f.key === status)
+    return statusFilter?.color || "#757575"
+  }
 
-          <Divider style={styles.divider} />
+  const getStatusLabel = (status: DeliveryStatus): string => {
+    const statusFilter = statusFilters.find(f => f.key === status)
+    return statusFilter?.label || status
+  }
 
-          <View style={styles.addressContainer}>
-            <View style={styles.addressRow}>
-              <View style={styles.addressDot} />
-              <View style={styles.addressTextContainer}>
-                <Text style={styles.addressLabel}>{t("deliveryHistory.pickup")}</Text>
-                <Text style={styles.addressText}>{item.pickup_address}</Text>
-                <Text style={styles.communeText}>{item.pickup_commune}</Text>
-              </View>
-            </View>
-
-            <View style={styles.addressLine} />
-
-            <View style={styles.addressRow}>
-              <View style={[styles.addressDot, styles.destinationDot]} />
-              <View style={styles.addressTextContainer}>
-                <Text style={styles.addressLabel}>{t("deliveryHistory.delivery")}</Text>
-                <Text style={styles.addressText}>{item.delivery_address}</Text>
-                <Text style={styles.communeText}>{item.delivery_commune}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.deliveryFooter}>
-            <Text style={styles.deliveryPrice}>{formatPrice(item.final_price || item.proposed_price)} FCFA</Text>
-
-            {item.courier && (
-              <Chip icon="account" style={styles.courierChip}>
-                {item.courier.full_name}
-              </Chip>
-            )}
-          </View>
-        </Card.Content>
-      </Card>
-    </Animated.View>
+  const filteredDeliveries = deliveries.filter(delivery => 
+    searchQuery === "" || 
+    delivery.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    delivery.pickup_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    delivery.delivery_address.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Rendu du pied de liste (chargement plus)
-  const renderFooter = (): React.ReactElement | null => {
-    if (!loadingMore) return null
-
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#FF6B00" />
-        <Text style={styles.footerText}>{t("common.loadingMore")}</Text>
-      </View>
-    )
-  }
-
-  // Rendu principal
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("deliveryHistory.title")}</Text>
-        <View style={{ width: 48 }} />
+        <Text style={styles.title}>Mes livraisons</Text>
       </View>
 
-      {isOfflineMode && (
-        <View style={styles.offlineBanner}>
-          <Feather name="wifi-off" size={16} color="#FFFFFF" />
-          <Text style={styles.offlineText}>{t("common.offlineMode")}</Text>
-        </View>
-      )}
+      <Searchbar
+        placeholder="Rechercher une livraison..."
+        onChangeText={setSearchQuery}
+        value={searchQuery}
+        style={styles.searchbar}
+        iconColor="#FF6B00"
+      />
 
-      <View style={styles.searchContainer}>
-        <Searchbar
-          placeholder={t("deliveryHistory.search")}
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-          iconColor="#FF6B00"
-        />
-      </View>
-
-      <View style={styles.filtersContainer}>
-        <View style={styles.filterButtons}>
-          <Menu
-            visible={filterMenuVisible}
-            onDismiss={() => setFilterMenuVisible(false)}
-            anchor={
-              <Button
-                mode="outlined"
-                onPress={() => setFilterMenuVisible(true)}
-                icon="filter-variant"
-                style={styles.filterButton}
-              >
-                {currentFilter === "all"
-                  ? t("deliveryHistory.allDeliveries")
-                  : currentFilter === "completed"
-                    ? t("deliveryHistory.completed")
-                    : currentFilter === "cancelled"
-                      ? t("deliveryHistory.cancelled")
-                      : t("deliveryHistory.inProgress")}
-              </Button>
-            }
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.filtersContainer}
+      >
+        {statusFilters.map((filter) => (
+          <Chip
+            key={filter.key}
+            selected={selectedStatus === filter.key}
+            onPress={() => setSelectedStatus(filter.key)}
+            style={[
+              styles.filterChip, 
+              selectedStatus === filter.key && { backgroundColor: filter.color }
+            ]}
+            textStyle={selectedStatus === filter.key ? styles.selectedChipText : {}}
           >
-            <Menu.Item
-              onPress={() => {
-                setCurrentFilter("all")
-                setFilterMenuVisible(false)
-              }}
-              title={t("deliveryHistory.allDeliveries")}
-              leadingIcon="package-variant"
-            />
-            <Menu.Item
-              onPress={() => {
-                setCurrentFilter("completed")
-                setFilterMenuVisible(false)
-              }}
-              title={t("deliveryHistory.completed")}
-              leadingIcon="check-circle"
-            />
-            <Menu.Item
-              onPress={() => {
-                setCurrentFilter("in_progress")
-                setFilterMenuVisible(false)
-              }}
-              title={t("deliveryHistory.inProgress")}
-              leadingIcon="progress-clock"
-            />
-            <Menu.Item
-              onPress={() => {
-                setCurrentFilter("cancelled")
-                setFilterMenuVisible(false)
-              }}
-              title={t("deliveryHistory.cancelled")}
-              leadingIcon="close-circle"
-            />
-          </Menu>
+            {filter.label}
+          </Chip>
+        ))}
+      </ScrollView>
 
-          <Menu
-            visible={sortMenuVisible}
-            onDismiss={() => setSortMenuVisible(false)}
-            anchor={
-              <Button mode="outlined" onPress={() => setSortMenuVisible(true)} icon="sort" style={styles.sortButton}>
-                {sortOrder === "newest"
-                  ? t("deliveryHistory.newest")
-                  : sortOrder === "oldest"
-                    ? t("deliveryHistory.oldest")
-                    : sortOrder === "price_high"
-                      ? t("deliveryHistory.priceHigh")
-                      : t("deliveryHistory.priceLow")}
-              </Button>
-            }
-          >
-            <Menu.Item
-              onPress={() => {
-                setSortOrder("newest")
-                setSortMenuVisible(false)
-              }}
-              title={t("deliveryHistory.newest")}
-              leadingIcon="clock-outline"
-            />
-            <Menu.Item
-              onPress={() => {
-                setSortOrder("oldest")
-                setSortMenuVisible(false)
-              }}
-              title={t("deliveryHistory.oldest")}
-              leadingIcon="clock-outline"
-            />
-            <Menu.Item
-              onPress={() => {
-                setSortOrder("price_high")
-                setSortMenuVisible(false)
-              }}
-              title={t("deliveryHistory.priceHigh")}
-              leadingIcon="cash"
-            />
-            <Menu.Item
-              onPress={() => {
-                setSortOrder("price_low")
-                setSortMenuVisible(false)
-              }}
-              title={t("deliveryHistory.priceLow")}
-              leadingIcon="cash"
-            />
-          </Menu>
-        </View>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />
+        }
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF6B00" />
+            <Text style={styles.loadingText}>Chargement...</Text>
+          </View>
+        ) : filteredDeliveries.length > 0 ? (
+          filteredDeliveries.map((delivery) => (
+            <Card
+              key={delivery.id}
+              style={styles.deliveryCard}
+              onPress={() => navigation.navigate("DeliveryDetails", { deliveryId: delivery.id.toString() })}
+            >
+              <Card.Content>
+                <View style={styles.deliveryHeader}>
+                  <View style={styles.deliveryInfo}>
+                    <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
+                    <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
+                  </View>
+                  <Chip 
+                    style={[styles.statusChip, { backgroundColor: getStatusColor(delivery.status) }]}
+                    textStyle={styles.statusText}
+                  >
+                    {getStatusLabel(delivery.status)}
+                  </Chip>
+                </View>
 
-        {filteredDeliveries.length > 0 && (
-          <Text style={styles.resultsCount}>
-            {filteredDeliveries.length} {t("deliveryHistory.results")}
-          </Text>
+                <Text style={styles.deliveryDescription} numberOfLines={2}>
+                  {delivery.description}
+                </Text>
+
+                <View style={styles.addressContainer}>
+                  <View style={styles.addressRow}>
+                    <Feather name="map-pin" size={16} color="#FF6B00" />
+                    <Text style={styles.addressText} numberOfLines={1}>
+                      De: {delivery.pickup_address}
+                    </Text>
+                  </View>
+                  <View style={styles.addressRow}>
+                    <Feather name="flag" size={16} color="#4CAF50" />
+                    <Text style={styles.addressText} numberOfLines={1}>
+                      À: {delivery.delivery_address}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.deliveryFooter}>
+                  <Text style={styles.priceText}>
+                    {formatPrice(delivery.final_price || delivery.proposed_price)} FCFA
+                  </Text>
+                  {delivery.status === "in_progress" && (
+                    <Button
+                      mode="contained"
+                      size="small"
+                      onPress={() => navigation.navigate("TrackDelivery", { deliveryId: delivery.id.toString() })}
+                      style={styles.trackButton}
+                    >
+                      Suivre
+                    </Button>
+                  )}
+                </View>
+              </Card.Content>
+            </Card>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Feather name="package" size={64} color="#CCCCCC" />
+            <Text style={styles.emptyStateTitle}>Aucune livraison trouvée</Text>
+            <Text style={styles.emptyStateText}>
+              {searchQuery 
+                ? "Aucune livraison ne correspond à votre recherche"
+                : "Vous n'avez encore aucune livraison"
+              }
+            </Text>
+          </View>
         )}
-      </View>
+      </ScrollView>
 
-      {loading && !refreshing ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("deliveryHistory.loading")}</Text>
-        </View>
-      ) : error ? (
-        <ErrorView message={error} onRetry={loadDeliveryHistory} icon="alert-circle" />
-      ) : filteredDeliveries.length === 0 ? (
-        <EmptyState
-          icon="package"
-          title={t("deliveryHistory.noDeliveries")}
-          message={
-            searchQuery
-              ? t("deliveryHistory.noSearchResults")
-              : currentFilter !== "all"
-                ? t("deliveryHistory.noFilterResults")
-                : t("deliveryHistory.emptyHistory")
-          }
-          buttonText={searchQuery || currentFilter !== "all" ? t("deliveryHistory.clearFilters") : undefined}
-          onButtonPress={() => {
-            setSearchQuery("")
-            setCurrentFilter("all")
-          }}
-        />
-      ) : (
-        <FlatList
-          data={filteredDeliveries}
-          renderItem={renderDeliveryItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContainer}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />}
-          onEndReached={loadMoreData}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={renderFooter}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        color="#FFFFFF"
+        onPress={() => navigation.navigate("CreateDelivery")}
+      />
     </SafeAreaView>
   )
 }
@@ -436,89 +209,55 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    borderBottomColor: "#E0E0E0",
   },
-  headerTitle: {
-    fontSize: 18,
+  title: {
+    fontSize: 20,
     fontWeight: "bold",
     color: "#212121",
   },
-  offlineBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FF9800",
-    padding: 8,
-  },
-  offlineText: {
-    color: "#FFFFFF",
-    marginLeft: 8,
-    fontWeight: "bold",
-  },
-  searchContainer: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-  },
-  searchBar: {
+  searchbar: {
+    margin: 16,
     elevation: 2,
     backgroundColor: "#FFFFFF",
   },
   filtersContainer: {
-    padding: 16,
-    paddingTop: 0,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
-  filterButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  filterButton: {
-    flex: 1,
+  filterChip: {
     marginRight: 8,
-    borderColor: "#DDDDDD",
+    backgroundColor: "#FFFFFF",
   },
-  sortButton: {
+  selectedChipText: {
+    color: "#FFFFFF",
+  },
+  content: {
     flex: 1,
-    marginLeft: 8,
-    borderColor: "#DDDDDD",
-  },
-  resultsCount: {
-    marginTop: 8,
-    fontSize: 12,
-    color: "#757575",
-    textAlign: "right",
+    paddingHorizontal: 16,
   },
   loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
+    padding: 40,
     alignItems: "center",
-    padding: 20,
+    justifyContent: "center",
   },
   loadingText: {
     marginTop: 16,
     color: "#757575",
   },
-  listContainer: {
-    padding: 16,
-    paddingBottom: 80,
-  },
   deliveryCard: {
-    marginBottom: 16,
-    borderRadius: 8,
+    marginBottom: 12,
     elevation: 2,
+    backgroundColor: "#FFFFFF",
   },
   deliveryHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    marginBottom: 8,
   },
   deliveryInfo: {
     flex: 1,
@@ -533,75 +272,69 @@ const styles = StyleSheet.create({
     color: "#757575",
     marginTop: 2,
   },
-  divider: {
-    marginVertical: 12,
+  statusChip: {
+    alignSelf: "flex-start",
+  },
+  statusText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  deliveryDescription: {
+    fontSize: 14,
+    color: "#424242",
+    marginBottom: 12,
   },
   addressContainer: {
     marginBottom: 12,
   },
   addressRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 8,
-  },
-  addressDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#FF6B00",
-    marginTop: 4,
-    marginRight: 8,
-  },
-  destinationDot: {
-    backgroundColor: "#4CAF50",
-  },
-  addressLine: {
-    width: 2,
-    height: 20,
-    backgroundColor: "#E0E0E0",
-    marginLeft: 5,
-    marginBottom: 8,
-  },
-  addressTextContainer: {
-    flex: 1,
-  },
-  addressLabel: {
-    fontSize: 12,
-    color: "#757575",
-    marginBottom: 2,
+    alignItems: "center",
+    marginBottom: 4,
   },
   addressText: {
-    fontSize: 14,
-    color: "#212121",
-  },
-  communeText: {
-    fontSize: 12,
-    color: "#757575",
-    marginTop: 2,
+    flex: 1,
+    fontSize: 13,
+    color: "#616161",
+    marginLeft: 8,
   },
   deliveryFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  deliveryPrice: {
+  priceText: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#FF6B00",
   },
-  courierChip: {
-    backgroundColor: "#F5F5F5",
-    height: 28,
+  trackButton: {
+    backgroundColor: "#FF6B00",
   },
-  footerLoader: {
-    flexDirection: "row",
-    justifyContent: "center",
+  emptyState: {
     alignItems: "center",
-    padding: 16,
+    justifyContent: "center",
+    padding: 40,
   },
-  footerText: {
-    marginLeft: 8,
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#757575",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: "#757575",
+    textAlign: "center",
+  },
+  fab: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#FF6B00",
   },
 })
 

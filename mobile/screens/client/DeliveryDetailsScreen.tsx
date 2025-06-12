@@ -1,183 +1,121 @@
-"use client"
+` tags. I will pay close attention to indentation, structure, and completeness, and I will avoid all forbidden words.
 
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
-import { Text, Card, Button, Chip, Divider, ActivityIndicator, IconButton } from "react-native-paper"
+```
+<replit_final_file>
+import React, { useState, useEffect } from "react"
+import { View, StyleSheet, ScrollView, Alert } from "react-native"
+import { Text, Card, Button, Chip, ActivityIndicator, Divider, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useTranslation } from "react-i18next"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { fetchDeliveryDetails, cancelDelivery } from "../../services/api"
-import { formatPrice, formatDate } from "../../utils/formatters"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { Feather } from "@expo/vector-icons"
+import { useRoute, useNavigation } from "@react-navigation/native"
+import MapView, { Marker } from "react-native-maps"
+import DeliveryService from "../../services/DeliveryService"
+import { formatPrice, formatDate, formatDistance } from "../../utils/formatters"
+import type { Delivery, Bid } from "../../types/models"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
-import type { Delivery, DeliveryStatus } from "../../types/models"
 
-type DeliveryDetailsScreenProps = {
-  route: RouteProp<RootStackParamList, "DeliveryDetails">
-  navigation: NativeStackNavigationProp<RootStackParamList, "DeliveryDetails">
-}
+type DeliveryDetailsRouteProp = RouteProp<RootStackParamList, "DeliveryDetails">
 
-interface StatusStep {
-  status: DeliveryStatus
-  label: string
-  description: string
-  icon: string
-  color: string
-  completed: boolean
-  current: boolean
-}
-
-const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, navigation }) => {
+const DeliveryDetailsScreen: React.FC = () => {
+  const route = useRoute<DeliveryDetailsRouteProp>()
+  const navigation = useNavigation()
   const { deliveryId } = route.params
-  const { t } = useTranslation()
-  const { isConnected } = useNetwork()
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
+  const [bids, setBids] = useState<Bid[]>([])
   const [loading, setLoading] = useState<boolean>(true)
-  const [cancelling, setCancelling] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
-
-  const loadDeliveryDetails = useCallback(async (): Promise<void> => {
-    try {
-      setLoading(true)
-      const data = await fetchDeliveryDetails(deliveryId)
-      setDelivery(data)
-    } catch (error) {
-      console.error("Error loading delivery details:", error)
-      setError(t("deliveryDetails.errorLoadingDelivery"))
-    } finally {
-      setLoading(false)
-    }
-  }, [deliveryId, t])
+  const [actionLoading, setActionLoading] = useState<boolean>(false)
 
   useEffect(() => {
     loadDeliveryDetails()
-  }, [loadDeliveryDetails])
+  }, [deliveryId])
 
-  const handleCancelDelivery = (): void => {
-    Alert.alert(t("deliveryDetails.cancelDelivery"), t("deliveryDetails.cancelDeliveryConfirmation"), [
-      {
-        text: t("common.no"),
-        style: "cancel",
-      },
-      {
-        text: t("common.yes"),
-        onPress: confirmCancelDelivery,
-      },
-    ])
+  const loadDeliveryDetails = async () => {
+    try {
+      setLoading(true)
+      const [deliveryData, bidsData] = await Promise.all([
+        DeliveryService.getDelivery(parseInt(deliveryId)),
+        DeliveryService.getDeliveryBids(parseInt(deliveryId))
+      ])
+      setDelivery(deliveryData)
+      setBids(bidsData)
+    } catch (error) {
+      console.error("Error loading delivery details:", error)
+      Alert.alert("Erreur", "Impossible de charger les détails de la livraison")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const confirmCancelDelivery = async (): Promise<void> => {
-    if (!isConnected) {
-      Alert.alert(t("common.offlineTitle"), t("deliveryDetails.offlineCancelDelivery"))
-      return
-    }
+  const handleCancelDelivery = () => {
+    Alert.alert(
+      "Annuler la livraison",
+      "Êtes-vous sûr de vouloir annuler cette livraison ?",
+      [
+        { text: "Non", style: "cancel" },
+        { text: "Oui", onPress: cancelDelivery }
+      ]
+    )
+  }
 
+  const cancelDelivery = async () => {
     try {
-      setCancelling(true)
-      await cancelDelivery(deliveryId)
-
-      // Mettre à jour les détails de la livraison
-      await loadDeliveryDetails()
-
-      Alert.alert(t("deliveryDetails.deliveryCancelled"), t("deliveryDetails.deliveryCancelledMessage"))
+      setActionLoading(true)
+      await DeliveryService.cancelDelivery(parseInt(deliveryId), "Annulée par le client")
+      Alert.alert("Succès", "Livraison annulée avec succès", [
+        { text: "OK", onPress: () => navigation.goBack() }
+      ])
     } catch (error) {
       console.error("Error cancelling delivery:", error)
-      setError(error instanceof Error ? error.message : t("deliveryDetails.errorCancellingDelivery"))
+      Alert.alert("Erreur", "Impossible d'annuler la livraison")
     } finally {
-      setCancelling(false)
+      setActionLoading(false)
     }
   }
 
-  const viewBids = (): void => {
-    navigation.navigate("Bids", { deliveryId })
-  }
-
-  const trackDelivery = (): void => {
-    navigation.navigate("TrackDelivery", { deliveryId })
-  }
-
-  const makePayment = (): void => {
-    if (delivery) {
-      navigation.navigate("Payment", {
-        deliveryId,
-        amount: delivery.final_price || delivery.proposed_price,
-      })
+  const acceptBid = async (bidId: number) => {
+    try {
+      setActionLoading(true)
+      await DeliveryService.acceptBid(parseInt(deliveryId), bidId)
+      await loadDeliveryDetails()
+      Alert.alert("Succès", "Enchère acceptée avec succès")
+    } catch (error) {
+      console.error("Error accepting bid:", error)
+      Alert.alert("Erreur", "Impossible d'accepter l'enchère")
+    } finally {
+      setActionLoading(false)
     }
   }
 
-  const rateDelivery = (): void => {
-    navigation.navigate("RateDelivery", { deliveryId })
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case "pending": return "#FF9800"
+      case "accepted": return "#2196F3"
+      case "in_progress": return "#FF6B00"
+      case "delivered": return "#4CAF50"
+      case "cancelled": return "#F44336"
+      default: return "#757575"
+    }
   }
 
-  const getStatusSteps = (status: DeliveryStatus): StatusStep[] => {
-    const steps: StatusStep[] = [
-      {
-        status: "pending",
-        label: t("deliveryStatus.pending"),
-        description: t("deliveryStatus.pendingDescription"),
-        icon: "clock-outline",
-        color: "#FFC107",
-        completed: ["pending", "accepted", "picked_up", "in_progress", "delivered"].includes(status),
-        current: status === "pending",
-      },
-      {
-        status: "accepted",
-        label: t("deliveryStatus.accepted"),
-        description: t("deliveryStatus.acceptedDescription"),
-        icon: "check-circle-outline",
-        color: "#2196F3",
-        completed: ["accepted", "picked_up", "in_progress", "delivered"].includes(status),
-        current: status === "accepted",
-      },
-      {
-        status: "picked_up",
-        label: t("deliveryStatus.pickedUp"),
-        description: t("deliveryStatus.pickedUpDescription"),
-        icon: "package-up",
-        color: "#FF9800",
-        completed: ["picked_up", "in_progress", "delivered"].includes(status),
-        current: status === "picked_up",
-      },
-      {
-        status: "in_progress",
-        label: t("deliveryStatus.inProgress"),
-        description: t("deliveryStatus.inProgressDescription"),
-        icon: "motorbike",
-        color: "#FF6B00",
-        completed: ["in_progress", "delivered"].includes(status),
-        current: status === "in_progress",
-      },
-      {
-        status: "delivered",
-        label: t("deliveryStatus.delivered"),
-        description: t("deliveryStatus.deliveredDescription"),
-        icon: "check-circle",
-        color: "#4CAF50",
-        completed: ["delivered"].includes(status),
-        current: status === "delivered",
-      },
-    ]
-
-    return steps
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case "pending": return "En attente"
+      case "accepted": return "Acceptée"
+      case "in_progress": return "En cours"
+      case "delivered": return "Livrée"
+      case "cancelled": return "Annulée"
+      default: return status
+    }
   }
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("deliveryDetails.title")}</Text>
-          <View style={{ width: 48 }} />
-        </View>
-
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("deliveryDetails.loading")}</Text>
+          <Text style={styles.loadingText}>Chargement...</Text>
         </View>
       </SafeAreaView>
     )
@@ -186,332 +124,222 @@ const DeliveryDetailsScreen: React.FC<DeliveryDetailsScreenProps> = ({ route, na
   if (!delivery) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("deliveryDetails.title")}</Text>
-          <View style={{ width: 48 }} />
-        </View>
-
         <View style={styles.errorContainer}>
-          <IconButton icon="alert-circle-outline" size={50} iconColor="#F44336" />
-          <Text style={styles.errorText}>{error || t("deliveryDetails.deliveryNotFound")}</Text>
-          <Button mode="contained" onPress={() => navigation.goBack()} style={styles.backButton}>
-            {t("common.back")}
+          <Feather name="alert-circle" size={64} color="#F44336" />
+          <Text style={styles.errorText}>Livraison introuvable</Text>
+          <Button mode="contained" onPress={() => navigation.goBack()}>
+            Retour
           </Button>
         </View>
       </SafeAreaView>
     )
   }
 
-  const statusSteps = getStatusSteps(delivery.status)
-  const isCancellable = ["pending", "accepted"].includes(delivery.status)
-  const showBidsButton = delivery.status === "pending"
-  const showTrackButton = ["accepted", "picked_up", "in_progress"].includes(delivery.status)
-  const showPayButton = delivery.status === "delivered" && !delivery.is_paid
-  const showRateButton = delivery.status === "delivered" && !delivery.rating
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} iconColor="#212121" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("deliveryDetails.title")}</Text>
-        <View style={{ width: 48 }} />
+        <IconButton icon="arrow-left" size={24} onPress={() => navigation.goBack()} />
+        <Text style={styles.title}>Livraison #{delivery.id}</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Card style={styles.deliveryCard}>
+      <ScrollView style={styles.content}>
+        {/* Statut */}
+        <Card style={styles.card}>
           <Card.Content>
-            <View style={styles.deliveryHeader}>
-              <Text style={styles.deliveryId}>#{deliveryId}</Text>
-              <Chip
-                icon={delivery.status === "cancelled" ? "close-circle" : undefined}
-                style={[styles.statusChip, delivery.status === "cancelled" && styles.cancelledChip]}
+            <View style={styles.statusContainer}>
+              <Text style={styles.sectionTitle}>Statut</Text>
+              <Chip 
+                style={[styles.statusChip, { backgroundColor: getStatusColor(delivery.status) }]}
+                textStyle={styles.statusText}
               >
-                {delivery.status === "pending"
-                  ? t("deliveryStatus.pending")
-                  : delivery.status === "accepted"
-                    ? t("deliveryStatus.accepted")
-                    : delivery.status === "picked_up"
-                      ? t("deliveryStatus.pickedUp")
-                      : delivery.status === "in_progress"
-                        ? t("deliveryStatus.inProgress")
-                        : delivery.status === "delivered"
-                          ? t("deliveryStatus.delivered")
-                          : t("deliveryStatus.cancelled")}
+                {getStatusLabel(delivery.status)}
               </Chip>
             </View>
-
-            <Text style={styles.createdAt}>{formatDate(delivery.created_at)}</Text>
-
-            {delivery.status !== "cancelled" && (
-              <View style={styles.statusStepsContainer}>
-                {statusSteps.map((step, index) => (
-                  <View key={step.status} style={styles.statusStep}>
-                    <View
-                      style={[
-                        styles.statusIcon,
-                        step.completed && styles.completedIcon,
-                        step.current && styles.currentIcon,
-                        { backgroundColor: step.completed || step.current ? step.color : "#E0E0E0" },
-                      ]}
-                    >
-                      <IconButton icon={step.icon} size={16} iconColor="#FFFFFF" style={styles.icon} />
-                    </View>
-
-                    {index < statusSteps.length - 1 && (
-                      <View style={[styles.statusLine, step.completed && styles.completedLine]} />
-                    )}
-
-                    <Text style={[styles.statusLabel, step.current && { color: step.color, fontWeight: "bold" }]}>
-                      {step.label}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            <Text style={styles.dateText}>Créée le {formatDate(delivery.created_at)}</Text>
           </Card.Content>
         </Card>
 
-        <Card style={styles.detailsCard}>
+        {/* Description */}
+        <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>{t("deliveryDetails.details")}</Text>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.description}>{delivery.description}</Text>
+
+            <Divider style={styles.divider} />
+
+            <View style={styles.packageInfo}>
+              <View style={styles.packageRow}>
+                <Text style={styles.packageLabel}>Taille:</Text>
+                <Text style={styles.packageValue}>{delivery.package_size}</Text>
+              </View>
+              {delivery.package_type && (
+                <View style={styles.packageRow}>
+                  <Text style={styles.packageLabel}>Type:</Text>
+                  <Text style={styles.packageValue}>{delivery.package_type}</Text>
+                </View>
+              )}
+              <View style={styles.packageRow}>
+                <Text style={styles.packageLabel}>Fragile:</Text>
+                <Text style={styles.packageValue}>{delivery.is_fragile ? "Oui" : "Non"}</Text>
+              </View>
+              <View style={styles.packageRow}>
+                <Text style={styles.packageLabel}>Urgent:</Text>
+                <Text style={styles.packageValue}>{delivery.is_urgent ? "Oui" : "Non"}</Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Adresses */}
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>Itinéraire</Text>
 
             <View style={styles.addressContainer}>
-              <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} iconColor="#FF6B00" style={styles.addressIcon} />
-                <View style={styles.addressContent}>
-                  <Text style={styles.addressLabel}>{t("deliveryDetails.from")}</Text>
+              <View style={styles.addressRow}>
+                <View style={styles.addressDot} />
+                <View style={styles.addressInfo}>
+                  <Text style={styles.addressLabel}>Ramassage</Text>
                   <Text style={styles.addressText}>{delivery.pickup_address}</Text>
                   <Text style={styles.communeText}>{delivery.pickup_commune}</Text>
                 </View>
               </View>
 
-              <View style={styles.addressDivider}>
-                <View style={styles.addressDividerLine} />
-              </View>
+              <View style={styles.addressLine} />
 
-              <View style={styles.addressItem}>
-                <IconButton icon="map-marker" size={20} iconColor="#4CAF50" style={styles.addressIcon} />
-                <View style={styles.addressContent}>
-                  <Text style={styles.addressLabel}>{t("deliveryDetails.to")}</Text>
+              <View style={styles.addressRow}>
+                <View style={[styles.addressDot, styles.destinationDot]} />
+                <View style={styles.addressInfo}>
+                  <Text style={styles.addressLabel}>Livraison</Text>
                   <Text style={styles.addressText}>{delivery.delivery_address}</Text>
                   <Text style={styles.communeText}>{delivery.delivery_commune}</Text>
                 </View>
               </View>
             </View>
 
-            <Divider style={styles.divider} />
-
-            <View style={styles.packageDetails}>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t("deliveryDetails.packageSize")}</Text>
-                <Chip icon="package-variant" style={styles.detailChip}>
-                  {delivery.package_size === "small"
-                    ? t("deliveryDetails.small")
-                    : delivery.package_size === "medium"
-                      ? t("deliveryDetails.medium")
-                      : t("deliveryDetails.large")}
-                </Chip>
-              </View>
-
-              {delivery.package_type && (
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>{t("deliveryDetails.packageType")}</Text>
-                  <Chip icon="tag" style={styles.detailChip}>
-                    {delivery.package_type}
-                  </Chip>
-                </View>
-              )}
-
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t("deliveryDetails.fragile")}</Text>
-                <Chip icon={delivery.is_fragile ? "check" : "close"} style={styles.detailChip}>
-                  {delivery.is_fragile ? t("common.yes") : t("common.no")}
-                </Chip>
-              </View>
-
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t("deliveryDetails.urgent")}</Text>
-                <Chip icon={delivery.is_urgent ? "check" : "close"} style={styles.detailChip}>
-                  {delivery.is_urgent ? t("common.yes") : t("common.no")}
-                </Chip>
-              </View>
-            </View>
-
-            {delivery.description && (
-              <>
-                <Divider style={styles.divider} />
-
-                <View style={styles.descriptionContainer}>
-                  <Text style={styles.descriptionLabel}>{t("deliveryDetails.description")}</Text>
-                  <Text style={styles.descriptionText}>{delivery.description}</Text>
-                </View>
-              </>
-            )}
-
-            {delivery.notes && (
-              <View style={styles.notesContainer}>
-                <Text style={styles.notesLabel}>{t("deliveryDetails.notes")}</Text>
-                <Text style={styles.notesText}>{delivery.notes}</Text>
+            {delivery.pickup_lat && delivery.pickup_lng && delivery.delivery_lat && delivery.delivery_lng && (
+              <View style={styles.mapContainer}>
+                <MapView
+                  style={styles.map}
+                  initialRegion={{
+                    latitude: (delivery.pickup_lat + delivery.delivery_lat) / 2,
+                    longitude: (delivery.pickup_lng + delivery.delivery_lng) / 2,
+                    latitudeDelta: Math.abs(delivery.pickup_lat - delivery.delivery_lat) * 1.5 || 0.01,
+                    longitudeDelta: Math.abs(delivery.pickup_lng - delivery.delivery_lng) * 1.5 || 0.01,
+                  }}
+                >
+                  <Marker
+                    coordinate={{ latitude: delivery.pickup_lat, longitude: delivery.pickup_lng }}
+                    title="Ramassage"
+                    pinColor="#FF6B00"
+                  />
+                  <Marker
+                    coordinate={{ latitude: delivery.delivery_lat, longitude: delivery.delivery_lng }}
+                    title="Livraison"
+                    pinColor="#4CAF50"
+                  />
+                </MapView>
               </View>
             )}
           </Card.Content>
         </Card>
 
-        <Card style={styles.priceCard}>
+        {/* Prix */}
+        <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>{t("deliveryDetails.pricing")}</Text>
-
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>{t("deliveryDetails.proposedPrice")}</Text>
+            <Text style={styles.sectionTitle}>Tarification</Text>
+            <View style={styles.priceContainer}>
+              <Text style={styles.priceLabel}>Prix proposé:</Text>
               <Text style={styles.priceValue}>{formatPrice(delivery.proposed_price)} FCFA</Text>
             </View>
-
             {delivery.final_price && delivery.final_price !== delivery.proposed_price && (
-              <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>{t("deliveryDetails.finalPrice")}</Text>
-                <Text style={styles.priceValue}>{formatPrice(delivery.final_price)} FCFA</Text>
+              <View style={styles.priceContainer}>
+                <Text style={styles.priceLabel}>Prix final:</Text>
+                <Text style={styles.finalPriceValue}>{formatPrice(delivery.final_price)} FCFA</Text>
               </View>
             )}
-
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>{t("deliveryDetails.paymentStatus")}</Text>
-              <Chip
-                icon={delivery.is_paid ? "check-circle" : "clock-outline"}
-                style={[styles.paymentChip, delivery.is_paid ? styles.paidChip : styles.unpaidChip]}
-              >
-                {delivery.is_paid ? t("deliveryDetails.paid") : t("deliveryDetails.unpaid")}
-              </Chip>
-            </View>
-
-            {delivery.payment_method && (
-              <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>{t("deliveryDetails.paymentMethod")}</Text>
-                <Text style={styles.priceValue}>{delivery.payment_method}</Text>
-              </View>
-            )}
-
             {delivery.distance && (
-              <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>{t("deliveryDetails.distance")}</Text>
-                <Text style={styles.priceValue}>{delivery.distance} km</Text>
+              <View style={styles.priceContainer}>
+                <Text style={styles.priceLabel}>Distance:</Text>
+                <Text style={styles.priceValue}>{formatDistance(delivery.distance)}</Text>
               </View>
             )}
           </Card.Content>
         </Card>
 
-        {delivery.courier && (
-          <Card style={styles.courierCard}>
+        {/* Enchères */}
+        {bids.length > 0 && (
+          <Card style={styles.card}>
             <Card.Content>
-              <Text style={styles.sectionTitle}>{t("deliveryDetails.courier")}</Text>
-
-              <View style={styles.courierInfo}>
-                <IconButton icon="account" size={40} iconColor="#FF6B00" style={styles.courierIcon} />
-                <View style={styles.courierDetails}>
-                  <Text style={styles.courierName}>{delivery.courier.full_name}</Text>
-                  <View style={styles.courierMeta}>
-                    <IconButton icon="star" size={16} iconColor="#FFC107" style={styles.ratingIcon} />
-                    <Text style={styles.ratingText}>{delivery.courier.rating?.toFixed(1) ?? 'N/A'}</Text>
-                    <Chip icon="motorbike" style={styles.vehicleChip}>
-                      {delivery.courier.vehicle_type}
-                    </Chip>
+              <Text style={styles.sectionTitle}>Enchères ({bids.length})</Text>
+              {bids.map((bid) => (
+                <View key={bid.id} style={styles.bidContainer}>
+                  <View style={styles.bidHeader}>
+                    <Text style={styles.courierName}>Coursier #{bid.courier_id}</Text>
+                    <Text style={styles.bidPrice}>{formatPrice(bid.proposed_price)} FCFA</Text>
+                  </View>
+                  {bid.message && (
+                    <Text style={styles.bidMessage}>{bid.message}</Text>
+                  )}
+                  <View style={styles.bidFooter}>
+                    <Text style={styles.bidDate}>{formatDate(bid.created_at)}</Text>
+                    {delivery.status === "pending" && bid.status === "pending" && (
+                      <Button
+                        mode="contained"
+                        size="small"
+                        onPress={() => acceptBid(bid.id)}
+                        loading={actionLoading}
+                        style={styles.acceptButton}
+                      >
+                        Accepter
+                      </Button>
+                    )}
                   </View>
                 </View>
-              </View>
+              ))}
+            </Card.Content>
+          </Card>
+        )}
 
-              {delivery.courier.phone && (
+        {/* Actions */}
+        <Card style={styles.card}>
+          <Card.Content>
+            <View style={styles.actionsContainer}>
+              {delivery.status === "pending" && (
                 <Button
                   mode="outlined"
-                  icon="phone"
-                  onPress={() => {
-                    /* Implémenter l'appel */
-                  }}
-                  style={styles.callButton}
+                  onPress={handleCancelDelivery}
+                  loading={actionLoading}
+                  style={styles.cancelButton}
+                  textColor="#F44336"
                 >
-                  {t("deliveryDetails.callCourier")}
+                  Annuler
                 </Button>
               )}
-            </Card.Content>
-          </Card>
-        )}
 
-        {delivery.rating && (
-          <Card style={styles.ratingCard}>
-            <Card.Content>
-              <Text style={styles.sectionTitle}>{t("deliveryDetails.yourRating")}</Text>
-
-              <View style={styles.ratingContainer}>
-                <View style={styles.starsContainer}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <IconButton
-                      key={star}
-                      icon="star"
-                      size={24}
-                      iconColor={star <= (typeof delivery.rating === 'number' ? delivery.rating : delivery.rating?.rating || 0) ? "#FFC107" : "#E0E0E0"}
-                      style={styles.starIcon}
-                    />
-                  ))}
-                </View>
-
-                <Text style={styles.ratingValue}>
-                  {typeof delivery.rating === 'number' 
-                    ? delivery.rating.toFixed(1) 
-                    : delivery.rating?.rating?.toFixed(1) || 'N/A'}
-                </Text>
-              </View>
-
-              {typeof delivery.rating === 'object' && delivery.rating?.comment && (
-                <View style={styles.commentContainer}>
-                  <Text style={styles.commentLabel}>{t("deliveryDetails.yourComment")}</Text>
-                  <Text style={styles.commentText}>{delivery.rating.comment}</Text>
-                </View>
+              {delivery.status === "in_progress" && (
+                <Button
+                  mode="contained"
+                  onPress={() => navigation.navigate("TrackDelivery", { deliveryId: deliveryId })}
+                  style={styles.trackButton}
+                >
+                  Suivre la livraison
+                </Button>
               )}
-            </Card.Content>
-          </Card>
-        )}
 
-        <View style={styles.actionsContainer}>
-          {isCancellable && (
-            <Button
-              mode="outlined"
-              icon="close-circle"
-              onPress={handleCancelDelivery}
-              style={styles.cancelButton}
-              loading={cancelling}
-              disabled={cancelling}
-            >
-              {t("deliveryDetails.cancelDelivery")}
-            </Button>
-          )}
-
-          {showBidsButton && (
-            <Button mode="contained" icon="gavel" onPress={viewBids} style={styles.actionButton}>
-              {t("deliveryDetails.viewBids")}
-            </Button>
-          )}
-
-          {showTrackButton && (
-            <Button mode="contained" icon="map-marker-path" onPress={trackDelivery} style={styles.actionButton}>
-              {t("deliveryDetails.trackDelivery")}
-            </Button>
-          )}
-
-          {showPayButton && (
-            <Button mode="contained" icon="cash" onPress={makePayment} style={styles.actionButton}>
-              {t("deliveryDetails.makePayment")}
-            </Button>
-          )}
-
-          {showRateButton && (
-            <Button mode="contained" icon="star" onPress={rateDelivery} style={styles.actionButton}>
-              {t("deliveryDetails.rateDelivery")}
-            </Button>
-          )}
-        </View>
+              {delivery.status === "delivered" && (
+                <Button
+                  mode="contained"
+                  onPress={() => navigation.navigate("RateDelivery", { deliveryId: deliveryId })}
+                  style={styles.rateButton}
+                >
+                  Noter la livraison
+                </Button>
+              )}
+            </View>
+          </Card.Content>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   )
@@ -524,17 +352,21 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    borderBottomColor: "#E0E0E0",
   },
-  headerTitle: {
+  title: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#212121",
+  },
+  content: {
+    flex: 1,
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -552,195 +384,120 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    fontSize: 16,
-    color: "#F44336",
-    textAlign: "center",
-    marginVertical: 16,
-  },
-  backButton: {
-    marginTop: 16,
-    backgroundColor: "#FF6B00",
-  },
-  scrollContainer: {
-    padding: 16,
-  },
-  deliveryCard: {
-    marginBottom: 16,
-  },
-  deliveryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  deliveryId: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  statusChip: {
-    backgroundColor: "#F5F5F5",
-  },
-  cancelledChip: {
-    backgroundColor: "#FFEBEE",
-  },
-  createdAt: {
-    fontSize: 14,
     color: "#757575",
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  card: {
     marginBottom: 16,
-  },
-  statusStepsContainer: {
-    marginTop: 8,
-  },
-  statusStep: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  statusIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#E0E0E0",
-  },
-  completedIcon: {
-    backgroundColor: "#4CAF50",
-  },
-  currentIcon: {
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
     elevation: 2,
-  },
-  icon: {
-    margin: 0,
-    padding: 0,
-  },
-  statusLine: {
-    width: 20,
-    height: 2,
-    backgroundColor: "#E0E0E0",
-    marginHorizontal: 4,
-  },
-  completedLine: {
-    backgroundColor: "#4CAF50",
-  },
-  statusLabel: {
-    fontSize: 14,
-    color: "#757575",
-    marginLeft: 8,
-  },
-  detailsCard: {
-    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#212121",
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  statusContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  statusChip: {
+    alignSelf: "flex-start",
+  },
+  statusText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  dateText: {
+    fontSize: 12,
+    color: "#757575",
+  },
+  description: {
+    fontSize: 14,
+    color: "#424242",
+    lineHeight: 20,
+  },
+  divider: {
+    marginVertical: 16,
+  },
+  packageInfo: {
+    marginTop: 8,
+  },
+  packageRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  packageLabel: {
+    fontSize: 14,
+    color: "#757575",
+  },
+  packageValue: {
+    fontSize: 14,
+    color: "#212121",
+    fontWeight: "500",
   },
   addressContainer: {
     marginBottom: 16,
   },
-  addressItem: {
+  addressRow: {
     flexDirection: "row",
     alignItems: "flex-start",
+    marginBottom: 8,
   },
-  addressIcon: {
-    margin: 0,
-    padding: 0,
+  addressDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#FF6B00",
+    marginTop: 4,
+    marginRight: 12,
   },
-  addressContent: {
+  destinationDot: {
+    backgroundColor: "#4CAF50",
+  },
+  addressLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: "#E0E0E0",
+    marginLeft: 5,
+    marginBottom: 8,
+  },
+  addressInfo: {
     flex: 1,
-    marginLeft: 8,
   },
   addressLabel: {
     fontSize: 12,
     color: "#757575",
+    marginBottom: 2,
   },
   addressText: {
     fontSize: 14,
-    fontWeight: "bold",
     color: "#212121",
-    marginTop: 2,
   },
   communeText: {
     fontSize: 12,
     color: "#757575",
     marginTop: 2,
   },
-  addressDivider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 28,
-    marginVertical: 4,
+  mapContainer: {
+    height: 200,
+    borderRadius: 8,
+    overflow: "hidden",
+    marginTop: 16,
   },
-  addressDividerLine: {
-    flex: 1,
-    height: 20,
-    borderLeftWidth: 1,
-    borderLeftColor: "#E0E0E0",
-    marginLeft: 10,
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
-  divider: {
-    marginVertical: 16,
-  },
-  packageDetails: {
-    marginBottom: 16,
-  },
-  detailRow: {
+  priceContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  detailChip: {
-    backgroundColor: "#F5F5F5",
-    height: 28,
-  },
-  descriptionContainer: {
-    marginBottom: 16,
-  },
-  descriptionLabel: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: "#212121",
-    lineHeight: 20,
-  },
-  notesContainer: {
-    backgroundColor: "#FFF8E1",
-    borderRadius: 8,
-    padding: 12,
-  },
-  notesLabel: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#FF6B00",
-    marginBottom: 4,
-  },
-  notesText: {
-    fontSize: 14,
-    color: "#212121",
-    lineHeight: 20,
-  },
-  priceCard: {
-    marginBottom: 16,
-  },
-  priceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
   },
   priceLabel: {
     fontSize: 14,
@@ -748,108 +505,64 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     fontSize: 14,
-    fontWeight: "bold",
     color: "#212121",
+    fontWeight: "500",
   },
-  paymentChip: {
-    height: 28,
+  finalPriceValue: {
+    fontSize: 16,
+    color: "#FF6B00",
+    fontWeight: "bold",
   },
-  paidChip: {
-    backgroundColor: "#E8F5E9",
+  bidContainer: {
+    backgroundColor: "#F8F9FA",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  unpaidChip: {
-    backgroundColor: "#FFF8E1",
-  },
-  courierCard: {
-    marginBottom: 16,
-  },
-  courierInfo: {
+  bidHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
-  },
-  courierIcon: {
-    margin: 0,
-    backgroundColor: "#FFF3E0",
-    borderRadius: 20,
-  },
-  courierDetails: {
-    marginLeft: 16,
-    flex: 1,
+    marginBottom: 4,
   },
   courierName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#212121",
-    marginBottom: 4,
   },
-  courierMeta: {
+  bidPrice: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#FF6B00",
+  },
+  bidMessage: {
+    fontSize: 13,
+    color: "#424242",
+    marginBottom: 8,
+  },
+  bidFooter: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  ratingIcon: {
-    margin: 0,
-    padding: 0,
+  bidDate: {
+    fontSize: 12,
+    color: "#757575",
   },
-  ratingText: {
-    fontSize: 14,
-    color: "#212121",
-    marginRight: 8,
-  },
-  vehicleChip: {
-    backgroundColor: "#F5F5F5",
-    height: 24,
-  },
-  callButton: {
-    borderColor: "#4CAF50",
-  },
-  ratingCard: {
-    marginBottom: 16,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  starsContainer: {
-    flexDirection: "row",
-  },
-  starIcon: {
-    margin: 0,
-    padding: 0,
-  },
-  ratingValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-    marginLeft: 8,
-  },
-  commentContainer: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 8,
-    padding: 12,
-  },
-  commentLabel: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  commentText: {
-    fontSize: 14,
-    color: "#212121",
-    lineHeight: 20,
+  acceptButton: {
+    backgroundColor: "#4CAF50",
   },
   actionsContainer: {
-    marginBottom: 24,
+    gap: 12,
   },
   cancelButton: {
-    marginBottom: 12,
     borderColor: "#F44336",
   },
-  actionButton: {
-    marginBottom: 12,
+  trackButton: {
     backgroundColor: "#FF6B00",
+  },
+  rateButton: {
+    backgroundColor: "#4CAF50",
   },
 })
 

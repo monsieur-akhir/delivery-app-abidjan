@@ -1,449 +1,546 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Animated,
-  RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import { GamificationService } from '../../services/GamificationService';
-import { GamificationBadge } from '../../components/GamificationBadge';
-import type { GamificationProfile, Ranking, Reward } from '../../types/models';
 
-export const GamificationScreen: React.FC = () => {
-  const [profile, setProfile] = useState<GamificationProfile | null>(null);
-  const [rankings, setRankings] = useState<Ranking[]>([]);
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [activeTab, setActiveTab] = useState<'profile' | 'leaderboard' | 'rewards'>('profile');
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
+import React, { useState, useEffect } from "react"
+import { View, StyleSheet, ScrollView, RefreshControl } from "react-native"
+import { Text, Card, ProgressBar, Avatar, Button, Badge } from "react-native-paper"
+import { SafeAreaView } from "react-native-safe-area-context"
+import { Feather } from "@expo/vector-icons"
+import * as Animatable from "react-native-animatable"
+import { useAuth } from "../../contexts/AuthContext"
+import GamificationService from "../../services/GamificationService"
+import type { Achievement, Leaderboard, CourierStats } from "../../types/models"
 
-  const gamificationService = new GamificationService();
+const GamificationScreen: React.FC = () => {
+  const { user } = useAuth()
+  
+  const [stats, setStats] = useState<CourierStats | null>(null)
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [leaderboard, setLeaderboard] = useState<Leaderboard[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [refreshing, setRefreshing] = useState<boolean>(false)
+
+  const levelThresholds = [0, 100, 300, 600, 1000, 1500, 2200, 3000, 4000, 5500]
+  const levelNames = [
+    "Novice", "Apprenti", "Livreur", "Expert", "Maître", 
+    "Champion", "Légende", "Héros", "Titan", "Dieu de la livraison"
+  ]
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadGamificationData()
+  }, [])
 
-  const loadData = async () => {
+  const loadGamificationData = async () => {
     try {
-      setLoading(true);
-      const [profileData, rankingsData, rewardsData] = await Promise.all([
-        gamificationService.getProfile(),
-        gamificationService.getRankings(),
-        gamificationService.getAvailableRewards(),
-      ]);
-
-      setProfile(profileData);
-      setRankings(rankingsData);
-      setRewards(rewardsData);
+      setLoading(true)
+      const [statsData, achievementsData, leaderboardData] = await Promise.all([
+        GamificationService.getCourierStats(),
+        GamificationService.getAchievements(),
+        GamificationService.getLeaderboard()
+      ])
+      
+      setStats(statsData)
+      setAchievements(achievementsData)
+      setLeaderboard(leaderboardData)
     } catch (error) {
-      console.error('Error loading gamification data:', error);
+      console.error("Error loading gamification data:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  };
+    setRefreshing(true)
+    await loadGamificationData()
+    setRefreshing(false)
+  }
 
-  const claimReward = async (rewardId: string) => {
-    try {
-      await gamificationService.claimReward(rewardId);
-      await loadData(); // Refresh data
-    } catch (error) {
-      console.error('Error claiming reward:', error);
+  const getCurrentLevel = (points: number): number => {
+    for (let i = levelThresholds.length - 1; i >= 0; i--) {
+      if (points >= levelThresholds[i]) {
+        return i
+      }
     }
-  };
+    return 0
+  }
 
-  const renderProfileTab = () => (
-    <ScrollView style={styles.tabContent}>
-      {profile && (
-        <>
-          {/* Level Progress */}
-          <View style={styles.levelCard}>
-            <View style={styles.levelHeader}>
-              <Text style={styles.levelTitle}>Niveau {profile.level}</Text>
-              <Text style={styles.xpText}>{profile.experience_points} XP</Text>
-            </View>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${(profile.experience_points % 1000) / 10}%` }
-                ]} 
-              />
-            </View>
-            <Text style={styles.progressText}>
-              {1000 - (profile.experience_points % 1000)} XP jusqu'au niveau suivant
-            </Text>
-          </View>
+  const getProgressToNextLevel = (points: number): number => {
+    const currentLevel = getCurrentLevel(points)
+    if (currentLevel >= levelThresholds.length - 1) return 1
+    
+    const currentThreshold = levelThresholds[currentLevel]
+    const nextThreshold = levelThresholds[currentLevel + 1]
+    
+    return (points - currentThreshold) / (nextThreshold - currentThreshold)
+  }
 
-          {/* Badges */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Mes Badges</Text>
-            <View style={styles.badgesGrid}>
-              {profile.badges.map((badge) => (
-                <GamificationBadge
-                  key={badge.id}
-                  badge={badge}
-                  size="large"
-                />
-              ))}
-            </View>
-          </View>
+  const getAchievementIcon = (type: string): string => {
+    switch (type) {
+      case "delivery_count": return "package"
+      case "rating": return "star"
+      case "speed": return "zap"
+      case "distance": return "map"
+      case "collaboration": return "users"
+      default: return "award"
+    }
+  }
 
-          {/* Achievements */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Objectifs</Text>
-            {profile.achievements.map((achievement) => (
-              <View key={achievement.id} style={styles.achievementCard}>
-                <View style={styles.achievementInfo}>
-                  <Text style={styles.achievementName}>{achievement.name}</Text>
-                  <Text style={styles.achievementDesc}>{achievement.description}</Text>
-                </View>
-                <View style={styles.achievementProgress}>
-                  <Text style={styles.progressText}>
-                    {achievement.progress}/{achievement.target}
-                  </Text>
-                  <View style={styles.progressBar}>
-                    <View 
-                      style={[
-                        styles.progressFill, 
-                        { width: `${(achievement.progress / achievement.target) * 100}%` }
-                      ]} 
-                    />
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
-    </ScrollView>
-  );
+  if (!stats) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text>Chargement des données de gamification...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
-  const renderLeaderboardTab = () => (
-    <ScrollView style={styles.tabContent}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Classement Général</Text>
-        {rankings.map((ranking, index) => (
-          <View key={ranking.courier_id} style={styles.rankingCard}>
-            <View style={styles.rankingPosition}>
-              <Text style={styles.positionText}>#{ranking.position}</Text>
-            </View>
-            <View style={styles.rankingInfo}>
-              <Text style={styles.courierName}>{ranking.courier_name}</Text>
-              <Text style={styles.courierPoints}>{ranking.points} points</Text>
-            </View>
-            <View style={styles.rankingLevel}>
-              <Text style={styles.levelBadge}>Niv. {ranking.level}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
-  );
-
-  const renderRewardsTab = () => (
-    <ScrollView style={styles.tabContent}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Récompenses Disponibles</Text>
-        {rewards.map((reward) => (
-          <View key={reward.id} style={styles.rewardCard}>
-            <View style={styles.rewardInfo}>
-              <Text style={styles.rewardName}>{reward.name}</Text>
-              <Text style={styles.rewardDesc}>{reward.description}</Text>
-              <Text style={styles.rewardPoints}>{reward.points_required} points requis</Text>
-            </View>
-            <TouchableOpacity
-              style={[
-                styles.claimButton,
-                !reward.is_available && styles.claimButtonDisabled
-              ]}
-              onPress={() => claimReward(reward.id)}
-              disabled={!reward.is_available}
-            >
-              <Text style={styles.claimButtonText}>
-                {reward.is_available ? 'Réclamer' : 'Indisponible'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
-  );
+  const currentLevel = getCurrentLevel(stats.total_points)
+  const progress = getProgressToNextLevel(stats.total_points)
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Gamification</Text>
-        <TouchableOpacity onPress={onRefresh}>
-          <Feather name="refresh-cw" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />
+        }
+      >
+        {/* Profil et niveau */}
+        <Animatable.View animation="fadeInUp" duration={800}>
+          <Card style={styles.profileCard}>
+            <Card.Content>
+              <View style={styles.profileHeader}>
+                <Avatar.Image
+                  size={80}
+                  source={
+                    user?.profile_picture 
+                      ? { uri: user.profile_picture } 
+                      : require("../../assets/images/default-avatar.png")
+                  }
+                />
+                <View style={styles.profileInfo}>
+                  <Text style={styles.userName}>{user?.full_name}</Text>
+                  <Text style={styles.userLevel}>
+                    Niveau {currentLevel + 1} - {levelNames[currentLevel]}
+                  </Text>
+                  <Text style={styles.totalPoints}>{stats.total_points} points</Text>
+                </View>
+              </View>
+              
+              <View style={styles.progressContainer}>
+                <Text style={styles.progressLabel}>
+                  Progression vers le niveau {currentLevel + 2}
+                </Text>
+                <ProgressBar 
+                  progress={progress} 
+                  color="#FF6B00" 
+                  style={styles.progressBar} 
+                />
+                <Text style={styles.progressText}>
+                  {Math.round(progress * 100)}% - 
+                  {currentLevel < levelThresholds.length - 1 
+                    ? ` ${levelThresholds[currentLevel + 1] - stats.total_points} points restants`
+                    : " Niveau maximum atteint !"
+                  }
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        </Animatable.View>
 
-      {/* Tabs */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'profile' && styles.activeTab]}
-          onPress={() => setActiveTab('profile')}
-        >
-          <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>
-            Profil
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'leaderboard' && styles.activeTab]}
-          onPress={() => setActiveTab('leaderboard')}
-        >
-          <Text style={[styles.tabText, activeTab === 'leaderboard' && styles.activeTabText]}>
-            Classement
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'rewards' && styles.activeTab]}
-          onPress={() => setActiveTab('rewards')}
-        >
-          <Text style={[styles.tabText, activeTab === 'rewards' && styles.activeTabText]}>
-            Récompenses
-          </Text>
-        </TouchableOpacity>
-      </View>
+        {/* Statistiques */}
+        <Animatable.View animation="fadeInUp" duration={800} delay={200}>
+          <Card style={styles.statsCard}>
+            <Card.Content>
+              <Text style={styles.cardTitle}>Mes statistiques</Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statItem}>
+                  <Feather name="package" size={24} color="#FF6B00" />
+                  <Text style={styles.statValue}>{stats.total_deliveries}</Text>
+                  <Text style={styles.statLabel}>Livraisons</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Feather name="star" size={24} color="#FFD700" />
+                  <Text style={styles.statValue}>{stats.average_rating?.toFixed(1) || "N/A"}</Text>
+                  <Text style={styles.statLabel}>Note moyenne</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Feather name="zap" size={24} color="#4CAF50" />
+                  <Text style={styles.statValue}>{stats.completion_rate?.toFixed(0) || 0}%</Text>
+                  <Text style={styles.statLabel}>Taux de réussite</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Feather name="clock" size={24} color="#2196F3" />
+                  <Text style={styles.statValue}>{stats.average_delivery_time || "N/A"}</Text>
+                  <Text style={styles.statLabel}>Temps moyen</Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+        </Animatable.View>
 
-      {/* Content */}
-      <View style={styles.content}>
-        {activeTab === 'profile' && renderProfileTab()}
-        {activeTab === 'leaderboard' && renderLeaderboardTab()}
-        {activeTab === 'rewards' && renderRewardsTab()}
-      </View>
+        {/* Achievements récents */}
+        <Animatable.View animation="fadeInUp" duration={800} delay={400}>
+          <Card style={styles.achievementsCard}>
+            <Card.Content>
+              <Text style={styles.cardTitle}>Succès récents</Text>
+              {achievements.slice(0, 3).map((achievement, index) => (
+                <View key={achievement.id} style={styles.achievementItem}>
+                  <View style={styles.achievementIcon}>
+                    <Feather 
+                      name={getAchievementIcon(achievement.type)} 
+                      size={24} 
+                      color="#FFD700" 
+                    />
+                  </View>
+                  <View style={styles.achievementInfo}>
+                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                    <Text style={styles.achievementDescription}>
+                      {achievement.description}
+                    </Text>
+                    <Text style={styles.achievementPoints}>
+                      +{achievement.points} points
+                    </Text>
+                  </View>
+                  {achievement.unlocked_at && (
+                    <Badge style={styles.newBadge}>Nouveau !</Badge>
+                  )}
+                </View>
+              ))}
+              
+              <Button
+                mode="outlined"
+                onPress={() => {/* Navigate to full achievements */}}
+                style={styles.viewAllButton}
+              >
+                Voir tous les succès
+              </Button>
+            </Card.Content>
+          </Card>
+        </Animatable.View>
+
+        {/* Classement */}
+        <Animatable.View animation="fadeInUp" duration={800} delay={600}>
+          <Card style={styles.leaderboardCard}>
+            <Card.Content>
+              <Text style={styles.cardTitle}>Classement hebdomadaire</Text>
+              {leaderboard.slice(0, 5).map((entry, index) => (
+                <View key={entry.courier_id} style={styles.leaderboardItem}>
+                  <View style={styles.rankContainer}>
+                    <Text style={[
+                      styles.rankText,
+                      index < 3 && styles.topRank
+                    ]}>
+                      #{index + 1}
+                    </Text>
+                    {index < 3 && (
+                      <Feather 
+                        name={index === 0 ? "award" : "medal"} 
+                        size={16} 
+                        color={index === 0 ? "#FFD700" : index === 1 ? "#C0C0C0" : "#CD7F32"}
+                      />
+                    )}
+                  </View>
+                  
+                  <Avatar.Image
+                    size={40}
+                    source={
+                      entry.profile_picture 
+                        ? { uri: entry.profile_picture }
+                        : require("../../assets/images/default-avatar.png")
+                    }
+                  />
+                  
+                  <View style={styles.leaderboardInfo}>
+                    <Text style={[
+                      styles.leaderboardName,
+                      entry.courier_id === user?.id && styles.currentUser
+                    ]}>
+                      {entry.courier_id === user?.id ? "Vous" : entry.name}
+                    </Text>
+                    <Text style={styles.leaderboardStats}>
+                      {entry.deliveries_count} livraisons • {entry.points} pts
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </Card.Content>
+          </Card>
+        </Animatable.View>
+
+        {/* Défis du jour */}
+        <Animatable.View animation="fadeInUp" duration={800} delay={800}>
+          <Card style={styles.challengesCard}>
+            <Card.Content>
+              <Text style={styles.cardTitle}>Défis du jour</Text>
+              
+              <View style={styles.challengeItem}>
+                <View style={styles.challengeIcon}>
+                  <Feather name="target" size={20} color="#FF6B00" />
+                </View>
+                <View style={styles.challengeInfo}>
+                  <Text style={styles.challengeTitle}>Complétez 5 livraisons</Text>
+                  <Text style={styles.challengeReward}>Récompense: 50 points</Text>
+                  <ProgressBar 
+                    progress={Math.min(stats.daily_deliveries / 5, 1)} 
+                    color="#FF6B00" 
+                    style={styles.challengeProgress}
+                  />
+                  <Text style={styles.challengeText}>
+                    {stats.daily_deliveries}/5 livraisons
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.challengeItem}>
+                <View style={styles.challengeIcon}>
+                  <Feather name="star" size={20} color="#FFD700" />
+                </View>
+                <View style={styles.challengeInfo}>
+                  <Text style={styles.challengeTitle}>Maintenez une note de 4.5+</Text>
+                  <Text style={styles.challengeReward}>Récompense: 30 points</Text>
+                  <ProgressBar 
+                    progress={Math.min((stats.daily_rating || 0) / 4.5, 1)} 
+                    color="#FFD700" 
+                    style={styles.challengeProgress}
+                  />
+                  <Text style={styles.challengeText}>
+                    Note actuelle: {stats.daily_rating?.toFixed(1) || "N/A"}
+                  </Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+        </Animatable.View>
+      </ScrollView>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTab: {
-    borderBottomColor: '#007AFF',
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#6c757d',
-  },
-  activeTabText: {
-    color: '#007AFF',
-    fontWeight: '600',
+    backgroundColor: "#F5F5F5",
   },
   content: {
     flex: 1,
+    padding: 16,
   },
-  tabContent: {
+  loadingContainer: {
     flex: 1,
-    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  levelCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  profileCard: {
+    marginBottom: 16,
+    elevation: 4,
   },
-  levelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+  profileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
   },
-  levelTitle: {
+  profileInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  userName: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212529',
+    fontWeight: "bold",
+    color: "#212121",
   },
-  xpText: {
+  userLevel: {
     fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
+    color: "#FF6B00",
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  totalPoints: {
+    fontSize: 14,
+    color: "#757575",
+    marginTop: 2,
+  },
+  progressContainer: {
+    marginTop: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+    color: "#212121",
+    marginBottom: 8,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#e9ecef',
     borderRadius: 4,
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#007AFF',
-    borderRadius: 4,
+    marginBottom: 4,
   },
   progressText: {
-    fontSize: 14,
-    color: '#6c757d',
-    textAlign: 'center',
+    fontSize: 12,
+    color: "#757575",
   },
-  section: {
-    marginBottom: 24,
+  statsCard: {
+    marginBottom: 16,
+    elevation: 2,
   },
-  sectionTitle: {
+  cardTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212529',
+    fontWeight: "bold",
+    color: "#212121",
     marginBottom: 16,
   },
-  badgesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
-  achievementCard: {
-    backgroundColor: '#fff',
+  statItem: {
+    width: "48%",
+    alignItems: "center",
+    paddingVertical: 16,
+    backgroundColor: "#F8F9FA",
     borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#212121",
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#757575",
+    marginTop: 4,
+  },
+  achievementsCard: {
+    marginBottom: 16,
+    elevation: 2,
+  },
+  achievementItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  achievementIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF3E0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
   achievementInfo: {
     flex: 1,
-    marginRight: 12,
   },
-  achievementName: {
+  achievementTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#212529',
-    marginBottom: 4,
+    fontWeight: "600",
+    color: "#212121",
   },
-  achievementDesc: {
-    fontSize: 14,
-    color: '#6c757d',
+  achievementDescription: {
+    fontSize: 13,
+    color: "#757575",
+    marginTop: 2,
   },
-  achievementProgress: {
-    alignItems: 'flex-end',
-    minWidth: 80,
-  },
-  rankingCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rankingPosition: {
-    width: 40,
-    alignItems: 'center',
-  },
-  positionText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  rankingInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  courierName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212529',
-  },
-  courierPoints: {
-    fontSize: 14,
-    color: '#6c757d',
-  },
-  rankingLevel: {
-    alignItems: 'flex-end',
-  },
-  levelBadge: {
-    backgroundColor: '#007AFF',
-    color: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  achievementPoints: {
     fontSize: 12,
-    fontWeight: '600',
+    color: "#FF6B00",
+    fontWeight: "600",
+    marginTop: 4,
   },
-  rewardCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+  newBadge: {
+    backgroundColor: "#FF6B00",
   },
-  rewardInfo: {
-    flex: 1,
+  viewAllButton: {
+    marginTop: 16,
+    borderColor: "#FF6B00",
+  },
+  leaderboardCard: {
+    marginBottom: 16,
+    elevation: 2,
+  },
+  leaderboardItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  rankContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 40,
     marginRight: 12,
   },
-  rewardName: {
+  rankText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#212529',
+    fontWeight: "bold",
+    color: "#212121",
+  },
+  topRank: {
+    color: "#FF6B00",
+  },
+  leaderboardInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  leaderboardName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#212121",
+  },
+  currentUser: {
+    color: "#FF6B00",
+  },
+  leaderboardStats: {
+    fontSize: 13,
+    color: "#757575",
+    marginTop: 2,
+  },
+  challengesCard: {
+    marginBottom: 16,
+    elevation: 2,
+  },
+  challengeItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  challengeIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFF3E0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  challengeInfo: {
+    flex: 1,
+  },
+  challengeTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#212121",
+  },
+  challengeReward: {
+    fontSize: 13,
+    color: "#FF6B00",
+    marginTop: 2,
+  },
+  challengeProgress: {
+    height: 6,
+    borderRadius: 3,
+    marginTop: 8,
     marginBottom: 4,
   },
-  rewardDesc: {
-    fontSize: 14,
-    color: '#6c757d',
-    marginBottom: 4,
+  challengeText: {
+    fontSize: 12,
+    color: "#757575",
   },
-  rewardPoints: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-  claimButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  claimButtonDisabled: {
-    backgroundColor: '#6c757d',
-  },
-  claimButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-});
+})
+
+export default GamificationScreen

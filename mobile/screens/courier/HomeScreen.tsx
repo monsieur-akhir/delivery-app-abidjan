@@ -6,7 +6,7 @@ import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from "
 import { Text, Card, Button, Chip, ActivityIndicator, Badge, Avatar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
-import FeatherIcon, { FeatherIconName } from "../../components/FeatherIcon"
+import { Feather } from "@expo/vector-icons"
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
 import { useAuth } from "../../contexts/AuthContext"
@@ -149,7 +149,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
     }
   }, [isConnected, isOfflineMode, isOnline, updateCourierStatus, updateUserData, user?.id, sendMessage, currentLocation])
 
-  const getWeatherIcon = (condition: string): FeatherIconName => {
+  const getWeatherIcon = (condition: string): string => {
     switch (condition.toLowerCase()) {
       case "sunny":
         return "sun";
@@ -158,7 +158,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
       case "rainy":
         return "cloud-rain";
       case "stormy":
-        return "cloud-lightning";
+        return "zap";
       default:
         return "cloud-drizzle";
     }
@@ -184,7 +184,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
             style={styles.notificationButton}
             onPress={() => navigation.navigate("Notifications")}
           >
-            <FeatherIcon name="bell" size={24} color="#212121" />
+            <Feather name="bell" size={24} color="#212121" />
             {unreadCount > 0 && (
               <Badge style={styles.notificationBadge} size={16}>
                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -211,7 +211,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
           </View>
         ) : locationPermissionDenied ? (
           <View style={styles.permissionDeniedContainer}>
-            <FeatherIcon name="map" size={64} color="#FF6B00" />
+            <Feather name="map" size={64} color="#FF6B00" />
             <Text style={styles.permissionDeniedTitle}>Localisation requise</Text>
             <Text style={styles.permissionDeniedText}>
               Pour utiliser cette application en tant que coursier, vous devez autoriser l&apos;accès à votre position.
@@ -298,7 +298,7 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
               <Card style={styles.weatherCard}>
                 <Card.Content>
                   <View style={styles.weatherContainer}>
-                    <FeatherIcon name={getWeatherIcon(weather.current.condition)} size={36} color="#FF6B00" />
+                    <Feather name={getWeatherIcon(weather.current.condition)} size={36} color="#FF6B00" />
                     <View style={styles.weatherInfo}>
                       <Text style={styles.weatherTemperature}>{weather.current.temperature}°C</Text>
                       <Text style={styles.weatherCondition}>{weather.current.condition}</Text>

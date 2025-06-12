@@ -63,9 +63,9 @@ export interface PasswordChangeRequest {
 
 class AuthService {
   private api: AxiosInstance
-  private tokenKey = 'auth_token'
-  private refreshTokenKey = 'refresh_token'
-  private userKey = 'user_data'
+  private tokenKey = '@livraison_abidjan:auth_token'
+  private refreshTokenKey = '@livraison_abidjan:refresh_token'
+  private userKey = '@livraison_abidjan:user_data'
 
   constructor() {
     this.api = axios.create({
