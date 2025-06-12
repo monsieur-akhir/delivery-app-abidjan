@@ -1,45 +1,65 @@
-"use client"
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import {
+  View,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  Dimensions,
+  StatusBar
+} from 'react-native'
+import {
+  Text,
+  TextInput,
+  Button,
+  Divider,
+  Chip,
+  HelperText,
+  Snackbar,
+  IconButton,
+  Surface,
+  Card
+} from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { LinearGradient } from 'expo-linear-gradient'
+import MapView, { Marker, Polyline } from 'react-native-maps'
+import * as Location from 'expo-location'
+import { Ionicons, MaterialIcons } from '@expo/vector-icons'
+import { useTranslation } from 'react-i18next'
+import { useNetwork } from '../../contexts/NetworkContext'
+import { useDelivery } from '../../hooks'
+import {
+  geocodeAddress,
+  getRecommendedPrice,
+  getVehicleRecommendation,
+  getWeatherData,
+  getDirections,
+  getTrafficInfo
+} from '../../services/api'
+import { formatPrice } from '../../utils/formatters'
+import AddressAutocomplete, { Address } from '../../components/AddressAutocomplete'
+import CustomMapView from '../../components/MapView'
+import WeatherInfo from '../../components/WeatherInfo'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../../types/navigation'
+import { Weather, CargoCategory, VehicleType } from '../../types/models'
 
-import type React from "react"
-import { useState, useEffect, useRef, useCallback } from "react"
-import { View, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, StyleSheet } from "react-native"
-import { Text, TextInput, Button, Divider, Chip, HelperText, Snackbar, IconButton } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import MapView from "react-native-maps"
-import * as Location from "expo-location"
-import { useTranslation } from "react-i18next"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { useDelivery } from "../../hooks"
-import { geocodeAddress, getRecommendedPrice, getVehicleRecommendation, getWeatherData } from "../../services/api"
-import { formatPrice } from "../../utils/formatters"
-import WeatherInfo from "../../components/WeatherInfo"
-import { CustomMapView } from "../../components"
-import type { Coordinates, Route, TrafficInfo } from "../../components"
-import AddressAutocomplete, { Address } from "../../components/AddressAutocomplete"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RootStackParamList } from "../../types/navigation"
-import { Weather, CargoCategory, VehicleType } from "../../types/models"
+const { width, height } = Dimensions.get('window')
 
 type CreateDeliveryScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, "CreateDelivery">
+  navigation: NativeStackNavigationProp<RootStackParamList, 'CreateDelivery'>
 }
 
-type PackageSize = "small" | "medium" | "large"
-type PackageType = "document" | "food" | "clothing" | "electronics" | "other"
+type PackageSize = 'small' | 'medium' | 'large'
+type PackageType = 'document' | 'food' | 'clothing' | 'electronics' | 'other'
 
-interface PackageSizeOption {
-  value: PackageSize
-  label: string
-}
-
-interface PackageTypeOption {
-  value: PackageType
-  label: string
-}
-
-interface CargoCategoryOption {
-  value: CargoCategory
-  label: string
+interface RouteInfo {
+  distance: number
+  duration: number
+  coordinates: { latitude: number; longitude: number }[]
+  trafficLevel: 'low' | 'moderate' | 'high' | 'severe'
 }
 
 const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation }) => {
@@ -47,31 +67,30 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   const { isConnected, addPendingUpload } = useNetwork()
   const mapRef = useRef<MapView | null>(null)
 
-  const {
-    createDelivery: submitDeliveryData,
-    loading: deliveryLoading
-  } = useDelivery()
+  const { createDelivery: submitDeliveryData, loading: deliveryLoading } = useDelivery()
 
-  const [pickupAddress, setPickupAddress] = useState<string>("")
-  const [pickupCommune, setPickupCommune] = useState<string>("")
-  const [deliveryAddress, setDeliveryAddress] = useState<string>("")
-  const [deliveryCommune, setDeliveryCommune] = useState<string>("")
-  const [recipientName, setRecipientName] = useState<string>("")
-  const [recipientPhone, setRecipientPhone] = useState<string>("")
-  const [description, setDescription] = useState<string>("")
-  const [packageSize, setPackageSize] = useState<PackageSize>("medium")
-  const [packageType, setPackageType] = useState<PackageType | "">("")
-  const [cargoCategory, setCargoCategory] = useState<CargoCategory | "">("")
+  // États pour les adresses
+  const [pickupAddress, setPickupAddress] = useState<string>('')
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('')
+  const [pickupLocation, setPickupLocation] = useState<Address | null>(null)
+  const [deliveryLocation, setDeliveryLocation] = useState<Address | null>(null)
+
+  // États pour les détails de livraison
+  const [recipientName, setRecipientName] = useState<string>('')
+  const [recipientPhone, setRecipientPhone] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
+  const [packageSize, setPackageSize] = useState<PackageSize>('medium')
+  const [packageType, setPackageType] = useState<PackageType | ''>('')
+  const [cargoCategory, setCargoCategory] = useState<CargoCategory | ''>('')
   const [isFragile, setIsFragile] = useState<boolean>(false)
   const [isUrgent, setIsUrgent] = useState<boolean>(false)
-  const [proposedPrice, setProposedPrice] = useState<string>("")
-  const [notes, setNotes] = useState<string>("")
+  const [proposedPrice, setProposedPrice] = useState<string>('')
+  const [notes, setNotes] = useState<string>('')
 
-  const [pickupLocation, setPickupLocation] = useState<Location.LocationObject | null>(null)
-  const [deliveryLocation, setDeliveryLocation] = useState<Location.LocationObject | null>(null)
+  // États pour les calculs et affichage
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null)
   const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null)
-  const [estimatedDistance, setEstimatedDistance] = useState<number | null>(null)
-  const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null)
+  const [estimatedTime, setEstimatedTime] = useState<number | null>(null)
   const [weatherData, setWeatherData] = useState<Weather | null>(null)
   const [recommendedVehicle, setRecommendedVehicle] = useState<{
     type: VehicleType
@@ -80,886 +99,589 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
     priceMultiplier: number
   } | null>(null)
 
+  // États UI
   const [loading, setLoading] = useState<boolean>(false)
-  const [geocoding, setGeocoding] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
+  const [error, setError] = useState<string>('')
   const [visible, setVisible] = useState<boolean>(false)
-  const [showWeather, setShowWeather] = useState<boolean>(false)
-  const [routeInfo, setRouteInfo] = useState<{
-    distance: number
-    duration: number
-    instructions: string[]
-  } | null>(null)
-  const [trafficInfo, setTrafficInfo] = useState<{
-    level: 'low' | 'moderate' | 'high' | 'severe'
-    delay: number
-    description: string
-  } | null>(null)
-
-  const communes: string[] = [
-    "Abobo",
-    "Adjamé",
-    "Attécoubé",
-    "Cocody",
-    "Koumassi",
-    "Marcory",
-    "Plateau",
-    "Port-Bouët",
-    "Treichville",
-    "Yopougon",
-  ]
-
-  const packageSizes: PackageSizeOption[] = [
-    { value: "small", label: t("createDelivery.packageSizes.small") },
-    { value: "medium", label: t("createDelivery.packageSizes.medium") },
-    { value: "large", label: t("createDelivery.packageSizes.large") },
-  ]
-
-  const packageTypes: PackageTypeOption[] = [
-    { value: "document", label: t("createDelivery.packageTypes.document") },
-    { value: "food", label: t("createDelivery.packageTypes.food") },
-    { value: "clothing", label: t("createDelivery.packageTypes.clothing") },
-    { value: "electronics", label: t("createDelivery.packageTypes.electronics") },
-    { value: "other", label: t("createDelivery.packageTypes.other") },
-  ]
-
-  const cargoCategories: CargoCategoryOption[] = [
-    { value: CargoCategory.DOCUMENTS, label: t("createDelivery.cargoCategories.documents") },
-    { value: CargoCategory.SMALL_PACKAGE, label: t("createDelivery.cargoCategories.smallPackages") },
-    { value: CargoCategory.MEDIUM_PACKAGE, label: t("createDelivery.cargoCategories.mediumPackages") },
-    { value: CargoCategory.LARGE_PACKAGE, label: t("createDelivery.cargoCategories.largePackages") },
-    { value: CargoCategory.FRAGILE, label: t("createDelivery.cargoCategories.fragile") },
-    { value: CargoCategory.FOOD, label: t("createDelivery.cargoCategories.food") },
-    { value: CargoCategory.ELECTRONICS, label: t("createDelivery.cargoCategories.electronics") },
-    { value: CargoCategory.FURNITURE, label: t("createDelivery.cargoCategories.furniture") },
-    { value: CargoCategory.APPLIANCES, label: t("createDelivery.cargoCategories.appliances") },
-    { value: CargoCategory.CONSTRUCTION, label: t("createDelivery.cargoCategories.construction") },
-    { value: CargoCategory.CUSTOM, label: t("createDelivery.cargoCategories.custom") },
-  ]
-
-  const deg2rad = useCallback((deg: number) => {
-    return deg * (Math.PI / 180)
-  }, [])
-
-  const calculateDistance = useCallback(
-    (lat1: number, lon1: number, lat2: number, lon2: number) => {
-      const R = 6371 // Rayon de la Terre en km
-      const dLat = deg2rad(lat2 - lat1)
-      const dLon = deg2rad(lon2 - lon1)
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-      const distance = R * c
-      return Math.round(distance * 10) / 10
-    },
-    [deg2rad],
+  const [showMapFullscreen, setShowMapFullscreen] = useState<boolean>(false)
+  const [currentStep, setCurrentStep] = useState<'addresses' | 'details' | 'review'>(
+    'addresses'
   )
 
-  const updatePriceEstimate = useCallback(async () => {
-    if (!pickupLocation || !deliveryLocation) return
+  const vehicleTypes = [
+    { value: 'motorcycle', label: 'Moto', icon: 'motorcycle', color: '#FF6B00' },
+    { value: 'bicycle', label: 'Vélo', icon: 'bicycle', color: '#4CAF50' },
+    { value: 'car', label: 'Voiture', icon: 'car-sport', color: '#2196F3' },
+    { value: 'van', label: 'Camionnette', icon: 'car', color: '#9C27B0' }
+  ]
 
-    try {
-      const distance = calculateDistance(
-        pickupLocation.coords.latitude,
-        pickupLocation.coords.longitude,
-        deliveryLocation.coords.latitude,
-        deliveryLocation.coords.longitude,
-      )
-      setEstimatedDistance(distance)
-
-      const duration = Math.round(distance * 3) // Estimation simple : 3 min/km
-      setEstimatedDuration(duration)
-
-      if (isConnected) {
-        const price = await getRecommendedPrice({
-          distance,
-          package_size: packageSize,
-          is_fragile: isFragile,
-          is_urgent: isUrgent,
-          weather_condition: weatherData?.current.condition || "Clear", // Utiliser condition comme string
-          pickup_commune: pickupCommune,
-          delivery_commune: deliveryCommune,
-        })
-
-        setRecommendedPrice(price)
-
-        if (!proposedPrice) {
-          setProposedPrice(price.toString())
-        }
-
-        if (cargoCategory) {
-          try {
-            const recommendation = await getVehicleRecommendation({
-              cargo_category: cargoCategory,
-              distance,
-              weight: packageSize === "small" ? 1 : packageSize === "medium" ? 5 : 15,
-              is_fragile: isFragile,
-              is_urgent: isUrgent,
-            })
-
-            setRecommendedVehicle({
-              type: recommendation.recommended_vehicle.type,
-              name: recommendation.recommended_vehicle.name,
-              reason: recommendation.reason,
-              priceMultiplier: recommendation.price_multiplier,
-            })
-
-            const adjustedPrice = Math.round(price * recommendation.price_multiplier)
-            setRecommendedPrice(adjustedPrice)
-            if (!proposedPrice) {
-              setProposedPrice(adjustedPrice.toString())
-            }
-          } catch (error) {
-            console.error("Erreur lors de la récupération de la recommandation de véhicule :", error)
-          }
-        }
-      } else {
-        const basePrice = 500
-        const pricePerKm = 100
-        let price = basePrice + Math.round(distance * pricePerKm)
-
-        if (packageSize === "large") price += 300
-        if (isFragile) price += 200
-        if (isUrgent) price += 500
-
-        setRecommendedPrice(price)
-
-        if (!proposedPrice) {
-          setProposedPrice(price.toString())
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors du calcul de l'estimation de prix :", error)
-    }
-  }, [pickupLocation, deliveryLocation, packageSize, isFragile, isUrgent, pickupCommune, deliveryCommune, isConnected, cargoCategory, proposedPrice, calculateDistance, weatherData])
-
-  const searchPickupLocation = useCallback(
-    async () => {
-      if (!pickupAddress || !pickupCommune) return
-
-      try {
-        setGeocoding(true)
-        const searchQuery = `${pickupAddress}, ${pickupCommune}, Abidjan, Côte d'Ivoire`
-
-        if (isConnected) {
-          const result = await geocodeAddress(searchQuery)
-
-          if (result && result.length > 0) {
-            const newLocation: Location.LocationObject = {
-              coords: {
-                latitude: result[0].latitude,
-                longitude: result[0].longitude,
-                altitude: null,
-                accuracy: null,
-                altitudeAccuracy: null,
-                heading: null,
-                speed: null,
-              },
-              timestamp: Date.now(),
-            }
-            setPickupLocation(newLocation)
-
-            if (mapRef.current) {
-              mapRef.current.animateToRegion({
-                latitude: result[0].latitude,
-                longitude: result[0].longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              })
-            }
-          } else {
-            Alert.alert(t("createDelivery.addressNotFound"), t("createDelivery.tryDifferentAddress"))
-          }
-        } else {
-          Alert.alert(t("createDelivery.offlineGeocoding"), t("createDelivery.usingCurrentLocation"))
-        }
-      } catch (error) {
-        console.error("Erreur lors du géocodage de l'adresse de ramassage :", error)
-      } finally {
-        setGeocoding(false)
-        updatePriceEstimate()
-      }
+  const packageSizes = [
+    { value: 'small', label: 'Petit', icon: 'cube-outline', description: 'Enveloppe, document' },
+    {
+      value: 'medium',
+      label: 'Moyen',
+      icon: 'gift-outline',
+      description: 'Sac, boîte moyenne'
     },
-    [pickupAddress, pickupCommune, isConnected, t, updatePriceEstimate],
-  )
+    { value: 'large', label: 'Grand', icon: 'archive-outline', description: 'Gros colis, valise' }
+  ]
 
-  const searchDeliveryLocation = useCallback(
-    async () => {
-      if (!deliveryAddress || !deliveryCommune) return
-
-      try {
-        setGeocoding(true)
-        const searchQuery = `${deliveryAddress}, ${deliveryCommune}, Abidjan, Côte d'Ivoire`
-
-        if (isConnected) {
-          const result = await geocodeAddress(searchQuery)
-
-          if (result && result.length > 0) {
-            const newLocation: Location.LocationObject = {
-              coords: {
-                latitude: result[0].latitude,
-                longitude: result[0].longitude,
-                altitude: null,
-                accuracy: null,
-                altitudeAccuracy: null,
-                heading: null,
-                speed: null,
-              },
-              timestamp: Date.now(),
-            }
-            setDeliveryLocation(newLocation)
-
-            if (mapRef.current && pickupLocation) {
-              const edgePadding = {
-                top: 50,
-                right: 50,
-                bottom: 50,
-                left: 50,
-              }
-
-              mapRef.current.fitToCoordinates(
-                [
-                  {
-                    latitude: pickupLocation.coords.latitude,
-                    longitude: pickupLocation.coords.longitude,
-                  },
-                  {
-                    latitude: result[0].latitude,
-                    longitude: result[0].longitude,
-                  },
-                ],
-                { edgePadding },
-              )
-            }
-          } else {
-            Alert.alert(t("createDelivery.addressNotFound"), t("createDelivery.tryDifferentAddress"))
-          }
-        } else {
-          Alert.alert(t("createDelivery.offlineGeocoding"), t("createDelivery.usingApproximateLocation"))
-
-          if (pickupLocation) {
-            const newLocation: Location.LocationObject = {
-              coords: {
-                latitude: pickupLocation.coords.latitude + 0.045,
-                longitude: pickupLocation.coords.longitude + 0.045,
-                altitude: null,
-                accuracy: null,
-                altitudeAccuracy: null,
-                heading: null,
-                speed: null,
-              },
-              timestamp: Date.now(),
-            }
-            setDeliveryLocation(newLocation)
-          }
-        }
-      } catch (error) {
-        console.error("Erreur lors du géocodage de l'adresse de livraison :", error)
-      } finally {
-        setGeocoding(false)
-        updatePriceEstimate()
-      }
-    },
-    [deliveryAddress, deliveryCommune, isConnected, pickupLocation, t, updatePriceEstimate],
-  )
-
+  // Calculer la route quand les deux adresses sont définies
   useEffect(() => {
-    (async () => {
+    const calculateRoute = async () => {
+      if (!pickupLocation || !deliveryLocation) {
+        setRouteInfo(null)
+        return
+      }
+
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync()
-        if (status !== "granted") {
-          Alert.alert(t("createDelivery.locationPermissionDenied"), t("createDelivery.locationPermissionMessage"))
-          return
+        setLoading(true)
+
+        // Calculer les directions
+        const directions = await getDirections(
+          pickupLocation.latitude,
+          pickupLocation.longitude,
+          deliveryLocation.latitude,
+          deliveryLocation.longitude
+        )
+
+        // Obtenir les infos de trafic
+        const traffic = await getTrafficInfo(
+          pickupLocation.latitude,
+          pickupLocation.longitude,
+          deliveryLocation.latitude,
+          deliveryLocation.longitude
+        )
+
+        const route: RouteInfo = {
+          distance: directions.distance / 1000, // en km
+          duration: directions.duration / 60, // en minutes
+          coordinates: directions.coordinates || [],
+          trafficLevel:
+            traffic.duration > directions.duration * 1.5
+              ? 'high'
+              : traffic.duration > directions.duration * 1.2
+              ? 'moderate'
+              : 'low'
         }
 
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
+        setRouteInfo(route)
+
+        // Calculer le prix recommandé
+        const priceData = await getRecommendedPrice({
+          distance: route.distance,
+          duration: route.duration,
+          packageSize,
+          isUrgent,
+          trafficLevel: route.trafficLevel
         })
-        setPickupLocation(location)
 
-        if (mapRef.current) {
-          mapRef.current.animateToRegion({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          })
-        }
+        setRecommendedPrice(priceData.recommended_price)
+        setEstimatedTime(route.duration)
 
-        if (isConnected) {
-          const weather = await getWeatherData(location.coords.latitude, location.coords.longitude)
-          setWeatherData(weather)
+        // Obtenir la recommandation de véhicule
+        const vehicleRec = await getVehicleRecommendation({
+          distance: route.distance,
+          packageSize,
+          packageType,
+          isFragile,
+          weatherConditions: weatherData?.condition
+        })
+
+        setRecommendedVehicle(vehicleRec)
+
+        // Centrer la carte sur la route
+        if (mapRef.current && route.coordinates.length > 0) {
+          mapRef.current.fitToCoordinates(
+            [
+              { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+              { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
+            ],
+            {
+              edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+              animated: true
+            }
+          )
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération de la localisation ou des données météo :", error)
-        setError(t("createDelivery.errorFetchingLocation"))
-        setVisible(true)
+        console.error('Erreur lors du calcul de la route:', error)
+        setError('Erreur lors du calcul de la route')
+      } finally {
+        setLoading(false)
       }
-    })()
-  }, [isConnected, t])
-
-  const handleSubmit = async () => {
-    if (!pickupAddress || !pickupCommune || !deliveryAddress || !deliveryCommune || !proposedPrice) {
-      setError(t("createDelivery.errorRequiredFields"))
-      setVisible(true)
-      return
     }
 
-    if (!recipientPhone || recipientPhone.trim().length === 0) {
-      setError(t("createDelivery.errorRecipientPhoneRequired"))
-      setVisible(true)
-      return
+    calculateRoute()
+  }, [pickupLocation, deliveryLocation, packageSize, isUrgent, packageType, isFragile])
+
+  // Charger les données météo
+  useEffect(() => {
+    const loadWeatherData = async () => {
+      if (pickupLocation) {
+        try {
+          const weather = await getWeatherData(
+            pickupLocation.latitude,
+            pickupLocation.longitude
+          )
+          setWeatherData(weather)
+        } catch (error) {
+          console.error('Erreur lors du chargement de la météo:', error)
+        }
+      }
     }
 
-    // Validation du numéro de téléphone ivoirien
-    const phoneRegex = /^(\+225)?[0-9]{8,10}$/
-    if (!phoneRegex.test(recipientPhone.replace(/\s/g, ''))) {
-      setError(t("createDelivery.errorInvalidPhoneNumber"))
-      setVisible(true)
-      return
-    }
+    loadWeatherData()
+  }, [pickupLocation])
 
-    // Cargo category is now optional
-    // if (!cargoCategory) {
-    //   setError(t("createDelivery.errorCargoCategoryRequired"))
-    //   setVisible(true)
-    //   return
-    // }
-
-    if (isNaN(Number.parseFloat(proposedPrice)) || Number.parseFloat(proposedPrice) <= 0) {
-      setError(t("createDelivery.errorInvalidPrice"))
-      setVisible(true)
-      return
-    }
-
-    if (recommendedPrice && Number.parseFloat(proposedPrice) < recommendedPrice * 0.7) {
-      Alert.alert(t("createDelivery.lowPriceWarning"), t("createDelivery.lowPriceMessage"), [
-        {
-          text: t("common.cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("common.continue"),
-          onPress: submitDelivery,
-        },
-      ])
-    } else {
-      submitDelivery()
-    }
+  const handlePickupAddressSelect = (address: Address) => {
+    setPickupLocation(address)
+    setPickupAddress(address.description)
   }
 
-  const submitDelivery = async () => {
-    setLoading(true)
+  const handleDeliveryAddressSelect = (address: Address) => {
+    setDeliveryLocation(address)
+    setDeliveryAddress(address.description)
+  }
+
+  const validateForm = (): boolean => {
+    if (!pickupLocation || !deliveryLocation) {
+      setError('Veuillez sélectionner les adresses de départ et de destination')
+      setVisible(true)
+      return false
+    }
+
+    if (!recipientName.trim()) {
+      setError('Veuillez entrer le nom du destinataire')
+      setVisible(true)
+      return false
+    }
+
+    if (!recipientPhone.trim()) {
+      setError('Veuillez entrer le numéro du destinataire')
+      setVisible(true)
+      return false
+    }
+
+    if (!description.trim()) {
+      setError('Veuillez décrire le colis à livrer')
+      setVisible(true)
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return
+
     try {
+      setLoading(true)
+
       const deliveryData = {
         pickup_address: pickupAddress,
-        pickup_commune: pickupCommune,
-        pickup_lat: pickupLocation?.coords.latitude,
-        pickup_lng: pickupLocation?.coords.longitude,
+        pickup_latitude: pickupLocation!.latitude,
+        pickup_longitude: pickupLocation!.longitude,
+        pickup_commune: pickupLocation!.commune || '',
         delivery_address: deliveryAddress,
-        delivery_commune: deliveryCommune,
-        delivery_lat: deliveryLocation?.coords.latitude,
-        delivery_lng: deliveryLocation?.coords.longitude,
-        delivery_contact_name: recipientName.trim() || undefined,
-        delivery_contact_phone: recipientPhone.trim(),
+        delivery_latitude: deliveryLocation!.latitude,
+        delivery_longitude: deliveryLocation!.longitude,
+        delivery_commune: deliveryLocation!.commune || '',
+        recipient_name: recipientName,
+        recipient_phone: recipientPhone,
         description,
         package_size: packageSize,
         package_type: packageType,
-        cargo_category: cargoCategory || undefined,
+        cargo_category: cargoCategory,
         is_fragile: isFragile,
         is_urgent: isUrgent,
-        proposed_price: Number.parseFloat(proposedPrice),
+        proposed_price: parseFloat(proposedPrice) || recommendedPrice || 0,
         notes,
-        estimated_distance: estimatedDistance ?? undefined,
-        estimated_duration: estimatedDuration ?? undefined,
-        required_vehicle_type: recommendedVehicle?.type,
+        estimated_distance: routeInfo?.distance || 0,
+        estimated_duration: routeInfo?.duration || 0,
+        weather_conditions: weatherData?.condition || 'unknown'
       }
 
-      if (isConnected) {
-        const response = await submitDeliveryData(deliveryData)
-        Alert.alert('Succès', 'Livraison créée avec succès!', [
-          {
-            text: 'Choisir un coursier',
-            onPress: () => navigation.navigate('SmartMatching', { deliveryId: response.id })
-          },
-          {
-            text: 'Plus tard',
-            style: 'cancel',
-            onPress: () => navigation.navigate('Orders')
-          }
-        ])
-      } else {
-        addPendingUpload({
-          type: "create_delivery",
-          data: deliveryData,
-        })
-
-        Alert.alert(t("createDelivery.offlineDeliveryCreated"), t("createDelivery.offlineDeliveryMessage"), [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ])
+      if (!isConnected) {
+        addPendingUpload('delivery', deliveryData)
+        Alert.alert(
+          'Mode hors ligne',
+          'Votre demande de livraison a été sauvegardée et sera envoyée quand vous serez reconnecté.'
+        )
+        navigation.goBack()
+        return
       }
+
+      const result = await submitDeliveryData(deliveryData)
+
+      Alert.alert('Succès', 'Votre demande de livraison a été créée avec succès!', [
+        {
+          text: 'Voir les enchères',
+          onPress: () => navigation.navigate('Bids', { deliveryId: result.id })
+        }
+      ])
     } catch (error) {
-      console.error("Erreur lors de la création de la livraison :", error)
-      setError(error instanceof Error ? error.message : t("createDelivery.errorCreatingDelivery"))
+      setError('Erreur lors de la création de la livraison')
       setVisible(true)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    if (cargoCategory && estimatedDistance) {
-      updatePriceEstimate()
-    }
-  }, [cargoCategory, estimatedDistance, updatePriceEstimate])
+  const renderAddressSection = () => (
+    <View style={styles.addressSection}>
+      <Text style={styles.sectionTitle}>Où récupérer et livrer ?</Text>
+
+      <View style={styles.addressContainer}>
+        <View style={styles.addressInputContainer}>
+          <View style={styles.addressDot} />
+          <View style={styles.addressInputWrapper}>
+            <AddressAutocomplete
+              label="Adresse de départ"
+              value={pickupAddress}
+              onChangeText={setPickupAddress}
+              onAddressSelect={handlePickupAddressSelect}
+              placeholder="D'où récupérer le colis ?"
+              showCurrentLocation={true}
+              style={styles.addressInput}
+            />
+          </View>
+        </View>
+
+        <View style={styles.addressLine} />
+
+        <View style={styles.addressInputContainer}>
+          <View style={[styles.addressDot, styles.destinationDot]} />
+          <View style={styles.addressInputWrapper}>
+            <AddressAutocomplete
+              label="Adresse de destination"
+              value={deliveryAddress}
+              onChangeText={setDeliveryAddress}
+              onAddressSelect={handleDeliveryAddressSelect}
+              placeholder="Où livrer le colis ?"
+              showCurrentLocation={false}
+              style={styles.addressInput}
+            />
+          </View>
+        </View>
+      </View>
+
+      {routeInfo && (
+        <Surface style={styles.routeInfoCard} elevation={2}>
+          <View style={styles.routeInfoHeader}>
+            <Ionicons name="time-outline" size={20} color="#666" />
+            <Text style={styles.routeInfoTitle}>Informations du trajet</Text>
+          </View>
+          <View style={styles.routeInfoContent}>
+            <View style={styles.routeInfoItem}>
+              <MaterialIcons name="straighten" size={16} color="#666" />
+              <Text style={styles.routeInfoText}>{routeInfo.distance.toFixed(1)} km</Text>
+            </View>
+            <View style={styles.routeInfoItem}>
+              <MaterialIcons name="schedule" size={16} color="#666" />
+              <Text style={styles.routeInfoText}>{Math.round(routeInfo.duration)} min</Text>
+            </View>
+            <View style={styles.routeInfoItem}>
+              <MaterialIcons name="traffic" size={16} color="#666" />
+              <Text
+                style={[
+                  styles.routeInfoText,
+                  {
+                    color:
+                      routeInfo.trafficLevel === 'high'
+                        ? '#f44336'
+                        : routeInfo.trafficLevel === 'moderate'
+                        ? '#ff9800'
+                        : '#4caf50'
+                  }
+                ]}
+              >
+                {routeInfo.trafficLevel === 'high'
+                  ? 'Dense'
+                  : routeInfo.trafficLevel === 'moderate'
+                  ? 'Modéré'
+                  : 'Fluide'}
+              </Text>
+            </View>
+          </View>
+        </Surface>
+      )}
+    </View>
+  )
+
+  const renderMapSection = () => (
+    <View style={styles.mapSection}>
+      <View style={styles.mapHeader}>
+        <Text style={styles.sectionTitle}>Aperçu du trajet</Text>
+        <TouchableOpacity
+          style={styles.fullscreenButton}
+          onPress={() => setShowMapFullscreen(true)}
+        >
+          <Ionicons name="expand-outline" size={20} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.mapContainer}>
+        <CustomMapView
+          ref={mapRef}
+          style={styles.map}
+          pickupPoint={
+            pickupLocation
+              ? {
+                  latitude: pickupLocation.latitude,
+                  longitude: pickupLocation.longitude,
+                  title: 'Point de départ',
+                  description: pickupAddress
+                }
+              : undefined
+          }
+          deliveryPoint={
+            deliveryLocation
+              ? {
+                  latitude: deliveryLocation.latitude,
+                  longitude: deliveryLocation.longitude,
+                  title: 'Point de destination',
+                  description: deliveryAddress
+                }
+              : undefined
+          }
+          route={
+            routeInfo
+              ? {
+                  coordinates: routeInfo.coordinates,
+                  distance: routeInfo.distance,
+                  duration: routeInfo.duration,
+                  instructions: []
+                }
+              : undefined
+          }
+          showUserLocation={true}
+          showTraffic={true}
+          isInteractive={true}
+        />
+
+        {loading && (
+          <View style={styles.mapLoading}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.7)']}
+              style={styles.loadingOverlay}
+            >
+              <Text style={styles.loadingText}>Calcul du trajet...</Text>
+            </LinearGradient>
+          </View>
+        )}
+      </View>
+    </View>
+  )
+
+  const renderPackageSection = () => (
+    <View style={styles.packageSection}>
+      <Text style={styles.sectionTitle}>Type de colis</Text>
+
+      <View style={styles.packageSizeContainer}>
+        {packageSizes.map((size) => (
+          <TouchableOpacity
+            key={size.value}
+            style={[
+              styles.packageSizeCard,
+              packageSize === size.value && styles.packageSizeCardSelected
+            ]}
+            onPress={() => setPackageSize(size.value as PackageSize)}
+          >
+            <Ionicons
+              name={size.icon as any}
+              size={24}
+              color={packageSize === size.value ? '#007AFF' : '#666'}
+            />
+            <Text
+              style={[
+                styles.packageSizeLabel,
+                packageSize === size.value && styles.packageSizeLabelSelected
+              ]}
+            >
+              {size.label}
+            </Text>
+            <Text style={styles.packageSizeDescription}>{size.description}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <TextInput
+        label="Description du colis"
+        value={description}
+        onChangeText={setDescription}
+        mode="outlined"
+        style={styles.input}
+        placeholder="Décrivez ce que vous voulez livrer..."
+        multiline
+        numberOfLines={3}
+      />
+
+      <View style={styles.optionsContainer}>
+        <TouchableOpacity
+          style={[styles.optionChip, isFragile && styles.optionChipSelected]}
+          onPress={() => setIsFragile(!isFragile)}
+        >
+          <Ionicons
+            name="warning-outline"
+            size={16}
+            color={isFragile ? '#ffffff' : '#666'}
+          />
+          <Text
+            style={[styles.optionChipText, isFragile && styles.optionChipTextSelected]}
+          >
+            Fragile
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.optionChip, isUrgent && styles.optionChipSelected]}
+          onPress={() => setIsUrgent(!isUrgent)}
+        >
+          <Ionicons name="flash-outline" size={16} color={isUrgent ? '#ffffff' : '#666'} />
+          <Text
+            style={[styles.optionChipText, isUrgent && styles.optionChipTextSelected]}
+          >
+            Urgent
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  )
+
+  const renderRecipientSection = () => (
+    <View style={styles.recipientSection}>
+      <Text style={styles.sectionTitle}>Informations du destinataire</Text>
+
+      <TextInput
+        label="Nom du destinataire"
+        value={recipientName}
+        onChangeText={setRecipientName}
+        mode="outlined"
+        style={styles.input}
+        placeholder="Nom complet"
+        left={<TextInput.Icon icon="account" />}
+      />
+
+      <TextInput
+        label="Numéro de téléphone"
+        value={recipientPhone}
+        onChangeText={setRecipientPhone}
+        mode="outlined"
+        style={styles.input}
+        placeholder="01 02 03 04 05"
+        keyboardType="phone-pad"
+        left={<TextInput.Icon icon="phone" />}
+      />
+
+      <TextInput
+        label="Instructions spéciales (optionnel)"
+        value={notes}
+        onChangeText={setNotes}
+        mode="outlined"
+        style={styles.input}
+        placeholder="Étage, code d'accès, instructions..."
+        multiline
+        numberOfLines={2}
+        left={<TextInput.Icon icon="note-text" />}
+      />
+    </View>
+  )
+
+  const renderPriceSection = () => (
+    <View style={styles.priceSection}>
+      <Text style={styles.sectionTitle}>Prix et véhicule</Text>
+
+      {recommendedPrice && (
+        <Surface style={styles.priceCard} elevation={2}>
+          <View style={styles.priceHeader}>
+            <Ionicons name="pricetag-outline" size={20} color="#007AFF" />
+            <Text style={styles.priceTitle}>Prix recommandé</Text>
+          </View>
+          <Text style={styles.priceAmount}>{formatPrice(recommendedPrice)} FCFA</Text>
+          <Text style={styles.priceNote}>
+            Basé sur la distance ({routeInfo?.distance.toFixed(1)} km) et les conditions actuelles
+          </Text>
+        </Surface>
+      )}
+
+      <TextInput
+        label="Votre prix proposé (FCFA)"
+        value={proposedPrice}
+        onChangeText={setProposedPrice}
+        mode="outlined"
+        style={styles.input}
+        keyboardType="numeric"
+        placeholder={recommendedPrice ? formatPrice(recommendedPrice) : '0'}
+        left={<TextInput.Icon icon="currency-usd" />}
+      />
+
+      {recommendedVehicle && (
+        <Surface style={styles.vehicleCard} elevation={2}>
+          <View style={styles.vehicleHeader}>
+            <Ionicons name="car-outline" size={20} color="#007AFF" />
+            <Text style={styles.vehicleTitle}>Véhicule recommandé</Text>
+          </View>
+          <Text style={styles.vehicleName}>{recommendedVehicle.name}</Text>
+          <Text style={styles.vehicleReason}>{recommendedVehicle.reason}</Text>
+        </Surface>
+      )}
+    </View>
+  )
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" iconColor="#212121" size={24} />
+      <StatusBar backgroundColor="#007AFF" barStyle="light-content" />
+
+      <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("createDelivery.title")}</Text>
-        <View style={{ width: 24 }} />
-      </View>
+        <Text style={styles.headerTitle}>Nouvelle livraison</Text>
+        <View style={styles.headerRight} />
+      </LinearGradient>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.mapContainer}>
-            <CustomMapView
-              style={styles.map}
-              initialRegion={{
-                latitude: 5.3599517,
-                longitude: -4.0082563,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
-              }}
-              pickupPoint={pickupLocation ? {
-                latitude: pickupLocation.coords.latitude,
-                longitude: pickupLocation.coords.longitude,
-                title: t("createDelivery.pickupPoint"),
-                description: pickupAddress
-              } : undefined}
-              deliveryPoint={deliveryLocation ? {
-                latitude: deliveryLocation.coords.latitude,
-                longitude: deliveryLocation.coords.longitude,
-                title: t("createDelivery.deliveryPoint"),
-                description: deliveryAddress
-              } : undefined}
-              onPickupPointSelected={(coordinate: Coordinates) => {
-                setPickupLocation({
-                  coords: {
-                    latitude: coordinate.latitude,
-                    longitude: coordinate.longitude,
-                    altitude: null,
-                    accuracy: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    speed: null
-                  },
-                  timestamp: Date.now()
-                });
-              }}
-              onDeliveryPointSelected={(coordinate: Coordinates) => {
-                setDeliveryLocation({
-                  coords: {
-                    latitude: coordinate.latitude,
-                    longitude: coordinate.longitude,
-                    altitude: null,
-                    accuracy: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    speed: null
-                  },
-                  timestamp: Date.now()
-                });
-              }}
-              onRouteCalculated={(route: Route) => {
-                setRouteInfo(route);
-                setEstimatedDistance(route.distance);
-                setEstimatedDuration(route.duration);
-              }}
-              onTrafficUpdate={(traffic: TrafficInfo) => {
-                setTrafficInfo(traffic);
-              }}
-              showsTraffic={true}
-              showsUserLocation={true}
-            />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {renderAddressSection()}
+          {(pickupLocation && deliveryLocation) && renderMapSection()}
+          {renderPackageSection()}
+          {renderRecipientSection()}
+          {(routeInfo && recommendedPrice) && renderPriceSection()}
 
-            {weatherData && (
-              <TouchableOpacity style={styles.weatherButton} onPress={() => setShowWeather(!showWeather)}>
-                <Text style={styles.weatherButtonText}>
-                  {showWeather ? t("createDelivery.hideWeather") : t("createDelivery.showWeather")}
-                </Text>
-              </TouchableOpacity>
-            )}
+          {weatherData && <WeatherInfo weather={weatherData} style={styles.weatherInfo} />}
+        </ScrollView>
 
-            {showWeather && weatherData && (
-              <View style={styles.weatherContainer}>
-                <WeatherInfo weather={weatherData} />
-              </View>
-            )}
-
-            {routeInfo && (
-              <View style={styles.routeInfoContainer}>
-                <Text style={styles.routeInfoTitle}>{t("createDelivery.routeInformation")}</Text>
-                <View style={styles.routeInfoRow}>
-                  <Text style={styles.routeInfoLabel}>{t("createDelivery.distance")}:</Text>
-                  <Text style={styles.routeInfoValue}>{(routeInfo.distance / 1000).toFixed(1)} km</Text>
-                </View>
-                <View style={styles.routeInfoRow}>
-                  <Text style={styles.routeInfoLabel}>{t("createDelivery.estimatedTime")}:</Text>
-                  <Text style={styles.routeInfoValue}>{Math.round(routeInfo.duration / 60)} min</Text>
-                </View>
-                {trafficInfo && (
-                  <View style={styles.routeInfoRow}>
-                    <Text style={styles.routeInfoLabel}>{t("createDelivery.traffic")}:</Text>
-                    <Text style={[styles.routeInfoValue, { 
-                      color: trafficInfo.level === 'high' || trafficInfo.level === 'severe' ? '#f44336' : 
-                             trafficInfo.level === 'moderate' ? '#ff9800' : '#4caf50' 
-                    }]}>
-                      {t(`createDelivery.trafficLevels.${trafficInfo.level}`)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("createDelivery.pickupAddress")}</Text>
-
-            <AddressAutocomplete
-              label={t("createDelivery.address")}
-              value={pickupAddress}
-              onChangeText={setPickupAddress}
-              onAddressSelect={(address: Address) => {
-                setPickupAddress(address.description);
-                setPickupCommune(address.commune || '');
-                setPickupLocation({
-                  coords: {
-                    latitude: address.latitude,
-                    longitude: address.longitude,
-                    altitude: null,
-                    accuracy: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    speed: null
-                  },
-                  timestamp: Date.now()
-                });
-              }}
-              placeholder={t("createDelivery.enterAddress")}
-              style={styles.input}
-              showCurrentLocation={true}
-            />
-
-            <View style={styles.communeContainer}>
-              <Text style={styles.communeLabel}>{t("createDelivery.commune")}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {communes.map((commune) => (
-                  <Chip
-                    key={commune}
-                    selected={pickupCommune === commune}
-                    onPress={() => {
-                      setPickupCommune(commune)
-                      setTimeout(searchPickupLocation, 500)
-                    }}
-                    style={[styles.communeChip, pickupCommune === commune && styles.selectedChip]}
-                    textStyle={pickupCommune === commune ? styles.selectedChipText : {}}
-                  >
-                    {commune}
-                  </Chip>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-
-          <Divider style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("createDelivery.deliveryAddress")}</Text>
-
-            <AddressAutocomplete
-              label={t("createDelivery.address")}
-              value={deliveryAddress}
-              onChangeText={setDeliveryAddress}
-              onAddressSelect={(address: Address) => {
-                setDeliveryAddress(address.description);
-                setDeliveryCommune(address.commune || '');
-                setDeliveryLocation({
-                  coords: {
-                    latitude: address.latitude,
-                    longitude: address.longitude,
-                    altitude: null,
-                    accuracy: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    speed: null
-                  },
-                  timestamp: Date.now()
-                });
-              }}
-              placeholder={t("createDelivery.enterAddress")}
-              style={styles.input}
-              showCurrentLocation={false}
-            />
-
-            <View style={styles.communeContainer}>
-              <Text style={styles.communeLabel}>{t("createDelivery.commune")}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {communes.map((commune) => (
-                  <Chip
-                    key={commune}
-                    selected={deliveryCommune === commune}
-                    onPress={() => {
-                      setDeliveryCommune(commune)
-                      setTimeout(searchDeliveryLocation, 500)
-                    }}
-                    style={[styles.communeChip, deliveryCommune === commune && styles.selectedChip]}
-                    textStyle={deliveryCommune === commune ? styles.selectedChipText : {}}
-                  >
-                    {commune}
-                  </Chip>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-
-          <Divider style={styles.divider} />
-
-          {/* Section Destinataire */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("createDelivery.recipientInfo")}</Text>
-
-            <TextInput
-              label={`${t("createDelivery.recipientPhone")} *`}
-              value={recipientPhone}
-              onChangeText={setRecipientPhone}
-              style={styles.input}
-              mode="outlined"
-              keyboardType="phone-pad"
-              placeholder="01 02 03 04 05"
-              left={<TextInput.Icon icon="phone" />}
-            />
-            <HelperText type="info" visible={true}>
-              {t("createDelivery.recipientPhoneRequired")}
-            </HelperText>
-
-            <TextInput
-              label={t("createDelivery.recipientName")}
-              value={recipientName}
-              onChangeText={setRecipientName}
-              style={styles.input}
-              mode="outlined"
-              placeholder={t("createDelivery.recipientNamePlaceholder")}
-              left={<TextInput.Icon icon="account" />}
-            />
-            <HelperText type="info" visible={true}>
-              {t("createDelivery.recipientNameOptional")}
-            </HelperText>
-          </View>
-
-          <Divider style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("createDelivery.packageDetails")}</Text>
-
-            <TextInput
-              label={t("createDelivery.description")}
-              value={description}
-              onChangeText={setDescription}
-              style={styles.input}
-              mode="outlined"
-              multiline
-              numberOfLines={3}
-              left={<TextInput.Icon icon="text" />}
-            />
-
-            <Text style={styles.optionLabel}>{t("createDelivery.packageSize")}</Text>
-            <View style={styles.optionsContainer}>
-              {packageSizes.map((size) => (
-                <Chip
-                  key={size.value}
-                  selected={packageSize === size.value}
-                  onPress={() => {
-                    setPackageSize(size.value)
-                    updatePriceEstimate()
-                  }}
-                  style={[styles.optionChip, packageSize === size.value && styles.selectedChip]}
-                  textStyle={packageSize === size.value ? styles.selectedChipText : {}}
-                >
-                  {size.label}
-                </Chip>
-              ))}
-            </View>
-
-            <Text style={styles.optionLabel}>{t("createDelivery.packageType")}</Text>
-            <View style={styles.optionsContainer}>
-              {packageTypes.map((type) => (
-                <Chip
-                  key={type.value}
-                  selected={packageType === type.value}
-                  onPress={() => setPackageType(type.value)}
-                  style={[styles.optionChip, packageType === type.value && styles.selectedChip]}
-                  textStyle={packageType === type.value ? styles.selectedChipText : {}}
-                >
-                  {type.label}
-                </Chip>
-              ))}
-            </View>
-
-            <Text style={styles.optionLabel}>{t("createDelivery.cargoCategory")} ({t("common.optional")})</Text>
-            <View style={styles.optionsContainer}>
-              {cargoCategories.map((category) => (
-                <Chip
-                  key={category.value}
-                  selected={cargoCategory === category.value}
-                  onPress={() => setCargoCategory(category.value)}
-                  style={[styles.optionChip, cargoCategory === category.value && styles.selectedChip]}
-                  textStyle={cargoCategory === category.value ? styles.selectedChipText : {}}
-                >
-                  {category.label}
-                </Chip>
-              ))}
-            </View>
-
-            <View style={styles.checkboxContainer}>
-              <Chip
-                selected={isFragile}
-                onPress={() => {
-                  setIsFragile(!isFragile)
-                  updatePriceEstimate()
-                }}
-                style={[styles.optionChip, isFragile && styles.selectedChip]}
-                textStyle={isFragile ? styles.selectedChipText : {}}
-                icon={isFragile ? "check" : "close"}
-              >
-                {t("createDelivery.isFragile")}
-              </Chip>
-
-              <Chip
-                selected={isUrgent}
-                onPress={() => {
-                  setIsUrgent(!isUrgent)
-                  updatePriceEstimate()
-                }}
-                style={[styles.optionChip, isUrgent && styles.selectedChip]}
-                textStyle={isUrgent ? styles.selectedChipText : {}}
-                icon={isUrgent ? "check" : "close"}
-              >
-                {t("createDelivery.isUrgent")}
-              </Chip>
-            </View>
-
-            <TextInput
-              label={t("createDelivery.notes")}
-              value={notes}
-              onChangeText={setNotes}
-              style={styles.input}
-              mode="outlined"
-              multiline
-              numberOfLines={2}
-              left={<TextInput.Icon icon="note" />}
-            />
-          </View>
-
-          <Divider style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("createDelivery.priceAndEstimates")}</Text>
-
-            {estimatedDistance && estimatedDuration && (
-              <View style={styles.estimatesContainer}>
-                <View style={styles.estimateItem}>
-                  <Text style={styles.estimateLabel}>{t("createDelivery.distance")}</Text>
-                  <Text style={styles.estimateValue}>{estimatedDistance} km</Text>
-                </View>
-                <View style={styles.estimateItem}>
-                  <Text style={styles.estimateLabel}>{t("createDelivery.duration")}</Text>
-                  <Text style={styles.estimateValue}>{estimatedDuration} min</Text>
-                </View>
-              </View>
-            )}
-
-            {recommendedVehicle && (
-              <View style={styles.vehicleRecommendationContainer}>
-                <Text style={styles.vehicleRecommendationTitle}>{t("createDelivery.recommendedVehicle")}</Text>
-                <View style={styles.vehicleRecommendationContent}>
-                  <View style={styles.vehicleIconContainer}>
-                    <IconButton
-                      icon={
-                        recommendedVehicle.type === VehicleType.SCOOTER
-                          ? "scooter"
-                          : recommendedVehicle.type === VehicleType.BICYCLE
-                            ? "bicycle"
-                            : recommendedVehicle.type ===`MOTORCYCLE
-                              ? "motorbike"                              : recommendedVehicle.type === VehicleType.VAN
-                                ? "truck-delivery"
-                              : recommendedVehicle.type === VehicleType.PICKUP
-                                ? "truck"
-                                  : recommendedVehicle.type === VehicleType.KIA_TRUCK ||
-                                      recommendedVehicle.type === VehicleType.MOVING_TRUCK
-                                    ? "truck"
-                                    : "truck-outline"
-                      }
-                      size={36}
-                      iconColor="#FF6B00"
-                    />
-                  </View>
-                  <View style={styles.vehicleRecommendationDetails}>
-                    <Text style={styles.vehicleRecommendationName}>{recommendedVehicle.name}</Text>
-                    <Text style={styles.vehicleRecommendationReason}>{recommendedVehicle.reason}</Text>
-                    <Text style={styles.vehicleRecommendationMultiplier}>
-                      {t("createDelivery.priceMultiplier")}: x{recommendedVehicle.priceMultiplier.toFixed(1)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            <TextInput
-              label={t("createDelivery.proposedPrice")}
-              value={proposedPrice}
-              onChangeText={setProposedPrice}
-              style={styles.input}
-              mode="outlined"
-              keyboardType="numeric"
-              left={<TextInput.Icon icon="cash" />}
-              right={<TextInput.Affix text="FCFA" />}
-            />
-
-            {recommendedPrice && (
-              <HelperText type="info" style={styles.recommendedPrice}>
-                {t("createDelivery.recommendedPrice")}: {formatPrice(recommendedPrice)} FCFA
-              </HelperText>
-            )}
-          </View>
-
+        <View style={styles.footer}>
           <Button
             mode="contained"
             onPress={handleSubmit}
-            style={styles.submitButton}
             loading={loading || deliveryLoading}
-            disabled={loading || deliveryLoading || geocoding}
+            disabled={loading || deliveryLoading || !pickupLocation || !deliveryLocation}
+            style={styles.submitButton}
+            contentStyle={styles.submitButtonContent}
+            labelStyle={styles.submitButtonLabel}
           >
-            {t("createDelivery.submit")}
+            {loading || deliveryLoading ? 'Création...' : 'Créer la livraison'}
           </Button>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
 
       <Snackbar
         visible={visible}
         onDismiss={() => setVisible(false)}
-        duration={3000}
-        action={{
-          label: "OK",
-          onPress: () => setVisible(false),
-        }}
+        duration={4000}
+        style={styles.snackbar}
       >
         {error}
       </Snackbar>
@@ -967,227 +689,335 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   )
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: '#f8f9fa'
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16
+  },
+  backButton: {
+    padding: 4
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#212121",
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold'
+  },
+  headerRight: {
+    width: 32
   },
   keyboardAvoidingView: {
-    flex: 1,
+    flex: 1
   },
-  scrollContainer: {
-    padding: 16,
+  scrollView: {
+    flex: 1
   },
-  mapContainer: {
-    height: 200,
-    borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 16,
+  scrollContent: {
+    paddingBottom: 100
   },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  weatherButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  weatherButtonText: {
-    fontSize: 12,
-    color: "#FF6B00",
-  },
-  weatherContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    padding: 10,
-  },
-  section: {
-    backgroundColor: "#FFFFFF",
-    marginBottom: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderRadius: 12,
-    marginHorizontal: 4,
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+
+  // Section des adresses
+  addressSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    marginBottom: 24
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: "#212121",
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16
   },
-  input: {
-    marginBottom: 16,
-    backgroundColor: "#F8F9FA",
-    borderRadius: 8,
+  addressContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   },
-  communeContainer: {
-    marginBottom: 16,
+  addressInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start'
   },
-  communeLabel: {
-    fontSize: 14,
-    color: "#757575",
-    marginBottom: 8,
-  },
-  communeChip: {
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: "#F5F5F5",
-  },
-  optionLabel: {
-    fontSize: 14,
-    color: "#757575",
-    marginBottom: 8,
-    marginTop: 8,
-  },
-  optionsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 12,
-  },
-  optionChip: {
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: "#F5F5F5",
-  },
-  selectedChip: {
-    backgroundColor: "#FF6B00",
-  },
-  selectedChipText: {
-    color: "#FFFFFF",
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    marginBottom: 12,
-  },
-  estimatesContainer: {
-    flexDirection: "row",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  estimateItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  estimateLabel: {
-    fontSize: 12,
-    color: "#757575",
-    marginBottom: 4,
-  },
-  estimateValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  vehicleRecommendationContainer: {
-    backgroundColor: "#FFF8E1",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  vehicleRecommendationTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#FF6B00",
-    marginBottom: 8,
-  },
-  vehicleRecommendationContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  vehicleIconContainer: {
-    marginRight: 8,
-  },
-  vehicleRecommendationDetails: {
-    flex: 1,
-  },
-  vehicleRecommendationName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  vehicleRecommendationReason: {
-    fontSize: 14,
-    color: "#757575",
-    marginTop: 4,
-  },
-  vehicleRecommendationMultiplier: {
-    fontSize: 14,
-    color: "#FF6B00",
-    marginTop: 4,
-    fontWeight: "bold",
-  },
-  recommendedPrice: {
-    fontSize: 14,
-    color: "#4CAF50",
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  submitButton: {
+  addressDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4CAF50',
     marginTop: 20,
-    marginBottom: 40,
-    paddingVertical: 8,
-    backgroundColor: "#FF6B00",
+    marginRight: 12
   },
-  routeInfoContainer: {
-    backgroundColor: "#F5F5F5",
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
+  destinationDot: {
+    backgroundColor: '#f44336'
+  },
+  addressLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#e0e0e0',
+    marginLeft: 5,
+    marginVertical: 8
+  },
+  addressInputWrapper: {
+    flex: 1
+  },
+  addressInput: {
+    marginBottom: 8
+  },
+  routeInfoCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12
+  },
+  routeInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12
   },
   routeInfoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8
+  },
+  routeInfoContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around'
+  },
+  routeInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  routeInfoText: {
+    marginLeft: 4,
     fontSize: 14,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 8,
+    color: '#666',
+    fontWeight: '500'
   },
-  routeInfoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
+
+  // Section de la carte
+  mapSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24
   },
-  routeInfoLabel: {
+  mapHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16
+  },
+  fullscreenButton: {
+    padding: 4
+  },
+  mapContainer: {
+    height: 200,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative'
+  },
+  map: {
+    flex: 1
+  },
+  mapLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center'
+  },
+
+  // Section du colis
+  packageSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24
+  },
+  packageSizeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16
+  },
+  packageSizeCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 12,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0'
+  },
+  packageSizeCardSelected: {
+    borderColor: '#007AFF',
+    backgroundColor: '#f0f8ff'
+  },
+  packageSizeLabel: {
     fontSize: 12,
-    color: "#757575",
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 4,
+    marginBottom: 2
   },
-  routeInfoValue: {
+  packageSizeLabelSelected: {
+    color: '#007AFF'
+  },
+  packageSizeDescription: {
+    fontSize: 10,
+    color: '#999',
+    textAlign: 'center'
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    marginTop: 12
+  },
+  optionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0'
+  },
+  optionChipSelected: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF'
+  },
+  optionChipText: {
+    marginLeft: 4,
     fontSize: 12,
-    fontWeight: "bold",
-    color: "#212121",
+    color: '#666',
+    fontWeight: '500'
   },
+  optionChipTextSelected: {
+    color: '#ffffff'
+  },
+
+  // Section destinataire
+  recipientSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24
+  },
+
+  // Section prix
+  priceSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24
+  },
+  priceCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16
+  },
+  priceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8
+  },
+  priceTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8
+  },
+  priceAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 4
+  },
+  priceNote: {
+    fontSize: 12,
+    color: '#666'
+  },
+  vehicleCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12
+  },
+  vehicleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8
+  },
+  vehicleTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8
+  },
+  vehicleName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 4
+  },
+  vehicleReason: {
+    fontSize: 14,
+    color: '#666'
+  },
+
+  // Éléments communs
+  input: {
+    backgroundColor: '#ffffff',
+    marginBottom: 12
+  },
+  weatherInfo: {
+    marginHorizontal: 20,
+    marginBottom: 20
+  },
+
+  // Pied de page
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0'
+  },
+  submitButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 12
+  },
+  submitButtonContent: {
+    paddingVertical: 4
+  },
+  submitButtonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
+
+  snackbar: {
+    backgroundColor: '#f44336'
+  }
 })
 
 export default CreateDeliveryScreen
