@@ -24,11 +24,39 @@ args = "cd backend"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
+args = "python -m pip install --upgrade pip"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
 args = "python -m pip install -r requirements.txt"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -c \"from app.db.init_db import init_db; import asyncio; asyncio.run(init_db())\""
+args = "python -c \""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "import asyncio"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "import sys"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sys.path.append('.')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "from app.db.init_db import init_db"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "asyncio.run(init_db())"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "\""
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
