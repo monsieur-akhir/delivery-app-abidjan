@@ -133,6 +133,281 @@ def update_kyc_status(
     db.refresh(user)
     return user
 
+def get_filtered_users(
+    db: Session, 
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    kyc_status: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100
+) -> List[User]:
+    """
+    Récupère les utilisateurs avec filtres
+    """
+    query = db.query(User)
+    
+    if role:
+        query = query.filter(User.role == role)
+    if status:
+        query = query.filter(User.status == status)
+    if kyc_status:
+        query = query.filter(User.kyc_status == kyc_status)
+    if search:
+        query = query.filter(
+            or_(
+                User.full_name.ilike(f"%{search}%"),
+                User.phone.ilike(f"%{search}%"),
+                User.email.ilike(f"%{search}%")
+            )
+        )
+    
+    return query.offset(skip).limit(limit).all()
+
+def create_new_user(db: Session, user_data: dict) -> User:
+    """
+    Crée un nouvel utilisateur
+    """
+    from ..core.security import get_password_hash
+    
+    # Hasher le mot de passe
+    if 'password' in user_data:
+        user_data['hashed_password'] = get_password_hash(user_data.pop('password'))
+    
+    user = User(**user_data)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_user_data(db: Session, user_id: int, user_data: dict) -> User:
+    """
+    Met à jour les données d'un utilisateur
+    """
+    user = get_user(db, user_id)
+    
+    for key, value in user_data.items():
+        if hasattr(user, key):
+            setattr(user, key, value)
+    
+    db.commit()
+    db.refresh(user)
+    return user
+
+def get_user_statistics(db: Session, user_id: int) -> Dict[str, Any]:
+    """
+    Récupère les statistiques d'un utilisateur
+    """
+    from ..models.delivery import Delivery
+    from ..models.rating import Rating
+    from sqlalchemy import func
+    
+    user = get_user(db, user_id)
+    stats = {}
+    
+    if user.role == 'client':
+        # Statistiques client
+        deliveries = db.query(Delivery).filter(Delivery.client_id == user_id)
+        stats.update({
+            'total_deliveries': deliveries.count(),
+            'completed_deliveries': deliveries.filter(Delivery.status == 'completed').count(),
+            'total_spent': deliveries.filter(Delivery.status == 'completed').with_entities(func.sum(Delivery.final_price)).scalar() or 0
+        })
+        
+    elif user.role == 'courier':
+        # Statistiques coursier
+        deliveries = db.query(Delivery).filter(Delivery.courier_id == user_id)
+        completed_deliveries = deliveries.filter(Delivery.status == 'completed')
+        
+        stats.update({
+            'total_deliveries': deliveries.count(),
+            'completed_deliveries': completed_deliveries.count(),
+            'total_earnings': completed_deliveries.with_entities(func.sum(Delivery.final_price)).scalar() or 0,
+            'distance_covered': 0  # À calculer selon la logique métier
+        })
+        
+    # Ratings moyens
+    avg_rating = db.query(func.avg(Rating.score)).filter(Rating.rated_user_id == user_id).scalar()
+    stats['average_rating'] = round(avg_rating, 2) if avg_rating else 0
+    
+    return stats
+
+def get_user_activity_history(db: Session, user_id: int, limit: int = 20) -> List[Dict]:
+    """
+    Récupère l'historique d'activité d'un utilisateur
+    """
+    # Cette fonction nécessiterait un modèle ActivityLog
+    # Pour l'instant, on retourne les dernières livraisons
+    from ..models.delivery import Delivery
+    
+    activities = []
+    
+    # Livraisons en tant que client
+    client_deliveries = db.query(Delivery).filter(
+        Delivery.client_id == user_id
+    ).order_by(Delivery.created_at.desc()).limit(10).all()
+    
+    for delivery in client_deliveries:
+        activities.append({
+            'id': f"delivery_client_{delivery.id}",
+            'type': 'delivery_created',
+            'description': f"Commande créée vers {delivery.delivery_commune}",
+            'created_at': delivery.created_at
+        })
+    
+    # Livraisons en tant que coursier
+    courier_deliveries = db.query(Delivery).filter(
+        Delivery.courier_id == user_id
+    ).order_by(Delivery.created_at.desc()).limit(10).all()
+    
+    for delivery in courier_deliveries:
+        activities.append({
+            'id': f"delivery_courier_{delivery.id}",
+            'type': 'delivery_completed' if delivery.status == 'completed' else 'delivery_accepted',
+            'description': f"Livraison {'terminée' if delivery.status == 'completed' else 'acceptée'} - {delivery.pickup_commune} vers {delivery.delivery_commune}",
+            'created_at': delivery.updated_at or delivery.created_at
+        })
+    
+    # Trier par date et limiter
+    activities.sort(key=lambda x: x['created_at'], reverse=True)
+    return activities[:limit]
+
+def get_user_kyc_documents(db: Session, user_id: int) -> List[Dict]:
+    """
+    Récupère les documents KYC d'un utilisateur
+    """
+    # Cette fonction nécessiterait un modèle KYCDocument
+    # Pour l'instant, on retourne des données factices
+    return [
+        {
+            'id': 1,
+            'type': 'id_card',
+            'url': '/documents/id_card_1.jpg',
+            'status': 'pending',
+            'submitted_at': '2024-01-15T10:00:00Z',
+            'notes': None
+        }
+    ]
+
+def get_kyc_review_history(db: Session, user_id: int) -> List[Dict]:
+    """
+    Récupère l'historique de révision KYC
+    """
+    # Cette fonction nécessiterait un modèle KYCReview
+    return []
+
+def update_kyc_document_status(db: Session, document_id: int, document_data: dict) -> Dict:
+    """
+    Met à jour le statut d'un document KYC
+    """
+    # À implémenter avec le modèle KYCDocument
+    return {'status': 'updated'}
+
+def export_users_to_csv(db: Session) -> bytes:
+    """
+    Exporte les utilisateurs en CSV
+    """
+    import csv
+    import io
+    
+    users = db.query(User).all()
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # En-têtes
+    writer.writerow(['ID', 'Nom complet', 'Téléphone', 'Email', 'Rôle', 'Statut', 'KYC', 'Date création'])
+    
+    # Données
+    for user in users:
+        writer.writerow([
+            user.id,
+            user.full_name,
+            user.phone,
+            user.email or '',
+            user.role,
+            user.status,
+            user.kyc_status,
+            user.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+    
+    output.seek(0)
+    return output.getvalue().encode('utf-8')
+
+def get_advanced_statistics(db: Session, period: str = "month") -> Dict[str, Any]:
+    """
+    Récupère les statistiques avancées
+    """
+    from datetime import datetime, timedelta
+    from ..models.delivery import Delivery
+    from sqlalchemy import func, extract
+    
+    # Calculer la période
+    now = datetime.utcnow()
+    if period == "day":
+        start_date = now - timedelta(days=1)
+    elif period == "week":
+        start_date = now - timedelta(weeks=1)
+    elif period == "month":
+        start_date = now - timedelta(days=30)
+    else:
+        start_date = now - timedelta(days=365)
+    
+    # Statistiques utilisateurs
+    total_users = db.query(User).count()
+    new_users = db.query(User).filter(User.created_at >= start_date).count()
+    
+    # Statistiques livraisons
+    total_deliveries = db.query(Delivery).count()
+    period_deliveries = db.query(Delivery).filter(Delivery.created_at >= start_date).count()
+    
+    # Revenus
+    total_revenue = db.query(func.sum(Delivery.final_price)).filter(
+        Delivery.status == 'completed'
+    ).scalar() or 0
+    
+    period_revenue = db.query(func.sum(Delivery.final_price)).filter(
+        Delivery.status == 'completed',
+        Delivery.completed_at >= start_date
+    ).scalar() or 0
+    
+    return {
+        'users': {
+            'total': total_users,
+            'new_in_period': new_users,
+            'growth_rate': (new_users / total_users * 100) if total_users > 0 else 0
+        },
+        'deliveries': {
+            'total': total_deliveries,
+            'period': period_deliveries
+        },
+        'revenue': {
+            'total': total_revenue,
+            'period': period_revenue
+        }
+    }
+
+def get_kyc_statistics(db: Session) -> Dict[str, Any]:
+    """
+    Récupère les statistiques KYC
+    """
+    from sqlalchemy import func
+    
+    kyc_stats = db.query(
+        User.kyc_status,
+        func.count(User.id).label('count')
+    ).group_by(User.kyc_status).all()
+    
+    stats = {status: 0 for status in ['pending', 'verified', 'rejected']}
+    
+    for stat in kyc_stats:
+        if stat.kyc_status in stats:
+            stats[stat.kyc_status] = stat.count
+    
+    stats['total'] = sum(stats.values())
+    
+    return stats
+
 
 def get_courier_performance(
     db: Session,

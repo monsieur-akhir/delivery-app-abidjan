@@ -19,6 +19,156 @@ from ..models.user import UserRole
 
 router = APIRouter()
 
+@router.get("/users", response_model=List[UserResponse])
+async def get_users(
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    kyc_status: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer la liste des utilisateurs avec filtres"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return get_filtered_users(db, role, status, kyc_status, search, skip, limit)
+
+@router.post("/users", response_model=UserResponse)
+async def create_user_endpoint(
+    user_data: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Créer un nouvel utilisateur"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return create_new_user(db, user_data)
+
+@router.put("/users/{user_id}", response_model=UserResponse)
+async def update_user_endpoint(
+    user_id: int,
+    user_data: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Mettre à jour un utilisateur"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return update_user_data(db, user_id, user_data)
+
+@router.get("/users/{user_id}/stats")
+async def get_user_stats_endpoint(
+    user_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les statistiques d'un utilisateur"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return get_user_statistics(db, user_id)
+
+@router.get("/users/{user_id}/activity")
+async def get_user_activity_endpoint(
+    user_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer l'activité récente d'un utilisateur"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return get_user_activity_history(db, user_id)
+
+@router.get("/users/{user_id}/kyc/documents")
+async def get_user_kyc_documents_endpoint(
+    user_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les documents KYC d'un utilisateur"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return get_user_kyc_documents(db, user_id)
+
+@router.get("/users/{user_id}/kyc/history")
+async def get_kyc_history_endpoint(
+    user_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer l'historique KYC d'un utilisateur"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return get_kyc_review_history(db, user_id)
+
+@router.put("/users/{user_id}/kyc")
+async def update_kyc_status_endpoint(
+    user_id: int,
+    kyc_data: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Mettre à jour le statut KYC d'un utilisateur"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return update_kyc_status(db, user_id, kyc_data.get('status'), kyc_data.get('rejection_reason'))
+
+@router.put("/kyc/documents/{document_id}")
+async def update_kyc_document_endpoint(
+    document_id: int,
+    document_data: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Mettre à jour un document KYC"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return update_kyc_document_status(db, document_id, document_data)
+
+@router.get("/users/export")
+async def export_users_endpoint(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Exporter la liste des utilisateurs en CSV"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return export_users_to_csv(db)
+
+@router.get("/stats/advanced")
+async def get_advanced_stats_endpoint(
+    period: str = "month",
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les statistiques avancées"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return get_advanced_statistics(db, period)
+
+@router.get("/stats/kyc")
+async def get_kyc_stats_endpoint(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les statistiques KYC"""
+    if current_user.role != UserRole.manager:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    
+    return get_kyc_statistics(db)
+
 # Routes pour la gestion des clients
 @router.get("/clients", response_model=List[UserResponse])
 async def read_clients(

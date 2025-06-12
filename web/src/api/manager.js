@@ -887,3 +887,150 @@ export async function addZone(zoneData) {
     throw error
   }
 }
+
+// Nouvelles APIs pour la gestion des utilisateurs
+const getUsers = (filters = {}) => {
+  return apiClient.get('/manager/users', { params: filters })
+}
+
+const createUser = (userData) => {
+  return apiClient.post('/manager/users', userData)
+}
+
+const updateUser = (userId, userData) => {
+  return apiClient.put(`/manager/users/${userId}`, userData)
+}
+
+const getUserStats = (userId) => {
+  return apiClient.get(`/manager/users/${userId}/stats`)
+}
+
+const getUserActivity = (userId) => {
+  return apiClient.get(`/manager/users/${userId}/activity`)
+}
+
+const getCourierProfile = (userId) => {
+  return apiClient.get(`/manager/users/${userId}/courier-profile`)
+}
+
+const getBusinessProfile = (userId) => {
+  return apiClient.get(`/manager/users/${userId}/business-profile`)
+}
+
+const exportUsers = () => {
+  return apiClient.get('/manager/users/export', { responseType: 'blob' })
+}
+
+// APIs pour la gestion KYC
+const getUserKycDocuments = (userId) => {
+  return apiClient.get(`/manager/users/${userId}/kyc/documents`)
+}
+
+const getKycHistory = (userId) => {
+  return apiClient.get(`/manager/users/${userId}/kyc/history`)
+}
+
+const updateKycStatus = (userId, statusData) => {
+  return apiClient.put(`/manager/users/${userId}/kyc`, statusData)
+}
+
+const updateKycDocument = (documentId, documentData) => {
+  return apiClient.put(`/manager/kyc/documents/${documentId}`, documentData)
+}
+
+const requestKycInfo = (userId, requestData) => {
+  return apiClient.post(`/manager/users/${userId}/kyc/request-info`, requestData)
+}
+
+// APIs pour les permissions et rôles
+const getUserPermissions = (userId) => {
+  return apiClient.get(`/manager/users/${userId}/permissions`)
+}
+
+const updateUserPermissions = (userId, permissions) => {
+  return apiClient.put(`/manager/users/${userId}/permissions`, permissions)
+}
+
+const getRoles = () => {
+  return apiClient.get('/manager/roles')
+}
+
+const createRole = (roleData) => {
+  return apiClient.post('/manager/roles', roleData)
+}
+
+const updateRole = (roleId, roleData) => {
+  return apiClient.put(`/manager/roles/${roleId}`, roleData)
+}
+
+const deleteRole = (roleId) => {
+  return apiClient.delete(`/manager/roles/${roleId}`)
+}
+
+// APIs pour les statistiques avancées
+const getAdvancedStats = (period = 'month') => {
+  return apiClient.get('/manager/stats/advanced', { params: { period } })
+}
+
+const getUserGrowthStats = () => {
+  return apiClient.get('/manager/stats/user-growth')
+}
+
+const getKycStats = () => {
+  return apiClient.get('/manager/stats/kyc')
+}
+
+const getRevenueStats = (period = 'month') => {
+  return apiClient.get('/manager/stats/revenue', { params: { period } })
+}
+
+const getPerformanceMetrics = () => {
+  return apiClient.get('/manager/stats/performance')
+}
+
+export const managerService = {
+  getGlobalStats,
+  getAnalyticsData,
+  getCourierPerformance,
+  getActiveCouriers,
+  getTrafficReports,
+  deleteTrafficReport,
+  getWeatherAlerts,
+  addWeatherAlert,
+  deleteWeatherAlert,
+  getChartData,
+  getRevenueStats,
+  getExpenseStats,
+  generateFinancialReport,
+  // Nouvelles APIs utilisateurs
+  getUsers,
+  createUser,
+  updateUser,
+  getUserStats,
+  getUserActivity,
+  getCourierProfile,
+  getBusinessProfile,
+  exportUsers,
+
+  // APIs KYC
+  getUserKycDocuments,
+  getKycHistory,
+  updateKycStatus,
+  updateKycDocument,
+  requestKycInfo,
+
+  // APIs permissions et rôles
+  getUserPermissions,
+  updateUserPermissions,
+  getRoles,
+  createRole,
+  updateRole,
+  deleteRole,
+
+  // APIs statistiques
+  getAdvancedStats,
+  getUserGrowthStats,
+  getKycStats,
+  getRevenueStats,
+  getPerformanceMetrics
+}
