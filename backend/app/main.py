@@ -253,3 +253,9 @@ async def estimate_delivery_price_endpoint(
 from .api import business_analytics
 app.include_router(business.router, prefix="/api/v1/business", tags=["business"])
 app.include_router(business_analytics.router, prefix="/api/v1/business/analytics", tags=["business-analytics"])
+# Importer les nouveaux routers
+from .api import support, zones
+
+# Ajouter après les autres includes
+app.include_router(support.router, prefix="/api/v1/support", tags=["support"])
+app.include_router(zones.router, prefix="/api/v1/zones", tags=["zones"])
