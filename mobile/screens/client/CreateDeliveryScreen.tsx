@@ -46,7 +46,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   const { t } = useTranslation()
   const { isConnected, addPendingUpload } = useNetwork()
   const mapRef = useRef<MapView | null>(null)
-  
+
   const {
     createDelivery: submitDeliveryData,
     loading: deliveryLoading
@@ -478,7 +478,17 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
 
       if (isConnected) {
         const response = await submitDeliveryData(deliveryData)
-        navigation.navigate("DeliveryDetails", { deliveryId: response.id.toString() })
+        Alert.alert('Succès', 'Livraison créée avec succès!', [
+          {
+            text: 'Choisir un coursier',
+            onPress: () => navigation.navigate('SmartMatching', { deliveryId: response.id })
+          },
+          {
+            text: 'Plus tard',
+            style: 'cancel',
+            onPress: () => navigation.navigate('Orders')
+          }
+        ])
       } else {
         addPendingUpload({
           type: "create_delivery",
@@ -725,7 +735,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
           {/* Section Destinataire */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t("createDelivery.recipientInfo")}</Text>
-            
+
             <TextInput
               label={`${t("createDelivery.recipientPhone")} *`}
               value={recipientPhone}
@@ -887,7 +897,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
                           ? "scooter"
                           : recommendedVehicle.type === VehicleType.BICYCLE
                             ? "bicycle"
-                            : recommendedVehicle.type === VehicleType.MOTORCYCLE
+                            : recommendedVehicle.type ===`MOTORCYCLE
                               ? "motorbike"                              : recommendedVehicle.type === VehicleType.VAN
                                 ? "truck-delivery"
                               : recommendedVehicle.type === VehicleType.PICKUP
