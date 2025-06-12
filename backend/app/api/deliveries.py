@@ -183,19 +183,47 @@ async def accept_delivery(
     if delivery.status != DeliveryStatus.PENDING:
         raise HTTPException(status_code=400, detail="Cette livraison ne peut plus être acceptée")
     
+    # Vérifier si le coursier a déjà des livraisons actives (limite)
+    active_deliveries = db.query(Delivery).filter(
+        Delivery.courier_id == current_user.id,
+        Delivery.status.in_([
+            DeliveryStatus.ACCEPTED,
+            DeliveryStatus.PICKUP_IN_PROGRESS, 
+            DeliveryStatus.PICKED_UP,
+            DeliveryStatus.IN_TRANSIT
+        ])
+    ).count()
+    
+    if active_deliveries >= 3:  # Limite de 3 livraisons actives
+        raise HTTPException(
+            status_code=400, 
+            detail="Vous avez atteint le nombre maximum de livraisons actives (3)"
+        )
+    
     # Assigner le coursier et changer le statut
     delivery_update = DeliveryUpdate(
         courier_id=current_user.id,
-        status=DeliveryStatus.ACCEPTED
+        status=DeliveryStatus.ACCEPTED,
+        accepted_at=datetime.utcnow()
     )
     updated_delivery = update_delivery(db, delivery_id, delivery_update)
     
-    # Notification au client
+    # Créer une notification push et SMS
     background_tasks.add_task(
         send_delivery_notification,
         delivery_id,
         "delivery_accepted",
-        f"Votre livraison #{delivery_id} a été acceptée par un coursier"
+        f"🚚 Bonne nouvelle ! Votre livraison #{delivery_id} a été acceptée par {current_user.full_name}. Suivi en temps réel disponible."
+    )
+    
+    # Mettre à jour les points du coursier
+    from ..services.gamification import add_points_for_action
+    background_tasks.add_task(
+        add_points_for_action,
+        db,
+        current_user.id,
+        "delivery_accepted",
+        5  # 5 points pour accepter une livraison
     )
     
     return updated_delivery
@@ -230,6 +258,8 @@ async def reject_delivery(
 @router.post("/{delivery_id}/start-pickup", response_model=DeliveryResponse)
 async def start_pickup(
     delivery_id: int,
+    courier_lat: Optional[float] = None,
+    courier_lng: Optional[float] = None,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -245,15 +275,41 @@ async def start_pickup(
     if delivery.status != DeliveryStatus.ACCEPTED:
         raise HTTPException(status_code=400, detail="La livraison doit être acceptée pour commencer la collecte")
     
-    delivery_update = DeliveryUpdate(status=DeliveryStatus.PICKUP_IN_PROGRESS)
+    # Calculer la distance si les coordonnées sont fournies
+    estimated_time = None
+    if courier_lat and courier_lng and delivery.pickup_lat and delivery.pickup_lng:
+        from ..services.geolocation import calculate_distance, estimate_travel_time
+        distance = calculate_distance(
+            courier_lat, courier_lng, 
+            delivery.pickup_lat, delivery.pickup_lng
+        )
+        estimated_time = estimate_travel_time(distance)
+    
+    delivery_update = DeliveryUpdate(
+        status=DeliveryStatus.PICKUP_IN_PROGRESS,
+        pickup_started_at=datetime.utcnow()
+    )
     updated_delivery = update_delivery(db, delivery_id, delivery_update)
     
-    # Notification au client
+    # Notification détaillée au client
+    eta_text = f" (ETA: ~{estimated_time} min)" if estimated_time else ""
+    notification_message = (
+        f"🚗 Votre coursier {current_user.full_name} se dirige vers l'adresse de collecte"
+        f"{eta_text}. Préparez votre colis !"
+    )
+    
     background_tasks.add_task(
         send_delivery_notification,
         delivery_id,
         "pickup_started",
-        f"Le coursier se dirige vers l'adresse de collecte pour la livraison #{delivery_id}"
+        notification_message
+    )
+    
+    # Commencer le tracking en temps réel
+    background_tasks.add_task(
+        start_real_time_tracking,
+        delivery_id,
+        current_user.id
     )
     
     return updated_delivery
@@ -441,6 +497,119 @@ async def get_delivery_status_timeline(
             "status": "pending",
             "timestamp": delivery.created_at,
             "title": "Commande créée",
+
+
+async def start_real_time_tracking(delivery_id: int, courier_id: int):
+    """Démarrer le suivi en temps réel"""
+    # Cette fonction sera appelée en arrière-plan pour initialiser le tracking
+    pass
+
+@router.post("/{delivery_id}/update-location")
+async def update_courier_realtime_location(
+    delivery_id: int,
+    latitude: float,
+    longitude: float,
+    heading: Optional[float] = None,
+    speed: Optional[float] = None,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mettre à jour la position du coursier en temps réel"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+    
+    if delivery.courier_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Vous n'êtes pas assigné à cette livraison")
+    
+    # Sauvegarder la position dans la table de tracking
+    from ..models.tracking import TrackingPoint
+    tracking_point = TrackingPoint(
+        delivery_id=delivery_id,
+        courier_id=current_user.id,
+        latitude=latitude,
+        longitude=longitude,
+        heading=heading,
+        speed=speed,
+        timestamp=datetime.utcnow()
+    )
+    db.add(tracking_point)
+    db.commit()
+    
+    # Envoyer la mise à jour via WebSocket au client
+    background_tasks.add_task(
+        send_location_update,
+        delivery_id,
+        {
+            "courier_id": current_user.id,
+            "latitude": latitude,
+            "longitude": longitude,
+            "heading": heading,
+            "speed": speed,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    )
+    
+    return {"message": "Position mise à jour avec succès"}
+
+async def send_location_update(delivery_id: int, location_data: dict):
+    """Envoyer la mise à jour de position via WebSocket"""
+    from ..websockets.tracking import send_tracking_update
+    await send_tracking_update(delivery_id, location_data)
+
+@router.get("/{delivery_id}/estimated-arrival")
+async def get_estimated_arrival_time(
+    delivery_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtenir le temps d'arrivée estimé du coursier"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+    
+    # Vérifier les permissions
+    if (current_user.id != delivery.client_id and 
+        current_user.id != delivery.courier_id and 
+        current_user.role not in ["manager", "admin"]):
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    # Obtenir la dernière position du coursier
+    from ..models.tracking import TrackingPoint
+    last_position = db.query(TrackingPoint).filter(
+        TrackingPoint.delivery_id == delivery_id
+    ).order_by(TrackingPoint.timestamp.desc()).first()
+    
+    if not last_position:
+        return {"estimated_time": None, "message": "Position du coursier non disponible"}
+    
+    # Déterminer la destination
+    if delivery.status in [DeliveryStatus.ACCEPTED, DeliveryStatus.PICKUP_IN_PROGRESS]:
+        dest_lat, dest_lng = delivery.pickup_lat, delivery.pickup_lng
+        destination_type = "pickup"
+    else:
+        dest_lat, dest_lng = delivery.delivery_lat, delivery.delivery_lng
+        destination_type = "delivery"
+    
+    if not dest_lat or not dest_lng:
+        return {"estimated_time": None, "message": "Coordonnées de destination non disponibles"}
+    
+    # Calculer l'ETA
+    from ..services.geolocation import calculate_distance, estimate_travel_time
+    distance = calculate_distance(
+        last_position.latitude, last_position.longitude,
+        dest_lat, dest_lng
+    )
+    estimated_time = estimate_travel_time(distance, last_position.speed)
+    
+    return {
+        "estimated_time": estimated_time,
+        "distance": distance,
+        "destination_type": destination_type,
+        "last_update": last_position.timestamp.isoformat()
+    }
+
             "description": "Votre demande de livraison a été créée"
         })
     

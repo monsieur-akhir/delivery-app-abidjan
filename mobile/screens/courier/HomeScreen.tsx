@@ -1,430 +1,337 @@
-"use client"
+import React, { useState, useEffect, useCallback } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  TouchableOpacity,
+  Alert,
+  Switch,
+  Dimensions,
+  FlatList
+} from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
+import { useAuth } from '../../hooks/useAuth'
+import { DeliveryService } from '../../services/DeliveryService'
+import { Delivery, DeliveryStatus } from '../../types/models'
+import DeliveryStatusBadge from '../../components/DeliveryStatusBadge'
+import VTCStyleMap from '../../components/VTCStyleMap'
 
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from "react-native"
-import { Text, Card, Button, Chip, ActivityIndicator, Badge, Avatar } from "react-native-paper"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Feather } from "@expo/vector-icons"
-import { Feather } from "@expo/vector-icons"
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps"
-import * as Location from "expo-location"
-import { useAuth } from "../../contexts/AuthContext"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { useWebSocket } from "../../contexts/WebSocketContext"
-import { useNotification } from "../../contexts/NotificationContext"
-import { useTranslation } from "react-i18next"
-import { useDelivery, useUser } from "../../hooks"
-import Icon from "react-native-vector-icons/MaterialCommunityIcons"
-import { formatPrice, formatDistance, formatDate } from "../../utils/formatters"
-import type { CourierHomeScreenNavigationProp } from "../../types/navigation"
-import type { Delivery } from "../../types/models"
+const { width } = Dimensions.get('window')
 
-// Import the Weather type from models
-import type { Weather } from "../../types/models"
-
-type CourierHomeScreenProps = {
-  navigation: CourierHomeScreenNavigationProp
+interface CourierStats {
+  todayEarnings: number
+  todayDeliveries: number
+  weeklyEarnings: number
+  currentRating: number
+  activeDeliveries: number
 }
 
-const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => {
-  const { user, updateUserData } = useAuth()
-  const { isConnected, isOfflineMode } = useNetwork()
-  const { sendMessage } = useWebSocket()
-  const { unreadCount } = useNotification()
-  const { t } = useTranslation()
-  const { getAvailableDeliveries } = useDelivery()
-  const { getCourierProfile, updateCourierStatus, getWeatherForecast } = useUser()
-
-  const [refreshing, setRefreshing] = useState<boolean>(false)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [isOnline, setIsOnline] = useState<boolean>(false)
-  const [statusLoading, setStatusLoading] = useState<boolean>(false)
+const CourierHomeScreen = ({ navigation }: any) => {
+  const { user } = useAuth()
+  const [isOnline, setIsOnline] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [stats, setStats] = useState<CourierStats>({
+    todayEarnings: 0,
+    todayDeliveries: 0,
+    weeklyEarnings: 0,
+    currentRating: 5.0,
+    activeDeliveries: 0
+  })
   const [availableDeliveries, setAvailableDeliveries] = useState<Delivery[]>([])
-  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null)
-  const [weather, setWeather] = useState<Weather | null>(null)
-  const [locationPermissionDenied, setLocationPermissionDenied] = useState<boolean>(false)
+  const [activeDeliveries, setActiveDeliveries] = useState<Delivery[]>([])
+  const [currentLocation, setCurrentLocation] = useState({
+    latitude: 5.3599517,
+    longitude: -4.0282563
+  })
 
-  const loadInitialData = useCallback(async (): Promise<void> => {
+  const loadData = useCallback(async () => {
     try {
-      setLoading(true)
-
-      // Vérifier les permissions de localisation
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status !== "granted") {
-        setLocationPermissionDenied(true)
-        setLoading(false)
-        return
-      }
-
-      // Obtenir la position actuelle
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      })
-      setCurrentLocation(location)
-
-      // Charger le profil du coursier
-      const profileData = await getCourierProfile()
-      setIsOnline(profileData?.is_online || false)
-
       // Charger les livraisons disponibles
-      const deliveries = await getAvailableDeliveries()
-      setAvailableDeliveries(deliveries)
+      const available = await DeliveryService.getAvailableDeliveries({
+        limit: 10
+      })
+      setAvailableDeliveries(available)
 
-      // Charger les données météo
-      const weatherData = await getWeatherForecast(location.coords.latitude, location.coords.longitude)
-      setWeather(weatherData)
+      // Charger les livraisons actives du coursier
+      const active = await DeliveryService.getActiveCourierDeliveries(user?.id || 0)
+      setActiveDeliveries(active)
+
+      // Charger les statistiques
+      const statsData = await DeliveryService.getDeliveryStats(user?.id || 0)
+      setStats({
+        todayEarnings: statsData.today_earnings || 0,
+        todayDeliveries: statsData.today_deliveries || 0,
+        weeklyEarnings: statsData.weekly_earnings || 0,
+        currentRating: statsData.average_rating || 5.0,
+        activeDeliveries: active.length
+      })
     } catch (error) {
-      console.error("Error loading initial data:", error)
-    } finally {
-      setLoading(false)
+      console.error('Erreur lors du chargement des données:', error)
     }
-  }, [getAvailableDeliveries, getCourierProfile, getWeatherForecast])
+  }, [user?.id])
 
   useEffect(() => {
-    loadInitialData()
-  }, [loadInitialData])
+    loadData()
+  }, [loadData])
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true)
-    await loadInitialData()
+    await loadData()
     setRefreshing(false)
+  }, [loadData])
+
+  const toggleOnlineStatus = () => {
+    setIsOnline(!isOnline)
+    // TODO: Envoyer le statut au backend
   }
 
-  const toggleOnlineStatus = useCallback(async (): Promise<void> => {
-    if (!isConnected && !isOfflineMode) {
-      return
-    }
-
+  const handleAcceptDelivery = async (deliveryId: number) => {
     try {
-      setStatusLoading(true)
-      const newStatus = !isOnline
-
-      if (newStatus) {
-        // Vérifier les permissions de localisation
-        const { status } = await Location.requestForegroundPermissionsAsync()
-        if (status !== "granted") {
-          setStatusLoading(false)
-          return
-        }
-
-        // Obtenir la position actuelle
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        })
-
-        // Mettre à jour le statut avec la position
-        await updateCourierStatus(newStatus, location.coords.latitude, location.coords.longitude)
-      } else {
-        // Simplement mettre à jour le statut
-        await updateCourierStatus(newStatus)
-      }
-
-      // Mettre à jour l'état local
-      setIsOnline(newStatus)
-
-      // Mettre à jour les données utilisateur
-      updateUserData({ status: newStatus ? "online" : "offline" })
-
-      // Envoyer un message WebSocket pour informer le serveur du changement de statut
-      if (isConnected && user?.id) {
-        sendMessage({
-          type: "courier_status_update",
-          data: {
-            courier_id: user.id,
-            is_online: newStatus,
-            location: currentLocation
-              ? {
-                  lat: currentLocation.coords.latitude,
-                  lng: currentLocation.coords.longitude,
-                }
-              : null,
-          },
-        })
-      }
-    } catch (error) {
-      console.error("Error updating status:", error)
-    } finally {
-      setStatusLoading(false)
-    }
-  }, [isConnected, isOfflineMode, isOnline, updateCourierStatus, updateUserData, user?.id, sendMessage, currentLocation])
-
-  const getWeatherIcon = (condition: string): string => {
-    switch (condition.toLowerCase()) {
-      case "sunny":
-        return "sun";
-      case "cloudy":
-        return "cloud";
-      case "rainy":
-        return "cloud-rain";
-      case "stormy":
-        return "zap";
-      default:
-        return "cloud-drizzle";
-    }
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Avatar.Image
-            size={40}
-            source={
-              user?.profile_picture ? { uri: user.profile_picture } : require("../../assets/images/default-avatar.png")
+      Alert.alert(
+        'Accepter la livraison',
+        'Voulez-vous accepter cette livraison ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Accepter',
+            onPress: async () => {
+              await DeliveryService.acceptDelivery(deliveryId)
+              Alert.alert('Succès', 'Livraison acceptée avec succès!')
+              loadData()
+              navigation.navigate('CourierTrackDelivery', { deliveryId })
             }
-          />
-          <View style={styles.headerInfo}>
-            <Text style={styles.welcomeText}>Bonjour,</Text>
-            <Text style={styles.userName}>{user?.full_name}</Text>
-          </View>
+          }
+        ]
+      )
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible d\'accepter la livraison')
+    }
+  }
+
+  const handleViewActiveDelivery = (delivery: Delivery) => {
+    navigation.navigate('CourierTrackDelivery', { deliveryId: delivery.id })
+  }
+
+  const renderAvailableDelivery = ({ item }: { item: Delivery }) => (
+    <TouchableOpacity
+      style={styles.deliveryCard}
+      onPress={() => navigation.navigate('DeliveryDetails', { deliveryId: item.id })}
+    >
+      <View style={styles.deliveryHeader}>
+        <Text style={styles.deliveryId}>#{item.id}</Text>
+        <DeliveryStatusBadge status={item.status} />
+      </View>
+
+      <View style={styles.deliveryInfo}>
+        <View style={styles.addressInfo}>
+          <Ionicons name="location-outline" size={16} color="#666" />
+          <Text style={styles.address} numberOfLines={1}>
+            {item.pickup_address}
+          </Text>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={() => navigation.navigate("Notifications")}
-          >
-            <Feather name="bell" size={24} color="#212121" />
-            {unreadCount > 0 && (
-              <Badge style={styles.notificationBadge} size={16}>
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </Badge>
-            )}
-          </TouchableOpacity>
+        <Ionicons name="arrow-down" size={16} color="#666" style={styles.arrowIcon} />
+        <View style={styles.addressInfo}>
+          <Ionicons name="flag-outline" size={16} color="#666" />
+          <Text style={styles.address} numberOfLines={1}>
+            {item.delivery_address}
+          </Text>
         </View>
       </View>
 
-      {isOfflineMode && (
-        <View style={styles.offlineBanner}>
-          <Feather name="wifi-off" size={16} color="#FFFFFF" />
-          <Text style={styles.offlineText}>Mode hors ligne</Text>
+      <View style={styles.deliveryFooter}>
+        <View style={styles.priceContainer}>
+          <Text style={styles.price}>{item.proposed_price} FCFA</Text>
+          <Text style={styles.distance}>~{item.estimated_distance || 0} km</Text>
         </View>
-      )}
+
+        <TouchableOpacity
+          style={styles.acceptButton}
+          onPress={() => handleAcceptDelivery(item.id)}
+        >
+          <Text style={styles.acceptButtonText}>Accepter</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  )
+
+  const renderActiveDelivery = ({ item }: { item: Delivery }) => (
+    <TouchableOpacity
+      style={[styles.deliveryCard, styles.activeDeliveryCard]}
+      onPress={() => handleViewActiveDelivery(item)}
+    >
+      <View style={styles.deliveryHeader}>
+        <Text style={styles.deliveryId}>#{item.id}</Text>
+        <DeliveryStatusBadge status={item.status} />
+      </View>
+
+      <View style={styles.deliveryInfo}>
+        <Text style={styles.clientName}>Client: {item.client?.full_name || 'N/A'}</Text>
+        <Text style={styles.address} numberOfLines={2}>
+          {getNextActionText(item.status)}
+        </Text>
+      </View>
+
+      <View style={styles.deliveryFooter}>
+        <Text style={styles.price}>{item.final_price || item.proposed_price} FCFA</Text>
+        <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+      </View>
+    </TouchableOpacity>
+  )
+
+  const getNextActionText = (status: DeliveryStatus) => {
+    switch (status) {
+      case 'accepted':
+        return 'Se diriger vers le point de collecte'
+      case 'pickup_in_progress':
+        return 'Arrivé au point de collecte'
+      case 'picked_up':
+        return 'Se diriger vers la destination'
+      case 'in_transit':
+        return 'Livrer le colis'
+      default:
+        return 'En cours...'
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#007AFF', '#0056CC']}
+        style={styles.header}
+      >
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.greeting}>Bonjour</Text>
+            <Text style={styles.userName}>{user?.full_name}</Text>
+          </View>
+
+          <View style={styles.onlineToggle}>
+            <Text style={styles.onlineText}>
+              {isOnline ? 'En ligne' : 'Hors ligne'}
+            </Text>
+            <Switch
+              value={isOnline}
+              onValueChange={toggleOnlineStatus}
+              trackColor={{ false: '#767577', true: '#4CAF50' }}
+              thumbColor={isOnline ? '#ffffff' : '#f4f3f4'}
+            />
+          </View>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.todayEarnings.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>FCFA aujourd'hui</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.todayDeliveries}</Text>
+            <Text style={styles.statLabel}>Livraisons</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{stats.currentRating.toFixed(1)} ⭐</Text>
+            <Text style={styles.statLabel}>Note</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />}
+        style={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF6B00" />
-            <Text style={styles.loadingText}>Chargement...</Text>
-          </View>
-        ) : locationPermissionDenied ? (
-          <View style={styles.permissionDeniedContainer}>
-            <Feather name="map" size={64} color="#FF6B00" />
-            <Text style={styles.permissionDeniedTitle}>Localisation requise</Text>
-            <Text style={styles.permissionDeniedText}>
-              Pour utiliser cette application en tant que coursier, vous devez autoriser l&apos;accès à votre position.
-            </Text>
-            <Button
-              mode="contained"
-              onPress={async () => {
-                const { status } = await Location.requestForegroundPermissionsAsync()
-                if (status === "granted") {
-                  setLocationPermissionDenied(false)
-                  await loadInitialData()
-                }
-              }}
-              style={styles.permissionButton}
-            >
-              Autoriser la localisation
-            </Button>
-          </View>
-        ) : (
-          <>
-            {/* Carte avec la position actuelle */}
-            {currentLocation && (
-              <Card style={styles.mapCard}>
-                <Card.Content style={styles.mapContainer}>
-                  <MapView
-                    provider={PROVIDER_GOOGLE}
-                    style={styles.map}
-                    initialRegion={{
-                      latitude: currentLocation.coords.latitude,
-                      longitude: currentLocation.coords.longitude,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    }}
-                    showsUserLocation
-                    showsMyLocationButton
-                  >
-                    {availableDeliveries.map(
-                      (delivery) =>
-                        delivery.pickup_lat &&
-                        delivery.pickup_lng && (
-                          <Marker
-                            key={delivery.id}
-                            coordinate={{
-                              latitude: delivery.pickup_lat,
-                              longitude: delivery.pickup_lng,
-                            }}
-                            title={`Livraison #${delivery.id}`}
-                            description={delivery.pickup_address}
-                            pinColor="#FF6B00"
-                          />
-                        ),
-                    )}
-                  </MapView>
-                </Card.Content>
-              </Card>
-            )}
-
-            {/* Statut en ligne/hors ligne */}
-            <Card style={styles.statusCard}>
-              <Card.Content>
-                <View style={styles.statusContainer}>
-                  <View style={styles.statusInfo}>
-                    <Text style={styles.statusTitle}>Statut</Text>
-                    <View style={styles.statusIndicator}>
-                      <View style={[styles.statusDot, { backgroundColor: isOnline ? "#4CAF50" : "#F44336" }]} />
-                      <Text style={styles.statusText}>{isOnline ? "En ligne" : "Hors ligne"}</Text>
-                    </View>
-                  </View>
-                  <Button
-                    mode="contained"
-                    onPress={toggleOnlineStatus}
-                    loading={statusLoading}
-                    disabled={statusLoading}
-                    style={[styles.statusButton, { backgroundColor: isOnline ? "#F44336" : "#4CAF50" }]}
-                  >
-                    {isOnline ? "Passer hors ligne" : "Passer en ligne"}
-                  </Button>
-                </View>
-              </Card.Content>
-            </Card>
-
-            {/* Météo */}
-            {weather && (
-              <Card style={styles.weatherCard}>
-                <Card.Content>
-                  <View style={styles.weatherContainer}>
-                    <Feather name={getWeatherIcon(weather.current.condition)} size={36} color="#FF6B00" />
-                    <View style={styles.weatherInfo}>
-                      <Text style={styles.weatherTemperature}>{weather.current.temperature}°C</Text>
-                      <Text style={styles.weatherCondition}>{weather.current.condition}</Text>
-                    </View>
-                    <View style={styles.weatherDetails}>
-                      <View style={styles.weatherDetail}>
-                        <Feather name="droplet" size={14} color="#2196F3" />
-                        <Text style={styles.weatherDetailText}>{weather.current.humidity}%</Text>
-                      </View>
-                      <View style={styles.weatherDetail}>
-                        <Feather name="wind" size={14} color="#607D8B" />
-                        <Text style={styles.weatherDetailText}>
-                          {weather.current.wind_speed} km/h
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </Card.Content>
-              </Card>
-            )}
-
-            {/* Actions rapides */}
-            <Card style={styles.actionsCard}>
-              <Card.Content>
-                <Text style={styles.sectionTitle}>Actions rapides</Text>
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("CourierStatus")}>
-                    <View style={[styles.actionIconContainer, { backgroundColor: "#FF6B00" }]}>
-                      <Feather name="activity" size={24} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.actionText}>Mon statut</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("CourierStats")}>
-                    <View style={[styles.actionIconContainer, { backgroundColor: "#2196F3" }]}>
-                      <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.actionText}>Statistiques</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => navigation.navigate("CollaborativeDeliveries")}
-                  >
-                    <View style={[styles.actionIconContainer, { backgroundColor: "#4CAF50" }]}>
-                      <Feather name="users" size={24} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.actionText}>Collaboratif</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => navigation.navigate("VehicleManagement")}
-                  >
-                    <View style={[styles.actionButtonIcon, { backgroundColor: "#FF9800" }]}>
-                      <Icon name="truck" size={24} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.actionButtonText}>{t("courierHome.manageVehicles")}</Text>
-                  </TouchableOpacity>
-                </View>
-              </Card.Content>
-            </Card>
-
-            {/* Livraisons disponibles */}
-            <View style={styles.deliveriesSection}>
-              <Text style={styles.sectionTitle}>Livraisons disponibles</Text>
-              {availableDeliveries.length > 0 ? (
-                availableDeliveries.map((delivery) => (
-                  <Card
-                    key={delivery.id}
-                    style={styles.deliveryCard}
-                    onPress={() => navigation.navigate("Bid", { deliveryId: delivery.id.toString() })}
-                  >
-                    <Card.Content>
-                      <View style={styles.deliveryHeader}>
-                        <View style={styles.deliveryInfo}>
-                          <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
-                          <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
-                        </View>
-                        <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price)} FCFA</Text>
-                      </View>
-
-                      <View style={styles.addressContainer}>
-                        <View style={styles.addressRow}>
-                          <View style={styles.addressDot} />
-                          <View style={styles.addressTextContainer}>
-                            <Text style={styles.addressLabel}>Ramassage</Text>
-                            <Text style={styles.addressText}>{delivery.pickup_address}</Text>
-                            <Text style={styles.communeText}>{delivery.pickup_lat && delivery.pickup_lng ? `${delivery.pickup_lat}, ${delivery.pickup_lng}` : "N/A"}</Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.addressLine} />
-
-                        <View style={styles.addressRow}>
-                          <View style={[styles.addressDot, styles.destinationDot]} />
-                          <View style={styles.addressTextContainer}>
-                            <Text style={styles.addressLabel}>Livraison</Text>
-                            <Text style={styles.addressText}>{delivery.delivery_address}</Text>
-                            <Text style={styles.communeText}>{delivery.delivery_lat && delivery.delivery_lng ? `${delivery.delivery_lat}, ${delivery.delivery_lng}` : "N/A"}</Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {delivery.distance && (
-                        <View style={styles.deliveryFooter}>
-                          <Chip icon="map-marker-distance">{formatDistance(delivery.distance)}</Chip>
-                          {delivery.delivery_type === "express" && (
-                            <Chip icon="flash" style={styles.expressChip}>
-                              Express
-                            </Chip>
-                          )}
-                        </View>
-                      )}
-                    </Card.Content>
-                  </Card>
-                ))
-              ) : (
-                <View style={styles.emptyState}>
-                  <Feather name="package" size={48} color="#CCCCCC" />
-                  <Text style={styles.emptyStateText}>Aucune livraison disponible pour le moment</Text>
-                </View>
-              )}
+        {/* Livraisons actives */}
+        {activeDeliveries.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Livraisons en cours</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('CourierDeliveryHistory')}>
+                <Text style={styles.seeAll}>Voir tout</Text>
+              </TouchableOpacity>
             </View>
-          </>
+
+            <FlatList
+              data={activeDeliveries}
+              renderItem={renderActiveDelivery}
+              keyExtractor={(item) => item.id.toString()}
+              scrollEnabled={false}
+            />
+          </View>
         )}
+
+        {/* Carte des livraisons disponibles */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Livraisons à proximité</Text>
+          <View style={styles.mapContainer}>
+            <VTCStyleMap
+              initialRegion={{
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }}
+              deliveries={availableDeliveries}
+              onDeliveryPress={(delivery) => navigation.navigate('DeliveryDetails', { deliveryId: delivery.id })}
+            />
+          </View>
+        </View>
+
+        {/* Livraisons disponibles */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Nouvelles demandes</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('AvailableDeliveries')}>
+              <Text style={styles.seeAll}>Voir tout</Text>
+            </TouchableOpacity>
+          </View>
+
+          {availableDeliveries.length > 0 ? (
+            <FlatList
+              data={availableDeliveries.slice(0, 3)}
+              renderItem={renderAvailableDelivery}
+              keyExtractor={(item) => item.id.toString()}
+              scrollEnabled={false}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="car-outline" size={48} color="#ccc" />
+              <Text style={styles.emptyText}>Aucune livraison disponible</Text>
+              <Text style={styles.emptySubtext}>Vérifiez plus tard</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Actions rapides */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Actions rapides</Text>
+          <View style={styles.quickActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('CourierEarnings')}
+            >
+              <Ionicons name="wallet-outline" size={24} color="#007AFF" />
+              <Text style={styles.actionText}>Gains</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('CourierStats')}
+            >
+              <Ionicons name="stats-chart-outline" size={24} color="#007AFF" />
+              <Text style={styles.actionText}>Statistiques</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('VehicleManagement')}
+            >
+              <Ionicons name="car-sport-outline" size={24} color="#007AFF" />
+              <Text style={styles.actionText}>Véhicules</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -433,313 +340,194 @@ const CourierHomeScreen: React.FC<CourierHomeScreenProps> = ({ navigation }) => 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  headerInfo: {
-    marginLeft: 12,
-  },
-  welcomeText: {
+  greeting: {
+    color: '#ffffff',
     fontSize: 14,
-    color: "#757575",
+    opacity: 0.9,
   },
   userName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
+  onlineToggle: {
+    alignItems: 'center',
   },
-  notificationButton: {
-    position: "relative",
-    padding: 8,
-  },
-  notificationBadge: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    backgroundColor: "#F44336",
-  },
-  offlineBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FF9800",
-    padding: 8,
-  },
-  offlineText: {
-    color: "#FFFFFF",
-    marginLeft: 8,
-    fontWeight: "bold",
-  },
-  loadingContainer: {
-    padding: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    color: "#757575",
-  },
-  mapCard: {
-    margin: 16,
-    marginBottom: 8,
-    elevation: 2,
-  },
-  mapContainer: {
-    height: 200,
-    padding: 0,
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 8,
-  },
-  statusCard: {
-    margin: 16,
-    marginBottom: 8,
-    elevation: 2,
-  },
-  statusContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  statusInfo: {
-    flex: 1,
-  },
-  statusTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 4,
-  },
-  statusIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  statusText: {
-    fontSize: 14,
-    color: "#212121",
-  },
-  statusButton: {
-    borderRadius: 20,
-  },
-  weatherCard: {
-    margin: 16,
-    marginBottom: 8,
-    elevation: 2,
-  },
-  weatherContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  weatherInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  weatherTemperature: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  weatherCondition: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  weatherDetails: {
-    alignItems: "flex-end",
-  },
-  weatherDetail: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  weatherDetailText: {
-    marginLeft: 4,
+  onlineText: {
+    color: '#ffffff',
     fontSize: 12,
-    color: "#757575",
+    marginBottom: 5,
   },
-  actionsCard: {
-    margin: 16,
-    marginBottom: 8,
-    elevation: 2,
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    color: '#ffffff',
+    fontSize: 12,
+    opacity: 0.9,
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+  },
+  section: {
+    backgroundColor: '#ffffff',
+    marginVertical: 8,
+    paddingVertical: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    marginBottom: 16,
-    marginHorizontal: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  actionButtons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+  seeAll: {
+    color: '#007AFF',
+    fontSize: 14,
   },
-  actionButton: {
-    alignItems: "center",
-  },
-  actionIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  actionButtonIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  actionText: {
-    fontSize: 12,
-    color: "#212121",
-  },
-  actionButtonText: {
-    fontSize: 12,
-    color: "#212121",
-  },
-  deliveriesSection: {
-    marginTop: 8,
-    marginBottom: 16,
+  mapContainer: {
+    height: 200,
+    marginHorizontal: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   deliveryCard: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    elevation: 2,
+    backgroundColor: '#ffffff',
+    marginHorizontal: 20,
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  activeDeliveryCard: {
+    borderColor: '#007AFF',
+    borderWidth: 2,
   },
   deliveryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
-  },
-  deliveryInfo: {
-    flex: 1,
   },
   deliveryId: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontWeight: 'bold',
+    color: '#333',
   },
-  deliveryDate: {
-    fontSize: 12,
-    color: "#757575",
-    marginTop: 2,
+  deliveryInfo: {
+    marginBottom: 16,
   },
-  deliveryPrice: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FF6B00",
-  },
-  addressContainer: {
-    marginBottom: 12,
-  },
-  addressRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+  addressInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  addressDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#FF6B00",
-    marginTop: 4,
-    marginRight: 8,
-  },
-  destinationDot: {
-    backgroundColor: "#4CAF50",
-  },
-  addressLine: {
-    width: 2,
-    height: 20,
-    backgroundColor: "#E0E0E0",
-    marginLeft: 5,
-    marginBottom: 8,
-  },
-  addressTextContainer: {
+  address: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#666',
     flex: 1,
   },
-  addressLabel: {
-    fontSize: 12,
-    color: "#757575",
-    marginBottom: 2,
-  },
-  addressText: {
-    fontSize: 14,
-    color: "#212121",
-  },
-  communeText: {
-    fontSize: 12,
-    color: "#757575",
-    marginTop: 2,
-  },
-  deliveryFooter: {
-    flexDirection: "row",
-    marginTop: 8,
-  },
-  expressChip: {
+  arrowIcon: {
     marginLeft: 8,
-    backgroundColor: "#FFF3E0",
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 40,
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 16,
-    borderRadius: 8,
-  },
-  emptyStateText: {
-    marginTop: 16,
-    color: "#757575",
-    textAlign: "center",
-  },
-  permissionDeniedContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 40,
-    margin: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-  },
-  permissionDeniedTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-    marginTop: 16,
     marginBottom: 8,
   },
-  permissionDeniedText: {
+  clientName: {
     fontSize: 14,
-    color: "#757575",
-    textAlign: "center",
-    marginBottom: 24,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
   },
-  permissionButton: {
-    backgroundColor: "#FF6B00",
+  deliveryFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  priceContainer: {
+    flex: 1,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  distance: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  acceptButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  acceptButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 12,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+  },
+  actionButton: {
+    alignItems: 'center',
+    padding: 16,
+  },
+  actionText: {
+    fontSize: 12,
+    color: '#333',
+    marginTop: 8,
   },
 })
 
