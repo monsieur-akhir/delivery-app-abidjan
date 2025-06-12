@@ -1,307 +1,486 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client"
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from "react-native"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
+import React, { useState, useEffect } from "react"
+import { View, StyleSheet, FlatList, Alert, TouchableOpacity, ScrollView } from "react-native"
+import { Text, Card, Button, FAB, Avatar, Chip, ActivityIndicator, ProgressBar } from "react-native-paper"
+import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
-import { useVehicle } from "../../hooks/useVehicle"
-import type { Vehicle } from "../../types/models"
-import { VehicleType } from "../../types/models"
 import { useAuth } from "../../contexts/AuthContext"
-import { useTheme } from "../../contexts/ThemeContext"
-import { useNetworkContext } from "../../contexts/NetworkContext"
-import ErrorView from "../../components/ErrorView"
-import EmptyState from "../../components/EmptyState"
-import { useTranslation } from "react-i18next"
+import { useVehicle } from "../../hooks"
+import type { Vehicle } from "../../types/models"
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import type { RootStackParamList } from "../../types/navigation"
+import { formatDate } from "../../utils/formatters"
 
-const VehicleManagementScreen: React.FC = () => {
-  const [refreshing, setRefreshing] = useState(false)
-  const { t } = useTranslation()
+type VehicleManagementScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, "VehicleManagement">
+}
 
-  const navigation = useNavigation()
+const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navigation }) => {
   const { user } = useAuth()
-  const { colors } = useTheme()
-  const { isConnected } = useNetworkContext()
-  
-  const {
-    vehicles,
-    isLoading,
-    error,
-    getVehicles,
-    deleteVehicle
-  } = useVehicle()
+  const { vehicles, isLoading, error, getUserVehicles, deleteVehicle, setActiveVehicle } = useVehicle()
+
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState<boolean>(false)
 
   useEffect(() => {
-    getVehicles()
-  }, [getVehicles])
+    if (user?.id) {
+      getUserVehicles()
+    }
+  }, [user?.id, getUserVehicles])
 
   const onRefresh = async () => {
     setRefreshing(true)
-    await getVehicles()
+    await getUserVehicles()
     setRefreshing(false)
   }
 
-  const handleAddVehicle = () => {
-    // @ts-ignore
-    navigation.navigate("AddVehicle")
-  }
-
-  const handleEditVehicle = (vehicle: Vehicle) => {
-    // @ts-ignore
-    navigation.navigate("EditVehicle", { vehicleId: vehicle.id })
-  }
-
-  const handleViewVehicle = (vehicle: Vehicle) => {
-    // @ts-ignore
-    navigation.navigate("VehicleDetails", { vehicleId: vehicle.id })
-  }
-
-  const handleDeleteVehicle = (vehicle: Vehicle) => {
-    Alert.alert("Supprimer le véhicule", `Êtes-vous sûr de vouloir supprimer ${vehicle.license_plate} ?`, [
+  const handleDeleteVehicle = async (vehicleId: string) => {
+    Alert.alert("Supprimer le véhicule", "Êtes-vous sûr de vouloir supprimer ce véhicule ?", [
       { text: "Annuler", style: "cancel" },
       {
         text: "Supprimer",
         style: "destructive",
         onPress: async () => {
+          setDeletingId(vehicleId)
           try {
-            await deleteVehicle(vehicle.id)
-            Alert.alert("Succès", "Véhicule supprimé avec succès")
+            await deleteVehicle(vehicleId)
           } catch (err) {
             Alert.alert("Erreur", "Impossible de supprimer le véhicule")
+          } finally {
+            setDeletingId(null)
           }
         },
       },
     ])
   }
 
-  const handleVehiclePress = (vehicle: Vehicle) => {
-    handleViewVehicle(vehicle)
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "#10b981" // green
-      case "maintenance":
-        return "#f59e0b" // amber
-      case "inactive":
-        return "#ef4444" // red
-      case "pending_verification":
-        return "#6366f1" // indigo
-      default:
-        return "#6b7280" // gray
+  const handleSetActive = async (vehicleId: string) => {
+    try {
+      await setActiveVehicle(vehicleId)
+      Alert.alert("Succès", "Véhicule principal mis à jour")
+    } catch (err) {
+      Alert.alert("Erreur", "Impossible de définir ce véhicule comme principal")
     }
   }
 
-  const renderItem = ({ item }: { item: Vehicle }) => (
-    <TouchableOpacity
-      style={[styles.vehicleCard, { backgroundColor: colors.card }]}
-      onPress={() => handleVehiclePress(item)}
-    >
-      <View style={styles.vehicleHeader}>
-        <Text style={[styles.vehiclePlate, { color: colors.text }]}>
-          {item.license_plate || "N/A"}
-        </Text>
-        <View
-          style={[
-            styles.statusBadge,
-            {
-              backgroundColor: getStatusColor(item.status || "inactive") + "20",
-              borderColor: getStatusColor(item.status || "inactive"),
-            },
-          ]}
-        >
-          <Text style={[styles.statusText, { color: getStatusColor(item.status || "inactive") }]}>
-            {(item.status || "inactive") === "active"
-              ? t("vehicle.active")
-              : (item.status || "inactive") === "maintenance"
-                ? t("vehicle.maintenance")
-                : (item.status || "inactive") === "inactive"
-                  ? t("vehicle.inactive")
-                  : t("vehicle.unknown")}
-          </Text>
-        </View>
-      </View>
+  const getVehicleIcon = (type: string): string => {
+    switch (type.toLowerCase()) {
+      case "moto":
+      case "motorcycle":
+        return "🏍️"
+      case "velo":
+      case "bicycle":
+        return "🚲"
+      case "voiture":
+      case "car":
+        return "🚗"
+      case "camion":
+      case "truck":
+        return "🚚"
+      case "scooter":
+        return "🛵"
+      default:
+        return "🚗"
+    }
+  }
 
-      <View style={styles.vehicleDetails}>
-        <View style={styles.vehicleDetail}>
-          <Feather name="truck" size={16} color={colors.text} />
-          <Text style={[styles.detailText, { color: colors.text }]}>
-            {item.type === VehicleType.PICKUP
-              ? t("vehicle.car")
-              : item.type === VehicleType.MOTORCYCLE
-                ? t("vehicle.motorcycle")
-                : item.type === VehicleType.BICYCLE
-                  ? t("vehicle.bicycle")
-                  : item.type === VehicleType.MOVING_TRUCK
-                    ? t("vehicle.truck")
-                    : "Autre"}
-          </Text>
-        </View>
+  const getInsuranceStatus = (expiryDate: string) => {
+    const today = new Date()
+    const expiry = new Date(expiryDate)
+    const diffTime = expiry.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-        {item.max_weight && (
-          <View style={styles.vehicleDetail}>
-            <Feather name="package" size={16} color={colors.text} />
-            <Text style={[styles.detailText, { color: colors.text }]}>{item.max_weight} kg</Text>
+    if (diffDays < 0) {
+      return { status: 'expired', color: '#F44336', text: 'Expirée' }
+    } else if (diffDays <= 30) {
+      return { status: 'warning', color: '#FF9800', text: `Expire dans ${diffDays} jours` }
+    } else {
+      return { status: 'valid', color: '#4CAF50', text: 'Valide' }
+    }
+  }
+
+  const renderVehicleStats = () => {
+    const activeVehicle = vehicles.find(v => v.is_active)
+    const expiringSoon = vehicles.filter(v => {
+      if (!v.insurance_expiry) return false
+      const days = Math.ceil((new Date(v.insurance_expiry).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+      return days <= 30 && days >= 0
+    }).length
+
+    return (
+      <Card style={styles.statsCard}>
+        <Card.Content>
+          <Text style={styles.statsTitle}>Aperçu</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{vehicles.length}</Text>
+              <Text style={styles.statLabel}>Véhicules</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{activeVehicle ? '1' : '0'}</Text>
+              <Text style={styles.statLabel}>Actif</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{expiringSoon}</Text>
+              <Text style={styles.statLabel}>À renouveler</Text>
+            </View>
           </View>
-        )}
+        </Card.Content>
+      </Card>
+    )
+  }
 
-        <View style={styles.vehicleDetail}>
-          <Ionicons name="water-outline" size={16} color={colors.text} />
-          <Text style={[styles.detailText, { color: colors.text }]}>
-            {item.fuel_type || "Thermique"}
-          </Text>
+  const renderVehicleItem = ({ item }: { item: Vehicle }) => {
+    const insuranceStatus = item.insurance_expiry ? getInsuranceStatus(item.insurance_expiry) : null
+
+    return (
+      <Card style={[styles.vehicleCard, item.is_active && styles.activeVehicleCard]}>
+        <Card.Content>
+          <View style={styles.vehicleHeader}>
+            <View style={styles.vehicleInfo}>
+              <Text style={styles.vehicleIcon}>{getVehicleIcon(item.type)}</Text>
+              <View style={styles.vehicleDetails}>
+                <View style={styles.vehicleTitleRow}>
+                  <Text style={styles.vehicleType}>{item.type}</Text>
+                  {item.is_active && <Chip style={styles.activeChip} textStyle={styles.activeChipText}>Principal</Chip>}
+                </View>
+                <Text style={styles.vehiclePlate}>{item.license_plate}</Text>
+                {item.brand && item.model && (
+                  <Text style={styles.vehicleModel}>{item.brand} {item.model}</Text>
+                )}
+                <Text style={styles.vehicleDate}>Ajouté le {formatDate(item.created_at)}</Text>
+              </View>
+            </View>
+
+            <View style={styles.vehicleActions}>
+              {!item.is_active && (
+                <TouchableOpacity
+                  style={styles.setActiveButton}
+                  onPress={() => handleSetActive(item.id)}
+                >
+                  <Feather name="star" size={16} color="#FF6B00" />
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => navigation.navigate("AddVehicleScreen", { vehicleId: item.id })}
+              >
+                <Feather name="edit-2" size={16} color="#2196F3" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteVehicle(item.id)}
+                disabled={deletingId === item.id}
+              >
+                {deletingId === item.id ? (
+                  <ActivityIndicator size="small" color="#F44336" />
+                ) : (
+                  <Feather name="trash-2" size={16} color="#F44336" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {insuranceStatus && (
+            <View style={styles.insuranceInfo}>
+              <Feather name="shield" size={14} color={insuranceStatus.color} />
+              <Text style={[styles.insuranceText, { color: insuranceStatus.color }]}>
+                Assurance: {insuranceStatus.text}
+              </Text>
+            </View>
+          )}
+
+          {item.technical_inspection_expiry && (
+            <View style={styles.inspectionInfo}>
+              <Feather name="check-circle" size={14} color="#4CAF50" />
+              <Text style={styles.inspectionText}>
+                Visite technique: {formatDate(item.technical_inspection_expiry)}
+              </Text>
+            </View>
+          )}
+        </Card.Content>
+      </Card>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Feather name="arrow-left" size={24} color="#212121" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Mes véhicules</Text>
+          <View style={{ width: 24 }} />
         </View>
-      </View>
-
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.primary + "20" }]}
-          onPress={() => handleEditVehicle(item)}
-        >
-          <Ionicons name="create-outline" size={18} color={colors.primary} />
-          <Text style={[styles.actionText, { color: colors.primary }]}>Modifier</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: "#ef4444" + "20" }]}
-          onPress={() => handleDeleteVehicle(item)}
-        >
-          <Ionicons name="trash-outline" size={18} color="#ef4444" />
-          <Text style={[styles.actionText, { color: "#ef4444" }]}>Supprimer</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  )
-
-  if (error) {
-    return <ErrorView message={error} onRetry={getVehicles} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B00" />
+          <Text style={styles.loadingText}>Chargement des véhicules...</Text>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>Gestion des véhicules</Text>
-        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={handleAddVehicle}>
-          <Ionicons name="add" size={24} color="white" />
-          <Text style={styles.addButtonText}>Ajouter</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Feather name="arrow-left" size={24} color="#212121" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Mes véhicules</Text>
+        <TouchableOpacity onPress={onRefresh}>
+          <Feather name="refresh-cw" size={24} color="#212121" />
         </TouchableOpacity>
       </View>
 
-      {vehicles.length === 0 && !isLoading ? (
-        <EmptyState
-          icon="truck"
-          title="Aucun véhicule"
-          message="Vous n'avez pas encore de véhicules. Ajoutez-en un pour commencer."
-          buttonText="Ajouter un véhicule"
-          onButtonPress={handleAddVehicle}
-        />
-      ) : (
-        <FlatList
-          data={vehicles}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContainer}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
+      <ScrollView style={styles.content}>
+        {vehicles.length > 0 && renderVehicleStats()}
+
+        {vehicles.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Feather name="truck" size={64} color="#CCCCCC" />
+            <Text style={styles.emptyTitle}>Aucun véhicule</Text>
+            <Text style={styles.emptyDescription}>
+              Ajoutez votre premier véhicule pour commencer à livrer
+            </Text>
+            <Button
+              mode="contained"
+              style={styles.emptyButton}
+              onPress={() => navigation.navigate("AddVehicleScreen", {})}
+            >
+              Ajouter un véhicule
+            </Button>
+          </View>
+        ) : (
+          <FlatList
+            data={vehicles}
+            renderItem={renderVehicleItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            scrollEnabled={false}
+          />
+        )}
+      </ScrollView>
+
+      {vehicles.length > 0 && (
+        <FAB
+          style={styles.fab}
+          icon="plus"
+          onPress={() => navigation.navigate("AddVehicleScreen", {})}
+          label="Ajouter"
         />
       )}
-    </View>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F5F5F5",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
+    backgroundColor: "#FFFFFF",
   },
-  title: {
-    fontSize: 20,
+  headerTitle: {
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#212121",
   },
-  addButton: {
-    flexDirection: "row",
+  content: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    color: "#757575",
+  },
+  errorContainer: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: "#FFEBEE",
     borderRadius: 8,
   },
-  addButtonText: {
-    color: "white",
-    fontWeight: "600",
-    marginLeft: 4,
+  errorText: {
+    color: "#C62828",
+    textAlign: "center",
+  },
+  statsCard: {
+    margin: 16,
+    elevation: 2,
+  },
+  statsTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#212121",
+    marginBottom: 12,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#FF6B00",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#757575",
+    marginTop: 4,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#212121",
+    marginTop: 16,
+  },
+  emptyDescription: {
+    fontSize: 14,
+    color: "#757575",
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  emptyButton: {
+    marginTop: 24,
+    backgroundColor: "#FF6B00",
   },
   listContainer: {
     padding: 16,
   },
   vehicleCard: {
-    borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 2,
+  },
+  activeVehicleCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6B00",
   },
   vehicleHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
+  },
+  vehicleInfo: {
+    flexDirection: "row",
+    flex: 1,
+  },
+  vehicleIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  vehicleDetails: {
+    flex: 1,
+  },
+  vehicleTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  vehicleType: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#212121",
+    textTransform: "capitalize",
+  },
+  activeChip: {
+    marginLeft: 8,
+    backgroundColor: "#E8F5E9",
+  },
+  activeChipText: {
+    color: "#2E7D32",
+    fontSize: 10,
   },
   vehiclePlate: {
     fontSize: 14,
-    opacity: 0.7,
+    color: "#212121",
+    fontWeight: "600",
+    marginBottom: 2,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  statusText: {
+  vehicleModel: {
     fontSize: 12,
-    fontWeight: "600",
+    color: "#757575",
+    marginBottom: 2,
   },
-  vehicleDetails: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 16,
+  vehicleDate: {
+    fontSize: 12,
+    color: "#757575",
   },
-  vehicleDetail: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
-    marginBottom: 8,
-  },
-  detailText: {
-    fontSize: 14,
-    marginLeft: 4,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  actionButton: {
+  vehicleActions: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+  },
+  setActiveButton: {
+    padding: 8,
+    marginHorizontal: 4,
+  },
+  editButton: {
+    padding: 8,
+    marginHorizontal: 4,
+  },
+  deleteButton: {
+    padding: 8,
+    marginHorizontal: 4,
+  },
+  insuranceInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 4,
+  },
+  insuranceText: {
     marginLeft: 8,
+    fontSize: 12,
   },
-  actionText: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
+  inspectionInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 4,
+  },
+  inspectionText: {
+    marginLeft: 8,
+    fontSize: 12,
+    color: "#4CAF50",
+  },
+  fab: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    backgroundColor: "#FF6B00",
   },
 })
 

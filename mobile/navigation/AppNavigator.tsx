@@ -38,6 +38,10 @@ import GamificationScreen from "../screens/courier/GamificationScreen"
 import CommunityWalletScreen from "../screens/courier/CommunityWalletScreen"
 import VehicleManagementScreen from "../screens/courier/VehicleManagementScreen"
 import CourierProfileScreen from "../screens/courier/CourierProfileScreen"
+// New Courier Screens
+import AvailableDeliveriesScreen from "../screens/courier/AvailableDeliveriesScreen"
+// import DeliveryDetailsScreen from "../screens/courier/DeliveryDetailsScreen" // Assuming this is a shared component or already imported
+
 
 // Other screens
 import SupportScreen from "../screens/SupportScreen"
@@ -163,6 +167,8 @@ const AppNavigator = () => {
         <Stack.Screen name="CommunityWallet" component={CommunityWalletScreen} />
         <Stack.Screen name="VehicleManagement" component={VehicleManagementScreen} />
         <Stack.Screen name="CourierProfile" component={CourierProfileScreen} />
+        <Stack.Screen name="AvailableDeliveries" component={AvailableDeliveriesScreen} />
+        <Stack.Screen name="DeliveryDetails" component={DeliveryDetailsScreen} />
 
         {/* Common screens */}
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
