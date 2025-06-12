@@ -6,7 +6,7 @@ import uuid
 
 from ..models.wallet import Wallet, Transaction, Loan, TransactionType, TransactionStatus
 from ..models.user import User
-from ..schemas.wallet import TransactionCreate, LoanCreate, LoanUpdate
+from ..schemas.wallet import TransactionCreate, LoanCreate, LoanUpdate, WalletBalanceResponse
 from ..core.exceptions import NotFoundError, BadRequestError
 
 
@@ -684,3 +684,299 @@ def get_loan_analytics(
             "end_date": end_date
         }
     }
+
+from sqlalchemy.orm import Session
+from sqlalchemy import and_, func, desc
+from typing import List, Optional
+from datetime import datetime, timedelta
+
+from ..models.wallet import Wallet, Transaction
+from ..models.user import User
+from ..schemas.wallet import (
+    TransactionCreate, WalletBalanceResponse, 
+    TransactionType, TransactionStatus
+)
+
+def get_user_wallet(db: Session, user_id: int) -> Wallet:
+    """
+    Récupérer ou créer le portefeuille d'un utilisateur
+    """
+    wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
+
+    if not wallet:
+        # Créer un nouveau portefeuille pour l'utilisateur
+        wallet = Wallet(user_id=user_id, balance=0.0, pending_balance=0.0)
+        db.add(wallet)
+        db.commit()
+        db.refresh(wallet)
+
+    return wallet
+
+def get_wallet_balance(db: Session, user_id: int) -> WalletBalanceResponse:
+    """
+    Récupérer le solde détaillé du portefeuille
+    """
+    wallet = get_user_wallet(db, user_id)
+
+    # Calculer les totaux des transactions
+    transactions = db.query(Transaction).filter(
+        Transaction.user_id == user_id,
+        Transaction.status == TransactionStatus.completed
+    ).all()
+
+    total_spent = sum(
+        t.amount for t in transactions 
+        if t.type in [TransactionType.payment, TransactionType.penalty]
+    )
+
+    total_refunds = sum(
+        t.amount for t in transactions 
+        if t.type in [TransactionType.refund, TransactionType.bonus]
+    )
+
+    return WalletBalanceResponse(
+        main_balance=wallet.balance,
+        pending_balance=wallet.pending_balance,
+        total_spent=total_spent,
+        total_refunds=total_refunds
+    )
+
+def create_transaction(
+    db: Session, 
+    user_id: int, 
+    transaction_data: TransactionCreate,
+    status: TransactionStatus = TransactionStatus.pending
+) -> Transaction:
+    """
+    Créer une nouvelle transaction
+    """
+    transaction = Transaction(
+        user_id=user_id,
+        delivery_id=transaction_data.delivery_id,
+        amount=transaction_data.amount,
+        type=transaction_data.type,
+        description=transaction_data.description,
+        payment_method=transaction_data.payment_method,
+        external_transaction_id=transaction_data.external_transaction_id,
+        status=status,
+        created_at=datetime.utcnow()
+    )
+
+    db.add(transaction)
+    db.commit()
+    db.refresh(transaction)
+
+    # Mettre à jour le solde du portefeuille si la transaction est complétée
+    if status == TransactionStatus.completed:
+        update_wallet_balance(db, user_id, transaction)
+
+    return transaction
+
+def update_wallet_balance(db: Session, user_id: int, transaction: Transaction):
+    """
+    Mettre à jour le solde du portefeuille après une transaction
+    """
+    wallet = get_user_wallet(db, user_id)
+
+    if transaction.type in [TransactionType.refund, TransactionType.bonus, TransactionType.add_funds]:
+        # Ajouter au solde principal
+        wallet.balance += transaction.amount
+    elif transaction.type in [TransactionType.payment, TransactionType.penalty]:
+        # Déduire du solde principal
+        wallet.balance -= transaction.amount
+        if wallet.balance < 0:
+            # Gérer le découvert (optionnel)
+            wallet.balance = 0
+
+    wallet.updated_at = datetime.utcnow()
+    db.commit()
+
+def add_funds_to_wallet(
+    db: Session, 
+    user_id: int, 
+    amount: float, 
+    payment_method: str,
+    external_transaction_id: Optional[str] = None
+) -> Transaction:
+    """
+    Ajouter des fonds au portefeuille
+    """
+    transaction_data = TransactionCreate(
+        amount=amount,
+        type=TransactionType.add_funds,
+        description=f"Ajout de fonds - {amount} FCFA",
+        payment_method=payment_method,
+        external_transaction_id=external_transaction_id
+    )
+
+    # Créer la transaction comme terminée directement
+    transaction = create_transaction(
+        db=db,
+        user_id=user_id,
+        transaction_data=transaction_data,
+        status=TransactionStatus.completed
+    )
+
+    return transaction
+
+def get_user_transactions(
+    db: Session,
+    user_id: int,
+    limit: int = 50,
+    offset: int = 0,
+    transaction_type: Optional[str] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None
+) -> List[Transaction]:
+    """
+    Récupérer l'historique des transactions d'un utilisateur
+    """
+    query = db.query(Transaction).filter(Transaction.user_id == user_id)
+
+    if transaction_type:
+        query = query.filter(Transaction.type == transaction_type)
+
+    if start_date:
+        query = query.filter(Transaction.created_at >= start_date)
+
+    if end_date:
+        query = query.filter(Transaction.created_at <= end_date)
+
+    transactions = query.order_by(desc(Transaction.created_at))\
+                        .offset(offset)\
+                        .limit(limit)\
+                        .all()
+
+    return transactions
+
+def process_delivery_payment(
+    db: Session,
+    delivery_id: int,
+    client_id: int,
+    courier_id: int,
+    amount: float
+) -> bool:
+    """
+    Traiter le paiement d'une livraison
+    """
+    client_wallet = get_user_wallet(db, client_id)
+
+    # Vérifier si le client a suffisamment de fonds
+    if client_wallet.balance < amount:
+        return False
+
+    # Créer la transaction de paiement pour le client
+    client_transaction = TransactionCreate(
+        delivery_id=delivery_id,
+        amount=amount,
+        type=TransactionType.payment,
+        description=f"Paiement livraison #{delivery_id}",
+        payment_method="wallet"
+    )
+
+    create_transaction(
+        db=db,
+        user_id=client_id,
+        transaction_data=client_transaction,
+        status=TransactionStatus.completed
+    )
+
+    # Calculer les frais (ex: 10% de commission)
+    commission_rate = 0.10
+    commission = amount * commission_rate
+    courier_amount = amount - commission
+
+    # Créer la transaction de bonus pour le coursier
+    courier_transaction = TransactionCreate(
+        delivery_id=delivery_id,
+        amount=courier_amount,
+        type=TransactionType.bonus,
+        description=f"Paiement livraison #{delivery_id}",
+        payment_method="wallet"
+    )
+
+    create_transaction(
+        db=db,
+        user_id=courier_id,
+        transaction_data=courier_transaction,
+        status=TransactionStatus.completed
+    )
+
+    return True
+
+def refund_delivery_payment(
+    db: Session,
+    delivery_id: int,
+    client_id: int,
+    amount: float,
+    reason: str = "Remboursement livraison"
+) -> Transaction:
+    """
+    Rembourser le paiement d'une livraison
+    """
+    refund_transaction = TransactionCreate(
+        delivery_id=delivery_id,
+        amount=amount,
+        type=TransactionType.refund,
+        description=f"{reason} #{delivery_id}",
+        payment_method="wallet"
+    )
+
+    return create_transaction(
+        db=db,
+        user_id=client_id,
+        transaction_data=refund_transaction,
+        status=TransactionStatus.completed
+    )
+
+def get_wallet_statistics(
+    db: Session,
+    user_id: int,
+    start_date: datetime,
+    end_date: datetime
+) -> dict:
+    """
+    Récupérer les statistiques du portefeuille pour une période donnée
+    """
+    transactions = get_user_transactions(
+        db=db,
+        user_id=user_id,
+        start_date=start_date,
+        end_date=end_date,
+        limit=1000  # Limite élevée pour les statistiques
+    )
+
+    stats = {
+        'total_transactions': len(transactions),
+        'total_amount_in': 0,
+        'total_amount_out': 0,
+        'transactions_by_type': {},
+        'transactions_by_day': {}
+    }
+
+    for transaction in transactions:
+        # Calculs des montants
+        if transaction.type in [TransactionType.refund, TransactionType.bonus, TransactionType.add_funds]:
+            stats['total_amount_in'] += transaction.amount
+        else:
+            stats['total_amount_out'] += transaction.amount
+
+        # Comptage par type
+        transaction_type = transaction.type.value
+        if transaction_type not in stats['transactions_by_type']:
+            stats['transactions_by_type'][transaction_type] = {'count': 0, 'amount': 0}
+
+        stats['transactions_by_type'][transaction_type]['count'] += 1
+        stats['transactions_by_type'][transaction_type]['amount'] += transaction.amount
+
+        # Comptage par jour
+        day_key = transaction.created_at.strftime('%Y-%m-%d')
+        if day_key not in stats['transactions_by_day']:
+            stats['transactions_by_day'][day_key] = {'count': 0, 'amount': 0}
+
+        stats['transactions_by_day'][day_key]['count'] += 1
+        stats['transactions_by_day'][day_key]['amount'] += transaction.amount
+
+    stats['net_change'] = stats['total_amount_in'] - stats['total_amount_out']
+
+    return stats
