@@ -3,6 +3,31 @@ import * as Location from 'expo-location'
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
+export interface LocationCoords {
+  latitude: number
+  longitude: number
+}
+
+export interface AddressSuggestion {
+  id: string
+  address: string
+  coords: LocationCoords
+  commune: string
+  type?: string
+  distance?: number
+}
+
+export interface PlaceDetails {
+  id: string
+  name: string
+  address: string
+  coords: LocationCoords
+  commune: string
+  type: string
+  rating?: number
+  isOpen?: boolean
+}
+
 export interface VTCLocation {
   latitude: number
   longitude: number
@@ -38,6 +63,8 @@ class LocationService {
   private lastKnownLocation: VTCLocation | null = null
   private locationCallbacks: ((location: VTCLocation) => void)[] = []
   private geofences: GeofenceRegion[] = []
+  private cachedSuggestions: Map<string, AddressSuggestion[]> = new Map()
+  private recentSearches: AddressSuggestion[] = []
 
   // Configuration VTC optimisée
   private readonly VTC_SETTINGS: LocationSettings = {
@@ -63,7 +90,7 @@ class LocationService {
     try {
       // Demander permission de base
       const foregroundPermission = await Location.requestForegroundPermissionsAsync()
-      
+
       if (foregroundPermission.status !== 'granted') {
         return { granted: false, status: foregroundPermission.status }
       }
@@ -115,13 +142,13 @@ class LocationService {
       return vtcLocation
     } catch (error) {
       console.error('Erreur lors de l\'obtention de la position:', error)
-      
+
       // Fallback vers la dernière position connue
       const lastPosition = await this.getLastKnownLocation()
       if (lastPosition) {
         return lastPosition
       }
-      
+
       throw error
     }
   }
@@ -165,10 +192,10 @@ class LocationService {
 
           this.lastKnownLocation = vtcLocation
           this.saveLastKnownLocation(vtcLocation)
-          
+
           // Notifier tous les callbacks
           this.locationCallbacks.forEach(cb => cb(vtcLocation))
-          
+
           // Vérifier les geofences
           this.checkGeofences(vtcLocation)
         }
@@ -342,6 +369,263 @@ class LocationService {
       this.VTC_SETTINGS.accuracy = Location.Accuracy.BestForNavigation
       this.VTC_SETTINGS.timeInterval = 2000 // 2 secondes
       this.VTC_SETTINGS.distanceInterval = 5 // 5 mètres
+    }
+  }
+
+  async searchAddresses(query: string, userLocation?: LocationCoords): Promise<AddressSuggestion[]> {
+    if (query.length < 2) {
+      return this.getPopularAddresses(userLocation)
+    }
+
+    // Vérifier le cache
+    const cacheKey = query.toLowerCase()
+    if (this.cachedSuggestions.has(cacheKey)) {
+      return this.cachedSuggestions.get(cacheKey)!
+    }
+
+    try {
+      const suggestions: AddressSuggestion[] = []
+
+      // Rechercher dans les lieux populaires
+      const popularPlaces = await this.getPopularPlaces(query)
+      suggestions.push(...popularPlaces)
+
+      // Rechercher dans les communes
+      const communeSuggestions = await this.searchInCommunes(query)
+      suggestions.push(...communeSuggestions)
+
+      // Rechercher dans les adresses récentes
+      const recentMatches = this.recentSearches.filter(addr =>
+        addr.address.toLowerCase().includes(query.toLowerCase())
+      )
+      suggestions.push(...recentMatches.map(addr => ({ ...addr, type: "recent" })))
+
+      // Calculer la distance si la position de l'utilisateur est disponible
+      if (userLocation) {
+        suggestions.forEach(suggestion => {
+          suggestion.distance = this.calculateDistance(userLocation, suggestion.coords)
+        })
+        // Trier par distance
+        suggestions.sort((a, b) => (a.distance || 0) - (b.distance || 0))
+      }
+
+      // Limiter et dédupliquer
+      const uniqueSuggestions = this.deduplicateSuggestions(suggestions).slice(0, 8)
+
+      // Mettre en cache
+      this.cachedSuggestions.set(cacheKey, uniqueSuggestions)
+
+      return uniqueSuggestions
+    } catch (error) {
+      console.error("Error searching addresses:", error)
+      return []
+    }
+  }
+
+  private async getPopularPlaces(query?: string): Promise<AddressSuggestion[]> {
+    const popularPlaces = [
+      {
+        id: "airport",
+        address: "Aéroport Félix Houphouët-Boigny",
+        coords: { latitude: 5.2539, longitude: -3.9263 },
+        commune: "Port-Bouët",
+        type: "airport"
+      },
+      {
+        id: "university",
+        address: "Université Félix Houphouët-Boigny",
+        coords: { latitude: 5.3847, longitude: -3.9883 },
+        commune: "Cocody",
+        type: "university"
+      },
+      {
+        id: "treichville_market",
+        address: "Marché de Treichville",
+        coords: { latitude: 5.2833, longitude: -4.0000 },
+        commune: "Treichville",
+        type: "market"
+      },
+      {
+        id: "playce_marcory",
+        address: "Centre Commercial PlaYce Marcory",
+        coords: { latitude: 5.2956, longitude: -3.9750 },
+        commune: "Marcory",
+        type: "mall"
+      },
+      {
+        id: "bassam_station",
+        address: "Gare de Bassam",
+        coords: { latitude: 5.3200, longitude: -4.0200 },
+        commune: "Plateau",
+        type: "transport"
+      },
+      {
+        id: "adjame_market",
+        address: "Marché d'Adjamé",
+        coords: { latitude: 5.3667, longitude: -4.0167 },
+        commune: "Adjamé",
+        type: "market"
+      },
+      {
+        id: "cocody_riviera",
+        address: "Riviera Golf, Cocody",
+        coords: { latitude: 5.3789, longitude: -3.9956 },
+        commune: "Cocody",
+        type: "entertainment"
+      },
+      {
+        id: "yop_Kennedy",
+        address: "Carrefour Kennedy, Yopougon",
+        coords: { latitude: 5.3289, longitude: -4.0756 },
+        commune: "Yopougon",
+        type: "intersection"
+      }
+    ]
+
+    if (query) {
+      return popularPlaces.filter(place =>
+        place.address.toLowerCase().includes(query.toLowerCase())
+      )
+    }
+
+    return popularPlaces
+  }
+
+  private async searchInCommunes(query: string): Promise<AddressSuggestion[]> {
+    const communes = [
+      "Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi",
+      "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon"
+    ]
+
+    const suggestions: AddressSuggestion[] = []
+
+    communes.forEach((commune, index) => {
+      suggestions.push({
+        id: `${commune}-${index}-${Date.now()}`,
+        address: `${query}, ${commune}, Abidjan`,
+        coords: this.getCommuneCoords(commune),
+        commune: commune,
+        type: "commune"
+      })
+    })
+
+    return suggestions
+  }
+
+  private deduplicateSuggestions(suggestions: AddressSuggestion[]): AddressSuggestion[] {
+    const seen = new Set<string>()
+    return suggestions.filter(suggestion => {
+      const key = suggestion.address.toLowerCase()
+      if (seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+  }
+
+  async addToRecentSearches(suggestion: AddressSuggestion): Promise<void> {
+    // Supprimer l'adresse existante si elle existe
+    this.recentSearches = this.recentSearches.filter(addr => addr.id !== suggestion.id)
+
+    // Ajouter au début
+    this.recentSearches.unshift({
+      ...suggestion,
+      type: "recent"
+    })
+
+    // Limiter à 5 adresses récentes
+    this.recentSearches = this.recentSearches.slice(0, 5)
+
+    await this.saveRecentSearches()
+  }
+
+  getRecentSearches(): AddressSuggestion[] {
+    return this.recentSearches
+  }
+
+  async clearRecentSearches(): Promise<void> {
+    this.recentSearches = []
+    await this.saveRecentSearches()
+  }
+
+  private calculateDistance(from: LocationCoords, to: LocationCoords): number {
+    const R = 6371 // Rayon de la Terre en km
+    const dLat = this.deg2rad(to.latitude - from.latitude)
+    const dLon = this.deg2rad(to.longitude - from.longitude)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(from.latitude)) *
+        Math.cos(this.deg2rad(to.latitude)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
+
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI / 180)
+  }
+
+  private async loadRecentSearches(): Promise<void> {
+    try {
+      const stored = await AsyncStorage.getItem("recentAddressSearches")
+      if (stored) {
+        this.recentSearches = JSON.parse(stored)
+      }
+    } catch (error) {
+      console.error("Error loading recent searches:", error)
+    }
+  }
+
+  private async saveRecentSearches(): Promise<void> {
+    try {
+      await AsyncStorage.setItem("recentAddressSearches", JSON.stringify(this.recentSearches))
+    } catch (error) {
+      console.error("Error saving recent searches:", error)
+    }
+  }
+
+  private getPopularAddresses(userLocation?: LocationCoords): AddressSuggestion[] {
+    const popularAddresses = this.getPopularPlaces()
+
+    if (userLocation) {
+      return popularAddresses.then(addresses => {
+        return addresses.map(address => {
+          return {
+            ...address,
+            distance: this.calculateDistance(userLocation, address.coords)
+          }
+        }).sort((a, b) => (a.distance || 0) - (b.distance || 0))
+      }) as any
+    }
+    return popularAddresses as any
+  }
+
+  private getCommuneCoords(commune: string): LocationCoords {
+    switch (commune) {
+      case "Abobo":
+        return { latitude: 5.4500, longitude: -4.0200 }
+      case "Adjamé":
+        return { latitude: 5.3667, longitude: -4.0167 }
+      case "Attécoubé":
+        return { latitude: 5.3333, longitude: -4.0500 }
+      case "Cocody":
+        return { latitude: 5.3381, longitude: -3.9344 }
+      case "Koumassi":
+        return { latitude: 5.2833, longitude: -3.9500 }
+      case "Marcory":
+        return { latitude: 5.2917, longitude: -3.9667 }
+      case "Plateau":
+        return { latitude: 5.3200, longitude: -4.0200 }
+      case "Port-Bouët":
+        return { latitude: 5.2583, longitude: -3.9333 }
+      case "Treichville":
+        return { latitude: 5.2833, longitude: -4.0000 }
+      case "Yopougon":
+        return { latitude: 5.3250, longitude: -4.0833 }
+      default:
+        return { latitude: 5.3500, longitude: -4.0000 }
     }
   }
 }

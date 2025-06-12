@@ -197,3 +197,335 @@ async def find_nearest_couriers(lat: float, lng: float, max_distance: float = 5.
     couriers.sort(key=lambda x: x["distance"])
     
     return couriers
+import math
+from typing import List, Optional, Dict, Any
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+import asyncio
+
+# Lieux populaires d'Abidjan avec coordonnées précises
+POPULAR_PLACES = [
+    {
+        "id": "airport_abidjan",
+        "name": "Aéroport Félix Houphouët-Boigny",
+        "address": "Aéroport Félix Houphouët-Boigny, Port-Bouët, Abidjan",
+        "latitude": 5.2539,
+        "longitude": -3.9263,
+        "commune": "Port-Bouët",
+        "category": "transport",
+        "type": "airport",
+        "importance": 10
+    },
+    {
+        "id": "university_ufhb",
+        "name": "Université Félix Houphouët-Boigny",
+        "address": "Université Félix Houphouët-Boigny, Cocody, Abidjan",
+        "latitude": 5.3847,
+        "longitude": -3.9883,
+        "commune": "Cocody",
+        "category": "education",
+        "type": "university",
+        "importance": 9
+    },
+    {
+        "id": "marche_treichville",
+        "name": "Marché de Treichville",
+        "address": "Marché de Treichville, Treichville, Abidjan",
+        "latitude": 5.2833,
+        "longitude": -4.0000,
+        "commune": "Treichville",
+        "category": "shopping",
+        "type": "market",
+        "importance": 8
+    },
+    {
+        "id": "playce_marcory",
+        "name": "Centre Commercial PlaYce Marcory",
+        "address": "Centre Commercial PlaYce Marcory, Marcory, Abidjan",
+        "latitude": 5.2956,
+        "longitude": -3.9750,
+        "commune": "Marcory",
+        "category": "shopping",
+        "type": "mall",
+        "importance": 8
+    },
+    {
+        "id": "gare_bassam",
+        "name": "Gare de Bassam",
+        "address": "Gare de Bassam, Plateau, Abidjan",
+        "latitude": 5.3200,
+        "longitude": -4.0200,
+        "commune": "Plateau",
+        "category": "transport",
+        "type": "station",
+        "importance": 7
+    },
+    {
+        "id": "marche_adjame",
+        "name": "Marché d'Adjamé",
+        "address": "Marché d'Adjamé, Adjamé, Abidjan",
+        "latitude": 5.3667,
+        "longitude": -4.0167,
+        "commune": "Adjamé",
+        "category": "shopping",
+        "type": "market",
+        "importance": 8
+    },
+    {
+        "id": "riviera_golf",
+        "name": "Riviera Golf",
+        "address": "Riviera Golf, Cocody, Abidjan",
+        "latitude": 5.3789,
+        "longitude": -3.9956,
+        "commune": "Cocody",
+        "category": "entertainment",
+        "type": "golf",
+        "importance": 6
+    },
+    {
+        "id": "carrefour_kennedy",
+        "name": "Carrefour Kennedy",
+        "address": "Carrefour Kennedy, Yopougon, Abidjan",
+        "latitude": 5.3289,
+        "longitude": -4.0756,
+        "commune": "Yopougon",
+        "category": "intersection",
+        "type": "intersection",
+        "importance": 7
+    },
+    {
+        "id": "hotel_ivoire",
+        "name": "Hôtel Ivoire",
+        "address": "Hôtel Ivoire, Cocody, Abidjan",
+        "latitude": 5.3439,
+        "longitude": -3.9889,
+        "commune": "Cocody",
+        "category": "hospitality",
+        "type": "hotel",
+        "importance": 7
+    },
+    {
+        "id": "stade_alassane_ouattara",
+        "name": "Stade Alassane Ouattara",
+        "address": "Stade Alassane Ouattara, Yopougon, Abidjan",
+        "latitude": 5.3156,
+        "longitude": -4.0789,
+        "commune": "Yopougon",
+        "category": "sports",
+        "type": "stadium",
+        "importance": 6
+    }
+]
+
+# Coordonnées des communes d'Abidjan
+COMMUNE_COORDINATES = {
+    "Abobo": {"latitude": 5.4414, "longitude": -4.0444},
+    "Adjamé": {"latitude": 5.3667, "longitude": -4.0167},
+    "Attécoubé": {"latitude": 5.3333, "longitude": -4.0333},
+    "Cocody": {"latitude": 5.3600, "longitude": -3.9678},
+    "Koumassi": {"latitude": 5.3000, "longitude": -3.9500},
+    "Marcory": {"latitude": 5.3000, "longitude": -3.9833},
+    "Plateau": {"latitude": 5.3167, "longitude": -4.0167},
+    "Port-Bouët": {"latitude": 5.2500, "longitude": -3.9333},
+    "Treichville": {"latitude": 5.2833, "longitude": -4.0000},
+    "Yopougon": {"latitude": 5.3167, "longitude": -4.0833}
+}
+
+def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Calculer la distance entre deux points géographiques en kilomètres"""
+    R = 6371  # Rayon de la Terre en km
+    
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    
+    a = (math.sin(dlat / 2) * math.sin(dlat / 2) +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+         math.sin(dlng / 2) * math.sin(dlng / 2))
+    
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = R * c
+    
+    return distance
+
+async def get_address_suggestions(
+    db: Session,
+    query: str,
+    user_location: Optional[Dict[str, float]] = None,
+    limit: int = 8
+) -> List[Dict[str, Any]]:
+    """Obtenir des suggestions d'adresses intelligentes"""
+    suggestions = []
+    query_lower = query.lower()
+    
+    # 1. Rechercher dans les lieux populaires
+    matching_places = []
+    for place in POPULAR_PLACES:
+        if (query_lower in place["name"].lower() or 
+            query_lower in place["address"].lower() or
+            query_lower in place["commune"].lower()):
+            
+            place_suggestion = {
+                "id": place["id"],
+                "address": place["address"],
+                "name": place["name"],
+                "latitude": place["latitude"],
+                "longitude": place["longitude"],
+                "commune": place["commune"],
+                "type": place["type"],
+                "category": place["category"],
+                "importance": place["importance"],
+                "distance": None
+            }
+            
+            # Calculer la distance si la position utilisateur est fournie
+            if user_location:
+                distance = calculate_distance(
+                    user_location["latitude"], user_location["longitude"],
+                    place["latitude"], place["longitude"]
+                )
+                place_suggestion["distance"] = round(distance, 2)
+            
+            matching_places.append(place_suggestion)
+    
+    # Trier les lieux populaires par importance et distance
+    if user_location:
+        matching_places.sort(key=lambda x: (x["distance"] or 999, -x["importance"]))
+    else:
+        matching_places.sort(key=lambda x: -x["importance"])
+    
+    suggestions.extend(matching_places[:4])  # Maximum 4 lieux populaires
+    
+    # 2. Générer des suggestions pour chaque commune
+    commune_suggestions = []
+    for commune, coords in COMMUNE_COORDINATES.items():
+        if query_lower in commune.lower():
+            commune_suggestion = {
+                "id": f"commune_{commune.lower()}",
+                "address": f"{query}, {commune}, Abidjan",
+                "name": f"{query} - {commune}",
+                "latitude": coords["latitude"],
+                "longitude": coords["longitude"],
+                "commune": commune,
+                "type": "custom",
+                "category": "address",
+                "importance": 1,
+                "distance": None
+            }
+            
+            if user_location:
+                distance = calculate_distance(
+                    user_location["latitude"], user_location["longitude"],
+                    coords["latitude"], coords["longitude"]
+                )
+                commune_suggestion["distance"] = round(distance, 2)
+            
+            commune_suggestions.append(commune_suggestion)
+    
+    # Trier par distance si disponible
+    if user_location and commune_suggestions:
+        commune_suggestions.sort(key=lambda x: x["distance"] or 999)
+    
+    # Ajouter les suggestions de commune (maximum 4)
+    suggestions.extend(commune_suggestions[:4])
+    
+    # 3. Si pas assez de suggestions, ajouter des suggestions génériques
+    if len(suggestions) < limit:
+        generic_suggestions = []
+        for commune in ["Cocody", "Plateau", "Marcory", "Yopougon", "Treichville"]:
+            if len(suggestions) + len(generic_suggestions) >= limit:
+                break
+                
+            coords = COMMUNE_COORDINATES[commune]
+            generic_suggestion = {
+                "id": f"generic_{commune.lower()}_{query}",
+                "address": f"{query}, {commune}, Abidjan",
+                "name": f"{query} - {commune}",
+                "latitude": coords["latitude"],
+                "longitude": coords["longitude"],
+                "commune": commune,
+                "type": "custom",
+                "category": "address",
+                "importance": 0,
+                "distance": None
+            }
+            
+            if user_location:
+                distance = calculate_distance(
+                    user_location["latitude"], user_location["longitude"],
+                    coords["latitude"], coords["longitude"]
+                )
+                generic_suggestion["distance"] = round(distance, 2)
+            
+            generic_suggestions.append(generic_suggestion)
+        
+        suggestions.extend(generic_suggestions)
+    
+    # Limiter le nombre de suggestions
+    return suggestions[:limit]
+
+async def get_popular_places(
+    db: Session,
+    user_location: Optional[Dict[str, float]] = None,
+    category: Optional[str] = None,
+    limit: int = 10
+) -> List[Dict[str, Any]]:
+    """Obtenir les lieux populaires d'Abidjan"""
+    places = POPULAR_PLACES.copy()
+    
+    # Filtrer par catégorie si spécifiée
+    if category:
+        places = [p for p in places if p["category"] == category]
+    
+    # Calculer les distances si la position utilisateur est fournie
+    if user_location:
+        for place in places:
+            distance = calculate_distance(
+                user_location["latitude"], user_location["longitude"],
+                place["latitude"], place["longitude"]
+            )
+            place["distance"] = round(distance, 2)
+        
+        # Trier par distance puis par importance
+        places.sort(key=lambda x: (x["distance"], -x["importance"]))
+    else:
+        # Trier par importance seulement
+        places.sort(key=lambda x: -x["importance"])
+    
+    return places[:limit]
+
+async def reverse_geocode(
+    latitude: float,
+    longitude: float
+) -> Optional[Dict[str, Any]]:
+    """Géocodage inverse pour obtenir l'adresse à partir de coordonnées"""
+    
+    # Trouver la commune la plus proche
+    closest_commune = None
+    min_distance = float('inf')
+    
+    for commune, coords in COMMUNE_COORDINATES.items():
+        distance = calculate_distance(
+            latitude, longitude,
+            coords["latitude"], coords["longitude"]
+        )
+        
+        if distance < min_distance:
+            min_distance = distance
+            closest_commune = commune
+    
+    if closest_commune and min_distance < 20:  # Moins de 20km
+        return {
+            "address": f"Position actuelle, {closest_commune}, Abidjan",
+            "commune": closest_commune,
+            "latitude": latitude,
+            "longitude": longitude,
+            "distance": round(min_distance, 2)
+        }
+    
+    return {
+        "address": f"Position actuelle, Abidjan",
+        "commune": "Abidjan",
+        "latitude": latitude,
+        "longitude": longitude,
+        "distance": 0
+    }
