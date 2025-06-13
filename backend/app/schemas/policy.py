@@ -92,7 +92,7 @@ class ModerationRuleResponse(ModerationRuleBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 # Refund Criteria Schemas
 class RefundCriteriaBase(BaseModel):
@@ -125,7 +125,7 @@ class RefundCriteriaResponse(RefundCriteriaBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 # Sanction Parameter Schemas
 class SanctionParameterBase(BaseModel):
@@ -162,7 +162,7 @@ class SanctionParameterResponse(SanctionParameterBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 # SMS Template Schemas
 class SmsTemplateBase(BaseModel):
@@ -193,7 +193,7 @@ class SmsTemplateResponse(SmsTemplateBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 # Policy Schemas
 class PolicyBase(BaseModel):
@@ -223,7 +223,7 @@ class PolicyResponse(PolicyBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 class PolicyHistoryResponse(BaseModel):
     id: int = Field(..., description="ID de l'historique")
@@ -236,7 +236,7 @@ class PolicyHistoryResponse(BaseModel):
     change_reason: Optional[str] = Field(None, description="Raison du changement")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Combined Schemas for API responses
 class AllPoliciesResponse(BaseModel):

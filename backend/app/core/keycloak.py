@@ -138,10 +138,10 @@ class KeycloakAuth:
             # Récupérer l'ID de l'utilisateur créé
             location = response.headers.get("Location", "")
             user_id = location.split("/")[-1]
-            
+
             # Ajouter le rôle à l'utilisateur
             self.assign_role(user_id, user_data["role"])
-            
+
             return {"id": user_id, "status": "created"}
         else:
             raise HTTPException(
@@ -210,28 +210,28 @@ class KeycloakAuth:
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             return False
-        
+
         current_user = response.json()
-        
+
         # Mettre à jour les champs
         if "email" in user_data:
             current_user["email"] = user_data["email"]
-        
+
         if "full_name" in user_data:
             names = user_data["full_name"].split(" ")
             current_user["firstName"] = names[0]
             current_user["lastName"] = " ".join(names[1:]) if len(names) > 1 else ""
-        
+
         # Mettre à jour les attributs
         if "attributes" not in current_user:
             current_user["attributes"] = {}
-        
+
         if "commune" in user_data:
             current_user["attributes"]["commune"] = user_data["commune"]
-        
+
         if "language_preference" in user_data:
             current_user["attributes"]["language_preference"] = user_data["language_preference"]
-        
+
         # Envoyer la mise à jour
         response = requests.put(url, json=current_user, headers=headers)
         return response.status_code == 204
@@ -313,3 +313,48 @@ async def get_current_user_from_keycloak(token: str = Depends(oauth2_scheme)):
             detail=str(e),
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+def get_keycloak_public_key():
+    """
+    Récupère la clé publique de Keycloak pour vérifier les tokens JWT
+    """
+    try:
+        response = requests.get(f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}")
+        realm_info = response.json()
+        return realm_info['public_key']
+    except Exception as e:
+        print(f"Exception lors du chargement de la clé publique: {e}")
+        # Retourner une clé par défaut pour éviter les erreurs lors du développement
+        print("Utilisation du mode développement sans Keycloak")
+        return None
+
+def verify_keycloak_token(token: str):
+    """
+    Vérifie un token JWT avec la clé publique de Keycloak
+    """
+    try:
+        public_key = get_keycloak_public_key()
+        if not public_key:
+            # Mode développement - accepter les tokens sans vérification
+            print("Mode développement: Keycloak non disponible")
+            return {"sub": "dev-user", "preferred_username": "dev", "email": "dev@test.com"}
+
+        # Convertir la clé publique en format PEM
+        public_key_pem = f"-----BEGIN PUBLIC KEY-----\n{public_key}\n-----END PUBLIC KEY-----"
+
+        # Décoder et vérifier le token
+        payload = jwt.decode(
+            token,
+            public_key_pem,
+            algorithms=["RS256"],
+            audience="account"
+        )
+
+        return payload
+
+    except jwt.InvalidTokenError as e:
+        print(f"Token invalide: {e}")
+        return None
+    except Exception as e:
+        print(f"Erreur lors de la vérification du token: {e}")
+        return None

@@ -96,7 +96,7 @@ class Vehicle(VehicleBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 
 # CourierVehicle schemas
@@ -136,7 +136,7 @@ class CourierVehicle(BaseModel):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 
 # TransportRule schemas
@@ -187,7 +187,7 @@ class VehicleInfo(BaseModel):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 
 class TransportRule(TransportRuleBase):
@@ -198,7 +198,7 @@ class TransportRule(TransportRuleBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 
 # VehicleRecommendation schemas
@@ -261,7 +261,7 @@ class VehicleUsage(VehicleUsageBase):
 
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 
 # Document upload schema
