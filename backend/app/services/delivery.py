@@ -30,18 +30,18 @@ def get_deliveries(
     delivery_type: Optional[DeliveryType] = None
 ) -> List[Delivery]:
     query = db.query(Delivery)
-    
+
     if status:
         query = query.filter(Delivery.status == status)
-    
+
     if commune:
         query = query.filter(
             (Delivery.pickup_commune == commune) | (Delivery.delivery_commune == commune)
         )
-    
+
     if delivery_type:
         query = query.filter(Delivery.delivery_type == delivery_type)
-    
+
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
 def get_deliveries_by_client(
@@ -52,10 +52,10 @@ def get_deliveries_by_client(
     status: Optional[DeliveryStatus] = None
 ) -> List[Delivery]:
     query = db.query(Delivery).filter(Delivery.client_id == client_id)
-    
+
     if status:
         query = query.filter(Delivery.status == status)
-    
+
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
 def get_deliveries_by_courier(
@@ -66,10 +66,10 @@ def get_deliveries_by_courier(
     status: Optional[DeliveryStatus] = None
 ) -> List[Delivery]:
     query = db.query(Delivery).filter(Delivery.courier_id == courier_id)
-    
+
     if status:
         query = query.filter(Delivery.status == status)
-    
+
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
 def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) -> Delivery:
@@ -79,7 +79,7 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) 
     # Vérifier si le prix proposé est supérieur au minimum
     if delivery_data.proposed_price < settings.MIN_DELIVERY_PRICE:
         raise BadRequestError(f"Le prix proposé doit être d'au moins {settings.MIN_DELIVERY_PRICE} FCFA")
-    
+
     # Recommander un véhicule si nécessaire
     if delivery_data.cargo_category and not delivery_data.required_vehicle_type:
         try:
@@ -91,45 +91,45 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) 
                 is_fragile=delivery_data.is_fragile or False
             )
             recommendation = transport_service.recommend_vehicle(recommendation_data)
-            
+
             # Appliquer le multiplicateur de prix
             delivery_data.proposed_price = delivery_data.proposed_price * recommendation["price_multiplier"]
-            
+
             # Définir le type de véhicule requis
             delivery_data.required_vehicle_type = recommendation["recommended_vehicle"].type
         except Exception as e:
             # En cas d'erreur, continuer sans recommandation
             logger.error(f"Erreur lors de la recommandation de véhicule: {str(e)}")
-    
+
     # Créer la livraison
     db_delivery = Delivery(
         client_id=client_id,
         **delivery_data.dict()
     )
-    
+
     db.add(db_delivery)
     db.commit()
     db.refresh(db_delivery)
-    
+
     # Notifier les coursiers disponibles (implémenté dans le service de notification)
-    
+
     return db_delivery
 
 def update_delivery(db: Session, delivery_id: int, delivery_data: DeliveryUpdate, user_id: int) -> Delivery:
     delivery = get_delivery(db, delivery_id)
-    
+
     # Vérifier les autorisations
     if delivery.client_id != user_id and not db.query(User).filter(User.id == user_id, User.role == UserRole.manager).first():
         raise ForbiddenError("Vous n'êtes pas autorisé à modifier cette livraison")
-    
+
     # Vérifier si la livraison peut être modifiée
     if delivery.status not in [DeliveryStatus.pending, DeliveryStatus.bidding]:
         raise BadRequestError("Cette livraison ne peut plus être modifiée")
-    
+
     # Mettre à jour les champs fournis
     for key, value in delivery_data.dict(exclude_unset=True).items():
         setattr(delivery, key, value)
-    
+
     db.commit()
     db.refresh(delivery)
     return delivery
@@ -137,45 +137,45 @@ def update_delivery(db: Session, delivery_id: int, delivery_data: DeliveryUpdate
 def update_delivery_status(db: Session, delivery_id: int, status_data: StatusUpdate, user_id: int) -> Delivery:
     delivery = get_delivery(db, delivery_id)
     user = db.query(User).filter(User.id == user_id).first()
-    
+
     # Vérifier les autorisations selon le rôle
     if user.role == UserRole.courier:
         if delivery.courier_id != user_id:
             raise ForbiddenError("Vous n'êtes pas le coursier assigné à cette livraison")
-        
+
         # Vérifier les transitions d'état valides pour un coursier
         valid_transitions = {
             DeliveryStatus.accepted: [DeliveryStatus.in_progress],
             DeliveryStatus.in_progress: [DeliveryStatus.delivered],
         }
-        
+
         if delivery.status not in valid_transitions or status_data.status not in valid_transitions.get(delivery.status, []):
             raise BadRequestError("Transition d'état non valide")
-    
+
     elif user.role == UserRole.client:
         if delivery.client_id != user_id:
             raise ForbiddenError("Vous n'êtes pas le client de cette livraison")
-        
+
         # Vérifier les transitions d'état valides pour un client
         valid_transitions = {
             DeliveryStatus.delivered: [DeliveryStatus.completed],
             DeliveryStatus.pending: [DeliveryStatus.cancelled],
             DeliveryStatus.bidding: [DeliveryStatus.cancelled],
         }
-        
+
         if delivery.status not in valid_transitions or status_data.status not in valid_transitions.get(delivery.status, []):
             raise BadRequestError("Transition d'état non valide")
-    
+
     elif user.role == UserRole.manager:
         # Les gestionnaires peuvent effectuer toutes les transitions
         pass
-    
+
     else:
         raise ForbiddenError("Rôle non autorisé")
-    
+
     # Mettre à jour le statut
     delivery.status = status_data.status
-    
+
     # Mettre à jour les horodatages en fonction du statut
     if status_data.status == DeliveryStatus.accepted:
         delivery.accepted_at = datetime.utcnow()
@@ -185,36 +185,36 @@ def update_delivery_status(db: Session, delivery_id: int, status_data: StatusUpd
         delivery.delivered_at = datetime.utcnow()
     elif status_data.status == DeliveryStatus.completed:
         delivery.completed_at = datetime.utcnow()
-        
+
         # Calculer la durée réelle
         if delivery.pickup_at:
             delivery.actual_duration = int((datetime.utcnow() - delivery.pickup_at).total_seconds() / 60)
-        
+
         # Mettre à jour les points du coursier (implémenté dans le service de gamification)
-        
+
     elif status_data.status == DeliveryStatus.cancelled:
         delivery.cancelled_at = datetime.utcnow()
-    
+
     db.commit()
     db.refresh(delivery)
-    
+
     # Envoyer des notifications (implémenté dans le service de notification)
-    
+
     return delivery
 
 def create_bid(db: Session, delivery_id: int, courier_id: int, bid_data: BidCreate) -> Bid:
     delivery = get_delivery(db, delivery_id)
-    
+
     # Vérifier si la livraison est disponible pour enchérir
     if delivery.status not in [DeliveryStatus.pending, DeliveryStatus.bidding]:
         raise BadRequestError("Cette livraison n'est plus disponible pour enchérir")
-    
+
     # Vérifier si le coursier a déjà enchéri
     existing_bid = db.query(Bid).filter(
         Bid.delivery_id == delivery_id,
         Bid.courier_id == courier_id
     ).first()
-    
+
     if existing_bid:
         # Mettre à jour l'enchère existante
         existing_bid.amount = bid_data.amount
@@ -231,17 +231,17 @@ def create_bid(db: Session, delivery_id: int, courier_id: int, bid_data: BidCrea
             note=bid_data.note
         )
         db.add(bid)
-        
+
         # Mettre à jour le statut de la livraison si c'est la première enchère
         if delivery.status == DeliveryStatus.pending:
             delivery.status = DeliveryStatus.bidding
             db.commit()
-        
+
         db.commit()
         db.refresh(bid)
-    
+
     # Notifier le client (implémenté dans le service de notification)
-    
+
     return bid
 
 def get_bids_for_delivery(db: Session, delivery_id: int) -> List[Bid]:
@@ -250,59 +250,59 @@ def get_bids_for_delivery(db: Session, delivery_id: int) -> List[Bid]:
 
 def accept_bid(db: Session, delivery_id: int, bid_id: int, client_id: int) -> Delivery:
     delivery = get_delivery(db, delivery_id)
-    
+
     # Vérifier les autorisations
     if delivery.client_id != client_id:
         raise ForbiddenError("Vous n'êtes pas autorisé à accepter cette enchère")
-    
+
     # Vérifier si la livraison est en attente d'acceptation
     if delivery.status != DeliveryStatus.bidding:
         raise BadRequestError("Cette livraison n'est plus en attente d'enchères")
-    
+
     # Récupérer l'enchère
     bid = db.query(Bid).filter(Bid.id == bid_id, Bid.delivery_id == delivery_id).first()
     if not bid:
         raise NotFoundError("Enchère non trouvée")
-    
+
     # Mettre à jour la livraison
     delivery.courier_id = bid.courier_id
     delivery.final_price = bid.amount
     delivery.status = DeliveryStatus.accepted
     delivery.accepted_at = datetime.utcnow()
-    
+
     db.commit()
     db.refresh(delivery)
-    
+
     # Notifier le coursier (implémenté dans le service de notification)
-    
+
     return delivery
 
 def add_tracking_point(db: Session, delivery_id: int, courier_id: int, tracking_data: TrackingPointCreate) -> TrackingPoint:
     delivery = get_delivery(db, delivery_id)
-    
+
     # Vérifier les autorisations
     if delivery.courier_id != courier_id:
         raise ForbiddenError("Vous n'êtes pas le coursier assigné à cette livraison")
-    
+
     # Vérifier si la livraison est en cours
     if delivery.status not in [DeliveryStatus.accepted, DeliveryStatus.in_progress]:
         raise BadRequestError("Cette livraison n'est pas en cours")
-    
+
     # Créer le point de tracking
     tracking_point = TrackingPoint(
         delivery_id=delivery_id,
         lat=tracking_data.lat,
         lng=tracking_data.lng
     )
-    
+
     db.add(tracking_point)
     db.commit()
     db.refresh(tracking_point)
-    
+
     # Mettre à jour la position du coursier
     from ..services.user import update_courier_location
     update_courier_location(db, courier_id, tracking_data.lat, tracking_data.lng)
-    
+
     return tracking_point
 
 def get_tracking_points(db: Session, delivery_id: int) -> List[TrackingPoint]:
@@ -311,20 +311,20 @@ def get_tracking_points(db: Session, delivery_id: int) -> List[TrackingPoint]:
 
 def create_collaborative_delivery(db: Session, delivery_id: int, collaborative_data: CollaborativeDeliveryCreate) -> CollaborativeDelivery:
     delivery = get_delivery(db, delivery_id)
-    
+
     # Vérifier si la livraison est de type collaboratif
     if delivery.delivery_type != DeliveryType.collaborative:
         delivery.delivery_type = DeliveryType.collaborative
-    
+
     # Vérifier si le coursier est déjà associé à cette livraison
     existing = db.query(CollaborativeDelivery).filter(
         CollaborativeDelivery.delivery_id == delivery_id,
         CollaborativeDelivery.courier_id == collaborative_data.courier_id
     ).first()
-    
+
     if existing:
         raise ConflictError("Ce coursier est déjà associé à cette livraison collaborative")
-    
+
     # Créer l'association
     collab_delivery = CollaborativeDelivery(
         delivery_id=delivery_id,
@@ -332,30 +332,30 @@ def create_collaborative_delivery(db: Session, delivery_id: int, collaborative_d
         role=collaborative_data.role,
         share_percentage=collaborative_data.share_percentage
     )
-    
+
     db.add(collab_delivery)
     db.commit()
     db.refresh(collab_delivery)
-    
+
     return collab_delivery
 
 def create_express_delivery(db: Session, express_data: ExpressDeliveryCreate) -> Delivery:
     delivery = get_delivery(db, express_data.delivery_id)
-    
+
     # Vérifier si la livraison peut être convertie en express
     if delivery.status != DeliveryStatus.pending:
         raise BadRequestError("Seules les livraisons en attente peuvent être converties en express")
-    
+
     # Mettre à jour le type et le prix
     delivery.delivery_type = DeliveryType.express
     delivery.proposed_price += settings.EXPRESS_DELIVERY_SURCHARGE
-    
+
     db.commit()
     db.refresh(delivery)
-    
+
     # Créer une transaction pour le don (implémenté dans le service de portefeuille)
     donation_amount = settings.EXPRESS_DELIVERY_SURCHARGE * (express_data.donation_percentage / 100)
-    
+
     return delivery
 
 def delete_delivery(db: Session, delivery_id: int) -> None:
@@ -434,7 +434,7 @@ def update_collaborative_delivery_status(db: Session, delivery_id: int, courier_
     Met à jour le statut d'un participant à une livraison collaborative.
     """
     collaborative_delivery = get_collaborative_delivery(db, delivery_id, courier_id)
-    
+
     # TODO: Add validation for allowed status transitions if necessary
     collaborative_delivery.status = status 
     db.commit()
@@ -462,7 +462,7 @@ def calculate_collaborative_earnings(db: Session, delivery_id: int) -> Dict[str,
         return {"total_earnings": 0, "participant_earnings": {}, "platform_fee": 0}
 
     total_share_percentage = sum(p.share_percentage for p in participants if p.share_percentage is not None)
-    
+
     # If total_share_percentage is 0 or not well-defined, distribute equally or handle as an error
     # For now, let's assume shares are defined. If not, this logic might need adjustment.
     # Or, if shares are not defined, perhaps the earnings are not distributed via this mechanism.
@@ -512,39 +512,39 @@ def estimate_delivery_price(
     try:
         # Calculer la distance en utilisant la formule de Haversine
         import math
-        
+
         def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
             """Calcule la distance entre deux points géographiques en kilomètres."""
             R = 6371  # Rayon de la Terre en kilomètres
-            
+
             lat1_rad = math.radians(lat1)
             lon1_rad = math.radians(lon1)
             lat2_rad = math.radians(lat2)
             lon2_rad = math.radians(lon2)
-            
+
             dlat = lat2_rad - lat1_rad
             dlon = lon2_rad - lon1_rad
-            
+
             a = (math.sin(dlat/2)**2 + 
                  math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon/2)**2)
             c = 2 * math.asin(math.sqrt(a))
-            
+
             return R * c
-        
+
         distance_km = haversine_distance(
             pickup_latitude, pickup_longitude,
             delivery_latitude, delivery_longitude
         )
-        
+
         # Prix de base (FCFA)
         base_price = settings.MIN_DELIVERY_PRICE or 1000  # 1000 FCFA minimum
-        
+
         # Prix par kilomètre
         price_per_km = 200  # 200 FCFA par km
-        
+
         # Calcul du prix de base
         estimated_price = base_price + (distance_km * price_per_km)
-        
+
         # Multiplicateurs selon les caractéristiques
         multipliers = {
             "base": 1.0,
@@ -553,7 +553,7 @@ def estimate_delivery_price(
             "express": 1.0,
             "cargo_category": 1.0
         }
-        
+
         # Multiplicateur pour le poids
         if package_weight:
             if package_weight > 20:  # Plus de 20kg
@@ -562,15 +562,15 @@ def estimate_delivery_price(
                 multipliers["weight"] = 1.3
             elif package_weight > 5:  # Plus de 5kg
                 multipliers["weight"] = 1.1
-        
+
         # Multiplicateur pour objets fragiles
         if is_fragile:
             multipliers["fragile"] = 1.2
-        
+
         # Multiplicateur pour livraison express
         if is_express:
             multipliers["express"] = 1.5
-        
+
         # Multiplicateur selon la catégorie de cargo
         cargo_multipliers = {
             "FOOD": 1.1,
@@ -581,30 +581,30 @@ def estimate_delivery_price(
             "FURNITURE": 1.4,
             "OTHER": 1.0
         }
-        
+
         if cargo_category and cargo_category in cargo_multipliers:
             multipliers["cargo_category"] = cargo_multipliers[cargo_category]
-        
+
         # Appliquer tous les multiplicateurs
         total_multiplier = 1.0
         for key, multiplier in multipliers.items():
             total_multiplier *= multiplier
-        
+
         final_price = estimated_price * total_multiplier
-        
+
         # Arrondir au multiple de 50 FCFA supérieur
         final_price = math.ceil(final_price / 50) * 50
-        
+
         # Estimation du temps de livraison (en minutes)
         # Vitesse moyenne en ville: 25 km/h
         estimated_time_minutes = max(15, int((distance_km / 25) * 60))
-        
+
         # Ajouter du temps selon les facteurs
         if is_fragile:
             estimated_time_minutes += 10
         if package_weight and package_weight > 10:
             estimated_time_minutes += 5
-        
+
         return {
             "estimated_price": int(final_price),
             "distance_km": round(distance_km, 2),
@@ -622,7 +622,7 @@ def estimate_delivery_price(
                 "cargo_category": cargo_category
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Erreur lors de l'estimation du prix: {str(e)}")
         # Retourner un prix par défaut en cas d'erreur
@@ -647,10 +647,108 @@ def get_active_deliveries_for_client(db: Session, client_id: int) -> List[Delive
         DeliveryStatus.IN_TRANSIT,
         DeliveryStatus.NEAR_DESTINATION
     ]
-    
+
     return db.query(Delivery).filter(
         Delivery.client_id == client_id,
         Delivery.status.in_(active_statuses)
     ).order_by(desc(Delivery.created_at)).all()
 
+def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) -> Delivery:
+    from ..services.promotions import PromotionService
+    """
+    Créer une nouvelle livraison.
+    """
+    # Vérifier si le prix proposé est supérieur au minimum
+    if delivery_data.proposed_price < settings.MIN_DELIVERY_PRICE:
+        raise BadRequestError(f"Le prix proposé doit être d'au moins {settings.MIN_DELIVERY_PRICE} FCFA")
 
+    # Recommander un véhicule si nécessaire
+    if delivery_data.cargo_category and not delivery_data.required_vehicle_type:
+        try:
+            transport_service = TransportService(db)
+            recommendation_data = VehicleRecommendationRequest(
+                cargo_category=delivery_data.cargo_category,
+                distance=delivery_data.estimated_distance or 10,  # Valeur par défaut si non fournie
+                weight=delivery_data.package_weight,
+                is_fragile=delivery_data.is_fragile or False
+            )
+            recommendation = transport_service.recommend_vehicle(recommendation_data)
+
+            # Appliquer le multiplicateur de prix
+            delivery_data.proposed_price = delivery_data.proposed_price * recommendation["price_multiplier"]
+
+            # Définir le type de véhicule requis
+            delivery_data.required_vehicle_type = recommendation["recommended_vehicle"].type
+        except Exception as e:
+            # En cas d'erreur, continuer sans recommandation
+            logger.error(f"Erreur lors de la recommandation de véhicule: {str(e)}")
+
+    # Calculer le prix estimé
+    estimated_price = estimate_delivery_price(
+        delivery_data.pickup_latitude,
+        delivery_data.pickup_longitude,
+        delivery_data.delivery_latitude,
+        delivery_data.delivery_longitude,
+        delivery_data.package_weight,
+        delivery_data.cargo_category,
+        delivery_data.is_fragile,
+        delivery_data.is_express
+    )
+
+    # Créer la livraison d'abord
+    db_delivery = Delivery(
+        client_id=client_id,
+        **delivery_data.dict()
+    )
+
+    db.add(db_delivery)
+    db.commit()
+    db.refresh(db_delivery)
+
+    # Notifier les coursiers disponibles (implémenté dans le service de notification)
+
+    return db_delivery
+
+def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: User) -> Delivery:
+    from ..services.promotions import PromotionService
+
+    # Calculer le prix estimé
+    estimated_price = estimate_delivery_price(
+        delivery_data.pickup_latitude,
+        delivery_data.pickup_longitude,
+        delivery_data.delivery_latitude,
+        delivery_data.delivery_longitude,
+        delivery_data.package_weight,
+        delivery_data.cargo_category,
+        delivery_data.is_fragile,
+        delivery_data.is_express
+    )
+
+    # Créer la livraison d'abord
+    delivery = Delivery(
+        **delivery_data.dict(),
+        client_id=current_user.id,
+        estimated_price=estimated_price,
+        status=DeliveryStatus.pending
+    )
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    # Appliquer les promotions automatiques
+    applied_promotions = PromotionService.check_auto_apply_promotions(
+        db, current_user, delivery, estimated_price
+    )
+
+    # Mettre à jour le prix final après promotions
+    total_discount = sum(promo["result"]["discount_applied"] for promo in applied_promotions)
+    total_cashback = sum(promo["result"]["cashback_earned"] for promo in applied_promotions)
+
+    delivery.final_price = estimated_price - total_discount
+    delivery.total_discount = total_discount
+    delivery.cashback_earned = total_cashback
+
+    db.commit()
+
+    return delivery
