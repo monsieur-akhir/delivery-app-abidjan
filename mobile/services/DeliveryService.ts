@@ -447,10 +447,7 @@ class DeliveryService {
 
 // Export des types et de la classe
 export {
-  DeliveryUpdateRequest,
-  DeliveryFilters,
-  ExpressDeliveryRequest,
-  CollaborativeDeliveryRequest
+  
 }
 
 export default DeliveryService

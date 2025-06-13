@@ -351,16 +351,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
     try {
       setState(prev => ({ ...prev, error: null }));
 
-      // Convert models format to service format
-      const requestData = {
-        email_notifications: settings.email_notifications,
-        sms_notifications: settings.sms_notifications,
-        push_notifications: settings.push_notifications,
-        promotion_alerts: settings.promotion_alerts,
-        whatsapp_enabled: settings.whatsapp_enabled,
-      };
-
-      const success = await NotificationService.updateNotificationSettings(requestData);
+      const success = await NotificationService.updateNotificationSettings(settings);
 
       return success;
     } catch (error) {

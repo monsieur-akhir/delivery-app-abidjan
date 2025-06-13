@@ -339,7 +339,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       }
     }
     onFocus?.()
-    const combinedSuggestions: Address[] = [
+    const combinedSuggestions = [
       ...recentAddresses,
       ...popularPlaces.map(place => ({
         id: place.name,
