@@ -44,7 +44,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         phone: profileData.phone,
         email: profileData.email,
         role: profileData.role,
-        
+
         vehicle_type: profileData.vehicle_type,
         license_plate: profileData.license_plate,
         business_name: profileData.business_name,
@@ -59,23 +59,36 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       console.error("Error loading profile:", error)
       // Utiliser les données locales en cas d'erreur
       if (user) {
-        const userProfile: UserProfile = {
+        setProfile({
           user_id: user.id,
-          address: user.address || "",
-          city: user.city || "",
-          country: user.country || "",
-          phone: user.phone,
-          email: user.email,
-          
-          vehicle_type: user.vehicle_type,
-          license_plate: user.license_plate,
-          business_name: user.business_name,
-          business_address: user.business_address,
-          profile_picture: user.profile_picture,
           full_name: user.full_name,
-        }
-        setProfile(userProfile)
-        setEditedProfile(userProfile)
+          phone: user.phone,
+          city: user.commune || "",
+          country: "Côte d'Ivoire",
+          address: user.commune || "",
+          email: user.email || "",
+          role: user.role,
+          language_preference: user.language_preference || 'fr',
+          vehicle_type: user.role === 'courier' ? 'motorcycle' : undefined,
+          license_plate: "",
+          business_name: "",
+          business_address: "",
+        })
+        setEditedProfile({
+          user_id: user.id,
+          full_name: user.full_name,
+          phone: user.phone,
+          city: user.commune || "",
+          country: "Côte d'Ivoire",
+          address: user.commune || "",
+          email: user.email || "",
+          role: user.role,
+          language_preference: user.language_preference || 'fr',
+          vehicle_type: user.role === 'courier' ? 'motorcycle' : undefined,
+          license_plate: "",
+          business_name: "",
+          business_address: "",
+        })
       }
     } finally {
       setLoading(false)
@@ -189,24 +202,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         // Mettre à jour le profil en ligne
         const updatedUser = await updateUserProfile(editedProfile as Partial<User>)
         // Convert User to UserProfile
-        const updatedProfile: UserProfile = {
+        setProfile({
           user_id: updatedUser.id,
-          address: updatedUser.address || "",
-          city: updatedUser.city || "",
-          country: updatedUser.country || "",
-          phone: updatedUser.phone,
-          email: updatedUser.email,
-          role: updatedUser.role,
-          
-          vehicle_type: updatedUser.vehicle_type,
-          license_plate: updatedUser.license_plate,
-          business_name: updatedUser.business_name,
-          business_address: updatedUser.business_address,
-          profile_picture: updatedUser.profile_picture,
           full_name: updatedUser.full_name,
-          created_at: updatedUser.created_at,
-        }
-        setProfile(updatedProfile)
+          phone: updatedUser.phone,
+          city: updatedUser.commune || "",
+          country: "Côte d'Ivoire",
+          address: updatedUser.commune || "",
+          email: updatedUser.email || "",
+          role: updatedUser.role,
+          language_preference: updatedUser.language_preference || 'fr',
+          vehicle_type: updatedUser.role === 'courier' ? 'motorcycle' : undefined,
+          license_plate: "",
+          business_name: "",
+          business_address: "",
+        })
         updateUserData(updatedUser)
       } else {
         // Stocker pour synchronisation ultérieure

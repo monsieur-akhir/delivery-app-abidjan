@@ -309,16 +309,15 @@ export interface CourierStats {
 }
 
 export interface SupportTicket {
-  id: number
-  user_id: number
-  subject: string
-  message: string
-  category: string
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  status: 'open' | 'in_progress' | 'resolved' | 'closed'
-  created_at: string
-  updated_at: string
-  messages: SupportMessage[]
+  id: string;
+  user_id: string;
+  subject: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  created_at: string;
+  updated_at: string;
+  message: string;
+  messages: SupportMessage[];
 }
 
 export interface SupportMessage {
@@ -1098,4 +1097,23 @@ export interface PromotionUsage {
 export interface Coordinates {
   latitude: number
   longitude: number
+}
+
+export interface RegisterRequest {
+  full_name: string;
+  phone: string;
+  email?: string;
+  role: UserRole;
+  password: string;
+  commune?: string;
+  language_preference?: string;
+  vehicle_type?: VehicleType;
+  license_plate?: string;
+}
+
+export interface LoginRequest {
+  phone: string;
+  email?: string;
+  role: UserRole;
+  password: string;
 }
