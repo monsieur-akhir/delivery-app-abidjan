@@ -9,8 +9,6 @@ import type {
   TrackingPoint,
   DeliverySearchParams,
   AvailableDelivery,
-  DeliveryCreateRequest,
-  BidCreateRequest,
   TrackingPointRequest,
   VehicleCreateRequest,
   PriceEstimateData,
@@ -163,12 +161,26 @@ class DeliveryService {
     }
   }
 
-  static async submitBid(bidData: BidCreateRequest): Promise<Bid> {
+  static async createBid(bidData: BidCreateRequest): Promise<Bid> {
     try {
       const response = await api.post('/bids', bidData)
       return response.data
     } catch (error) {
       console.error('Erreur lors de la soumission de l\'enchère:', error)
+      throw error
+    }
+  }
+
+  static async submitBid(bidData: BidCreateRequest): Promise<Bid> {
+    return this.createBid(bidData)
+  }
+
+  static async getDeliveryDetails(id: string): Promise<TrackingPoint[]> {
+    try {
+      const response = await api.get(`/deliveries/${id}/tracking`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des détails:', error)
       throw error
     }
   }

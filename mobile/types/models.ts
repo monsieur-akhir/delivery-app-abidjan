@@ -16,16 +16,6 @@ export interface LoginCredentials {
   otp?: string;
 }
 
-export interface RegisterData {
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phoneNumber: string;
-  password?: string;
-  role: 'client' | 'courier';
-  vehicleType?: string;
-}
-
 export interface User {
   id: number
   full_name: string
@@ -211,7 +201,7 @@ export interface WeatherCurrent {
 export interface WeatherAlert {
   title: string
   description: string
-  message?: string
+  message: string
 }
 
 export interface Weather {
@@ -319,7 +309,6 @@ export interface SupportTicket {
   category: string;
   attachments?: string[];
   created_at: string;
-  updated_at: string;
   updated_at: string;
   messages: SupportMessage[];
   assigned_to?: number;
