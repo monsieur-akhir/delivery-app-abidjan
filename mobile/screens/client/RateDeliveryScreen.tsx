@@ -16,8 +16,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { useTranslation } from 'react-i18next'
 
-import { DeliveryService } from '../../services/DeliveryService'
-import { StarRating } from '../../components/StarRating'
+import DeliveryService from '../../services/DeliveryService'
+import StarRating from '../../components/StarRating'
 import { Delivery } from '../../types/models'
 import { formatPrice, formatDate } from '../../utils/formatters'
 
@@ -161,7 +161,7 @@ const RateDeliveryScreen: React.FC = () => {
                 <View style={styles.deliveryInfo}>
                   <Text style={styles.deliveryTitle}>Livraison terminée !</Text>
                   <Text style={styles.deliverySubtitle}>
-                    Livraison #{delivery.id} • {formatDate(delivery.delivered_at || new Date())}
+                    Livraison #{delivery.id} • {formatDate(delivery.delivered_at?.toString() || new Date().toISOString())}
                   </Text>
                 </View>
               </View>
@@ -195,14 +195,14 @@ const RateDeliveryScreen: React.FC = () => {
                 <View style={styles.courierHeader}>
                   <Avatar.Image 
                     size={60} 
-                    source={{ uri: delivery.courier.avatar || 'https://via.placeholder.com/60' }} 
+                    source={{ uri: delivery.courier.profile_picture || 'https://via.placeholder.com/60' }} 
                   />
                   <View style={styles.courierInfo}>
                     <Text style={styles.courierName}>{delivery.courier.full_name}</Text>
                     <View style={styles.courierStats}>
                       <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
                       <Text style={styles.courierRating}>
-                        {delivery.courier.average_rating?.toFixed(1) || 'N/A'}
+                        {delivery.courier.rating?.toFixed(1) || 'N/A'}
                       </Text>
                       <Text style={styles.courierDeliveries}>
                         • {delivery.courier.total_deliveries || 0} livraisons
@@ -236,7 +236,7 @@ const RateDeliveryScreen: React.FC = () => {
                     <Text style={styles.criteriaLabel}>Ponctualité</Text>
                     <StarRating
                       rating={criteria.punctuality}
-                      onRatingChange={(value) => updateCriteria('punctuality', value)}
+                      onRatingChange={(value: number) => updateCriteria('punctuality', value)}
                       size={20}
                     />
                   </View>
@@ -245,7 +245,7 @@ const RateDeliveryScreen: React.FC = () => {
                     <Text style={styles.criteriaLabel}>Soin du colis</Text>
                     <StarRating
                       rating={criteria.packaging}
-                      onRatingChange={(value) => updateCriteria('packaging', value)}
+                      onRatingChange={(value: number) => updateCriteria('packaging', value)}
                       size={20}
                     />
                   </View>
@@ -254,7 +254,7 @@ const RateDeliveryScreen: React.FC = () => {
                     <Text style={styles.criteriaLabel}>Communication</Text>
                     <StarRating
                       rating={criteria.communication}
-                      onRatingChange={(value) => updateCriteria('communication', value)}
+                      onRatingChange={(value: number) => updateCriteria('communication', value)}
                       size={20}
                     />
                   </View>
@@ -263,7 +263,7 @@ const RateDeliveryScreen: React.FC = () => {
                     <Text style={styles.criteriaLabel}>Professionnalisme</Text>
                     <StarRating
                       rating={criteria.professionalism}
-                      onRatingChange={(value) => updateCriteria('professionalism', value)}
+                      onRatingChange={(value: number) => updateCriteria('professionalism', value)}
                       size={20}
                     />
                   </View>

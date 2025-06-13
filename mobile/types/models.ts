@@ -119,14 +119,14 @@ export interface TrackingPoint {
 
 export interface Notification {
   id: string
+  type: NotificationType
   title: string
-  body?: string
-  data?: NotificationData
-  type?: NotificationType
-  created_at?: string
+  body: string
+  data?: Record<string, any>
+  timestamp: Date
   message: string
+  created_at?: string
   read: boolean
-  date?: string
 }
 
 export interface NotificationData {
@@ -375,7 +375,21 @@ export interface VehicleCreateRequest {
   model: string
   year: number
   license_plate: string
-  color: string
+  color?: string
+  capacity?: number
+  maxWeight?: number
+  customType?: string
+}
+
+export interface CourierVehicleCreateRequest extends VehicleCreateRequest {
+  courier_id: string
+}
+
+export interface VehicleUsage {
+  total_distance: number
+  total_deliveries: number
+  fuel_consumption?: number
+  maintenance_cost?: number
 }
 
 // Weather Types
@@ -1042,15 +1056,6 @@ export interface PromotionUsage {
   discount_applied: number
   cashback_earned: number
   created_at: string
-}
-
-export interface VehicleCreateRequest {
-  type: VehicleType
-  brand: string
-  model: string
-  year: number
-  license_plate: string
-  color: string
 }
 
 export interface Coordinates {

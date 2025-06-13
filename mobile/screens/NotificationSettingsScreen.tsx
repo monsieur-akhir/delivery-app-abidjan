@@ -16,8 +16,8 @@ const NotificationSettingsScreen = () => {
     email_notifications: true,
     sms_notifications: false,
     push_notifications: true,
-    promotion_alerts: false,
     whatsapp_enabled: false,
+    promotion_alerts: true,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -158,7 +158,11 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingTitle}>{t("settings.marketingUpdates")}</Text>
               <Text style={styles.settingDescription}>{t("settings.marketingUpdatesDescription")}</Text>
             </View>
-            <Switch value={settings.marketing_emails} onValueChange={() => handleToggle("marketing_emails")} color="#FF6B00" />
+            <Switch 
+              value={settings.promotion_alerts} 
+              onValueChange={() => handleToggle("promotion_alerts")} 
+              color="#FF6B00" 
+            />
           </View>
 
           <Divider style={styles.divider} />
@@ -168,10 +172,10 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingTitle}>{t("settings.systemUpdates")}</Text>
               <Text style={styles.settingDescription}>{t("settings.systemUpdatesDescription")}</Text>
             </View>
-            <Switch
-              value={settings.security_notifications}
-              onValueChange={() => handleToggle("security_notifications")}
-              color="#FF6B00"
+            <Switch 
+              value={settings.push_notifications}
+              onValueChange={() => handleToggle("push_notifications")}
+              color="#FF6B00" 
             />
           </View>
         </View>

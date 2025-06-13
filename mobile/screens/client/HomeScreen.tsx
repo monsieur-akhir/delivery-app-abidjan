@@ -192,7 +192,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const renderActiveDelivery = (delivery: Delivery) => (
     <Card key={delivery.id} style={styles.activeDeliveryCard}>
       <TouchableOpacity 
-        onPress={() => navigation.navigate('TrackDelivery', { deliveryId: delivery.id.toString() })}
+        onPress={() => navigation.navigate('TrackDelivery', { deliveryId: Number(delivery.id) })}
       >
         <LinearGradient
           colors={['#FF6B00', '#FF8F00']}
@@ -236,7 +236,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
             <TouchableOpacity 
               style={styles.trackButton}
-              onPress={() => navigation.navigate('TrackDelivery', { deliveryId: delivery.id.toString() })}
+              onPress={() => navigation.navigate('TrackDelivery', { deliveryId: Number(delivery.id) })}
             >
               <Feather name="eye" size={20} color="#FF6B00" />
               <Text style={styles.trackButtonText}>Suivre</Text>

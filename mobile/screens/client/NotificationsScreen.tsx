@@ -21,7 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from 'react-i18next'
 import { Swipeable } from 'react-native-gesture-handler'
 
-import { NotificationService } from '../../services/NotificationService'
+import NotificationService from '../../services/NotificationService'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
 import { Notification, NotificationType } from '../../types/models'

@@ -435,9 +435,7 @@ export {
   DeliveryUpdateRequest,
   DeliveryFilters,
   ExpressDeliveryRequest,
-  CollaborativeDeliveryRequest,
-  BidCreateRequest,
-  TrackingPointRequest
+  CollaborativeDeliveryRequest
 }
 
 export default DeliveryService

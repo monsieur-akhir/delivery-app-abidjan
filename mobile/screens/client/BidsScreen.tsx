@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { DeliveryService } from '../../services/DeliveryService'
+import DeliveryService from '../../services/DeliveryService'
 
 interface Bid {
   id: number

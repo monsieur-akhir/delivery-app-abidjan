@@ -15,8 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { TextInput, Button, Chip } from 'react-native-paper'
-import { DeliveryService } from '../../services/DeliveryService'
-import { DeliveryStatusBadge } from '../../components/DeliveryStatusBadge'
+import DeliveryService from '../../services/DeliveryService'
+import DeliveryStatusBadge from '../../components/DeliveryStatusBadge'
 import { useAuth } from '../../contexts/AuthContext'
 
 interface DeliveryHistoryScreenProps {

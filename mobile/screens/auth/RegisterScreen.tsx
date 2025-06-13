@@ -154,7 +154,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         }
         return true
       case "vehicle":
-        if (role === "courier" && !licensePlate) {
+        if (role === UserRole.COURIER && !licensePlate) {
           setError(t("register.errorLicensePlateRequired"))
           setVisible(true)
           return false
@@ -206,7 +206,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     }
 
     // If user is a courier, check license plate
-    if (role === "courier" && !licensePlate) {
+    if (role === UserRole.COURIER && !licensePlate) {
       setError(t("register.errorLicensePlateRequired"))
       setVisible(true)
       return
@@ -260,7 +260,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       }
 
       // Add vehicle information for couriers
-      if (role === "courier") {
+      if (role === UserRole.COURIER) {
         userData.vehicle_type = vehicleType
         userData.license_plate = licensePlate
       }
@@ -380,21 +380,21 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                   <TouchableOpacity
                     style={[
                       styles.roleButton,
-                      role === "courier" && styles.roleButtonActive
+                      role === UserRole.COURIER && styles.roleButtonActive
                     ]}
-                    onPress={() => setRole("courier")}
+                    onPress={() => setRole(UserRole.COURIER)}
                     activeOpacity={0.8}
                   >
                     <View style={styles.roleIconContainer}>
                       <IconButton 
                         icon="truck-delivery" 
                         size={30}
-                        iconColor={role === "courier" ? "#FFFFFF" : "#FF6B00"}
+                        iconColor={role === UserRole.COURIER ? "#FFFFFF" : "#FF6B00"}
                       />
                     </View>
                     <Text style={[
                       styles.roleButtonText,
-                      role === "courier" && styles.roleButtonTextActive
+                      role === UserRole.COURIER && styles.roleButtonTextActive
                     ]}>
                       {t("roles.courier")}
                     </Text>
@@ -621,7 +621,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         </View>
 
         {/* Étape 5 : Véhicule (uniquement pour les coursiers) */}
-        {role === "courier" && (
+        {role === UserRole.COURIER && (
           <View style={[styles.slide, { width: screenWidth }]}>
             <Card style={styles.card} elevation={5}>
               <Animatable.View 

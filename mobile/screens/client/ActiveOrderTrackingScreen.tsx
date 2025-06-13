@@ -20,7 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
 import { useTranslation } from 'react-i18next'
 
-import { DeliveryService } from '../../services/DeliveryService'
+import DeliveryService from '../../services/DeliveryService'
 import { useAuth } from '../../contexts/AuthContext'
 import { useWebSocket } from '../../contexts/WebSocketContext'
 import { Delivery, DeliveryStatus } from '../../types/models'
