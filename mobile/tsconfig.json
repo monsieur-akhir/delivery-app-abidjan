@@ -21,7 +21,7 @@
         "./*"
       ]
     },
-    "types": ["jest", "@testing-library/jest-native"]
+    "types": ["jest", "@testing-library/react-native"]
   },
   "exclude": [
     "node_modules",

@@ -511,6 +511,56 @@ export class DeliveryService {
       throw error
     }
   }
+
+  // Récupérer les livraisons actives d'un coursier
+  static async getCourierActiveDeliveries(): Promise<Delivery[]> {
+    try {
+      const response = await api.get('/api/v1/courier/active-deliveries')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching courier active deliveries:', error)
+      throw error
+    }
+  }
+
+  // Récupérer le statut d'un coursier
+  static async getCourierStatus(): Promise<{ is_online: boolean }> {
+    try {
+      const response = await api.get('/api/v1/courier/status')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching courier status:', error)
+      throw error
+    }
+  }
+
+  // Mettre à jour le statut d'un coursier
+  static async updateCourierStatus(isOnline: boolean): Promise<{ is_online: boolean }> {
+    try {
+      const response = await api.put('/api/v1/courier/status', { is_online: isOnline })
+      return response.data
+    } catch (error) {
+      console.error('Error updating courier status:', error)
+      throw error
+    }
+  }
+
+  // Récupérer les statistiques d'un coursier
+  static async getCourierStats(): Promise<{
+    total_deliveries: number
+    completed_today: number
+    earnings_today: number
+    average_rating: number
+    current_earnings: number
+  }> {
+    try {
+      const response = await api.get('/api/v1/courier/stats')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching courier stats:', error)
+      throw error
+    }
+  }
 }
 
 export default DeliveryService

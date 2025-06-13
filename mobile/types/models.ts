@@ -431,37 +431,36 @@ export interface User {
 }
 
 export interface Merchant {
-  business_name: string | undefined
-  category: string | undefined
-  logo_url: any
   id: number
   name: string
-  logo: string
-  cover_image?: string
-  image_url?: string
-  description: string
+  description?: string
   address: string
   commune: string
-  lat: number
-  lng: number
-  categories: string[]
-  rating: number
-  review_count: number
-  is_open: boolean
-  opening_hours: string
+  category: string
+  rating?: number
   phone?: string
+  lat?: number
+  lng?: number
+  is_open: boolean
+  opening_hours?: string
+  logo?: string
+  cover_image?: string
+  image_url?: string
+  categories?: string[]
+  review_count?: number
   website?: string
   social_media?: {
     facebook?: string
     instagram?: string
     twitter?: string
   }
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
   featured?: boolean
   promotion?: string
   delivery_time?: string
 }
+
 export interface DeliveryRequest {
   pickup_address: string
   pickup_lat: number
@@ -483,7 +482,7 @@ export interface DeliveryRequest {
   delivery_id?: number // Added to support delivery ID
   delivery_commune?: string // Added to support delivery commune
   pickup_commune?: string // Added to support pickup commune
-  }
+}
 
 export enum CargoCategory {
   SMALL_PACKAGE = "small_package",
