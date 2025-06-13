@@ -403,7 +403,12 @@ class LocationService {
       // Calculer la distance si la position de l'utilisateur est disponible
       if (userLocation) {
         suggestions.forEach(suggestion => {
-          suggestion.distance = this.calculateDistance(userLocation, suggestion.coords)
+          suggestion.distance = this.calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            suggestion.coords.latitude,
+            suggestion.coords.longitude
+          )
         })
         // Trier par distance
         suggestions.sort((a, b) => (a.distance || 0) - (b.distance || 0))
@@ -549,22 +554,22 @@ class LocationService {
     await this.saveRecentSearches()
   }
 
+   private toRad = (Value: number) => {
+      return Value * Math.PI / 180;
+   }
+
   private calculateDistance(from: LocationCoords, to: LocationCoords): number {
     const R = 6371 // Rayon de la Terre en km
-    const dLat = this.deg2rad(to.latitude - from.latitude)
-    const dLon = this.deg2rad(to.longitude - from.longitude)
+    const dLat = this.toRad(to.latitude - from.latitude)
+    const dLon = this.toRad(to.longitude - from.longitude)
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(from.latitude)) *
-        Math.cos(this.deg2rad(to.latitude)) *
+      Math.cos(this.toRad(from.latitude)) *
+        Math.cos(this.toRad(to.latitude)) *
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c
-  }
-
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI / 180)
   }
 
   private async loadRecentSearches(): Promise<void> {
@@ -594,7 +599,7 @@ class LocationService {
         return addresses.map(address => {
           return {
             ...address,
-            distance: this.calculateDistance(userLocation, address.coords)
+            distance: this.calculateDistance(userLocation, address.coords.latitude, address.coords.longitude)
           }
         }).sort((a, b) => (a.distance || 0) - (b.distance || 0))
       }) as any

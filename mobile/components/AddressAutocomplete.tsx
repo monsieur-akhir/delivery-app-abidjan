@@ -339,7 +339,19 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       }
     }
     onFocus?.()
-    setSuggestions([...recentAddresses, ...popularPlaces])
+    const combinedSuggestions: Address[] = [
+      ...recentAddresses,
+      ...popularPlaces.map(place => ({
+        id: place.name,
+        name: place.name,
+        description: place.commune,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        commune: place.commune,
+        type: place.type
+      }))
+    ]
+    setSuggestions(combinedSuggestions)
   }, [value, recentAddresses.length, searchAddresses, onFocus, popularPlaces]);
 
   const handleBlur = useCallback(() => {
@@ -487,7 +499,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             }
           ]}
         >
-          <Card style={styles.suggestionsCard} elevation={8}>
+          <Card style={styles.suggestionsCard}>
             <ScrollView
               style={styles.suggestionsList}
               keyboardShouldPersistTaps="handled"

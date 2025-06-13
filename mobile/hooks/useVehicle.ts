@@ -60,18 +60,18 @@ interface UseVehicleReturn extends VehicleState {
   updateCourierVehicle: (courierVehicleId: number, data: Partial<CourierVehicleCreateRequest>) => Promise<void>;
   removeCourierVehicle: (courierVehicleId: number) => Promise<void>;
   setPrimaryVehicle: (courierVehicleId: number) => Promise<void>;
-  
+
   // Gestion des documents
   getVehicleDocuments: (vehicleId: number) => Promise<void>;
   uploadVehicleDocument: (vehicleId: number, documentType: string, fileUri: string) => Promise<void>;
   deleteVehicleDocument: (vehicleId: number, documentId: number) => Promise<void>;
-  
+
   // Gestion de la maintenance
   getMaintenanceRecords: (vehicleId: number) => Promise<void>;
   createMaintenanceRecord: (data: MaintenanceRecordCreateRequest) => Promise<void>;
   updateMaintenanceRecord: (recordId: number, data: Partial<MaintenanceRecordCreateRequest>) => Promise<void>;
   deleteMaintenanceRecord: (recordId: number) => Promise<void>;
-  
+
   // Règles de transport
   getTransportRules: (params?: {
     vehicle_type?: VehicleType;
@@ -82,12 +82,12 @@ interface UseVehicleReturn extends VehicleState {
   createTransportRule: (data: TransportRuleCreateRequest) => Promise<void>;
   updateTransportRule: (ruleId: number, data: Partial<TransportRuleCreateRequest>) => Promise<void>;
   deleteTransportRule: (ruleId: number) => Promise<void>;
-  
+
   // Recommandations et utilisation
   getVehicleRecommendation: (request: VehicleRecommendationRequest) => Promise<void>;
   createVehicleUsage: (data: VehicleUsageCreateRequest) => Promise<void>;
   updateVehicleUsage: (usageId: number, data: Partial<VehicleUsageCreateRequest>) => Promise<void>;
-  
+
   // Statistiques
   getUsageStats: (params?: {
     start_date?: string;
@@ -104,7 +104,7 @@ interface UseVehicleReturn extends VehicleState {
     end_date?: string;
     vehicle_type?: VehicleType;
   }) => Promise<void>;
-  
+
   // Utilitaires
   clearError: () => void;
   clearCurrentVehicle: () => void;
@@ -139,9 +139,9 @@ export const useVehicle = (): UseVehicleReturn => {
   }) => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const vehicles = await VehicleService.getVehicles(params);
-      
+
       setState(prev => ({
         ...prev,
         vehicles: params?.skip ? [...prev.vehicles, ...vehicles] : vehicles,
@@ -157,9 +157,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const getVehicle = useCallback(async (id: number) => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const vehicle = await VehicleService.getVehicle(id);
-      
+
       setState(prev => ({
         ...prev,
         currentVehicle: vehicle,
@@ -175,16 +175,16 @@ export const useVehicle = (): UseVehicleReturn => {
   const createVehicle = useCallback(async (data: VehicleCreateRequest): Promise<Vehicle> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const vehicle = await VehicleService.createVehicle(data);
-      
+
       setState(prev => ({
         ...prev,
         vehicles: [vehicle, ...prev.vehicles],
         currentVehicle: vehicle,
         isLoading: false,
       }));
-      
+
       return vehicle;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create vehicle';
@@ -197,9 +197,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const updateVehicle = useCallback(async (id: number, data: VehicleUpdateRequest) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const updatedVehicle = await VehicleService.updateVehicle(id, data);
-      
+
       setState(prev => ({
         ...prev,
         vehicles: prev.vehicles.map(v => v.id === id ? updatedVehicle : v),
@@ -216,9 +216,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const deleteVehicle = useCallback(async (id: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await VehicleService.deleteVehicle(id);
-      
+
       setState(prev => ({
         ...prev,
         vehicles: prev.vehicles.filter(v => v.id !== id),
@@ -235,9 +235,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const getCourierVehicles = useCallback(async (courierId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const courierVehicles = await VehicleService.getCourierVehicles(courierId);
-      
+
       setState(prev => ({ ...prev, courierVehicles }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch courier vehicles';
@@ -248,9 +248,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const assignVehicleToCourier = useCallback(async (courierId: number, vehicleData: CourierVehicleCreateRequest) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const courierVehicle = await VehicleService.assignVehicleToCourier(courierId, vehicleData);
-      
+
       setState(prev => ({
         ...prev,
         courierVehicles: [...prev.courierVehicles, courierVehicle],
@@ -265,9 +265,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const updateCourierVehicle = useCallback(async (courierVehicleId: number, data: Partial<CourierVehicleCreateRequest>) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const updatedCourierVehicle = await VehicleService.updateCourierVehicle(courierVehicleId, data);
-      
+
       setState(prev => ({
         ...prev,
         courierVehicles: prev.courierVehicles.map(cv => 
@@ -285,9 +285,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const removeCourierVehicle = useCallback(async (courierVehicleId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await VehicleService.removeCourierVehicle(courierVehicleId);
-      
+
       setState(prev => ({
         ...prev,
         courierVehicles: prev.courierVehicles.filter(cv => cv.id !== courierVehicleId),
@@ -302,9 +302,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const setPrimaryVehicle = useCallback(async (courierVehicleId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await VehicleService.setPrimaryVehicle(courierVehicleId);
-      
+
       setState(prev => ({
         ...prev,
         courierVehicles: prev.courierVehicles.map(cv => ({
@@ -323,9 +323,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const getVehicleDocuments = useCallback(async (vehicleId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const documents = await VehicleService.getVehicleDocuments(vehicleId);
-      
+
       setState(prev => ({ ...prev, documents }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch vehicle documents';
@@ -337,9 +337,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const uploadVehicleDocument = useCallback(async (vehicleId: number, documentType: string, fileUri: string) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const document = await VehicleService.uploadVehicleDocument(vehicleId, documentType, fileUri);
-      
+
       setState(prev => ({
         ...prev,
         documents: [...prev.documents, document],
@@ -355,9 +355,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const deleteVehicleDocument = useCallback(async (vehicleId: number, documentId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await VehicleService.deleteVehicleDocument(vehicleId, documentId);
-      
+
       setState(prev => ({
         ...prev,
         documents: prev.documents.filter(d => d.id !== documentId),
@@ -373,9 +373,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const getMaintenanceRecords = useCallback(async (vehicleId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const records = await VehicleService.getMaintenanceRecords(vehicleId);
-      
+
       setState(prev => ({ ...prev, maintenanceRecords: records }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch maintenance records';
@@ -387,9 +387,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const createMaintenanceRecord = useCallback(async (data: MaintenanceRecordCreateRequest) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const record = await VehicleService.createMaintenanceRecord(data);
-      
+
       setState(prev => ({
         ...prev,
         maintenanceRecords: [record, ...prev.maintenanceRecords],
@@ -405,9 +405,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const updateMaintenanceRecord = useCallback(async (recordId: number, data: Partial<MaintenanceRecordCreateRequest>) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const updatedRecord = await VehicleService.updateMaintenanceRecord(recordId, data);
-      
+
       setState(prev => ({
         ...prev,
         maintenanceRecords: prev.maintenanceRecords.map(r => 
@@ -425,9 +425,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const deleteMaintenanceRecord = useCallback(async (recordId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await VehicleService.deleteMaintenanceRecord(recordId);
-      
+
       setState(prev => ({
         ...prev,
         maintenanceRecords: prev.maintenanceRecords.filter(r => r.id !== recordId),
@@ -448,9 +448,9 @@ export const useVehicle = (): UseVehicleReturn => {
   }) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const rules = await VehicleService.getTransportRules(params);
-      
+
       setState(prev => ({ ...prev, transportRules: rules }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transport rules';
@@ -462,9 +462,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const createTransportRule = useCallback(async (data: TransportRuleCreateRequest) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const rule = await VehicleService.createTransportRule(data);
-      
+
       setState(prev => ({
         ...prev,
         transportRules: [rule, ...prev.transportRules],
@@ -480,9 +480,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const updateTransportRule = useCallback(async (ruleId: number, data: Partial<TransportRuleCreateRequest>) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const updatedRule = await VehicleService.updateTransportRule(ruleId, data);
-      
+
       setState(prev => ({
         ...prev,
         transportRules: prev.transportRules.map(r => 
@@ -500,9 +500,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const deleteTransportRule = useCallback(async (ruleId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await VehicleService.deleteTransportRule(ruleId);
-      
+
       setState(prev => ({
         ...prev,
         transportRules: prev.transportRules.filter(r => r.id !== ruleId),
@@ -518,9 +518,9 @@ export const useVehicle = (): UseVehicleReturn => {
   const getVehicleRecommendation = useCallback(async (request: VehicleRecommendationRequest) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const recommendation = await VehicleService.getVehicleRecommendation(request);
-      
+
       setState(prev => ({ ...prev, recommendation }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get vehicle recommendation';
@@ -560,9 +560,9 @@ export const useVehicle = (): UseVehicleReturn => {
   }) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const stats = await VehicleService.getVehicleUsageStats(params);
-      
+
       setState(prev => ({ ...prev, usageStats: stats }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch usage stats';
@@ -578,9 +578,9 @@ export const useVehicle = (): UseVehicleReturn => {
   }) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const stats = await VehicleService.getVehiclePerformanceStats(params);
-      
+
       setState(prev => ({ ...prev, performanceStats: stats }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch performance stats';
@@ -596,9 +596,9 @@ export const useVehicle = (): UseVehicleReturn => {
   }) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const stats = await VehicleService.getVehicleEnvironmentalStats(params);
-      
+
       setState(prev => ({ ...prev, environmentalStats: stats }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch environmental stats';
