@@ -92,7 +92,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
 
     setLoading(true)
     try {
-      const result = await verifyOTP(phone, otpCode)
+      const result = await verifyOTP(route.params.phoneNumber || route.params.phone || '', otpCode)
       
       if (result.success) {
         // Use setAuthData if available and we have token/user data
@@ -120,7 +120,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
   const handleResend = async (): Promise<void> => {
     setResendLoading(true)
     try {
-      await resendOTP(phone, 'login')  // Add otp_type parameter
+      await resendOTP(route.params.phoneNumber || route.params.phone || '', 'login')  // Add otp_type parameter
       setCountdown(60)
       setError(t("verifyOTP.otpResent"))
       setVisible(true)
@@ -159,7 +159,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
             
             <Text style={styles.title}>{t("verifyOTP.title")}</Text>
             <Text style={styles.subtitle}>
-              {t("verifyOTP.subtitle")} <Text style={styles.phoneText}>{phone}</Text>
+              {t("verifyOTP.subtitle")} <Text style={styles.phoneText}>{route.params.phoneNumber || route.params.phone}</Text>
             </Text>
 
             <Animatable.View animation="fadeIn" duration={800} delay={800} style={styles.otpContainer}>

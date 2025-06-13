@@ -309,24 +309,30 @@ export interface CourierStats {
 }
 
 export interface SupportTicket {
-  id: string;
-  user_id: string;
+  id: number;
+  user_id: number;
+  user?: User;
   subject: string;
+  message: string;
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  category: string;
+  attachments?: string[];
   created_at: string;
   updated_at: string;
-  message: string;
+  updated_at: string;
   messages: SupportMessage[];
+  assigned_to?: number;
+  resolution?: string;
 }
 
 export interface SupportMessage {
-  id: number
-  ticket_id: number
-  user_id: number
-  message: string
-  is_staff_reply: boolean
-  created_at: string
+  id: number;
+  ticket_id: number;
+  sender_id: number;
+  message: string;
+  is_from_support: boolean;
+  created_at: string;
 }
 
 // Types pour les données de prix et recommandations
@@ -409,10 +415,10 @@ export interface VehicleCreateRequest {
   model: string
   year: number
   license_plate: string
-  color?: string
-  capacity?: number
-  maxWeight?: number
-  customType?: string
+  color: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface CourierVehicleCreateRequest extends VehicleCreateRequest {
@@ -752,7 +758,8 @@ export interface VehicleEnvironmentalStats {
 
 // Authentication Types
 export interface LoginCredentials {
-  email: string;
+  email?: string;
+  phone?: string;
   password: string;
 }
 
@@ -1101,10 +1108,10 @@ export interface Coordinates {
 
 export interface RegisterRequest {
   full_name: string;
-  phone: string;
   email?: string;
-  role: UserRole;
+  phone: string;
   password: string;
+  role: UserRole;
   commune?: string;
   language_preference?: string;
   vehicle_type?: VehicleType;
@@ -1112,8 +1119,7 @@ export interface RegisterRequest {
 }
 
 export interface LoginRequest {
-  phone: string;
   email?: string;
-  role: UserRole;
+  phone?: string;
   password: string;
 }
