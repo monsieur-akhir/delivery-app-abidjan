@@ -179,13 +179,61 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
     }, [loadDeliveryHistory, loadStats])
   )
 
+  const handleViewDetails = (deliveryId: number) => {
+    navigation.navigate("DeliveryDetails", { deliveryId })
+  }
+
+  const renderDeliveryItem = ({ item }: { item: Delivery }) => (
+    <Card style={styles.deliveryCard} onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id })}>
+      <Card.Content>
+        <View style={styles.deliveryHeader}>
+          <Text style={styles.deliveryTitle}>#{item.id}</Text>
+          <DeliveryStatusBadge status={item.status} />
+        </View>
+
+        <View style={styles.routeContainer}>
+          <View style={styles.routePoint}>
+            <Ionicons name="radio-button-on" size={12} color="#4CAF50" />
+            <View style={styles.pointInfo}>
+              <Text style={styles.pointAddress}>{item.pickup_address}</Text>
+              <Text style={styles.communeText}>Départ</Text>
+            </View>
+          </View>
+
+          <View style={styles.routeLine} />
+
+          <View style={styles.routePoint}>
+            <Ionicons name="location" size={12} color="#FF6B00" />
+            <View style={styles.pointInfo}>
+              <Text style={styles.pointAddress}>{item.delivery_address}</Text>
+              <Text style={styles.communeText}>Arrivée</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.deliveryFooter}>
+          <Text style={styles.deliveryPrice}>{formatPrice(item.final_price || item.proposed_price)} FCFA</Text>
+          <TouchableOpacity 
+            style={styles.detailsButton}
+            onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id })}
+          >
+            {/* <Text style={styles.detailsButtonText}>Voir Détails</Text> */}
+          </TouchableOpacity>
+        </View>
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingText}>Livraison terminée</Text>
+        </View>
+      </Card.Content>
+    </Card>
+  );
+
   // Afficher les détails d'une livraison
   const viewDeliveryDetails = (deliveryId: string): void => {
     navigation.navigate("DeliveryDetails", { deliveryId })
   }
 
   // Rendu d'un élément de livraison
-  const renderDeliveryItem = ({ item, index }: { item: Delivery; index: number }): React.ReactElement => (
+  const renderDeliveryItem2 = ({ item, index }: { item: Delivery; index: number }): React.ReactElement => (
     <Animated.View entering={FadeInUp.delay(index * 100).springify()} exiting={FadeOutDown.springify()}>
       <Card style={styles.deliveryCard} onPress={() => viewDeliveryDetails(item.id.toString())} mode="elevated">
         <Card.Content>
@@ -540,7 +588,7 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
       ) : (
         <FlatList
           data={filteredDeliveries}
-          renderItem={renderDeliveryItem}
+          renderItem={renderDeliveryItem2}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />}
