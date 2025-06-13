@@ -4,15 +4,16 @@ import { RouteProp } from '@react-navigation/native';
 
 // Root Stack Parameter List
 export type RootStackParamList = {
-  // Auth Screens
+  // Auth Stack
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
   VerifyOTP: { phoneNumber: string; isRegistration?: boolean };
   OTPLogin: undefined;
   Onboarding: undefined;
+  ClassicLogin: undefined;
 
-  // Main Tab Navigators
+  // Main Stacks
   ClientMain: undefined;
   CourierMain: undefined;
 
@@ -20,14 +21,64 @@ export type RootStackParamList = {
   Settings: undefined;
   CreateDelivery: undefined;
   TrackDelivery: { deliveryId: string };
-  Payment: { deliveryId: string; amount: number };
+  Payment: undefined;
   PaymentMethods: undefined;
 
-  // Courier Specific Screens
+  // Client Screens
+  Home: undefined;
+  Wallet: undefined;
+  DeliveryHistory: undefined;
+  Notifications: undefined;
+  Profile: undefined;
+  Support: undefined;
+  TransactionHistory: undefined;
+  AddFunds: undefined;
+  Marketplace: undefined;
+  MerchantDetails: { merchantId: string };
+  DeliveryDetails: { deliveryId: string };
+  RateDelivery: { deliveryId: string };
+  EnhancedRateDelivery: { deliveryId: string };
+  ComplaintsScreen: undefined;
+  KYCVerification: undefined;
+  PrivacySettings: undefined;
+  Cart: { merchantId: string };
+  WebPayment: { paymentUrl: string; transactionId: string; onComplete: (success: boolean) => void };
+
+  // Courier Screens
+  CourierHome: undefined;
+  CourierEarnings: undefined;
+  CourierStats: undefined;
+  CourierStatus: undefined;
+  CollaborativeDeliveries: undefined;
+  AvailableDeliveries: undefined;
   BidScreen: { deliveryId: string };
   CourierTrackDelivery: { deliveryId: string };
   Gamification: undefined;
   CommunityWallet: undefined;
+  GamificationScreen: undefined;
+  CollaborativeDeliveryDetails: { deliveryId: string; clientName: string; finalPrice: number };
+  JoinCollaborativeDelivery: { deliveryId: string };
+  CollaborativeChat: { deliveryId: string };
+  VehicleManagement: undefined;
+  CourierProfile: undefined;
+
+  // Settings Screens
+  NotificationSettings: undefined;
+  SecuritySettings: undefined;
+  LanguageSettings: undefined;
+  ChangePassword: undefined;
+  SecurityQuestions: undefined;
+  StorageManagementScreen: undefined;
+  AutoSyncSettingsScreen: undefined;
+  DataUsageSettingsScreen: undefined;
+  WeatherScreen: { location?: string };
+
+  // Other screens
+  Bids: { deliveryId: string };
+  Bid: { deliveryId: string };
+  ClientHome: undefined;
+  Main: undefined;
+  OfflineManagerScreen: undefined;
 };
 
 // Tab Parameter Lists

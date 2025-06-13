@@ -22,7 +22,7 @@ interface AuthContextType {
   setAuthData: (user: User, token: string) => void
 }
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   loading: false,
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken")
       if (!refreshToken) return null
-      
+
       const response = await axios.post(`${API_URL}/auth/refresh`, {
         refresh_token: refreshToken,
       })

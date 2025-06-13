@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import { View, StyleSheet, Alert } from 'react-native'
 import { IconButton, Portal, Modal, Text, Button } from 'react-native-paper'
@@ -86,7 +85,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
         await recording.stopAndUnloadAsync()
         const uri = recording.getURI()
         setRecording(null)
-        
+
         if (uri && isConnected) {
           await processVoiceCommand(uri)
         } else if (!isConnected) {
@@ -112,10 +111,10 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
         'voir les notifications',
         'appeler le support'
       ]
-      
+
       const randomCommand = mockCommands[Math.floor(Math.random() * mockCommands.length)]
       setLastCommand(randomCommand)
-      
+
       await executeVoiceCommand(randomCommand)
     } catch (error) {
       console.error('Erreur lors du traitement de la commande vocale:', error)
@@ -131,19 +130,19 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
         navigation?.navigate('CreateDelivery')
         speak('Ouverture de la création de livraison.')
       } else if (lowerCommand.includes('livraison') || lowerCommand.includes('historique')) {
-        navigation?.navigate('DeliveryHistory')
+        navigation?.navigate('ClientMain', { screen: 'Orders' } as any)
         speak('Affichage de vos livraisons.')
       } else if (lowerCommand.includes('profil')) {
-        navigation?.navigate('Profile')
+        navigation?.navigate('ClientMain', { screen: 'Profile' } as any)
         speak('Ouverture de votre profil.')
       } else if (lowerCommand.includes('notification')) {
-        navigation?.navigate('Notifications')
+        navigation?.navigate('ClientMain', { screen: 'Notifications' } as any)
         speak('Affichage des notifications.')
       } else if (lowerCommand.includes('support') || lowerCommand.includes('aide')) {
-        navigation?.navigate('Support')
+        navigation?.navigate('Settings')
         speak('Ouverture du support client.')
       } else if (lowerCommand.includes('accueil') || lowerCommand.includes('home')) {
-        navigation?.navigate('ClientHome')
+        navigation?.navigate('ClientMain', { screen: 'Home' } as any)
         speak('Retour à l\'accueil.')
       } else {
         speak('Commande non reconnue. Essayez "créer une livraison" ou "voir mes livraisons".')
@@ -186,7 +185,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
         >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Assistant Vocal</Text>
-            
+
             {isListening ? (
               <View style={styles.listeningContainer}>
                 <Text style={styles.listeningText}>🎤 Écoute en cours...</Text>
@@ -200,14 +199,14 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
                 <Text style={styles.instructionText}>
                   Appuyez sur le microphone pour commencer
                 </Text>
-                
+
                 {lastCommand && (
                   <View style={styles.lastCommandContainer}>
                     <Text style={styles.lastCommandLabel}>Dernière commande:</Text>
                     <Text style={styles.lastCommandText}>{lastCommand}</Text>
                   </View>
                 )}
-                
+
                 <View style={styles.examplesContainer}>
                   <Text style={styles.examplesTitle}>Exemples de commandes:</Text>
                   <Text style={styles.exampleText}>• "Créer une livraison"</Text>

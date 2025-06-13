@@ -74,7 +74,9 @@ const WeatherAlertModal: React.FC<WeatherAlertModalProps> = ({ visible, alert, o
                   {getSeverityText(alert.severity)}
                 </Chip>
               </View>
-              <FeatherIcon name="x" size={24} color="#757575" onPress={onDismiss} />
+              <TouchableOpacity onPress={onDismiss}>
+                <FeatherIcon name="x" size={24} color="#757575" />
+              </TouchableOpacity>
             </View>
 
             <Divider style={styles.divider} />

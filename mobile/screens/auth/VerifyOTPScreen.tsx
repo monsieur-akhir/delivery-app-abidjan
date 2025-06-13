@@ -36,7 +36,7 @@ interface AuthContextType {
 
 const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) => {
   const { t } = useTranslation()
-  const { phone } = route.params
+  const { phoneNumber } = route.params
   const { completeRegistration, setAuthData } = useAuth() as AuthContextType
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""])  // 6-digit OTP

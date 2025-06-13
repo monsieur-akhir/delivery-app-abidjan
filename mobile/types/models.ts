@@ -28,42 +28,36 @@ export interface RegisterData {
 
 export interface User {
   id: number
-  email: string
-  phone: string
-  role: UserRole
   full_name: string
-  first_name?: string
-  last_name?: string
-  name?: string
-  commune?: string
-  language?: string
+  phone: string
+  email?: string
+  role: UserRole
   is_active: boolean
-  is_verified: boolean
+  profile_picture?: string
   created_at: string
   updated_at: string
-  profile_image?: string
-  profile_picture?: string
-  date_of_birth?: string
-  nationality?: string
+  language_preference?: 'fr' | 'en' | 'dioula' | 'baoulé'
+  commune?: string
   address?: string
-  city?: string
-  country?: string
-  vehicle_type?: string
-  license_plate?: string
-  business_name?: string
-  business_address?: string
-  wallet_balance?: number
-  monthly_earnings?: number
-  completed_deliveries?: number
-  is_online?: boolean
+  date_of_birth?: string
+  gender?: 'male' | 'female' | 'other'
+  verification_status?: 'pending' | 'verified' | 'rejected'
+  last_active?: string
+  token?: string
 }
 
-export type UserRole = 'client' | 'courier' | 'business' | 'manager'
+export type UserRole = 'client' | 'courier' | 'business' | 'admin'
+
+export const UserRole = {
+  CLIENT: 'client' as const,
+  COURIER: 'courier' as const,
+  BUSINESS: 'business' as const,
+  ADMIN: 'admin' as const,
+} as const
 
 export interface Delivery {
   id: number
-  client_id: number
-  courier_id?: number
+  user_id?: number
   pickup_address: string
   delivery_address: string
   pickup_lat: number
@@ -71,8 +65,8 @@ export interface Delivery {
   delivery_lat: number
   delivery_lng: number
   package_type: string
-  package_description?: string
   package_weight?: number
+  package_description?: string
   special_instructions?: string
   proposed_price: number
   final_price?: number
@@ -94,6 +88,16 @@ export interface Delivery {
   is_paid?: any
   payment_method?: any
   price?: number
+  pickup_commune?: string
+  delivery_commune?: string
+  estimated_distance?: number
+  pickup_location?: string
+  delivery_location?: string
+  notes?: string
+  description?: string
+  is_fragile?: boolean
+  rating?: any
+  actual_price?: number
 }
 
 export type DeliveryStatus = 'pending' | 'bidding' | 'accepted' | 'confirmed' | 'picked_up' | 'in_progress' | 'in_transit' | 'near_destination' | 'delivered' | 'completed' | 'cancelled'
@@ -102,7 +106,7 @@ export interface Courier {
   id: number
   user_id: number
   vehicle_type: VehicleType
-  license_plate?: string
+  license_plate: string
   is_available: boolean
   current_lat?: number
   current_lng?: number
@@ -116,6 +120,8 @@ export interface Courier {
   phone?: string
   profile_picture?: string
   user?: User
+  avatar?: string
+  average_rating?: number
 }
 
 export type VehicleType = 'bicycle' | 'motorcycle' | 'scooter' | 'car' | 'van' | 'truck'
@@ -147,14 +153,15 @@ export interface TrackingPoint {
 
 export interface Notification {
   id: string
-  type: NotificationType
   title: string
-  body: string
-  data?: Record<string, any>
-  timestamp: Date
   message: string
-  created_at?: string
+  type: 'info' | 'success' | 'warning' | 'error'
   read: boolean
+  created_at: string
+  data?: any
+  user_id?: number
+  is_read?: boolean
+  date?: string
 }
 
 export interface NotificationData {
@@ -843,19 +850,21 @@ export interface KYCStatus {
 
 // UserType and NotificationSettings Types
 export interface NotificationSettings {
-  push_notifications: boolean
-  email_notifications: boolean
-  sms_notifications: boolean
-  marketing_emails: boolean
-  promotional_notifications: boolean
-  promotion_alerts: boolean
-  security_alerts: boolean
   push_enabled: boolean
   email_enabled: boolean
   sms_enabled: boolean
-  whatsapp_enabled: boolean
-  marketing: boolean
-  system_updates: boolean
+  delivery_updates: boolean
+  promotional_offers: boolean
+  security_alerts: boolean
+  marketing_emails: boolean
+  promotional_notifications: boolean
+  email_notifications: boolean
+  push_notifications?: boolean
+  sms_notifications?: boolean
+  promotion_alerts?: boolean
+  whatsapp_enabled?: boolean
+  bid_notifications?: boolean
+  delivery_notifications?: boolean
 }
 
 // UserPreferences Type
