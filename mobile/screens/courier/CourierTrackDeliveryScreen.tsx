@@ -903,8 +903,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  clientTitle:```text
-{
+  clientTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#212121",
