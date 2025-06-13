@@ -50,10 +50,9 @@ const AddVehicleScreen: React.FC = () => {
         model: formData.model || '',
         year: formData.year ? parseInt(formData.year) : new Date().getFullYear(),
         color: formData.color || undefined,
-        maxWeight: formData.maxWeight ? parseFloat(formData.maxWeight) : undefined,
         maxDistance: formData.maxDistance ? parseFloat(formData.maxDistance) : undefined,
         isElectric: formData.isElectric,
-        customType: formData.type === VehicleType.CUSTOM ? formData.customType : undefined,
+        customType: formData.type === 'custom' ? formData.customType : undefined,
       })
 
       Alert.alert("Succès", "Véhicule ajouté avec succès", [

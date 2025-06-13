@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { TextInput } from 'react-native-paper'
 import { PaymentService } from '../../services/PaymentService'
-import { DeliveryService } from '../../services/DeliveryService'
+import DeliveryService from '../../services/DeliveryService'
 
 interface PaymentMethod {
   id: string

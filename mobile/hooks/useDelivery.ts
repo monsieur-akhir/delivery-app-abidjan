@@ -11,7 +11,8 @@ import type {
   CollaborativeDelivery,
   Coordinates,
   Promotion,
-  Zone
+  Zone,
+  DeliveryStatus
 } from '../types/models'
 import DeliveryService from '../services/DeliveryService'
 import { useAuth } from '../contexts/AuthContext'
@@ -102,10 +103,13 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const getUserDeliveries = useCallback(async (filters?: any): Promise<void> => {
+  const getUserDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const deliveries = await DeliveryService.getUserDeliveries()
+      const deliveries = await DeliveryService.getUserDeliveries(
+        filters?.skip || 0,
+        filters?.limit || 20
+      )
       setState(prev => ({ 
         ...prev, 
         deliveries,
@@ -168,18 +172,22 @@ export const useDelivery = (): UseDeliveryReturn => {
   const getDeliveryBids = useCallback(async (deliveryId: string): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const bids = await DeliveryService.getDeliveryBids(deliveryId)
-      setState(prev => ({ ...prev, bids, isLoading: false }))
+      const response = await DeliveryService.getDeliveryBids(deliveryId)
+      setState(prev => ({
+        ...prev,
+        bids: response.data as Bid[],
+        isLoading: false
+      }))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement des enchères'
       setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
     }
   }, [])
 
-  const createBid = useCallback(async (bidData: any): Promise<void> => {
+  const createBid = useCallback(async (bidData: BidCreateRequest): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const bid = await DeliveryService.createDelivery(bidData)
+      const bid = await DeliveryService.createBid(bidData)
       setState(prev => ({ 
         ...prev, 
         bids: [...prev.bids, bid],
@@ -211,13 +219,13 @@ export const useDelivery = (): UseDeliveryReturn => {
   const rejectBid = useCallback(async (deliveryId: string, bidId: string, reason?: string): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      await DeliveryService.updateDeliveryStatus(deliveryId, 'cancelled')
-      setState(prev => ({ 
-        ...prev, 
-        bids: prev.bids.map(b => 
-          b.id === bidId ? { ...b, status: 'rejected' } : b
+      await DeliveryService.rejectBid(deliveryId, bidId, reason)
+      setState(prev => ({
+        ...prev,
+        bids: prev.bids.map(b =>
+          b.id === Number(bidId) ? { ...b, status: 'rejected' } : b
         ),
-        isLoading: false 
+        isLoading: false
       }))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors du rejet'
@@ -296,7 +304,7 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const assignCourierToExpress = useCallback(async (deliveryId: string, courierId: number): Promise<void> => {
+  const assignCourierToExpress = useCallback(async (deliveryId: string, courierId: string): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.assignCourierToExpress(deliveryId, courierId)
@@ -484,11 +492,10 @@ export const useDelivery = (): UseDeliveryReturn => {
   const getClientDeliveryHistory = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const deliveries = await DeliveryService.getUserDeliveries({
-        ...filters,
-        skip: 0,
-        limit: filters?.limit || 20
-      })
+      const deliveries = await DeliveryService.getUserDeliveries(
+        filters?.skip || 0,
+        filters?.limit || 20
+      )
       setState(prev => ({ 
         ...prev, 
         deliveries,
