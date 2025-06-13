@@ -339,16 +339,15 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       }
     }
     onFocus?.()
-    const combinedSuggestions = [
+    const combinedSuggestions: Address[] = [
       ...recentAddresses,
       ...popularPlaces.map(place => ({
         id: place.name,
-        name: place.name,
-        description: place.commune,
+        description: `${place.name}, ${place.commune}`,
         latitude: place.latitude,
         longitude: place.longitude,
         commune: place.commune,
-        type: place.type
+        type: 'suggestion' as const
       }))
     ]
     setSuggestions(combinedSuggestions)
