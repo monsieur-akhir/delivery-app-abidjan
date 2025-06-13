@@ -2,6 +2,10 @@ import api from './api'
 import type {
   Delivery,
   Bid,
+  DeliveryStatus,
+  VehicleType
+} from '../types/models'
+import type {
   TrackingPoint,
   DeliverySearchParams,
   AvailableDelivery,
@@ -9,7 +13,6 @@ import type {
   BidCreateRequest,
   TrackingPointRequest,
   VehicleCreateRequest,
-  DeliveryStatus,
   PriceEstimateData,
   VehicleRecommendationData,
   VehicleRecommendation

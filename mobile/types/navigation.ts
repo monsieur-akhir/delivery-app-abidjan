@@ -3,12 +3,19 @@ import { BottomTabNavigationProp, BottomTabScreenProps } from '@react-navigation
 import { RouteProp } from '@react-navigation/native';
 
 // Root Stack Parameter List
+export type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
+export type CourierStatsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CourierStats'>;
+
 export type RootStackParamList = {
   // Auth Stack
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
-  VerifyOTP: { phoneNumber: string; isRegistration?: boolean };
+  VerifyOTP: { phoneNumber: string; phone?: string; isRegistration?: boolean };
+  ClientTabs: undefined;
+  CourierTabs: undefined;
+  CourierDeliveryHistory: undefined;
+  AddVehicleScreen: { vehicleId?: number };
   OTPLogin: undefined;
   Onboarding: undefined;
   ClassicLogin: undefined;
@@ -19,9 +26,9 @@ export type RootStackParamList = {
 
   // Shared Screens
   Settings: undefined;
-  CreateDelivery: undefined;
+  CreateDelivery: { serviceType?: string; searchQuery?: string } | undefined;
   TrackDelivery: { deliveryId: string };
-  Payment: undefined;
+  Payment: { deliveryId?: string; amount?: number } | undefined;
   PaymentMethods: undefined;
 
   // Client Screens

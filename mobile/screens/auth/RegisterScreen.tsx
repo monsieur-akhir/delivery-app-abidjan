@@ -268,12 +268,13 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       if (isConnected) {
         // Online registration
         await signUp(userData)
-        navigation.navigate("VerifyOTP", { phone })
+        navigation.navigate("VerifyOTP", { phoneNumber: phone })
       } else {
         // Offline mode: store for later synchronization
         addPendingUpload({
           type: "register",
           data: userData,
+          retries: 0,
         })
         setError(t("register.offlineRegistration"))
         setVisible(true)

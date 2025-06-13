@@ -1,5 +1,5 @@
 import type React from "react"
-import { View, StyleSheet, Modal, ScrollView } from "react-native"
+import { View, StyleSheet, Modal, ScrollView, TouchableOpacity } from "react-native"
 import { Text, Card, Button, Chip, Divider } from "react-native-paper"
 import { useTranslation } from "react-i18next"
 import FeatherIcon from "./FeatherIcon"

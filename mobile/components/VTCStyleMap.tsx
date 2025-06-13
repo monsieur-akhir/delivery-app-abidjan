@@ -439,7 +439,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
           transform: [{ translateY: slideAnimation }]
         }
       ]}>
-        <Surface style={styles.statusCard} elevation={8}>
+        <Surface style={styles.statusCard} elevation={4}>
           <LinearGradient
             colors={getStatusGradient(deliveryStatus.status)}
             style={styles.statusGradient}

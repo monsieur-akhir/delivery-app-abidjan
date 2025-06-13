@@ -129,13 +129,9 @@ const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
 
 export type FeatherIconName = keyof typeof iconMap
 
-export const FeatherIcon: React.FC<FeatherIconProps> = ({
-  name,
-  size = 24,
-  color = '#000000',
-  style,
-}) => {
-  const ioniconsName = iconMap[name] || 'help-outline'
+const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size = 24, color = '#000', style }) => {
+  const iconName = typeof name === 'string' ? name : String(name)
+  const ioniconsName = iconMap[iconName] || iconName
 
   return (
     <Ionicons
