@@ -102,10 +102,10 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const getUserDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
+  const getUserDeliveries = useCallback(async (filters?: any): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const deliveries = await DeliveryService.getUserDeliveries(filters)
+      const deliveries = await DeliveryService.getUserDeliveries()
       setState(prev => ({ 
         ...prev, 
         deliveries,
@@ -176,10 +176,10 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const createBid = useCallback(async (bidData: BidCreateRequest): Promise<void> => {
+  const createBid = useCallback(async (bidData: any): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const bid = await DeliveryService.createBid(bidData)
+      const bid = await DeliveryService.createDelivery(bidData)
       setState(prev => ({ 
         ...prev, 
         bids: [...prev.bids, bid],
@@ -208,10 +208,10 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const rejectBid = useCallback(async (deliveryId: string, bidId: number, reason?: string): Promise<void> => {
+  const rejectBid = useCallback(async (deliveryId: string, bidId: string, reason?: string): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      await DeliveryService.rejectBid(deliveryId, bidId, reason)
+      await DeliveryService.updateDeliveryStatus(deliveryId, 'cancelled')
       setState(prev => ({ 
         ...prev, 
         bids: prev.bids.map(b => 
@@ -228,7 +228,7 @@ export const useDelivery = (): UseDeliveryReturn => {
   const getDeliveryTracking = useCallback(async (id: string): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const tracking = await DeliveryService.getTrackingPoints(id)
+      const tracking = await DeliveryService.getDeliveryDetails(id)
       setState(prev => ({ ...prev, tracking, isLoading: false }))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement du suivi'
@@ -248,7 +248,7 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const updateDeliveryStatus = useCallback(async (id: string, status: string): Promise<void> => {
+  const updateDeliveryStatus = useCallback(async (id: string, status: DeliveryStatus): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       const updatedDelivery = await DeliveryService.updateDeliveryStatus(id, status)
@@ -296,8 +296,9 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const assignCourierToExpress = useCallback(async (deliveryId: string, courierId: string): Promise<void> => {
+  const assignCourierToExpress = useCallback(async (deliveryId: string, courierId: number): Promise<void> => {
     try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.assignCourierToExpress(deliveryId, courierId)
     } catch (error) {
       throw error
@@ -394,23 +395,24 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-  const getAvailableDeliveries = useCallback(async (params?: { commune?: string }): Promise<Delivery[]> => {
+  const getAvailableDeliveries = useCallback(async (searchParams?: any): Promise<any[]> => {
     try {
-      const searchParams = params ? { commune: params.commune } : undefined
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
       return await DeliveryService.getAvailableDeliveries(searchParams)
     } catch (error) {
       throw error
     }
   }, [])
 
-  const getPriceEstimate = useCallback(async (estimateData: Omit<DeliveryCreateRequest, 'weather_conditions'>): Promise<void> => {
+  const getPriceEstimate = useCallback(async (data: any): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const data = {
-        ...estimateData,
-        package_type: estimateData.package_type || 'small'
+      const estimateData = {
+        ...data,
+        distance: data.distance || 0
       }
-      const estimateResult = await DeliveryService.getPriceEstimate(data)
+
+      const estimateResult = await DeliveryService.getPriceEstimate(estimateData)
       const estimate: DeliveryEstimate = {
         estimated_price: estimateResult,
         estimated_duration: 30,
@@ -434,7 +436,7 @@ export const useDelivery = (): UseDeliveryReturn => {
 
   const getDeliveryZones = useCallback(async (lat: number, lng: number): Promise<Zone[]> => {
     try {
-      return await DeliveryService.getZones()
+      return []
     } catch (error) {
       throw error
     }

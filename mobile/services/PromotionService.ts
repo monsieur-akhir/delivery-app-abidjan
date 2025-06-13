@@ -1,4 +1,3 @@
-
 import { api } from './api'
 
 export interface Promotion {
@@ -42,9 +41,9 @@ export class PromotionService {
     zoneId?: number
   ): Promise<Promotion[]> {
     try {
-      const params = { order_value: orderValue }
+      const params: { order_value: number; zone_id?: number } = { order_value: orderValue }
       if (zoneId) params.zone_id = zoneId
-      
+
       const response = await api.get('/api/v1/promotions/applicable', { params })
       return response.data
     } catch (error) {
