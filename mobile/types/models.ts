@@ -1,3 +1,31 @@
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshToken: () => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+}
+
+export interface LoginCredentials {
+  email?: string;
+  phoneNumber?: string;
+  password?: string;
+  otp?: string;
+}
+
+export interface RegisterData {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phoneNumber: string;
+  password?: string;
+  role: 'client' | 'courier';
+  vehicleType?: string;
+}
+
 export interface User {
   id: number
   email: string
