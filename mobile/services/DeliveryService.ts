@@ -433,6 +433,84 @@ export class DeliveryService {
       throw error
     }
   }
+
+  // Récupérer les promotions applicables
+  static async getApplicablePromotions(orderValue: number, zoneId?: number): Promise<any[]> {
+    try {
+      const params = { order_value: orderValue }
+      if (zoneId) params.zone_id = zoneId
+      const response = await api.get('/api/v1/promotions/applicable', { params })
+      return response.data
+    } catch (error) {
+      console.error('Error fetching applicable promotions:', error)
+      throw error
+    }
+  }
+
+  // Appliquer un code promo
+  static async applyPromotionCode(deliveryId: number, promoCode: string): Promise<any> {
+    try {
+      const response = await api.post(`/api/v1/deliveries/${deliveryId}/apply-promotion`, {
+        promotion_code: promoCode
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error applying promotion code:', error)
+      throw error
+    }
+  }
+
+  // Valider un code promo
+  static async validatePromotionCode(promoCode: string, orderValue: number): Promise<any> {
+    try {
+      const response = await api.post('/api/v1/promotions/validate-code', {
+        code: promoCode,
+        order_value: orderValue
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error validating promotion code:', error)
+      throw error
+    }
+  }
+
+  // Obtenir les zones de livraison
+  static async getDeliveryZones(lat: number, lng: number): Promise<any[]> {
+    try {
+      const response = await api.get('/api/v1/zones/locate', {
+        params: { lat, lng }
+      })
+      return response.data.zones
+    } catch (error) {
+      console.error('Error fetching delivery zones:', error)
+      throw error
+    }
+  }
+
+  // Calculer le prix avec zones et promotions
+  static async calculateZonePricing(
+    pickupLat: number,
+    pickupLng: number,
+    deliveryLat: number,
+    deliveryLng: number,
+    packageWeight?: number,
+    isExpress: boolean = false
+  ): Promise<any> {
+    try {
+      const response = await api.post('/api/v1/zones/calculate-price', {
+        pickup_lat: pickupLat,
+        pickup_lng: pickupLng,
+        delivery_lat: deliveryLat,
+        delivery_lng: deliveryLng,
+        package_weight: packageWeight,
+        is_express: isExpress
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error calculating zone pricing:', error)
+      throw error
+    }
+  }
 }
 
 export default DeliveryService
