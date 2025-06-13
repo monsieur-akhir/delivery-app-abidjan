@@ -137,4 +137,5 @@ class VehicleUsage(Base):
 
     # Contrainte d'unicité
     __table_args__ = (UniqueConstraint("courier_vehicle_id", "delivery_id", name="uq_vehicle_usage_delivery"),)
-```Adding business profile related models.
+
+# Adding business profile related models.
