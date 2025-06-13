@@ -13,7 +13,7 @@ import {
 } from "react-native"
 import { Text, Card, Chip, Divider, IconButton, Searchbar, Button, Menu, ProgressBar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { MaterialIcons } from "@expo/vector-icons"
+import { MaterialIcons, Ionicons } from "@expo/vector-icons"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { fetchCourierDeliveryHistory, fetchCourierStats } from "../../services/api"
@@ -180,14 +180,14 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   )
 
   const handleViewDetails = (deliveryId: number) => {
-    navigation.navigate("DeliveryDetails", { deliveryId })
+    navigation.navigate("DeliveryDetails", { deliveryId: deliveryId.toString() })
   }
 
-  const renderDeliveryItem = ({ item }: { item: Delivery }) => (
-    <Card style={styles.deliveryCard} onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id })}>
+  const renderDeliveryCard = ({ item }: { item: Delivery }) => (
+    <Card style={styles.deliveryCard} onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id.toString() })}>
       <Card.Content>
-        <View style={styles.deliveryHeader}>
-          <Text style={styles.deliveryTitle}>#{item.id}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.deliveryCardTitle}>#{item.id}</Text>
           <DeliveryStatusBadge status={item.status} />
         </View>
 
@@ -196,7 +196,6 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
             <Ionicons name="radio-button-on" size={12} color="#4CAF50" />
             <View style={styles.pointInfo}>
               <Text style={styles.pointAddress}>{item.pickup_address}</Text>
-              <Text style={styles.communeText}>Départ</Text>
             </View>
           </View>
 
@@ -206,26 +205,23 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
             <Ionicons name="location" size={12} color="#FF6B00" />
             <View style={styles.pointInfo}>
               <Text style={styles.pointAddress}>{item.delivery_address}</Text>
-              <Text style={styles.communeText}>Arrivée</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.deliveryFooter}>
-          <Text style={styles.deliveryPrice}>{formatPrice(item.final_price || item.proposed_price)} FCFA</Text>
+        <View style={styles.cardFooter}>
           <TouchableOpacity 
             style={styles.detailsButton}
-            onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id })}
+            onPress={() => navigation.navigate("CourierTrackDelivery", { deliveryId: item.id.toString() })}
           >
-            {/* <Text style={styles.detailsButtonText}>Voir Détails</Text> */}
+            <Text style={styles.detailsButtonText}>{t("common.viewDetails")}</Text>
           </TouchableOpacity>
-        </View>
-        <View style={styles.ratingContainer}>
-          <Text style={styles.ratingText}>Livraison terminée</Text>
+
+          <Text style={styles.completedText}>Livraison terminée</Text>
         </View>
       </Card.Content>
     </Card>
-  );
+  )
 
   // Afficher les détails d'une livraison
   const viewDeliveryDetails = (deliveryId: string): void => {
@@ -890,6 +886,50 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     borderBottomWidth: 1,
     borderBottomColor: "#EEEEEE",
+  },
+  deliveryCardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  routeContainer: {
+    marginVertical: 12,
+  },
+  routePoint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  pointInfo: {
+    marginLeft: 8,
+    flex: 1,
+  },
+  pointAddress: {
+    fontSize: 14,
+    color: '#666',
+  },
+  routeLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#ddd',
+    marginLeft: 5,
+    marginVertical: 2,
+  },
+  detailsButton: {
+    backgroundColor: '#FF6B00',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  detailsButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  completedText: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: 'bold',
   },
 })
 

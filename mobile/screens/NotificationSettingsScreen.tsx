@@ -13,11 +13,14 @@ const NotificationSettingsScreen = () => {
   const navigation = useNavigation()
 
   const [settings, setSettings] = useState<NotificationSettings>({
-    email_notifications: true,
-    sms_notifications: false,
-    push_notifications: true,
-    whatsapp_enabled: false,
-    promotion_alerts: true,
+    push_enabled: true,
+    email_enabled: true,
+    sms_enabled: true,
+    delivery_updates: true,
+    payment_updates: true,
+    promotional_offers: true,
+    security_alerts: true,
+    maintenance_alerts: true,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -94,7 +97,7 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingTitle}>{t("settings.pushNotifications")}</Text>
               <Text style={styles.settingDescription}>{t("settings.pushNotificationsDescription")}</Text>
             </View>
-            <Switch value={settings.push_notifications} onValueChange={() => handleToggle("push_notifications")} color="#FF6B00" />
+            <Switch value={settings.push_enabled} onValueChange={() => handleToggle("push_enabled")} color="#FF6B00" />
           </View>
 
           <Divider style={styles.divider} />
@@ -104,7 +107,7 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingTitle}>{t("settings.smsNotifications")}</Text>
               <Text style={styles.settingDescription}>{t("settings.smsNotificationsDescription")}</Text>
             </View>
-            <Switch value={settings.sms_notifications} onValueChange={() => handleToggle("sms_notifications")} color="#FF6B00" />
+            <Switch value={settings.sms_enabled} onValueChange={() => handleToggle("sms_enabled")} color="#FF6B00" />
           </View>
 
           <Divider style={styles.divider} />
@@ -129,8 +132,8 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingDescription}>{t("settings.emailNotificationsDescription")}</Text>
             </View>
             <Switch
-              value={settings.email_notifications}
-              onValueChange={() => handleToggle("email_notifications")}
+              value={settings.email_enabled}
+              onValueChange={() => handleToggle("email_enabled")}
               color="#FF6B00"
             />
           </View>
@@ -145,7 +148,7 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingDescription}>{t("settings.deliveryUpdatesDescription")}</Text>
             </View>
             <Switch
-              value={false}
+              value={settings.delivery_updates}
               onValueChange={() => handleToggle("delivery_updates")}
               color="#FF6B00"
             />
@@ -159,8 +162,8 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingDescription}>{t("settings.marketingUpdatesDescription")}</Text>
             </View>
             <Switch 
-              value={settings.promotion_alerts} 
-              onValueChange={() => handleToggle("promotion_alerts")} 
+              value={settings.promotional_offers} 
+              onValueChange={() => handleToggle("promotional_offers")} 
               color="#FF6B00" 
             />
           </View>
@@ -173,8 +176,8 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingDescription}>{t("settings.systemUpdatesDescription")}</Text>
             </View>
             <Switch 
-              value={settings.push_notifications}
-              onValueChange={() => handleToggle("push_notifications")}
+              value={settings.security_alerts}
+              onValueChange={() => handleToggle("security_alerts")}
               color="#FF6B00" 
             />
           </View>
