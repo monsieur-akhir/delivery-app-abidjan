@@ -1,8 +1,16 @@
-import i18n from "i18next"
-import { initReactI18next } from "react-i18next"
-import * as Localization from "expo-localization"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { translations } from "./translations"
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Localization from 'expo-localization'
+
+import { translations } from './translations'
+
+// Configuration TypeScript pour i18n
+declare module 'i18next' {
+  interface CustomTypeOptions {
+    returnNull: false
+  }
+}
 
 // Fonction pour détecter la langue par défaut
 const detectUserLanguage = async () => {
@@ -38,15 +46,15 @@ const detectUserLanguage = async () => {
 const initI18n = async () => {
   const userLanguage = await detectUserLanguage()
 
-  i18n.use(initReactI18next).init({
+  i18n
+  .use(initReactI18next)
+  .init({
     resources: translations,
-    lng: userLanguage,
-    fallbackLng: "fr",
+    lng: 'fr',
+    fallbackLng: 'fr',
+    returnNull: false,
     interpolation: {
-      escapeValue: false, // React gère déjà l'échappement
-    },
-    react: {
-      useSuspense: false, // Désactiver Suspense pour éviter les problèmes avec React Native
+      escapeValue: false,
     },
   })
 

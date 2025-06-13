@@ -46,6 +46,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@react-navigation/native-stack": "^7.3.14",
     "@react-navigation/stack": "^7.3.3",
     "@types/lodash": "^4.17.17",
     "expo-haptics": "^14.1.4",
