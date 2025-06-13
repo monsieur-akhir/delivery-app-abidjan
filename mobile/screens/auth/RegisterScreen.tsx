@@ -987,7 +987,7 @@ const styles = StyleSheet.create({
   buttonBack: {
     height: 54,
     justifyContent: 'center',
-    alignItems: 'center,
+    alignItems: 'center',
     borderRadius: 12,
     borderColor: "#FF6B00",
     borderWidth: 1,
