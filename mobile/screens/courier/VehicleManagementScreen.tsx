@@ -194,14 +194,6 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
             </View>
           )}
 
-          {item.technical_inspection_expiry && (
-            <View style={styles.inspectionInfo}>
-              <Feather name="check-circle" size={14} color="#4CAF50" />
-              <Text style={styles.inspectionText}>
-                Visite technique: {formatDate(item.technical_inspection_expiry)}
-              </Text>
-            </View>
-          )}
         </Card.Content>
       </Card>
     )

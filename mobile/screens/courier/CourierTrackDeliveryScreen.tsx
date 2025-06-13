@@ -393,12 +393,13 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
       if (isOfflineMode && !isConnected) {
         // Utiliser un type valide pour PendingOperation
         addPendingUpload({
-          type: "update_profile", // Using an existing allowed type
+          type: "delivery",
           data: {
             delivery_id: deliveryId,
-            status: status,
-            operation: "status_update" // Add an identifier field to distinguish the operation
-          }
+            status,
+            operation: "status_update"
+          },
+          retries: 0
         })
 
         // Mettre à jour l'état local
@@ -694,7 +695,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
                   <View style={styles.addressTextContainer}>
                     <Text style={styles.addressLabel}>Ramassage</Text>
                     <Text style={styles.addressText}>{delivery.pickup_address}</Text>
-                    <Text style={styles.communeText}>{delivery.pickup_commune}</Text>
+                    <Text style={styles.communeText}>Commune de retrait</Text>
                   </View>
                 </View>
               </>
@@ -705,7 +706,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
                   <View style={styles.addressTextContainer}>
                     <Text style={styles.addressLabel}>Ramassage (Complété)</Text>
                     <Text style={styles.addressText}>{delivery.pickup_address}</Text>
-                    <Text style={styles.communeText}>{delivery.pickup_commune}</Text>
+                    <Text style={styles.communeText}>Commune de retrait</Text>
                   </View>
                 </View>
 
@@ -716,17 +717,17 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
                   <View style={styles.addressTextContainer}>
                     <Text style={styles.addressLabel}>Livraison</Text>
                     <Text style={styles.addressText}>{delivery.delivery_address}</Text>
-                    <Text style={styles.communeText}>{delivery.delivery_commune}</Text>
+                    <Text style={styles.communeText}>Commune de retrait</Text>
                   </View>
                 </View>
               </>
             )}
           </View>
 
-          {delivery.description && (
+          {delivery.package_description && (
             <View style={styles.descriptionContainer}>
               <Text style={styles.descriptionLabel}>Description :</Text>
-              <Text style={styles.descriptionText}>{delivery.description}</Text>
+              <Text style={styles.descriptionText}>{delivery.package_description}</Text>
             </View>
           )}
         </Card.Content>
@@ -902,7 +903,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  clientTitle: {
+  clientTitle:```text
+{
     fontSize: 16,
     fontWeight: "bold",
     color: "#212121",

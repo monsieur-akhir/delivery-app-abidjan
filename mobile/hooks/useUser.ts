@@ -36,26 +36,26 @@ interface UseUserReturn extends UserState {
   getProfile: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   uploadProfilePhoto: (imageUri: string) => Promise<void>;
-  
+
   // Gestion KYC
   getKYCStatus: () => Promise<void>;
   uploadKYCDocument: (type: string, imageUri: string) => Promise<void>;
   deleteKYCDocument: (documentId: number) => Promise<void>;
   submitKYCForVerification: () => Promise<void>;
-  
+
   // Notifications
   getNotifications: (page?: number, limit?: number) => Promise<void>;
   markNotificationAsRead: (notificationId: number) => Promise<void>;
   registerPushToken: (token: string, platform: 'ios' | 'android') => Promise<void>;
   unregisterPushToken: () => Promise<void>;
-  
+
   // Préférences
   getPreferences: () => Promise<void>;
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
     // Alias pour la compatibilité
   getUserPreferences: () => Promise<void>;
   updateUserPreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
-  
+
   // Notification settings (uses NotificationService)
   getNotificationSettings: () => Promise<NotificationSettings>;
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => Promise<boolean>;
@@ -67,17 +67,17 @@ interface UseUserReturn extends UserState {
   updateCourierStatus: (isOnline: boolean, lat?: number, lng?: number) => Promise<void>;
   getCourierEarnings: (period?: string) => Promise<CourierEarningsData>;
   getWeatherForecast: (lat?: number, lng?: number) => Promise<Weather | null>;
-  
+
   // Wallet and transactions
   getUserProfile: () => Promise<User | null>;
   getWalletTransactions: (page?: number, limit?: number) => Promise<WalletTransaction[]>;
   withdrawFunds: (amount: number, paymentMethod: string) => Promise<void>;
   requestPayout: (request: PayoutRequest) => Promise<void>;
-  
+
   // Additional properties for compatibility
   userProfile: User | null;
   loading: boolean;
-  
+
   // Utilitaires
   clearError: () => void;
   refreshProfile: () => Promise<void>;
@@ -101,9 +101,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const getProfile = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const profile = await UserService.getCurrentUser();
-      
+
       setState(prev => ({
         ...prev,
         profile,
@@ -119,9 +119,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const updateProfile = useCallback(async (data: Partial<User>) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const updatedProfile = await UserService.updateProfile(data);
-      
+
       setState(prev => ({
         ...prev,
         profile: updatedProfile,
@@ -137,9 +137,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const uploadProfilePhoto = useCallback(async (imageUri: string) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.uploadProfilePicture(imageUri);
-      
+
       // Rafraîchir le profil après l'upload
       await getProfile();
     } catch (error) {
@@ -153,9 +153,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const getKYCStatus = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const kycStatus = await UserService.getKYCStatus();
-      
+
       setState(prev => ({
         ...prev,
         kycStatus,
@@ -170,9 +170,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const uploadKYCDocument = useCallback(async (type: string, imageUri: string) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.uploadKYCDocument(type, imageUri);
-      
+
       // Rafraîchir le statut KYC après l'upload
       await getKYCStatus();
     } catch (error) {
@@ -186,9 +186,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const deleteKYCDocument = useCallback(async (documentId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.deleteKYCDocument(documentId);
-      
+
       // Rafraîchir le statut KYC après la suppression
       await getKYCStatus();
     } catch (error) {
@@ -202,9 +202,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const submitKYCForVerification = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.submitKYCForVerification();
-      
+
       // Rafraîchir le statut KYC après la soumission
       await getKYCStatus();
     } catch (error) {
@@ -218,9 +218,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const getNotifications = useCallback(async (page: number = 1, limit: number = 20) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const notifications = await UserService.getNotifications(page, limit);
-      
+
       setState(prev => ({
         ...prev,
         notifications,
@@ -235,9 +235,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const markNotificationAsRead = useCallback(async (notificationId: number) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.markNotificationAsRead(notificationId);
-      
+
       // Optionnel: rafraîchir les notifications
       // await getNotifications();
     } catch (error) {
@@ -251,7 +251,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const registerPushToken = useCallback(async (token: string, platform: 'ios' | 'android') => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.registerPushToken({ token, platform });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to register push token';
@@ -264,7 +264,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const unregisterPushToken = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.unregisterPushToken();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to unregister push token';
@@ -277,9 +277,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const getPreferences = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const preferences = await UserService.getPreferences();
-      
+
       setState(prev => ({
         ...prev,
         preferences,
@@ -294,9 +294,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const updatePreferences = useCallback(async (preferences: Partial<UserPreferences>) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const updatedPreferences = await UserService.updatePreferences(preferences);
-      
+
       setState(prev => ({
         ...prev,
         preferences: updatedPreferences,
@@ -312,7 +312,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const updateLocation = useCallback(async (locationData: { latitude: number; longitude: number; accuracy?: number }) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       await UserService.updateLocation(locationData);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update location';
@@ -326,23 +326,22 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   const getNotificationSettings = useCallback(async (): Promise<NotificationSettings> => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       const serviceSettings = await NotificationService.getNotificationSettings();
-      
+
       // Convert service format to models format
       const notificationSettings: NotificationSettings = {
-        push_notifications: serviceSettings.push_enabled,
-        email_notifications: serviceSettings.email_enabled,
-        sms_notifications: serviceSettings.sms_enabled,
-        marketing_emails: serviceSettings.marketing,
-        delivery_updates: serviceSettings.delivery_updates,
-        delivery_notifications: serviceSettings.delivery_updates,
-        promotional_notifications: serviceSettings.marketing,
-        bid_notifications: serviceSettings.delivery_updates,
-        promotion_alerts: serviceSettings.marketing,
-        security_alerts: serviceSettings.system_updates,
+        push_notifications: serviceSettings.push_notifications || false,
+        email_notifications: serviceSettings.email_notifications || false,
+        sms_notifications: serviceSettings.sms_notifications || false,
+        marketing_emails: serviceSettings.marketing_emails || false,
+        security_notifications: true,
+        promotional_notifications: serviceSettings.promotional_notifications || false,
+        app_notifications: true,
+        promotion_alerts: serviceSettings.promotion_alerts || false,
+        security_alerts: serviceSettings.security_alerts || false,
       };
-      
+
       return notificationSettings;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notification settings';
@@ -350,24 +349,27 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       throw error;
     }
   }, []);
-  
+
   // Mise à jour des paramètres de notification avec conversion de type
   const updateNotificationSettings = useCallback(async (settings: Partial<NotificationSettings>) => {
     try {
       setState(prev => ({ ...prev, error: null }));
-      
+
       // Convert models format to service format
-      const serviceSettings: Partial<ServiceNotificationSettings> = {
-        push_enabled: settings.push_notifications,
-        email_enabled: settings.email_notifications,
-        sms_enabled: settings.sms_notifications,
-        marketing: settings.marketing_emails || settings.promotional_notifications || settings.promotion_alerts,
-        delivery_updates: settings.delivery_updates || settings.delivery_notifications || settings.bid_notifications,
-        system_updates: settings.security_alerts,
+      const payload = {
+        push_notifications: settings.push_notifications,
+        email_notifications: settings.email_notifications,
+        sms_notifications: settings.sms_notifications,
+        marketing_emails: settings.marketing_emails,
+        security_notifications: settings.security_notifications,
+        promotional_notifications: settings.promotional_notifications,
+        app_notifications: settings.app_notifications,
+        promotion_alerts: settings.promotion_alerts,
+        security_alerts: settings.security_alerts
       };
-      
-      const success = await NotificationService.updateNotificationSettings(serviceSettings);
-      
+
+      const success = await NotificationService.updateNotificationSettings(payload);
+
       return success;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update notification settings';
@@ -538,7 +540,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       setState(prev => ({ ...prev, error: errorMessage }));
     }
   }, []);
-  
+
   // Alias pour la compatibilité
   const getUserPreferences = getPreferences;
   const updateUserPreferences = updatePreferences;
