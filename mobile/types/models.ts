@@ -749,7 +749,7 @@ export interface VehicleEnvironmentalStats {
 export interface LoginCredentials {
   email?: string;
   phone?: string;
-  password: string;
+  password?: string;
 }
 
 export interface RegisterData {

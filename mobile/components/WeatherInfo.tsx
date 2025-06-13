@@ -66,7 +66,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
           condition: 'clear',
           humidity: 0,
           wind_speed: 0,
-          visibility: 0,
+          
           uv_index: 0
         },
         forecast: apiData.forecast || [],

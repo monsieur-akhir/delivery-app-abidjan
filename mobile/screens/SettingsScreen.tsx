@@ -80,11 +80,11 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             <Avatar.Image
               size={80}
               source={
-                user?.profile_image ? { uri: user.profile_image } : require("../assets/images/default-avatar.png")
+                user?.avatar ? { uri: user.avatar } : require("../assets/images/default-avatar.png")
               }
             />
             <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: colors.text }]}>{user?.name}</Text>
+              <Text style={[styles.profileName, { color: colors.text }]}>{user?.first_name || user?.username}</Text>
               <Text style={[styles.profilePhone, { color: colors.text }]}>{user?.phone}</Text>
               <Button
                 mode="outlined"

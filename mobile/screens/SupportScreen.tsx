@@ -158,7 +158,7 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
             message: ticketMessage,
             images: ticketImages,
           },
-
+          retries: 0
         })
 
         // Reset form
@@ -219,6 +219,7 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
             ticketId: selectedTicket.id,
             message: replyMessage,
           },
+          retries: 0
         })
 
         // Reset reply input
@@ -1038,6 +1039,7 @@ const styles = StyleSheet.create({
   faqDivider: {
     marginBottom: 8,
   },
+```text
   faqAnswer: {
     fontSize: 14,
     color: "#212121",

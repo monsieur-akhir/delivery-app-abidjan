@@ -1,7 +1,7 @@
 // Configuration des environnements
 
 // Déclaration de la variable __DEV__
-const __DEV__ = process.env.NODE_ENV === "development"
+const __DEV__ = (global as any).process?.env?.NODE_ENV === "development"
 
 // URL de base de l'API
 export const API_URL = __DEV__
