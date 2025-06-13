@@ -44,7 +44,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         phone: profileData.phone,
         email: profileData.email,
         role: profileData.role,
-        commune: profileData.commune,
+        
         vehicle_type: profileData.vehicle_type,
         license_plate: profileData.license_plate,
         business_name: profileData.business_name,
@@ -66,7 +66,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           country: user.country || "",
           phone: user.phone,
           email: user.email,
-          commune: user.commune,
+          
           vehicle_type: user.vehicle_type,
           license_plate: user.license_plate,
           business_name: user.business_name,
@@ -155,6 +155,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         addPendingUpload({
           type: "profile_image",
           data: { uri },
+          retries: 0
         })
 
         Alert.alert(t("profile.offlineImageSaved"), t("profile.offlineImageSavedMessage"))
@@ -186,7 +187,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       if (isConnected) {
         // Mettre à jour le profil en ligne
-        const updatedUser = await updateUserProfile(editedProfile)
+        const updatedUser = await updateUserProfile(editedProfile as Partial<User>)
         // Convert User to UserProfile
         const updatedProfile: UserProfile = {
           user_id: updatedUser.id,
@@ -196,7 +197,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           phone: updatedUser.phone,
           email: updatedUser.email,
           role: updatedUser.role,
-          commune: updatedUser.commune,
+          
           vehicle_type: updatedUser.vehicle_type,
           license_plate: updatedUser.license_plate,
           business_name: updatedUser.business_name,
@@ -212,11 +213,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         addPendingUpload({
           type: "profile_update",
           data: editedProfile,
+          retries: 0
         })
 
         // Mettre à jour localement
         setProfile((prev) => ({ ...prev, ...editedProfile }) as UserProfile)
-        updateUserData(editedProfile)
+        updateUserData(editedProfile as Partial<User>)
 
         Alert.alert(t("profile.offlineUpdateSaved"), t("profile.offlineUpdateSavedMessage"))
       }
@@ -336,13 +338,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <Text style={styles.infoLabel}>{t("profile.commune")}</Text>
               {editing ? (
                 <TextInput
-                  value={editedProfile.commune || ""}
-                  onChangeText={(value) => handleChange("commune", value)}
+                  value={editedProfile.address || ""}
+                  onChangeText={(value) => handleChange("address", value)}
                   style={styles.editInput}
                   mode="outlined"
                 />
               ) : (
-                <Text style={styles.infoValue}>{profile?.commune || t("profile.notProvided")}</Text>
+                <Text style={styles.infoValue}>{profile?.address || t("profile.notProvided")}</Text>
               )}
             </View>
 
@@ -423,7 +425,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>{t("profile.memberSince")}</Text>
               <Text style={styles.infoValue}>
-                {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "-"}
+                {profile ? new Date().toLocaleDateString() : "-"}
               </Text>
             </View>
           </Card.Content>
