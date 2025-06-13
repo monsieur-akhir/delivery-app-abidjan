@@ -1,18 +1,22 @@
-// components/index.ts - Barrel exports
 
-// Import and re-export MapView component and types
-import CustomMapView from './MapView'
-import type { Coordinates, Route, TrafficInfo, MapPoint, MapViewProps } from './MapView'
+export { default as FeatherIcon } from './FeatherIcon';
+export { default as StarRating } from './StarRating';
+export { default as VoiceAssistant } from './VoiceAssistant';
+export { default as VoiceRecorder } from './VoiceRecorder';
+export { default as WeatherInfo } from './WeatherInfo';
+export { default as EnhancedWeatherInfo } from './EnhancedWeatherInfo';
+export { default as WeatherAlertModal } from './WeatherAlertModal';
+export { default as MapView } from './MapView';
+export { default as EnhancedMap } from './EnhancedMap';
+export { default as VTCStyleMap } from './VTCStyleMap';
+export { default as AddressAutocomplete } from './AddressAutocomplete';
+export { default as DeliveryStatusBadge } from './DeliveryStatusBadge';
+export { default as EmptyState } from './EmptyState';
+export { default as ErrorView } from './ErrorView';
+export { default as GamificationBadge } from './GamificationBadge';
+export { default as IconButton } from './IconButton';
+export { default as LanguageSwitcher } from './LanguageSwitcher';
+export { default as OfflineIndicator } from './OfflineIndicator';
 
-// Import and re-export VTC-style MapView component and types
-import { VTCStyleMap } from './VTCStyleMap'
-import type { VTCCoordinates, VTCRoute, VTCCourier, VTCDeliveryStatus } from './VTCStyleMap'
-
-export { CustomMapView, VTCStyleMap }
-export type { Coordinates, Route, TrafficInfo, MapPoint, MapViewProps, VTCCoordinates, VTCRoute, VTCCourier, VTCDeliveryStatus }
-
-// Export other components that might be needed
-export { default as WeatherInfo } from './WeatherInfo'
-export { default as EnhancedMap } from './EnhancedMap'
-export { default as EnhancedWeatherInfo } from './EnhancedWeatherInfo'
-export { default as FeatherIcon } from './FeatherIcon'
+// Re-export types if needed
+export type { FeatherIconProps } from './FeatherIcon';
