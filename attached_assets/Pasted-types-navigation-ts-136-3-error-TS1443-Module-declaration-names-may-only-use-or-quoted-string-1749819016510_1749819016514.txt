@@ -1,0 +1,41 @@
+types/navigation.ts:136:3 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+136 ```
+      ~
+137 
+    
+138 **Analysis:** The primary change involves correcting and streamlining the `RootStackParamList` type definition, addressing potential issues with duplicate entries and incorrect type assignments. The types `BidsScreenNavigationProp` and `PaymentScreenNavigationProp` and `BidScreenNavigationProp` have also been updated to reflect changes in `RootStackParamList`.
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+types/navigation.ts:138:94 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+138 **Analysis:** The primary change involves correcting and streamlining the `RootStackParamList` type definition, addressing potential issues with duplicate entries and incorrect type assignments. The types `BidsScreenNavigationProp` and `PaymentScreenNavigationProp` and `BidScreenNavigationProp` have also been updated to reflect changes in `RootStackParamList`.
+                                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+types/navigation.ts:138:231 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+138 **Analysis:** The primary change involves correcting and streamlining the `RootStackParamList` type definition, addressing potential issues with duplicate entries and incorrect type assignments. The types `BidsScreenNavigationProp` and `PaymentScreenNavigationProp` and `BidScreenNavigationProp` have also been updated to reflect changes in `RootStackParamList`.
+                                                                                                                                                                                                                                          ~~~~~~~
+
+types/navigation.ts:138:265 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+138 **Analysis:** The primary change involves correcting and streamlining the `RootStackParamList` type definition, addressing potential issues with duplicate entries and incorrect type assignments. The types `BidsScreenNavigationProp` and `PaymentScreenNavigationProp` and `BidScreenNavigationProp` have also been updated to reflect changes in `RootStackParamList`.
+                                                                                                                                                                                                                                                                            ~~~~~~~
+
+types/navigation.ts:138:295 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+138 **Analysis:** The primary change involves correcting and streamlining the `RootStackParamList` type definition, addressing potential issues with duplicate entries and incorrect type assignments. The types `BidsScreenNavigationProp` and `PaymentScreenNavigationProp` and `BidScreenNavigationProp` have also been updated to reflect changes in `RootStackParamList`.
+                                                                                                                                                                                                                                                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+types/navigation.ts:140:2 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+140 ```replit_final_file}
+     ~~
+
+types/navigation.ts:140:21 - error TS1128: Declaration or statement expected.
+
+140 ```replit_final_file}
+                        ~
+
+
+Found 7 errors in the same file, starting at: types/navigation.ts:136
