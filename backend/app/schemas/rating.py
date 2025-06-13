@@ -38,4 +38,4 @@ class RatingResponse(RatingBase):
     
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
