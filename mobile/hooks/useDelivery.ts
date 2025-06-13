@@ -485,6 +485,77 @@ export const useDelivery = (): UseDeliveryReturn => {
       setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
       throw error;
     }
+  }, []);
+
+  // Récupérer les promotions applicables
+  const getApplicablePromotions = useCallback(async (orderValue: number, zoneId?: number) => {
+    try {
+      setState(prev => ({ ...prev, error: null }));
+      return await DeliveryService.getApplicablePromotions(orderValue, zoneId);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get applicable promotions';
+      setState(prev => ({ ...prev, error: errorMessage }));
+      throw error;
+    }
+  }, []);
+
+  // Appliquer un code promo
+  const applyPromotionCode = useCallback(async (deliveryId: number, promoCode: string) => {
+    try {
+      setState(prev => ({ ...prev, error: null }));
+      const result = await DeliveryService.applyPromotionCode(deliveryId, promoCode);
+      
+      // Mettre à jour la livraison avec la promotion appliquée
+      setState(prev => ({
+        ...prev,
+        currentDelivery: prev.currentDelivery 
+          ? { ...prev.currentDelivery, ...result }
+          : prev.currentDelivery
+      }));
+      
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to apply promotion code';
+      setState(prev => ({ ...prev, error: errorMessage }));
+      throw error;
+    }
+  }, []);
+
+  // Obtenir les zones de livraison
+  const getDeliveryZones = useCallback(async (lat: number, lng: number) => {
+    try {
+      setState(prev => ({ ...prev, error: null }));
+      return await DeliveryService.getDeliveryZones(lat, lng);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get delivery zones';
+      setState(prev => ({ ...prev, error: errorMessage }));
+      throw error;
+    }
+  }, []);
+
+  // Calculer le prix avec zones
+  const calculateZonePricing = useCallback(async (
+    pickupLat: number,
+    pickupLng: number,
+    deliveryLat: number,
+    deliveryLng: number,
+    packageWeight?: number,
+    isExpress: boolean = false
+  ) => {
+    try {
+      setState(prev => ({ ...prev, error: null, isLoading: true }));
+      
+      const pricing = await DeliveryService.calculateZonePricing(
+        pickupLat, pickupLng, deliveryLat, deliveryLng, packageWeight, isExpress
+      );
+      
+      setState(prev => ({ ...prev, isLoading: false }));
+      return pricing;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to calculate zone pricing';
+      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
+      throw error;
+    }
   }, []);  // Missing methods implementation
   const placeBid = useCallback(async (bidData: BidCreateRequest) => {
     return createBid(bidData);
@@ -607,6 +678,10 @@ export const useDelivery = (): UseDeliveryReturn => {
     clearError,
     clearCurrentDelivery,
     refreshDeliveries,
+    getApplicablePromotions,
+    applyPromotionCode,
+    getDeliveryZones,
+    calculateZonePricing,
   };
 };
 

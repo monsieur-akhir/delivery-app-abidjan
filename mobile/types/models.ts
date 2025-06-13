@@ -819,7 +819,7 @@ export interface ExpressDelivery extends Delivery {
 }
 
 export interface DeliveryEstimate {
-  estimated_price: number;
+  estimated_price: number
   estimated_duration: number; // minutes
   estimated_distance: number; // km
   pricing_breakdown: {
@@ -1095,4 +1095,60 @@ export interface Challenge {
   reward_points: number
   expires_at: string
   is_completed: boolean
+}
+
+export interface DeliveryEstimate {
+  estimated_price: number
+  distance_km: number
+  estimated_time_minutes: number
+  price_breakdown?: any
+  applicable_promotions?: Promotion[]
+  zone_info?: Zone
+}
+
+export interface Promotion {
+  id: string
+  name: string
+  description?: string
+  promotion_type: 'discount_percentage' | 'discount_fixed' | 'free_delivery' | 'cashback'
+  discount_value: number
+  max_discount?: number
+  min_order_value?: number
+  start_date: string
+  end_date: string
+  is_active: boolean
+  max_uses_per_user?: number
+  current_uses: number
+  max_uses_total?: number
+  target_zones?: number[]
+  target_user_types?: string[]
+  is_auto_apply: boolean
+}
+
+export interface Zone {
+  id: string
+  name: string
+  description?: string
+  zone_type: 'city' | 'district' | 'special'
+  coordinates?: number[][]
+  center_lat: number
+  center_lng: number
+  radius?: number
+  base_price: number
+  price_per_km: number
+  max_delivery_time?: number
+  min_courier_rating?: number
+  requires_special_vehicle: boolean
+  peak_hour_multiplier: number
+  is_active: boolean
+}
+
+export interface PromotionUsage {
+  id: string
+  promotion_id: string
+  user_id: string
+  delivery_id: string
+  discount_applied: number
+  cashback_earned: number
+  created_at: string
 }

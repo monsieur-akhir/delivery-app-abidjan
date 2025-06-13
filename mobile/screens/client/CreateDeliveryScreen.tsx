@@ -1,7 +1,3 @@
-Applying the changes will enhance the CreateDeliveryScreen component with improved autocompletion, a Yango/Uber-style map, and an enhanced user interface.
-```
-
-```replit_final_file
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View,
@@ -12,11 +8,12 @@ import {
   Alert,
   StyleSheet,
   Dimensions,
-  StatusBar
+  StatusBar,
+  TextInput,
+  Modal,
 } from 'react-native'
 import {
   Text,
-  TextInput,
   Button,
   Divider,
   Chip,
@@ -111,6 +108,15 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = ({ navigation 
   const [currentStep, setCurrentStep] = useState<'addresses' | 'details' | 'review'>(
     'addresses'
   )
+
+  // Etats pour les promotions et zones
+  const [promoCode, setPromoCode] = useState<string>('')
+  const [appliedPromotion, setAppliedPromotion] = useState<any>(null)
+  const [availablePromotions, setAvailablePromotions] = useState<any[]>([])
+  const [showPromotions, setShowPromotions] = useState<boolean>(false)
+  const [deliveryZones, setDeliveryZones] = useState<any[]>([])
+  const [selectedZone, setSelectedZone] = useState<any>(null)
+  const [finalPrice, setFinalPrice] = useState<number | null>(null)
 
   const vehicleTypes = [
     { value: 'motorcycle', label: 'Moto', icon: 'motorcycle', color: '#FF6B00' },
@@ -1025,4 +1031,3 @@ const styles = StyleSheet.create({
 })
 
 export default CreateDeliveryScreen
-```Applying the changes will enhance the CreateDeliveryScreen component with improved autocompletion, a Yango/Uber-style map, and an enhanced user interface.

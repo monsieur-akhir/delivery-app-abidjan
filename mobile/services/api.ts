@@ -1256,5 +1256,61 @@ export const clearApiCache = async (): Promise<boolean> => {
   }
 }
 
+// Fonctions pour les promotions
+export const getActivePromotions = async (): Promise<any[]> => {
+  const response = await api.get("/api/v1/promotions/active")
+  return response.data
+}
+
+export const getApplicablePromotions = async (orderValue: number, zoneId?: number): Promise<any[]> => {
+  const params = { order_value: orderValue }
+  if (zoneId) params.zone_id = zoneId
+  
+  const response = await api.get("/api/v1/promotions/applicable", { params })
+  return response.data
+}
+
+export const validatePromotionCode = async (code: string, orderValue: number): Promise<any> => {
+  const response = await api.post("/api/v1/promotions/validate-code", {
+    code,
+    order_value: orderValue
+  })
+  return response.data
+}
+
+export const applyPromotionToDelivery = async (deliveryId: number, promotionId: string): Promise<any> => {
+  const response = await api.post(`/api/v1/deliveries/${deliveryId}/apply-promotion`, {
+    promotion_id: promotionId
+  })
+  return response.data
+}
+
+// Fonctions pour les zones
+export const getDeliveryZones = async (lat: number, lng: number): Promise<any> => {
+  const response = await api.get("/api/v1/zones/locate", {
+    params: { lat, lng }
+  })
+  return response.data
+}
+
+export const calculateZonePrice = async (
+  pickupLat: number,
+  pickupLng: number,
+  deliveryLat: number,
+  deliveryLng: number,
+  packageWeight?: number,
+  isExpress: boolean = false
+): Promise<any> => {
+  const response = await api.post("/api/v1/zones/calculate-price", {
+    pickup_lat: pickupLat,
+    pickup_lng: pickupLng,
+    delivery_lat: deliveryLat,
+    delivery_lng: deliveryLng,
+    package_weight: packageWeight,
+    is_express: isExpress
+  })
+  return response.data
+}
+
 // Exporter d'autres fonctions d'API au besoin
 export default api
