@@ -1610,7 +1610,7 @@ def get_delivery_analytics(
         total_revenue = sum([d.final_price or 0 for d in deliveries if d.status == DeliveryStatus.completed])
 
         return {
-            "total_deliveries": total_deliveries",
+            "total_deliveries": total_deliveries,
             "completed_deliveries": completed_deliveries,
             "cancelled_deliveries": cancelled_deliveries,
             "completion_rate": (completed_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0,
