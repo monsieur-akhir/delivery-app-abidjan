@@ -265,7 +265,9 @@ class NotificationService:
         self,
         delivery_id: int,
         user_id: Optional[int] = None,
-        message: Optional[str] = None
+        message: Optional[str] = None,
+        commune: Optional[str] = None,
+        active_only: bool = True
     ) -> List[Notification]:
         """
         Envoyer une notification concernant une livraison.
@@ -365,9 +367,6 @@ class NotificationService:
             channel="in_app"
         )
     
-
-
-
     async def send_policy_update_notification(
         self,
         policy_type: str,
@@ -405,8 +404,7 @@ class NotificationService:
         
         return notifications
     
-    
-async def send_traffic_notification(
+    async def send_traffic_notification(
         self,
         commune: str,
         severity: Optional[str] = None,
@@ -442,67 +440,40 @@ async def send_traffic_notification(
             notifications.append(notification)
 
         return notifications
-# Fonctions utilitaires pour les appels directs
-async def send_delivery_notification(
-    self,
-    delivery_id: int,
-    user_id: Optional[int] = None,
-    message: Optional[str] = None,
-    commune: Optional[str] = None,
-    active_only: bool = True
-) -> List[Notification]:
+
+async def send_notification(
+    db: Session,
+    user_id: int,
+    title: str,
+    message: str,
+    notification_type: str = "system",
+    data: Optional[Dict[str, Any]] = None,
+    channel: str = "in_app"
+) -> Notification:
     """
-    Envoie une notification liée à une livraison, avec possibilité de filtrer par localisation et statut actif.
-
-    - Si `user_id` est spécifié, la notification est envoyée uniquement à cet utilisateur.
-    - Sinon, la notification est envoyée à tous les coursiers actifs dans la commune spécifiée (ou à tous si aucune commune n'est précisée).
-
+    Fonction utilitaire pour envoyer une notification.
+    
     Args:
-        delivery_id (int): ID de la livraison.
-        user_id (Optional[int]): ID de l'utilisateur spécifique (client ou coursier).
-        message (Optional[str]): Message personnalisé. Utilise un message par défaut sinon.
-        commune (Optional[str]): Nom de la commune pour filtrer les coursiers.
-        active_only (bool): Si True, filtre les coursiers actifs uniquement.
-
+        db: Session de base de données
+        user_id: ID de l'utilisateur
+        title: Titre de la notification
+        message: Message de la notification
+        notification_type: Type de notification (system, delivery, rating, etc.)
+        data: Données supplémentaires (optionnel)
+        channel: Canal de notification (in_app, push, sms, whatsapp)
+        
     Returns:
-        List[Notification]: Notifications créées et envoyées.
+        Notification: L'objet notification créé
     """
-    notifications = []
-
-    if user_id:
-        # Notification à un utilisateur spécifique
-        notification = await self.create_notification(
-            user_id=user_id,
-            title="Mise à jour de livraison",
-            message=message or f"Mise à jour de la livraison #{delivery_id}",
-            notification_type=NotificationType.delivery_status,
-            data={"delivery_id": delivery_id},
-            channel=NotificationChannel.push
-        )
-        notifications.append(notification)
-    else:
-        # Préparer la requête pour les coursiers
-        query = self.db.query(User).filter(User.role == UserRole.courier)
-
-        if commune:
-            query = query.filter(User.commune == commune)
-        if active_only:
-            query = query.filter(User.is_active.is_(True))
-
-        couriers = query.all()
-
-        for courier in couriers:
-            notification = await self.create_notification(
-                user_id=courier.id,
-                title="Nouvelle livraison disponible",
-                message=message or f"Nouvelle livraison disponible #{delivery_id}",
-                notification_type=NotificationType.delivery_status,
-                data={"delivery_id": delivery_id},
-                channel=NotificationChannel.push
-            )
-            notifications.append(notification)
-
-    return notifications
+    service = NotificationService(db)
+    return await service.create_notification(
+        user_id=user_id,
+        title=title,
+        message=message,
+        notification_type=notification_type,
+        data=data,
+        channel=channel
+    )
 
 async def send_rating_notification(
     db: Session,
@@ -513,66 +484,27 @@ async def send_rating_notification(
     """
     Fonction utilitaire pour envoyer une notification suite à une évaluation.
     """
-    notification_service = NotificationService(db)
-    return await notification_service.send_rating_notification(
+    service = NotificationService(db)
+    return await service.send_rating_notification(
         rating_id=rating_id,
         user_id=user_id,
         score=score
     )
 
-
-def send_reward_notification(db: Session, reward_id: int, user_id: int):
+async def send_reward_notification(
+    db: Session,
+    reward_id: int,
+    user_id: int
+) -> Notification:
     """
-    Envoie une notification à un utilisateur après qu'il ait demandé une récompense.
+    Fonction utilitaire pour envoyer une notification de récompense à un utilisateur.
     """
-    reward = db.query(Reward).filter(Reward.id == reward_id).first()
-    user = db.query(User).filter(User.id == user_id).first()
-
-    if not reward or not user:
-        return
-
-    title = "Récompense demandée"
-    message = f"Votre demande de récompense de {reward.amount} FCFA a été enregistrée avec succès."
-
-    # Créer une notification en base
-    notification = Notification(
-        user_id=user.id,
-        type=NotificationType.reward_earned,
-        title=title,
-        message=message,
-        status=NotificationStatus.sent,
-        channel=NotificationChannel.in_app,
-        created_at=datetime.utcnow()
+    service = NotificationService(db)
+    return await service.send_reward_notification(
+        reward_id=reward_id,
+        user_id=user_id
     )
-    db.add(notification)
 
-    # Envoi PUSH
-    if user.push_token:
-        send_push_notification(
-            token=user.push_token,
-            title=title,
-            message=message,
-            data={"type": "reward", "reward_id": reward.id}
-        )
-
-    # Envoi SMS (si activé)
-    if settings.SEND_SMS and user.phone_number:
-        send_sms(
-            to=user.phone_number,
-            message=message
-        )
-
-    # Envoi WhatsApp (optionnel)
-    if settings.SEND_WHATSAPP and user.phone_number:
-        send_whatsapp_message(
-            to=user.phone_number,
-            message=message
-        )
-
-    db.commit()
-
-
-# Fonction autonome pour l'API wallet
 async def send_wallet_notification(
     db: Session,
     user_id: int,
@@ -580,8 +512,7 @@ async def send_wallet_notification(
     message: Optional[str] = None
 ) -> Notification:
     """
-    Fonction autonome pour envoyer une notification concernant le portefeuille.
-    Cette fonction peut être importée directement par les APIs.
+    Fonction utilitaire pour envoyer une notification concernant le portefeuille.
     """
     service = NotificationService(db)
     return await service.send_wallet_notification(
@@ -589,6 +520,79 @@ async def send_wallet_notification(
         transaction_id=transaction_id,
         message=message
     )
+
+async def send_traffic_notification(
+    db: Session,
+    commune: str,
+    severity: Optional[str] = None,
+    lat: Optional[float] = None,
+    lng: Optional[float] = None,
+    message: Optional[str] = None,
+    alert_type: str = "traffic"
+) -> List[Notification]:
+    """
+    Fonction utilitaire pour envoyer une notification concernant le trafic.
+    """
+    service = NotificationService(db)
+    return await service.send_traffic_notification(
+        commune=commune,
+        severity=severity,
+        lat=lat,
+        lng=lng,
+        message=message,
+        alert_type=alert_type
+    )
+
+async def send_delivery_notification(
+    db: Session,
+    delivery_id: int,
+    user_id: Optional[int] = None,
+    message: Optional[str] = None,
+    commune: Optional[str] = None,
+    active_only: bool = True
+) -> List[Notification]:
+    """
+    Fonction utilitaire pour envoyer une notification concernant une livraison.
+    """
+    service = NotificationService(db)
+    return await service.send_delivery_notification(
+        delivery_id=delivery_id,
+        user_id=user_id,
+        message=message,
+        commune=commune,
+        active_only=active_only
+    )
+
+async def send_sms_notification(phone: str, message: str) -> Dict[str, Any]:
+    """
+    Fonction utilitaire pour envoyer une notification SMS.
+    """
+    from twilio.rest import Client
+    
+    try:
+        # Initialiser le client Twilio
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        
+        # Envoyer le SMS
+        sms = client.messages.create(
+            body=message,
+            from_=settings.TWILIO_PHONE_NUMBER,
+            to=phone
+        )
+        
+        return {
+            "status": "success",
+            "sid": sms.sid,
+            "to": phone,
+            "message": message
+        }
+    except Exception as e:
+        logger.error(f"Erreur Twilio SMS: {str(e)}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "to": phone
+        }
 
 
 

@@ -154,3 +154,21 @@ class ExpressDeliveryCreate(DeliveryCreate):
 
 class ExpressDeliveryResponse(DeliveryResponse):
     is_priority: bool    
+
+class SmartMatchingRequest(BaseModel):
+    """
+    Schéma pour la demande de correspondance intelligente des livraisons
+    """
+    courier_id: Optional[int] = None
+    commune: Optional[str] = None
+    vehicle_type: Optional[VehicleType] = None
+    cargo_category: Optional[CargoCategory] = None
+    max_distance: Optional[float] = None  # en km
+    min_rating: Optional[float] = None
+    preferred_time_slot: Optional[Dict[str, str]] = None  # {"start": "HH:MM", "end": "HH:MM"}
+    max_deliveries: Optional[int] = None
+    include_express: Optional[bool] = True
+    include_collaborative: Optional[bool] = True
+
+    class Config:
+        from_attributes = True    

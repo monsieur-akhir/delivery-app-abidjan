@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from ..db.session import get_db
 from ..core.dependencies import get_current_user, get_current_active_user
 from ..schemas.user import UserResponse, UserStatusUpdate, KYCUpdate
+from ..models.user import User, UserRole
 from ..services.manager import (
     get_clients, get_couriers, get_businesses,
     update_user_status, update_kyc_status,
@@ -15,7 +16,6 @@ from ..services.manager import (
     generate_financial_report,
     update_app_config, get_app_config
 )
-from ..models.user import UserRole
 
 router = APIRouter()
 

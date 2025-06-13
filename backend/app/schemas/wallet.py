@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, validator
 from typing import Optional, List
 from datetime import datetime
@@ -160,3 +159,62 @@ class TransferResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+class LoanStatus(str, Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
+    active = "active"
+    completed = "completed"
+    defaulted = "defaulted"
+
+class LoanCreate(BaseModel):
+    amount: float
+    purpose: str
+    duration_months: int
+    monthly_payment: float
+    
+    @validator('amount')
+    def amount_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError('Le montant doit être positif')
+        if v > 500000:  # Limite max: 500,000 FCFA
+            raise ValueError('Le montant ne peut pas dépasser 500,000 FCFA')
+        return v
+    
+    @validator('duration_months')
+    def duration_must_be_valid(cls, v):
+        if v < 1 or v > 12:
+            raise ValueError('La durée doit être entre 1 et 12 mois')
+        return v
+    
+    @validator('monthly_payment')
+    def payment_must_be_valid(cls, v, values):
+        if 'amount' in values and 'duration_months' in values:
+            min_payment = values['amount'] / values['duration_months']
+            if v < min_payment:
+                raise ValueError('Le paiement mensuel doit être au moins égal au montant total divisé par la durée')
+        return v
+
+class LoanResponse(LoanCreate):
+    id: int
+    user_id: int
+    status: LoanStatus
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    approved_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class LoanUpdate(BaseModel):
+    status: Optional[LoanStatus] = None
+    monthly_payment: Optional[float] = None
+    purpose: Optional[str] = None
+    
+    @validator('monthly_payment')
+    def payment_must_be_positive(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError('Le paiement mensuel doit être positif')
+        return v

@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -8,7 +7,7 @@ from ..db.session import get_db
 from ..core.dependencies import get_current_user, get_current_active_user
 from ..schemas.complaint import ComplaintCreate, ComplaintUpdate, ComplaintResponse
 from ..services.complaint import create_complaint, get_complaint, get_complaints, update_complaint
-from ..services.notification import send_notification
+from ..services.notification import NotificationService
 from ..models.user import UserRole
 
 router = APIRouter()
@@ -27,13 +26,15 @@ async def create_new_complaint(
     db_complaint = create_complaint(db=db, complaint=complaint, user_id=current_user.id)
     
     # Notifier les gestionnaires
+    notification_service = NotificationService(db)
     background_tasks.add_task(
-        send_notification,
-        db=db,
-        user_role=UserRole.manager,
+        notification_service.create_notification,
+        user_id=current_user.id,
         title="Nouvelle plainte",
         message=f"Nouvelle plainte soumise: {complaint.subject}",
-        data={"complaint_id": db_complaint.id}
+        notification_type="complaint",
+        data={"complaint_id": db_complaint.id},
+        channel="in_app"
     )
     
     return db_complaint
