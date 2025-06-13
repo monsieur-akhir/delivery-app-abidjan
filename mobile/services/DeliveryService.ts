@@ -1,566 +1,400 @@
-import { api } from './api'
-import { 
-  Delivery, 
-  DeliveryCreateRequest, 
-  DeliveryUpdateRequest,
+import api from './api'
+import type {
+  Delivery,
+  Bid,
+  TrackingPoint,
+  DeliverySearchParams,
+  AvailableDelivery,
+  DeliveryCreateRequest,
+  BidCreateRequest,
+  TrackingPointRequest,
+  VehicleCreateRequest,
   DeliveryStatus,
-  DeliveryEstimate,
-  TrackingUpdate 
+  PriceEstimateData,
+  VehicleRecommendationData,
+  VehicleRecommendation
 } from '../types/models'
 
-export interface DeliverySearchParams {
+export interface DeliveryUpdateRequest {
+  pickup_address?: string
+  delivery_address?: string
+  package_type?: string
+  package_description?: string
+  special_instructions?: string
+  proposed_price?: number
+}
+
+export interface DeliveryFilters {
   status?: DeliveryStatus
-  skip?: number
-  limit?: number
-  start_date?: string
-  end_date?: string
+  date_from?: string
+  date_to?: string
+  commune?: string
 }
 
-export interface PriceEstimateRequest {
-  pickup_lat: number
-  pickup_lng: number
-  delivery_lat: number
-  delivery_lng: number
-  package_weight?: number
-  cargo_category?: string
-  is_fragile?: boolean
-  is_express?: boolean
+export interface ExpressDeliveryRequest extends DeliveryCreateRequest {
+  is_express: boolean
+  priority_level: 'high' | 'urgent'
 }
 
-export interface CourierAssignmentRequest {
-  delivery_id: number
-  courier_id: number
-  estimated_pickup_time?: string
-  estimated_delivery_time?: string
+export interface CollaborativeDeliveryRequest extends DeliveryCreateRequest {
+  is_collaborative: boolean
+  max_participants: number
+  role_requirements: string[]
 }
 
-export class DeliveryService {
-  // Récupérer les livraisons d'un utilisateur
+class DeliveryService {
+  // Méthodes de base pour les livraisons
   static async getUserDeliveries(
-    userId: number, 
-    params?: DeliverySearchParams
+    userId?: number,
+    filters?: DeliveryFilters
   ): Promise<Delivery[]> {
     try {
-      const response = await api.get(`/api/v1/deliveries/user/${userId}`, { params })
+      const params = new URLSearchParams()
+      if (userId) params.append('user_id', userId.toString())
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.date_from) params.append('date_from', filters.date_from)
+      if (filters?.date_to) params.append('date_to', filters.date_to)
+      if (filters?.commune) params.append('commune', filters.commune)
+
+      const response = await api.get(`/deliveries?${params.toString()}`)
       return response.data
     } catch (error) {
-      console.error('Error fetching user deliveries:', error)
+      console.error('Erreur lors de la récupération des livraisons:', error)
       throw error
     }
   }
 
-  // Récupérer toutes les livraisons (pour les coursiers)
-  static async getAvailableDeliveries(params?: DeliverySearchParams): Promise<Delivery[]> {
+  static async getDeliveryById(id: string): Promise<Delivery> {
     try {
-      const response = await api.get('/api/v1/deliveries/available', { params })
+      const response = await api.get(`/deliveries/${id}`)
       return response.data
     } catch (error) {
-      console.error('Error fetching available deliveries:', error)
+      console.error('Erreur lors de la récupération de la livraison:', error)
       throw error
     }
   }
 
-  // Récupérer une livraison par ID
-  static async getDeliveryById(deliveryId: number): Promise<Delivery> {
-    try {
-      const response = await api.get(`/api/v1/deliveries/${deliveryId}`)
-      return response.data
-    } catch (error) {
-      console.error('Error fetching delivery:', error)
-      throw error
-    }
-  }
-
-  // Créer une nouvelle livraison
   static async createDelivery(deliveryData: DeliveryCreateRequest): Promise<Delivery> {
     try {
-      const response = await api.post('/api/v1/deliveries', deliveryData)
+      const response = await api.post('/deliveries', deliveryData)
       return response.data
     } catch (error) {
-      console.error('Error creating delivery:', error)
+      console.error('Erreur lors de la création de la livraison:', error)
       throw error
     }
   }
 
-  // Mettre à jour une livraison
   static async updateDelivery(
-    deliveryId: number, 
+    id: string,
     updateData: DeliveryUpdateRequest
   ): Promise<Delivery> {
     try {
-      const response = await api.put(`/api/v1/deliveries/${deliveryId}`, updateData)
+      const response = await api.put(`/deliveries/${id}`, updateData)
       return response.data
     } catch (error) {
-      console.error('Error updating delivery:', error)
+      console.error('Erreur lors de la mise à jour de la livraison:', error)
       throw error
     }
   }
 
-  // Estimer le prix d'une livraison
-  static async estimatePrice(request: PriceEstimateRequest): Promise<DeliveryEstimate> {
+  static async cancelDelivery(id: string, reason?: string): Promise<void> {
     try {
-      const response = await api.post('/api/v1/deliveries/price-estimate', request)
+      await api.post(`/deliveries/${id}/cancel`, { reason })
+    } catch (error) {
+      console.error('Erreur lors de l\'annulation de la livraison:', error)
+      throw error
+    }
+  }
+
+  // Méthodes pour les enchères
+  static async getDeliveryBids(deliveryId: string): Promise<Bid[]> {
+    try {
+      const response = await api.get(`/deliveries/${deliveryId}/bids`)
       return response.data
     } catch (error) {
-      console.error('Error estimating price:', error)
+      console.error('Erreur lors de la récupération des enchères:', error)
       throw error
     }
   }
 
-  // Accepter une livraison (pour les coursiers)
-  static async acceptDelivery(deliveryId: number): Promise<Delivery> {
+  static async submitBid(bidData: BidCreateRequest): Promise<Bid> {
     try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/accept`)
+      const response = await api.post('/bids', bidData)
       return response.data
     } catch (error) {
-      console.error('Error accepting delivery:', error)
+      console.error('Erreur lors de la soumission de l\'enchère:', error)
       throw error
     }
   }
 
-  // Rejeter une livraison (pour les coursiers)
-  static async rejectDelivery(deliveryId: number, reason?: string): Promise<void> {
+  static async acceptBid(deliveryId: string, bidId: number): Promise<void> {
     try {
-      await api.post(`/api/v1/deliveries/${deliveryId}/reject`, { reason })
+      await api.post(`/deliveries/${deliveryId}/bids/${bidId}/accept`)
     } catch (error) {
-      console.error('Error rejecting delivery:', error)
+      console.error('Erreur lors de l\'acceptation de l\'enchère:', error)
       throw error
     }
   }
 
-  // Commencer la collecte
-  static async startPickup(deliveryId: number): Promise<Delivery> {
+  static async declineBid(deliveryId: string, bidId: number, reason?: string): Promise<void> {
     try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/start-pickup`)
-      return response.data
+      await api.post(`/deliveries/${deliveryId}/bids/${bidId}/decline`, { reason })
     } catch (error) {
-      console.error('Error starting pickup:', error)
+      console.error('Erreur lors du refus de l\'enchère:', error)
       throw error
     }
   }
 
-  // Confirmer la collecte
-  static async confirmPickup(deliveryId: number): Promise<Delivery> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/confirm-pickup`)
-      return response.data
-    } catch (error) {
-      console.error('Error confirming pickup:', error)
-      throw error
-    }
-  }
-
-  // Commencer la livraison
-  static async startDelivery(deliveryId: number): Promise<Delivery> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/start-delivery`)
-      return response.data
-    } catch (error) {
-      console.error('Error starting delivery:', error)
-      throw error
-    }
-  }
-
-  // Confirmer la livraison
-  static async confirmDelivery(
-    deliveryId: number, 
-    confirmationCode?: string,
-    photo?: string
-  ): Promise<Delivery> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/confirm-delivery`, {
-        confirmation_code: confirmationCode,
-        delivery_photo: photo
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error confirming delivery:', error)
-      throw error
-    }
-  }
-
-  // Annuler une livraison
-  static async cancelDelivery(deliveryId: number, reason: string): Promise<Delivery> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/cancel`, { reason })
-      return response.data
-    } catch (error) {
-      console.error('Error cancelling delivery:', error)
-      throw error
-    }
-  }
-
-  // Récupérer le suivi en temps réel
-  static async getTrackingUpdates(deliveryId: number): Promise<TrackingUpdate[]> {
-    try {
-      const response = await api.get(`/api/v1/deliveries/${deliveryId}/tracking`)
-      return response.data
-    } catch (error) {
-      console.error('Error fetching tracking updates:', error)
-      throw error
-    }
-  }
-
-  // Mettre à jour la position du coursier
+  // Méthodes de suivi
   static async updateCourierLocation(
-    deliveryId: number, 
-    latitude: number, 
-    longitude: number
+    deliveryId: string,
+    lat: number,
+    lng: number
   ): Promise<void> {
     try {
-      await api.post(`/api/v1/deliveries/${deliveryId}/location`, {
-        latitude,
-        longitude,
-        timestamp: new Date().toISOString()
-      })
+      await api.post(`/deliveries/${deliveryId}/location`, { lat, lng })
     } catch (error) {
-      console.error('Error updating courier location:', error)
+      console.error('Erreur lors de la mise à jour de la position:', error)
       throw error
     }
   }
 
-  // Assigner un coursier à une livraison
-  static async assignCourier(assignmentData: CourierAssignmentRequest): Promise<Delivery> {
+  static async addTrackingPoint(trackingData: TrackingPointRequest): Promise<TrackingPoint> {
     try {
-      const response = await api.post('/api/v1/deliveries/assign-courier', assignmentData)
+      const response = await api.post('/tracking-points', trackingData)
       return response.data
     } catch (error) {
-      console.error('Error assigning courier:', error)
+      console.error('Erreur lors de l\'ajout du point de suivi:', error)
       throw error
     }
   }
 
-  // Récupérer les livraisons actives du client
-  static async getActiveClientDeliveries(clientId: number): Promise<Delivery[]> {
+  static async getTrackingHistory(deliveryId: string): Promise<TrackingPoint[]> {
     try {
-      const response = await api.get(`/api/v1/client/deliveries/active?client_id=${clientId}`)
+      const response = await api.get(`/deliveries/${deliveryId}/tracking`)
       return response.data
     } catch (error) {
-      console.error('Error fetching active client deliveries:', error)
+      console.error('Erreur lors de la récupération de l\'historique:', error)
       throw error
     }
   }
 
-  // Récupérer les livraisons actives du coursier
-  static async getActiveCourierDeliveries(courierId: number): Promise<Delivery[]> {
+  // Méthodes pour les coursiers
+  static async getAvailableDeliveries(searchParams?: DeliverySearchParams): Promise<AvailableDelivery[]> {
     try {
-      const response = await api.get(`/api/v1/courier/deliveries/active?courier_id=${courierId}`)
+      const params = new URLSearchParams()
+      if (searchParams?.commune) params.append('commune', searchParams.commune)
+      if (searchParams?.max_distance) params.append('max_distance', searchParams.max_distance.toString())
+      if (searchParams?.min_price) params.append('min_price', searchParams.min_price.toString())
+      if (searchParams?.max_price) params.append('max_price', searchParams.max_price.toString())
+      if (searchParams?.vehicle_type) params.append('vehicle_type', searchParams.vehicle_type)
+
+      const response = await api.get(`/courier/available-deliveries?${params.toString()}`)
       return response.data
     } catch (error) {
-      console.error('Error fetching active courier deliveries:', error)
+      console.error('Erreur lors de la récupération des livraisons disponibles:', error)
       throw error
     }
   }
 
-  // Rechercher des livraisons
-  static async searchDeliveries(query: string, filters?: DeliverySearchParams): Promise<Delivery[]> {
-    try {
-      const params = { q: query, ...filters }
-      const response = await api.get('/api/v1/deliveries/search', { params })
-      return response.data
-    } catch (error) {
-      console.error('Error searching deliveries:', error)
-      throw error
-    }
-  }
-
-  // Récupérer les statistiques de livraison
-  static async getDeliveryStats(
-    userId: number, 
-    startDate?: string, 
-    endDate?: string
-  ): Promise<any> {
-    try {
-      const params = { 
-        user_id: userId, 
-        start_date: startDate, 
-        end_date: endDate 
-      }
-      const response = await api.get('/api/v1/deliveries/stats', { params })
-      return response.data
-    } catch (error) {
-      console.error('Error fetching delivery stats:', error)
-      throw error
-    }
-  }
-
-  // Obtenir les directions pour une livraison
-  static async getDeliveryDirections(
-    deliveryId: number,
-    currentLat: number,
-    currentLng: number
-  ): Promise<any> {
-    try {
-      const response = await api.get(`/api/v1/deliveries/${deliveryId}/directions`, {
-        params: { current_lat: currentLat, current_lng: currentLng }
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error fetching delivery directions:', error)
-      throw error
-    }
-  }
-
-  // Envoyer un message concernant une livraison
-  static async sendDeliveryMessage(
-    deliveryId: number,
-    message: string,
-    recipientType: 'client' | 'courier'
-  ): Promise<void> {
-    try {
-      await api.post(`/api/v1/deliveries/${deliveryId}/message`, {
-        message,
-        recipient_type: recipientType
-      })
-    } catch (error) {
-      console.error('Error sending delivery message:', error)
-      throw error
-    }
-  }
-
-  // Signaler un problème avec une livraison
-  static async reportDeliveryIssue(
-    deliveryId: number,
-    issueType: string,
-    description: string,
-    photos?: string[]
-  ): Promise<void> {
-    try {
-      await api.post(`/api/v1/deliveries/${deliveryId}/report-issue`, {
-        issue_type: issueType,
-        description,
-        photos
-      })
-    } catch (error) {
-      console.error('Error reporting delivery issue:', error)
-      throw error
-    }
-  }
-
-  // Confirmer la livraison côté client avec notation
-  static async clientConfirmDelivery(
-    deliveryId: number,
-    rating: number,
-    comment?: string
-  ): Promise<Delivery> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/client-confirm`, {
-        rating,
-        comment
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error confirming delivery:', error)
-      throw error
-    }
-  }
-
-  // Obtenir les coursiers suggérés pour une livraison
-  static async getSuggestedCouriers(
-    deliveryId: number,
-    maxDistance: number = 10,
-    limit: number = 5
-  ): Promise<any> {
-    try {
-      const response = await api.get(`/api/v1/deliveries/${deliveryId}/suggested-couriers`, {
-        params: { max_distance: maxDistance, limit }
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error getting suggested couriers:', error)
-      throw error
-    }
-  }
-
-  // Assignment automatique de livraison
-  static async autoAssignDelivery(deliveryId: number): Promise<any> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/auto-assign`)
-      return response.data
-    } catch (error) {
-      console.error('Error auto-assigning delivery:', error)
-      throw error
-    }
-  }
-
-  // Récupérer la timeline des statuts
-  static async getDeliveryStatusTimeline(deliveryId: number): Promise<any> {
-    try {
-      const response = await api.get(`/api/v1/deliveries/${deliveryId}/status-timeline`)
-      return response.data
-    } catch (error) {
-      console.error('Error fetching status timeline:', error)
-      throw error
-    }
-  }
-
-  // Placer une enchère sur une livraison
-  static async placeBid(bidData: {
-    delivery_id: number
-    proposed_price: number
-    estimated_duration?: number
-  }): Promise<any> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${bidData.delivery_id}/bid`, {
-        amount: bidData.proposed_price,
-        estimated_time: bidData.estimated_duration
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error placing bid:', error)
-      throw error
-    }
-  }
-
-  // Récupérer les enchères pour une livraison
-  static async getDeliveryBids(deliveryId: number): Promise<any[]> {
-    try {
-      const response = await api.get(`/api/v1/deliveries/${deliveryId}/bids`)
-      return response.data
-    } catch (error) {
-      console.error('Error fetching delivery bids:', error)
-      throw error
-    }
-  }
-
-  // Accepter une enchère
-  static async acceptBid(deliveryId: number, bidId: number): Promise<Delivery> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/accept-bid/${bidId}`)
-      return response.data
-    } catch (error) {
-      console.error('Error accepting bid:', error)
-      throw error
-    }
-  }
-
-  // Récupérer les promotions applicables
-  static async getApplicablePromotions(orderValue: number, zoneId?: number): Promise<any[]> {
-    try {
-      const params = { order_value: orderValue }
-      if (zoneId) params.zone_id = zoneId
-      const response = await api.get('/api/v1/promotions/applicable', { params })
-      return response.data
-    } catch (error) {
-      console.error('Error fetching applicable promotions:', error)
-      throw error
-    }
-  }
-
-  // Appliquer un code promo
-  static async applyPromotionCode(deliveryId: number, promoCode: string): Promise<any> {
-    try {
-      const response = await api.post(`/api/v1/deliveries/${deliveryId}/apply-promotion`, {
-        promotion_code: promoCode
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error applying promotion code:', error)
-      throw error
-    }
-  }
-
-  // Valider un code promo
-  static async validatePromotionCode(promoCode: string, orderValue: number): Promise<any> {
-    try {
-      const response = await api.post('/api/v1/promotions/validate-code', {
-        code: promoCode,
-        order_value: orderValue
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error validating promotion code:', error)
-      throw error
-    }
-  }
-
-  // Obtenir les zones de livraison
-  static async getDeliveryZones(lat: number, lng: number): Promise<any[]> {
-    try {
-      const response = await api.get('/api/v1/zones/locate', {
-        params: { lat, lng }
-      })
-      return response.data.zones
-    } catch (error) {
-      console.error('Error fetching delivery zones:', error)
-      throw error
-    }
-  }
-
-  // Calculer le prix avec zones et promotions
-  static async calculateZonePricing(
-    pickupLat: number,
-    pickupLng: number,
-    deliveryLat: number,
-    deliveryLng: number,
-    packageWeight?: number,
-    isExpress: boolean = false
-  ): Promise<any> {
-    try {
-      const response = await api.post('/api/v1/zones/calculate-price', {
-        pickup_lat: pickupLat,
-        pickup_lng: pickupLng,
-        delivery_lat: deliveryLat,
-        delivery_lng: deliveryLng,
-        package_weight: packageWeight,
-        is_express: isExpress
-      })
-      return response.data
-    } catch (error) {
-      console.error('Error calculating zone pricing:', error)
-      throw error
-    }
-  }
-
-  // Récupérer les livraisons actives d'un coursier
   static async getCourierActiveDeliveries(): Promise<Delivery[]> {
     try {
-      const response = await api.get('/api/v1/courier/active-deliveries')
+      const response = await api.get('/courier/active-deliveries')
       return response.data
     } catch (error) {
-      console.error('Error fetching courier active deliveries:', error)
+      console.error('Erreur lors de la récupération des livraisons actives:', error)
       throw error
     }
   }
 
-  // Récupérer le statut d'un coursier
-  static async getCourierStatus(): Promise<{ is_online: boolean }> {
+  static async updateDeliveryStatus(deliveryId: string, status: DeliveryStatus): Promise<Delivery> {
     try {
-      const response = await api.get('/api/v1/courier/status')
+      const response = await api.put(`/deliveries/${deliveryId}/status`, { status })
       return response.data
     } catch (error) {
-      console.error('Error fetching courier status:', error)
+      console.error('Erreur lors de la mise à jour du statut:', error)
       throw error
     }
   }
 
-  // Mettre à jour le statut d'un coursier
-  static async updateCourierStatus(isOnline: boolean): Promise<{ is_online: boolean }> {
+  // Méthodes pour les estimations
+  static async getPriceEstimate(estimateData: PriceEstimateData): Promise<number> {
     try {
-      const response = await api.put('/api/v1/courier/status', { is_online: isOnline })
-      return response.data
+      const response = await api.post('/deliveries/estimate-price', estimateData)
+      return response.data.estimated_price
     } catch (error) {
-      console.error('Error updating courier status:', error)
+      console.error('Erreur lors de l\'estimation du prix:', error)
       throw error
     }
   }
 
-  // Récupérer les statistiques d'un coursier
-  static async getCourierStats(): Promise<{
-    total_deliveries: number
-    completed_today: number
-    earnings_today: number
-    average_rating: number
-    current_earnings: number
-  }> {
+  static async getVehicleRecommendation(data: VehicleRecommendationData): Promise<VehicleRecommendation> {
     try {
-      const response = await api.get('/api/v1/courier/stats')
+      const response = await api.post('/deliveries/recommend-vehicle', data)
       return response.data
     } catch (error) {
-      console.error('Error fetching courier stats:', error)
+      console.error('Erreur lors de la recommandation de véhicule:', error)
       throw error
     }
   }
+
+  // Méthodes pour les livraisons express (nouvelles)
+  static async createExpressDelivery(data: ExpressDeliveryRequest): Promise<Delivery> {
+    try {
+      const response = await api.post('/deliveries/express', data)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la création de la livraison express:', error)
+      throw error
+    }
+  }
+
+  static async getExpressDeliveries(filters?: DeliveryFilters): Promise<Delivery[]> {
+    try {
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.commune) params.append('commune', filters.commune)
+
+      const response = await api.get(`/deliveries/express?${params.toString()}`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des livraisons express:', error)
+      throw error
+    }
+  }
+
+  static async assignCourierToExpress(deliveryId: string, courierId: number): Promise<void> {
+    try {
+      await api.post(`/deliveries/express/${deliveryId}/assign`, { courier_id: courierId })
+    } catch (error) {
+      console.error('Erreur lors de l\'assignation du coursier:', error)
+      throw error
+    }
+  }
+
+  static async completeExpressDelivery(deliveryId: string): Promise<void> {
+    try {
+      await api.post(`/deliveries/express/${deliveryId}/complete`)
+    } catch (error) {
+      console.error('Erreur lors de la finalisation de la livraison express:', error)
+      throw error
+    }
+  }
+
+  // Méthodes pour les livraisons collaboratives (nouvelles)
+  static async createCollaborativeDelivery(data: CollaborativeDeliveryRequest): Promise<Delivery> {
+    try {
+      const response = await api.post('/deliveries/collaborative', data)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la création de la livraison collaborative:', error)
+      throw error
+    }
+  }
+
+  static async getCollaborativeDeliveries(filters?: DeliveryFilters): Promise<Delivery[]> {
+    try {
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.commune) params.append('commune', filters.commune)
+
+      const response = await api.get(`/deliveries/collaborative?${params.toString()}`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des livraisons collaboratives:', error)
+      throw error
+    }
+  }
+
+  static async joinCollaborativeDelivery(id: string, message?: string): Promise<void> {
+    try {
+      await api.post(`/deliveries/collaborative/${id}/join`, { message })
+    } catch (error) {
+      console.error('Erreur lors de la participation à la livraison collaborative:', error)
+      throw error
+    }
+  }
+
+  static async leaveCollaborativeDelivery(id: string): Promise<void> {
+    try {
+      await api.post(`/deliveries/collaborative/${id}/leave`)
+    } catch (error) {
+      console.error('Erreur lors de l\'abandon de la livraison collaborative:', error)
+      throw error
+    }
+  }
+
+  // Méthodes pour l'historique (nouvelles)
+  static async getClientDeliveryHistory(filters?: DeliveryFilters): Promise<Delivery[]> {
+    try {
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.date_from) params.append('date_from', filters.date_from)
+      if (filters?.date_to) params.append('date_to', filters.date_to)
+
+      const response = await api.get(`/client/delivery-history?${params.toString()}`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique client:', error)
+      throw error
+    }
+  }
+
+  static async getCourierDeliveryHistory(filters?: DeliveryFilters): Promise<Delivery[]> {
+    try {
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.date_from) params.append('date_from', filters.date_from)
+      if (filters?.date_to) params.append('date_to', filters.date_to)
+
+      const response = await api.get(`/courier/delivery-history?${params.toString()}`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique coursier:', error)
+      throw error
+    }
+  }
+
+  // Méthodes utilitaires
+  static async getCourierLocation(deliveryId: string): Promise<{ lat: number; lng: number }> {
+    try {
+      const response = await api.get(`/deliveries/${deliveryId}/courier-location`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la position du coursier:', error)
+      throw error
+    }
+  }
+
+  static async getETA(deliveryId: string): Promise<{ eta_minutes: number; distance_remaining: number }> {
+    try {
+      const response = await api.get(`/deliveries/${deliveryId}/eta`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors du calcul de l\'ETA:', error)
+      throw error
+    }
+  }
+
+  static async getDeliveryRoute(deliveryId: string): Promise<{ coordinates: number[][]; distance: number; duration: number }> {
+    try {
+      const response = await api.get(`/deliveries/${deliveryId}/route`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'itinéraire:', error)
+      throw error
+    }
+  }
+}
+
+// Export des types et de la classe
+export {
+  DeliveryUpdateRequest,
+  DeliveryFilters,
+  ExpressDeliveryRequest,
+  CollaborativeDeliveryRequest,
+  BidCreateRequest,
+  TrackingPointRequest
 }
 
 export default DeliveryService

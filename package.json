@@ -46,6 +46,10 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "expo-linear-gradient": "^14.1.5"
+    "@react-navigation/stack": "^7.3.3",
+    "@types/lodash": "^4.17.17",
+    "expo-haptics": "^14.1.4",
+    "expo-linear-gradient": "^14.1.5",
+    "expo-speech": "^13.1.7"
   }
 }

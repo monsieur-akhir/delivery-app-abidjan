@@ -1,64 +1,75 @@
-import type React from "react"
-import { View, StyleSheet, TouchableOpacity } from "react-native"
-import { Feather } from "@expo/vector-icons"
+
+import React from 'react'
+import { View, TouchableOpacity, StyleSheet } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 
 export interface StarRatingProps {
   rating: number
-  size?: number
-  color?: string
-  inactiveColor?: string
   onRatingChange?: (rating: number) => void
-  editable?: boolean
+  maxRating?: number
+  starSize?: number
+  disabled?: boolean
+  readonly?: boolean
 }
 
 const StarRating: React.FC<StarRatingProps> = ({
   rating,
-  size = 24,
-  color = "#FFC107",
-  inactiveColor = "#E0E0E0",
   onRatingChange,
-  editable = false,
+  maxRating = 5,
+  starSize = 24,
+  disabled = false,
+  readonly = false,
 }) => {
-  // Generate an array of 5 stars
-  const stars = Array.from({ length: 5 }, (_, index) => index + 1)
-
-  // Handle click on a star
-  const handleStarPress = (selectedRating: number): void => {
-    if (editable && onRatingChange) {
+  const handleStarPress = (selectedRating: number) => {
+    if (!disabled && !readonly && onRatingChange) {
       onRatingChange(selectedRating)
     }
   }
 
+  const renderStar = (index: number) => {
+    const isFilled = index < rating
+    const isInteractive = !disabled && !readonly && onRatingChange
+
+    const StarComponent = isInteractive ? TouchableOpacity : View
+
+    return (
+      <StarComponent
+        key={index}
+        style={styles.star}
+        onPress={isInteractive ? () => handleStarPress(index + 1) : undefined}
+        disabled={disabled}
+      >
+        <Feather
+          name={isFilled ? 'star' : 'star'}
+          size={starSize}
+          color={isFilled ? '#FFD700' : '#E0E0E0'}
+          style={isFilled ? styles.filledStar : styles.emptyStar}
+        />
+      </StarComponent>
+    )
+  }
+
   return (
     <View style={styles.container}>
-      {stars.map((star) => (
-        <TouchableOpacity
-          key={star}
-          onPress={() => handleStarPress(star)}
-          disabled={!editable || !onRatingChange}
-          style={styles.starContainer}
-        >
-          <Feather
-            name={star <= rating ? "star" : "star"}
-            size={size}
-            style={{ color: star <= rating ? color : inactiveColor, margin: 0 }}
-          />
-        </TouchableOpacity>
-      ))}
+      {Array.from({ length: maxRating }, (_, index) => renderStar(index))}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  starContainer: {
-    padding: 0,
-    margin: 0,
+  star: {
+    marginHorizontal: 2,
+  },
+  filledStar: {
+    color: '#FFD700',
+  },
+  emptyStar: {
+    color: '#E0E0E0',
   },
 })
 
 export default StarRating
-export { StarRating }
