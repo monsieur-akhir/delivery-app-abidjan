@@ -30,22 +30,33 @@ const StarRating: React.FC<StarRatingProps> = ({
     const isFilled = index < rating
     const isInteractive = !disabled && !readonly && onRatingChange
 
-    const StarComponent = isInteractive ? TouchableOpacity : View
+    if (isInteractive) {
+      return (
+        <TouchableOpacity
+          key={index}
+          style={styles.star}
+          onPress={() => handleStarPress(index + 1)}
+          disabled={disabled}
+        >
+          <Feather
+            name="star"
+            size={starSize}
+            color={isFilled ? '#FFD700' : '#E0E0E0'}
+            style={isFilled ? styles.filledStar : styles.emptyStar}
+          />
+        </TouchableOpacity>
+      )
+    }
 
     return (
-      <StarComponent
-        key={index}
-        style={styles.star}
-        onPress={isInteractive ? () => handleStarPress(index + 1) : undefined}
-        disabled={disabled}
-      >
+      <View key={index} style={styles.star}>
         <Feather
-          name={isFilled ? 'star' : 'star'}
+          name="star"
           size={starSize}
           color={isFilled ? '#FFD700' : '#E0E0E0'}
           style={isFilled ? styles.filledStar : styles.emptyStar}
         />
-      </StarComponent>
+      </View>
     )
   }
 

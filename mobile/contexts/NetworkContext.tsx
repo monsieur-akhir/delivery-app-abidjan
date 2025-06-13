@@ -38,8 +38,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const addPendingUpload = (operation: Omit<PendingOperation, "timestamp" | "id">) => {
     const newOperation: PendingOperation = {
       ...operation,
-      id: Date.now(),
-      timestamp: new Date(),
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
     }
     setPendingUploads((prev) => [...prev, newOperation])
   }

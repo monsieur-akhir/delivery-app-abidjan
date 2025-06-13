@@ -126,14 +126,14 @@ const ClientTabNavigator: React.FC = () => {
         },
       })}
     >
-      <ClientTab.Screen name="ClientHome" component={ClientHomeScreen} options={{ title: i18n.t("tabs.home") }} />
+      <ClientTab.Screen name="ClientHome" component={ClientHomeScreen} options={{ title: i18n.t("tabs.home") as string }} />
       <ClientTab.Screen
         name="Marketplace"
         component={MarketplaceScreen}
-        options={{ title: i18n.t("tabs.marketplace") }}
+        options={{ title: i18n.t("tabs.marketplace") as string }}
       />
-      <ClientTab.Screen name="DeliveryHistory" component={ClientDeliveriesNavigator} options={{ title: i18n.t("tabs.deliveries") }} />
-      <ClientTab.Screen name="Settings" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") }} />
+      <ClientTab.Screen name="DeliveryHistory" component={ClientDeliveriesNavigator} options={{ title: i18n.t("tabs.deliveries") as string }} />
+      <ClientTab.Screen name="Settings" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") as string }} />
     </ClientTab.Navigator>
   )
 }
@@ -169,14 +169,14 @@ const CourierTabNavigator: React.FC = () => {
         },
       })}
     >
-      <CourierTab.Screen name="CourierHome" component={CourierHomeScreen} options={{ title: i18n.t("tabs.home") }} />
+      <CourierTab.Screen name="CourierHome" component={CourierHomeScreen} options={{ title: i18n.t("tabs.home") as string }} />
       <CourierTab.Screen
         name="CourierDeliveryHistory"
         component={CourierDeliveriesNavigator}
-        options={{ title: i18n.t("tabs.deliveries") }}
+        options={{ title: i18n.t("tabs.deliveries") as string }}
       />
-      <CourierTab.Screen name="CourierEarnings" component={CourierEarningsScreen} options={{ title: i18n.t("tabs.earnings") }} />
-      <CourierTab.Screen name="Settings" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") }} />
+      <CourierTab.Screen name="CourierEarnings" component={CourierEarningsScreen} options={{ title: i18n.t("tabs.earnings") as string }} />
+      <CourierTab.Screen name="Settings" component={ProfileScreen} options={{ title: i18n.t("tabs.profile") as string }} />
     </CourierTab.Navigator>
   )
 }
