@@ -24,7 +24,7 @@ class CourierPointsResponse(CourierPointsBase):
     updated_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schémas pour les transactions de points
 class PointTransactionBase(BaseModel):
@@ -41,7 +41,7 @@ class PointTransactionResponse(PointTransactionBase):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schémas pour les récompenses
 class RewardBase(BaseModel):
@@ -66,7 +66,7 @@ class RewardResponse(RewardBase):
     processed_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schéma pour le classement
 class LeaderboardEntry(BaseModel):
@@ -79,4 +79,4 @@ class LeaderboardEntry(BaseModel):
     commune: Optional[str] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True

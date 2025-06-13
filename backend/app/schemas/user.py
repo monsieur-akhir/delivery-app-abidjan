@@ -59,7 +59,7 @@ class CourierProfileResponse(CourierProfileBase):
     
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 # Base user schemas
 class UserBase(BaseModel):
@@ -93,7 +93,7 @@ class UserResponse(UserBase):
     
     class Config:
         from_attributes = True
-        orm_mode = True  # Keeping for backwards compatibility
+        from_attributes = True  # Keeping for backwards compatibility
 
 class Token(BaseModel):
     access_token: str
