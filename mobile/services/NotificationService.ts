@@ -257,4 +257,5 @@ class NotificationService {
   }
 }
 
-export default new NotificationService()
+export default NotificationService
+export { NotificationService }

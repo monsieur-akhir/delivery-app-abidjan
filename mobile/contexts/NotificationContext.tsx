@@ -36,6 +36,8 @@ export const useNotification = (): NotificationContextType => {
   return context
 }
 
+export const useNotifications = useNotification
+
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const { token, user } = useAuth()
   const [expoPushToken, setExpoPushToken] = useState<string>("")
