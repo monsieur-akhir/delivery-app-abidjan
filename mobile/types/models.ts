@@ -176,18 +176,20 @@ export enum DocumentStatus {
 }
 
 export interface Vehicle {
-  id: number;
-  make: string;
-  model: string;
-  year: number;
-  type: VehicleType;
-  max_weight: number;
-  max_volume: number;
-  fuel_type: string;
-  license_plate: string;
-  status: VehicleStatus;
-  created_at: string;
-  updated_at: string;
+  id: number
+  user_id: number
+  type: string
+  model: string
+  brand?: string
+  license_plate: string
+  color: string
+  capacity: number
+  status: string
+  is_active?: boolean
+  insurance_expiry?: string
+  technical_inspection_expiry?: string
+  created_at: string
+  updated_at: string
 }
 
 export interface VehicleDocument {
@@ -251,17 +253,26 @@ export interface UserProfile {
 export interface Notification {
   id: number
   user_id: number
-  title: string | null
-  message: string | null
-  read: boolean
-  date: string | null
+  title: string
+  message: string
+  type?: string
+  is_read?: boolean
   data?: {
     type?: string | number
     deliveryId?: number
+    delivery_id?: number
     paymentId?: number
-    // Other data properties...
+    transaction_id?: number
   }
-  // Other existing properties...
+  read_at?: string
+  created_at: string
+}
+
+export enum NotificationType {
+  DELIVERY_UPDATE = 'delivery_update',
+  PAYMENT = 'payment',
+  PROMOTION = 'promotion',
+  SYSTEM = 'system'
 }
 
 // This is a legacy interface, renamed to avoid conflicts
@@ -313,15 +324,6 @@ export interface ProfileUpdateData {
   profile_picture?: string
 }
 
-export interface TrackingData {
-  delivery_id: number
-  latitude: number
-  longitude: number
-  status?: DeliveryStatus
-  timestamp: string
-  notes?: string
-}
-
 export interface SupportRequestData {
   user_id: number
   subject: string
@@ -337,15 +339,19 @@ export enum LanguageCode {
   ES = "es",
 }
 
-export type DeliveryStatus =
-  | "pending"
-  | "accepted"
-  | "picked_up"
-  | "in_progress"
-  | "delivered"
-  | "completed"
-  | "cancelled"
-  | "bidding"
+export enum DeliveryStatus {
+  PENDING = 'pending',
+  BIDDING = 'bidding',
+  ACCEPTED = 'accepted',
+  CONFIRMED = 'confirmed',
+  PICKED_UP = 'picked_up',
+  IN_PROGRESS = 'in_progress',
+  IN_TRANSIT = 'in_transit',
+  NEAR_DESTINATION = 'near_destination',
+  DELIVERED = 'delivered',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
 
 export interface Delivery {
   is_paid: any
@@ -402,86 +408,78 @@ export interface Delivery {
 }
 
 export interface User {
-  date_of_birth: any
-  nationality: any
   id: number
-  name: string
-  email: string
-  phone?: string
-  role?: string // Add role property to match backend User model
-  status?: "online" | "offline"; // Added status property
-  profile_image?: string
+  full_name: string
+  first_name?: string
+  phone: string
+  email?: string
+  role: UserRole
+  status: UserStatus
+  commune?: string
+  avatar?: string
+  token?: string
   created_at: string
   updated_at: string
-  address?: string
-  city?: string
-  country?: string
-  commune?: string
-  vehicle_type?: string
-  license_plate?: string
-  business_name?: string
-  business_address?: string
-  profile_picture?: string
-  full_name?: string
-  is_online?: boolean;
-  // Courier-specific properties
-  wallet_balance?: number;
-  monthly_earnings?: number;
-  completed_deliveries?: number;
+  kyc_status?: string
+  is_verified?: boolean
 }
 
 export interface Merchant {
   id: number
   name: string
-  description?: string
+  business_name?: string
   address: string
   commune: string
-  category: string
-  rating?: number
-  phone?: string
-  lat?: number
-  lng?: number
-  is_open: boolean
-  opening_hours?: string
-  logo?: string
-  cover_image?: string
-  image_url?: string
+  lat: number
+  lng: number
+  phone: string
+  email?: string
+  description?: string
   categories?: string[]
-  review_count?: number
-  website?: string
-  social_media?: {
-    facebook?: string
-    instagram?: string
-    twitter?: string
-  }
-  created_at?: string
-  updated_at?: string
-  featured?: boolean
-  promotion?: string
-  delivery_time?: string
+  rating?: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface DeliveryRequest {
   pickup_address: string
+  pickup_commune: string
   pickup_lat: number
   pickup_lng: number
   delivery_address: string
+  delivery_commune: string
   delivery_lat: number
   delivery_lng: number
-  description?: string
-  package_size?: string
+  package_description?: string
+  package_weight?: number
+  proposed_price: number
   is_fragile?: boolean
-  is_urgent?: boolean
+  is_express?: boolean
+  cargo_category?: string
+}
+
+export interface DeliveryCreateRequest extends DeliveryRequest {}
+
+export interface DeliveryUpdateRequest {
+  package_description?: string
+  package_weight?: number
   proposed_price?: number
-  actual_price?: number
-  status?: DeliveryStatus
-  scheduled_pickup_time?: string
-  notes?: string
-  cargo_category?: string // Added to support cargo categories
-  required_vehicle_type?: string // Added to support required vehicle types     
-  delivery_id?: number // Added to support delivery ID
-  delivery_commune?: string // Added to support delivery commune
-  pickup_commune?: string // Added to support pickup commune
+  is_fragile?: boolean
+  is_express?: boolean
+  cargo_category?: string
+}
+
+export interface TrackingUpdate {
+  lat: number
+  lng: number
+  timestamp?: string
+}
+
+export interface TrackingData {
+  lat: number
+  lng: number
+  timestamp?: string
 }
 
 export enum CargoCategory {
@@ -520,21 +518,17 @@ export interface Bid {
 
 export interface Courier {
   id: number
-  name: string
-  phone: string
-  email: string
-  photo_url?: string
-  profile_picture?: string // Added for TrackDeliveryScreen
-  full_name?: string      // Added for TrackDeliveryScreen
+  user_id: number
+  vehicle_type: string
+  license_number: string
+  is_available: boolean
+  current_lat?: number
+  current_lng?: number
   rating?: number
-  rating_count?: number   // Added for TrackDeliveryScreen
-  total_deliveries?: number
-  vehicle_type?: string
-  license_plate?: string
-  commune?: string
-  is_available?: boolean
-  created_at: string
-  updated_at: string
+  average_rating?: number
+  total_deliveries: number
+  avatar?: string
+  user: User
 }
 
 export interface Rating {
@@ -568,21 +562,6 @@ export interface CourierStats {
 // Added FeatherIconName type for better type safety
 export type FeatherIconName = 'package' | 'tag' | 'credit-card' | 'star' | 'gift' | 'bell' | 'dots-vertical' | 'delete';
 
-export interface Vehicle {
-  id: number;
-  make: string;
-  model: string;
-  year: number;
-  type: VehicleType;
-  max_weight: number;
-  max_volume: number;
-  fuel_type: string;
-  license_plate: string;
-  status: VehicleStatus;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface CourierVehicle {
   id: number;
   courier_id: number;
@@ -593,45 +572,6 @@ export interface CourierVehicle {
   vehicle: Vehicle;
   documents: VehicleDocument[];
   maintenance_records: MaintenanceRecord[];
-}
-
-export interface VehicleDocument {
-  id: number;
-  courier_vehicle_id: number;
-  type: DocumentType;
-  document_url: string;
-  expiry_date?: string;
-  status: DocumentStatus;
-  verified_at?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MaintenanceRecord {
-  id: number;
-  courier_vehicle_id: number;
-  type: string;
-  description: string;
-  cost: number;
-  date: string;
-  next_service_date?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TransportRule {
-  id: number;
-  commune: string;
-  vehicle_type: VehicleType;
-  max_weight: number;
-  max_volume: number;
-  restricted_hours: string[];
-  special_permits_required: boolean;
-  environmental_restrictions: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface VehicleRecommendation {
@@ -1063,18 +1003,6 @@ export interface Achievement {
   required_value?: number
 }
 
-export interface CourierStats {
-  total_points: number
-  total_deliveries: number
-  average_rating?: number
-  completion_rate?: number
-  average_delivery_time?: string
-  daily_deliveries: number
-  daily_rating?: number
-  level: number
-  rank_position?: number
-}
-
 export interface Leaderboard {
   courier_id: number
   name: string
@@ -1150,4 +1078,14 @@ export interface PromotionUsage {
   discount_applied: number
   cashback_earned: number
   created_at: string
+}
+
+export interface VehicleCreateRequest {
+  type: string
+  model: string
+  brand?: string
+  license_plate: string
+  color: string
+  capacity: number
+  maxWeight?: number
 }

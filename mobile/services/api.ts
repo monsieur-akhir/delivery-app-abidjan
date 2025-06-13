@@ -1264,7 +1264,7 @@ export const getActivePromotions = async (): Promise<any[]> => {
 
 export const getApplicablePromotions = async (orderValue: number, zoneId?: number): Promise<any[]> => {
   const params = { order_value: orderValue }
-  if (zoneId) params.zone_id = zoneId
+  if (zoneId) (params as any).zone_id = zoneId
   
   const response = await api.get("/api/v1/promotions/applicable", { params })
   return response.data
@@ -1314,3 +1314,4 @@ export const calculateZonePrice = async (
 
 // Exporter d'autres fonctions d'API au besoin
 export default api
+export { api }

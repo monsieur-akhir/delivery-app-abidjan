@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native'
-import { Text, Card, Surface, Chip, SearchBar, IconButton } from 'react-native-paper'
+import { Text, Card, Surface, Chip, Searchbar, IconButton } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather } from '@expo/vector-icons'
 import { useAuth } from '../../contexts/AuthContext'

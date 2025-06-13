@@ -232,7 +232,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
           <View style={styles.activeDeliveryFooter}>
             <View style={styles.priceContainer}>
-              <Text style={styles.priceText}>{formatPrice(delivery.price)} F</Text>
+              <Text style={styles.priceText}>{formatPrice(delivery.price || delivery.final_price || 0)} F</Text>
             </View>
             <TouchableOpacity 
               style={styles.trackButton}
@@ -285,7 +285,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </Text>
       </View>
       <Text style={styles.recentDeliveryPrice}>
-        {formatPrice(delivery.price)} F
+        {formatPrice(delivery.price || delivery.final_price || 0)} F
       </Text>
     </TouchableOpacity>
   )
