@@ -95,7 +95,7 @@ const DeliveryStatusBadge: React.FC<DeliveryStatusBadgeProps> = ({ status, size 
 
   return (
     <View style={[styles.container, { backgroundColor }, currentSize.container]}>
-      <FeatherIcon name={icon} size={currentSize.icon} color={color} style={styles.icon} />
+      <FeatherIcon name={String(icon)} size={currentSize.icon} color={color} style={styles.icon} />
       <Text style={[styles.text, { color }, currentSize.text]}>{label}</Text>
     </View>
   )

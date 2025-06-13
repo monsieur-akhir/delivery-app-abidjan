@@ -587,7 +587,7 @@ class LocationService {
         return addresses.map(address => {
           return {
             ...address,
-            distance: this.calculateDistance(userLocation, address.coords.latitude, address.coords.longitude)
+            distance: this.calculateDistance(userLocation.latitude, userLocation.longitude, address.coords.latitude, address.coords.longitude)
           }
         }).sort((a, b) => (a.distance || 0) - (b.distance || 0))
       }) as any

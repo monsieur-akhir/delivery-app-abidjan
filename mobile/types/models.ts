@@ -1099,7 +1099,7 @@ export interface RegisterRequest {
   full_name: string;
   email?: string;
   phone: string;
-  password: string;
+  user_password: string;
   role: UserRole;
   commune?: string;
   language_preference?: string;

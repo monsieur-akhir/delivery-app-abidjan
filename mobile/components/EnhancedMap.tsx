@@ -240,7 +240,7 @@ const EnhancedMap: React.FC<EnhancedMapProps> = ({
           <Marker key={marker.id} coordinate={marker.coordinate} title={marker.title} description={marker.description} onPress={() => onMarkerPress?.(marker.id)}>
             {marker.icon && (
               <View style={[styles.customMarker, { backgroundColor: marker.color || "#FF6B00" }]}>
-                <FeatherIcon name={marker.icon as FeatherIconName} size={20} color="#FFFFFF" />
+                <FeatherIcon name={String(marker.icon)} size={20} color="#FFFFFF" />
               </View>
             )}
           </Marker>

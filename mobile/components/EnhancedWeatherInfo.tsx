@@ -258,7 +258,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
 
           <View style={styles.compactWeatherInfo}>
             <FeatherIcon
-              name={getWeatherIcon(weatherData.current.condition)}
+              name={String(getWeatherIcon(weatherData.current.condition))}
               size={32}
               color="#FF6B00"
               style={styles.compactWeatherIcon}
@@ -308,7 +308,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
         <View style={styles.currentWeather}>
           <View style={styles.temperatureContainer}>
             <FeatherIcon
-              name={getWeatherIcon(weatherData.current.condition)}
+              name={String(getWeatherIcon(weatherData.current.condition))}
               size={48}
               color="#FF6B00"
               style={styles.weatherIcon}
@@ -373,7 +373,7 @@ const EnhancedWeatherInfo: React.FC<EnhancedWeatherInfoProps> = ({
               <Card.Content style={styles.forecastCardContent}>
                 <Text style={styles.forecastDay}>{day.day}</Text>
                 <FeatherIcon
-                  name={getWeatherIcon(day.condition)}
+                  name={String(getWeatherIcon(day.condition))}
                   size={32}
                   color="#FF6B00"
                   style={styles.forecastIcon}

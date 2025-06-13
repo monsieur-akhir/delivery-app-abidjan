@@ -61,7 +61,14 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
       const apiData = await fetchWeatherForecast(latitude, longitude)
       // Transform the API data to match the WeatherData interface
       const formattedData: WeatherData = {
-        current: apiData.current,
+        current: apiData.current || {
+          temperature: 0,
+          condition: 'clear',
+          humidity: 0,
+          wind_speed: 0,
+          visibility: 0,
+          uv_index: 0
+        },
         forecast: apiData.forecast || [],
         alerts: apiData.alerts ? apiData.alerts.map((a: WeatherAlert) => a.title || a.description || "") : undefined
       }
