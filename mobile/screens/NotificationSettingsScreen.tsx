@@ -13,15 +13,11 @@ const NotificationSettingsScreen = () => {
   const navigation = useNavigation()
 
   const [settings, setSettings] = useState<NotificationSettings>({
-    push_notifications: true,
     email_notifications: true,
     sms_notifications: false,
-    marketing_emails: false,
-    security_notifications: true,
-    promotional_notifications: false,
-    app_notifications: true,
+    push_notifications: true,
     promotion_alerts: false,
-    security_alerts: true
+    whatsapp_enabled: false,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

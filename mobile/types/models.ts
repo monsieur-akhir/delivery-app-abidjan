@@ -120,13 +120,21 @@ export interface TrackingPoint {
 export interface Notification {
   id: string
   title: string
-  body: string
+  body?: string
+  data?: NotificationData
   type?: NotificationType
-  data?: Record<string, any>
-  timestamp: string
-  user_id?: number
-  is_read?: boolean
   created_at?: string
+  message: string
+  read: boolean
+  date?: string
+}
+
+export interface NotificationData {
+  delivery_id?: string
+  courier_id?: string
+  user_id?: string
+  type?: string
+  action?: string
 }
 
 export type NotificationType = 'delivery' | 'payment' | 'system' | 'promotion' | 'delivery_update' | 'message'

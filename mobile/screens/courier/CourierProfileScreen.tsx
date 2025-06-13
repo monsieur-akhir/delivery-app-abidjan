@@ -75,17 +75,17 @@ const CourierProfileScreen: React.FC = () => {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <FeatherIcon name="package" size={24} color="#FF6B00" />
-              <Text style={styles.statValue}>{stats.deliveriesCompleted}</Text>
+              <Text style={styles.statValue}>{stats.total_deliveries || 0}</Text>
               <Text style={styles.statLabel}>{t("profile.deliveries")}</Text>
             </View>
             <View style={styles.statItem}>
               <FeatherIcon name="dollar-sign" size={24} color="#FF6B00" />
-              <Text style={styles.statValue}>{stats.totalEarnings.toLocaleString()} XOF</Text>
+              <Text style={styles.statValue}>{(stats.total_earnings || 0).toLocaleString()} XOF</Text>
               <Text style={styles.statLabel}>{t("profile.earnings")}</Text>
             </View>
             <View style={styles.statItem}>
               <FeatherIcon name="map-pin" size={24} color="#FF6B00" />
-              <Text style={styles.statValue}>{(stats.totalDistance / 1000).toFixed(1)} km</Text>
+              <Text style={styles.statValue}>{((stats.total_distance || 0) / 1000).toFixed(1)} km</Text>
               <Text style={styles.statLabel}>{t("profile.distance")}</Text>
             </View>
           </View>
@@ -96,14 +96,14 @@ const CourierProfileScreen: React.FC = () => {
         <Card.Title title={t("profile.level")} />
         <Card.Content>
           <View style={styles.levelContainer}>
-            <Text style={styles.levelText}>Niveau {stats.level}</Text>
+            <Text style={styles.levelText}>Niveau {stats.level || 1}</Text>
             <View style={styles.progressContainer}>
               <View
-                style={[styles.progressBar, { width: `${(stats.experience / stats.nextLevelExperience) * 100}%` }]}
+                style={[styles.progressBar, { width: `${((stats.experience || 0) / (stats.nextLevelExperience || 100)) * 100}%` }]}
               />
             </View>
             <Text style={styles.experienceText}>
-              {stats.experience} / {stats.nextLevelExperience} XP
+              {stats.experience || 0} / {stats.nextLevelExperience || 100} XP
             </Text>
           </View>
         </Card.Content>

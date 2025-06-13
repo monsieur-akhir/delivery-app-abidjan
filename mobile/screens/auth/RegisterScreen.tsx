@@ -33,7 +33,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const theme = useTheme()
   // Get screen dimensions for responsive layouts
   const { width: screenWidth } = Dimensions.get('window')
-  
+
   // Animation refs
   const formRef = useRef(null)
   const courierSectionRef = useRef(null)
@@ -58,7 +58,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
   // Focus state for input fields
   const [focusedField, setFocusedField] = useState<string | null>(null)
-  
+
   // Étapes d'inscription
   const steps = [
     "profile", // Choix de profil (client ou coursier)
@@ -81,12 +81,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       handleRegister()
       return
     }
-    
+
     // Validation par étape
     if (!validateCurrentStep()) {
       return
     }
-    
+
     if (currentStep < steps.length - 1) {
       const nextStep = currentStep + 1
       setCurrentStep(nextStep)
@@ -103,7 +103,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       scrollViewRef.current?.scrollTo({ x: screenWidth * (currentStep - 2), animated: true })
       return
     }
-    
+
     if (currentStep > 0) {
       const prevStep = currentStep - 1
       setCurrentStep(prevStep)
@@ -114,7 +114,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   // Validation par étape
   const validateCurrentStep = (): boolean => {
     const currentStepName = steps[currentStep]
-    
+
     switch (currentStepName) {
       case "profile":
         // Aucune validation nécessaire, le choix est déjà fait
@@ -154,7 +154,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         }
         return true
       case "vehicle":
-        if (role === "coursier" && !licensePlate) {
+        if (role === "courier" && !licensePlate) {
           setError(t("register.errorLicensePlateRequired"))
           setVisible(true)
           return false
@@ -206,7 +206,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     }
 
     // If user is a courier, check license plate
-    if (role === "coursier" && !licensePlate) {
+    if (role === "courier" && !licensePlate) {
       setError(t("register.errorLicensePlateRequired"))
       setVisible(true)
       return
@@ -260,7 +260,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       }
 
       // Add vehicle information for couriers
-      if (role === "coursier") {
+      if (role === "courier") {
         userData.vehicle_type = vehicleType
         userData.license_plate = licensePlate
       }
@@ -290,14 +290,14 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
       <StatusBar backgroundColor="#FF6B00" barStyle="light-content" />
-      
+
       {/* Header Background */}
       <View style={styles.headerBackground}>
         <Animatable.View animation="fadeIn" duration={1000} style={styles.logoContainer}>
           <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
         </Animatable.View>
       </View>
-      
+
       {/* Progress Steps */}
       <View style={styles.progressContainer}>
         {steps.map((step, index) => {
@@ -325,7 +325,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
           )
         })}
       </View>
-      
+
       <ScrollView 
         ref={scrollViewRef}
         horizontal 
@@ -348,11 +348,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 <Text style={styles.title}>{t("register.title")}</Text>
                 <Text style={styles.subtitle}>{t("register.subtitle")}</Text>
               </View>
-              
+
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t("register.profileInfo")}</Text>
                 <Text style={styles.sectionSubtitle}>{t("register.role")}</Text>
-                
+
                 <View style={styles.roleButtonsContainer}>
                   <TouchableOpacity
                     style={[
@@ -376,25 +376,25 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                       {t("roles.client")}
                     </Text>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={[
                       styles.roleButton,
-                      role === "coursier" && styles.roleButtonActive
+                      role === "courier" && styles.roleButtonActive
                     ]}
-                    onPress={() => setRole("coursier")}
+                    onPress={() => setRole("courier")}
                     activeOpacity={0.8}
                   >
                     <View style={styles.roleIconContainer}>
                       <IconButton 
                         icon="truck-delivery" 
                         size={30}
-                        iconColor={role === "coursier" ? "#FFFFFF" : "#FF6B00"}
+                        iconColor={role === "courier" ? "#FFFFFF" : "#FF6B00"}
                       />
                     </View>
                     <Text style={[
                       styles.roleButtonText,
-                      role === "coursier" && styles.roleButtonTextActive
+                      role === "courier" && styles.roleButtonTextActive
                     ]}>
                       {t("roles.courier")}
                     </Text>
@@ -422,7 +422,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <View style={styles.headerContainer}>
                 <Text style={styles.title}>{t("register.personalInfo")}</Text>
               </View>
-              
+
               <View style={styles.section}>
                 <Animatable.View animation={focusedField === 'fullName' ? 'pulse' : undefined}>
                   <TextInput
@@ -475,7 +475,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               </View>
             </Animatable.View>
           </Card>
-          
+
           <View style={styles.buttonContainer}>
             <Button 
               mode="outlined" 
@@ -485,7 +485,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             >
               {t("common.back") || "Retour"}
             </Button>
-            
+
             <Button 
               mode="contained" 
               onPress={goToNextStep}
@@ -504,7 +504,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <View style={styles.headerContainer}>
                 <Text style={styles.title}>{t("register.security")}</Text>
               </View>
-              
+
               <View style={styles.section}>
                 <Animatable.View animation={focusedField === 'password' ? 'pulse' : undefined}>
                   <TextInput
@@ -546,7 +546,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               </View>
             </Animatable.View>
           </Card>
-          
+
           <View style={styles.buttonContainer}>
             <Button 
               mode="outlined" 
@@ -556,7 +556,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             >
               {t("common.back") || "Retour"}
             </Button>
-            
+
             <Button 
               mode="contained" 
               onPress={goToNextStep}
@@ -575,7 +575,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <View style={styles.headerContainer}>
                 <Text style={styles.title}>{t("register.commune")}</Text>
               </View>
-              
+
               <View style={styles.communeSelectionContainer}>
                 {communes.map((item) => (
                   <TouchableOpacity
@@ -598,7 +598,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               </View>
             </Animatable.View>
           </Card>
-          
+
           <View style={styles.buttonContainer}>
             <Button 
               mode="outlined" 
@@ -608,7 +608,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
             >
               {t("common.back") || "Retour"}
             </Button>
-            
+
             <Button 
               mode="contained" 
               onPress={goToNextStep}
@@ -621,7 +621,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         </View>
 
         {/* Étape 5 : Véhicule (uniquement pour les coursiers) */}
-        {role === "coursier" && (
+        {role === "courier" && (
           <View style={[styles.slide, { width: screenWidth }]}>
             <Card style={styles.card} elevation={5}>
               <Animatable.View 
@@ -632,7 +632,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 <View style={styles.headerContainer}>
                   <Text style={styles.title}>{t("register.vehicleType")}</Text>
                 </View>
-                
+
                 <View style={styles.vehicleContainer}>
                   <View style={styles.vehicleTypeContainer}>
                     {[
@@ -664,7 +664,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                       </TouchableOpacity>
                     ))}
                   </View>
-                  
+
                   <Animatable.View animation={focusedField === 'licensePlate' ? 'pulse' : undefined}>
                     <TextInput
                       label={t("register.licensePlate")}
@@ -683,7 +683,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 </View>
               </Animatable.View>
             </Card>
-            
+
             <View style={styles.buttonContainer}>
               <Button 
                 mode="outlined" 
@@ -693,7 +693,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               >
                 {t("common.back") || "Retour"}
               </Button>
-              
+
               <Button 
                 mode="contained" 
                 onPress={handleRegister}
@@ -708,7 +708,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
-      
+
       <Animatable.View animation="fadeIn" delay={700} style={styles.loginContainer}>
         <Text style={styles.loginText}>{t("register.alreadyHaveAccount")}</Text>
         <TouchableOpacity 
@@ -987,7 +987,7 @@ const styles = StyleSheet.create({
   buttonBack: {
     height: 54,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center,
     borderRadius: 12,
     borderColor: "#FF6B00",
     borderWidth: 1,

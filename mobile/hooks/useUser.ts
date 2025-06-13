@@ -333,16 +333,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       const notificationSettings: NotificationSettings = {
         email_notifications: serviceSettings.email_notifications || false,
         sms_notifications: serviceSettings.sms_notifications || false,
-        system_notifications: serviceSettings.system_notifications || false,
-        promotional_offers: serviceSettings.promotional_offers || false,
-        security_alerts: serviceSettings.security_alerts || false,
-        in_app_notifications: serviceSettings.in_app_notifications || false,
-        browser_notifications: serviceSettings.browser_notifications || false,
-        mobile_notifications: serviceSettings.mobile_notifications || false,
-        marketing_communications: serviceSettings.marketing_communications || false,
-        order_updates: serviceSettings.order_updates || false,
-        delivery_updates: serviceSettings.delivery_updates || false,
-        weekly_reports: serviceSettings.weekly_reports || false,
+        push_notifications: serviceSettings.push_notifications || false,
+        promotion_alerts: serviceSettings.promotion_alerts || false,
+        whatsapp_enabled: serviceSettings.whatsapp_enabled || false,
       };
 
       return notificationSettings;
@@ -359,22 +352,15 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       setState(prev => ({ ...prev, error: null }));
 
       // Convert models format to service format
-      const payload = {
+      const requestData = {
         email_notifications: settings.email_notifications,
         sms_notifications: settings.sms_notifications,
-        system_notifications: settings.system_notifications,
-        promotional_offers: settings.promotional_offers,
-        security_alerts: settings.security_alerts,
-        in_app_notifications: settings.in_app_notifications,
-        browser_notifications: settings.browser_notifications,
-        mobile_notifications: settings.mobile_notifications,
-        marketing_communications: settings.marketing_communications,
-        order_updates: settings.order_updates,
-        delivery_updates: settings.delivery_updates,
-        weekly_reports: settings.weekly_reports
+        push_notifications: settings.push_notifications,
+        promotion_alerts: settings.promotion_alerts,
+        whatsapp_enabled: settings.whatsapp_enabled,
       };
 
-      const success = await NotificationService.updateNotificationSettings(payload);
+      const success = await NotificationService.updateNotificationSettings(requestData);
 
       return success;
     } catch (error) {
