@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
@@ -9,7 +8,8 @@ import json
 from ..db.session import get_db
 from ..core.dependencies import get_current_manager
 from ..models.user import User
-from ..models.zones import Zone, ZonePricingRule, ZoneRestriction
+from ..models.zones import Zone, ZoneRestriction, ZonePricingRule
+from ..models.promotions import Promotion
 from ..schemas.zones import (
     ZoneCreate, ZoneUpdate, ZoneResponse,
     ZonePricingRuleCreate, ZoneRestrictionCreate
@@ -44,11 +44,11 @@ async def create_zone(
         requires_special_vehicle=zone_data.requires_special_vehicle,
         peak_hour_multiplier=zone_data.peak_hour_multiplier
     )
-    
+
     db.add(zone)
     db.commit()
     db.refresh(zone)
-    
+
     return zone
 
 @router.get("/zones", response_model=List[ZoneResponse])
@@ -62,12 +62,12 @@ async def get_zones(
     Récupérer toutes les zones
     """
     query = db.query(Zone)
-    
+
     if zone_type:
         query = query.filter(Zone.zone_type == zone_type)
     if is_active is not None:
         query = query.filter(Zone.is_active == is_active)
-    
+
     zones = query.order_by(Zone.name).all()
     return zones
 
@@ -83,7 +83,7 @@ async def get_zone(
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
         raise HTTPException(status_code=404, detail="Zone non trouvée")
-    
+
     return zone
 
 @router.put("/zones/{zone_id}", response_model=ZoneResponse)
@@ -99,15 +99,15 @@ async def update_zone(
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
         raise HTTPException(status_code=404, detail="Zone non trouvée")
-    
+
     update_fields = zone_data.dict(exclude_unset=True)
     for field, value in update_fields.items():
         if hasattr(zone, field):
             setattr(zone, field, value)
-    
+
     db.commit()
     db.refresh(zone)
-    
+
     return zone
 
 @router.delete("/zones/{zone_id}")
@@ -122,10 +122,10 @@ async def delete_zone(
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
         raise HTTPException(status_code=404, detail="Zone non trouvée")
-    
+
     db.delete(zone)
     db.commit()
-    
+
     return {"message": "Zone supprimée avec succès"}
 
 @router.post("/zones/{zone_id}/pricing-rules")
@@ -141,16 +141,16 @@ async def add_pricing_rule(
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
         raise HTTPException(status_code=404, detail="Zone non trouvée")
-    
+
     pricing_rule = ZonePricingRule(
         zone_id=zone_id,
         **rule_data.dict()
     )
-    
+
     db.add(pricing_rule)
     db.commit()
     db.refresh(pricing_rule)
-    
+
     return pricing_rule
 
 @router.post("/zones/{zone_id}/restrictions")
@@ -166,16 +166,16 @@ async def add_restriction(
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
         raise HTTPException(status_code=404, detail="Zone non trouvée")
-    
+
     restriction = ZoneRestriction(
         zone_id=zone_id,
         **restriction_data.dict()
     )
-    
+
     db.add(restriction)
     db.commit()
     db.refresh(restriction)
-    
+
     return restriction
 
 @router.get("/zones/locate")
@@ -189,7 +189,7 @@ async def locate_zones(
     """
     zones = db.query(Zone).filter(Zone.is_active == True).all()
     matching_zones = []
-    
+
     for zone in zones:
         if zone.coordinates:
             # Vérifier si le point est dans le polygone
@@ -200,10 +200,10 @@ async def locate_zones(
                         lat, lng, zone.center_lat, zone.center_lng
                     )
                 })
-    
+
     # Trier par distance au centre
     matching_zones.sort(key=lambda x: x["distance_to_center"])
-    
+
     return {
         "zones": [item["zone"] for item in matching_zones],
         "total": len(matching_zones)
@@ -226,48 +226,48 @@ async def calculate_delivery_price(
     # Trouver les zones pour pickup et delivery
     pickup_zones_response = await locate_zones(pickup_lat, pickup_lng, db)
     delivery_zones_response = await locate_zones(delivery_lat, delivery_lng, db)
-    
+
     pickup_zones = pickup_zones_response["zones"]
     delivery_zones = delivery_zones_response["zones"]
-    
+
     if not pickup_zones or not delivery_zones:
         raise HTTPException(
             status_code=400, 
             detail="Une ou les deux adresses ne sont pas dans une zone de livraison"
         )
-    
+
     # Utiliser la première zone (la plus proche du centre)
     pickup_zone = pickup_zones[0]
     delivery_zone = delivery_zones[0]
-    
+
     # Calculer la distance
     distance = calculate_distance(pickup_lat, pickup_lng, delivery_lat, delivery_lng)
-    
+
     # Prix de base
     base_price = pickup_zone.base_price or 1000  # Prix par défaut en XOF
-    
+
     # Prix par kilomètre
     price_per_km = pickup_zone.price_per_km or 100
     distance_price = distance * price_per_km
-    
+
     # Total de base
     total_price = base_price + distance_price
-    
+
     # Appliquer les règles de tarification
     for rule in pickup_zone.pricing_rules:
         if not rule.is_active:
             continue
-            
+
         # Vérifier les conditions temporelles
         now = datetime.utcnow()
         if rule.start_time and now < rule.start_time:
             continue
         if rule.end_time and now > rule.end_time:
             continue
-        
+
         # Appliquer la règle selon le type de condition
         condition_met = False
-        
+
         if rule.condition_type == "distance":
             if rule.operator == ">=" and distance >= rule.condition_value:
                 condition_met = True
@@ -279,36 +279,36 @@ async def calculate_delivery_price(
                 condition_met = True
             elif rule.operator == "=" and distance == rule.condition_value:
                 condition_met = True
-        
+
         elif rule.condition_type == "weight" and package_weight:
             if rule.operator == ">=" and package_weight >= rule.condition_value:
                 condition_met = True
             # ... autres opérateurs
-        
+
         # Appliquer l'ajustement de prix
         if condition_met:
             if rule.adjustment_type == "fixed":
                 total_price += rule.price_adjustment
             elif rule.adjustment_type == "percentage":
                 total_price *= (1 + rule.price_adjustment / 100)
-    
+
     # Multiplicateur d'heure de pointe
     if delivery_time:
         hour = delivery_time.hour
         if 7 <= hour <= 9 or 17 <= hour <= 19:  # Heures de pointe
             total_price *= pickup_zone.peak_hour_multiplier
-    
+
     # Surcharge express
     if is_express:
         total_price *= 1.5
-    
+
     # Appliquer les limites min/max
     if pickup_zone.min_delivery_fee and total_price < pickup_zone.min_delivery_fee:
         total_price = pickup_zone.min_delivery_fee
-    
+
     if pickup_zone.max_delivery_fee and total_price > pickup_zone.max_delivery_fee:
         total_price = pickup_zone.max_delivery_fee
-    
+
     return {
         "pickup_zone": pickup_zone.name,
         "delivery_zone": delivery_zone.name,
@@ -325,6 +325,18 @@ async def calculate_delivery_price(
             "express_multiplier": 1.5 if is_express else 1.0
         }
     }
+
+@router.get("/{zone_id}/promotions")
+async def get_zone_promotions(
+    zone_id: int,
+    current_user: User = Depends(get_current_manager),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les promotions actives pour une zone"""
+    promotions = db.query(Promotion).filter(
+        Promotion.target_zones.contains([zone_id])
+    ).all()
+    return promotions
 
 @router.get("/zones/analytics")
 async def get_zones_analytics(
@@ -344,11 +356,11 @@ async def get_zones_analytics(
         # Assumant qu'on ajoute une relation zone dans le modèle Delivery
         # Delivery, Delivery.pickup_zone_id == Zone.id
     ).group_by(Zone.id, Zone.name).all()
-    
+
     # Zones les plus/moins utilisées
     most_used_zones = sorted(zone_stats, key=lambda x: x.delivery_count, reverse=True)[:5]
     least_used_zones = sorted(zone_stats, key=lambda x: x.delivery_count)[:5]
-    
+
     # Revenue par zone
     revenue_by_zone = [
         {
@@ -359,7 +371,7 @@ async def get_zones_analytics(
         }
         for stat in zone_stats
     ]
-    
+
     return {
         "total_zones": db.query(func.count(Zone.id)).scalar(),
         "active_zones": db.query(func.count(Zone.id)).filter(Zone.is_active == True).scalar(),
