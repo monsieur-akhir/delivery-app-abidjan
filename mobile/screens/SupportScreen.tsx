@@ -1039,7 +1039,6 @@ const styles = StyleSheet.create({
   faqDivider: {
     marginBottom: 8,
   },
-```text
   faqAnswer: {
     fontSize: 14,
     color: "#212121",
