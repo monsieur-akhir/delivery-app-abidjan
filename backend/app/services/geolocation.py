@@ -529,3 +529,32 @@ async def reverse_geocode(
         "longitude": longitude,
         "distance": 0
     }
+
+def point_in_polygon(point: Tuple[float, float], polygon: List[Tuple[float, float]]) -> bool:
+    """
+    Vérifier si un point est à l'intérieur d'un polygone en utilisant l'algorithme du point dans le polygone.
+    
+    Args:
+        point: Tuple (latitude, longitude) du point à vérifier
+        polygon: Liste de tuples (latitude, longitude) formant le polygone
+        
+    Returns:
+        bool: True si le point est à l'intérieur du polygone, False sinon
+    """
+    x, y = point
+    n = len(polygon)
+    inside = False
+    
+    p1x, p1y = polygon[0]
+    for i in range(n + 1):
+        p2x, p2y = polygon[i % n]
+        if y > min(p1y, p2y):
+            if y <= max(p1y, p2y):
+                if x <= max(p1x, p2x):
+                    if p1y != p2y:
+                        xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                    if p1x == p2x or x <= xinters:
+                        inside = not inside
+        p1x, p1y = p2x, p2y
+    
+    return inside

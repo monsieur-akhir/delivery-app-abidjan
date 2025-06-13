@@ -43,6 +43,24 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ) -> User:
+    # En mode développement, si Keycloak est désactivé, retourner un utilisateur de test
+    if settings.ENVIRONMENT == "development" and getattr(settings, "DISABLE_KEYCLOAK", False):
+        test_user = db.query(User).filter(User.phone == "test@example.com").first()
+        if test_user:
+            return test_user
+        # Créer un utilisateur de test si nécessaire
+        test_user = User(
+            phone="test@example.com",
+            email="test@example.com",
+            hashed_password=get_password_hash("test123"),
+            role="client",
+            status="active"
+        )
+        db.add(test_user)
+        db.commit()
+        db.refresh(test_user)
+        return test_user
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Identifiants invalides",

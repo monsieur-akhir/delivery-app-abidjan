@@ -50,6 +50,8 @@ class User(Base):
     # Relations
     client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="Delivery.client_id")
     courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="Delivery.courier_id")
+    complaints = relationship("Complaint", back_populates="user", foreign_keys="Complaint.user_id")
+    assigned_complaints = relationship("Complaint", back_populates="assigned_manager", foreign_keys="Complaint.assigned_to")
     # TODO: Re-add rating relationships after fixing circular imports
     # ratings_received = relationship("Rating", back_populates="rated_user", foreign_keys="Rating.rated_user_id")
     # ratings_given = relationship("Rating", back_populates="rater", foreign_keys="Rating.rater_id")

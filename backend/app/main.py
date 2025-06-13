@@ -9,7 +9,7 @@ from .db.base import Base
 from .db.session import get_db
 from .db.init_db import init_db
 from .api import (
-    auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport, assistant, courier, complaints
+    auth, users, deliveries, ratings, gamification, market, wallet, traffic, manager, transport, assistant, courier, complaints, business
 )
 from .websockets import tracking
 
@@ -49,6 +49,7 @@ app.include_router(transport.router, prefix=f"{settings.API_V1_STR}/transport", 
 app.include_router(assistant.router, prefix=f"{settings.API_V1_STR}/assistant", tags=["Assistant"])
 app.include_router(courier.router, prefix=f"{settings.API_V1_STR}/courier", tags=["Coursiers"])
 app.include_router(complaints.router, prefix=f"{settings.API_V1_STR}/complaints", tags=["complaints"])
+app.include_router(business.router, prefix=f"{settings.API_V1_STR}/business", tags=["business"])
 
 # Endpoint WebSocket pour le tracking en temps réel
 @app.websocket("/ws/tracking/{delivery_id}")
@@ -251,7 +252,6 @@ async def estimate_delivery_price_endpoint(
         is_express
     )
 from .api import business_analytics
-app.include_router(business.router, prefix="/api/v1/business", tags=["business"])
 app.include_router(business_analytics.router, prefix="/api/v1/business/analytics", tags=["business-analytics"])
 # Importer les nouveaux routers
 from .api import support, zones, promotions

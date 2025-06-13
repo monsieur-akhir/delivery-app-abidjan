@@ -46,7 +46,7 @@ class UserResponse(UserBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserStatusUpdate(BaseModel):
     status: UserStatus
@@ -90,7 +90,7 @@ class DeliveryResponse(DeliveryBase):
     courier: Optional[Dict[str, Any]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class StatusUpdate(BaseModel):
     status: DeliveryStatus
@@ -106,7 +106,7 @@ class BidResponse(BidCreate):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schémas pour les évaluations
 class RatingBase(BaseModel):
@@ -129,7 +129,7 @@ class RatingResponse(RatingBase):
     rated_user: Optional[Dict[str, Any]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schémas pour la gamification
 class PointsResponse(BaseModel):
@@ -140,7 +140,7 @@ class PointsResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class LeaderboardEntry(BaseModel):
     courier_id: int
@@ -152,7 +152,7 @@ class LeaderboardEntry(BaseModel):
     commune: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schémas pour le marché intégré
 class MerchantBase(BaseModel):
@@ -176,7 +176,7 @@ class MerchantResponse(MerchantBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ProductBase(BaseModel):
     name: str
@@ -199,7 +199,7 @@ class ProductResponse(ProductBase):
     merchant: Optional[MerchantResponse] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Schémas pour les tableaux de bord
 class BusinessDashboard(BaseModel):
@@ -220,3 +220,6 @@ class ManagerDashboard(BaseModel):
     top_couriers: List[LeaderboardEntry]
     recent_deliveries: List[DeliveryResponse]
     delivery_stats_by_day: Dict[str, Dict[str, int]]
+
+    class Config:
+        from_attributes = True

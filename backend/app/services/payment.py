@@ -380,3 +380,62 @@ async def process_wallet_topup(
         db.commit()
         
         raise ValueError(f"Méthode de paiement non supportée: {payment_method}")
+
+async def process_payment_transaction(
+    db: Session,
+    wallet_id: int,
+    amount: float,
+    transaction_type: TransactionType,
+    description: str,
+    delivery_id: Optional[int] = None,
+    reference: Optional[str] = None
+) -> Transaction:
+    """
+    Traiter une transaction de paiement.
+    
+    Args:
+        db: Session de base de données
+        wallet_id: ID du portefeuille
+        amount: Montant de la transaction
+        transaction_type: Type de transaction
+        description: Description de la transaction
+        delivery_id: ID de la livraison (optionnel)
+        reference: Référence de la transaction (optionnel)
+        
+    Returns:
+        Transaction: L'objet transaction créé
+    """
+    # Vérifier le portefeuille
+    wallet = db.query(Wallet).filter(Wallet.id == wallet_id).first()
+    if not wallet:
+        raise ValueError("Portefeuille non trouvé")
+    
+    # Vérifier le solde pour les paiements
+    if transaction_type in [TransactionType.delivery_payment, TransactionType.transfer]:
+        if wallet.balance < amount:
+            raise ValueError("Solde insuffisant")
+    
+    # Créer la transaction
+    transaction = Transaction(
+        wallet_id=wallet_id,
+        amount=amount,
+        type=transaction_type,
+        status=TransactionStatus.completed,
+        description=description,
+        delivery_id=delivery_id,
+        reference=reference or str(uuid.uuid4()),
+        completed_at=datetime.now()
+    )
+    
+    # Mettre à jour le solde du portefeuille
+    if transaction_type in [TransactionType.delivery_payment, TransactionType.transfer]:
+        wallet.balance -= amount
+    else:
+        wallet.balance += amount
+    
+    # Enregistrer les modifications
+    db.add(transaction)
+    db.commit()
+    db.refresh(transaction)
+    
+    return transaction
