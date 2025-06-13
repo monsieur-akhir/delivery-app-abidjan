@@ -530,3 +530,245 @@ const styles = StyleSheet.create({
 })
 
 export default GamificationScreen
+import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native'
+import { Card, Button, Surface, ProgressBar } from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../hooks/useAuth'
+import { FeatherIcon } from '../../components/FeatherIcon'
+import type { Achievement, Badge, Challenge } from '../../types/models'
+
+const GamificationScreen: React.FC = () => {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [totalPoints, setTotalPoints] = useState(0)
+  const [currentLevel, setCurrentLevel] = useState(1)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadGamificationData()
+  }, [])
+
+  const loadGamificationData = async () => {
+    try {
+      // Données simulées pour la démo
+      setAchievements([
+        {
+          id: 1,
+          title: 'Premier coursier',
+          description: 'Complétez votre première livraison',
+          type: 'delivery',
+          points: 10,
+          unlocked_at: new Date().toISOString()
+        },
+        {
+          id: 2,
+          title: 'Livraison express',
+          description: 'Complétez 5 livraisons en moins de 30 minutes',
+          type: 'speed',
+          points: 50,
+          progress: 3,
+          required_value: 5
+        }
+      ])
+
+      setChallenges([
+        {
+          id: 1,
+          title: 'Défi quotidien',
+          description: 'Complétez 3 livraisons aujourd\'hui',
+          type: 'daily',
+          target_value: 3,
+          current_progress: 1,
+          reward_points: 25,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          is_completed: false
+        }
+      ])
+
+      setTotalPoints(150)
+      setCurrentLevel(2)
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de charger les données de gamification')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const renderAchievement = (achievement: Achievement) => (
+    <Card key={achievement.id} style={styles.achievementCard}>
+      <View style={styles.achievementContent}>
+        <View style={styles.achievementIcon}>
+          <FeatherIcon 
+            name={achievement.unlocked_at ? "award" : "lock"} 
+            size={24} 
+            color={achievement.unlocked_at ? "#FFD700" : "#9E9E9E"}
+          />
+        </View>
+        <View style={styles.achievementText}>
+          <Text style={styles.achievementTitle}>{achievement.title}</Text>
+          <Text style={styles.achievementDescription}>{achievement.description}</Text>
+          {achievement.progress && achievement.required_value && (
+            <ProgressBar 
+              progress={achievement.progress / achievement.required_value} 
+              color="#FF6B00"
+              style={styles.progressBar}
+            />
+          )}
+        </View>
+        <Text style={styles.achievementPoints}>+{achievement.points} pts</Text>
+      </View>
+    </Card>
+  )
+
+  const renderChallenge = (challenge: Challenge) => (
+    <Card key={challenge.id} style={styles.challengeCard}>
+      <View style={styles.challengeContent}>
+        <Text style={styles.challengeTitle}>{challenge.title}</Text>
+        <Text style={styles.challengeDescription}>{challenge.description}</Text>
+        <ProgressBar 
+          progress={challenge.current_progress / challenge.target_value} 
+          color="#4CAF50"
+          style={styles.progressBar}
+        />
+        <Text style={styles.challengeProgress}>
+          {challenge.current_progress}/{challenge.target_value}
+        </Text>
+        <Text style={styles.challengeReward}>Récompense: {challenge.reward_points} points</Text>
+      </View>
+    </Card>
+  )
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Chargement...</Text>
+      </SafeAreaView>
+    )
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.content}>
+        <Surface style={styles.headerCard} elevation={2}>
+          <Text style={styles.headerTitle}>Niveau {currentLevel}</Text>
+          <Text style={styles.pointsText}>{totalPoints} points</Text>
+          <ProgressBar progress={0.6} color="#FF6B00" style={styles.levelProgress} />
+          <Text style={styles.nextLevelText}>240 points pour le niveau suivant</Text>
+        </Surface>
+
+        <Text style={styles.sectionTitle}>Défis actifs</Text>
+        {challenges.map(renderChallenge)}
+
+        <Text style={styles.sectionTitle}>Réussites</Text>
+        {achievements.map(renderAchievement)}
+      </ScrollView>
+    </SafeAreaView>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  headerCard: {
+    padding: 20,
+    marginBottom: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  pointsText: {
+    fontSize: 18,
+    color: '#FF6B00',
+    marginVertical: 8,
+  },
+  levelProgress: {
+    width: '100%',
+    height: 8,
+    marginVertical: 8,
+  },
+  nextLevelText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+  },
+  achievementCard: {
+    marginBottom: 12,
+  },
+  achievementContent: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'center',
+  },
+  achievementIcon: {
+    marginRight: 16,
+  },
+  achievementText: {
+    flex: 1,
+  },
+  achievementTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  achievementDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  achievementPoints: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FF6B00',
+  },
+  challengeCard: {
+    marginBottom: 12,
+  },
+  challengeContent: {
+    padding: 16,
+  },
+  challengeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  challengeDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginVertical: 8,
+  },
+  challengeProgress: {
+    fontSize: 12,
+    color: '#333',
+    marginTop: 4,
+  },
+  challengeReward: {
+    fontSize: 12,
+    color: '#4CAF50',
+    marginTop: 4,
+  },
+  progressBar: {
+    height: 6,
+    marginVertical: 4,
+  },
+})
+
+export default GamificationScreen

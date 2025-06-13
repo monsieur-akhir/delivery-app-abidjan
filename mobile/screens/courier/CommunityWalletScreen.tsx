@@ -1,380 +1,257 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  RefreshControl,
-  Modal,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import walletService from '../../services/CommunityWalletService';
-import type { Transaction as ModelTransaction } from '../../types/models';
-import { styles } from './CommunityWalletScreen.styles';
+import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native'
+import { Card, Button, Surface, FAB } from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../hooks/useAuth'
+import { FeatherIcon } from '../../components/FeatherIcon'
+import { formatPrice } from '../../utils/formatters'
 
-interface ServiceTransaction {
-  id: string;
-  amount: number;
-  type: "deposit" | "withdrawal" | "payment" | "refund" | "bonus" | "loan" | "repayment" | "contribution";
-  status: "pending" | "completed" | "failed";
-  reference?: string;
-  description?: string;
-  created_at: string;
+interface CommunityTransaction {
+  id: string
+  type: 'contribution' | 'withdrawal' | 'loan' | 'repayment'
+  amount: number
+  date: string
+  description: string
+  status: 'pending' | 'completed' | 'failed'
 }
 
-interface LoanRequest {
-  amount: number;
-  reason: string;
-}
-
-interface Loan {
-  id: string;
-  user_id: string;
-  amount: number;
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected' | 'repaid';
-  approved_at?: string;
-  repaid_at?: string;
-  due_date?: string;
-  created_at: string;
-}
-
-interface WalletBalance {
-  balance: number;
-  currency: string;
-  total_contributed: number;
-  total_borrowed: number;
-  available_credit: number;
-}
-
-export const CommunityWalletScreen: React.FC = () => {
-  const [balance, setBalance] = useState<WalletBalance | null>(null);
-  const [transactions, setTransactions] = useState<ServiceTransaction[]>([]);
-  const [activeLoan, setActiveLoan] = useState<Loan | null>(null);
-  const [loanHistory, setLoanHistory] = useState<Loan[]>([]);
-  const [activeTab, setActiveTab] = useState<'balance' | 'transactions' | 'loans'>('balance');
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // Modal states
-  const [showLoanModal, setShowLoanModal] = useState(false);
-  const [loanAmount, setLoanAmount] = useState('');
-  const [loanReason, setLoanReason] = useState('');
+const CommunityWalletScreen: React.FC = () => {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const [balance, setBalance] = useState(0)
+  const [totalContributions, setTotalContributions] = useState(0)
+  const [pendingLoans, setPendingLoans] = useState(0)
+  const [transactions, setTransactions] = useState<CommunityTransaction[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadWalletData()
+  }, [])
 
-  const loadData = async () => {
+  const loadWalletData = async () => {
     try {
-      setLoading(true);
-      const [balanceData, transactionsData, activeLoanData, historyData] = await Promise.all([
-        walletService.getBalance(),
-        walletService.getTransactions(),
-        walletService.getActiveLoan().catch(() => null),
-        walletService.getLoanHistory(),
-      ]);
+      // Données simulées pour la démo
+      setBalance(25000)
+      setTotalContributions(150000)
+      setPendingLoans(10000)
 
-      setBalance(balanceData);
-      setTransactions(transactionsData);
-      setActiveLoan(activeLoanData);
-      setLoanHistory(historyData);
-    } catch (error) {
-      console.error('Error loading wallet data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  };
-
-  const requestLoan = async () => {
-    if (!loanAmount || !loanReason) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
-    try {
-      const loanRequest: LoanRequest = {
-        amount: parseFloat(loanAmount),
-        reason: loanReason,
-      };
-
-      await walletService.requestLoan(loanRequest.amount, loanRequest.reason);
-
-      Alert.alert(
-        'Demande soumise',
-        'Votre demande de prêt a été soumise et sera examinée dans les plus brefs délais.',
-        [{ text: 'OK', onPress: () => setShowLoanModal(false) }]
-      );
-
-      // Reset form
-      setLoanAmount('');
-      setLoanReason('');
-
-      // Refresh data
-      await loadData();
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de soumettre la demande de prêt');
-      console.error('Loan request error:', error);
-    }
-  };
-
-  const repayLoan = async () => {
-    if (!activeLoan) return;
-
-    Alert.alert(
-      'Confirmer le remboursement',
-      `Êtes-vous sûr de vouloir rembourser ${activeLoan.amount} FCFA ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
+      setTransactions([
         {
-          text: 'Confirmer',
-          onPress: async () => {
-            try {
-              await walletService.repayLoan(activeLoan.id);
-              Alert.alert('Succès', 'Prêt remboursé avec succès');
-              await loadData();
-            } catch (error) {
-              Alert.alert('Erreur', 'Impossible de rembourser le prêt');
-              console.error('Repay loan error:', error);
-            }
-          },
+          id: '1',
+          type: 'contribution',
+          amount: 5000,
+          date: new Date().toISOString(),
+          description: 'Contribution mensuelle',
+          status: 'completed'
         },
-      ]
-    );
-  };
+        {
+          id: '2',
+          type: 'loan',
+          amount: 15000,
+          date: new Date(Date.now() - 86400000).toISOString(),
+          description: 'Prêt pour équipement',
+          status: 'pending'
+        }
+      ])
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de charger les données du portefeuille')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const renderBalanceTab = () => (
-    <ScrollView style={styles.tabContent}>
-      {balance && (
-        <>
-          {/* Balance Card */}
-          <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Solde Disponible</Text>
-            <Text style={styles.balanceAmount}>
-              {balance.balance.toLocaleString()} {balance.currency}
-            </Text>
-            {balance.available_credit > 0 && (
-              <Text style={styles.balanceLabel}>
-                Crédit disponible: {balance.available_credit.toLocaleString()} {balance.currency}
-              </Text>
-            )}
-          </View>
+  const handleContribute = () => {
+    Alert.alert('Contribution', 'Fonctionnalité de contribution en développement')
+  }
 
-          {/* Quick Actions */}
-          <View style={styles.actionsCard}>
-            <Text style={styles.sectionTitle}>Actions Rapides</Text>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => setShowLoanModal(true)}
-                disabled={!!activeLoan}
-              >
-                <Feather name="plus-circle" size={24} color="#007AFF" />
-                <Text style={styles.actionButtonText}>Demander un prêt</Text>
-              </TouchableOpacity>
+  const handleRequestLoan = () => {
+    Alert.alert('Demande de prêt', 'Fonctionnalité de prêt en développement')
+  }
 
-              {activeLoan && (
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={repayLoan}
-                >
-                  <Feather name="credit-card" size={24} color="#28a745" />
-                  <Text style={styles.actionButtonText}>Rembourser</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+  const renderTransaction = (transaction: CommunityTransaction) => {
+    const getIcon = () => {
+      switch (transaction.type) {
+        case 'contribution': return 'plus-circle'
+        case 'withdrawal': return 'minus-circle'
+        case 'loan': return 'arrow-down-circle'
+        case 'repayment': return 'arrow-up-circle'
+        default: return 'circle'
+      }
+    }
 
-          {/* Active Loan */}
-          {activeLoan && (
-            <View style={styles.loanCard}>
-              <Text style={styles.sectionTitle}>Prêt Actif</Text>
-              <View style={styles.loanDetails}>
-                <View style={styles.loanRow}>
-                  <Text style={styles.loanLabel}>Montant:</Text>
-                  <Text style={styles.loanValue}>
-                    {activeLoan.amount.toLocaleString()} FCFA
-                  </Text>
-                </View>
-                <View style={styles.loanRow}>
-                  <Text style={styles.loanLabel}>Statut:</Text>
-                  <Text style={styles.loanValue}>{activeLoan.status}</Text>
-                </View>
-                {activeLoan.due_date && (
-                  <View style={styles.loanRow}>
-                    <Text style={styles.loanLabel}>Échéance:</Text>
-                    <Text style={styles.loanValue}>
-                      {new Date(activeLoan.due_date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
-        </>
-      )}
-    </ScrollView>
-  );
+    const getColor = () => {
+      switch (transaction.type) {
+        case 'contribution': return '#4CAF50'
+        case 'withdrawal': return '#F44336'
+        case 'loan': return '#FF9800'
+        case 'repayment': return '#2196F3'
+        default: return '#757575'
+      }
+    }
 
-  const renderTransactionsTab = () => (
-    <ScrollView style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>Historique des Transactions</Text>
-      {transactions.map((transaction) => (
-        <View key={transaction.id} style={styles.transactionCard}>
-          <View style={styles.transactionHeader}>
-            <Text style={styles.transactionType}>{transaction.type}</Text>
-            <Text style={[
-              styles.transactionAmount,
-              transaction.amount > 0 ? styles.positiveAmount : styles.negativeAmount
-            ]}>
-              {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()} FCFA
-            </Text>
-          </View>
-          <Text style={styles.transactionDescription}>{transaction.description}</Text>
-          <View style={styles.transactionFooter}>
+    return (
+      <Card key={transaction.id} style={styles.transactionCard}>
+        <View style={styles.transactionContent}>
+          <FeatherIcon name={getIcon()} size={24} color={getColor()} />
+          <View style={styles.transactionDetails}>
+            <Text style={styles.transactionDescription}>{transaction.description}</Text>
             <Text style={styles.transactionDate}>
-              {new Date(transaction.created_at).toLocaleDateString()}
+              {new Date(transaction.date).toLocaleDateString('fr-FR')}
             </Text>
-            <View style={[
-              styles.statusBadge,
-              transaction.status === "completed" ? styles.completedStatus : styles.pendingStatus
-            ]}>
-              <Text style={styles.statusText}>{transaction.status}</Text>
-            </View>
           </View>
-        </View>
-      ))}
-    </ScrollView>
-  );
-
-  const renderLoansTab = () => (
-    <ScrollView style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>Historique des Prêts</Text>
-      {loanHistory.map((loan) => (
-        <View key={loan.id} style={styles.loanHistoryCard}>
-          <View style={styles.loanHistoryHeader}>
-            <Text style={styles.loanAmount}>{loan.amount.toLocaleString()} FCFA</Text>
-            <View style={[
-              styles.statusBadge,
-              loan.status === 'approved' ? styles.completedStatus : styles.pendingStatus
-            ]}>
-              <Text style={styles.statusText}>{loan.status}</Text>
-            </View>
-          </View>
-          <Text style={styles.loanLabel}>
-            Demandé le: {new Date(loan.created_at).toLocaleDateString()}
+          <Text style={[styles.transactionAmount, { color: getColor() }]}>
+            {transaction.type === 'withdrawal' || transaction.type === 'loan' ? '-' : '+'}
+            {formatPrice(transaction.amount)} FCFA
           </Text>
-          {loan.due_date && (
-            <Text style={styles.loanLabel}>
-              Échéance: {new Date(loan.due_date).toLocaleDateString()}
-            </Text>
-          )}
         </View>
-      ))}
-    </ScrollView>
-  );
+      </Card>
+    )
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Chargement...</Text>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Portefeuille Communautaire</Text>
-        <TouchableOpacity onPress={onRefresh}>
-          <Feather name="refresh-cw" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
+      <ScrollView style={styles.content}>
+        <Surface style={styles.balanceCard} elevation={4}>
+          <Text style={styles.balanceLabel}>Solde du portefeuille communautaire</Text>
+          <Text style={styles.balanceAmount}>{formatPrice(balance)} FCFA</Text>
+        </Surface>
 
-      {/* Tabs */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'balance' && styles.activeTab]}
-          onPress={() => setActiveTab('balance')}
-        >
-          <Text style={[styles.tabText, activeTab === 'balance' && styles.activeTabText]}>
-            Solde
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'transactions' && styles.activeTab]}
-          onPress={() => setActiveTab('transactions')}
-        >
-          <Text style={[styles.tabText, activeTab === 'transactions' && styles.activeTabText]}>
-            Transactions
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'loans' && styles.activeTab]}
-          onPress={() => setActiveTab('loans')}
-        >
-          <Text style={[styles.tabText, activeTab === 'loans' && styles.activeTabText]}>
-            Prêts
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.statsContainer}>
+          <Card style={styles.statCard}>
+            <Text style={styles.statLabel}>Contributions totales</Text>
+            <Text style={styles.statValue}>{formatPrice(totalContributions)} FCFA</Text>
+          </Card>
+          <Card style={styles.statCard}>
+            <Text style={styles.statLabel}>Prêts en cours</Text>
+            <Text style={styles.statValue}>{formatPrice(pendingLoans)} FCFA</Text>
+          </Card>
+        </View>
 
-      {/* Content */}
-      <View style={styles.container}>
-        {activeTab === 'balance' && renderBalanceTab()}
-        {activeTab === 'transactions' && renderTransactionsTab()}
-        {activeTab === 'loans' && renderLoansTab()}
-      </View>
+        <View style={styles.actionsContainer}>
+          <Button mode="contained" onPress={handleContribute} style={styles.actionButton}>
+            Contribuer
+          </Button>
+          <Button mode="outlined" onPress={handleRequestLoan} style={styles.actionButton}>
+            Demander un prêt
+          </Button>
+        </View>
 
-      {/* Loan Request Modal */}
-      <Modal
-        visible={showLoanModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Demande de Prêt</Text>
-            <TouchableOpacity onPress={() => setShowLoanModal(false)}>
-              <Feather name="x" size={24} color="#6c757d" />
-            </TouchableOpacity>
-          </View>
+        <Text style={styles.sectionTitle}>Transactions récentes</Text>
+        {transactions.map(renderTransaction)}
+      </ScrollView>
 
-          <ScrollView style={styles.container}>
-            <View style={styles.container}>
-              <Text style={styles.inputLabel}>Montant (FCFA) *</Text>
-              <TextInput
-                style={styles.input}
-                value={loanAmount}
-                onChangeText={setLoanAmount}
-                placeholder="Ex: 50000"
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View style={styles.container}>
-              <Text style={styles.inputLabel}>Raison du prêt *</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={loanReason}
-                onChangeText={setLoanReason}
-                placeholder="Expliquez pourquoi vous avez besoin de ce prêt"
-                multiline
-                numberOfLines={4}
-              />
-            </View>
-
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={requestLoan}
-            >
-              <Text style={styles.submitButtonText}>Soumettre la demande</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        onPress={handleContribute}
+      />
     </SafeAreaView>
-  );
-};
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  balanceCard: {
+    padding: 24,
+    marginBottom: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#FF6B00',
+  },
+  balanceLabel: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  balanceAmount: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    padding: 16,
+    marginHorizontal: 4,
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 4,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  actionButton: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+  },
+  transactionCard: {
+    marginBottom: 8,
+  },
+  transactionContent: {
+    flexDirection: 'row',
+    padding: 16,
+    alignItems: 'center',
+  },
+  transactionDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  transactionDescription: {
+    fontSize: 16,
+    color: '#333',
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  transactionAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#FF6B00',
+  },
+})
+
+export default CommunityWalletScreen

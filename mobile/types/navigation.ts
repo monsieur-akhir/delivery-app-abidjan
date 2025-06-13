@@ -149,17 +149,17 @@ export type ComplaintsScreenNavigationProp = NativeStackNavigationProp<RootStack
 
 // Props pour les écrans avec paramètres
 export interface BidsScreenProps {
-  route: { params: { deliveryId: number } }
+  route: { params: { deliveryId: string } }
   navigation: BidsScreenNavigationProp
 }
 
 export interface PaymentScreenProps {
-  route: { params: { deliveryId: number; amount: number } }
+  route: { params: { deliveryId: string; amount: number } }
   navigation: PaymentScreenNavigationProp
 }
 
 export interface TrackDeliveryScreenProps {
-  route: { params: { deliveryId: number } }
+  route: { params: { deliveryId: string } }
   navigation: TrackDeliveryScreenNavigationProp
 }
 

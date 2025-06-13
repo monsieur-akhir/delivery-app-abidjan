@@ -4,7 +4,7 @@ import { jest } from "@jest/globals"
 
 describe("StarRating Component", () => {
   it("renders correctly with default props", () => {
-    const { getAllByRole } = render(<StarRating />)
+    const { getAllByRole } = render(<StarRating rating={0} />)
 
     // Vérifier que 5 étoiles sont rendues
     const buttons = getAllByRole("button")
@@ -24,7 +24,7 @@ describe("StarRating Component", () => {
 
   it("calls onRatingChange when a star is pressed", () => {
     const mockOnRatingChange = jest.fn()
-    const { getAllByRole } = render(<StarRating onRatingChange={mockOnRatingChange} />)
+    const { getAllByRole } = render(<StarRating rating={0} onRatingChange={mockOnRatingChange} />)
 
     const buttons = getAllByRole("button")
 
@@ -37,7 +37,7 @@ describe("StarRating Component", () => {
 
   it("does not call onRatingChange when disabled", () => {
     const mockOnRatingChange = jest.fn()
-    const { getAllByRole } = render(<StarRating onRatingChange={mockOnRatingChange} disabled={true} />)
+    const { getAllByRole } = render(<StarRating rating={0} onRatingChange={mockOnRatingChange} disabled={true} />)
 
     const buttons = getAllByRole("button")
 
