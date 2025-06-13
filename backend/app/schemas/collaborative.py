@@ -67,7 +67,7 @@ class CollaborativeDeliveryResponse(CollaborativeDeliveryBase):
     courier: Optional[Dict[str, Any]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Schémas pour les messages
@@ -89,7 +89,7 @@ class CollaborativeMessageResponse(CollaborativeMessageBase):
     courier: Optional[Dict[str, Any]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Schémas pour les gains
@@ -116,7 +116,7 @@ class CollaborativeEarningResponse(CollaborativeEarningBase):
     courier: Optional[Dict[str, Any]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Schémas pour les statistiques
