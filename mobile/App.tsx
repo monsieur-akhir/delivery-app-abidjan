@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -12,8 +13,6 @@ import { I18nextProvider } from "react-i18next"
 import i18n from "./i18n"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import * as SplashScreen from "expo-splash-screen"
-// Optionnel: Sentry peut être commenté en développement
-// import * as Sentry from "sentry-expo"
 
 // Contextes
 import { AuthProvider } from "./contexts/AuthContext"
@@ -39,6 +38,7 @@ import PaymentScreen from "./screens/client/PaymentScreen"
 import MerchantDetailsScreen from "./screens/client/MerchantDetailsScreen"
 import RateDeliveryScreen from "./screens/client/RateDeliveryScreen"
 import MarketplaceScreen from "./screens/client/MarketplaceScreen"
+import DeliveryDetailsScreen from "./screens/client/DeliveryDetailsScreen"
 
 // Écrans coursier
 import CourierHomeScreen from "./screens/courier/HomeScreen"
@@ -65,16 +65,6 @@ import type {
   ClientDeliveriesParamList,
   CourierDeliveriesParamList,
 } from "./types/navigation"
-
-// Initialiser Sentry (optionnel en développement)
-if (SENTRY_DSN && ENVIRONMENT === "production") {
-  // Sentry.init({
-  //   dsn: SENTRY_DSN,
-  //   enableInExpoDevelopment: true,
-  //   debug: ENVIRONMENT !== "production",
-  //   environment: ENVIRONMENT,
-  // })
-}
 
 // Ignorer certains avertissements
 LogBox.ignoreLogs(["ViewPropTypes will be removed", "ColorPropType will be removed"])
@@ -211,7 +201,7 @@ const CourierDeliveriesNavigator: React.FC = () => {
   return (
     <CourierDeliveriesStack.Navigator screenOptions={{ headerShown: false }}>
       <CourierDeliveriesStack.Screen name="DeliveriesList" component={CourierDeliveriesScreen} />
-      <CourierDeliveriesStack.Screen name="DeliveryDetails" component={CourierDeliveryDetailsScreen} />
+      <CourierDeliveriesStack.Screen name="DeliveryDetails" component={DeliveryDetailsScreen} />
       <CourierDeliveriesStack.Screen name="Bid" component={BidScreen} />
     </CourierDeliveriesStack.Navigator>
   )
@@ -224,21 +214,9 @@ const ClientDeliveriesScreen: React.FC = () => (
   </View>
 )
 
-const DeliveryDetailsScreen: React.FC = () => (
-  <View style={styles.placeholderContainer}>
-    <Text style={styles.placeholderText}>Écran des détails de livraison</Text>
-  </View>
-)
-
 const CourierDeliveriesScreen: React.FC = () => (
   <View style={styles.placeholderContainer}>
     <Text style={styles.placeholderText}>Écran des livraisons coursier</Text>
-  </View>
-)
-
-const CourierDeliveryDetailsScreen: React.FC = () => (
-  <View style={styles.placeholderContainer}>
-    <Text style={styles.placeholderText}>Écran des détails de livraison coursier</Text>
   </View>
 )
 
@@ -248,7 +226,6 @@ const App: React.FC = () => {
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean>(false)
 
   useEffect(() => {
-    // Vérifier s'il s'agit du premier lancement de l'application
     const checkFirstLaunch = async (): Promise<void> => {
       try {
         const value = await AsyncStorage.getItem("alreadyLaunched")
@@ -265,11 +242,9 @@ const App: React.FC = () => {
       }
     }
 
-    // Charger le type d'utilisateur (client ou coursier) - pour usage futur
     const loadUserType = async (): Promise<void> => {
       try {
         await AsyncStorage.getItem("userType")
-        // Type sera utilisé dans une future implémentation
       } catch (error) {
         console.error("Error loading user type:", error)
       }
@@ -321,12 +296,11 @@ const App: React.FC = () => {
                         <Stack.Screen name="Settings" component={SettingsScreen} />
                         <Stack.Screen name="MerchantDetails" component={MerchantDetailsScreen} />
                         <Stack.Screen name="CreateDelivery" component={CreateDeliveryScreen} />
-                        <Stack.Screen name="Bids" component={BidsScreen} />
+                        <Stack.Screen name="BidsScreen" component={BidsScreen} />
                         <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
-                        <Stack.Screen name="Payment" component={PaymentScreen} />
+                        <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
                         <Stack.Screen name="RateDelivery" component={RateDeliveryScreen} />
 
-                        {/* Écrans supplémentaires pour les coursiers */}
                         <Stack.Screen name="CourierStatus" component={CourierStatusScreen} />
                         <Stack.Screen name="CourierStats" component={CourierStatsScreen} />
                       </Stack.Navigator>

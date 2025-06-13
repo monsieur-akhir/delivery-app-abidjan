@@ -1,224 +1,218 @@
-"use client"
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { View, StyleSheet, TouchableOpacity, Animated, Easing, Platform } from "react-native"
-import { Text, Portal, Modal, ActivityIndicator } from "react-native-paper"
-import { Audio } from "expo-av"
-import * as FileSystem from "expo-file-system"
-import { useTranslation } from "react-i18next"
-import { useTheme } from "../contexts/ThemeContext"
-import { useNetwork } from "../contexts/NetworkContext"
-import { processVoiceCommand } from "../services/api"
-import { requestAudioPermissions, HIGH_QUALITY_RECORDING_OPTIONS } from "../utils/audioUtils"
+import React, { useState, useEffect } from 'react'
+import { View, StyleSheet, Alert } from 'react-native'
+import { IconButton, Portal, Modal, Text, Button } from 'react-native-paper'
+import * as Speech from 'expo-speech'
+import { Audio } from 'expo-av'
+import { useNetwork } from '../contexts/NetworkContext'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../types/navigation'
 
-type VoiceAssistantProps = {}
+interface VoiceAssistantProps {
+  navigation?: NativeStackNavigationProp<RootStackParamList>
+}
 
-const VoiceAssistant: React.FC<VoiceAssistantProps> = () => {
-  const { t } = useTranslation()
-  const { colors } = useTheme()
-  const { isConnected } = useNetwork()
-
-  const [isListening, setIsListening] = useState<boolean>(false)
-  const [isProcessing, setIsProcessing] = useState<boolean>(false)
+const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
+  const [isListening, setIsListening] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
+  const [lastCommand, setLastCommand] = useState<string>('')
   const [recording, setRecording] = useState<Audio.Recording | null>(null)
-  const [transcript, setTranscript] = useState<string>("")
-  const [response, setResponse] = useState<string>("")
-  const [modalVisible, setModalVisible] = useState<boolean>(false)
-  const [permissionGranted, setPermissionGranted] = useState<boolean>(false)
+  const { isOnline } = useNetwork()
 
-  const pulseAnim = useRef(new Animated.Value(1)).current
-
-  // Vérifier les permissions au démarrage
   useEffect(() => {
-    checkPermissions()
-  }, [])
-
-  // Animation de pulsation
-  useEffect(() => {
-    if (isListening) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.2,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ]),
-      ).start()
-    } else {
-      pulseAnim.setValue(1)
+    return () => {
+      if (recording) {
+        recording.stopAndUnloadAsync()
+      }
     }
-  }, [isListening, pulseAnim])
+  }, [recording])
 
-  const checkPermissions = async (): Promise<void> => {
-    if (Platform.OS === "web") {
-      setPermissionGranted(true)
-      return
-    }
-
-    const hasPermission = await requestAudioPermissions()
-    setPermissionGranted(hasPermission)
-  }
-
-  const startListening = async (): Promise<void> => {
-    if (!permissionGranted) {
-      await checkPermissions()
-      if (!permissionGranted) return
-    }
-
+  const startListening = async () => {
     try {
+      const permission = await Audio.requestPermissionsAsync()
+      if (permission.status !== 'granted') {
+        Alert.alert('Permission requise', 'L\'accès au microphone est nécessaire pour l\'assistant vocal.')
+        return
+      }
+
       setIsListening(true)
-      setModalVisible(true)
-      setTranscript("")
-      setResponse("")
+      setIsVisible(true)
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
-      })
+      const recordingOptions = {
+        android: {
+          extension: '.m4a',
+          outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_MPEG_4,
+          audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_AAC,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+        },
+        ios: {
+          extension: '.m4a',
+          outputFormat: Audio.RECORDING_OPTION_IOS_OUTPUT_FORMAT_MPEG4AAC,
+          audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+      }
 
-      const recording = new Audio.Recording()
-      await recording.prepareToRecordAsync(HIGH_QUALITY_RECORDING_OPTIONS)
-      await recording.startAsync()
-      setRecording(recording)
+      const newRecording = new Audio.Recording()
+      await newRecording.prepareToRecordAsync(recordingOptions)
+      await newRecording.startAsync()
+      setRecording(newRecording)
 
       // Arrêter automatiquement après 10 secondes
       setTimeout(() => {
-        if (isListening) {
-          stopListening()
-        }
+        stopListening()
       }, 10000)
     } catch (error) {
-      console.error("Error starting recording:", error)
+      console.error('Erreur lors du démarrage de l\'enregistrement:', error)
       setIsListening(false)
+      setIsVisible(false)
     }
   }
 
-  const stopListening = async (): Promise<void> => {
-    if (!recording) return
-
+  const stopListening = async () => {
     try {
-      setIsListening(false)
-      setIsProcessing(true)
-
-      await recording.stopAndUnloadAsync()
-      const uri = recording.getURI()
-      setRecording(null)
-
-      if (uri && isConnected) {
-        await processRecording(uri)
-      } else {
-        setTranscript(t("voiceAssistant.offlineMode"))
-        setIsProcessing(false)
+      if (recording) {
+        await recording.stopAndUnloadAsync()
+        const uri = recording.getURI()
+        setRecording(null)
+        
+        if (uri && isOnline) {
+          await processVoiceCommand(uri)
+        } else if (!isOnline) {
+          speak('Mode hors ligne. Commandes vocales non disponibles.')
+        }
       }
     } catch (error) {
-      console.error("Error stopping recording:", error)
-      setIsProcessing(false)
-    }
-  }
-
-  const processRecording = async (uri: string): Promise<void> => {
-    try {
-      // Convertir l'enregistrement en base64
-      const base64Audio = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      })
-
-      // Envoyer au serveur pour traitement
-      const result = await processVoiceCommand(base64Audio)
-
-      setTranscript(result.transcript)
-      setResponse(result.response)
-    } catch (error) {
-      console.error("Error processing voice command:", error)
-      setTranscript(t("voiceAssistant.processingError"))
+      console.error('Erreur lors de l\'arrêt de l\'enregistrement:', error)
     } finally {
-      setIsProcessing(false)
+      setIsListening(false)
+      setIsVisible(false)
     }
   }
 
-  const closeModal = (): void => {
-    setModalVisible(false)
-    if (isListening) {
-      stopListening()
+  const processVoiceCommand = async (audioUri: string) => {
+    try {
+      // Simulation du traitement de la commande vocale
+      // En production, ceci ferait appel à un service de reconnaissance vocale
+      const mockCommands = [
+        'créer une livraison',
+        'voir mes livraisons',
+        'aller au profil',
+        'voir les notifications',
+        'appeler le support'
+      ]
+      
+      const randomCommand = mockCommands[Math.floor(Math.random() * mockCommands.length)]
+      setLastCommand(randomCommand)
+      
+      await executeVoiceCommand(randomCommand)
+    } catch (error) {
+      console.error('Erreur lors du traitement de la commande vocale:', error)
+      speak('Désolé, je n\'ai pas compris votre commande.')
     }
+  }
+
+  const executeVoiceCommand = async (command: string) => {
+    const lowerCommand = command.toLowerCase()
+
+    try {
+      if (lowerCommand.includes('créer') && lowerCommand.includes('livraison')) {
+        navigation?.navigate('CreateDelivery')
+        speak('Ouverture de la création de livraison.')
+      } else if (lowerCommand.includes('livraison') || lowerCommand.includes('historique')) {
+        navigation?.navigate('DeliveryHistory')
+        speak('Affichage de vos livraisons.')
+      } else if (lowerCommand.includes('profil')) {
+        navigation?.navigate('Profile')
+        speak('Ouverture de votre profil.')
+      } else if (lowerCommand.includes('notification')) {
+        navigation?.navigate('Notifications')
+        speak('Affichage des notifications.')
+      } else if (lowerCommand.includes('support') || lowerCommand.includes('aide')) {
+        navigation?.navigate('Support')
+        speak('Ouverture du support client.')
+      } else if (lowerCommand.includes('accueil') || lowerCommand.includes('home')) {
+        navigation?.navigate('ClientHome')
+        speak('Retour à l\'accueil.')
+      } else {
+        speak('Commande non reconnue. Essayez "créer une livraison" ou "voir mes livraisons".')
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'exécution de la commande:', error)
+      speak('Erreur lors de l\'exécution de la commande.')
+    }
+  }
+
+  const speak = (text: string) => {
+    Speech.speak(text, {
+      language: 'fr-FR',
+      pitch: 1.0,
+      rate: 0.8,
+    })
+  }
+
+  const toggleModal = () => {
+    setIsVisible(!isVisible)
   }
 
   return (
     <>
-      <TouchableOpacity
-        style={[styles.floatingButton, { backgroundColor: colors.primary }]}
-        onPress={startListening}
-        disabled={isListening || isProcessing}
-      >
-        <Text style={styles.buttonText}>🎤</Text>
-      </TouchableOpacity>
+      <View style={styles.floatingButton}>
+        <IconButton
+          icon="microphone"
+          size={24}
+          iconColor="#FFFFFF"
+          style={[styles.micButton, isListening && styles.micButtonActive]}
+          onPress={isListening ? stopListening : startListening}
+        />
+      </View>
 
       <Portal>
-        <Modal visible={modalVisible} onDismiss={closeModal} contentContainerStyle={styles.modalContainer}>
+        <Modal
+          visible={isVisible}
+          onDismiss={toggleModal}
+          contentContainerStyle={styles.modal}
+        >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {isListening
-                ? t("voiceAssistant.listening")
-                : isProcessing
-                  ? t("voiceAssistant.processing")
-                  : t("voiceAssistant.result")}
-            </Text>
-
-            {isListening && (
-              <Animated.View
-                style={[
-                  styles.listeningIndicator,
-                  { transform: [{ scale: pulseAnim }], backgroundColor: colors.primary },
-                ]}
-              >
-                <Text style={styles.microphoneIcon}>🎤</Text>
-              </Animated.View>
-            )}
-
-            {isProcessing && <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />}
-
-            {transcript ? (
-              <View style={styles.resultContainer}>
-                <Text style={styles.transcriptLabel}>{t("voiceAssistant.youSaid")}:</Text>
-                <Text style={styles.transcript}>{transcript}</Text>
-
-                {response && (
-                  <>
-                    <Text style={styles.responseLabel}>{t("voiceAssistant.response")}:</Text>
-                    <Text style={styles.response}>{response}</Text>
-                  </>
-                )}
+            <Text style={styles.modalTitle}>Assistant Vocal</Text>
+            
+            {isListening ? (
+              <View style={styles.listeningContainer}>
+                <Text style={styles.listeningText}>🎤 Écoute en cours...</Text>
+                <Text style={styles.instructionText}>Parlez maintenant</Text>
+                <Button mode="outlined" onPress={stopListening}>
+                  Arrêter
+                </Button>
               </View>
             ) : (
-              !isListening &&
-              !isProcessing && <Text style={styles.noTranscript}>{t("voiceAssistant.noSpeechDetected")}</Text>
+              <View style={styles.idleContainer}>
+                <Text style={styles.instructionText}>
+                  Appuyez sur le microphone pour commencer
+                </Text>
+                
+                {lastCommand && (
+                  <View style={styles.lastCommandContainer}>
+                    <Text style={styles.lastCommandLabel}>Dernière commande:</Text>
+                    <Text style={styles.lastCommandText}>{lastCommand}</Text>
+                  </View>
+                )}
+                
+                <View style={styles.examplesContainer}>
+                  <Text style={styles.examplesTitle}>Exemples de commandes:</Text>
+                  <Text style={styles.exampleText}>• "Créer une livraison"</Text>
+                  <Text style={styles.exampleText}>• "Voir mes livraisons"</Text>
+                  <Text style={styles.exampleText}>• "Aller au profil"</Text>
+                  <Text style={styles.exampleText}>• "Voir les notifications"</Text>
+                </View>
+              </View>
             )}
-
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                {
-                  backgroundColor: isListening ? "#F44336" : colors.primary,
-                },
-              ]}
-              onPress={isListening ? stopListening : closeModal}
-              disabled={isProcessing}
-            >
-              <Text style={styles.actionButtonText}>
-                {isListening ? t("voiceAssistant.stop") : t("voiceAssistant.close")}
-              </Text>
-            </TouchableOpacity>
           </View>
         </Modal>
       </Portal>
@@ -228,93 +222,89 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = () => {
 
 const styles = StyleSheet.create({
   floatingButton: {
-    position: "absolute",
-    bottom: 20,
+    position: 'absolute',
+    bottom: 100,
     right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
     zIndex: 1000,
   },
-  buttonText: {
-    fontSize: 24,
+  micButton: {
+    backgroundColor: '#FF6B00',
+    borderRadius: 30,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
-  modalContainer: {
-    backgroundColor: "white",
+  micButtonActive: {
+    backgroundColor: '#FF4444',
+  },
+  modal: {
     margin: 20,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
     padding: 20,
+    elevation: 10,
   },
   modalContent: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  listeningContainer: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  listeningText: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 10,
+    color: '#FF6B00',
   },
-  listeningIndicator: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  microphoneIcon: {
-    fontSize: 32,
-    color: "white",
-  },
-  loader: {
-    marginVertical: 20,
-  },
-  resultContainer: {
-    width: "100%",
-    marginBottom: 20,
-  },
-  transcriptLabel: {
+  instructionText: {
     fontSize: 14,
-    fontWeight: "bold",
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  idleContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  lastCommandContainer: {
+    marginVertical: 15,
+    padding: 10,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    width: '100%',
+  },
+  lastCommandLabel: {
+    fontSize: 12,
+    color: '#666',
     marginBottom: 5,
   },
-  transcript: {
-    fontSize: 16,
-    marginBottom: 15,
-    padding: 10,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 8,
-  },
-  responseLabel: {
+  lastCommandText: {
     fontSize: 14,
-    fontWeight: "bold",
+    color: '#333',
+    fontStyle: 'italic',
+  },
+  examplesContainer: {
+    marginTop: 20,
+    width: '100%',
+  },
+  examplesTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  exampleText: {
+    fontSize: 12,
+    color: '#666',
     marginBottom: 5,
-  },
-  response: {
-    fontSize: 16,
-    padding: 10,
-    backgroundColor: "#E8F5E9",
-    borderRadius: 8,
-  },
-  noTranscript: {
-    fontSize: 16,
-    color: "#757575",
-    marginBottom: 20,
-  },
-  actionButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  actionButtonText: {
-    color: "white",
-    fontWeight: "bold",
   },
 })
 
