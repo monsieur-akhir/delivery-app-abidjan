@@ -8,8 +8,10 @@ export interface StarRatingProps {
   onRatingChange?: (rating: number) => void
   maxRating?: number
   starSize?: number
+  size?: number
   disabled?: boolean
   readonly?: boolean
+  editable?: boolean
 }
 
 const StarRating: React.FC<StarRatingProps> = ({
@@ -17,9 +19,12 @@ const StarRating: React.FC<StarRatingProps> = ({
   onRatingChange,
   maxRating = 5,
   starSize = 24,
+  size,
   disabled = false,
   readonly = false,
+  editable = false,
 }) => {
+  const finalSize = size || starSize
   const handleStarPress = (selectedRating: number) => {
     if (!disabled && !readonly && onRatingChange) {
       onRatingChange(selectedRating)
@@ -40,7 +45,7 @@ const StarRating: React.FC<StarRatingProps> = ({
         >
           <Feather
             name="star"
-            size={starSize}
+            size={finalSize}
             color={isFilled ? '#FFD700' : '#E0E0E0'}
             style={isFilled ? styles.filledStar : styles.emptyStar}
           />
@@ -52,7 +57,7 @@ const StarRating: React.FC<StarRatingProps> = ({
       <View key={index} style={styles.star}>
         <Feather
           name="star"
-          size={starSize}
+          size={finalSize}
           color={isFilled ? '#FFD700' : '#E0E0E0'}
           style={isFilled ? styles.filledStar : styles.emptyStar}
         />

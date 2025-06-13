@@ -120,21 +120,22 @@ export interface TrackingPoint {
 export interface Notification {
   id: string
   title: string
-  message: string
+  body: string
   type?: NotificationType
-  data?: any
+  data?: Record<string, any>
   timestamp: string
-  read?: boolean
-  date?: string
+  user_id?: number
+  is_read?: boolean
+  created_at?: string
 }
 
 export type NotificationType = 'delivery' | 'payment' | 'system' | 'promotion' | 'delivery_update' | 'message'
 
 export interface PendingOperation {
   id: string
-  type: 'payment' | 'create_delivery' | 'submit_rating' | 'bid' | 'tracking' | 'update_profile' | 'support_request' | 'profile_image' | 'profile_update' | 'support_ticket' | 'ticket_reply' | 'collaborative_delivery' | 'register'
-  data: any
   timestamp: string
+  type: 'payment' | 'create_delivery' | 'submit_rating' | 'bid' | 'tracking' | 'update_profile' | 'support_request' | 'profile_image' | 'profile_update' | 'support_ticket' | 'ticket_reply' | 'collaborative_delivery' | 'register' | 'delivery'
+  data: any
   retries: number
 }
 
@@ -157,12 +158,34 @@ export interface Address {
   type: string
 }
 
-export interface Weather {
-  condition?: string
+export interface WeatherCurrent {
   temperature: number
+  condition: string
   humidity: number
-  windSpeed: number
+  wind_speed: number
+}
+
+export interface WeatherAlert {
+  title: string
   description: string
+  message?: string
+}
+
+export interface Weather {
+  temperature: number
+  condition: string
+  humidity: number
+  wind_speed: number
+  location?: string
+  current?: WeatherCurrent
+  forecast?: any[]
+  alerts?: WeatherAlert[]
+}
+
+export interface WeatherData {
+  current: WeatherCurrent
+  forecast?: any[]
+  alerts?: string[]
 }
 
 export interface Merchant {
@@ -770,16 +793,19 @@ export interface KYCStatus {
 
 // UserType and NotificationSettings Types
 export interface NotificationSettings {
-  push_notifications: boolean;
-  email_notifications: boolean;
-  sms_notifications: boolean;
-  marketing_emails: boolean;
-  delivery_updates: boolean;
-  delivery_notifications: boolean;
-  promotional_notifications: boolean;
-  bid_notifications: boolean;
-  promotion_alerts: boolean;
-  security_alerts: boolean;
+  push_notifications: boolean
+  email_notifications: boolean
+  sms_notifications: boolean
+  marketing_emails: boolean
+  promotional_notifications: boolean
+  promotion_alerts: boolean
+  security_alerts: boolean
+  push_enabled: boolean
+  email_enabled: boolean
+  sms_enabled: boolean
+  whatsapp_enabled: boolean
+  marketing: boolean
+  system_updates: boolean
 }
 
 // UserPreferences Type

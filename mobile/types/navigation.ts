@@ -1,4 +1,3 @@
-
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 export type RootStackParamList = {
@@ -104,7 +103,13 @@ export type CourierDeliveriesParamList = {
   DeliveriesList: undefined
   DeliveryDetails: { deliveryId: string }
   Bid: { deliveryId: string }
-  TrackDelivery: undefined
+}
+
+// Extensions des types existants pour compatibilité
+declare global {
+  namespace ReactNavigation {
+    interface RootParamList extends RootStackParamList {}
+  }
 }
 
 // Navigation Props

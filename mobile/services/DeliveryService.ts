@@ -42,6 +42,49 @@ export interface CollaborativeDeliveryRequest extends DeliveryCreateRequest {
   role_requirements: string[]
 }
 
+export interface DeliveryUpdateRequest {
+  status?: DeliveryStatus
+  notes?: string
+  location?: {
+    lat: number
+    lng: number
+  }
+}
+
+export interface DeliveryCreateRequest {
+  pickup_lat: number
+  pickup_lng: number
+  delivery_lat: number
+  delivery_lng: number
+  pickup_address: string
+  delivery_address: string
+  package_description: string
+  recipient_name: string
+  recipient_phone: string
+  proposed_price: number
+  package_size?: string
+  is_fragile?: boolean
+  is_urgent?: boolean
+  special_instructions?: string
+}
+
+export interface PriceEstimateRequest {
+  pickup_lat: number
+  pickup_lng: number
+  delivery_lat: number
+  delivery_lng: number
+  package_size?: string
+  is_urgent?: boolean
+  distance?: number
+  duration?: number
+}
+
+export interface BidCreateRequest {
+  delivery_id: string
+  proposed_price: number
+  message?: string
+}
+
 class DeliveryService {
   // Méthodes de base pour les livraisons
   static async getUserDeliveries(
