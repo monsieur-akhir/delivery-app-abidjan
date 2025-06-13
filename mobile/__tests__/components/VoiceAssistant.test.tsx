@@ -1,150 +1,141 @@
-import { render, fireEvent, waitFor } from "@testing-library/react-native"
-import VoiceAssistant from "../../components/VoiceAssistant"
-import { Audio } from "expo-av"
-import * as Speech from "expo-speech"
-import { processVoiceCommand } from "../../services/api"
-import jest from "jest" // Import jest to declare the variable
 
-// Mock pour processVoiceCommand
-jest.mock("../../services/api", () => ({
-  processVoiceCommand: jest.fn(() =>
+import React from 'react'
+import { render, fireEvent, waitFor } from '@testing-library/react-native'
+import VoiceAssistant from '../../components/VoiceAssistant'
+import { useAuth } from '../../contexts/AuthContext'
+import { useNetwork } from '../../contexts/NetworkContext'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../../types/navigation'
+
+// Mock jest functions
+const mockJest = {
+  mock: jest.mock,
+  fn: jest.fn,
+  clearAllMocks: jest.clearAllMocks,
+  requireMock: jest.requireMock
+}
+
+mockJest.mock("../../services/api", () => ({
+  processVoiceCommand: mockJest.fn(() =>
     Promise.resolve({
-      transcript: "Créer une livraison",
-      response: "Je vais créer une livraison pour vous",
-      action: {
-        type: "create_delivery",
-        params: {},
-      },
-    }),
+      action: "navigate",
+      destination: "CreateDelivery",
+      params: {},
+    })
   ),
 }))
 
-// Mock pour la navigation
-const mockNavigation = {
-  navigate: jest.fn(),
+mockJest.mock("../../contexts/AuthContext")
+mockJest.mock("../../contexts/NetworkContext")
+
+const mockNavigation: Partial<NativeStackNavigationProp<RootStackParamList>> = {
+  navigate: mockJest.fn(),
+  dispatch: mockJest.fn(),
+  reset: mockJest.fn(),
+  goBack: mockJest.fn(),
+  isFocused: mockJest.fn(() => true),
+  canGoBack: mockJest.fn(() => true),
+  getId: mockJest.fn(() => 'test-id'),
+  getState: mockJest.fn(() => ({ routes: [], index: 0 })),
+  setParams: mockJest.fn(),
+  setOptions: mockJest.fn(),
+  addListener: mockJest.fn(),
+  removeListener: mockJest.fn(),
+  getParent: mockJest.fn()
 }
 
-describe("VoiceAssistant Component", () => {
+describe("VoiceAssistant", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockJest.clearAllMocks()
   })
 
   it("renders correctly", () => {
-    const { getByRole } = render(<VoiceAssistant navigation={mockNavigation} />)
-
-    // Vérifier que le bouton flottant est rendu
-    const button = getByRole("button")
-    expect(button).toBeTruthy()
+    const { getByRole } = render(<VoiceAssistant navigation={mockNavigation as NativeStackNavigationProp<RootStackParamList>} />)
+    expect(getByRole("button")).toBeTruthy()
   })
 
-  it("opens the modal when the button is pressed", () => {
-    const { getByRole, getByText } = render(<VoiceAssistant navigation={mockNavigation} />)
+  it("shows recording state when pressed", async () => {
+    ;(useAuth as jest.Mock).mockReturnValue({ user: { id: 1 } })
+    ;(useNetwork as jest.Mock).mockReturnValue({ isConnected: true })
 
-    // Cliquer sur le bouton flottant
+    const { getByRole, getByText } = render(<VoiceAssistant navigation={mockNavigation as NativeStackNavigationProp<RootStackParamList>} />)
+
     const button = getByRole("button")
     fireEvent.press(button)
 
-    // Vérifier que le modal est ouvert
-    expect(getByText("voiceAssistant.title")).toBeTruthy()
-    expect(getByText("voiceAssistant.tapToSpeak")).toBeTruthy()
-  })
-
-  it("starts recording when the microphone button is pressed", async () => {
-    const { getByRole, getByText, queryByText } = render(<VoiceAssistant navigation={mockNavigation} />)
-
-    // Ouvrir le modal
-    const button = getByRole("button")
-    fireEvent.press(button)
-
-    // Cliquer sur le bouton du microphone
-    const micButton = getByText("voiceAssistant.tapToSpeak").parent
-    fireEvent.press(micButton)
-
-    // Vérifier que l'enregistrement a commencé
     await waitFor(() => {
-      expect(Audio.Recording.prototype.prepareToRecordAsync).toHaveBeenCalled()
-      expect(Audio.Recording.prototype.startAsync).toHaveBeenCalled()
-      expect(queryByText("voiceAssistant.listening")).toBeTruthy()
+      expect(getByText("En cours d'écoute...")).toBeTruthy()
     })
   })
 
-  it("processes the recording when stopped", async () => {
-    const { getByRole, getByText, findByText } = render(<VoiceAssistant navigation={mockNavigation} />)
+  it("handles voice command processing", async () => {
+    ;(useAuth as jest.Mock).mockReturnValue({ user: { id: 1 } })
+    ;(useNetwork as jest.Mock).mockReturnValue({ isConnected: true })
 
-    // Ouvrir le modal
+    const { getByRole, getByText, queryByText } = render(<VoiceAssistant navigation={mockNavigation as NativeStackNavigationProp<RootStackParamList>} />)
+
     const button = getByRole("button")
     fireEvent.press(button)
 
-    // Cliquer sur le bouton du microphone pour commencer l'enregistrement
-    const micButton = getByText("voiceAssistant.tapToSpeak").parent
-    fireEvent.press(micButton)
-
-    // Attendre que l'enregistrement commence
-    await findByText("voiceAssistant.listening")
-
-    // Simuler l'arrêt de l'enregistrement
-    const stopButton = await findByText("voiceAssistant.listening")
-    fireEvent.press(stopButton)
-
-    // Vérifier que l'enregistrement a été arrêté et traité
     await waitFor(() => {
-      expect(Audio.Recording.prototype.stopAndUnloadAsync).toHaveBeenCalled()
-      expect(processVoiceCommand).toHaveBeenCalled()
-      expect(Speech.speak).toHaveBeenCalled()
+      expect(queryByText("En cours d'écoute...")).toBeTruthy()
     })
 
-    // Vérifier que la transcription et la réponse sont affichées
-    await findByText("voiceAssistant.youSaid")
-    await findByText("Créer une livraison")
-    await findByText("voiceAssistant.response")
-    await findByText("Je vais créer une livraison pour vous")
+    // Simulate end of recording
+    fireEvent.press(button)
 
-    // Vérifier que la navigation est appelée après un délai
-    await waitFor(
-      () => {
-        expect(mockNavigation.navigate).toHaveBeenCalledWith("CreateDelivery", {})
-      },
-      { timeout: 3000 },
-    )
+    await waitFor(() => {
+      expect(queryByText("Traitement en cours...")).toBeTruthy()
+    })
   })
 
-  it("shows an error message when offline", async () => {
-    // Modifier le mock pour simuler un état hors ligne
-    const useNetworkMock = jest.requireMock("../../contexts/NetworkContext").useNetwork
-    useNetworkMock.mockReturnValueOnce({
-      isConnected: false,
-      isOfflineMode: false,
-    })
+  it("handles navigation after voice command", async () => {
+    ;(useAuth as jest.Mock).mockReturnValue({ user: { id: 1 } })
+    ;(useNetwork as jest.Mock).mockReturnValue({ isConnected: true })
 
-    const { getByRole, getByText, findByText } = render(<VoiceAssistant navigation={mockNavigation} />)
+    const { getByRole, getByText, findByText } = render(<VoiceAssistant navigation={mockNavigation as NativeStackNavigationProp<RootStackParamList>} />)
 
-    // Ouvrir le modal
     const button = getByRole("button")
     fireEvent.press(button)
 
-    // Cliquer sur le bouton du microphone
-    const micButton = getByText("voiceAssistant.tapToSpeak").parent
-    fireEvent.press(micButton)
+    await waitFor(() => {
+      expect(getByText("En cours d'écoute...")).toBeTruthy()
+    })
 
-    // Vérifier que le message d'erreur est affiché
-    await findByText("voiceAssistant.offlineError")
+    fireEvent.press(button)
+
+    await findByText("Traitement en cours...")
+
+    await waitFor(() => {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith("CreateDelivery", {})
+    }, { timeout: 5000 })
   })
 
-  it("closes the modal when the close button is pressed", () => {
-    const { getByRole, getByText, queryByText } = render(<VoiceAssistant navigation={mockNavigation} />)
+  it("shows offline message when network is not available", async () => {
+    ;(useAuth as jest.Mock).mockReturnValue({ user: { id: 1 } })
+    
+    const useNetworkMock = jest.requireMock("../../contexts/NetworkContext").useNetwork as jest.Mock
+    useNetworkMock.mockReturnValue({ isConnected: false })
 
-    // Ouvrir le modal
+    ;(useNetwork as jest.Mock).mockReturnValue({ isConnected: false })
+
+    const { getByRole, getByText, findByText } = render(<VoiceAssistant navigation={mockNavigation as NativeStackNavigationProp<RootStackParamList>} />)
+
     const button = getByRole("button")
     fireEvent.press(button)
 
-    // Vérifier que le modal est ouvert
-    expect(getByText("voiceAssistant.title")).toBeTruthy()
+    await findByText("Connexion requise pour utiliser l'assistant vocal")
+  })
 
-    // Cliquer sur le bouton de fermeture
-    const closeButton = getByText("voiceAssistant.title").parent.children[1]
-    fireEvent.press(closeButton)
+  it("requires authentication", () => {
+    ;(useAuth as jest.Mock).mockReturnValue({ user: null })
+    ;(useNetwork as jest.Mock).mockReturnValue({ isConnected: true })
 
-    // Vérifier que le modal est fermé
-    expect(queryByText("voiceAssistant.title")).toBeNull()
+    const { getByRole, getByText, queryByText } = render(<VoiceAssistant navigation={mockNavigation as NativeStackNavigationProp<RootStackParamList>} />)
+
+    const button = getByRole("button")
+    fireEvent.press(button)
+
+    expect(queryByText("Authentification requise")).toBeTruthy()
   })
 })

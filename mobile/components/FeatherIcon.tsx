@@ -85,7 +85,7 @@ const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
   'external-link': 'open-outline',
   'file': 'document-outline',
   'folder': 'folder-outline',
-  'shopping-bag': 'bag-outline',
+  'shopping-bag': 'bag-handle-outline',
   'shopping-cart': 'cart-outline',
   'credit-card': 'card-outline',
   'gift': 'gift-outline',
@@ -143,5 +143,4 @@ const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size = 24, color = '#00
   )
 }
 
-export { FeatherIconName }
 export default FeatherIcon;

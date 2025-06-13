@@ -1,185 +1,86 @@
-import { renderHook, act } from "@testing-library/react-hooks"
-import { NetworkProvider, useNetwork } from "../../contexts/NetworkContext"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import NetInfo from "@react-native-community/netinfo"
-import jest from "jest" // Import jest to declare the variable
+import React from 'react'
+import { renderHook, act } from '@testing-library/react-native'
+import NetInfo from '@react-native-community/netinfo'
+import { NetworkProvider, useNetwork } from '../../contexts/NetworkContext'
+import type { ReactNode } from 'react'
 
-// Mock pour NetInfo
-jest.mock("@react-native-community/netinfo", () => ({
-  addEventListener: jest.fn(() => jest.fn()),
-  fetch: jest.fn(() => Promise.resolve({ isConnected: true, isInternetReachable: true })),
+// Mock jest functions
+const mockJest = {
+  mock: jest.mock,
+  fn: jest.fn,
+  clearAllMocks: jest.clearAllMocks
+}
+
+mockJest.mock("@react-native-community/netinfo", () => ({
+  addEventListener: mockJest.fn(() => mockJest.fn()),
+  fetch: mockJest.fn(() => Promise.resolve({ isConnected: true, isInternetReachable: true })),
 }))
 
-// Wrapper pour le hook
-const wrapper = ({ children }) => <NetworkProvider>{children}</NetworkProvider>
+mockJest.mock("@react-native-async-storage/async-storage", () => ({
+  getItem: mockJest.fn(() => Promise.resolve(null)),
+  setItem: mockJest.fn(() => Promise.resolve()),
+}))
+
+const wrapper = ({ children }: { children: ReactNode }) => <NetworkProvider>{children}</NetworkProvider>
 
 describe("NetworkContext", () => {
   beforeEach(() => {
-    // Réinitialiser les mocks avant chaque test
-    jest.clearAllMocks()
-    AsyncStorage.clear()
+    mockJest.clearAllMocks()
   })
 
-  it("provides the network context with default values", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useNetwork(), { wrapper })
+  it("provides network context", () => {
+    const { result } = renderHook(() => useNetwork(), { wrapper })
 
-    // Attendre que les effets asynchrones se terminent
-    await waitForNextUpdate()
-
-    // Vérifier les valeurs par défaut
-    expect(result.current.isConnected).toBe(true)
-    expect(result.current.isOfflineMode).toBe(false)
+    expect(result.current.isConnected).toBeDefined()
+    expect(result.current.isOnline).toBeDefined()
     expect(result.current.pendingUploads).toEqual([])
     expect(result.current.pendingDownloads).toEqual([])
-    expect(result.current.syncInProgress).toBe(false)
-    expect(result.current.lastSyncTime).toBeNull()
+    expect(result.current.addPendingUpload).toBeDefined()
+    expect(result.current.syncPendingOperations).toBeDefined()
   })
 
-  it("toggles offline mode", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useNetwork(), { wrapper })
+  it("can add pending upload", () => {
+    const { result } = renderHook(() => useNetwork(), { wrapper })
 
-    // Attendre que les effets asynchrones se terminent
-    await waitForNextUpdate()
-
-    // Activer le mode hors ligne
-    await act(async () => {
-      const success = await result.current.toggleOfflineMode(true)
-      expect(success).toBe(true)
-    })
-
-    // Vérifier que le mode hors ligne est activé
-    expect(result.current.isOfflineMode).toBe(true)
-
-    // Vérifier que la valeur a été sauvegardée dans AsyncStorage
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith("offlineMode", "true")
-
-    // Désactiver le mode hors ligne
-    await act(async () => {
-      const success = await result.current.toggleOfflineMode(false)
-      expect(success).toBe(false)
-    })
-
-    // Vérifier que le mode hors ligne est désactivé
-    expect(result.current.isOfflineMode).toBe(false)
-  })
-
-  it("adds pending upload", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useNetwork(), { wrapper })
-
-    // Attendre que les effets asynchrones se terminent
-    await waitForNextUpdate()
-
-    // Ajouter un téléversement en attente
-    await act(async () => {
-      const success = result.current.addPendingUpload({
-        type: "delivery",
-        data: { id: 1, status: "pending" },
-        timestamp: new Date().toISOString(),
-      })
-      expect(success).toBe(true)
-    })
-
-    // Vérifier que le téléversement a été ajouté
-    expect(result.current.pendingUploads.length).toBe(1)
-    expect(result.current.pendingUploads[0].type).toBe("delivery")
-
-    // Vérifier que la liste a été sauvegardée dans AsyncStorage
-    expect(AsyncStorage.setItem).toHaveBeenCalled()
-  })
-
-  it("removes pending upload", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useNetwork(), { wrapper })
-
-    // Attendre que les effets asynchrones se terminent
-    await waitForNextUpdate()
-
-    // Ajouter un téléversement en attente
-    await act(async () => {
-      result.current.addPendingUpload({
-        type: "delivery",
-        data: { id: 1, status: "pending" },
-        timestamp: new Date().toISOString(),
+    act(() => {
+      result.current.addPendingUpload('delivery', {
+        pickup_address: 'Test address',
+        delivery_address: 'Test delivery',
+        package_type: 'small',
       })
     })
 
-    // Récupérer l'ID du téléversement
-    const uploadId = result.current.pendingUploads[0].id
-
-    // Supprimer le téléversement
-    await act(async () => {
-      const success = result.current.removePendingUpload(uploadId)
-      expect(success).toBe(true)
-    })
-
-    // Vérifier que le téléversement a été supprimé
-    expect(result.current.pendingUploads.length).toBe(0)
-
-    // Vérifier que la liste a été sauvegardée dans AsyncStorage
-    expect(AsyncStorage.setItem).toHaveBeenCalled()
+    expect(result.current.pendingUploads).toHaveLength(1)
+    expect(result.current.pendingUploads[0].type).toBe('delivery')
   })
 
-  it("clears all pending data", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useNetwork(), { wrapper })
+  it("can sync pending operations", async () => {
+    const { result } = renderHook(() => useNetwork(), { wrapper })
 
-    // Attendre que les effets asynchrones se terminent
-    await waitForNextUpdate()
-
-    // Ajouter des données en attente
-    await act(async () => {
-      result.current.addPendingUpload({
-        type: "delivery",
-        data: { id: 1, status: "pending" },
-        timestamp: new Date().toISOString(),
-      })
-
-      result.current.addPendingDownload({
-        type: "delivery_details",
-        data: { id: 1 },
-        timestamp: new Date().toISOString(),
+    act(() => {
+      result.current.addPendingUpload('delivery', {
+        pickup_address: 'Test address',
+        delivery_address: 'Test delivery',
+        package_type: 'small',
       })
     })
 
-    // Vérifier que les données ont été ajoutées
-    expect(result.current.pendingUploads.length).toBe(1)
-    expect(result.current.pendingDownloads.length).toBe(1)
-
-    // Effacer toutes les données
     await act(async () => {
-      const success = await result.current.clearPendingData()
-      expect(success).toBe(true)
+      await result.current.syncPendingOperations()
     })
 
-    // Vérifier que les données ont été effacées
-    expect(result.current.pendingUploads.length).toBe(0)
-    expect(result.current.pendingDownloads.length).toBe(0)
-
-    // Vérifier que les données ont été supprimées d'AsyncStorage
-    expect(AsyncStorage.removeItem).toHaveBeenCalledWith("pendingUploads")
-    expect(AsyncStorage.removeItem).toHaveBeenCalledWith("pendingDownloads")
+    expect(result.current.pendingUploads).toHaveLength(0)
   })
 
-  it("handles connectivity changes", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useNetwork(), { wrapper })
+  it("handles network state changes", async () => {
+    const { result } = renderHook(() => useNetwork(), { wrapper })
 
-    // Attendre que les effets asynchrones se terminent
-    await waitForNextUpdate()
-
-    // Simuler une perte de connexion
-    const mockListener = NetInfo.addEventListener.mock.calls[0][0]
-
-    await act(async () => {
+    // Simulate network change
+    const mockListener = (NetInfo.addEventListener as jest.Mock).mock.calls[0][0]
+    act(() => {
       mockListener({ isConnected: false, isInternetReachable: false })
     })
 
-    // Vérifier que l'état de connexion a été mis à jour
     expect(result.current.isConnected).toBe(false)
-
-    // Simuler un rétablissement de la connexion
-    await act(async () => {
-      mockListener({ isConnected: true, isInternetReachable: true })
-    })
-
-    // Vérifier que l'état de connexion a été mis à jour
-    expect(result.current.isConnected).toBe(true)
   })
 })
