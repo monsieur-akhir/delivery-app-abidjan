@@ -96,14 +96,14 @@ const CourierProfileScreen: React.FC = () => {
         <Card.Title title={t("profile.level")} />
         <Card.Content>
           <View style={styles.levelContainer}>
-            <Text style={styles.levelText}>Niveau {stats.level || 1}</Text>
+            <Text style={styles.levelText}>Niveau {(stats as any).level || 1}</Text>
             <View style={styles.progressContainer}>
-              <View
-                style={[styles.progressBar, { width: `${((stats.experience || 0) / (stats.nextLevelExperience || 100)) * 100}%` }]}
+              <View 
+                style={[styles.progressBar, { width: `${(((stats as any).experience || 0) / ((stats as any).nextLevelExperience || 100)) * 100}%` }]}
               />
             </View>
             <Text style={styles.experienceText}>
-              {stats.experience || 0} / {stats.nextLevelExperience || 100} XP
+              {(stats as any).experience || 0} / {(stats as any).nextLevelExperience || 100} XP
             </Text>
           </View>
         </Card.Content>

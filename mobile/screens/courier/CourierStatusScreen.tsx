@@ -318,9 +318,9 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
                 <View style={styles.vehicleIconContainer}>
                   <Feather
                     name={
-                      courierProfile.vehicle_type === "moto"
+                      courierProfile.vehicle_type === "motorcycle"
                         ? "truck"
-                        : courierProfile.vehicle_type === "velo"
+                        : courierProfile.vehicle_type === "bicycle"
                           ? "truck"
                           : "truck"
                     }
@@ -330,9 +330,9 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
                 </View>
                 <View style={styles.vehicleDetails}>
                   <Text style={styles.vehicleType}>
-                    {courierProfile.vehicle_type === "moto"
+                    {courierProfile.vehicle_type === "motorcycle"
                       ? "Moto"
-                      : courierProfile.vehicle_type === "velo"
+                      : courierProfile.vehicle_type === "bicycle"
                         ? "Vélo"
                         : "Voiture"}
                   </Text>
