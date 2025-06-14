@@ -324,7 +324,7 @@ class DeliveryService {
   }
 
   // Méthodes pour l'historique
-  static async getClientDeliveryHistory(filters?: DeliveryFilters): Promise<Delivery[]> {
+  static async getClientDeliveryHistory(filters?: any): Promise<Delivery[]> {
     try {
       const params = new URLSearchParams()
       if (filters?.status) params.append('status', filters.status)
