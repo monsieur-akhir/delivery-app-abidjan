@@ -1,0 +1,272 @@
+screens/client/MarketplaceScreen.tsx:25:3 - error TS2353: Object literal may only specify known properties, and 'review_count' does not exist in type 'Merchant'.
+
+25   review_count: 0,
+     ~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:28:3 - error TS2561: Object literal may only specify known properties, but 'categories' does not exist in type 'Merchant'. Did you mean to write 'category'?
+
+28   categories: [merchantInfo.category],
+     ~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:40:11 - error TS2339: Property 'addVehicle' does not exist on type 'UseVehicleReturn'.
+
+40   const { addVehicle, loading } = useVehicle()
+             ~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:40:23 - error TS2339: Property 'loading' does not exist on type 'UseVehicleReturn'.
+
+40   const { addVehicle, loading } = useVehicle()
+                         ~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:63:9 - error TS2322: Type 'string' is not assignable to type 'VehicleType'.
+
+63         type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : formData.type,
+           ~~~~
+
+  types/models.ts:588:3
+    588   type: VehicleType
+          ~~~~
+    The expected type comes from property 'type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:61:35 - error TS2339: Property 'is_available' does not exist on type 'CourierProfile'.
+
+61         is_available: profileData.is_available ?? true,
+                                     ~~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:219:15 - error TS2322: Type '{ showUserLocation: true; initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'initialRegion' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'.
+
+219               initialRegion={{
+                  ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:45:9 - error TS2353: Object literal may only specify known properties, and 'level' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+45         level: statsData.level || 0,
+           ~~~~~
+
+screens/courier/HomeScreen.tsx:23:10 - error TS2614: Module '"../../components/WeatherInfo"' has no exported member 'WeatherInfo'. Did you mean to use 'import WeatherInfo from "../../components/WeatherInfo"' instead?
+
+23 import { WeatherInfo } from '../../components/WeatherInfo'
+            ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:98:42 - error TS2339: Property 'total_earnings' does not exist on type 'CourierStats'.
+
+98           earnings_today: statsResponse?.total_earnings || 0,
+                                            ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:101:42 - error TS2339: Property 'total_distance' does not exist on type 'CourierStats'.
+
+101           total_distance: statsResponse?.total_distance || 0,
+                                             ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:151:33 - error TS2551: Property 'activeDeliveryPrice' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'. Did you mean 'deliveryPrice'?
+
+151             <Text style={styles.activeDeliveryPrice}>{formatPrice(item.final_price || item.proposed_price)} FCFA</Text>
+                                    ~~~~~~~~~~~~~~~~~~~
+
+  screens/courier/HomeScreen.tsx:498:3
+    498   deliveryPrice: {
+          ~~~~~~~~~~~~~~~~
+    499     fontSize: 16,
+        ~~~~~~~~~~~~~~~~~
+    ... 
+    501     color: '#4CAF50',
+        ~~~~~~~~~~~~~~~~~~~~~
+    502   },
+        ~~~
+    'deliveryPrice' is declared here.
+
+screens/courier/HomeScreen.tsx:152:49 - error TS2339: Property 'statusChip' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+152             <Chip mode="outlined" style={styles.statusChip}>
+                                                    ~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:157:31 - error TS2339: Property 'addressContainer' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+157           <View style={styles.addressContainer}>
+                                  ~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:159:33 - error TS2339: Property 'addressText' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+159             <Text style={styles.addressText} numberOfLines={1}>
+                                    ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:164:31 - error TS2339: Property 'addressContainer' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+164           <View style={styles.addressContainer}>
+                                  ~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:166:33 - error TS2339: Property 'addressText' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+166             <Text style={styles.addressText} numberOfLines={1}>
+                                    ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:171:31 - error TS2339: Property 'clientPhone' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+171           <Text style={styles.clientPhone}>{item.client_phone || 'N/A'}</Text>
+                                  ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:176:27 - error TS2339: Property 'trackButton' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+176             style={styles.trackButton}
+                              ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:191:31 - error TS2339: Property 'deliveryDistance' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+191           <Text style={styles.deliveryDistance}>{formatDistance(item.distance)}</Text>
+                                  ~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:194:29 - error TS2339: Property 'addressContainer' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+194         <View style={styles.addressContainer}>
+                                ~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:196:31 - error TS2339: Property 'addressText' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+196           <Text style={styles.addressText} numberOfLines={1}>
+                                  ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:201:29 - error TS2339: Property 'addressContainer' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+201         <View style={styles.addressContainer}>
+                                ~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:203:31 - error TS2339: Property 'addressText' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+203           <Text style={styles.addressText} numberOfLines={1}>
+                                  ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:211:25 - error TS2339: Property 'acceptButton' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+211           style={styles.acceptButton}
+                            ~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:226:29 - error TS2339: Property 'headerContent' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+226         <View style={styles.headerContent}>
+                                ~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:227:31 - error TS2339: Property 'profileSection' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+227           <View style={styles.profileSection}>
+                                  ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:232:33 - error TS2339: Property 'profileInfo' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+232             <View style={styles.profileInfo}>
+                                    ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:233:35 - error TS2339: Property 'welcomeText' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+233               <Text style={styles.welcomeText}>Bonjour,</Text>
+                                      ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:234:35 - error TS2339: Property 'userName' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+234               <Text style={styles.userName}>{user?.full_name || 'Coursier'}</Text>
+                                      ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:236:37 - error TS2339: Property 'statusText' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+236                 <Text style={styles.statusText}>
+                                        ~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:249:23 - error TS2339: Property 'content' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+249         style={styles.content}
+                          ~~~~~~~
+
+screens/courier/HomeScreen.tsx:261:29 - error TS2551: Property 'statsCard' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'. Did you mean 'statusCard'?
+
+261         <Card style={styles.statsCard}>
+                                ~~~~~~~~~
+
+  screens/courier/HomeScreen.tsx:352:3
+    352   statusCard: {
+          ~~~~~~~~~~~~~
+    353     backgroundColor: '#FFFFFF',
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ... 
+    360     shadowRadius: 4,
+        ~~~~~~~~~~~~~~~~~~~~
+    361   },
+        ~~~
+    'statusCard' is declared here.
+
+screens/courier/HomeScreen.tsx:264:33 - error TS2339: Property 'statsRow' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+264             <View style={styles.statsRow}>
+                                    ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:265:35 - error TS2339: Property 'statItem' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+265               <View style={styles.statItem}>
+                                      ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:269:35 - error TS2339: Property 'statItem' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+269               <View style={styles.statItem}>
+                                      ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:273:35 - error TS2339: Property 'statItem' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+273               <View style={styles.statItem}>
+                                      ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:283:31 - error TS2339: Property 'section' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+283           <View style={styles.section}>
+                                  ~~~~~~~
+
+screens/courier/HomeScreen.tsx:294:29 - error TS2339: Property 'section' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+294         <View style={styles.section}>
+                                ~~~~~~~
+
+screens/courier/HomeScreen.tsx:297:33 - error TS2339: Property 'emptyCard' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+297             <Card style={styles.emptyCard}>
+                                    ~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:299:37 - error TS2339: Property 'emptyText' does not exist on type '{ container: { flex: number; backgroundColor: string; }; loadingContainer: { flex: number; justifyContent: "center"; alignItems: "center"; }; header: { backgroundColor: string; padding: number; paddingTop: number; ... 4 more ...; shadowRadius: number; }; ... 35 more ...; emptyStateText: { ...; }; }'.
+
+299                 <Text style={styles.emptyText}>Aucune livraison disponible</Text>
+                                        ~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:540:16 - error TS2304: Cannot find name 'HomeScreen'.
+
+540 export default HomeScreen
+                   ~~~~~~~~~~
+
+
+Found 46 errors in 8 files.
+
+Errors  Files
+     1  screens/client/MarketplaceScreen.tsx:25
+     1  screens/client/MerchantDetailsScreen.tsx:28
+     3  screens/courier/AddVehicleScreen.tsx:40
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     1  screens/courier/CourierStatusScreen.tsx:61
+     1  screens/courier/DeliveryDetailsScreen.tsx:219
+     1  screens/courier/GamificationScreen.tsx:45
+    34  screens/courier/HomeScreen.tsx:23
