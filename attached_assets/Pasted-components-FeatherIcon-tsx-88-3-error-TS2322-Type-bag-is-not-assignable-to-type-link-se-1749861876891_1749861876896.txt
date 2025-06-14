@@ -1,0 +1,171 @@
+components/FeatherIcon.tsx:88:3 - error TS2322: Type '"bag"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3661 more ... | "md-woman-sharp"'.
+
+88   'shopping-bag': 'bag',
+     ~~~~~~~~~~~~~~
+
+  components/FeatherIcon.tsx:12:18
+    12 const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    The expected type comes from this index signature.
+
+hooks/useDelivery.ts:91:61 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").DeliveryCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/DeliveryService").DeliveryCreateRequest'.
+  Type 'DeliveryCreateRequest' is missing the following properties from type 'DeliveryCreateRequest': recipient_name, recipient_phone
+
+91       const delivery = await DeliveryService.createDelivery(data)
+                                                               ~~~~
+
+hooks/useDelivery.ts:111:9 - error TS2559: Type 'number' has no properties in common with type 'DeliveryFilters'.
+
+111         (typeof filters === 'object' && filters && 'limit' in filters ? filters.limit : undefined) || 20
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+hooks/useDelivery.ts:190:51 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").BidCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/DeliveryService").BidCreateRequest'.
+  Types of property 'delivery_id' are incompatible.
+    Type 'number' is not assignable to type 'string'.
+
+190       const bid = await DeliveryService.createBid(bidData)
+                                                      ~~~~~~~
+
+hooks/useDelivery.ts:311:64 - error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+
+311       await DeliveryService.assignCourierToExpress(deliveryId, courierId)
+                                                                   ~~~~~~~~~
+
+hooks/useDelivery.ts:498:9 - error TS2559: Type 'number' has no properties in common with type 'DeliveryFilters'.
+
+498         (typeof filters === 'object' && filters && 'limit' in filters ? filters.limit : undefined) || 20
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+hooks/useDelivery.ts:537:5 - error TS2322: Type '(id: string, status: DeliveryStatus) => Promise<void>' is not assignable to type '(id: string, status: string) => Promise<void>'.
+  Types of parameters 'status' and 'status' are incompatible.
+    Type 'string' is not assignable to type 'DeliveryStatus'.
+
+537     updateDeliveryStatus,
+        ~~~~~~~~~~~~~~~~~~~~
+
+  hooks/useDelivery.ts:52:3
+    52   updateDeliveryStatus: (id: string, status: string) => Promise<void>
+         ~~~~~~~~~~~~~~~~~~~~
+    The expected type comes from property 'updateDeliveryStatus' which is declared here on type 'UseDeliveryReturn'
+
+hooks/useUser.ts:333:13 - error TS2740: Type '{ email_notifications: any; sms_notifications: any; push_notifications: any; promotion_alerts: any; whatsapp_enabled: any; }' is missing the following properties from type 'NotificationSettings': push_enabled, email_enabled, sms_enabled, delivery_updates, and 4 more.
+
+333       const notificationSettings: NotificationSettings = {
+                ~~~~~~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:334:46 - error TS2339: Property 'email_notifications' does not exist on type 'NotificationSettings'.
+
+334         email_notifications: serviceSettings.email_notifications || false,
+                                                 ~~~~~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:335:44 - error TS2339: Property 'sms_notifications' does not exist on type 'NotificationSettings'.
+
+335         sms_notifications: serviceSettings.sms_notifications || false,
+                                               ~~~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:336:45 - error TS2339: Property 'push_notifications' does not exist on type 'NotificationSettings'.
+
+336         push_notifications: serviceSettings.push_notifications || false,
+                                                ~~~~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:337:43 - error TS2551: Property 'promotion_alerts' does not exist on type 'NotificationSettings'. Did you mean 'promotional_offers'?
+
+337         promotion_alerts: serviceSettings.promotion_alerts || false,
+                                              ~~~~~~~~~~~~~~~~
+
+  services/NotificationService.ts:11:3
+    11   promotional_offers: boolean
+         ~~~~~~~~~~~~~~~~~~
+    'promotional_offers' is declared here.
+
+hooks/useUser.ts:338:43 - error TS2339: Property 'whatsapp_enabled' does not exist on type 'NotificationSettings'.
+
+338         whatsapp_enabled: serviceSettings.whatsapp_enabled || false,
+                                              ~~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:449:9 - error TS2353: Object literal may only specify known properties, and 'last_updated_epoch' does not exist in type 'Weather'.
+
+449         last_updated_epoch: Date.now(),
+            ~~~~~~~~~~~~~~~~~~
+
+navigation/AppNavigator.tsx:133:17 - error TS2339: Property 'isLoading' does not exist on type 'AuthContextType'.
+
+133   const { user, isLoading } = useAuth();
+                    ~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:16:5 - error TS2353: Object literal may only specify known properties, and 'push_enabled' does not exist in type 'NotificationSettings | (() => NotificationSettings)'.
+
+16     push_enabled: true,
+       ~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:100:37 - error TS2339: Property 'push_enabled' does not exist on type 'NotificationSettings'.
+
+100             <Switch value={settings.push_enabled} onValueChange={() => handleToggle("push_enabled")} color="#FF6B00" />
+                                        ~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:100:85 - error TS2345: Argument of type '"push_enabled"' is not assignable to parameter of type 'keyof NotificationSettings'.
+
+100             <Switch value={settings.push_enabled} onValueChange={() => handleToggle("push_enabled")} color="#FF6B00" />
+                                                                                        ~~~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:110:37 - error TS2339: Property 'sms_enabled' does not exist on type 'NotificationSettings'.
+
+110             <Switch value={settings.sms_enabled} onValueChange={() => handleToggle("sms_enabled")} color="#FF6B00" />
+                                        ~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:110:84 - error TS2345: Argument of type '"sms_enabled"' is not assignable to parameter of type 'keyof NotificationSettings'.
+
+110             <Switch value={settings.sms_enabled} onValueChange={() => handleToggle("sms_enabled")} color="#FF6B00" />
+                                                                                       ~~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:122:49 - error TS2345: Argument of type '"whatsapp_enabled"' is not assignable to parameter of type 'keyof NotificationSettings'.
+
+122               onValueChange={() => handleToggle("whatsapp_enabled")}
+                                                    ~~~~~~~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:135:31 - error TS2339: Property 'email_enabled' does not exist on type 'NotificationSettings'.
+
+135               value={settings.email_enabled}
+                                  ~~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:136:49 - error TS2345: Argument of type '"email_enabled"' is not assignable to parameter of type 'keyof NotificationSettings'.
+
+136               onValueChange={() => handleToggle("email_enabled")}
+                                                    ~~~~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:179:31 - error TS2339: Property 'security_alerts' does not exist on type 'NotificationSettings'.
+
+179               value={settings.security_alerts}
+                                  ~~~~~~~~~~~~~~~
+
+screens/NotificationSettingsScreen.tsx:180:49 - error TS2345: Argument of type '"security_alerts"' is not assignable to parameter of type 'keyof NotificationSettings'.
+
+180               onValueChange={() => handleToggle("security_alerts")}
+                                                    ~~~~~~~~~~~~~~~~~
+
+screens/NotificationsScreen.tsx:131:24 - error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+131           <FeatherIcon name={getNotificationIcon(item.data?.type as FeatherIconName)} size={20} color="#000000" style={styles.iconStyle} />
+                           ~~~~
+
+  components/FeatherIcon.tsx:5:3
+    5   name: string;
+        ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & FeatherIconProps'
+
+screens/NotificationsScreen.tsx:131:50 - error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string | undefined'.
+  Type 'number' is not assignable to type 'string'.
+
+131           <FeatherIcon name={getNotificationIcon(item.data?.type as FeatherIconName)} size={20} color="#000000" style={styles.iconStyle} />
+                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/SettingsScreen.tsx:83:23 - error TS2339: Property 'avatar' does not exist on type 'User'.
+
+83                 user?.avatar ? { uri: user.avatar } : require("../assets/images/default-avatar.png")
+                         ~~~~~~
+
+screens/SettingsScreen.tsx:83:44 - error TS2339: Property 'avatar' does not exist on type 'User'.
+
+83                 user?.avatar ? { uri: user.avatar } : require("../assets/images/default-avatar.png")
+  
