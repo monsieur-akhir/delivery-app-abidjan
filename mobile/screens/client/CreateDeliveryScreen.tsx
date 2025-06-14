@@ -190,7 +190,7 @@ const CreateDeliveryScreen: React.FC = () => {
       const vehicleRec = await DeliveryService.getVehicleRecommendation(vehicleData)
       if (vehicleRec) {
         setRecommendedVehicle({
-          type: vehicleRec.recommended_vehicle,
+          type: vehicleRec.recommended_vehicle as VehicleType,
           name: getVehicleName(vehicleRec.recommended_vehicle),
           reason: vehicleRec.reason,
           priceMultiplier: 1

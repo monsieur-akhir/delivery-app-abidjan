@@ -5,7 +5,7 @@ export { default as VoiceAssistant } from './VoiceAssistant';
 export { default as VoiceRecorder } from './VoiceRecorder';
 export { default as WeatherInfo } from './WeatherInfo'
 export { default as CustomMapView } from './CustomMapView'
-export type { Route } from './CustomMapView';
+export type { CustomMapRoute as Route } from './CustomMapView';
 export { default as EnhancedWeatherInfo } from './EnhancedWeatherInfo';
 export { default as WeatherAlertModal } from './WeatherAlertModal';
 export { default as MapView } from './MapView';

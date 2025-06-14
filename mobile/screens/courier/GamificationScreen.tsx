@@ -242,7 +242,7 @@ const GamificationScreen: React.FC = () => {
                       />
                     )}
                   </View>
-                  
+
                   <Avatar.Image
                     size={40}
                     source={
@@ -251,7 +251,7 @@ const GamificationScreen: React.FC = () => {
                         : require("../../assets/images/default-avatar.png")
                     }
                   />
-                  
+
                   <View style={styles.leaderboardInfo}>
                     <Text style={[
                       styles.leaderboardName,
@@ -274,7 +274,7 @@ const GamificationScreen: React.FC = () => {
           <Card style={styles.challengesCard}>
             <Card.Content>
               <Text style={styles.cardTitle}>Défis du jour</Text>
-              
+
               <View style={styles.challengeItem}>
                 <View style={styles.challengeIcon}>
                   <Feather name="target" size={20} color="#FF6B00" />
@@ -283,12 +283,12 @@ const GamificationScreen: React.FC = () => {
                   <Text style={styles.challengeTitle}>Complétez 5 livraisons</Text>
                   <Text style={styles.challengeReward}>Récompense: 50 points</Text>
                   <ProgressBar 
-                    progress={Math.min(stats.daily_deliveries / 5, 1)} 
+                    progress={Math.min((stats.daily_deliveries || 0) / 5, 1)} 
                     color="#FF6B00" 
                     style={styles.challengeProgress}
                   />
                   <Text style={styles.challengeText}>
-                    {stats.daily_deliveries}/5 livraisons
+                    {stats.daily_deliveries || 0}/5 livraisons
                   </Text>
                 </View>
               </View>

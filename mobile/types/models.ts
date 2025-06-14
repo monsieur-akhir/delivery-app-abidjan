@@ -939,7 +939,7 @@ export interface VehicleEnvironmentalStats {
 export interface LoginCredentials {
   email?: string;
   phone?: string;
-  password?: string;
+  password: string;
 }
 
 export interface RegisterData {
@@ -1317,7 +1317,7 @@ export interface Leaderboard {
   name: string
   profile_picture?: string
   points: number
-  deliveries_count: number
+  deliveriescount: number
   rank: number
 }
 

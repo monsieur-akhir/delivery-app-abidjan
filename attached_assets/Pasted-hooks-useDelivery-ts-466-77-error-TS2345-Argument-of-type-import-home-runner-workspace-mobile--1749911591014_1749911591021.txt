@@ -1,0 +1,522 @@
+hooks/useDelivery.ts:466:77 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/hooks/useDelivery").VehicleRecommendationData' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/types/models").VehicleRecommendationData'.
+  Type 'VehicleRecommendationData' is missing the following properties from type 'VehicleRecommendationData': pickup_lat, pickup_lng, delivery_lat, delivery_lng, package_type
+
+466       const recommendation = await DeliveryService.getVehicleRecommendation(data)
+                                                                                ~~~~
+
+screens/client/CreateDeliveryScreen.tsx:27:10 - error TS2300: Duplicate identifier 'formatPrice'.
+
+27 import { formatPrice } from '../../utils/formatters'
+            ~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:37:10 - error TS2300: Duplicate identifier 'formatPrice'.
+
+37 import { formatPrice, formatDistance } from "../../utils/formatters"
+            ~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:149:9 - error TS2554: Expected 2 arguments, but got 4.
+
+149         deliveryLocation.latitude,
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~
+150         deliveryLocation.longitude
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:194:32 - error TS2345: Argument of type 'string' is not assignable to parameter of type 'VehicleType'.
+
+194           name: getVehicleName(vehicleRec.recommended_vehicle),
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:240:7 - error TS2353: Object literal may only specify known properties, and 'pickup_commune' does not exist in type 'DeliveryCreateRequest'.
+
+240       pickup_commune: extractCommune(pickupAddress),
+          ~~~~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:268:43 - error TS2345: Argument of type 'DeliveryCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/hooks/useDelivery").DeliveryCreateRequest'.
+  Type 'DeliveryCreateRequest' is missing the following properties from type 'DeliveryCreateRequest': pickup_commune, delivery_commune
+
+268       const result = await createDelivery(deliveryData)
+                                              ~~~~~~~~~~~~
+
+screens/client/EnhancedRateDeliveryScreen.tsx:232:11 - error TS2322: Type '"submit_rating"' is not assignable to type '"rating" | "delivery" | "bid" | "tracking" | "support_ticket" | "ticket_reply" | "register" | "profile_image" | "profile_update"'.
+
+232           type: "submit_rating",
+              ~~~~
+
+  types/models.ts:202:3
+    202   type: 'delivery' | 'bid' | 'tracking' | 'rating' | 'support_ticket' | 'ticket_reply' | 'register' | 'profile_image' | 'profile_update'
+          ~~~~
+    The expected type comes from property 'type' which is declared here on type 'Omit<PendingOperation, "id" | "timestamp">'
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:51:53 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+51       const deliveryData = await getDeliveryDetails(Number(deliveryId))
+                                                       ~~~~~~~~~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:59:11 - error TS2339: Property 'getActiveDeliveries' does not exist on type 'UseDeliveryReturn'.
+
+59   const { getActiveDeliveries, getClientDeliveryHistory } = useDelivery()
+             ~~~~~~~~~~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:141:36 - error TS2353: Object literal may only specify known properties, and 'limit' does not exist in type 'DeliveryFilters'.
+
+141         getClientDeliveryHistory({ limit: 5 })
+                                       ~~~~~
+
+screens/client/HomeScreen.tsx:258:18 - error TS2322: Type 'string' is not assignable to type '"link" | "search" | "image" | "menu" | "radio" | "code" | "map" | "filter" | "book" | "pause" | "mail" | "home" | "star" | "save" | "cloud" | "eye" | "camera" | "heart" | "download" | ... 267 more ... | undefined'.
+
+258         <Feather name={service.icon} size={24} color="#FFFFFF" />
+                     ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"link" | "search" | "image" | "menu" | "radio" | "code" | "map" | "filter" | "book" | "pause" | "mail" | "home" | "star" | "save" | ... 271 more ... | "zoom-out">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/HomeScreen.tsx:389:15 - error TS2322: Type '{ initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; style: { flex: number; }; showsUserLocation: boolean; zoomEnabled: boolean; scrollEnabled: boolean; pitchEnabled: boolean; rotateEnabled: boolean; }' is not assignable to type 'IntrinsicAttributes & CustomMapViewProps'.
+  Property 'showsUserLocation' does not exist on type 'IntrinsicAttributes & CustomMapViewProps'.
+
+389               showsUserLocation={true}
+                  ~~~~~~~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:20:3 - error TS1117: An object literal cannot have multiple properties with the same name.
+
+20   name: merchantInfo.name,
+     ~~~~
+
+screens/client/MarketplaceScreen.tsx:23:3 - error TS2353: Object literal may only specify known properties, and 'commune' does not exist in type 'Merchant'.
+
+23   commune: merchantInfo.commune,
+     ~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:170:19 - error TS2339: Property 'delivery_time' does not exist on type 'Merchant'.
+
+170             {item.delivery_time || 30} min
+                      ~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:23:3 - error TS2353: Object literal may only specify known properties, and 'business_name' does not exist in type 'Merchant'.
+
+23   business_name: merchantInfo.name,
+     ~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:321:50 - error TS18048: 'merchant.rating' is possibly 'undefined'.
+
+321                 <Text style={styles.ratingText}>{merchant.rating.toFixed(1)}</Text>
+                                                     ~~~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:329:25 - error TS2339: Property 'delivery_time' does not exist on type 'Merchant'.
+
+329               {merchant.delivery_time && (
+                            ~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:332:63 - error TS2339: Property 'delivery_time' does not exist on type 'Merchant'.
+
+332                   <Text style={styles.deliveryTime}>{merchant.delivery_time} min</Text>
+                                                                  ~~~~~~~~~~~~~
+
+screens/client/NotificationsScreen.tsx:177:32 - error TS2339: Property 'transaction_id' does not exist on type 'NotificationData'.
+
+177         if (notification.data?.transaction_id) {
+                                   ~~~~~~~~~~~~~~
+
+screens/client/NotificationsScreen.tsx:275:17 - error TS2322: Type '"cog" | "bell" | "credit-card" | "truck-delivery" | "info" | "tag" | "alert-triangle" | "check-circle" | "x-circle" | "message-text"' is not assignable to type '"symbol" | "function" | "link" | "image" | "text" | "alert" | "menu" | "radio" | "timer" | "map" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | "mail" | "home" | "laptop" | ... 6577 more ... | undefined'.
+  Type '"info"' is not assignable to type '"symbol" | "function" | "link" | "image" | "text" | "alert" | "menu" | "radio" | "timer" | "map" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | "mail" | "home" | "laptop" | ... 6577 more ... | undefined'.
+
+275                 name={notificationIcon}
+                    ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"symbol" | "function" | "link" | "image" | "text" | "alert" | "menu" | "radio" | "timer" | "map" | "ellipse" | "filter" | "stop" | ... 6582 more ... | "blank">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/OrdersScreen.tsx:204:17 - error TS2322: Type 'Element' is not assignable to type '((string | number | boolean | Value | AnimatedInterpolation<string | number> | WithAnimatedObject<ReactElement<any, string | JSXElementConstructor<any>>> | WithAnimatedObject<...> | WithAnimatedObject<...> | null) & (string | number)) | undefined'.
+  Type 'ReactElement<any, any>' is not assignable to type 'WithAnimatedObject<ReactPortal> & number'.
+    Property 'children' is missing in type 'ReactElement<any, any>' but required in type 'WithAnimatedObject<ReactPortal>'.
+
+204                 <Ionicons name={statusIcon} size={12} color="white" />
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  node_modules/@types/react/index.d.ts:192:9
+    192         children: ReactNode;
+                ~~~~~~~~
+    'children' is declared here.
+  node_modules/react-native/Libraries/Text/Text.d.ts:110:3
+    110   children?: React.ReactNode;
+          ~~~~~~~~
+    The expected type comes from property 'children' which is declared here on type 'IntrinsicAttributes & AnimatedProps<TextProps & RefAttributes<Text>> & { visible?: boolean | undefined; ... 4 more ...; theme?: ThemeProp | undefined; }'
+
+screens/client/OrdersScreen.tsx:204:27 - error TS2322: Type '"close-circle-outline" | "help-circle-outline" | "package-variant" | "check-circle-outline" | "check-all" | "clock-outline" | "truck-delivery-outline"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+  Type '"package-variant"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+
+204                 <Ionicons name={statusIcon} size={12} color="white" />
+                              ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | ... 3667 more ... | "md-woman-sharp">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/OrdersScreen.tsx:261:25 - error TS2322: Type '"close-circle-outline" | "help-circle-outline" | "package-variant" | "check-circle-outline" | "check-all" | "clock-outline" | "truck-delivery-outline"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+  Type '"package-variant"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+
+261               <Ionicons name={statusIcon} size={18} color={statusColor} />
+                            ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | ... 3667 more ... | "md-woman-sharp">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/RateDeliveryScreen.tsx:59:68 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+59         const deliveryData = await DeliveryService.getDeliveryById(Number(deliveryId))
+                                                                      ~~~~~~~~~~~~~~~~~~
+
+screens/client/SmartMatchingScreen.tsx:53:67 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+53       const response = await DeliveryService.getSuggestedCouriers(deliveryId)
+                                                                     ~~~~~~~~~~
+
+screens/client/SmartMatchingScreen.tsx:74:56 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+74               await DeliveryService.autoAssignDelivery(deliveryId)
+                                                          ~~~~~~~~~~
+
+screens/client/SmartMatchingScreen.tsx:95:45 - error TS2322: Type 'number' is not assignable to type 'string'.
+
+95       await DeliveryService.assignCourier({ delivery_id: deliveryId, courier_id: courierId })
+                                               ~~~~~~~~~~~
+
+  services/DeliveryService.ts:479:38
+    479   static async assignCourier(data: { delivery_id: string; courier_id: string }): Promise<void> {
+                                             ~~~~~~~~~~~
+    The expected type comes from property 'delivery_id' which is declared here on type '{ delivery_id: string; courier_id: string; }'
+
+screens/client/SmartMatchingScreen.tsx:95:70 - error TS2322: Type 'number' is not assignable to type 'string'.
+
+95       await DeliveryService.assignCourier({ delivery_id: deliveryId, courier_id: courierId })
+                                                                        ~~~~~~~~~~
+
+  services/DeliveryService.ts:479:59
+    479   static async assignCourier(data: { delivery_id: string; courier_id: string }): Promise<void> {
+                                                                  ~~~~~~~~~~
+    The expected type comes from property 'courier_id' which is declared here on type '{ delivery_id: string; courier_id: string; }'
+
+screens/client/TrackDeliveryScreen.tsx:29:5 - error TS2353: Object literal may only specify known properties, and 'instructions' does not exist in type 'MapRoute'.
+
+29     instructions: []
+       ~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:105:66 - error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+105             onPress: () => navigation.navigate("RateDelivery", { deliveryId }),
+                                                                     ~~~~~~~~~~
+
+  types/navigation.ts:46:19
+    46   RateDelivery: { deliveryId: string };
+                         ~~~~~~~~~~
+    The expected type comes from property 'deliveryId' which is declared here on type '{ deliveryId: string; }'
+
+screens/client/TrackDeliveryScreen.tsx:154:53 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+154       const deliveryData = await getDeliveryDetails(Number(deliveryId))
+                                                        ~~~~~~~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:354:11 - error TS2322: Type '{ style: { position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; pickupPoint: { latitude: number; longitude: number; title: string; description: string; } | undefined; ... 4 more ...; showsUserLocation: b...' is not assignable to type 'IntrinsicAttributes & CustomMapViewProps'.
+  Property 'pickupPoint' does not exist on type 'IntrinsicAttributes & CustomMapViewProps'.
+
+354           pickupPoint={delivery.pickup_lat && delivery.pickup_lng ? {
+              ~~~~~~~~~~~
+
+screens/client/TransactionHistoryScreen.tsx:210:10 - error TS2552: Cannot find name 'SearchBar'. Did you mean 'Searchbar'?
+
+210         <SearchBar
+             ~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:53:9 - error TS2353: Object literal may only specify known properties, and 'maxDistance' does not exist in type 'VehicleCreateRequest'.
+
+53         maxDistance: formData.maxDistance ? parseFloat(formData.maxDistance) : undefined,
+           ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:55:21 - error TS2367: This comparison appears to be unintentional because the types '"motorcycle"' and '"custom"' have no overlap.
+
+55         customType: formData.type === 'custom' ? formData.customType : undefined,
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:102:12 - error TS2367: This comparison appears to be unintentional because the types '"motorcycle"' and '"custom"' have no overlap.
+
+102           {formData.type === VehicleType.CUSTOM && (
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/BidScreen.tsx:122:45 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+122       const data = await getDeliveryDetails(Number(deliveryId))
+                                                ~~~~~~~~~~~~~~~~~~
+
+screens/courier/BidScreen.tsx:213:26 - error TS2345: Argument of type '{ type: "bid"; data: { delivery_id: number; proposed_price: number; estimated_duration: number | undefined; }; }' is not assignable to parameter of type 'Omit<PendingOperation, "id" | "timestamp">'.
+  Property 'retries' is missing in type '{ type: "bid"; data: { delivery_id: number; proposed_price: number; estimated_duration: number | undefined; }; }' but required in type 'Omit<PendingOperation, "id" | "timestamp">'.
+
+213         addPendingUpload({
+                             ~
+214           type: "bid",
+    ~~~~~~~~~~~~~~~~~~~~~~
+... 
+219           },
+    ~~~~~~~~~~~~
+220         })
+    ~~~~~~~~~
+
+  types/models.ts:203:3
+    203   retries: number
+          ~~~~~~~
+    'retries' is declared here.
+
+screens/courier/BidScreen.tsx:229:15 - error TS2554: Expected 2 arguments, but got 1.
+
+229         await placeBid({
+                  ~~~~~~~~
+
+  hooks/useDelivery.ts:165:34
+    165   placeBid: (deliveryId: number, bidData: any) => Promise<void>
+                                         ~~~~~~~~~~~~
+    An argument for 'bidData' was not provided.
+
+screens/courier/BidScreen.tsx:284:63 - error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+284               <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price)} FCFA</Text>
+                                                                  ~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:66:37 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+66           <StarRating rating={stats.averageRating} size={20} />
+                                       ~~~~~~~~~~~~~
+
+  types/models.ts:337:3
+    337   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/CourierProfileScreen.tsx:67:50 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+67           <Text style={styles.ratingText}>{stats.averageRating.toFixed(1)}</Text>
+                                                    ~~~~~~~~~~~~~
+
+  types/models.ts:337:3
+    337   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/CourierProfileScreen.tsx:116:14 - error TS18048: 'stats.badges' is possibly 'undefined'.
+
+116             {stats.badges.map((badge: any) => (
+                 ~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:52:25 - error TS2345: Argument of type 'CourierProfile' is not assignable to parameter of type 'SetStateAction<CourierProfile | null>'.
+  Type 'CourierProfile' is missing the following properties from type 'CourierProfile': user_id, is_available
+
+52       setCourierProfile(profileData)
+                           ~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:41:58 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+41       const data = await DeliveryService.getDeliveryById(deliveryId)
+                                                            ~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:217:15 - error TS2322: Type '{ deliveries: Delivery[]; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'deliveries' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'.
+
+217               deliveries={[delivery]}
+                  ~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:24:5 - error TS2339: Property 'loading' does not exist on type 'UseDeliveryReturn'.
+
+24     loading,
+       ~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:27:5 - error TS2339: Property 'acceptDelivery' does not exist on type 'UseDeliveryReturn'.
+
+27     acceptDelivery,
+       ~~~~~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:28:5 - error TS2339: Property 'startDelivery' does not exist on type 'UseDeliveryReturn'.
+
+28     startDelivery
+       ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:41:9 - error TS2353: Object literal may only specify known properties, and 'averageRating' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+41         averageRating: statsData.average_rating || 0,
+           ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:55:22 - error TS2345: Argument of type 'Leaderboard[]' is not assignable to parameter of type 'SetStateAction<Leaderboard[]>'.
+  Type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard[]' is not assignable to type 'import("/home/runner/workspace/mobile/types/models").Leaderboard[]'.
+    Property 'deliveriescount' is missing in type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard' but required in type 'import("/home/runner/workspace/mobile/types/models").Leaderboard'.
+
+55       setLeaderboard(leaderboardData)
+                        ~~~~~~~~~~~~~~~
+
+  types/models.ts:1320:3
+    1320   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/GamificationScreen.tsx:109:46 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+109   const currentLevel = getCurrentLevel(stats.total_points || 0)
+                                                 ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:110:49 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+110   const progress = getProgressToNextLevel(stats.total_points || 0)
+                                                    ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:138:59 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+138                   <Text style={styles.totalPoints}>{stats.total_points || 0} points</Text>
+                                                              ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:154:70 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+154                     ? ` ${levelThresholds[currentLevel + 1] - (stats.total_points || 0)} points restants`
+                                                                         ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:176:57 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+176                   <Text style={styles.statValue}>{stats.averageRating?.toFixed(1) || "N/A"}</Text>
+                                                            ~~~~~~~~~~~~~
+
+  types/models.ts:337:3
+    337   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/GamificationScreen.tsx:181:57 - error TS2339: Property 'completion_rate' does not exist on type 'CourierStats'.
+
+181                   <Text style={styles.statValue}>{stats.completion_rate?.toFixed(0) || 0}%</Text>
+                                                            ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:186:57 - error TS2339: Property 'average_delivery_time' does not exist on type 'CourierStats'.
+
+186                   <Text style={styles.statValue}>{stats.average_delivery_time || "N/A"}</Text>
+                                                            ~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:263:30 - error TS2551: Property 'deliveries_count' does not exist on type 'Leaderboard'. Did you mean 'deliveriescount'?
+
+263                       {entry.deliveries_count} livraisons • {entry.points} pts
+                                 ~~~~~~~~~~~~~~~~
+
+  types/models.ts:1320:3
+    1320   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/GamificationScreen.tsx:304:47 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+304                     progress={Math.min((stats.daily_rating || 0) / 4.5, 1)}
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:309:43 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+309                     Note actuelle: {stats.daily_rating?.toFixed(1) || "N/A"}
+                                              ~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:96:30 - error TS2345: Argument of type 'AvailableDelivery[]' is not assignable to parameter of type 'SetStateAction<AvailableDelivery[]>'.
+  Type 'import("/home/runner/workspace/mobile/types/models").AvailableDelivery[]' is not assignable to type 'AvailableDelivery[]'.
+    Type 'AvailableDelivery' is missing the following properties from type 'AvailableDelivery': estimated_price, commune, bids_count, urgency_level
+
+96       setAvailableDeliveries(response || [])
+                                ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:105:27 - error TS2345: Argument of type 'Delivery[]' is not assignable to parameter of type 'SetStateAction<ActiveDelivery[]>'.
+  Type 'Delivery[]' is not assignable to type 'ActiveDelivery[]'.
+    Property 'client_name' is missing in type 'Delivery' but required in type 'ActiveDelivery'.
+
+105       setActiveDeliveries(response || [])
+                              ~~~~~~~~~~~~~~
+
+  screens/courier/HomeScreen.tsx:42:3
+    42   client_name: string
+         ~~~~~~~~~~~
+    'client_name' is declared here.
+
+screens/courier/HomeScreen.tsx:123:16 - error TS2345: Argument of type 'CourierStats' is not assignable to parameter of type 'SetStateAction<CourierStats>'.
+  Type 'CourierStats' is missing the following properties from type 'CourierStats': completed_today, earnings_today, current_earnings
+
+123       setStats(response || stats)
+                   ~~~~~~~~~~~~~~~~~
+
+screens/profile/ProfileScreen.tsx:54:9 - error TS2353: Object literal may only specify known properties, and 'created_at' does not exist in type 'UserProfile'.
+
+54         created_at: profileData.created_at,
+           ~~~~~~~~~~
+
+types/models.ts:16:3 - error TS2687: All declarations of 'password' must have identical modifiers.
+
+16   password?: string;
+     ~~~~~~~~
+
+types/models.ts:942:3 - error TS2687: All declarations of 'password' must have identical modifiers.
+
+942   password: string;
+      ~~~~~~~~
+
+types/models.ts:942:3 - error TS2717: Subsequent property declarations must have the same type.  Property 'password' must be of type 'string | undefined', but here has type 'string'.
+
+942   password: string;
+      ~~~~~~~~
+
+  types/models.ts:16:3
+    16   password?: string;
+         ~~~~~~~~
+    'password' was also declared here.
+
+
+Found 74 errors in 24 files.
+
+Errors  Files
+     1  hooks/useDelivery.ts:466
+     6  screens/client/CreateDeliveryScreen.tsx:27
+     1  screens/client/EnhancedRateDeliveryScreen.tsx:232
+     1  screens/client/EnhancedTrackDeliveryScreen.tsx:51
+     4  screens/client/HomeScreen.tsx:59
+     3  screens/client/MarketplaceScreen.tsx:20
+     4  screens/client/MerchantDetailsScreen.tsx:23
+     2  screens/client/NotificationsScreen.tsx:177
+     3  screens/client/OrdersScreen.tsx:204
+     1  screens/client/RateDeliveryScreen.tsx:59
+     4  screens/client/SmartMatchingScreen.tsx:53
+     4  screens/client/TrackDeliveryScreen.tsx:29
+     1  screens/client/TransactionHistoryScreen.tsx:210
+     3  screens/courier/AddVehicleScreen.tsx:53
+     4  screens/courier/BidScreen.tsx:122
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     3  screens/courier/CourierProfileScreen.tsx:66
+     1  screens/courier/CourierStatusScreen.tsx:52
+     2  screens/courier/DeliveryDetailsScreen.tsx:41
+     3  screens/courier/ExpressDeliveriesScreen.tsx:24
+    12  screens/courier/GamificationScreen.tsx:41
+     3  screens/courier/HomeScreen.tsx:96
+     1  screens/profile/ProfileScreen.tsx:54
+     3  types/models.ts:16

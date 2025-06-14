@@ -93,7 +93,7 @@ const CourierHomeScreen: React.FC = () => {
   const loadAvailableDeliveries = async () => {
     try {
       const response = await DeliveryService.getAvailableDeliveries()
-      setAvailableDeliveries(response.data || [])
+      setAvailableDeliveries(response || [])
     } catch (error) {
       console.error('Error loading available deliveries:', error)
     }
@@ -102,7 +102,7 @@ const CourierHomeScreen: React.FC = () => {
   const loadActiveDeliveries = async () => {
     try {
       const response = await DeliveryService.getCourierActiveDeliveries()
-      setActiveDeliveries(response.data || [])
+      setActiveDeliveries(response || [])
     } catch (error) {
       console.error('Error loading active deliveries:', error)
     }
@@ -120,7 +120,7 @@ const CourierHomeScreen: React.FC = () => {
   const loadStats = async () => {
     try {
       const response = await DeliveryService.getCourierStats()
-      setStats(response.data || stats)
+      setStats(response || stats)
     } catch (error) {
       console.error('Error loading stats:', error)
     }
@@ -135,7 +135,7 @@ const CourierHomeScreen: React.FC = () => {
   const toggleCourierStatus = async () => {
     try {
       const newStatus = !courierStatus
-      await DeliveryService.updateCourierStatus(newStatus)
+      await DeliveryService.updateCourierStatus(newStatus ? 'online' : 'offline')
       setCourierStatus(newStatus)
 
       Alert.alert(
@@ -277,7 +277,7 @@ const CourierHomeScreen: React.FC = () => {
       <View style={styles.actionButtons}>
         <TouchableOpacity
           style={styles.bidButton}
-          onPress={() => navigation.navigate('BidScreen', { delivery: item })}
+          onPress={() => navigation.navigate('BidScreen', { deliveryId: item.id.toString() })}
         >
           <Text style={styles.bidButtonText}>Faire une offre</Text>
         </TouchableOpacity>

@@ -55,7 +55,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
   const handleNotificationPress = (notification: Notification) => {
     if (!notification.data) return
 
-    const deliveryId = String(notification.data.deliveryId || '')
+    const deliveryId = String(notification.data.delivery_id || '')
 
     if (notification.data.type === "delivery_assigned" || notification.data.type === "delivery_status") {
       navigation.navigate("DeliveryDetails", { deliveryId })
