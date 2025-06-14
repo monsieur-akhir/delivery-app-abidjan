@@ -893,7 +893,8 @@
                     <div class="location-item">
                       <div class="location-label">Coordonnées</div>
                       <div class="location-value">
-                        <span v-if="selectedCourier.latitude && selectedCourier.longitude">
+                        ```text
+                         <span v-if="selectedCourier.latitude && selectedCourier.longitude">
                           {{ selectedCourier.latitude.toFixed(6) }},
                           {{ selectedCourier.longitude.toFixed(6) }}
                         </span>
@@ -1233,7 +1234,7 @@ export default {
     const showNotificationModal = ref(false)
     const showRejectVerificationModal = ref(false)
     const loading = ref(true)
-    const isSaving = ref(false)
+    const isSaving = ref(isSaving)
     const isSendingNotification = ref(false)
     const currentPage = ref(1)
     const totalPages = ref(1)
@@ -1670,68 +1671,40 @@ export default {
       }
     }
 
-    const suspendCourier = async courierId => {
-      if (!confirm(`Êtes-vous sûr de vouloir suspendre ce coursier ?`)) {
-        return
-      }
-
+    const suspendCourier = async id => {
       try {
-        await updateCourierStatus(courierId, 'suspended')
-
-        // Mettre à jour le coursier dans la liste
-        const index = couriers.value.findIndex(c => c.id === courierId)
-        if (index !== -1) {
-          couriers.value[index].status = 'suspended'
-        }
-
-        // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value && selectedCourier.value.id === courierId) {
-          selectedCourier.value.status = 'suspended'
-        }
-
-        // Afficher une notification de succès
-        showToast('Coursier suspendu avec succès', { type: 'success' })
+        await updateCourierStatus(id, 'suspended')
+        showToast('Coursier suspendu avec succès', 'success')
+        fetchData()
       } catch (error) {
         console.error('Erreur lors de la suspension du coursier:', error)
-        showToast('Erreur lors de la suspension du coursier', { type: 'error' })
+        showToast('Erreur lors de la suspension du coursier', 'error')
       }
     }
 
-    const activateCourier = async courierId => {
+    const activateCourier = async id => {
       try {
-        await updateCourierStatus(courierId, 'active')
-
-        // Mettre à jour le coursier dans la liste
-        const index = couriers.value.findIndex(c => c.id === courierId)
-        if (index !== -1) {
-          couriers.value[index].status = 'active'
-        }
-
-        // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value && selectedCourier.value.id === courierId) {
-          selectedCourier.value.status = 'active'
-        }
-
-        // Afficher une notification de succès
-        showToast('Coursier activé avec succès', { type: 'success' })
+        await updateCourierStatus(id, 'active')
+        showToast('Coursier activé avec succès', 'success')
+        fetchData()
       } catch (error) {
         console.error("Erreur lors de l'activation du coursier:", error)
-        showToast("Erreur lors de l'activation du coursier", { type: 'error' })
+        showToast("Erreur lors de l'activation du coursier", 'error')
       }
     }
 
-    const verifyCourier = async courierId => {
+    const verifyCourier = async id => {
       try {
-        await verifyCourierKyc(courierId)
+        await verifyCourierKyc(id)
 
         // Mettre à jour le coursier dans la liste
-        const index = couriers.value.findIndex(c => c.id === courierId)
+        const index = couriers.value.findIndex(c => c.id === id)
         if (index !== -1) {
           couriers.value[index].status = 'active'
         }
 
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value && selectedCourier.value.id === courierId) {
+        if (selectedCourier.value && selectedCourier.value.id === id) {
           selectedCourier.value.status = 'active'
           if (selectedCourier.value.kyc) {
             selectedCourier.value.kyc.status = 'verified'
@@ -1889,7 +1862,8 @@ export default {
         showToast('Coursier bloqué avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors du blocage du coursier:', error)
-        showToast('Erreur lors du blocage du coursier', { type: 'error' })
+        ```text
+showToast('Erreur lors du blocage du coursier', { type: 'error' })
       }
     }
 
@@ -2122,7 +2096,7 @@ export default {
           await verifyCourierDocument(selectedCourier.value.id, documentType)
           selectedCourier.value.kyc[`${documentType}_verified`] = true
         } else if (action === 'reject') {
-          await rejectCourierDocument(selectedCourier.value.id, documentType)
+          await rejectCourierDocument(selectedCourier.value.id, documentType, rejectionReason.value)
           selectedCourier.value.kyc[`${documentType}_verified`] = false
           selectedCourier.value.kyc[`${documentType}_document`] = null
         }
@@ -2136,26 +2110,15 @@ export default {
       }
     }
 
-    const handleKycAction = async (action, reason = null) => {
+    // Approuver la vérification KYC
+    const verifyCourier = async id => {
       try {
-        if (!selectedCourier.value) return
-
-        if (action === 'verify') {
-          await verifyCourierKyc(selectedCourier.value.id)
-          selectedCourier.value.status = 'active'
-          selectedCourier.value.kyc.status = 'verified'
-        } else if (action === 'reject') {
-          await rejectCourierKyc(selectedCourier.value.id, reason)
-          selectedCourier.value.status = 'inactive'
-          selectedCourier.value.kyc.status = 'rejected'
-        }
-
-        showToast(`Vérification ${action === 'verify' ? 'approuvée' : 'rejetée'} avec succès`, {
-          type: 'success',
-        })
+        await verifyCourierKyc(id)
+        showToast('Vérification KYC approuvée', 'success')
+        loadCourierDetails(id)
       } catch (error) {
-        console.error(`Erreur lors de l'action sur le KYC:`, error)
-        showToast(`Erreur lors de l'action sur le KYC`, { type: 'error' })
+        console.error('Erreur lors de la vérification KYC:', error)
+        showToast('Erreur lors de la vérification KYC', { type: 'error' })
       }
     }
 
@@ -3088,7 +3051,7 @@ input:checked + .toggle-slider:before {
 
 .courier-details-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: column: column;
   gap: 0.5rem;
 }
 

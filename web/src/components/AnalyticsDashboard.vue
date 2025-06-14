@@ -217,7 +217,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="courier in topCouriers" :key="index">
+                <tr v-for="courier in topCouriers" :key="courier.id">
                   <td>
                     <div class="courier-info">
                       <div class="courier-avatar">

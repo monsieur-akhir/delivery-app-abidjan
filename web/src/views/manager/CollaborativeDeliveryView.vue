@@ -872,13 +872,11 @@ export default {
       const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#6f42c1']
 
       // Remplir les données
-      let i = 0
       for (const [participantId, amount] of Object.entries(
         earningsData.value.participant_earnings
       )) {
         labels.push(getParticipantName(participantId))
         data.push(amount)
-        i++
       }
 
       // Créer le graphique
