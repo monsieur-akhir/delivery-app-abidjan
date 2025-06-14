@@ -1,0 +1,109 @@
+screens/courier/GamificationScreen.tsx:42:9 - error TS2353: Object literal may only specify known properties, and 'completion_rate' does not exist in type 'CourierStats'.
+
+42         completion_rate: statsData.completion_rate || 100,
+           ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:46:31 - error TS2339: Property 'experience' does not exist on type 'CourierStats'.
+
+46         experience: statsData.experience || 0,
+                                 ~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:48:34 - error TS2339: Property 'badges' does not exist on type 'CourierStats'.
+
+48         badges_count: (statsData.badges || []).length,
+                                    ~~~~~~
+
+screens/courier/GamificationScreen.tsx:49:38 - error TS2339: Property 'weekly_deliveries' does not exist on type 'CourierStats'.
+
+49         weekly_deliveries: statsData.weekly_deliveries || 0,
+                                        ~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:50:39 - error TS2551: Property 'monthly_deliveries' does not exist on type 'CourierStats'. Did you mean 'total_deliveries'?
+
+50         monthly_deliveries: statsData.monthly_deliveries || 0,
+                                         ~~~~~~~~~~~~~~~~~~
+
+  services/GamificationService.ts:19:3
+    19   total_deliveries: number
+         ~~~~~~~~~~~~~~~~
+    'total_deliveries' is declared here.
+
+screens/courier/GamificationScreen.tsx:51:36 - error TS2339: Property 'weekly_earnings' does not exist on type 'CourierStats'.
+
+51         weekly_earnings: statsData.weekly_earnings || 0,
+                                      ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:52:37 - error TS2339: Property 'monthly_earnings' does not exist on type 'CourierStats'.
+
+52         monthly_earnings: statsData.monthly_earnings || 0
+                                       ~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:60:48 - error TS2339: Property 'name' does not exist on type 'Achievement'.
+
+60         name: achievement.title || achievement.name || 'Achievement',
+                                                  ~~~~
+
+screens/courier/GamificationScreen.tsx:62:27 - error TS2339: Property 'icon' does not exist on type 'Achievement'.
+
+62         icon: achievement.icon || 'award',
+                             ~~~~
+
+screens/courier/GamificationScreen.tsx:66:49 - error TS2339: Property 'name' does not exist on type 'Achievement'.
+
+66         title: achievement.title || achievement.name || 'Achievement'
+                                                   ~~~~
+
+screens/courier/GamificationScreen.tsx:136:47 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+136   const currentLevel = getCurrentLevel(stats?.total_points || 0)
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:137:50 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+137   const progress = getProgressToNextLevel(stats?.total_points || 0)
+                                                     ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:165:60 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+165                   <Text style={styles.totalPoints}>{stats?.total_points || 0} points</Text>
+                                                               ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:181:71 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+181                     ? ` ${levelThresholds[currentLevel + 1] - (stats?.total_points || 0)} points restants`
+                                                                          ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:208:58 - error TS2339: Property 'completion_rate' does not exist on type 'CourierStats'.
+
+208                   <Text style={styles.statValue}>{stats?.completion_rate?.toFixed(0) || 0}%</Text>
+                                                             ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:213:58 - error TS2339: Property 'average_delivery_time' does not exist on type 'CourierStats'.
+
+213                   <Text style={styles.statValue}>{stats?.average_delivery_time || "N/A"} min</Text>
+                                                             ~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:230:60 - error TS2339: Property 'type' does not exist on type 'Achievement'.
+
+230                       name={getAchievementIcon(achievement.type || 'award')}
+                                                               ~~~~
+
+screens/courier/GamificationScreen.tsx:276:29 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+276                       entry.profile_picture
+                                ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:277:40 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+277                         ? { uri: entry.profile_picture }
+                                           ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:287:71 - error TS2339: Property 'name' does not exist on type 'Leaderboard'.
+
+287                       {entry.courier_id === user?.id ? "Vous" : entry.name}
+                                                                          ~~~~
+
+screens/courier/GamificationScreen.tsx:290:30 - error TS2339: Property 'deliveries_count' does not exist on type 'Leaderboard'.
+
+290                       {entry.deliveries_count || 0} livraisons • {entry.total_points || 0} pts
+                                 ~~~~~~~~~~~~~~~~
