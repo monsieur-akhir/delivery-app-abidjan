@@ -247,8 +247,8 @@ const UserPreferencesScreen: React.FC<UserPreferencesScreenProps> = ({ navigatio
               left={props => <List.Icon {...props} icon="gift" />}
               right={() => (
                 <Switch
-                  value={notifications?.promotional_notifications || false}
-                  onValueChange={(value) => handleNotificationUpdate('promotional_notifications', value)}
+                  value={notifications?.promotional_offers || false}
+                  onValueChange={(value) => handleNotificationUpdate('promotional_offers', value)}
                   disabled={saving}
                 />
               )}

@@ -286,4 +286,4 @@ class NotificationService {
 }
 
 export default NotificationService
-export type { NotificationSettings }
+export type { NotificationSettings as ServiceNotificationSettings }

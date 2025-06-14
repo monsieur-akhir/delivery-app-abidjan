@@ -6,7 +6,7 @@ import { Feather } from "@expo/vector-icons"
 
 export interface EmptyStateProps {
   title: string
-  subtitle: string
+  subtitle?: string
   actionText?: string
   onAction?: () => void
   image?: any
@@ -27,7 +27,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   buttonText,
   onButtonPress
 }) => {
-  const displayMessage = message || subtitle
+  const displayMessage = message || subtitle || ""
   const displayButtonText = buttonText || actionText
   const displayOnPress = onButtonPress || onAction
 

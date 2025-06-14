@@ -94,11 +94,11 @@ export const formatCurrency = (amount: number, currency: string = 'FCFA'): strin
   return `${formatPrice(amount)} ${currency}`
 }
 
-export const formatDistance = (distance: number): string => {
+export const formatDistanceKm = (distance: number): string => {
   if (distance < 1000) {
-    return `${Math.round(distance)} m`
+    return `${distance.toFixed(0)}m`
   }
-  return `${(distance / 1000).toFixed(1)} km`
+  return `${(distance / 1000).toFixed(1)}km`
 }
 
 export const formatDate2 = (date: string | Date): string => {

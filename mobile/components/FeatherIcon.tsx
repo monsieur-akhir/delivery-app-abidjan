@@ -85,7 +85,7 @@ const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
   'external-link': 'open-outline',
   'file': 'document-outline',
   'folder': 'folder-outline',
-  'shopping-bag': 'bag-outline',
+  'shopping-bag': 'bag-outline' as keyof typeof Ionicons.glyphMap,
   'shopping-cart': 'cart-outline',
   'credit-card': 'card-outline',
   'gift': 'gift-outline',
