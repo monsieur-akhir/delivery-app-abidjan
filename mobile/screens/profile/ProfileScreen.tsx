@@ -12,7 +12,7 @@ import { useNetwork } from "../../contexts/NetworkContext"
 import { getUserProfile, updateUserProfile, uploadProfileImage } from "../../services/api"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
-import type { UserProfile } from "../../types/models"
+import type { UserProfile, User } from "../../types/models"
 
 type ProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Profile">
@@ -42,7 +42,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         city: profileData.city || "",
         country: profileData.country || "",
         phone: profileData.phone,
-        email: profileData.email,
+        email: profileData.email || '',
         role: profileData.role,
 
         vehicle_type: profileData.vehicle_type,

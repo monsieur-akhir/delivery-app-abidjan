@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import MapView, { Marker, Polyline, Region } from 'react-native-maps'
@@ -104,4 +103,4 @@ const styles = StyleSheet.create({
 
 export default CustomMapView
 export { CustomMapView }
-export type { MapRoute as Route }
+export type { MapRoute as CustomMapRoute }
