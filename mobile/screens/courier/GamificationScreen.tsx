@@ -351,7 +351,6 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 20,
     fontWeight: "bold",
-    ```
     marginBottom: 4,
   },
   userLevel:{

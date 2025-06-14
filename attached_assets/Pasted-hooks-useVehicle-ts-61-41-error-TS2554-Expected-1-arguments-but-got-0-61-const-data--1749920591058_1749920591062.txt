@@ -1,0 +1,111 @@
+hooks/useVehicle.ts:61:41 - error TS2554: Expected 1 arguments, but got 0.
+
+61       const data = await VehicleService.getCourierVehicles()
+                                           ~~~~~~~~~~~~~~~~~~
+
+  services/VehicleService.ts:181:28
+    181   async getCourierVehicles(courierId: number): Promise<CourierVehicle[]> {
+                                   ~~~~~~~~~~~~~~~~~
+    An argument for 'courierId' was not provided.
+
+hooks/useVehicle.ts:62:19 - error TS2345: Argument of type 'CourierVehicle[]' is not assignable to parameter of type 'SetStateAction<Vehicle[]>'.
+  Type 'CourierVehicle[]' is not assignable to type 'Vehicle[]'.
+    Type 'CourierVehicle' is missing the following properties from type 'Vehicle': user_id, type, license_plate, is_available, and 2 more.
+
+62       setVehicles(data)
+                     ~~~~
+
+hooks/useVehicle.ts:73:28 - error TS2339: Property 'addCourierVehicle' does not exist on type 'VehicleService'.
+
+73       await VehicleService.addCourierVehicle(data)
+                              ~~~~~~~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:26:3 - error TS2353: Object literal may only specify known properties, and 'is_open' does not exist in type 'Merchant'.
+
+26   is_open: merchantInfo.is_open,
+     ~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:29:3 - error TS2353: Object literal may only specify known properties, and 'is_open' does not exist in type 'Merchant'.
+
+29   is_open: merchantInfo.is_open,
+     ~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:63:9 - error TS2353: Object literal may only specify known properties, and 'brand' does not exist in type 'VehicleCreateRequest'.
+
+63         brand: formData.brand,
+           ~~~~~
+
+screens/courier/AddVehicleScreen.tsx:71:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Type 'VehicleCreateRequest' is missing the following properties from type 'VehicleCreateRequest': brand, vehicle_type
+
+71       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type 'string' is not assignable to type 'VTCDeliveryStatus'.
+
+218               deliveryStatus="in_progress"
+                  ~~~~~~~~~~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    The expected type comes from property 'deliveryStatus' which is declared here on type 'IntrinsicAttributes & VTCStyleMapProps'
+
+screens/courier/GamificationScreen.tsx:46:9 - error TS2353: Object literal may only specify known properties, and 'nextLevelExperience' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+46         nextLevelExperience: levelThresholds[statsData.level + 1] || 0,
+           ~~~~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:98:42 - error TS2339: Property 'daily_earnings' does not exist on type 'CourierStats'.
+
+98           earnings_today: statsResponse?.daily_earnings || 0,
+                                            ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:101:42 - error TS2339: Property 'distance_covered' does not exist on type 'CourierStats'.
+
+101           total_distance: statsResponse?.distance_covered || 0,
+                                             ~~~~~~~~~~~~~~~~
+
+screens/courier/VehicleManagementScreen.tsx:22:21 - error TS2339: Property 'isLoading' does not exist on type 'UseVehicleReturn'.
+
+22   const { vehicles, isLoading, error, deleteVehicle } = useVehicle()
+                       ~~~~~~~~~
+
+screens/courier/VehicleManagementScreen.tsx:22:32 - error TS2339: Property 'error' does not exist on type 'UseVehicleReturn'.
+
+22   const { vehicles, isLoading, error, deleteVehicle } = useVehicle()
+                                  ~~~~~
+
+
+Found 17 errors in 9 files.
+
+Errors  Files
+     3  hooks/useVehicle.ts:61
+     1  screens/client/MarketplaceScreen.tsx:26
+     1  screens/client/MerchantDetailsScreen.tsx:29
+     2  screens/courier/AddVehicleScreen.tsx:63
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     1  screens/courier/DeliveryDetailsScreen.tsx:218
+     1  screens/courier/GamificationScreen.tsx:46
+     2  screens/courier/HomeScreen.tsx:98
+     2  screens/courier/VehicleManagementScreen.tsx:22
