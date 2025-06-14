@@ -1,0 +1,465 @@
+~/workspace/mobile$ npx tsc
+screens/client/ActiveOrderTrackingScreen.tsx:75:32 - error TS2339: Property 'timeline' does not exist on type 'never[]'.
+
+75       setTimeline(timelineData.timeline)
+                                  ~~~~~~~~
+
+screens/client/ActiveOrderTrackingScreen.tsx:333:15 - error TS2322: Type '{ initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; courierLocation: { latitude: number; longitude: number; } | null; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'initialRegion' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'.
+
+333               initialRegion={{
+                  ~~~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:222:11 - error TS2741: Property 'recipient_name' is missing in type '{ pickup_address: string; delivery_address: string; pickup_lat: number; pickup_lng: number; delivery_lat: number; delivery_lng: number; package_type: string; package_description: string; special_instructions: string; proposed_price: number; weather_conditions: string; }' but required in type 'DeliveryCreateRequest'.
+
+222     const deliveryData: DeliveryCreateRequest = {
+              ~~~~~~~~~~~~
+
+  screens/client/CreateDeliveryScreen.tsx:47:3
+    47   recipient_name: string
+         ~~~~~~~~~~~~~~
+    'recipient_name' is declared here.
+
+screens/client/DeliveryHistoryScreen.tsx:240:50 - error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<"today" | "month" | "all" | "week">'.
+
+240                     onPress={() => setDateFilter(option.value)}
+                                                     ~~~~~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:27:11 - error TS2339: Property 'getDeliveryDetails' does not exist on type 'UseDeliveryReturn'.
+
+27   const { getDeliveryDetails } = useDelivery()
+             ~~~~~~~~~~~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:108:9 - error TS2322: Type 'string' is not assignable to type '"delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit"'.
+
+108         status: statusMapping[deliveryData.status] || 'searching',
+            ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:299:65 - error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+299                     <Text style={styles.infoValue}>{formatPrice(delivery.proposed_price || delivery.final_price)}</Text>
+                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:29:10 - error TS2305: Module '"../../components"' has no exported member 'CustomMapView'.
+
+29 import { CustomMapView } from '../../components'
+            ~~~~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:59:11 - error TS2339: Property 'getActiveDeliveries' does not exist on type 'UseDeliveryReturn'.
+
+59   const { getActiveDeliveries, getClientDeliveryHistory } = useDelivery()
+             ~~~~~~~~~~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:258:18 - error TS2322: Type 'string' is not assignable to type '"link" | "search" | "image" | "menu" | "radio" | "code" | "map" | "filter" | "book" | "pause" | "mail" | "home" | "star" | "save" | "cloud" | "eye" | "camera" | "heart" | "download" | ... 267 more ... | undefined'.
+
+258         <Feather name={service.icon} size={24} color="#FFFFFF" />
+                     ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"link" | "search" | "image" | "menu" | "radio" | "code" | "map" | "filter" | "book" | "pause" | "mail" | "home" | "star" | "save" | ... 271 more ... | "zoom-out">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/MarketplaceScreen.tsx:20:3 - error TS2353: Object literal may only specify known properties, and 'business_name' does not exist in type 'Merchant'.
+
+20   business_name: merchantInfo.name,
+     ~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:33:3 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+33   phone: merchantInfo.phone,
+     ~~~~~
+
+  types/models.ts:274:3
+    274   phone: string
+          ~~~~~
+    The expected type comes from property 'phone' which is declared here on type 'Merchant'
+
+screens/client/MerchantDetailsScreen.tsx:41:3 - error TS2322: Type 'string' is not assignable to type 'number'.
+
+41   delivery_time: '30'
+     ~~~~~~~~~~~~~
+
+  types/models.ts:280:3
+    280   delivery_time?: number
+          ~~~~~~~~~~~~~
+    The expected type comes from property 'delivery_time' which is declared here on type 'Merchant'
+
+screens/client/MerchantDetailsScreen.tsx:321:50 - error TS18048: 'merchant.rating' is possibly 'undefined'.
+
+321                 <Text style={styles.ratingText}>{merchant.rating.toFixed(1)}</Text>
+                                                     ~~~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:327:27 - error TS2339: Property 'commune' does not exist on type 'Merchant'.
+
+327                 {merchant.commune}
+                              ~~~~~~~
+
+screens/client/NotificationsScreen.tsx:166:24 - error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'number'.
+  Type 'string' is not assignable to type 'number'.
+
+166       await markAsRead(notification.id)
+                           ~~~~~~~~~~~~~~~
+
+screens/client/NotificationsScreen.tsx:275:17 - error TS2322: Type '"cog" | "bell" | "credit-card" | "truck-delivery" | "info" | "tag" | "alert-triangle" | "check-circle" | "x-circle" | "message-text"' is not assignable to type '"symbol" | "function" | "link" | "image" | "text" | "alert" | "menu" | "radio" | "timer" | "map" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | "mail" | "home" | "laptop" | ... 6577 more ... | undefined'.
+  Type '"info"' is not assignable to type '"symbol" | "function" | "link" | "image" | "text" | "alert" | "menu" | "radio" | "timer" | "map" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | "mail" | "home" | "laptop" | ... 6577 more ... | undefined'.
+
+275                 name={notificationIcon}
+                    ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"symbol" | "function" | "link" | "image" | "text" | "alert" | "menu" | "radio" | "timer" | "map" | "ellipse" | "filter" | "stop" | ... 6582 more ... | "blank">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/OrdersScreen.tsx:204:17 - error TS2322: Type 'Element' is not assignable to type '((string | number | boolean | Value | AnimatedInterpolation<string | number> | WithAnimatedObject<ReactElement<any, string | JSXElementConstructor<any>>> | WithAnimatedObject<...> | WithAnimatedObject<...> | null) & (string | number)) | undefined'.
+  Type 'ReactElement<any, any>' is not assignable to type 'WithAnimatedObject<ReactPortal> & number'.
+    Property 'children' is missing in type 'ReactElement<any, any>' but required in type 'WithAnimatedObject<ReactPortal>'.
+
+204                 <Ionicons name={statusIcon} size={12} color="white" />
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  node_modules/@types/react/index.d.ts:192:9
+    192         children: ReactNode;
+                ~~~~~~~~
+    'children' is declared here.
+  node_modules/react-native/Libraries/Text/Text.d.ts:110:3
+    110   children?: React.ReactNode;
+          ~~~~~~~~
+    The expected type comes from property 'children' which is declared here on type 'IntrinsicAttributes & AnimatedProps<TextProps & RefAttributes<Text>> & { visible?: boolean | undefined; ... 4 more ...; theme?: ThemeProp | undefined; }'
+
+screens/client/OrdersScreen.tsx:204:27 - error TS2322: Type '"close-circle-outline" | "help-circle-outline" | "package-variant" | "check-circle-outline" | "check-all" | "clock-outline" | "truck-delivery-outline"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+  Type '"package-variant"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+
+204                 <Ionicons name={statusIcon} size={12} color="white" />
+                              ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | ... 3667 more ... | "md-woman-sharp">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/OrdersScreen.tsx:261:25 - error TS2322: Type '"close-circle-outline" | "help-circle-outline" | "package-variant" | "check-circle-outline" | "check-all" | "clock-outline" | "truck-delivery-outline"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+  Type '"package-variant"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3662 more ... | undefined'.
+
+261               <Ionicons name={statusIcon} size={18} color={statusColor} />
+                            ~~~~
+
+  node_modules/@expo/vector-icons/build/createIconSet.d.ts:17:5
+    17     name: GLYPHS;
+           ~~~~
+    The expected type comes from property 'name' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<Component<IconProps<"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | ... 3667 more ... | "md-woman-sharp">, {}, any>> & Pick<...> & InexactPartial<...> & InexactPartial<...>'
+
+screens/client/PaymentScreen.tsx:65:41 - error TS2448: Block-scoped variable 'formatPrice' used before its declaration.
+
+65       description: `Solde disponible: ${formatPrice(walletBalance)} FCFA`
+                                           ~~~~~~~~~~~
+
+  screens/client/PaymentScreen.tsx:91:9
+    91   const formatPrice = (price: number) => {
+               ~~~~~~~~~~~
+    'formatPrice' is declared here.
+
+screens/client/PaymentScreen.tsx:65:41 - error TS2454: Variable 'formatPrice' is used before being assigned.
+
+65       description: `Solde disponible: ${formatPrice(walletBalance)} FCFA`
+                                           ~~~~~~~~~~~
+
+screens/client/RateDeliveryScreen.tsx:59:68 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+59         const deliveryData = await DeliveryService.getDeliveryById(Number(deliveryId))
+                                                                      ~~~~~~~~~~~~~~~~~~
+
+screens/client/RateDeliveryScreen.tsx:93:29 - error TS2339: Property 'clientConfirmDelivery' does not exist on type 'typeof DeliveryService'.
+
+93       await DeliveryService.clientConfirmDelivery(Number(deliveryId), rating, comment || undefined)
+                               ~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/RateDeliveryScreen.tsx:226:21 - error TS2322: Type '{ rating: number; onRatingChange: Dispatch<SetStateAction<number>>; size: number; style: { marginBottom: number; }; }' is not assignable to type 'IntrinsicAttributes & StarRatingProps'.
+  Property 'style' does not exist on type 'IntrinsicAttributes & StarRatingProps'.
+
+226                     style={styles.globalRating}
+                        ~~~~~
+
+screens/client/SmartMatchingScreen.tsx:16:10 - error TS2614: Module '"../../services/DeliveryService"' has no exported member 'DeliveryService'. Did you mean to use 'import DeliveryService from "../../services/DeliveryService"' instead?
+
+16 import { DeliveryService } from '../../services/DeliveryService'
+            ~~~~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:9:10 - error TS2305: Module '"../../components"' has no exported member 'CustomMapView'.
+
+9 import { CustomMapView } from "../../components"
+           ~~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:10:15 - error TS2305: Module '"../../components"' has no exported member 'Route'.
+
+10 import type { Route as MapRoute } from "../../components"
+                 ~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:56:11 - error TS2339: Property 'getDeliveryDetails' does not exist on type 'UseDeliveryReturn'.
+
+56   const { getDeliveryDetails } = useDelivery()
+             ~~~~~~~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:105:66 - error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+105             onPress: () => navigation.navigate("RateDelivery", { deliveryId }),
+                                                                     ~~~~~~~~~~
+
+  types/navigation.ts:46:19
+    46   RateDelivery: { deliveryId: string };
+                         ~~~~~~~~~~
+    The expected type comes from property 'deliveryId' which is declared here on type '{ deliveryId: string; }'
+
+screens/client/TransactionHistoryScreen.tsx:210:10 - error TS2552: Cannot find name 'SearchBar'. Did you mean 'Searchbar'?
+
+210         <SearchBar
+             ~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:53:9 - error TS2353: Object literal may only specify known properties, and 'maxDistance' does not exist in type 'VehicleCreateRequest'.
+
+53         maxDistance: formData.maxDistance ? parseFloat(formData.maxDistance) : undefined,
+           ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:55:21 - error TS2367: This comparison appears to be unintentional because the types '"motorcycle"' and '"custom"' have no overlap.
+
+55         customType: formData.type === 'custom' ? formData.customType : undefined,
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:102:12 - error TS2367: This comparison appears to be unintentional because the types '"motorcycle"' and '"custom"' have no overlap.
+
+102           {formData.type === VehicleType.CUSTOM && (
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/AvailableDeliveriesScreen.tsx:17:10 - error TS2614: Module '"../../services/DeliveryService"' has no exported member 'DeliveryService'. Did you mean to use 'import DeliveryService from "../../services/DeliveryService"' instead?
+
+17 import { DeliveryService } from '../../services/DeliveryService'
+            ~~~~~~~~~~~~~~~
+
+screens/courier/BidScreen.tsx:33:11 - error TS2339: Property 'getDeliveryDetails' does not exist on type 'UseDeliveryReturn'.
+
+33   const { getDeliveryDetails, placeBid } = useDelivery()
+             ~~~~~~~~~~~~~~~~~~
+
+screens/courier/BidScreen.tsx:33:31 - error TS2339: Property 'placeBid' does not exist on type 'UseDeliveryReturn'.
+
+33   const { getDeliveryDetails, placeBid } = useDelivery()
+                                 ~~~~~~~~
+
+screens/courier/BidScreen.tsx:213:26 - error TS2345: Argument of type '{ type: "bid"; data: { delivery_id: number; proposed_price: number; estimated_duration: number | undefined; }; }' is not assignable to parameter of type 'Omit<PendingOperation, "id" | "timestamp">'.
+  Property 'retries' is missing in type '{ type: "bid"; data: { delivery_id: number; proposed_price: number; estimated_duration: number | undefined; }; }' but required in type 'Omit<PendingOperation, "id" | "timestamp">'.
+
+213         addPendingUpload({
+                             ~
+214           type: "bid",
+    ~~~~~~~~~~~~~~~~~~~~~~
+... 
+219           },
+    ~~~~~~~~~~~~
+220         })
+    ~~~~~~~~~
+
+  types/models.ts:204:3
+    204   retries: number
+          ~~~~~~~
+    'retries' is declared here.
+
+screens/courier/BidScreen.tsx:284:63 - error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+284               <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price)} FCFA</Text>
+                                                                  ~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CommunityWalletScreen.tsx:7:10 - error TS2614: Module '"../../components/FeatherIcon"' has no exported member 'FeatherIcon'. Did you mean to use 'import FeatherIcon from "../../components/FeatherIcon"' instead?
+
+7 import { FeatherIcon } from '../../components/FeatherIcon'
+           ~~~~~~~~~~~
+
+screens/courier/CourierDeliveryHistoryScreen.tsx:31:5 - error TS2339: Property 'getCourierDeliveryHistory' does not exist on type 'UseDeliveryReturn'.
+
+31     getCourierDeliveryHistory  } = useDelivery()
+       ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:88:55 - error TS2339: Property 'total_distance' does not exist on type 'CourierStats'.
+
+88               <Text style={styles.statValue}>{((stats.total_distance || 0) / 1000).toFixed(1)} km</Text>
+                                                         ~~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:116:14 - error TS18048: 'stats.badges' is possibly 'undefined'.
+
+116             {stats.badges.map((badge: any) => (
+                 ~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:52:25 - error TS2345: Argument of type 'CourierProfile' is not assignable to parameter of type 'SetStateAction<CourierProfile | null>'.
+  Type 'CourierProfile' is missing the following properties from type 'CourierProfile': user_id, is_available
+
+52       setCourierProfile(profileData)
+                           ~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:321:23 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"moto"' have no overlap.
+
+321                       courierProfile.vehicle_type === "moto"
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:323:27 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"velo"' have no overlap.
+
+323                         : courierProfile.vehicle_type === "velo"
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:333:22 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"moto"' have no overlap.
+
+333                     {courierProfile.vehicle_type === "moto"
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:335:25 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"velo"' have no overlap.
+
+335                       : courierProfile.vehicle_type === "velo"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierTrackDeliveryScreen.tsx:140:47 - error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+140       const data = await fetchDeliveryDetails(deliveryId)
+                                                  ~~~~~~~~~~
+
+screens/courier/CourierTrackDeliveryScreen.tsx:362:26 - error TS2345: Argument of type '{ type: "tracking"; data: { delivery_id: string | number; lat: number; lng: number; accuracy: number; speed: number; timestamp: string; }; }' is not assignable to parameter of type 'Omit<PendingOperation, "id" | "timestamp">'.
+  Property 'retries' is missing in type '{ type: "tracking"; data: { delivery_id: string | number; lat: number; lng: number; accuracy: number; speed: number; timestamp: string; }; }' but required in type 'Omit<PendingOperation, "id" | "timestamp">'.
+
+362         addPendingUpload({
+                             ~
+363           type: "tracking",
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+364           data: trackingData,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+365         })
+    ~~~~~~~~~
+
+  types/models.ts:204:3
+    204   retries: number
+          ~~~~~~~
+    'retries' is declared here.
+
+screens/courier/CourierTrackDeliveryScreen.tsx:411:36 - error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+411         await updateDeliveryStatus(deliveryId, status)
+                                       ~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:16:10 - error TS2614: Module '"../../services/DeliveryService"' has no exported member 'DeliveryService'. Did you mean to use 'import DeliveryService from "../../services/DeliveryService"' instead?
+
+16 import { DeliveryService } from '../../services/DeliveryService'
+            ~~~~~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type '{ initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; deliveries: Delivery[]; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'initialRegion' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'.
+
+218               initialRegion={{
+                  ~~~~~~~~~~~~~
+
+screens/courier/DeliveryHistoryScreen.tsx:189:29 - error TS2339: Property 'cardHeader' does not exist on type '{ container: { flex: number; backgroundColor: string; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; padding: number; backgroundColor: string; borderBottomWidth: number; borderBottomColor: string; }; ... 61 more ...; completedText: { ...; }; }'.
+
+189         <View style={styles.cardHeader}>
+                                ~~~~~~~~~~
+
+screens/courier/DeliveryHistoryScreen.tsx:212:29 - error TS2339: Property 'cardFooter' does not exist on type '{ container: { flex: number; backgroundColor: string; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; padding: number; backgroundColor: string; borderBottomWidth: number; borderBottomColor: string; }; ... 61 more ...; completedText: { ...; }; }'.
+
+212         <View style={styles.cardFooter}>
+                                ~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:24:5 - error TS2339: Property 'loading' does not exist on type 'UseDeliveryReturn'.
+
+24     loading,
+       ~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:52:28 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+52       await acceptDelivery(deliveryId)
+                              ~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:61:27 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+61       await startDelivery(deliveryId)
+                             ~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:44:9 - error TS2353: Object literal may only specify known properties, and 'totalDistance' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+44         totalDistance: 0,
+           ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:286:40 - error TS18048: 'stats.daily_deliveries' is possibly 'undefined'.
+
+286                     progress={Math.min(stats.daily_deliveries / 5, 1)}
+                                           ~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:15:10 - error TS2614: Module '"../../services/DeliveryService"' has no exported member 'DeliveryService'. Did you mean to use 'import DeliveryService from "../../services/DeliveryService"' instead?
+
+15 import { DeliveryService } from '../../services/DeliveryService'
+            ~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:280:61 - error TS2561: Object literal may only specify known properties, but 'delivery' does not exist in type '{ deliveryId: string; }'. Did you mean to write 'deliveryId'?
+
+280           onPress={() => navigation.navigate('BidScreen', { delivery: item })}
+                                                                ~~~~~~~~
+
+screens/courier/JoinCollaborativeDeliveryScreen.tsx:16:20 - error TS2307: Cannot find module '@react-native-community/slider' or its corresponding type declarations.
+
+16 import Slider from "@react-native-community/slider"
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/profile/ProfileScreen.tsx:45:9 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+45         email: profileData.email,
+           ~~~~~
+
+  types/models.ts:306:3
+    306   email: string
+          ~~~~~
+    The expected type comes from property 'email' which is declared here on type 'UserProfile'
+
+screens/profile/ProfileScreen.tsx:203:78 - error TS2304: Cannot find name 'User'.
+
+203         const updatedUser = await updateUserProfile(editedProfile as Partial<User>)
+                                                                                 ~~~~
+
+screens/profile/ProfileScreen.tsx:231:49 - error TS2304: Cannot find name 'User'.
+
+231         updateUserData(editedProfile as Partial<User>)
+                                                    ~~~~
+
+
+Found 66 errors in 29 files.
+
+Errors  Files
+     2  screens/client/ActiveOrderTrackingScreen.tsx:75
+     1  screens/client/CreateDeliveryScreen.tsx:222
+     1  screens/client/DeliveryHistoryScreen.tsx:240
+     3  screens/client/EnhancedTrackDeliveryScreen.tsx:27
+     3  screens/client/HomeScreen.tsx:29
+     1  screens/client/MarketplaceScreen.tsx:20
+     4  screens/client/MerchantDetailsScreen.tsx:33
+     2  screens/client/NotificationsScreen.tsx:166
+     3  screens/client/OrdersScreen.tsx:204
+     2  screens/client/PaymentScreen.tsx:65
+     3  screens/client/RateDeliveryScreen.tsx:59
+     1  screens/client/SmartMatchingScreen.tsx:16
+     4  screens/client/TrackDeliveryScreen.tsx:9
+     1  screens/client/TransactionHistoryScreen.tsx:210
+     3  screens/courier/AddVehicleScreen.tsx:53
+     1  screens/courier/AvailableDeliveriesScreen.tsx:17
+     4  screens/courier/BidScreen.tsx:33
+     1  screens/courier/CommunityWalletScreen.tsx:7
+     1  screens/courier/CourierDeliveryHistoryScreen.tsx:31
+     2  screens/courier/CourierProfileScreen.tsx:88
+     5  screens/courier/CourierStatusScreen.tsx:52
+     3  screens/courier/CourierTrackDeliveryScreen.tsx:140
+     2  screens/courier/DeliveryDetailsScreen.tsx:16
+     2  screens/courier/DeliveryHistoryScreen.tsx:189
+     3  screens/courier/ExpressDeliveriesScreen.tsx:24
+     2  screens/courier/GamificationScreen.tsx:44
+     2  screens/courier/HomeScreen.tsx:15
+     1  screens/courier/JoinCollaborativeDeliveryScreen.tsx:16
+     3  screens/profile/ProfileScreen.tsx:45

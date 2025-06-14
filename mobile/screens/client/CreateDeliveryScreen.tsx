@@ -29,7 +29,9 @@ import type {
   User,
   Delivery,
   Address,
-  WeatherData
+  Weather,
+  VehicleType,
+  RootStackParamList
 } from '../../types'
 
 interface DeliveryCreateRequest {
@@ -47,12 +49,8 @@ interface DeliveryCreateRequest {
   special_instructions?: string
   distance?: number
   estimated_duration?: number
+  weather_conditions?: string
 }
-import type { 
-  RootStackParamList, 
-  VehicleType, 
-  Weather
-} from '../../types'
 
 interface RouteParams {
   searchQuery?: string
@@ -67,7 +65,7 @@ const CreateDeliveryScreen: React.FC = () => {
   const { user } = useAuth()
   const { isConnected, addPendingUpload } = useNetwork()
   const { createDelivery, getPriceEstimate, estimate } = useDelivery()
-  const { getUserLocation } = useUser()
+  const { } = useUser()
 
   const mapRef = useRef<any>(null)
 
@@ -139,6 +137,8 @@ const CreateDeliveryScreen: React.FC = () => {
         delivery_lat: deliveryLocation.latitude,
         delivery_lng: deliveryLocation.longitude,
         package_type: packageType,
+        proposed_price: 0,
+        recipient_name: '',
         distance: distance
       }
 
@@ -177,7 +177,8 @@ const CreateDeliveryScreen: React.FC = () => {
     if (!pickupLocation) return
 
     try {
-      const weather = await DeliveryService.getWeatherData(pickupLocation.latitude, pickupLocation.longitude)
+      const weather = await fetch(`/api/weather/current?lat=${pickupLocation.latitude}&lng=${pickupLocation.longitude}`)
+        .then(res => res.json())
       setWeatherData(weather)
     } catch (error) {
       console.error('Erreur météo:', error)
@@ -277,13 +278,18 @@ const CreateDeliveryScreen: React.FC = () => {
     return true
   }
 
-  const handleAddressSelect = (address: Address, type: 'pickup' | 'delivery') => {
+  const handleAddressSelect = (address: any, type: 'pickup' | 'delivery') => {
+    const addressWithName = {
+      ...address,
+      name: address.name || address.description || address.address || 'Adresse'
+    }
+    
     if (type === 'pickup') {
-      setPickupLocation(address)
-      setPickupAddress(address.name)
+      setPickupLocation(addressWithName)
+      setPickupAddress(addressWithName.name)
     } else {
-      setDeliveryLocation(address)
-      setDeliveryAddress(address.name)
+      setDeliveryLocation(addressWithName)
+      setDeliveryAddress(addressWithName.name)
     }
   }
 
@@ -320,7 +326,6 @@ const CreateDeliveryScreen: React.FC = () => {
                   title: 'Livraison',
                   description: deliveryAddress
                 }}
-                showRoute={true}
                 showTraffic={false}
                 isInteractive={true}
               />
@@ -468,14 +473,15 @@ const CreateDeliveryScreen: React.FC = () => {
           </Card>
 
           {weatherData?.current && (
-            <WeatherInfo 
-              weather={{
-                current: weatherData.current,
-                forecast: weatherData.forecast,
-                alerts: weatherData.alerts
-              }} 
-              style={styles.weatherInfo} 
-            />
+            <View style={styles.weatherInfo}>
+              <WeatherInfo 
+                weather={{
+                  current: weatherData.current,
+                  forecast: weatherData.forecast,
+                  alerts: weatherData.alerts
+                }} 
+              />
+            </View>
           )}
 
           <Button

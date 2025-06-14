@@ -19,7 +19,7 @@ type VehicleManagementScreenProps = {
 
 const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navigation }) => {
   const { user } = useAuth()
-  const { vehicles, isLoading, error, deleteVehicle, setActiveVehicle } = useVehicle()
+  const { vehicles, isLoading, error, deleteVehicle } = useVehicle()
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState<boolean>(false)
@@ -88,7 +88,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
   }
 
   const renderVehicleStats = () => {
-    const activeVehicle = vehicles.find(v => v.is_active)
+    const activeVehicle = vehicles.find(v => v.id === vehicles[0]?.id) // Premier véhicule comme actif par défaut
     const expiringSoon = vehicles.filter(v => {
       if (!v.insurance_expiry) return false
       const days = Math.ceil((new Date(v.insurance_expiry).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
@@ -127,7 +127,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
           <View style={styles.vehicleHeader}>
             <View style={styles.vehicleInfo}>
               <Text style={styles.vehicleType}>{item.type}</Text>
-              <View style={styles.vehicleHeaderRight}>
+              <View style={styles.vehicleInfo}>
                 <Chip style={styles.activeChip} textStyle={styles.activeChipText}>Principal</Chip>
               </View>
               <Text style={styles.vehicleModel}>{item.type} Vehicle</Text>
@@ -228,7 +228,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
           <FlatList
             data={vehicles}
             renderItem={renderVehicleItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContainer}
             scrollEnabled={false}
           />

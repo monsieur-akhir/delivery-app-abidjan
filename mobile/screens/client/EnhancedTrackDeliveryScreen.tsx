@@ -54,7 +54,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
         setLoading(false)
         return
       }
-      
+
       setDelivery(deliveryData)
 
       // Convert to VTC format
@@ -88,19 +88,22 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
           }
         })
       }
-      
+
       // Set delivery status
-      const statusMapping: Record<DeliveryStatus, VTCDeliveryStatus['status']> = {
-        'pending': 'searching',
-        'accepted': 'assigned',
-        'picked_up': 'pickup',
-        'in_progress': 'transit',
-        'delivered': 'delivered',
-        'completed': 'delivered',
-        'cancelled': 'cancelled',
-        'bidding': 'searching'
+      const statusMapping: Record<string, string> = {
+        pending: 'searching',
+        accepted: 'assigned',
+        picked_up: 'pickup',
+        in_progress: 'transit',
+        delivered: 'delivered',
+        completed: 'delivered',
+        cancelled: 'cancelled',
+        bidding: 'searching',
+        confirmed: 'assigned',
+        in_transit: 'transit',
+        near_destination: 'transit',
       }
-      
+
       setDeliveryStatus({
         status: statusMapping[deliveryData.status] || 'searching',
         eta: undefined,
@@ -265,7 +268,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
             <Card style={styles.detailsCard}>
               <Card.Content>
                 <Text style={styles.cardTitle}>{t('trackDelivery.deliveryDetails')}</Text>
-                
+
                 <View style={styles.addressContainer}>
                   <View style={styles.addressItem}>
                     <MaterialIcons name="location-on" size={20} color="#FF6B00" />
@@ -274,7 +277,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
                       <Text style={styles.addressValue}>{delivery.pickup_address}</Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.addressItem}>
                     <MaterialIcons name="flag" size={20} color="#4CAF50" />
                     <View style={styles.addressText}>
@@ -295,7 +298,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
                     <Text style={styles.infoLabel}>{t('trackDelivery.price')}</Text>
                     <Text style={styles.infoValue}>{formatPrice(delivery.proposed_price || delivery.final_price)}</Text>
                   </View>
-                  
+
                   <View style={styles.infoItem}>
                     <Text style={styles.infoLabel}>{t('trackDelivery.createdAt')}</Text>
                     <Text style={styles.infoValue}>{formatDate(delivery.created_at)}</Text>
@@ -330,7 +333,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  
+
   // Loading & Error
   loadingContainer: {
     flex: 1,
@@ -459,7 +462,7 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 12,
   },
-  
+
   // Addresses
   addressContainer: {
     marginBottom: 16,
