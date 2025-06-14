@@ -294,6 +294,7 @@ export interface Merchant {
   latitude: number
   longitude: number
   is_open: boolean
+  opening_hours?: string
 }
 
 export interface Vehicle {
@@ -308,6 +309,12 @@ export interface Vehicle {
   created_at: string
   updated_at: string
   insurance_expiry?: string
+  brand?: string
+  model?: string
+  year?: number
+  color?: string
+  capacity?: number
+  status?: string
 }
 
 export interface UserProfile {
@@ -347,9 +354,79 @@ export interface CourierStats {
   average_rating: number
   total_earnings: number
   total_distance: number
-  total_distance?: number
   daily_deliveries?: number
   totalDistance?: number
+  badges?: string[]
+  total_points?: number
+  daily_rating?: number
+  completion_rate?: number
+  average_delivery_time?: number
+  completed_today?: number
+  earnings_today?: number
+  current_earnings?: number
+  level?: number
+  nextLevelExperience?: number
+  daily_earnings?: number
+  distance_covered?: number
+}
+
+export interface Coordinates {
+  latitude: number
+  longitude: number
+}
+
+export interface Achievement {
+  id: number
+  name: string
+  description: string
+  icon?: string
+  earned_at?: string
+  points?: number
+}
+
+export interface Leaderboard {
+  id: number
+  courier_id: number
+  position: number
+  total_points: number
+  courier?: Courier
+}
+
+export interface VTCDeliveryStatusType {
+  status: string
+  color: string
+  label: string
+}
+
+export interface Transaction {
+  id: number
+  user_id: number
+  amount: number
+  type: TransactionType
+  status: TransactionStatus
+  description?: string
+  created_at: string
+  reference?: string
+}
+
+export interface WalletTransaction extends Transaction {
+  wallet_id?: number
+  balance_after?: number
+}
+
+export interface CourierEarningsData {
+  total_earnings: number
+  period_earnings: number
+  delivery_count: number
+  average_per_delivery: number
+  period: string
+}
+
+export interface PayoutRequest {
+  amount: number
+  payment_method: string
+  account_details: Record<string, any>
+  notes?: string
 }
 
 export interface SupportTicket {
@@ -582,7 +659,9 @@ export interface TrackingPointRequest {
 
 export interface VehicleCreateRequest {
   type: VehicleType
+  vehicle_type?: VehicleType
   license_plate: string
+  brand?: string
   model: string
   year: number
   color: string
@@ -867,6 +946,9 @@ export interface CourierVehicle {
   vehicle: Vehicle;
   documents: VehicleDocument[];
   maintenance_records: MaintenanceRecord[];
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // VehicleRecommendation Types

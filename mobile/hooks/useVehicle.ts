@@ -43,6 +43,8 @@ export interface UseVehicleReturn {
   vehicles: Vehicle[]
   selectedVehicle: Vehicle | null
   loading: boolean
+  isLoading: boolean
+  error: string | null
   refreshVehicles: () => Promise<void>
   addVehicle: (data: VehicleCreateRequest) => Promise<void>
   updateVehicle: (vehicleId: number, data: Partial<Vehicle>) => Promise<void>
@@ -54,6 +56,7 @@ export const useVehicle = (): UseVehicleReturn => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null))
 
   const refreshVehicles = async (courierId?: number) => {
     try {
@@ -68,15 +71,15 @@ export const useVehicle = (): UseVehicleReturn => {
         user_id: cv.courier_id,
         type: cv.vehicle.type,
         license_plate: cv.vehicle.license_plate,
-        is_available: cv.is_active,
+        is_available: cv.is_active || cv.vehicle.is_available,
         brand: cv.vehicle.brand,
         model: cv.vehicle.model,
         year: cv.vehicle.year,
         color: cv.vehicle.color,
         capacity: cv.vehicle.capacity,
         status: cv.vehicle.status,
-        created_at: cv.created_at,
-        updated_at: cv.updated_at
+        created_at: cv.created_at || cv.vehicle.created_at,
+        updated_at: cv.updated_at || cv.vehicle.updated_at
       }))
       
       setVehicles(vehicles)
@@ -130,6 +133,8 @@ export const useVehicle = (): UseVehicleReturn => {
     vehicles,
     selectedVehicle,
     loading,
+    isLoading: loading,
+    error,
     refreshVehicles,
     addVehicle,
     updateVehicle,
