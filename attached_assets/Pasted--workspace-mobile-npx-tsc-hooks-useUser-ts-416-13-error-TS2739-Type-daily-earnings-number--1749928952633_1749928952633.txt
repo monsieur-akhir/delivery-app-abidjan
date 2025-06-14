@@ -1,0 +1,104 @@
+~/workspace/mobile$ npx tsc
+hooks/useUser.ts:416:13 - error TS2739: Type '{ daily_earnings: number; weekly_earnings: any; monthly_earnings: number; total_earnings: any; pending_earnings: number; completed_deliveries: number; average_rating: number; earnings_history: never[]; }' is missing the following properties from type 'CourierEarningsData': period_earnings, delivery_count, average_per_delivery, period
+
+416       const earnings: CourierEarningsData = {
+                ~~~~~~~~
+
+hooks/useUser.ts:418:32 - error TS2339: Property 'weekly_earnings' does not exist on type 'User'.
+
+418         weekly_earnings: user?.weekly_earnings || 0,
+                                   ~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:420:31 - error TS2339: Property 'total_earnings' does not exist on type 'User'.
+
+420         total_earnings: user?.total_earnings || 0,
+                                  ~~~~~~~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:142:9 - error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+
+142         eta: deliveryData.estimated_duration ? `${deliveryData.estimated_duration} min` : null,
+            ~~~
+
+screens/client/MarketplaceScreen.tsx:32:3 - error TS1117: An object literal cannot have multiple properties with the same name.
+
+32   cover_image: '',
+     ~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:35:3 - error TS1117: An object literal cannot have multiple properties with the same name.
+
+35   cover_image: '',
+     ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:65:9 - error TS2322: Type 'VehicleType' is not assignable to type 'VehicleType | undefined'.
+  Type '"pickup"' is not assignable to type 'VehicleType | undefined'.
+
+65         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
+           ~~~~~~~~~~~~
+
+  types/models.ts:688:3
+    688   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:73:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+73       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:36:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+36         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:39:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+39         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:42:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+42         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:45:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+45         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CourierWalletScreen.tsx:33:5 - error TS2339: Property 'user' does not exist on type 'UseUserReturn'.
+
+33     user
+       ~~~~
+
+screens/courier/CourierWalletScreen.tsx:101:27 - error TS2345: Argument of type 'PayoutRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/types/models").PayoutRequest'.
+  Type 'PayoutRequest' is missing the following properties from type 'PayoutRequest': payment_method, account_details
+
+101       await requestPayout(payoutRequestData)
+                              ~~~~~~~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:52 - error TS2353: Object literal may only specify known properties, and 'color' does not exist in type 'VTCDeliveryStatus'.
+
+218               deliveryStatus={{ status: "transit", color: "#FF6B00", label: "En transit" }}
+                                                       ~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    The expected type comes from property 'deliveryStatus' which is declared here on type 'IntrinsicAttributes & VTCStyleMapProps'
+
+
+Found 15 errors in 8 files.
+
+Errors  Files
+     3  hooks/useUser.ts:416
+     1  screens/client/EnhancedTrackDeliveryScreen.tsx:142
+     1  screens/client/MarketplaceScreen.tsx:32
+     1  screens/client/MerchantDetailsScreen.tsx:35
+     2  screens/courier/AddVehicleScreen.tsx:65
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:36
+     2  screens/courier/CourierWalletScreen.tsx:33
+     1  screens/courier/DeliveryDetailsScreen.tsx:218
