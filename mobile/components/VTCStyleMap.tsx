@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { View, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native'
 import { Text, Surface, Badge, IconButton } from 'react-native-paper'
@@ -46,12 +45,7 @@ export interface VTCRoute {
   estimatedPrice?: number
 }
 
-export interface VTCDeliveryStatus {
-  status: 'searching' | 'assigned' | 'pickup' | 'transit' | 'delivered' | 'cancelled'
-  eta?: string
-  progress: number
-  message?: string
-}
+export type VTCDeliveryStatus = 'pending' | 'en_route' | 'delivered' | 'cancelled'
 
 export interface VTCStyleMapProps {
   pickupLocation?: VTCCoordinates
@@ -162,12 +156,12 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
   style
 }) => {
   const mapRef = useRef<MapView>(null)
-  
+
   // Animations
   const pulseAnimation = useRef(new Animated.Value(1)).current
   const fadeAnimation = useRef(new Animated.Value(0)).current
   const slideAnimation = useRef(new Animated.Value(-100)).current
-  
+
   // State
   const [isMapReady, setIsMapReady] = useState(false)
   const [courierAnimatedLocation, setCourierAnimatedLocation] = useState<AnimatedRegion | null>(null)
@@ -279,7 +273,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
     const maxLat = Math.max(...locations.map(l => l.latitude))
     const minLng = Math.min(...locations.map(l => l.longitude))
     const maxLng = Math.max(...locations.map(l => l.longitude))
-    
+
     const centerLat = (minLat + maxLat) / 2
     const centerLng = (minLng + maxLng) / 2
     const deltaLat = Math.max((maxLat - minLat) * 1.5, 0.01)
@@ -296,7 +290,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
   const onMapReadyHandler = useCallback(() => {
     setIsMapReady(true)
     onMapReady?.()
-    
+
     setTimeout(() => {
       if (mapRef.current) {
         const region = getInitialRegion()
@@ -308,7 +302,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
   // Rendu des marqueurs VTC modernes
   const renderPickupMarker = () => {
     if (!pickupLocation) return null
-    
+
     return (
       <Marker
         coordinate={pickupLocation}
@@ -333,7 +327,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
 
   const renderDeliveryMarker = () => {
     if (!deliveryLocation) return null
-    
+
     return (
       <Marker
         coordinate={deliveryLocation}
@@ -355,7 +349,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
 
   const renderUserLocationMarker = () => {
     if (!showUserLocation || !userLocation) return null
-    
+
     return (
       <Marker
         coordinate={userLocation}
@@ -379,7 +373,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
     if (!courier) return null
 
     const vehicleIcon = getVehicleIcon(courier.vehicle.type)
-    
+
     return (
       <Marker
         coordinate={courier.location}
@@ -414,7 +408,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
     if (!route || route.coordinates.length < 2) return null
 
     const routeColor = getRouteColor(route.traffic)
-    
+
     return (
       <Polyline
         coordinates={route.coordinates}
@@ -642,7 +636,7 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  
+
   // Marqueurs modernes
   modernMarker: {
     alignItems: 'center',
@@ -672,7 +666,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#4CAF50',
     marginTop: -1,
   },
-  
+
   // Marqueur utilisateur
   userLocationMarker: {
     width: 20,
@@ -695,7 +689,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'rgba(33, 150, 243, 0.3)',
   },
-  
+
   // Marqueur coursier
   courierMarkerContainer: {
     alignItems: 'center',
@@ -742,7 +736,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: 'bold',
   },
-  
+
   // Carte de statut
   statusContainer: {
     position: 'absolute',
@@ -804,7 +798,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 1.5,
   },
-  
+
   // Contrôles de carte
   mapControls: {
     position: 'absolute',
