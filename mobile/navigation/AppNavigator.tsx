@@ -130,7 +130,7 @@ function CourierTabs() {
 }
 
 export default function AppNavigator() {
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
 
   if (isLoading) {
     return null; // Or a loading screen

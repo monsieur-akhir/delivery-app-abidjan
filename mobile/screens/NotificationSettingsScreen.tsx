@@ -15,12 +15,12 @@ const NotificationSettingsScreen = () => {
   const [settings, setSettings] = useState<NotificationSettings>({
     push_enabled: true,
     email_enabled: true,
-    sms_enabled: true,
+    sms_enabled: false,
     delivery_updates: true,
-    payment_updates: true,
-    promotional_offers: true,
+    bid_notifications: true,
+    promotional_offers: false,
     security_alerts: true,
-    maintenance_alerts: true,
+    in_app_notifications: true,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

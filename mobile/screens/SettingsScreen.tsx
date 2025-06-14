@@ -80,7 +80,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             <Avatar.Image
               size={80}
               source={
-                user?.avatar ? { uri: user.avatar } : require("../assets/images/default-avatar.png")
+                user?.profile_picture ? { uri: user.profile_picture } : require("../assets/images/default-avatar.png")
               }
             />
             <View style={styles.profileInfo}>
