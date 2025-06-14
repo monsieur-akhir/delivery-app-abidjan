@@ -56,7 +56,7 @@
         <button @click="showInviteModal = true" class="btn btn-primary">Inviter un coursier</button>
       </div>
 
-      <div v-else v-for="(courier, index) in couriers" :key="courier.id" class="courier-card">
+      <div v-else v-for="courier in couriers" :key="courier.id" class="courier-card">
         <div class="courier-header">
           <div class="courier-avatar">
             <img :src="courier.profile_picture || '/default-avatar.png'" :alt="courier.full_name" />

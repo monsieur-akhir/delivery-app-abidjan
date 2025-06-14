@@ -330,7 +330,7 @@ export default {
       return result
     })
 
-    const paginatedProducts = computed(() => {
+    // const paginatedProducts = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage.value
       const end = start + itemsPerPage.value
       return filteredProducts.value.slice(start, end)

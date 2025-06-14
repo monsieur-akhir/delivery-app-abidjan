@@ -106,7 +106,7 @@
 
 <script>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+
 import { getTrafficReports, deleteTrafficReport } from '@/api/manager'
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters'
 import L from 'leaflet'

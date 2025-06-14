@@ -494,7 +494,7 @@ export default {
   name: 'BusinessDeliveryDetailView',
   setup() {
     const route = useRoute()
-    const router = useRouter()
+    
     const deliveryId = route.params.id
 
     const loading = ref(true)

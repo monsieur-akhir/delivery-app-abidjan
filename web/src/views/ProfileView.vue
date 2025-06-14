@@ -737,6 +737,3 @@ export default {
   }
 }
 </style>
-
-</replit_final_file>
-```

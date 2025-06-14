@@ -732,7 +732,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.id_verified"
                                 class="btn-icon"
-                                @click="verifyDocument(selectedCourier.id, 'id')"
+                                @click="handleDocumentAction('id', 'verify')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
@@ -740,7 +740,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.id_verified"
                                 class="btn-icon"
-                                @click="rejectDocument(selectedCourier.id, 'id')"
+                                @click="handleDocumentAction('id', 'reject')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
@@ -782,7 +782,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.license_verified"
                                 class="btn-icon"
-                                @click="verifyDocument(selectedCourier.id, 'license')"
+                                @click="handleDocumentAction('license', 'verify')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
@@ -790,7 +790,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.license_verified"
                                 class="btn-icon"
-                                @click="rejectDocument(selectedCourier.id, 'license')"
+                                @click="handleDocumentAction('license', 'reject')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
@@ -832,7 +832,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.vehicle_verified"
                                 class="btn-icon"
-                                @click="verifyDocument(selectedCourier.id, 'vehicle')"
+                                @click="handleDocumentAction('vehicle', 'verify')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
@@ -840,7 +840,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.vehicle_verified"
                                 class="btn-icon"
-                                @click="rejectDocument(selectedCourier.id, 'vehicle')"
+                                @click="handleDocumentAction('vehicle', 'reject')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
@@ -1194,7 +1194,7 @@
 
 <script>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import { useToast } from 'vue-toastification'
 import {
@@ -2114,6 +2114,47 @@ export default {
       return statusLabels[status] || status
     }
 
+    const handleDocumentAction = async (documentType, action) => {
+      try {
+        if (!selectedCourier.value) return;
+
+        if (action === 'verify') {
+          await verifyCourierDocument(selectedCourier.value.id, documentType);
+          selectedCourier.value.kyc[`${documentType}_verified`] = true;
+        } else if (action === 'reject') {
+          await rejectCourierDocument(selectedCourier.value.id, documentType);
+          selectedCourier.value.kyc[`${documentType}_verified`] = false;
+          selectedCourier.value.kyc[`${documentType}_document`] = null;
+        }
+
+        showToast(`Document ${action === 'verify' ? 'vérifié' : 'rejeté'} avec succès`, { type: 'success' });
+      } catch (error) {
+        console.error(`Erreur lors de l'action sur le document:`, error);
+        showToast(`Erreur lors de l'action sur le document`, { type: 'error' });
+      }
+    };
+
+    const handleKycAction = async (action, reason = null) => {
+      try {
+        if (!selectedCourier.value) return;
+
+        if (action === 'verify') {
+          await verifyCourierKyc(selectedCourier.value.id);
+          selectedCourier.value.status = 'active';
+          selectedCourier.value.kyc.status = 'verified';
+        } else if (action === 'reject') {
+          await rejectCourierKyc(selectedCourier.value.id, reason);
+          selectedCourier.value.status = 'inactive';
+          selectedCourier.value.kyc.status = 'rejected';
+        }
+
+        showToast(`Vérification ${action === 'verify' ? 'approuvée' : 'rejetée'} avec succès`, { type: 'success' });
+      } catch (error) {
+        console.error(`Erreur lors de l'action sur le KYC:`, error);
+        showToast(`Erreur lors de l'action sur le KYC`, { type: 'error' });
+      }
+    };
+
     // Computed properties
     const sortBy = ref('name_asc')
 
@@ -2297,6 +2338,7 @@ export default {
       formatMinutes,
       debounceSearch,
       onCourierBlocked,
+      handleDocumentAction,
     }
   },
 }
@@ -2982,10 +3024,7 @@ input:checked + .toggle-slider:before {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.checkbox-group {
+  margin-top: 1.5rem.checkbox-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;

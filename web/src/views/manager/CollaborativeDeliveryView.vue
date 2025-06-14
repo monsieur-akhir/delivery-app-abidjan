@@ -969,7 +969,7 @@ export default {
         )
 
         // Mettre à jour les données locales
-        if (selectedDelivery.value.collaborative_couriers) {
+        if (selectedDelivery.value.collaborative_couriers){
           const participant = selectedDelivery.value.collaborative_couriers.find(
             c => c.id === data.participantId
           )
