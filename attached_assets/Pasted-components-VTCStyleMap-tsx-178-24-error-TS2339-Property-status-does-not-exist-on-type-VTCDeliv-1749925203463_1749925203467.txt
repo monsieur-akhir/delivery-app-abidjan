@@ -1,0 +1,141 @@
+components/VTCStyleMap.tsx:178:24 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+178     if (deliveryStatus.status === 'searching') {
+                           ~~~~~~
+
+components/VTCStyleMap.tsx:194:22 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+194   }, [deliveryStatus.status, pulseAnimation])
+                         ~~~~~~
+
+components/VTCStyleMap.tsx:314:49 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+314           { transform: [{ scale: deliveryStatus.status === 'searching' ? pulseAnimation : 1 }] }
+                                                    ~~~~~~
+
+components/VTCStyleMap.tsx:438:54 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+438             colors={getStatusGradient(deliveryStatus.status)}
+                                                         ~~~~~~
+
+components/VTCStyleMap.tsx:446:54 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+446                   name={getStatusIcon(deliveryStatus.status)}
+                                                         ~~~~~~
+
+components/VTCStyleMap.tsx:453:49 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+453                   {getStatusText(deliveryStatus.status)}
+                                                    ~~~~~~
+
+components/VTCStyleMap.tsx:455:33 - error TS2339: Property 'message' does not exist on type 'VTCDeliveryStatus'.
+  Property 'message' does not exist on type '"pending"'.
+
+455                 {deliveryStatus.message && (
+                                    ~~~~~~~
+
+components/VTCStyleMap.tsx:457:37 - error TS2339: Property 'message' does not exist on type 'VTCDeliveryStatus'.
+  Property 'message' does not exist on type '"pending"'.
+
+457                     {deliveryStatus.message}
+                                        ~~~~~~~
+
+components/VTCStyleMap.tsx:460:44 - error TS2339: Property 'eta' does not exist on type 'VTCDeliveryStatus'.
+  Property 'eta' does not exist on type '"pending"'.
+
+460                 {showETA && deliveryStatus.eta && (
+                                               ~~~
+
+components/VTCStyleMap.tsx:462:53 - error TS2339: Property 'eta' does not exist on type 'VTCDeliveryStatus'.
+  Property 'eta' does not exist on type '"pending"'.
+
+462                     Arrivée prévue: {deliveryStatus.eta}
+                                                        ~~~
+
+components/VTCStyleMap.tsx:473:48 - error TS2339: Property 'progress' does not exist on type 'VTCDeliveryStatus'.
+  Property 'progress' does not exist on type '"pending"'.
+
+473                       width: `${deliveryStatus.progress}%`,
+                                                   ~~~~~~~~
+
+hooks/useUser.ts:421:9 - error TS2353: Object literal may only specify known properties, and 'history' does not exist in type 'CourierEarningsData'.
+
+421         history: [],
+            ~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:37:5 - error TS2353: Object literal may only specify known properties, and 'status' does not exist in type '() => VTCDeliveryStatus'.
+
+37     status: 'searching',
+       ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:108:9 - error TS2353: Object literal may only specify known properties, and 'status' does not exist in type '(prevState: VTCDeliveryStatus) => VTCDeliveryStatus'.
+
+108         status: (statusMapping[deliveryData.status] || 'searching') as "delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit",
+            ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:311:29 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+311             {deliveryStatus.status !== 'delivered' && deliveryStatus.status !== 'cancelled' && (
+                                ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:311:70 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+311             {deliveryStatus.status !== 'delivered' && deliveryStatus.status !== 'cancelled' && (
+                                                                         ~~~~~~
+
+screens/client/MarketplaceScreen.tsx:29:26 - error TS2339: Property 'latitude' does not exist on type 'MerchantInfo'.
+
+29   latitude: merchantInfo.latitude || 0,
+                            ~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:30:27 - error TS2339: Property 'longitude' does not exist on type 'MerchantInfo'.
+
+30   longitude: merchantInfo.longitude || 0,
+                             ~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:31:3 - error TS2353: Object literal may only specify known properties, and 'logo' does not exist in type 'Merchant'.
+
+31   logo: '',
+     ~~~~
+
+screens/client/MerchantDetailsScreen.tsx:32:26 - error TS2339: Property 'latitude' does not exist on type 'MerchantInfo'.
+
+32   latitude: merchantInfo.latitude || 0,
+                            ~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:33:27 - error TS2339: Property 'longitude' does not exist on type 'MerchantInfo'.
+
+33   longitude: merchantInfo.longitude || 0,
+                             ~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:34:3 - error TS2353: Object literal may only specify known properties, and 'logo' does not exist in type 'Merchant'.
+
+34   logo: '',
+     ~~~~
+
+screens/courier/AddVehicleScreen.tsx:70:9 - error TS2322: Type 'VehicleType' is not assignable to type 'VehicleType | undefined'.
+  Type '"pickup"' is not assignable to type 'VehicleType | undefined'.
+
+70         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
+           ~~~~~~~~~~~~
+
+  types/models.ts:686:3
+    686   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:73:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+73       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
