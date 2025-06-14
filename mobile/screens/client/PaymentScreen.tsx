@@ -42,6 +42,10 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
   const [processing, setProcessing] = useState(false)
   const [walletBalance, setWalletBalance] = useState<number>(0)
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR').format(price)
+  }
+
   const paymentMethods: PaymentMethod[] = [
     {
       id: 'orange_money',
@@ -86,10 +90,6 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
     } catch (error) {
       console.error('Erreur lors du chargement du solde:', error)
     }
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price)
   }
 
   const handlePayment = async () => {

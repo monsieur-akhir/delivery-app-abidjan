@@ -15,7 +15,8 @@ import type {
   VehicleRecommendationData,
   VehicleRecommendation,
   ExpressDeliveryRequest,
-  CollaborativeDeliveryRequest
+  CollaborativeDeliveryRequest,
+  CourierStats
 } from '../types'
 
 interface VehicleType {
@@ -413,6 +414,73 @@ class DeliveryService {
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'itinéraire:', error)
+      throw error
+    }
+  }
+
+  // Méthodes manquantes pour les écrans
+  static async acceptDelivery(deliveryId: number | string): Promise<void> {
+    try {
+      await api.post(`/deliveries/${deliveryId}/accept`)
+    } catch (error) {
+      console.error('Erreur lors de l\'acceptation de la livraison:', error)
+      throw error
+    }
+  }
+
+  static async getCourierStatus(): Promise<any> {
+    try {
+      const response = await api.get('/courier/status')
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération du statut coursier:', error)
+      throw error
+    }
+  }
+
+  static async getCourierStats(): Promise<CourierStats> {
+    try {
+      const response = await api.get('/courier/stats')
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques:', error)
+      throw error
+    }
+  }
+
+  static async updateCourierStatus(status: string): Promise<void> {
+    try {
+      await api.put('/courier/status', { status })
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error)
+      throw error
+    }
+  }
+
+  static async getSuggestedCouriers(deliveryId: string): Promise<any> {
+    try {
+      const response = await api.get(`/deliveries/${deliveryId}/suggested-couriers`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des coursiers suggérés:', error)
+      throw error
+    }
+  }
+
+  static async autoAssignDelivery(deliveryId: string): Promise<void> {
+    try {
+      await api.post(`/deliveries/${deliveryId}/auto-assign`)
+    } catch (error) {
+      console.error('Erreur lors de l\'assignation automatique:', error)
+      throw error
+    }
+  }
+
+  static async assignCourier(data: { delivery_id: string; courier_id: string }): Promise<void> {
+    try {
+      await api.post('/deliveries/assign-courier', data)
+    } catch (error) {
+      console.error('Erreur lors de l\'assignation du coursier:', error)
       throw error
     }
   }

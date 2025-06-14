@@ -36,9 +36,9 @@ import type {
 
 interface DeliveryCreateRequest {
   pickup_address: string
-  delivery_address: string
   pickup_lat: number
   pickup_lng: number
+  delivery_address: string
   delivery_lat: number
   delivery_lng: number
   package_type: string
@@ -221,9 +221,9 @@ const CreateDeliveryScreen: React.FC = () => {
 
     const deliveryData: DeliveryCreateRequest = {
       pickup_address: pickupAddress,
-      delivery_address: deliveryAddress,
       pickup_lat: pickupLocation.latitude,
       pickup_lng: pickupLocation.longitude,
+      delivery_address: deliveryAddress,
       delivery_lat: deliveryLocation.latitude,
       delivery_lng: deliveryLocation.longitude,
       package_type: packageType,
@@ -285,7 +285,7 @@ const CreateDeliveryScreen: React.FC = () => {
       ...address,
       name: address.name || address.description || address.address || 'Adresse'
     }
-    
+
     if (type === 'pickup') {
       setPickupLocation(addressWithName)
       setPickupAddress(addressWithName.name)

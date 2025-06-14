@@ -177,13 +177,9 @@ export interface Notification {
   id: string | number
   title: string
   message: string
-  type: 'info' | 'success' | 'warning' | 'error' | 'delivery_update' | 'payment' | 'promotion' | 'system' | 'message'
-  read: boolean
+  type: string
   created_at: string
-  data?: any
-  user_id?: number
-  is_read?: boolean
-  date?: string
+  read: boolean
 }
 
 export interface NotificationData {
@@ -198,13 +194,13 @@ export type NotificationType = 'delivery' | 'payment' | 'system' | 'promotion' |
 
 export interface PendingOperation {
   id: string
-  type: 'delivery' | 'bid' | 'tracking' | 'rating'
-  data: any
   timestamp: string
+  type: 'delivery' | 'bid' | 'tracking' | 'rating' | 'support_ticket' | 'ticket_reply' | 'register' | 'profile_image' | 'profile_update'
   retries: number
+  data: any
 }
 
-export type PendingOperationCreate = Omit<PendingOperation, 'id' | 'timestamp'>
+export interface PendingOperationCreate = Omit<PendingOperation, 'id' | 'timestamp'>
 
 export interface NetworkContextType {
   isConnected: boolean
@@ -271,22 +267,19 @@ export interface WeatherData {
 export interface Merchant {
   id: number
   name: string
-  business_name?: string
+  description?: string
+  address: string
   phone?: string
   email?: string
-  address: string
-  commune?: string
-  latitude?: number
-  longitude?: number
-  delivery_time?: number | string
-  rating?: number
   category?: string
-  logo?: string
-  description?: string
-  working_hours?: string
-  is_verified?: boolean
+  categories?: string[]
+  rating?: number
+  review_count?: number
+  cover_image?: string
+  opening_hours?: string
+  is_active: boolean
   created_at: string
-  updated_at?: string
+  updated_at: string
 }
 
 export interface Vehicle {
@@ -335,22 +328,14 @@ export interface CourierProfile {
 
 export interface CourierStats {
   total_deliveries: number
-  completed_today: number
-  earnings_today: number
+  completed_deliveries: number
+  cancelled_deliveries: number
   average_rating: number
-  current_earnings: number
-  averageRating: number
-  total_points?: number
+  total_earnings: number
+  total_distance?: number
   daily_deliveries?: number
-  daily_rating?: number
-  completion_rate?: number
-  average_delivery_time?: string
-  total_earnings?: number
-  level?: number
-  experience?: number
-  nextLevelExperience?: number
-  badges?: any[]
-  totalEarnings?: number
+  totalDistance?: number
+  badges?: string[]
 }
 
 export interface SupportTicket {
@@ -381,38 +366,30 @@ export interface SupportMessage {
 
 // Types pour les données de prix et recommandations
 export interface PriceEstimateData {
-  pickup_lat: number
-  pickup_lng: number
-  delivery_lat: number
-  delivery_lng: number
-  package_type: string
-  distance: number
+  pickup_address: string
+  delivery_address: string
+  package_weight?: number
+  vehicle_type?: string
+  delivery_type?: string
 }
 
 export interface VehicleRecommendationData {
-  pickup_lat: number
-  pickup_lng: number
-  delivery_lat: number
-  delivery_lng: number
-  package_type: string
-  weatherConditions?: string
+  package_weight: number
+  package_size: string
+  is_fragile: boolean
+  distance: number
 }
 
 export interface VehicleRecommendation {
-  recommended_vehicle: VehicleType
-  reason: string
+  recommended_type: string
+  reasoning: string
+  alternatives: string[]
 }
 
 export interface AvailableDelivery {
-  id: number
-  pickup_address: string
-  delivery_address: string
-  package_type: string
-  proposed_price: number
   distance: number
-  estimated_duration: number
-  created_at: string
-  client?: User
+  score?: number
+  eta_minutes?: number
 }
 
 export interface DeliverySearchParams {
@@ -420,31 +397,42 @@ export interface DeliverySearchParams {
   max_distance?: number
   min_price?: number
   max_price?: number
-  vehicle_type?: VehicleType
+  vehicle_type?: string
 }
 
 // Types pour les requêtes API
 export interface DeliveryCreateRequest {
   pickup_address: string
+  pickup_commune: string
+  pickup_lat?: number
+  pickup_lng?: number
+  pickup_contact_name?: string
+  pickup_contact_phone?: string
   delivery_address: string
-  pickup_lat: number
-  pickup_lng: number
-  delivery_lat: number
-  delivery_lng: number
-  package_type: string
+  delivery_commune: string
+  delivery_lat?: number
+  delivery_lng?: number
+  delivery_contact_name?: string
+  delivery_contact_phone?: string
   package_description?: string
+  package_size?: string
+  package_weight?: number
+  is_fragile?: boolean
   proposed_price: number
-  recipient_name: string
-  recipient_phone?: string
-  special_instructions?: string
-  distance?: number
-  estimated_duration?: number
-  vehicle_type?: VehicleType
-  urgent?: boolean
+  delivery_type?: string
+}
+
+export interface DeliveryUpdateRequest {
+  pickup_address?: string
+  pickup_commune?: string
+  delivery_address?: string
+  delivery_commune?: string
+  package_description?: string
+  proposed_price?: number
 }
 
 export interface BidCreateRequest {
-  delivery_id: number | string
+  delivery_id: number
   proposed_price: number
   estimated_duration?: number
   message?: string
@@ -454,19 +442,21 @@ export interface TrackingPointRequest {
   delivery_id: number
   lat: number
   lng: number
-  status?: string
-  notes?: string
+  accuracy?: number
+  speed?: number
+  heading?: number
 }
 
 export interface VehicleCreateRequest {
   type: VehicleType
-  make?: string
-  model?: string
-  year?: number
+  make: string
+  model: string
+  year: number
   license_plate: string
   color?: string
   capacity?: number
   maxDistance?: number
+  customType?: string
 }
 
 export interface CourierVehicleCreateRequest extends VehicleCreateRequest {
@@ -508,7 +498,11 @@ export interface WeatherAlert {
 }
 
 // CollaborativeDelivery Types
-export interface CollaborativeDelivery {
+export interface CollaborativeDelivery extends Delivery {
+  max_participants: number
+  contribution_amount: number
+  description: string
+  participants?: User[]
   pickupAddress: string
   deliveryAddress: string
   estimatedDistance: string
@@ -528,7 +522,6 @@ export interface CollaborativeDelivery {
   deliveryPrice: number
   id: number
   title: string
-  description: string
   status: string
   pickupCommune: string
   deliveryCommune: string
@@ -857,27 +850,142 @@ export interface DeliveryTracking {
   real_time_updates: boolean;
 }
 
+export interface DeliveryEstimate {
+  estimated_price: number
+  estimated_duration: number
+  distance: number
+}
+
 export interface ExpressDelivery extends Delivery {
-  express_priority: 'standard' | 'urgent' | 'emergency'
-  estimated_pickup_time: string
-  guaranteed_delivery_time: string
-  express_fee: number
-  auto_assignment: boolean
+  is_priority: boolean
+  guaranteed_delivery_time?: string
 }
 
 export interface DeliveryEstimate {
   estimated_price: number
-  estimated_duration: number; // minutes
-  estimated_distance: number; // km
-  pricing_breakdown: {
-    base_price: number;
-    distance_fee: number;
-    time_fee: number;
-    size_fee: number;
-    urgency_fee: number;
-    total: number;
-  };
-  vehicle_recommendations: VehicleRecommendation[];
+  estimated_duration: number
+  distance: number
+}
+
+export interface ExpressDelivery extends Delivery {
+  is_priority: boolean
+  guaranteed_delivery_time?: string
+}
+
+export interface CollaborativeDelivery extends Delivery {
+  max_participants: number
+  contribution_amount: number
+  description: string
+  participants?: User[]
+}
+
+export interface Notification {
+  id: string | number
+  title: string
+  message: string
+  type: string
+  created_at: string
+  read: boolean
+}
+
+export interface AvailableDelivery extends Delivery {
+  distance: number
+  score?: number
+  eta_minutes?: number
+}
+
+export interface DeliveryFilters {
+  status?: DeliveryStatus
+  date_from?: string
+  date_to?: string
+  commune?: string
+  limit?: number
+}
+
+export interface DeliverySearchParams {
+  commune?: string
+  max_distance?: number
+  min_price?: number
+  max_price?: number
+  vehicle_type?: string
+}
+
+export interface DeliveryCreateRequest {
+  pickup_address: string
+  pickup_commune: string
+  pickup_lat?: number
+  pickup_lng?: number
+  pickup_contact_name?: string
+  pickup_contact_phone?: string
+  delivery_address: string
+  delivery_commune: string
+  delivery_lat?: number
+  delivery_lng?: number
+  delivery_contact_name?: string
+  delivery_contact_phone?: string
+  package_description?: string
+  package_size?: string
+  package_weight?: number
+  is_fragile?: boolean
+  proposed_price: number
+  delivery_type?: string
+}
+
+export interface DeliveryUpdateRequest {
+  pickup_address?: string
+  pickup_commune?: string
+  delivery_address?: string
+  delivery_commune?: string
+  package_description?: string
+  proposed_price?: number
+}
+
+export interface BidCreateRequest {
+  delivery_id: number
+  proposed_price: number
+  estimated_duration?: number
+  message?: string
+}
+
+export interface TrackingPointRequest {
+  delivery_id: number
+  lat: number
+  lng: number
+  accuracy?: number
+  speed?: number
+  heading?: number
+}
+
+export interface PriceEstimateData {
+  pickup_address: string
+  delivery_address: string
+  package_weight?: number
+  vehicle_type?: string
+  delivery_type?: string
+}
+
+export interface VehicleRecommendationData {
+  package_weight: number
+  package_size: string
+  is_fragile: boolean
+  distance: number
+}
+
+export interface VehicleRecommendation {
+  recommended_type: string
+  reasoning: string
+  alternatives: string[]
+}
+
+export interface ExpressDeliveryRequest extends DeliveryCreateRequest {
+  is_priority: boolean
+  guaranteed_delivery_time?: string
+}
+
+export interface CollaborativeDeliveryRequest extends DeliveryCreateRequest {
+  max_participants: number
+  contribution_amount: number
+  description: string
 }
 
 // KYCDocument Types
