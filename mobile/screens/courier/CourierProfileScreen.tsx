@@ -63,8 +63,8 @@ const CourierProfileScreen: React.FC = () => {
         />
         <Text style={styles.name}>{`${user?.name}`}</Text>
         <View style={styles.ratingContainer}>
-          <StarRating rating={stats.averageRating} size={20} />
-          <Text style={styles.ratingText}>{stats.averageRating.toFixed(1)}</Text>
+          <StarRating rating={stats.average_rating} size={20} />
+          <Text style={styles.ratingText}>{stats.average_rating.toFixed(1)}</Text>
         </View>
         <Text style={styles.role}>{t("profile.courier")}</Text>
       </View>
@@ -113,7 +113,7 @@ const CourierProfileScreen: React.FC = () => {
         <Card.Title title={t("profile.badges")} />
         <Card.Content>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesScroll}>
-            {stats.badges.map((badge: any) => (
+            {stats.badges?.map((badge: any) => (
               <View key={badge.id} style={styles.badgeItem}>
                 <View style={styles.badgeIconContainer}>
                   <FeatherIcon name={badge.icon as any} size={24} color="#FFFFFF" />
