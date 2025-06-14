@@ -357,7 +357,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import Chart from 'chart.js/auto'
 import {
   fetchCourierEarnings,
-  fetchTransactions,
   fetchAvailableRewards,
   redeemReward as apiRedeemReward,
   withdrawFunds,
@@ -1089,7 +1088,7 @@ export default {
 
 .amount-positive {
   color: #388e3c;
-  font-weight: 600;
+font-weight: 600;
 }
 
 .amount-negative {

@@ -243,7 +243,7 @@ export default {
       required: true,
     },
   },
-  emits: ['close', 'edit'],
+  emits: ['close', 'edit', 'updateUser'],
   setup(props, { emit }) {
     const { showToast } = useToast()
 
@@ -325,7 +325,7 @@ export default {
 
       try {
         await managerApi.updateUserStatus(props.user.id, { status: newStatus })
-        props.user.status = newStatus
+        emit('updateUser', { ...props.user, status: newStatus })
         showToast(
           `Utilisateur ${action === 'suspendre' ? 'suspendu' : 'activé'} avec succès`,
           'success'

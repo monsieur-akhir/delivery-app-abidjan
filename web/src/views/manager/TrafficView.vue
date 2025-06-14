@@ -115,7 +115,7 @@ import 'leaflet/dist/leaflet.css'
 export default {
   name: 'TrafficView',
   setup() {
-    const router = useRouter()
+    
 
     // État
     const trafficReports = ref([])

@@ -147,7 +147,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import managerApi from '@/api/manager'
 

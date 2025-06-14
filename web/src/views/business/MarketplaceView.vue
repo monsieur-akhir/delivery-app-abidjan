@@ -247,8 +247,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { formatPrice, truncateText } from '@/utils/formatters'
-import { exportToCSV, exportToExcel } from '@/utils/export-utils'
-import { getProducts, createProduct, updateProduct, deleteProduct } from '@/api/market'
+import { exportToCSV } from '@/utils/export-utils'
+import { getProducts, updateProduct, deleteProduct } from '@/api/market'
 import { uploadImage } from '@/api/storage'
 import { categories } from '@/config'
 

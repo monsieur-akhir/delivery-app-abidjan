@@ -554,7 +554,6 @@ import {
   cancelExpressDelivery,
   completeExpressDelivery,
   getExpressStats,
-  getCharityOrganizations,
   exportExpressData,
 } from '@/api/express'
 import { useToast } from '@/composables/useToast'
@@ -721,7 +720,7 @@ export default {
     const updateStats = async () => {
       try {
         // Dans un environnement réel, ces données viendraient de l'API
-        const statsData = await getExpressStats()
+        await getExpressStats()
         stats.value = {
           totalDeliveries: 67,
           totalDonations: 125000,
@@ -960,8 +959,6 @@ export default {
     // Exporter les données
     const exportData = async () => {
       try {
-        // Dans un environnement réel, les données viendraient de l'API
-        // Simuler l'export de données
         const dataToExport = deliveries.value.map(delivery => ({
           id: delivery.id,
           date: formatDate(delivery.created_at),
@@ -982,12 +979,10 @@ export default {
       }
     }
 
-    // Charger les données au montage du composant
     onMounted(() => {
       loadDeliveries()
     })
 
-    // Surveiller les changements de page
     watch(currentPage, () => {
       loadDeliveries()
     })

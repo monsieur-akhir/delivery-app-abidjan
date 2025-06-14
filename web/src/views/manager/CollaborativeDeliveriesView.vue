@@ -249,61 +249,53 @@ export default {
 
     // Filtrer les livraisons en fonction des critères
     const filteredDeliveries = computed(() => {
-      let result = [...deliveries.value]
-
-      // Filtre par statut
-      if (filters.value.status) {
-        result = result.filter(d => d.status === filters.value.status)
-      }
-
-      // Filtre par date
-      if (filters.value.dateRange !== 'all') {
-        const now = new Date()
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
-        if (filters.value.dateRange === 'today') {
-          result = result.filter(d => {
-            const date = new Date(d.createdAt)
-            return date >= today
-          })
-        } else if (filters.value.dateRange === 'week') {
-          const weekStart = new Date(today)
-          weekStart.setDate(today.getDate() - today.getDay())
-
-          result = result.filter(d => {
-            const date = new Date(d.createdAt)
-            return date >= weekStart
-          })
-        } else if (filters.value.dateRange === 'month') {
-          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
-
-          result = result.filter(d => {
-            const date = new Date(d.createdAt)
-            return date >= monthStart
-          })
+      return deliveries.value.filter(delivery => {
+        // Filtre par statut
+        if (filters.value.status && delivery.status !== filters.value.status) {
+          return false
         }
-      }
 
-      // Filtre par recherche
-      if (filters.value.search) {
-        const searchLower = filters.value.search.toLowerCase()
-        result = result.filter(
-          d =>
-            d.id.toLowerCase().includes(searchLower) ||
-            d.pickupCommune.toLowerCase().includes(searchLower) ||
-            d.deliveryCommune.toLowerCase().includes(searchLower) ||
-            (d.primaryCourierName && d.primaryCourierName.toLowerCase().includes(searchLower))
-        )
-      }
+        // Filtre par date
+        if (filters.value.dateRange !== 'all') {
+          const now = new Date()
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          const deliveryDate = new Date(delivery.createdAt)
 
-      // Mettre à jour le nombre total d'éléments filtrés
-      totalItems.value = result.length
+          if (filters.value.dateRange === 'today') {
+            if (deliveryDate < today) {
+              return false
+            }
+          } else if (filters.value.dateRange === 'week') {
+            const weekStart = new Date(today)
+            weekStart.setDate(today.getDate() - today.getDay())
 
-      // Appliquer la pagination
-      const start = (currentPage.value - 1) * itemsPerPage.value
-      const end = start + itemsPerPage.value
+            if (deliveryDate < weekStart) {
+              return false
+            }
+          } else if (filters.value.dateRange === 'month') {
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
 
-      return result.slice(start, end)
+            if (deliveryDate < monthStart) {
+              return false
+            }
+          }
+        }
+
+        // Filtre par recherche
+        if (filters.value.search) {
+          const searchLower = filters.value.search.toLowerCase()
+          if (
+            !delivery.id.toLowerCase().includes(searchLower) &&
+            !delivery.pickupCommune.toLowerCase().includes(searchLower) &&
+            !delivery.deliveryCommune.toLowerCase().includes(searchLower) &&
+            !(delivery.primaryCourierName && delivery.primaryCourierName.toLowerCase().includes(searchLower))
+          ) {
+            return false
+          }
+        }
+
+        return true
+      })
     })
 
     // Récupérer les livraisons collaboratives

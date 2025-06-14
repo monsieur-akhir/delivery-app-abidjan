@@ -436,9 +436,9 @@
                 class="form-control"
                 required
               >
-                <option value="small">Petit (< 5kg)</option>
+                <option value="small">Petit (&lt; 5kg)</option>
                 <option value="medium">Moyen (5-10kg)</option>
-                <option value="large">Grand (> 10kg)</option>
+                <option value="large">Grand (&gt; 10kg)</option>
               </select>
             </div>
             <div class="form-group">
