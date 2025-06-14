@@ -10,6 +10,36 @@ import useDelivery from "../../hooks/useDelivery"
 import { useNetwork } from "../../contexts/NetworkContext"
 import { useTranslation } from "react-i18next"
 import { formatPrice, formatDate } from "../../utils/formatters"
+import { useAuth } from "../../contexts/AuthContext"
+import { useWebSocket } from "../../contexts/WebSocketContext"
+import DeliveryService from "../../services/DeliveryService"
+
+// Fonctions utilitaires pour les statuts
+const getStatusMessage = (status: string): string => {
+  const messages: Record<string, string> = {
+    'pending': 'Commande en attente',
+    'searching': 'Recherche d\'un coursier',
+    'assigned': 'Coursier assigné',
+    'pickup': 'Récupération en cours',
+    'transit': 'En cours de livraison',
+    'delivered': 'Livré',
+    'cancelled': 'Annulé'
+  }
+  return messages[status] || 'Statut inconnu'
+}
+
+const getProgressPercentage = (status: string): number => {
+  const progressMap: Record<string, number> = {
+    'pending': 10,
+    'searching': 20,
+    'assigned': 40,
+    'pickup': 60,
+    'transit': 80,
+    'delivered': 100,
+    'cancelled': 0
+  }
+  return progressMap[status] || 0
+}
 
 type EnhancedTrackDeliveryScreenProps = {
   route: { params: { deliveryId: string } }
