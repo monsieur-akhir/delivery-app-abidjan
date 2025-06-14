@@ -1,0 +1,141 @@
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:34:9 - error TS2322: Type 'void' is not assignable to type 'CollaborativeDelivery[]'.
+
+34         data = await getCollaborativeDeliveries({ status: "in_progress" })
+           ~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:36:9 - error TS2322: Type 'void' is not assignable to type 'CollaborativeDelivery[]'.
+
+36         data = await getCollaborativeDeliveries({ status: "pending" })
+           ~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:9 - error TS2322: Type 'void' is not assignable to type 'CollaborativeDelivery[]'.
+
+38         data = await getCollaborativeDeliveries({ status: "completed" })
+           ~~~~
+
+screens/courier/CourierProfileScreen.tsx:66:37 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+66           <StarRating rating={stats.averageRating} size={20} />
+                                       ~~~~~~~~~~~~~
+
+  types/models.ts:337:3
+    337   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/CourierProfileScreen.tsx:67:50 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+67           <Text style={styles.ratingText}>{stats.averageRating.toFixed(1)}</Text>
+                                                    ~~~~~~~~~~~~~
+
+  types/models.ts:337:3
+    337   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/CourierProfileScreen.tsx:99:58 - error TS2339: Property 'level' does not exist on type 'CourierStats'.
+
+99             <Text style={styles.levelText}>Niveau {stats.level || 1}</Text>
+                                                            ~~~~~
+
+screens/courier/CourierProfileScreen.tsx:102:65 - error TS2339: Property 'experience' does not exist on type 'CourierStats'.
+
+102                 style={[styles.progressBar, { width: `${((stats.experience || 0) / (stats.nextLevelExperience || 100)) * 100}%` }]}
+                                                                    ~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:102:91 - error TS2339: Property 'nextLevelExperience' does not exist on type 'CourierStats'.
+
+102                 style={[styles.progressBar, { width: `${((stats.experience || 0) / (stats.nextLevelExperience || 100)) * 100}%` }]}
+                                                                                              ~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:106:22 - error TS2339: Property 'experience' does not exist on type 'CourierStats'.
+
+106               {stats.experience || 0} / {stats.nextLevelExperience || 100} XP
+                         ~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:106:48 - error TS2339: Property 'nextLevelExperience' does not exist on type 'CourierStats'.
+
+106               {stats.experience || 0} / {stats.nextLevelExperience || 100} XP
+                                                   ~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:116:14 - error TS18048: 'stats.badges' is possibly 'undefined'.
+
+116             {stats.badges.map((badge: any) => (
+                 ~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:52:25 - error TS2345: Argument of type 'CourierProfile' is not assignable to parameter of type 'SetStateAction<CourierProfile | null>'.
+  Type 'CourierProfile' is missing the following properties from type 'CourierProfile': user_id, is_available
+
+52       setCourierProfile(profileData)
+                           ~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:321:23 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"moto"' have no overlap.
+
+321                       courierProfile.vehicle_type === "moto"
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:323:27 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"velo"' have no overlap.
+
+323                         : courierProfile.vehicle_type === "velo"
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:333:22 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"moto"' have no overlap.
+
+333                     {courierProfile.vehicle_type === "moto"
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:335:25 - error TS2367: This comparison appears to be unintentional because the types 'VehicleType' and '"velo"' have no overlap.
+
+335                       : courierProfile.vehicle_type === "velo"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierTrackDeliveryScreen.tsx:140:47 - error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+140       const data = await fetchDeliveryDetails(deliveryId)
+                                                  ~~~~~~~~~~
+
+screens/courier/CourierTrackDeliveryScreen.tsx:362:26 - error TS2345: Argument of type '{ type: "tracking"; data: { delivery_id: string | number; lat: number; lng: number; accuracy: number; speed: number; timestamp: string; }; }' is not assignable to parameter of type 'Omit<PendingOperation, "id" | "timestamp">'.
+  Property 'retries' is missing in type '{ type: "tracking"; data: { delivery_id: string | number; lat: number; lng: number; accuracy: number; speed: number; timestamp: string; }; }' but required in type 'Omit<PendingOperation, "id" | "timestamp">'.
+
+362         addPendingUpload({
+                             ~
+363           type: "tracking",
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+364           data: trackingData,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+365         })
+    ~~~~~~~~~
+
+  types/models.ts:203:3
+    203   retries: number
+          ~~~~~~~
+    'retries' is declared here.
+
+screens/courier/CourierTrackDeliveryScreen.tsx:411:36 - error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+411         await updateDeliveryStatus(deliveryId, status)
+                                       ~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:42:58 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+42       const data = await DeliveryService.getDeliveryById(deliveryId)
+                                                            ~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type '{ initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; deliveries: Delivery[]; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'initialRegion' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'.
+
+218               initialRegion={{
+                  ~~~~~~~~~~~~~
+
+screens/courier/DeliveryHistoryScreen.tsx:189:29 - error TS2339: Property 'cardHeader' does not exist on type '{ container: { flex: number; backgroundColor: string; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; padding: number; backgroundColor: string; borderBottomWidth: number; borderBottomColor: string; }; ... 61 more ...; completedText: { ...; }; }'.
+
+189         <View style={styles.cardHeader}>
+                                ~~~~~~~~~~
+
+screens/courier/DeliveryHistoryScreen.tsx:212:29 - error TS2339: Property 'cardFooter' does not exist on type '{ container: { flex: number; backgroundColor: string; }; header: { flexDirection: "row"; justifyContent: "space-between"; alignItems: "center"; padding: number; backgroundColor: string; borderBottomWidth: number; borderBottomColor: string; }; ... 61 more ...; completedText: { ...; }; }'.
+
+212         <View style={styles.cardFooter}>
+                                ~~~~~~~~~~
