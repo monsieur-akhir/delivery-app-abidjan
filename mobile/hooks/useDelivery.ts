@@ -92,7 +92,11 @@ export const useDelivery = (): UseDeliveryReturn => {
         ...data,
         package_description: data.package_description || ''
       }
-      const delivery = await DeliveryService.createDelivery(deliveryData)
+      const deliveryDataWithDefaults = {
+        ...deliveryData,
+        recipient_name: deliveryData.recipient_name || 'Non spécifié'
+      }
+      const delivery = await DeliveryService.createDelivery(deliveryDataWithDefaults)
       setState(prev => ({ 
         ...prev, 
         deliveries: [delivery, ...prev.deliveries],
