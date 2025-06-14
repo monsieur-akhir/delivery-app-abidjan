@@ -1,0 +1,175 @@
+~/workspace/mobile$ npx tsc
+hooks/useUser.ts:416:13 - error TS2740: Type '{ total_earnings: number; weekly_earnings: number; monthly_earnings: number; pending_earnings: number; }' is missing the following properties from type 'CourierEarningsData': daily_earnings, completed_deliveries, average_rating, earnings_history, and 4 more.
+
+416       const earnings: CourierEarningsData = {
+                ~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:140:9 - error TS2322: Type '"delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit"' is not assignable to type '"pending" | "delivered" | "cancelled" | "searching" | "assigned" | "transit"'.
+  Type '"pickup"' is not assignable to type '"pending" | "delivered" | "cancelled" | "searching" | "assigned" | "transit"'.
+
+140         status: (statusMapping[deliveryData.status] || 'searching') as "delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit",
+            ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:142:27 - error TS2339: Property 'estimated_arrival_time' does not exist on type 'Delivery'.
+
+142         eta: deliveryData.estimated_arrival_time,
+                              ~~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:31:3 - error TS2353: Object literal may only specify known properties, and 'logo_url' does not exist in type 'Merchant'.
+
+31   logo_url: undefined,
+     ~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:34:3 - error TS2353: Object literal may only specify known properties, and 'logo_url' does not exist in type 'Merchant'.
+
+34   logo_url: undefined,
+     ~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:65:9 - error TS2322: Type 'VehicleType' is not assignable to type 'VehicleType | undefined'.
+  Type '"pickup"' is not assignable to type 'VehicleType | undefined'.
+
+65         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
+           ~~~~~~~~~~~~
+
+  types/models.ts:688:3
+    688   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:73:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+73       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:36:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+36         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:39:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+39         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:42:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+42         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:45:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+45         data = result ? result : []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveryDetailsScreen.tsx:298:23 - error TS2551: Property 'isFragile' does not exist on type 'CollaborativeDelivery'. Did you mean 'is_fragile'?
+
+298             {delivery.isFragile && (
+                          ~~~~~~~~~
+
+  types/models.ts:762:3
+    762   is_fragile: boolean
+          ~~~~~~~~~~
+    'is_fragile' is declared here.
+
+screens/courier/CourierProfileScreen.tsx:66:23 - error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+66           <StarRating rating={stats.average_rating} size={20} />
+                         ~~~~~~
+
+  components/StarRating.tsx:6:3
+    6   rating: number
+        ~~~~~~
+    The expected type comes from property 'rating' which is declared here on type 'IntrinsicAttributes & StarRatingProps'
+
+screens/courier/CourierProfileScreen.tsx:67:44 - error TS18048: 'stats.average_rating' is possibly 'undefined'.
+
+67           <Text style={styles.ratingText}>{stats.average_rating.toFixed(1)}</Text>
+                                              ~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:88:55 - error TS2339: Property 'totalDistance' does not exist on type 'CourierStats'.
+
+88               <Text style={styles.statValue}>{((stats.totalDistance || (stats as any).total_distance || 0) / 1000).toFixed(1)} km</Text>
+                                                         ~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:116:20 - error TS2339: Property 'badges' does not exist on type 'CourierStats'.
+
+116             {stats.badges?.map((badge: any) => (
+                       ~~~~~~
+
+screens/courier/CourierWalletScreen.tsx:33:5 - error TS2339: Property 'user' does not exist on type 'UseUserReturn'.
+
+33     user
+       ~~~~
+
+screens/courier/CourierWalletScreen.tsx:101:27 - error TS2345: Argument of type 'PayoutRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/types/models").PayoutRequest'.
+  Type 'PayoutRequest' is missing the following properties from type 'PayoutRequest': payment_method, account_details
+
+101       await requestPayout(payoutRequestData)
+                              ~~~~~~~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type 'string' is not assignable to type 'VTCDeliveryStatus'.
+
+218               deliveryStatus="transit"
+                  ~~~~~~~~~~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    The expected type comes from property 'deliveryStatus' which is declared here on type 'IntrinsicAttributes & VTCStyleMapProps'
+
+screens/courier/GamificationScreen.tsx:80:22 - error TS2345: Argument of type '{ position: number; total_points: number; courier_id: number; name: string; profile_picture?: string | undefined; points: number; deliveries_count: number; rank: number; }[]' is not assignable to parameter of type 'SetStateAction<Leaderboard[]>'.
+  Type '{ position: number; total_points: number; courier_id: number; name: string; profile_picture?: string | undefined; points: number; deliveries_count: number; rank: number; }[]' is not assignable to type 'Leaderboard[]'.
+    Property 'id' is missing in type '{ position: number; total_points: number; courier_id: number; name: string; profile_picture?: string; points: number; deliveries_count: number; rank: number; }' but required in type 'Leaderboard'.
+
+80       setLeaderboard(adaptedLeaderboard)
+                        ~~~~~~~~~~~~~~~~~~
+
+  types/models.ts:406:3
+    406   id: number
+          ~~
+    'id' is declared here.
+
+screens/courier/GamificationScreen.tsx:274:29 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+274                       entry.profile_picture
+                                ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:275:40 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+275                         ? { uri: entry.profile_picture }
+                                           ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:285:71 - error TS2339: Property 'name' does not exist on type 'Leaderboard'.
+
+285                       {entry.courier_id === user?.id ? "Vous" : entry.name}
+                                                                          ~~~~
+
+screens/courier/GamificationScreen.tsx:288:30 - error TS2339: Property 'deliveries_count' does not exist on type 'Leaderboard'.
+
+288                       {entry.deliveries_count || 0} livraisons • {entry.points || 0} pts
+                                 ~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:288:73 - error TS2339: Property 'points' does not exist on type 'Leaderboard'.
+
+288                       {entry.deliveries_count || 0} livraisons • {entry.points || 0} pts
+                                                                            ~~~~~~
+
+
+Found 25 errors in 11 files.
+
+Errors  Files
+     1  hooks/useUser.ts:416
+     2  screens/client/EnhancedTrackDeliveryScreen.tsx:140
+     1  screens/client/MarketplaceScreen.tsx:31
+     1  screens/client/MerchantDetailsScreen.tsx:34
+     2  screens/courier/AddVehicleScreen.tsx:65
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:36
+     1  screens/courier/CollaborativeDeliveryDetailsScreen.tsx:298
+     4  screens/courier/CourierProfileScreen.tsx:66
+     2  screens/courier/CourierWalletScreen.tsx:33
+     1  screens/courier/DeliveryDetailsScreen.tsx:218
+     6  screens/courier/GamificationScreen.tsx:80
