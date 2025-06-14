@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View,
@@ -56,7 +55,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
       const response = await DeliveryService.getUserDeliveries(user?.id!)
       setOrders(response)
       setFilteredOrders(response)
-      
+
       // Animation d'entrée
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -155,7 +154,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
   // Gérer la sélection d'une commande
   const handleOrderPress = useCallback(async (order: Delivery) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    
+
     if (order.status === 'in_transit' || order.status === 'picked_up') {
       navigation.navigate('TrackDelivery', { deliveryId: order.id })
     } else {
@@ -173,7 +172,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
   const renderOrderItem = useCallback(({ item, index }: { item: Delivery; index: number }) => {
     const statusColor = getStatusColor(item.status)
     const statusIcon = getStatusIcon(item.status)
-    
+
     return (
       <Animated.View
         style={[
@@ -224,9 +223,9 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
                 {item.pickup_address}
               </Text>
             </View>
-            
+
             <View style={styles.routeLine} />
-            
+
             <View style={styles.routePointContainer}>
               <View style={[styles.routePoint, styles.deliveryPoint]} />
               <Text style={styles.addressText} numberOfLines={1}>
@@ -243,7 +242,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
                 {item.package_weight ? `${item.package_weight} kg` : t('orders.weightNotSpecified')}
               </Text>
             </View>
-            
+
             <View style={styles.detailItem}>
               <MaterialCommunityIcons name="currency-eur" size={16} color="#757575" />
               <Text style={[styles.detailText, styles.priceText]}>
@@ -341,7 +340,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
+
       {/* Header animé */}
       <Animated.View
         style={[
@@ -365,7 +364,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
               <Badge size={20} style={styles.notificationBadge}>3</Badge>
             </TouchableOpacity>
           </View>
-          
+
           <Searchbar
             placeholder={t('orders.searchPlaceholder')}
             onChangeText={setSearchQuery}
@@ -633,6 +632,15 @@ const styles = StyleSheet.create({
     bottom: 20,
     right: 20,
     backgroundColor: '#FF6B00',
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "white",
+    marginLeft: 4,
+  },
+  statusDot: {
+    fontSize: 12,
   },
 })
 

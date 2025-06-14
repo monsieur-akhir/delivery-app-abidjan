@@ -26,7 +26,7 @@ const fetchDeliveryRoute = async (_deliveryId: string): Promise<MapRoute> => {
     coordinates: [],
     distance: 0,
     duration: 0,
-    instructions: []
+    // instructions: [] // Removed instructions
   }
 }
 
