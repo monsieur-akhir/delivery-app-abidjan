@@ -161,7 +161,7 @@
 
 <script>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+
 import { fetchAuditLogs, fetchUsers } from '@/api/manager'
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters'
 

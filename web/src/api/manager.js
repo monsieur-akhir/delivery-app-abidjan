@@ -895,9 +895,7 @@ export const fetchAuditLogs = async (params = {}) => {
  */
 export async function addZone(zoneData) {
   try {
-    const response = await axios.post(`${API_URL}/manager/zones`, zoneData, {
-      headers: getAuthHeaders(),
-    })
+    const response = await apiClient.post('/manager/zones', zoneData)
     return response.data
   } catch (error) {
     console.error("Erreur lors de l'ajout de la zone:", error)
@@ -914,9 +912,7 @@ const createUser = userData => {
   return apiClient.post('/manager/users', userData)
 }
 
-const updateManagerUser = (userId, userData) => {
-  return apiClient.put(`/manager/users/${userId}`, userData)
-}
+
 
 const getUserStats = userId => {
   return apiClient.get(`/manager/users/${userId}/stats`)
@@ -1044,6 +1040,5 @@ export const managerService = {
   getAdvancedStats,
   getUserGrowthStats,
   getKycStats,
-  getRevenueStats,
   getPerformanceMetrics,
 }

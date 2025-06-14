@@ -1095,7 +1095,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   fetchUsers,
-  addUser,
+  
   updateUserStatus,
   updateUser as apiUpdateUser,
   fetchUserDetails,

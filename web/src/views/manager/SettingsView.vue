@@ -586,7 +586,6 @@ export default {
   }
 }
 </script>
-</template>
 
 <style scoped>
 .settings-view {
