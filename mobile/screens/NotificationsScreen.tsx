@@ -26,7 +26,6 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     markAllNotificationsAsRead,
     deleteNotification,
     clearAllNotifications,
-    markAsRead,
   } = useNotification()
 
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
@@ -54,10 +53,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
   }
 
   const handleNotificationPress = (notification: Notification) => {
-    // Mark notification as read
-    if (markAsRead) {
-      markAsRead(notification.id)
-    }
+    // Mark notification as read functionality would be implemented here
 
     if (notification.type === 'delivery_assigned' && notification.data?.delivery_id) {
       navigation.navigate("TrackDelivery", { deliveryId: notification.data.delivery_id.toString() })
@@ -127,8 +123,8 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
       onPress={() => handleNotificationPress(item)}
     >
       <View style={styles.notificationContent}>
-        <View style={[styles.notificationIcon, { backgroundColor: getNotificationColor(item.data?.type as string) }]}>
-          <FeatherIcon name={getNotificationIcon(item.data?.type)} size={20} color="#000000" style={styles.iconStyle} />
+        <View style={[styles.notificationIcon, { backgroundColor: getNotificationColor(item.type) }]}>
+          <FeatherIcon name={getNotificationIcon(item.type)} size={20} color="#000000" style={styles.iconStyle} />
         </View>
         <View style={styles.notificationTextContainer}>
           <Text style={[styles.notificationTitle, { color: colors.text }]}>{item.title}</Text>

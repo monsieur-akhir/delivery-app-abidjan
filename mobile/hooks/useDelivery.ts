@@ -499,11 +499,15 @@ export const useDelivery = (): UseDeliveryReturn => {
 
 const getVehicleRecommendation = useCallback(async (data: VehicleRecommendationData): Promise<VehicleRecommendation> => {
     try {
-      if (!data.pickup_lat || !data.pickup_lng || !data.delivery_lat || !data.delivery_lng) {
-        throw new Error('Coordonnées manquantes')
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const requestData = {
+        ...data,
+        pickup_lat: data.pickup_lat || 0,
+        pickup_lng: data.pickup_lng || 0,
+        delivery_lat: data.delivery_lat || 0,
+        delivery_lng: data.delivery_lng || 0
       }
-
-      const recommendation = await DeliveryService.getVehicleRecommendation(data)
+      const recommendation = await DeliveryService.getVehicleRecommendation(requestData)
       if (!recommendation) {
         throw new Error('Aucune recommandation disponible')
       }

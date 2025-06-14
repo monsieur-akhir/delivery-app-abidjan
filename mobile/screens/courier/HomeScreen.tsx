@@ -94,11 +94,11 @@ const CourierHomeScreen: React.FC = () => {
       if (user?.id) {
         const statsResponse = await GamificationService.getCourierStats()
         setStats({
-          completed_deliveries: statsResponse?.completed_deliveries || 0,
-          total_earnings: statsResponse?.total_earnings || 0,
+          completed_today: statsResponse?.deliveries_count || 0,
+          earnings_today: statsResponse?.earnings || 0,
           total_deliveries: statsResponse?.total_deliveries || 0,
           average_rating: statsResponse?.average_rating || 0,
-          total_distance: statsResponse?.total_distance || 0,
+          total_distance: statsResponse?.distance_traveled || 0,
         })
       }
     } catch (error) {

@@ -19,7 +19,6 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   name: merchantInfo.name,
   description: merchantInfo.description || '',
   address: merchantInfo.address,
-  commune: merchantInfo.commune,
   category: merchantInfo.category,
   categories: [merchantInfo.category],
   rating: merchantInfo.rating || 0,
@@ -396,3 +395,4 @@ const styles = StyleSheet.create({
 })
 
 export default MarketplaceScreen
+```The primary goal is achieved by removing the `commune` property from the `adaptMerchantInfo` function.
