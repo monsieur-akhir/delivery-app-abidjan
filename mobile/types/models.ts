@@ -131,7 +131,18 @@ export interface Courier {
   average_rating?: number
 }
 
-export type VehicleType = 'bicycle' | 'motorcycle' | 'scooter' | 'car' | 'van' | 'truck'
+export type VehicleType = 'motorcycle' | 'car' | 'bicycle' | 'scooter' | 'van' | 'truck'
+
+export const VehicleType = {
+  MOTORCYCLE: 'motorcycle' as const,
+  CAR: 'car' as const,
+  BICYCLE: 'bicycle' as const,
+  SCOOTER: 'scooter' as const,
+  VAN: 'van' as const,
+  TRUCK: 'truck' as const,
+  PICKUP: 'car' as const,
+  CUSTOM: 'custom' as const
+}
 
 export interface Bid {
   id: number
@@ -229,6 +240,7 @@ export interface Weather {
   condition: string
   humidity: number
   wind_speed: number
+  feels_like: number
   location?: string
   current?: WeatherCurrent
   forecast?: any[]
@@ -402,22 +414,16 @@ export interface DeliveryCreateRequest {
   pickup_lng: number
   delivery_lat: number
   delivery_lng: number
-  proposed_price: number
+  package_type: string
   package_description?: string
-  package_type?: string
-  package_weight?: number
-  package_dimensions?: string
+  proposed_price: number
+  recipient_name: string
+  recipient_phone: string
   special_instructions?: string
-  urgency_level?: 'low' | 'medium' | 'high'
-  fragile?: boolean
-  requires_id?: boolean
-  payment_method?: string
-  scheduled_pickup?: string
   distance?: number
   estimated_duration?: number
-  weather_conditions?: string
-  recipient_name?: string
-  recipient_phone?: string
+  vehicle_type?: VehicleType
+  urgent?: boolean
 }
 
 export interface BidCreateRequest {
@@ -881,21 +887,16 @@ export interface KYCStatus {
 
 // UserType and NotificationSettings Types
 export interface NotificationSettings {
-  push_enabled: boolean
-  email_enabled: boolean
-  sms_enabled: boolean
   delivery_updates: boolean
+  bid_notifications: boolean
   promotional_offers: boolean
   security_alerts: boolean
-  marketing_emails: boolean
-  promotional_notifications: boolean
+  push_notifications: boolean
   email_notifications: boolean
-  push_notifications?: boolean
-  sms_notifications?: boolean
-  promotion_alerts?: boolean
+  sms_notifications: boolean
+  delivery_notifications: boolean
+  payment_notifications: boolean
   whatsapp_enabled?: boolean
-  bid_notifications?: boolean
-  delivery_notifications?: boolean
 }
 
 // UserPreferences Type
