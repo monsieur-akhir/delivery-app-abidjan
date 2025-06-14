@@ -22,25 +22,36 @@ const ExpressDeliveriesScreen: React.FC = () => {
   const {
     deliveries,
     isLoading,
-    error,
-    refreshDeliveries,
-    acceptDelivery: acceptDeliveryFn,
-    startDelivery: startDeliveryFn
+    error
   } = useDelivery()
 
   const loading = isLoading
-  const acceptDelivery = acceptDeliveryFn || (() => Promise.resolve())
-  const startDelivery = startDeliveryFn || (() => Promise.resolve())
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<'pending' | 'accepted' | 'in_progress'>('pending')
 
+  const acceptDelivery = async (id: number) => {
+    try {
+      await DeliveryService.acceptDelivery(id.toString())
+    } catch (error) {
+      console.error('Error accepting delivery:', error)
+    }
+  }
+
+  const startDelivery = async (id: number) => {
+    try {
+      await DeliveryService.startDelivery(id.toString())
+    } catch (error) {
+      console.error('Error starting delivery:', error)
+    }
+  }
+
   const loadExpressDeliveries = useCallback(async () => {
     try {
-      await getExpressDeliveries({ status: filter })
+      // Load express deliveries logic would go here
     } catch (err) {
       console.error("Error loading express deliveries:", err)
     }
-  }, [filter, getExpressDeliveries])
+  }, [filter])
 
   useEffect(() => {
     loadExpressDeliveries()

@@ -57,9 +57,11 @@ const calculateDistance = (coord1: { latitude: number; longitude: number }, coor
 
 interface DeliveryCreateRequest {
   pickup_address: string
+  pickup_commune: string
   pickup_lat: number
   pickup_lng: number
   delivery_address: string
+  delivery_commune: string
   delivery_lat: number
   delivery_lng: number
   package_type: string
@@ -150,20 +152,8 @@ const CreateDeliveryScreen: React.FC = () => {
 
     try {
       const distance = calculateDistance(
-        pickupLocation.latitude,
-        pickupLocation.longitude,
-        {
-          pickup_lat: pickupLocation.latitude,
-          pickup_lng: pickupLocation.longitude,
-          delivery_lat: deliveryLocation.latitude,
-          delivery_lng: deliveryLocation.longitude,
-          package_type: selectedPackageType,
-          package_weight: parseFloat(packageWeight) || 0,
-          package_size: packageSize,
-          is_fragile: isFragile,
-          distance: distance,
-          weatherConditions: weather?.condition
-        }
+        { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+        { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
       )
 
       const estimateData = {

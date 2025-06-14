@@ -137,9 +137,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     try {
       setLoading(true)
       const deliveries = await getClientDeliveryHistory({})
-      if (deliveries && Array.isArray(deliveries)) {
-        const active = deliveries.filter(d => d.status === 'in_progress' || d.status === 'picked_up')
-        const recent = deliveries.filter(d => d.status === 'completed' || d.status === 'cancelled')
+      if (Array.isArray(deliveries)) {
+        const active = deliveries.filter((d: any) => d.status === 'in_progress' || d.status === 'picked_up')
+        const recent = deliveries.filter((d: any) => d.status === 'completed' || d.status === 'cancelled')
         setActiveDeliveries(active)
         setRecentDeliveries(recent)
       }
