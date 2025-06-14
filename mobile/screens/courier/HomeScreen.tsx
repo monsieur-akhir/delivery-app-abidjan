@@ -1,7 +1,3 @@
-` tags. I will ensure that no parts are skipped, the indentation and structure are preserved, and no forbidden words are used.
-
-```
-<replit_final_file>
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View,

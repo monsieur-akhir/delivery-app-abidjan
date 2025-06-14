@@ -20,9 +20,9 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   description: merchantInfo.description || '',
   address: merchantInfo.address,
   category: merchantInfo.category,
-  
+
   rating: merchantInfo.rating || 0,
-  
+
   is_open: merchantInfo.is_open,
   opening_hours: merchantInfo.opening_hours || '',
   phone: merchantInfo.phone || '',
