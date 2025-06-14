@@ -102,7 +102,7 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
         Alert.alert(t("trackDelivery.deliveryCompleted"), t("trackDelivery.deliveryCompletedMessage"), [
           {
             text: "OK",
-            onPress: () => navigation.navigate("RateDelivery", { deliveryId }),
+            onPress: () => navigation.navigate("RateDelivery", { deliveryId: deliveryId.toString() }),
           },
         ])
       }
@@ -151,7 +151,7 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
       setLoading(true)
 
       // Charger les détails de la livraison avec le hook
-      const deliveryData = await getDeliveryDetails(Number(deliveryId))
+      const deliveryData = await getDeliveryDetails(deliveryId.toString())
       if (deliveryData) {
         setDelivery(deliveryData)
 

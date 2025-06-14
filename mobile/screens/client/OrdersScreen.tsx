@@ -201,7 +201,7 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
             <View style={styles.orderIdContainer}>
               <Text style={styles.orderIdLabel}>#{item.id}</Text>
               <Badge size={20} style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-                <Animated.Text style={{ color: 'white', fontSize: 12 }}>●</Animated.Text>
+                <Text style={{ color: 'white', fontSize: 12 }}>●</Text>
               </Badge>
             </View>
             <View style={styles.orderTimeContainer}>

@@ -96,6 +96,7 @@ export interface VehicleRecommendationData {
   pickup_lng?: number
   delivery_lat?: number
   delivery_lng?: number
+  package_type?: string // Added package_type
 }
 
 export interface VehicleRecommendation {

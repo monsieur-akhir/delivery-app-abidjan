@@ -132,7 +132,7 @@ export interface Courier {
   average_rating?: number
 }
 
-export type VehicleType = 'motorcycle' | 'car' | 'bicycle' | 'scooter' | 'van' | 'truck'
+export type VehicleType = 'motorcycle' | 'car' | 'bicycle' | 'scooter' | 'van' | 'truck' | 'custom'
 
 export const VehicleType = {
   MOTORCYCLE: 'motorcycle' as const,
@@ -196,6 +196,7 @@ export interface NotificationData {
   amount?: number
   status?: string
   transaction_id?: string
+  type?: string
 }
 
 export type NotificationType = 'delivery' | 'payment' | 'system' | 'promotion' | 'delivery_update' | 'message'
@@ -286,6 +287,10 @@ export interface Merchant {
   delivery_time?: number
   created_at?: string
   updated_at?: string
+  description?: string
+  category?: string
+  cover_image?: string
+  image_url?: string
 }
 
 export interface Vehicle {
@@ -581,14 +586,13 @@ export interface TrackingPointRequest {
 
 export interface VehicleCreateRequest {
   type: VehicleType
-  make: string
+  license_plate: string
   model: string
   year: number
-  license_plate: string
-  color?: string
+  color: string
   capacity?: number
-  maxDistance?: number
   customType?: string
+  maxDistance?: number
 }
 
 export interface VehicleUpdateRequest {
@@ -1434,3 +1438,15 @@ export interface VTCDeliveryStatus {
 }
 
 export type VTCDeliveryStatusType = 'searching' | 'assigned' | 'pickup' | 'transit' | 'delivered' | 'cancelled'
+
+export interface LatLng {
+  latitude: number;
+  longitude: number;
+}
+
+export interface MapRoute {
+  coordinates: LatLng[]
+  distance: number
+  duration: number
+  instructions?: string[]
+}

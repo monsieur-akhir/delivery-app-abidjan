@@ -119,7 +119,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
   const loadDeliveryDetails = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-      const data = await getDeliveryDetails(Number(deliveryId))
+      const data = await getDeliveryDetails(deliveryId.toString())
       setDelivery(data)
 
       // Définir un montant d'enchère par défaut légèrement inférieur au prix proposé
@@ -281,7 +281,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
                 <Text style={styles.deliveryId}>Livraison #{delivery.id}</Text>
                 <Text style={styles.deliveryDate}>{formatDate(delivery.created_at)}</Text>
               </View>
-              <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price)} FCFA</Text>
+              <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price || 0)} FCFA</Text>
             </View>
 
             <Divider style={styles.divider} />
