@@ -36,19 +36,20 @@ const GamificationScreen: React.FC = () => {
         GamificationService.getLeaderboard()
       ])
 
-      setStats({
+      const enhancedStats: CourierStats = {
         ...statsData,
         average_rating: statsData.average_rating || 0,
         total_deliveries: statsData.total_deliveries || 0,
-        total_earnings: 0,
-        totalDistance: 0,
+        total_earnings: statsData.total_earnings || 0,
+        totalDistance: statsData.totalDistance || 0,
         total_points: statsData.total_points || 0,
-        nextLevelExperience: levelThresholds[statsData.level + 1] || 0,
-        badges: [],
+        badges: statsData.badges || [],
         deliveriesCompleted: statsData.total_deliveries || 0,
-        daily_deliveries: 0,
-        daily_rating: 0
-      })
+        daily_deliveries: statsData.daily_deliveries || 0,
+        daily_rating: statsData.daily_rating || 0,
+        nextLevelExperience: levelThresholds[statsData.level + 1] || 0
+      }
+      setStats(enhancedStats)
       setAchievements(achievementsData)
       // Adapter les données du service vers le type models
       const adaptedLeaderboard = leaderboardData.map(entry => ({

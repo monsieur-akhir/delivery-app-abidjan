@@ -55,11 +55,31 @@ export const useVehicle = (): UseVehicleReturn => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const refreshVehicles = async () => {
+  const refreshVehicles = async (courierId?: number) => {
     try {
       setLoading(true)
-      const data = await VehicleService.getCourierVehicles()
-      setVehicles(data)
+      // Get courier ID from auth context or use parameter
+      const id = courierId || 1 // Default fallback - should be from auth context
+      const courierVehicles = await VehicleService.getCourierVehicles(id)
+      
+      // Convert CourierVehicle[] to Vehicle[]
+      const vehicles: Vehicle[] = courierVehicles.map(cv => ({
+        id: cv.id,
+        user_id: cv.courier_id,
+        type: cv.vehicle.type,
+        license_plate: cv.vehicle.license_plate,
+        is_available: cv.is_active,
+        brand: cv.vehicle.brand,
+        model: cv.vehicle.model,
+        year: cv.vehicle.year,
+        color: cv.vehicle.color,
+        capacity: cv.vehicle.capacity,
+        status: cv.vehicle.status,
+        created_at: cv.created_at,
+        updated_at: cv.updated_at
+      }))
+      
+      setVehicles(vehicles)
     } catch (error) {
       console.error('Error refreshing vehicles:', error)
     } finally {
@@ -70,7 +90,7 @@ export const useVehicle = (): UseVehicleReturn => {
   const addVehicle = async (data: VehicleCreateRequest) => {
     try {
       setLoading(true)
-      await VehicleService.addCourierVehicle(data)
+      await VehicleService.createVehicle(data)
       await refreshVehicles()
     } catch (error) {
       console.error('Error adding vehicle:', error)
