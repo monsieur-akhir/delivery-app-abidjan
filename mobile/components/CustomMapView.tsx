@@ -4,7 +4,7 @@ import { View, StyleSheet } from 'react-native'
 import MapView, { Marker, Polyline, Region } from 'react-native-maps'
 import type { Delivery, TrackingPoint } from '../types'
 
-export interface Route {
+export interface MapRoute {
   coordinates: Array<{
     latitude: number
     longitude: number
@@ -17,7 +17,7 @@ interface CustomMapViewProps {
   initialRegion?: Region
   deliveries?: Delivery[]
   trackingPoints?: TrackingPoint[]
-  route?: Route
+  route?: MapRoute
   onRegionChange?: (region: Region) => void
   style?: any
 }
@@ -86,7 +86,6 @@ const CustomMapView: React.FC<CustomMapViewProps> = ({
             coordinates={route.coordinates}
             strokeColor="#007AFF"
             strokeWidth={3}
-            strokePattern={[1, 1]}
           />
         )}
       </MapView>
@@ -105,4 +104,4 @@ const styles = StyleSheet.create({
 
 export default CustomMapView
 export { CustomMapView }
-export type { Route }
+export type { MapRoute }

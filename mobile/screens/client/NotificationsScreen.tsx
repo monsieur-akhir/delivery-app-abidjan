@@ -36,7 +36,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
   const navigation = useNavigation()
   const { user } = useAuth()
   const { notifications, unreadCount } = useNotifications()
-  
+
   // Fonction locale pour marquer comme lu
   const markAsRead = async (notificationId: number) => {
     try {
@@ -45,7 +45,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
       console.error('Erreur lors du marquage:', error)
     }
   }
-  
+
   // Fonction locale pour marquer toutes comme lues
   const markAllAsRead = async () => {
     try {
@@ -214,7 +214,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
         { 
           text: t('common.delete'), 
           style: 'destructive',
-          onPress: () => handleDeleteNotification(notificationId)
+          onPress={() => handleDeleteNotification(notificationId)
         },
       ]
     )

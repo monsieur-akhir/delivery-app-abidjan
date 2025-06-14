@@ -695,4 +695,3 @@ export const useDelivery = (): UseDeliveryReturn => {
 }
 
 export default useDelivery
-export { useDelivery }
