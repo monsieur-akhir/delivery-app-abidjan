@@ -1,0 +1,328 @@
+components/VTCStyleMap.tsx:178:24 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+178     if (deliveryStatus.status === 'searching') {
+                           ~~~~~~
+
+components/VTCStyleMap.tsx:194:22 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+194   }, [deliveryStatus.status, pulseAnimation])
+                         ~~~~~~
+
+components/VTCStyleMap.tsx:314:49 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+314           { transform: [{ scale: deliveryStatus.status === 'searching' ? pulseAnimation : 1 }] }
+                                                    ~~~~~~
+
+components/VTCStyleMap.tsx:438:54 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+438             colors={getStatusGradient(deliveryStatus.status)}
+                                                         ~~~~~~
+
+components/VTCStyleMap.tsx:446:54 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+446                   name={getStatusIcon(deliveryStatus.status)}
+                                                         ~~~~~~
+
+components/VTCStyleMap.tsx:453:49 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+453                   {getStatusText(deliveryStatus.status)}
+                                                    ~~~~~~
+
+components/VTCStyleMap.tsx:455:33 - error TS2339: Property 'message' does not exist on type 'VTCDeliveryStatus'.
+  Property 'message' does not exist on type '"pending"'.
+
+455                 {deliveryStatus.message && (
+                                    ~~~~~~~
+
+components/VTCStyleMap.tsx:457:37 - error TS2339: Property 'message' does not exist on type 'VTCDeliveryStatus'.
+  Property 'message' does not exist on type '"pending"'.
+
+457                     {deliveryStatus.message}
+                                        ~~~~~~~
+
+components/VTCStyleMap.tsx:460:44 - error TS2339: Property 'eta' does not exist on type 'VTCDeliveryStatus'.
+  Property 'eta' does not exist on type '"pending"'.
+
+460                 {showETA && deliveryStatus.eta && (
+                                               ~~~
+
+components/VTCStyleMap.tsx:462:53 - error TS2339: Property 'eta' does not exist on type 'VTCDeliveryStatus'.
+  Property 'eta' does not exist on type '"pending"'.
+
+462                     Arrivée prévue: {deliveryStatus.eta}
+                                                        ~~~
+
+components/VTCStyleMap.tsx:473:48 - error TS2339: Property 'progress' does not exist on type 'VTCDeliveryStatus'.
+  Property 'progress' does not exist on type '"pending"'.
+
+473                       width: `${deliveryStatus.progress}%`,
+                                                   ~~~~~~~~
+
+hooks/useUser.ts:421:9 - error TS2353: Object literal may only specify known properties, and 'history' does not exist in type 'CourierEarningsData'.
+
+421         history: [],
+            ~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:37:5 - error TS2353: Object literal may only specify known properties, and 'status' does not exist in type '() => VTCDeliveryStatus'.
+
+37     status: 'searching',
+       ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:108:9 - error TS2353: Object literal may only specify known properties, and 'status' does not exist in type '(prevState: VTCDeliveryStatus) => VTCDeliveryStatus'.
+
+108         status: (statusMapping[deliveryData.status] || 'searching') as "delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit",
+            ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:311:29 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+311             {deliveryStatus.status !== 'delivered' && deliveryStatus.status !== 'cancelled' && (
+                                ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:311:70 - error TS2339: Property 'status' does not exist on type 'VTCDeliveryStatus'.
+  Property 'status' does not exist on type '"pending"'.
+
+311             {deliveryStatus.status !== 'delivered' && deliveryStatus.status !== 'cancelled' && (
+                                                                         ~~~~~~
+
+screens/client/MarketplaceScreen.tsx:29:26 - error TS2339: Property 'latitude' does not exist on type 'MerchantInfo'.
+
+29   latitude: merchantInfo.latitude || 0,
+                            ~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:30:27 - error TS2339: Property 'longitude' does not exist on type 'MerchantInfo'.
+
+30   longitude: merchantInfo.longitude || 0,
+                             ~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:31:3 - error TS2353: Object literal may only specify known properties, and 'logo' does not exist in type 'Merchant'.
+
+31   logo: '',
+     ~~~~
+
+screens/client/MerchantDetailsScreen.tsx:32:26 - error TS2339: Property 'latitude' does not exist on type 'MerchantInfo'.
+
+32   latitude: merchantInfo.latitude || 0,
+                            ~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:33:27 - error TS2339: Property 'longitude' does not exist on type 'MerchantInfo'.
+
+33   longitude: merchantInfo.longitude || 0,
+                             ~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:34:3 - error TS2353: Object literal may only specify known properties, and 'logo' does not exist in type 'Merchant'.
+
+34   logo: '',
+     ~~~~
+
+screens/courier/AddVehicleScreen.tsx:70:9 - error TS2322: Type 'VehicleType' is not assignable to type 'VehicleType | undefined'.
+  Type '"pickup"' is not assignable to type 'VehicleType | undefined'.
+
+70         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
+           ~~~~~~~~~~~~
+
+  types/models.ts:686:3
+    686   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:73:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+73       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:36:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+36         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:39:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+39         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:42:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+42         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:45:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+45         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:67:33 - error TS2339: Property 'available_balance' does not exist on type 'CourierEarningsData'.
+
+67         available_balance: data.available_balance,
+                                   ~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:68:31 - error TS2339: Property 'pending_balance' does not exist on type 'CourierEarningsData'.
+
+68         pending_balance: data.pending_balance,
+                                 ~~~~~~~~~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:69:32 - error TS2339: Property 'total_deliveries' does not exist on type 'CourierEarningsData'.
+
+69         total_deliveries: data.total_deliveries,
+                                  ~~~~~~~~~~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:70:30 - error TS2339: Property 'total_distance' does not exist on type 'CourierEarningsData'.
+
+70         total_distance: data.total_distance || 0,
+                                ~~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:88:78 - error TS2551: Property 'total_distance' does not exist on type 'CourierStats'. Did you mean 'totalDistance'?
+
+88               <Text style={styles.statValue}>{((stats.totalDistance || stats.total_distance || 0) / 1000).toFixed(1)} km</Text>
+                                                                                ~~~~~~~~~~~~~~
+
+  types/models.ts:385:3
+    385   totalDistance?: number
+          ~~~~~~~~~~~~~
+    'totalDistance' is declared here.
+
+screens/courier/CourierWalletScreen.tsx:33:5 - error TS2339: Property 'user' does not exist on type 'UseUserReturn'.
+
+33     user
+       ~~~~
+
+screens/courier/CourierWalletScreen.tsx:101:27 - error TS2345: Argument of type 'PayoutRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/types/models").PayoutRequest'.
+  Type 'PayoutRequest' is missing the following properties from type 'PayoutRequest': payment_method, account_details
+
+101       await requestPayout(payoutRequestData)
+                              ~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:42:9 - error TS2353: Object literal may only specify known properties, and 'completion_rate' does not exist in type 'CourierStats'.
+
+42         completion_rate: statsData.completion_rate || 100,
+           ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:46:31 - error TS2339: Property 'experience' does not exist on type 'CourierStats'.
+
+46         experience: statsData.experience || 0,
+                                 ~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:48:34 - error TS2339: Property 'badges' does not exist on type 'CourierStats'.
+
+48         badges_count: (statsData.badges || []).length,
+                                    ~~~~~~
+
+screens/courier/GamificationScreen.tsx:49:38 - error TS2339: Property 'weekly_deliveries' does not exist on type 'CourierStats'.
+
+49         weekly_deliveries: statsData.weekly_deliveries || 0,
+                                        ~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:50:39 - error TS2551: Property 'monthly_deliveries' does not exist on type 'CourierStats'. Did you mean 'total_deliveries'?
+
+50         monthly_deliveries: statsData.monthly_deliveries || 0,
+                                         ~~~~~~~~~~~~~~~~~~
+
+  services/GamificationService.ts:19:3
+    19   total_deliveries: number
+         ~~~~~~~~~~~~~~~~
+    'total_deliveries' is declared here.
+
+screens/courier/GamificationScreen.tsx:51:36 - error TS2339: Property 'weekly_earnings' does not exist on type 'CourierStats'.
+
+51         weekly_earnings: statsData.weekly_earnings || 0,
+                                      ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:52:37 - error TS2339: Property 'monthly_earnings' does not exist on type 'CourierStats'.
+
+52         monthly_earnings: statsData.monthly_earnings || 0
+                                       ~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:60:48 - error TS2339: Property 'name' does not exist on type 'Achievement'.
+
+60         name: achievement.title || achievement.name || 'Achievement',
+                                                  ~~~~
+
+screens/courier/GamificationScreen.tsx:62:27 - error TS2339: Property 'icon' does not exist on type 'Achievement'.
+
+62         icon: achievement.icon || 'award',
+                             ~~~~
+
+screens/courier/GamificationScreen.tsx:66:49 - error TS2339: Property 'name' does not exist on type 'Achievement'.
+
+66         title: achievement.title || achievement.name || 'Achievement'
+                                                   ~~~~
+
+screens/courier/GamificationScreen.tsx:136:47 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+136   const currentLevel = getCurrentLevel(stats?.total_points || 0)
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:137:50 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+137   const progress = getProgressToNextLevel(stats?.total_points || 0)
+                                                     ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:165:60 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+165                   <Text style={styles.totalPoints}>{stats?.total_points || 0} points</Text>
+                                                               ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:181:71 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+181                     ? ` ${levelThresholds[currentLevel + 1] - (stats?.total_points || 0)} points restants`
+                                                                          ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:208:58 - error TS2339: Property 'completion_rate' does not exist on type 'CourierStats'.
+
+208                   <Text style={styles.statValue}>{stats?.completion_rate?.toFixed(0) || 0}%</Text>
+                                                             ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:213:58 - error TS2339: Property 'average_delivery_time' does not exist on type 'CourierStats'.
+
+213                   <Text style={styles.statValue}>{stats?.average_delivery_time || "N/A"} min</Text>
+                                                             ~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:230:60 - error TS2339: Property 'type' does not exist on type 'Achievement'.
+
+230                       name={getAchievementIcon(achievement.type || 'award')}
+                                                               ~~~~
+
+screens/courier/GamificationScreen.tsx:276:29 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+276                       entry.profile_picture
+                                ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:277:40 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+277                         ? { uri: entry.profile_picture }
+                                           ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:287:71 - error TS2339: Property 'name' does not exist on type 'Leaderboard'.
+
+287                       {entry.courier_id === user?.id ? "Vous" : entry.name}
+                                                                          ~~~~
+
+screens/courier/GamificationScreen.tsx:290:30 - error TS2339: Property 'deliveries_count' does not exist on type 'Leaderboard'.
+
+290                       {entry.deliveries_count || 0} livraisons • {entry.total_points || 0} pts
+                                 ~~~~~~~~~~~~~~~~
+
+
+Found 56 errors in 11 files.
+
+Errors  Files
+    11  components/VTCStyleMap.tsx:178
+     1  hooks/useUser.ts:421
+     4  screens/client/EnhancedTrackDeliveryScreen.tsx:37
+     3  screens/client/MarketplaceScreen.tsx:29
+     3  screens/client/MerchantDetailsScreen.tsx:32
+     2  screens/courier/AddVehicleScreen.tsx:70
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:36
+     4  screens/courier/CourierEarningsScreen.tsx:67
+     1  screens/courier/CourierProfileScreen.tsx:88
+     2  screens/courier/CourierWalletScreen.tsx:33
+    21  screens/courier/GamificationScreen.tsx:42

@@ -37,35 +37,47 @@ const GamificationScreen: React.FC = () => {
       ])
 
       const enhancedStats: CourierStats = {
-        ...statsData,
-        total_earnings: 0,
-        totalDistance: 0,
-        rating: statsData.average_rating || 0,
-        badges: [],
-        completed_deliveries: statsData.completed_deliveries || 0,
-        daily_deliveries: statsData.daily_deliveries || 0,
-        daily_rating: statsData.daily_rating || 0,
-        nextLevelExperience: levelThresholds[statsData.level + 1] || 0
-      }
-      setStats({
         total_deliveries: statsData.total_deliveries || 0,
         average_rating: statsData.average_rating || 0,
-        completed_deliveries: statsData.completed_deliveries || 0,
-        total_earnings: statsData.total_earnings || 0,
-        totalDistance: statsData.totalDistance || 0,
-        badges: statsData.badges || [],
-        rating: statsData.average_rating || 0,
-        completion_rate: statsData.completion_rate || 0,
-        average_delivery_time: statsData.average_delivery_time || 0,
-        daily_deliveries: statsData.daily_deliveries || 0,
-        daily_rating: statsData.daily_rating || 0,
-        total_points: statsData.total_points || 0
-      })
-      setAchievements(achievementsData)
-      // Adapter les données du service vers le type models
-      const adaptedLeaderboard = leaderboardData.map(entry => ({
-        ...entry,
-        deliveriescount: entry.deliveries_count || 0
+        completion_rate: statsData.completion_rate || 100,
+        average_delivery_time: statsData.average_delivery_time || 30,
+        total_points: statsData.total_points || 0,
+        level: statsData.level || 1,
+        experience: statsData.experience || 0,
+        next_level_experience: levelThresholds[statsData.level + 1] || 1000,
+        badges_count: (statsData.badges || []).length,
+        weekly_deliveries: statsData.weekly_deliveries || 0,
+        monthly_deliveries: statsData.monthly_deliveries || 0,
+        weekly_earnings: statsData.weekly_earnings || 0,
+        monthly_earnings: statsData.monthly_earnings || 0
+      }
+      
+      setStats(enhancedStats)
+      
+      // Adapter les achievements
+      const adaptedAchievements = achievementsData.map(achievement => ({
+        id: achievement.id,
+        name: achievement.title || achievement.name || 'Achievement',
+        description: achievement.description,
+        icon: achievement.icon || 'award',
+        points: achievement.points,
+        unlocked_at: achievement.unlocked_at,
+        type: achievement.type || 'general',
+        title: achievement.title || achievement.name || 'Achievement'
+      }))
+      setAchievements(adaptedAchievements)
+      
+      // Adapter les données du leaderboard
+      const adaptedLeaderboard = leaderboardData.map((entry, index) => ({
+        id: entry.courier_id,
+        position: index + 1,
+        courier_id: entry.courier_id,
+        name: entry.name,
+        total_points: entry.points,
+        deliveries_count: entry.deliveries_count || 0,
+        profile_picture: entry.profile_picture,
+        deliveriescount: entry.deliveries_count || 0,
+        points: entry.points
       }))
       setLeaderboard(adaptedLeaderboard)
     } catch (error) {
@@ -150,7 +162,7 @@ const GamificationScreen: React.FC = () => {
                   <Text style={styles.userLevel}>
                     Niveau {currentLevel + 1} - {levelNames[currentLevel]}
                   </Text>
-                  <Text style={styles.totalPoints}>{stats.total_points || 0} points</Text>
+                  <Text style={styles.totalPoints}>{stats?.total_points || 0} points</Text>
                 </View>
               </View>
 
@@ -166,7 +178,7 @@ const GamificationScreen: React.FC = () => {
                 <Text style={styles.progressText}>
                   {Math.round(progress * 100)}% - 
                   {currentLevel < levelThresholds.length - 1 
-                    ? ` ${levelThresholds[currentLevel + 1] - (stats.total_points || 0)} points restants`
+                    ? ` ${levelThresholds[currentLevel + 1] - (stats?.total_points || 0)} points restants`
                     : " Niveau maximum atteint !"
                   }
                 </Text>
@@ -183,22 +195,22 @@ const GamificationScreen: React.FC = () => {
               <View style={styles.statsGrid}>
                 <View style={styles.statItem}>
                   <Feather name="package" size={24} color="#FF6B00" />
-                  <Text style={styles.statValue}>{stats.completed_deliveries}</Text>
+                  <Text style={styles.statValue}>{stats?.total_deliveries || 0}</Text>
                   <Text style={styles.statLabel}>Livraisons</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Feather name="star" size={24} color="#FFD700" />
-                  <Text style={styles.statValue}>{stats.rating?.toFixed(1) || "N/A"}</Text>
+                  <Text style={styles.statValue}>{stats?.average_rating?.toFixed(1) || "N/A"}</Text>
                   <Text style={styles.statLabel}>Note moyenne</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Feather name="zap" size={24} color="#4CAF50" />
-                  <Text style={styles.statValue}>{stats.completion_rate?.toFixed(0) || 0}%</Text>
+                  <Text style={styles.statValue}>{stats?.completion_rate?.toFixed(0) || 0}%</Text>
                   <Text style={styles.statLabel}>Taux de réussite</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Feather name="clock" size={24} color="#2196F3" />
-                  <Text style={styles.statValue}>{stats.average_delivery_time || "N/A"}</Text>
+                  <Text style={styles.statValue}>{stats?.average_delivery_time || "N/A"} min</Text>
                   <Text style={styles.statLabel}>Temps moyen</Text>
                 </View>
               </View>
@@ -215,13 +227,13 @@ const GamificationScreen: React.FC = () => {
                 <View key={achievement.id} style={styles.achievementItem}>
                   <View style={styles.achievementIcon}>
                     <Feather 
-                      name={getAchievementIcon(achievement.type)} 
+                      name={getAchievementIcon(achievement.type || 'award')} 
                       size={24} 
                       color="#FFD700" 
                     />
                   </View>
                   <View style={styles.achievementInfo}>
-                    <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                    <Text style={styles.achievementTitle}>{achievement.name}</Text>
                     <Text style={styles.achievementDescription}>
                       {achievement.description}
                     </Text>
@@ -275,7 +287,7 @@ const GamificationScreen: React.FC = () => {
                       {entry.courier_id === user?.id ? "Vous" : entry.name}
                     </Text>
                     <Text style={styles.leaderboardStats}>
-                      {entry.deliveriescount} livraisons • {entry.points} pts
+                      {entry.deliveries_count || 0} livraisons • {entry.total_points || 0} pts
                     </Text>
                   </View>
                 </View>
@@ -298,12 +310,12 @@ const GamificationScreen: React.FC = () => {
                   <Text style={styles.challengeTitle}>Complétez 5 livraisons</Text>
                   <Text style={styles.challengeReward}>Récompense: 50 points</Text>
                   <ProgressBar 
-                    progress={Math.min((stats.daily_deliveries || 0) / 5, 1)} 
+                    progress={Math.min((stats?.total_deliveries || 0) / 5, 1)} 
                     color="#FF6B00" 
                     style={styles.challengeProgress}
                   />
                   <Text style={styles.challengeText}>
-                    {stats.daily_deliveries || 0}/5 livraisons
+                    {stats?.total_deliveries || 0}/5 livraisons
                   </Text>
                 </View>
               </View>
@@ -316,12 +328,12 @@ const GamificationScreen: React.FC = () => {
                   <Text style={styles.challengeTitle}>Maintenez une note de 4.5+</Text>
                   <Text style={styles.challengeReward}>Récompense: 30 points</Text>
                   <ProgressBar 
-                    progress={Math.min((stats.daily_rating || 0) / 4.5, 1)} 
+                    progress={Math.min((stats?.average_rating || 0) / 4.5, 1)} 
                     color="#FFD700" 
                     style={styles.challengeProgress}
                   />
                   <Text style={styles.challengeText}>
-                    Note actuelle: {stats.daily_rating?.toFixed(1) || "N/A"}
+                    Note actuelle: {stats?.average_rating?.toFixed(1) || "N/A"}
                   </Text>
                 </View>
               </View>
