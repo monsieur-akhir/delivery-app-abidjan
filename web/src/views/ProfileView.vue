@@ -242,7 +242,7 @@ export default {
 
       // Simuler le téléchargement
       const reader = new FileReader()
-      reader.onload = e => {
+      reader.onload = () => {
         // Dans une application réelle, vous téléchargeriez le fichier sur le serveur
         console.log('Avatar changed:', file.name)
       }

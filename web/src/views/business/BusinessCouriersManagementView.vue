@@ -353,8 +353,8 @@ export default {
       }
     }
 
-    const viewCourierDetails = courier => {
-      selectedCourier.value = courier
+    const viewCourierDetails = courierData => {
+      selectedCourier.value = courierData
     }
 
     const toggleFavorite = async courier => {
