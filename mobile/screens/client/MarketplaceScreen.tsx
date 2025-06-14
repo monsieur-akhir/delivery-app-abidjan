@@ -17,7 +17,7 @@ import type { Merchant } from "../../types/models"
 const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   id: parseInt(merchantInfo.id),
   name: merchantInfo.name,
-  business_name: merchantInfo.name,
+  name: merchantInfo.name,
   description: merchantInfo.description || '',
   address: merchantInfo.address,
   commune: merchantInfo.commune,
@@ -167,7 +167,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
 
           <Text style={styles.deliveryTime}>
             <IconButton icon="clock" size={14} color="#757575" style={styles.timeIcon} />
-            {item.delivery_time} min
+            {item.delivery_time || 30} min
           </Text>
         </View>
       </Card.Content>

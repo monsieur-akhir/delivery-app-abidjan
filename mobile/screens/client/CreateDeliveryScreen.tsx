@@ -34,6 +34,27 @@ import type {
   RootStackParamList
 } from '../../types'
 
+import { formatPrice, formatDistance } from "../../utils/formatters"
+
+// Helper function to extract commune from address
+const extractCommune = (address: string): string => {
+  // Simple extraction logic - you can enhance this based on your address format
+  const parts = address.split(',')
+  return parts.length > 1 ? parts[parts.length - 1].trim() : 'Unknown'
+}
+
+// Helper function to calculate distance between two coordinates
+const calculateDistance = (coord1: { latitude: number; longitude: number }, coord2: { latitude: number; longitude: number }): number => {
+  const R = 6371 // Earth's radius in km
+  const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180
+  const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  return R * c
+}
+
 interface DeliveryCreateRequest {
   pickup_address: string
   pickup_lat: number
@@ -156,6 +177,13 @@ const CreateDeliveryScreen: React.FC = () => {
         delivery_lat: deliveryLocation.latitude,
         delivery_lng: deliveryLocation.longitude,
         package_type: packageType,
+        package_weight: parseFloat(packageWeight) || 1,
+        package_size: 'medium',
+        is_fragile: isFragile || false,
+        distance: calculateDistance(
+          { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+          { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
+        ),
         weatherConditions: weatherData?.current?.condition
       }
 
@@ -185,18 +213,6 @@ const CreateDeliveryScreen: React.FC = () => {
     }
   }
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLon = (lon2 - lon1) * Math.PI / 180
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return R * c
-  }
-
   const getVehicleName = (type: VehicleType): string => {
     const names = {
       bicycle: 'Vélo',
@@ -221,9 +237,11 @@ const CreateDeliveryScreen: React.FC = () => {
 
     const deliveryData: DeliveryCreateRequest = {
       pickup_address: pickupAddress,
+      pickup_commune: extractCommune(pickupAddress),
+      delivery_address: deliveryAddress,
+      delivery_commune: extractCommune(deliveryAddress),
       pickup_lat: pickupLocation.latitude,
       pickup_lng: pickupLocation.longitude,
-      delivery_address: deliveryAddress,
       delivery_lat: deliveryLocation.latitude,
       delivery_lng: deliveryLocation.longitude,
       package_type: packageType,

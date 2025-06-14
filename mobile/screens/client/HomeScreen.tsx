@@ -387,8 +387,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               initialRegion={mapRegion}
               style={styles.mapPreview}
               showsUserLocation={true}
-              showsMyLocationButton={false}
-              zoomEnabled={false}
+              zoomEnabled={true}
               scrollEnabled={false}
               pitchEnabled={false}
               rotateEnabled={false}

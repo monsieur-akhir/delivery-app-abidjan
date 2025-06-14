@@ -60,15 +60,15 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
       // Convert to VTC format
       if (deliveryData.pickup_location && typeof deliveryData.pickup_location === 'object' && 'latitude' in deliveryData.pickup_location && 'longitude' in deliveryData.pickup_location) {
         setPickupLocation({
-          latitude: deliveryData.pickup_location.latitude as number,
-          longitude: deliveryData.pickup_location.longitude as number
+          latitude: deliveryData.pickup_lat as number,
+          longitude: deliveryData.pickup_lng as number
         })
       }
 
-      if (deliveryData.delivery_location && typeof deliveryData.delivery_location === 'object' && 'latitude' in deliveryData.delivery_location && 'longitude' in deliveryData.delivery_location) {
+      if (deliveryData.delivery_lat && deliveryData.delivery_lng) {
         setDeliveryLocation({
-          latitude: deliveryData.delivery_location.latitude as number,
-          longitude: deliveryData.delivery_location.longitude as number
+          latitude: deliveryData.delivery_lat as number,
+          longitude: deliveryData.delivery_lng as number
         })
       }      // Convert courier data if available
       if (deliveryData.courier) {
