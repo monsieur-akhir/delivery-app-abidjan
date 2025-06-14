@@ -1,7 +1,7 @@
+
 /**
  * Gestionnaire d'erreurs global pour l'application
  */
-import { useToast } from "vue-toastification"
 
 // Configuration des types d'erreurs
 const ERROR_TYPES = {
@@ -47,19 +47,14 @@ const ERROR_MESSAGES = {
 }
 
 // Configuration du stockage local
-const STORAGE_KEY = 'app_error_logs'
-const MAX_STORED_ERRORS = 100
+const STORAGE_KEY = 'app_errors'
+const MAX_STORED_ERRORS = 50
 
 // Configuration des couleurs pour le terminal
 const TERMINAL_COLORS = {
   reset: '\x1b[0m',
   bright: '\x1b[1m',
   dim: '\x1b[2m',
-  underscore: '\x1b[4m',
-  blink: '\x1b[5m',
-  reverse: '\x1b[7m',
-  hidden: '\x1b[8m',
-  
   fg: {
     black: '\x1b[30m',
     red: '\x1b[31m',
@@ -68,10 +63,8 @@ const TERMINAL_COLORS = {
     blue: '\x1b[34m',
     magenta: '\x1b[35m',
     cyan: '\x1b[36m',
-    white: '\x1b[37m',
-    crimson: '\x1b[38m'
+    white: '\x1b[37m'
   },
-  
   bg: {
     black: '\x1b[40m',
     red: '\x1b[41m',
@@ -80,50 +73,41 @@ const TERMINAL_COLORS = {
     blue: '\x1b[44m',
     magenta: '\x1b[45m',
     cyan: '\x1b[46m',
-    white: '\x1b[47m',
-    crimson: '\x1b[48m'
+    white: '\x1b[47m'
   }
 }
 
 /**
- * Formate une erreur pour le logging
+ * Formate les données d'erreur
  * @param {Error} error - L'erreur à formater
  * @param {string} type - Le type d'erreur
  * @param {string} severity - Le niveau de sévérité
- * @returns {Object} - L'erreur formatée
+ * @returns {Object} - Les données d'erreur formatées
  */
-function formatError(error, type = ERROR_TYPES.UNKNOWN, severity = SEVERITY_LEVELS.MEDIUM) {
-  // Get current route safely without relying on global router instance
-  let currentRoute = null;
-  try {
-    const currentPath = window.location.pathname + window.location.search;
-    currentRoute = currentPath;
-  } catch (e) {
-    console.warn("Could not determine current route", e);
-  }
-
+function formatError(error, type, severity) {
   return {
-    id: generateErrorId(),
+    message: error.message || 'Erreur inconnue',
+    stack: error.stack || '',
+    type: type,
+    severity: severity,
     timestamp: new Date().toISOString(),
-    type,
-    severity,
-    message: error.message,
-    stack: error.stack,
     url: window.location.href,
     userAgent: navigator.userAgent,
-    route: currentRoute,
-    component: error?.componentName,
-    props: error?.propsData,
-    // Ajouter d'autres informations utiles ici
+    userId: getCurrentUserId() || 'anonymous'
   }
 }
 
 /**
- * Génère un ID unique pour l'erreur
- * @returns {string} - ID unique
+ * Récupère l'ID de l'utilisateur actuel
+ * @returns {string|null} - L'ID de l'utilisateur ou null
  */
-function generateErrorId() {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+function getCurrentUserId() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    return user.id || null
+  } catch (e) {
+    return null
+  }
 }
 
 /**
@@ -178,14 +162,11 @@ function storeError(errorData) {
  */
 function getStoredErrors() {
   try {
-    // Vérifier si localStorage est disponible
     if (typeof localStorage === 'undefined') {
-      console.warn('localStorage n\'est pas disponible')
       return []
     }
-
-    const errors = localStorage.getItem(STORAGE_KEY)
-    return errors ? JSON.parse(errors) : []
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
   } catch (e) {
     console.error('Erreur lors de la récupération des erreurs stockées:', e)
     return []
@@ -193,61 +174,7 @@ function getStoredErrors() {
 }
 
 /**
- * Envoie l'erreur au serveur de logging
- * @param {Object} errorData - Les données d'erreur formatées
- */
-async function sendErrorToServer(errorData) {
-  try {
-    // TODO: Implémenter l'envoi au serveur de logging
-    console.error('Erreur capturée:', errorData)
-  } catch (e) {
-    console.error('Erreur lors de l\'envoi au serveur de logging:', e)
-  }
-}
-
-/**
- * Affiche une notification à l'utilisateur
- * @param {Error} error - L'erreur
- * @param {string} severity - Le niveau de sévérité
- */
-function showNotification(error, severity) {
-  const toast = useToast()
-  
-  const options = {
-    position: "top-right",
-    timeout: 5000,
-    closeOnClick: true,
-    pauseOnFocusLoss: true,
-    pauseOnHover: true,
-    draggable: true,
-    draggablePercent: 0.6,
-    showCloseButtonOnHover: false,
-    hideProgressBar: true,
-    closeButton: "button",
-    icon: true,
-    rtl: false
-  }
-
-  switch (severity) {
-    case SEVERITY_LEVELS.CRITICAL:
-      toast.error(error.message, { ...options, timeout: 0 })
-      break
-    case SEVERITY_LEVELS.HIGH:
-      toast.error(error.message, options)
-      break
-    case SEVERITY_LEVELS.MEDIUM:
-      toast.warning(error.message, options)
-      break
-    case SEVERITY_LEVELS.LOW:
-      toast.info(error.message, options)
-      break
-    default:
-      toast.error(error.message, options)
-  }
-}
-
-/**
- * Log une erreur dans le terminal en mode développement
+ * Log l'erreur dans le terminal en mode développement
  * @param {Object} errorData - Les données d'erreur formatées
  */
 function logToTerminal(errorData) {
@@ -275,22 +202,78 @@ function logToTerminal(errorData) {
 
     console.log('\n' + '='.repeat(80))
     console.log(`${bright}${severityColor}[${errorData.severity.toUpperCase()}]${reset} ${typeColor}[${errorData.type.toUpperCase()}]${reset}`)
-    console.log(`${bright}${fg.white}Message:${reset} ${errorData.message}`)
-    console.log(`${bright}${fg.white}ID:${reset} ${errorData.id}`)
-    console.log(`${bright}${fg.white}Timestamp:${reset} ${errorData.timestamp}`)
-    console.log(`${bright}${fg.white}URL:${reset} ${errorData.url}`)
-    console.log(`${bright}${fg.white}Route:${reset} ${errorData.route}`)
-    
-    if (errorData.component) {
-      console.log(`${bright}${fg.white}Component:${reset} ${errorData.component}`)
-    }
+    console.log(`${bright}Message:${reset} ${errorData.message}`)
+    console.log(`${bright}Timestamp:${reset} ${errorData.timestamp}`)
+    console.log(`${bright}URL:${reset} ${errorData.url}`)
     
     if (errorData.stack) {
-      console.log(`\n${bright}${fg.white}Stack Trace:${reset}`)
+      console.log(`${bright}Stack:${reset}`)
       console.log(errorData.stack)
     }
     
     console.log('='.repeat(80) + '\n')
+  }
+}
+
+/**
+ * Envoie l'erreur au serveur de logging
+ * @param {Object} errorData - Les données d'erreur formatées
+ */
+async function sendErrorToServer(errorData) {
+  try {
+    // Ne pas envoyer les erreurs en mode développement
+    if (import.meta.env.DEV) {
+      return
+    }
+
+    const response = await fetch('/api/errors', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(errorData)
+    })
+
+    if (!response.ok) {
+      console.warn('Erreur lors de l\'envoi au serveur de logging:', response.statusText)
+    }
+  } catch (e) {
+    console.warn('Impossible d\'envoyer l\'erreur au serveur:', e.message)
+  }
+}
+
+/**
+ * Affiche une notification à l'utilisateur
+ * @param {Error} error - L'erreur
+ * @param {string} severity - Le niveau de sévérité
+ */
+function showNotification(error, severity) {
+  // Pour Vue 3, nous utiliserons un système de notification simple
+  if (typeof window !== 'undefined' && window.__VUE_APP__) {
+    // Utiliser le système de notification de l'app Vue si disponible
+    const app = window.__VUE_APP__
+    if (app.config.globalProperties.$notify) {
+      app.config.globalProperties.$notify({
+        title: 'Erreur',
+        message: error.message,
+        type: severity === SEVERITY_LEVELS.CRITICAL ? 'error' : 'warning',
+        duration: severity === SEVERITY_LEVELS.LOW ? 3000 : 5000
+      })
+      return
+    }
+  }
+
+  // Fallback vers une notification browser native
+  if (severity === SEVERITY_LEVELS.CRITICAL || severity === SEVERITY_LEVELS.HIGH) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('Erreur de l\'application', {
+        body: error.message,
+        icon: '/favicon.ico'
+      })
+    } else {
+      // Fallback vers une alerte simple
+      console.error('Erreur critique:', error.message)
+    }
   }
 }
 
@@ -392,7 +375,6 @@ export function initErrorHandler(app) {
 // Exporter les constantes et fonctions pour une utilisation externe
 export { 
   ERROR_TYPES, 
-  SEVERITY_LEVELS,
-  ERROR_MESSAGES,
-  getStoredErrors
-} 
+  SEVERITY_LEVELS, 
+  getStoredErrors 
+}
