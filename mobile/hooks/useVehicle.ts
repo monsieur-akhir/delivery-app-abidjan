@@ -56,7 +56,7 @@ export const useVehicle = (): UseVehicleReturn => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null))
+  const [error, setError] = useState<string | null>(null)
 
   const refreshVehicles = async (courierId?: number) => {
     try {
@@ -64,24 +64,24 @@ export const useVehicle = (): UseVehicleReturn => {
       // Get courier ID from auth context or use parameter
       const id = courierId || 1 // Default fallback - should be from auth context
       const courierVehicles = await VehicleService.getCourierVehicles(id)
-      
+
       // Convert CourierVehicle[] to Vehicle[]
       const vehicles: Vehicle[] = courierVehicles.map(cv => ({
-        id: cv.id,
+        id: cv.vehicle.id,
         user_id: cv.courier_id,
         type: cv.vehicle.type,
         license_plate: cv.vehicle.license_plate,
-        is_available: cv.is_active || cv.vehicle.is_available,
-        brand: cv.vehicle.brand,
-        model: cv.vehicle.model,
-        year: cv.vehicle.year,
-        color: cv.vehicle.color,
-        capacity: cv.vehicle.capacity,
+        is_available: cv.vehicle.is_available || false,
+        brand: cv.vehicle.make || '',
+        model: cv.vehicle.model || '',
+        year: cv.vehicle.year || new Date().getFullYear(),
+        color: cv.vehicle.color || '',
+        capacity: cv.vehicle.load_capacity || 0,
         status: cv.vehicle.status,
-        created_at: cv.created_at || cv.vehicle.created_at,
-        updated_at: cv.updated_at || cv.vehicle.updated_at
+        created_at: cv.vehicle.created_at,
+        updated_at: cv.vehicle.updated_at
       }))
-      
+
       setVehicles(vehicles)
     } catch (error) {
       console.error('Error refreshing vehicles:', error)

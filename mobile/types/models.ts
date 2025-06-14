@@ -17,6 +17,11 @@ export interface LoginCredentials {
   otp?: string;
 }
 
+export interface Coordinates {
+  latitude: number
+  longitude: number
+}
+
 export interface User {
   id: number
   phone: string
@@ -345,6 +350,42 @@ export interface CourierProfile {
   is_available: boolean
   rating: number
   total_deliveries: number
+}
+
+export interface CourierEarningsData {
+  daily_earnings: number
+  weekly_earnings: number
+  monthly_earnings: number
+  total_earnings: number
+  pending_earnings: number
+  completed_deliveries: number
+  average_rating: number
+  earnings_history: {
+    date: string
+    amount: number
+  }[]
+}
+
+export interface WalletTransaction {
+  id: number
+  user_id: number
+  type: 'credit' | 'debit' | 'withdrawal' | 'deposit'
+  amount: number
+  description: string
+  status: 'pending' | 'completed' | 'failed'
+  created_at: string
+  updated_at: string
+}
+
+export interface PayoutRequest {
+  id: number
+  user_id: number
+  amount: number
+  method: string
+  status: 'pending' | 'approved' | 'rejected' | 'processed'
+  requested_at: string
+  processed_at?: string
+  notes?: string
 }
 
 export interface CourierStats {
