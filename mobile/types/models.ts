@@ -366,17 +366,6 @@ export interface CourierEarningsData {
   }[]
 }
 
-export interface WalletTransaction {
-  id: number
-  user_id: number
-  type: 'credit' | 'debit' | 'withdrawal' | 'deposit'
-  amount: number
-  description: string
-  status: 'pending' | 'completed' | 'failed'
-  created_at: string
-  updated_at: string
-}
-
 export interface PayoutRequest {
   id: number
   user_id: number
@@ -436,7 +425,15 @@ export interface Transaction {
   reference?: string
 }
 
-export interface WalletTransaction extends Transaction {
+export interface WalletTransaction {
+  id: number
+  user_id: number
+  type: TransactionType
+  amount: number
+  description: string
+  status: TransactionStatus
+  created_at: string
+  updated_at: string
   wallet_id?: number
   balance_after?: number
 }

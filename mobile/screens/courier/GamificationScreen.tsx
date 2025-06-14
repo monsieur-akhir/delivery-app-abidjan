@@ -47,7 +47,20 @@ const GamificationScreen: React.FC = () => {
         daily_rating: statsData.daily_rating || 0,
         nextLevelExperience: levelThresholds[statsData.level + 1] || 0
       }
-      setStats(enhancedStats)
+      setStats({
+        total_deliveries: statsData.total_deliveries || 0,
+        average_rating: statsData.average_rating || 0,
+        completed_deliveries: statsData.completed_deliveries || 0,
+        total_earnings: statsData.total_earnings || 0,
+        totalDistance: statsData.totalDistance || 0,
+        badges: statsData.badges || [],
+        rating: statsData.average_rating || 0,
+        completion_rate: statsData.completion_rate || 0,
+        average_delivery_time: statsData.average_delivery_time || 0,
+        daily_deliveries: statsData.daily_deliveries || 0,
+        daily_rating: statsData.daily_rating || 0,
+        total_points: statsData.total_points || 0
+      })
       setAchievements(achievementsData)
       // Adapter les données du service vers le type models
       const adaptedLeaderboard = leaderboardData.map(entry => ({
