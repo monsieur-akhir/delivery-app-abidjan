@@ -137,7 +137,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
   const loadDeliveryDetails = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-      const data = await fetchDeliveryDetails(deliveryId)
+      const data = await fetchDeliveryDetails(deliveryId.toString())
       setDelivery(data)
 
       // Vérifier si le coursier est bien assigné à cette livraison
@@ -362,6 +362,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
         addPendingUpload({
           type: "tracking",
           data: trackingData,
+          retries: 0
         })
       } else {
         await sendTrackingPoint(trackingData)
@@ -408,7 +409,7 @@ const CourierTrackDeliveryScreen: React.FC<CourierTrackDeliveryScreenProps> = ({
         Alert.alert("Mise à jour enregistrée", "Le statut sera mis à jour lorsque vous serez en ligne.")
       } else {
         // Mettre à jour immédiatement
-        await updateDeliveryStatus(deliveryId, status)
+        await updateDeliveryStatus(deliveryId.toString(), status)
 
         // Mettre à jour l'état local
         setDelivery({ ...delivery, status })

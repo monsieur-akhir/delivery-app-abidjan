@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -159,7 +158,7 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
         {/* Informations du trajet */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Informations du trajet</Text>
-          
+
           <View style={styles.routeContainer}>
             <View style={styles.routePoint}>
               <View style={styles.pointIcon}>
@@ -215,12 +214,6 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
           <Text style={styles.cardTitle}>Aperçu du trajet</Text>
           <View style={styles.mapContainer}>
             <VTCStyleMap
-              initialRegion={{
-                latitude: delivery.pickup_lat || 5.3599517,
-                longitude: delivery.pickup_lng || -4.0282563,
-                latitudeDelta: 0.02,
-                longitudeDelta: 0.02,
-              }}
               deliveries={[delivery]}
             />
           </View>
@@ -229,20 +222,20 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
         {/* Détails du colis */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Détails du colis</Text>
-          
+
           <View style={styles.packageDetails}>
             <View style={styles.packageItem}>
               <Text style={styles.packageLabel}>Type</Text>
               <Text style={styles.packageValue}>{delivery.package_type || 'Standard'}</Text>
             </View>
-            
+
             {delivery.package_description && (
               <View style={styles.packageItem}>
                 <Text style={styles.packageLabel}>Description</Text>
                 <Text style={styles.packageValue}>{delivery.package_description}</Text>
               </View>
             )}
-            
+
             <View style={styles.packageItem}>
               <Text style={styles.packageLabel}>Instructions spéciales</Text>
               <Text style={styles.packageValue}>
@@ -255,13 +248,13 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
         {/* Informations client */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Informations client</Text>
-          
+
           <View style={styles.clientInfo}>
             <View style={styles.clientItem}>
               <Ionicons name="person-outline" size={20} color="#666" />
               <Text style={styles.clientText}>{delivery.client?.full_name || 'N/A'}</Text>
             </View>
-            
+
             {delivery.client_phone && (
               <TouchableOpacity style={styles.clientItem} onPress={handleCallClient}>
                 <Ionicons name="call-outline" size={20} color="#4CAF50" />

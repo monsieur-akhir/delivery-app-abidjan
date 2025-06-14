@@ -927,9 +927,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   completedText: {
-    fontSize: 12,
     color: '#4CAF50',
     fontWeight: 'bold',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
   },
 })
 

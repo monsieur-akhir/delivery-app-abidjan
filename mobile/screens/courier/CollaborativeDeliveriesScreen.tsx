@@ -31,11 +31,17 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
       let data: CollaborativeDelivery[] = []
 
       if (activeTab === "active") {
-        data = await getCollaborativeDeliveries({ status: "in_progress" })
+        const result = await getCollaborativeDeliveries({ status: "in_progress" })
+        data = result || []
       } else if (activeTab === "available") {
-        data = await getCollaborativeDeliveries({ status: "pending" })
+        const result = await getCollaborativeDeliveries({ status: "pending" })
+        data = result || []
       } else if (activeTab === "completed") {
-        data = await getCollaborativeDeliveries({ status: "completed" })
+        const result = await getCollaborativeDeliveries({ status: "completed" })
+        data = result || []
+      } else {
+        const result = await getCollaborativeDeliveries()
+        data = result || []
       }
 
       setDeliveries(data)
