@@ -38,19 +38,22 @@ const GamificationScreen: React.FC = () => {
 
       const enhancedStats: CourierStats = {
         total_deliveries: statsData.total_deliveries || 0,
-        completion_rate: (statsData as any).completion_rate || 100,
+        completion_rate: statsData.completion_rate || 100,
         average_rating: statsData.average_rating || 0,
         distance_traveled: statsData.distance_traveled || 0,
         total_earnings: statsData.total_earnings || 0,
-        experience: (statsData as any).experience || 0,
-        level: (statsData as any).level || 1,
-        badges_count: ((statsData as any).badges || []).length,
-        weekly_deliveries: (statsData as any).weekly_deliveries || 0,
-        monthly_deliveries: (statsData as any).monthly_deliveries || 0,
-        weekly_earnings: (statsData as any).weekly_earnings || 0,
-        monthly_earnings: (statsData as any).monthly_earnings || 0,
-        total_points: (statsData as any).total_points || 0,
-        average_delivery_time: (statsData as any).average_delivery_time || 0
+        experience: statsData.experience || 0,
+        level: statsData.level || 1,
+        badges_count: statsData.badges_count || 0,
+        weekly_deliveries: statsData.weekly_deliveries || 0,
+        monthly_deliveries: statsData.monthly_deliveries || 0,
+        weekly_earnings: statsData.weekly_earnings || 0,
+        monthly_earnings: statsData.monthly_earnings || 0,
+        total_points: statsData.total_points || 0,
+        average_delivery_time: statsData.average_delivery_time || "0",
+        daily_deliveries: statsData.daily_deliveries || 0,
+        daily_rating: statsData.daily_rating || 0,
+        rank_position: statsData.rank_position || 0
       }
 
       setStats(enhancedStats)
@@ -70,15 +73,9 @@ const GamificationScreen: React.FC = () => {
 
       // Adapter les données du leaderboard
       const adaptedLeaderboard = leaderboardData.map((entry, index) => ({
-        id: entry.courier_id,
+        ...entry,
         position: index + 1,
-        courier_id: entry.courier_id,
-        name: (entry as any).name,
-        total_points: entry.points,
-        deliveries_count: (entry as any).deliveries_count || 0,
-        profile_picture: (entry as any).profile_picture,
-        deliveriescount: (entry as any).deliveries_count || 0,
-        points: entry.points
+        total_points: entry.points
       }))
       setLeaderboard(adaptedLeaderboard)
     } catch (error) {
@@ -206,12 +203,12 @@ const GamificationScreen: React.FC = () => {
                 </View>
                 <View style={styles.statItem}>
                   <Feather name="zap" size={24} color="#4CAF50" />
-                  <Text style={styles.statValue}>{(stats as any)?.completion_rate?.toFixed(0) || 0}%</Text>
+                  <Text style={styles.statValue}>{stats?.completion_rate?.toFixed(0) || 0}%</Text>
                   <Text style={styles.statLabel}>Taux de réussite</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Feather name="clock" size={24} color="#2196F3" />
-                  <Text style={styles.statValue}>{(stats as any)?.average_delivery_time || "N/A"} min</Text>
+                  <Text style={styles.statValue}>{stats?.average_delivery_time || "N/A"} min</Text>
                   <Text style={styles.statLabel}>Temps moyen</Text>
                 </View>
               </View>
@@ -274,8 +271,8 @@ const GamificationScreen: React.FC = () => {
                   <Avatar.Image
                     size={40}
                     source={
-                      (entry as any).profile_picture
-                        ? { uri: (entry as any).profile_picture }
+                      entry.profile_picture
+                        ? { uri: entry.profile_picture }
                         : require("../../assets/images/default-avatar.png")
                     }
                   />
@@ -285,10 +282,10 @@ const GamificationScreen: React.FC = () => {
                       styles.leaderboardName,
                       entry.courier_id === user?.id && styles.currentUser
                     ]}>
-                      {entry.courier_id === user?.id ? "Vous" : (entry as any).name}
+                      {entry.courier_id === user?.id ? "Vous" : entry.name}
                     </Text>
                     <Text style={styles.leaderboardStats}>
-                      {(entry as any).deliveries_count || 0} livraisons • {entry.total_points || 0} pts
+                      {entry.deliveries_count || 0} livraisons • {entry.points || 0} pts
                     </Text>
                   </View>
                 </View>
