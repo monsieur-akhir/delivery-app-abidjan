@@ -40,7 +40,7 @@ const GamificationScreen: React.FC = () => {
         ...statsData,
         average_rating: statsData.average_rating || 0,
         total_deliveries: statsData.total_deliveries || 0,
-        totalEarnings: 0,
+        total_earnings: 0,
         totalDistance: 0,
         level: statsData.level || 0,
         total_points: statsData.total_points || 0,
@@ -52,7 +52,12 @@ const GamificationScreen: React.FC = () => {
         daily_rating: 0
       })
       setAchievements(achievementsData)
-      setLeaderboard(leaderboardData)
+      // Adapter les données du service vers le type models
+      const adaptedLeaderboard = leaderboardData.map(entry => ({
+        ...entry,
+        deliveriescount: entry.deliveries_count || 0
+      }))
+      setLeaderboard(adaptedLeaderboard)
     } catch (error) {
       console.error("Error loading gamification data:", error)
     } finally {
@@ -173,7 +178,7 @@ const GamificationScreen: React.FC = () => {
                 </View>
                 <View style={styles.statItem}>
                   <Feather name="star" size={24} color="#FFD700" />
-                  <Text style={styles.statValue}>{stats.averageRating?.toFixed(1) || "N/A"}</Text>
+                  <Text style={styles.statValue}>{stats.average_rating?.toFixed(1) || "N/A"}</Text>
                   <Text style={styles.statLabel}>Note moyenne</Text>
                 </View>
                 <View style={styles.statItem}>
@@ -260,7 +265,7 @@ const GamificationScreen: React.FC = () => {
                       {entry.courier_id === user?.id ? "Vous" : entry.name}
                     </Text>
                     <Text style={styles.leaderboardStats}>
-                      {entry.deliveries_count} livraisons • {entry.points} pts
+                      {entry.deliveriescount} livraisons • {entry.points} pts
                     </Text>
                   </View>
                 </View>

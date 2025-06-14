@@ -1,0 +1,92 @@
+screens/courier/HomeScreen.tsx:463:1 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+    ~~~
+
+screens/courier/HomeScreen.tsx:463:5 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+        ~~~~
+
+screens/courier/HomeScreen.tsx:463:10 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+             ~~~
+
+screens/courier/HomeScreen.tsx:463:14 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                 ~~~~
+
+screens/courier/HomeScreen.tsx:463:19 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                      ~~~~~~~
+
+screens/courier/HomeScreen.tsx:463:27 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                              ~~
+
+screens/courier/HomeScreen.tsx:463:30 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                 ~~~~~~~
+
+screens/courier/HomeScreen.tsx:463:38 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                         ~~~
+
+screens/courier/HomeScreen.tsx:463:42 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                             ~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:463:80 - error TS1005: ';' expected.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                                                                   ~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:463:152 - error TS1005: ';' expected.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                                                                                                                                           ~~~~~~
+
+screens/courier/HomeScreen.tsx:463:159 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                                                                                                                                                  ~~
+
+screens/courier/HomeScreen.tsx:463:162 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                                                                                                                                                     ~~~~~
+
+screens/courier/HomeScreen.tsx:463:173 - error TS1005: '(' expected.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                                                                                                                                                                ~~~
+
+screens/courier/HomeScreen.tsx:463:177 - error TS1005: ')' expected.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                                                                                                                                                                    ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:463:186 - error TS1434: Unexpected keyword or identifier.
+
+463 The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+                                                                                                                                                                                             ~~~~
+
+screens/courier/HomeScreen.tsx:464:1 - error TS1003: Identifier expected.
+
+464 </replit_final_file>
+    ~~
+
+screens/courier/HomeScreen.tsx:464:21 - error TS1109: Expression expected.
+
+464 </replit_final_file>
+                        
+
+
+Found 18 errors in the same file, starting at: screens/courier/HomeScreen.tsx:463

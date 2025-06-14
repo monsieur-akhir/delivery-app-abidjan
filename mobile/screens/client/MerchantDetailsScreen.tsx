@@ -23,7 +23,7 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   business_name: merchantInfo.name,
   description: merchantInfo.description || '',
   address: merchantInfo.address,
-  commune: merchantInfo.commune,
+  
   category: merchantInfo.category,
   categories: [merchantInfo.category],
   rating: merchantInfo.rating || 0,

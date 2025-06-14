@@ -20,7 +20,7 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   description: merchantInfo.description || '',
   address: merchantInfo.address,
   category: merchantInfo.category,
-  categories: [merchantInfo.category],
+  
   rating: merchantInfo.rating || 0,
   review_count: 0,
   is_open: merchantInfo.is_open,
@@ -89,7 +89,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (merchant) => merchant.name.toLowerCase().includes(query) || merchant.category.toLowerCase().includes(query),
+        (merchant) => merchant.name.toLowerCase().includes(query) || (merchant.category && merchant.category.toLowerCase().includes(query)),
       )
     }
 

@@ -226,7 +226,8 @@ const CreateDeliveryScreen: React.FC = () => {
       scooter: 'Scooter',
       car: 'Voiture',
       van: 'Camionnette',
-      truck: 'Camion'
+      truck: 'Camion',
+      custom: 'Personnalisé',
     }
     return names[type] || 'Véhicule'
   }

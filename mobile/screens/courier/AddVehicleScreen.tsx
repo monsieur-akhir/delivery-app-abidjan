@@ -1,312 +1,245 @@
-import React, { useState } from "react"
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  Switch,
-} from "react-native"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { Picker } from "@react-native-picker/picker"
-import { useVehicle } from "../../hooks/useVehicle"
-import { useTheme } from "../../contexts/ThemeContext"
-import { useTranslation } from "react-i18next"
+import React, { useState } from 'react'
+import { View, StyleSheet, ScrollView, Alert } from 'react-native'
+import { Text, TextInput, Button, Card, Switch } from 'react-native-paper'
+import { Picker } from '@react-native-picker/picker'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
+import { useVehicle } from '../../hooks'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../../types/navigation'
+import type { VehicleCreateRequest } from '../../types/models'
 
-// Assuming VehicleType is defined in "../../types/models"
-// Ensure 'custom' is included in the VehicleType definition
-type VehicleType = 'bicycle' | 'motorcycle' | 'scooter' | 'car' | 'van' | 'truck' | 'custom';
+// Définition des constantes pour les types de véhicules
+const VEHICLE_TYPES = {
+  MOTORCYCLE: 'motorcycle',
+  PICKUP: 'pickup',
+  BICYCLE: 'bicycle',
+  VAN: 'van',
+  CUSTOM: 'custom'
+} as const
+
+type VehicleType = typeof VEHICLE_TYPES[keyof typeof VEHICLE_TYPES]
 
 interface VehicleFormData {
   type: VehicleType
   brand: string
   model: string
   year: string
-  color: string
-  licensePlate: string
-  capacity?: number
-  description?: string
+  license_plate: string
+  capacity: string
+  is_electric: boolean
+  customType: string
 }
 
-const AddVehicleScreen: React.FC = () => {
-  const [formData, setFormData] = useState<VehicleFormData>({
-    type: VehicleType.MOTORCYCLE,
-    licensePlate: "",
-    brand: "",
-    model: "",
-    year: "",
-    color: "",
-    capacity: undefined,
-    description: undefined
-  })
-  const [loading, setLoading] = useState(false)
-  const { t } = useTranslation()
+type AddVehicleScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'VehicleManagement'>
+}
 
-  const navigation = useNavigation()
-  const { colors } = useTheme()
-  const { createVehicle } = useVehicle()
+const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
+  const { t } = useTranslation()
+  const { addVehicle, loading } = useVehicle()
+
+  const [formData, setFormData] = useState<VehicleFormData>({
+    type: VEHICLE_TYPES.MOTORCYCLE,
+    brand: '',
+    model: '',
+    year: '',
+    license_plate: '',
+    capacity: '',
+    is_electric: false,
+    customType: ''
+  })
 
   const handleSubmit = async () => {
-    if (!formData.licensePlate.trim()) {
-      Alert.alert("Erreur", "La plaque d'immatriculation est obligatoire")
-      return
-    }
-
-    setLoading(true)
     try {
-      await createVehicle({
-        vehicle_type: formData.type,
-        license_plate: formData.licensePlate,
-        brand: formData.brand || '',
-        model: formData.model || '',
-        year: formData.year ? parseInt(formData.year) : new Date().getFullYear(),
-        color: formData.color || undefined,
-        isElectric: false,
-        customType: formData.type === 'custom' ? formData.model : undefined,
-      })
+      // Validation
+      if (!formData.brand || !formData.model || !formData.license_plate) {
+        Alert.alert(t('errors.validation'), t('vehicle.fillAllFields'))
+        return
+      }
 
-      Alert.alert("Succès", "Véhicule ajouté avec succès", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ])
+      // Préparation des données pour l'API
+      const vehicleData: VehicleCreateRequest = {
+        type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : formData.type,
+        brand: formData.brand,
+        model: formData.model,
+        year: parseInt(formData.year) || new Date().getFullYear(),
+        license_plate: formData.license_plate,
+        capacity: parseFloat(formData.capacity) || 0,
+        is_electric: formData.is_electric,
+      }
+
+      await addVehicle(vehicleData)
+      Alert.alert(t('success.title'), t('vehicle.addSuccess'))
+      navigation.goBack()
     } catch (error) {
-      Alert.alert("Erreur", "Impossible d'ajouter le véhicule")
-    } finally {
-      setLoading(false)
+      console.error('Error adding vehicle:', error)
+      Alert.alert(t('errors.title'), t('vehicle.addError'))
     }
   }
 
-  const updateFormData = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const updateFormData = (field: keyof VehicleFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text }]}>Ajouter un véhicule</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={styles.title}>{t('vehicle.addVehicle')}</Text>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Informations générales</Text>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Type de véhicule *</Text>
-            <View style={[styles.pickerContainer, { borderColor: colors.border }]}>
-              <Picker
-                selectedValue={formData.type}
-                onValueChange={(value) => updateFormData("type", value)}
-                style={[styles.picker, { color: colors.text }]}
-              >
-                <Picker.Item label="Moto" value={VehicleType.MOTORCYCLE} />                <Picker.Item label="Voiture" value={VehicleType.PICKUP} />
-                <Picker.Item label="Vélo" value={VehicleType.BICYCLE} />
-                <Picker.Item label="Camion" value={VehicleType.VAN} />
-                <Picker.Item label="Autre" value={VehicleType.CUSTOM} />
-              </Picker>
-            </View>
-          </View>
-
-          {formData.type === VehicleType.CUSTOM && (
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Type personnalisé</Text>
-              <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-                value={formData.model}
-                onChangeText={(text) => updateFormData("model", text)}
-                placeholder="Ex: Scooter, Quad..."
-                placeholderTextColor={colors.text + "60"}
-              />
+              <Text style={styles.label}>{t('vehicle.type')}</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={formData.type}
+                  onValueChange={(value) => updateFormData('type', value)}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Moto" value={VEHICLE_TYPES.MOTORCYCLE} />
+                  <Picker.Item label="Voiture" value={VEHICLE_TYPES.PICKUP} />
+                  <Picker.Item label="Vélo" value={VEHICLE_TYPES.BICYCLE} />
+                  <Picker.Item label="Camion" value={VEHICLE_TYPES.VAN} />
+                  <Picker.Item label="Autre" value={VEHICLE_TYPES.CUSTOM} />
+                </Picker>
+              </View>
             </View>
-          )}
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Plaque d'immatriculation *</Text>
+            {formData.type === VEHICLE_TYPES.CUSTOM && (
+              <TextInput
+                label={t('vehicle.customType')}
+                value={formData.customType}
+                onChangeText={(text) => updateFormData('customType', text)}
+                style={styles.input}
+                mode="outlined"
+              />
+            )}
+
             <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              value={formData.licensePlate}
-              onChangeText={(text) => updateFormData("licensePlate", text.toUpperCase())}
-              placeholder="Ex: AA 123 BB"
-              placeholderTextColor={colors.text + "60"}
+              label={t('vehicle.brand')}
+              value={formData.brand}
+              onChangeText={(text) => updateFormData('brand', text)}
+              style={styles.input}
+              mode="outlined"
+            />
+
+            <TextInput
+              label={t('vehicle.model')}
+              value={formData.model}
+              onChangeText={(text) => updateFormData('model', text)}
+              style={styles.input}
+              mode="outlined"
+            />
+
+            <TextInput
+              label={t('vehicle.year')}
+              value={formData.year}
+              onChangeText={(text) => updateFormData('year', text)}
+              keyboardType="numeric"
+              style={styles.input}
+              mode="outlined"
+            />
+
+            <TextInput
+              label={t('vehicle.licensePlate')}
+              value={formData.license_plate}
+              onChangeText={(text) => updateFormData('license_plate', text)}
+              style={styles.input}
+              mode="outlined"
               autoCapitalize="characters"
             />
-          </View>
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Marque</Text>
             <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              value={formData.brand}
-              onChangeText={(text) => updateFormData("brand", text)}
-              placeholder="Ex: Honda, Toyota..."
-              placeholderTextColor={colors.text + "60"}
+              label={t('vehicle.capacity')}
+              value={formData.capacity}
+              onChangeText={(text) => updateFormData('capacity', text)}
+              keyboardType="numeric"
+              style={styles.input}
+              mode="outlined"
+              placeholder="kg"
             />
-          </View>
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Modèle</Text>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              value={formData.model}
-              onChangeText={(text) => updateFormData("model", text)}
-              placeholder="Ex: CB 125, Corolla..."
-              placeholderTextColor={colors.text + "60"}
-            />
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-              <Text style={[styles.label, { color: colors.text }]}>Année</Text>
-              <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-                value={formData.year}
-                onChangeText={(text) => updateFormData("year", text)}
-                placeholder="2023"
-                placeholderTextColor={colors.text + "60"}
-                keyboardType="numeric"
-                maxLength={4}
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>{t('vehicle.isElectric')}</Text>
+              <Switch
+                value={formData.is_electric}
+                onValueChange={(value) => updateFormData('is_electric', value)}
+                thumbColor={formData.is_electric ? '#FF6B00' : "#f4f3f4"}
+                trackColor={{ false: "#767577", true: "#FF6B0080" }}
               />
             </View>
 
-            <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-              <Text style={[styles.label, { color: colors.text }]}>Couleur</Text>
-              <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-                value={formData.color}
-                onChangeText={(text) => updateFormData("color", text)}
-                placeholder="Bleu"
-                placeholderTextColor={colors.text + "60"}
-              />
-            </View>
-          </View>
-        </View>
-
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Capacités</Text>
-
-          <View style={styles.row}>
-            <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-              <Text style={[styles.label, { color: colors.text }]}>Poids max (kg)</Text>
-              <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-                value={formData.capacity}
-                onChangeText={(text) => updateFormData("capacity", text)}
-                placeholder="50"
-                placeholderTextColor={colors.text + "60"}
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={[styles.label, { color: colors.text }]}>Véhicule électrique</Text>
-            <Switch
-              value={formData.isElectric}
-              onValueChange={(value) => updateFormData("isElectric", value)}
-              trackColor={{ false: colors.border, true: colors.primary + "40" }}
-              thumbColor={formData.isElectric ? colors.primary : "#f4f3f4"}
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            { backgroundColor: colors.primary },
-            loading && { opacity: 0.6 },
-          ]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          <Text style={styles.submitButtonText}>
-            {loading ? "Ajout en cours..." : "Ajouter le véhicule"}
-          </Text>
-        </TouchableOpacity>
+            <Button
+              mode="contained"
+              onPress={handleSubmit}
+              style={styles.submitButton}
+              loading={loading}
+              disabled={loading}
+            >
+              {t('vehicle.addVehicle')}
+            </Button>
+          </Card.Content>
+        </Card>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F5F5',
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    paddingTop: 60,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  content: {
-    flex: 1,
+  scrollContent: {
     padding: 16,
   },
-  section: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+  card: {
     elevation: 2,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 16,
+    textAlign: 'center',
+    color: '#212121',
   },
   formGroup: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
     fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: '#212121',
   },
   pickerContainer: {
     borderWidth: 1,
-    borderRadius: 8,
-    overflow: "hidden",
+    borderColor: '#CCCCCC',
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
   },
   picker: {
     height: 50,
   },
-  row: {
-    flexDirection: "row",
+  input: {
+    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
   },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8,
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingVertical: 8,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#212121',
   },
   submitButton: {
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  submitButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
+    marginTop: 16,
+    backgroundColor: '#FF6B00',
   },
 })
 

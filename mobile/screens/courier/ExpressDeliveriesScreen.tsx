@@ -40,7 +40,7 @@ const ExpressDeliveriesScreen: React.FC = () => {
 
   const startDelivery = async (id: number) => {
     try {
-      await DeliveryService.startDelivery(id.toString())
+      await DeliveryService.acceptDelivery(id.toString())
     } catch (error) {
       console.error('Error starting delivery:', error)
     }

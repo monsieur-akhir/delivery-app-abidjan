@@ -52,13 +52,13 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
       const profileData = await fetchCourierProfile()
       // Assurer que profileData a tous les champs requis
       const completeProfile: CourierProfile = {
-        user_id: profileData.id || user?.id || 0,
+        user_id: Number(profileData.id) || Number(user?.id) || 0,
         full_name: profileData.full_name || user?.full_name || '',
         phone: profileData.phone || user?.phone || '',
         email: profileData.email || user?.email || '',
         vehicle_type: (profileData.vehicle_type as VehicleType) || 'motorcycle',
         license_plate: profileData.license_plate || '',
-        is_available: profileData.available ?? true,
+        is_available: profileData.is_available ?? true,
         rating: profileData.rating || 0,
         total_deliveries: profileData.total_deliveries || 0,
       }
