@@ -1,0 +1,39 @@
+components/FeatherIcon.tsx:88:3 - error TS2820: Type '"bag-outline"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3661 more ... | "md-woman-sharp"'. Did you mean '"bug-outline"'?
+
+88   'shopping-bag': 'bag-outline',
+     ~~~~~~~~~~~~~~
+
+  components/FeatherIcon.tsx:12:18
+    12 const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    The expected type comes from this index signature.
+
+config/environment.ts:4:7 - error TS7022: '__DEV__' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+
+4 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV === "development"
+        ~~~~~~~
+
+config/environment.ts:4:24 - error TS2448: Block-scoped variable '__DEV__' used before its declaration.
+
+4 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV === "development"
+                         ~~~~~~~
+
+  config/environment.ts:4:7
+    4 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV === "development"
+            ~~~~~~~
+    '__DEV__' is declared here.
+
+config/environment.ts:4:50 - error TS2448: Block-scoped variable '__DEV__' used before its declaration.
+
+4 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV === "development"
+                                                   ~~~~~~~
+
+  config/environment.ts:4:7
+    4 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV === "development"
+            ~~~~~~~
+    '__DEV__' is declared here.
+
+config/environment.ts:4:60 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+4 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV === "development"
+                                                             ~~~~~~~
