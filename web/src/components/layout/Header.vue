@@ -55,7 +55,7 @@ import { formatRelativeTime } from '@/utils/formatters'
 import { USER_ROLES } from '@/config'
 
 export default {
-  name: 'Header',
+  name: 'AppHeader',
   components: {
     NotificationBell,
   },

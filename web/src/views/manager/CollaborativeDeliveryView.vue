@@ -560,8 +560,6 @@ import ParticipantShareForm from '@/components/forms/ParticipantShareForm.vue'
 import {
   getCollaborativeDeliveries,
   getCollaborativeDelivery,
-  getCollaborativeParticipants,
-  updateParticipantStatus,
   updateParticipantShare,
   getCollaborativeEarnings,
   distributeCollaborativeEarnings,
@@ -953,16 +951,6 @@ export default {
     }
 
     // Mettre à jour le statut d'un participant
-    const updateParticipantStatus = async (deliveryId, participantId, status) => {
-      try {
-        await updateParticipantStatus(deliveryId, participantId, status)
-        showToast('Statut du participant mis à jour avec succès', 'success')
-      } catch (error) {
-        console.error('Erreur lors de la mise à jour du statut du participant:', error)
-        showToast('Erreur lors de la mise à jour du statut du participant', 'error')
-      }
-    }
-
     // Éditer le pourcentage de partage d'un participant
     const editParticipantShare = participant => {
       selectedParticipant.value = participant
@@ -1149,7 +1137,6 @@ export default {
       viewEarnings,
       getParticipantName,
       getParticipantPercentage,
-      updateParticipantStatus,
       editParticipantShare,
       saveParticipantShare,
       addParticipant,

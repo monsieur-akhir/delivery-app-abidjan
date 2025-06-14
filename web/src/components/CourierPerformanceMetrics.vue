@@ -152,8 +152,8 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import Chart from 'chart.js/auto'
+import { ref, reactive, onMounted } from 'vue'
+import { getCourierPerformance } from '@/api/manager'
 
 export default {
   name: 'CourierPerformanceMetrics',

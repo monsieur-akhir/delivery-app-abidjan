@@ -155,23 +155,19 @@ export default {
       // Ajouter chaque rapport à la carte
       props.trafficReports.forEach(report => {
         // Définir l'icône en fonction de la sévérité
-        let iconUrl, iconSize
+        let iconSize
 
         switch (report.severity) {
           case 'high':
-            iconUrl = '/img/traffic-high.png'
             iconSize = [32, 32]
             break
           case 'medium':
-            iconUrl = '/img/traffic-medium.png'
             iconSize = [28, 28]
             break
           case 'low':
-            iconUrl = '/img/traffic-low.png'
             iconSize = [24, 24]
             break
           default:
-            iconUrl = '/img/traffic-medium.png'
             iconSize = [28, 28]
         }
 
