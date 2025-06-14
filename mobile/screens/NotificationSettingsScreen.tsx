@@ -13,9 +13,9 @@ const NotificationSettingsScreen = () => {
   const navigation = useNavigation()
 
   const [settings, setSettings] = useState<NotificationSettings>({
-    push_enabled: true,
-    email_enabled: true,
-    sms_enabled: false,
+    push_notifications: true,
+    email_notifications: true,
+    sms_notifications: false,
     delivery_updates: true,
     bid_notifications: true,
     promotional_offers: false,
@@ -97,7 +97,7 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingTitle}>{t("settings.pushNotifications")}</Text>
               <Text style={styles.settingDescription}>{t("settings.pushNotificationsDescription")}</Text>
             </View>
-            <Switch value={settings.push_enabled} onValueChange={() => handleToggle("push_enabled")} color="#FF6B00" />
+            <Switch value={settings.push_notifications} onValueChange={() => handleToggle("push_notifications")} color="#FF6B00" />
           </View>
 
           <Divider style={styles.divider} />
@@ -107,7 +107,7 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingTitle}>{t("settings.smsNotifications")}</Text>
               <Text style={styles.settingDescription}>{t("settings.smsNotificationsDescription")}</Text>
             </View>
-            <Switch value={settings.sms_enabled} onValueChange={() => handleToggle("sms_enabled")} color="#FF6B00" />
+            <Switch value={settings.sms_notifications} onValueChange={() => handleToggle("sms_notifications")} color="#FF6B00" />
           </View>
 
           <Divider style={styles.divider} />
@@ -132,8 +132,8 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingDescription}>{t("settings.emailNotificationsDescription")}</Text>
             </View>
             <Switch
-              value={settings.email_enabled}
-              onValueChange={() => handleToggle("email_enabled")}
+              value={settings.email_notifications}
+              onValueChange={() => handleToggle("email_notifications")}
               color="#FF6B00"
             />
           </View>
