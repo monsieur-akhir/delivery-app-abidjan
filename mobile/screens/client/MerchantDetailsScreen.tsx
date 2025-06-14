@@ -324,7 +324,7 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
             </View>
             <View style={styles.merchantMeta}>
               <Chip icon="map-marker" style={styles.communeChip}>
-                {merchant.commune}
+                {merchant.address || 'Location not specified'}
               </Chip>
               {merchant.delivery_time && (
                 <View style={styles.deliveryTimeContainer}>

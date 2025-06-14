@@ -1,0 +1,66 @@
+
+screens/courier/GamificationScreen.tsx:286:40 - error TS18048: 'stats.daily_deliveries' is possibly 'undefined'.
+
+286                     progress={Math.min(stats.daily_deliveries / 5, 1)}
+                                           ~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:304:47 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+304                     progress={Math.min((stats.daily_rating || 0) / 4.5, 1)}
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:309:43 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+309                     Note actuelle: {stats.daily_rating?.toFixed(1) || "N/A"}
+                                              ~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:96:39 - error TS2339: Property 'data' does not exist on type 'AvailableDelivery[]'.
+
+96       setAvailableDeliveries(response.data || [])
+                                         ~~~~
+
+screens/courier/HomeScreen.tsx:105:36 - error TS2339: Property 'data' does not exist on type 'Delivery[]'.
+
+105       setActiveDeliveries(response.data || [])
+                                       ~~~~
+
+screens/courier/HomeScreen.tsx:123:25 - error TS2339: Property 'data' does not exist on type 'CourierStats'.
+
+123       setStats(response.data || stats)
+                            ~~~~
+
+screens/courier/HomeScreen.tsx:138:49 - error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'string'.
+
+138       await DeliveryService.updateCourierStatus(newStatus)
+                                                    ~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:280:61 - error TS2561: Object literal may only specify known properties, but 'delivery' does not exist in type '{ deliveryId: string; }'. Did you mean to write 'deliveryId'?
+
+280           onPress={() => navigation.navigate('BidScreen', { delivery: item })}
+                                                                ~~~~~~~~
+
+screens/courier/JoinCollaborativeDeliveryScreen.tsx:16:20 - error TS2307: Cannot find module '@react-native-community/slider' or its corresponding type declarations.
+
+16 import Slider from "@react-native-community/slider"
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/profile/ProfileScreen.tsx:45:9 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+45         email: profileData.email,
+           ~~~~~
+
+  types/models.ts:307:3
+    307   email: string
+          ~~~~~
+    The expected type comes from property 'email' which is declared here on type 'UserProfile'
+
+screens/profile/ProfileScreen.tsx:203:78 - error TS2304: Cannot find name 'User'.
+
+203         const updatedUser = await updateUserProfile(editedProfile as Partial<User>)
+                                                                                 ~~~~
+
+screens/profile/ProfileScreen.tsx:231:49 - error TS2304: Cannot find name 'User'.
+
+231         updateUserData(editedProfile as Partial<User>)
+                                                    ~~~~

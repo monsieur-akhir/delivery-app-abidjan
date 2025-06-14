@@ -228,9 +228,12 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
       } else {
         // Stocker l'évaluation pour synchronisation ultérieure
         addPendingUpload({
+          id: Date.now().toString(),
           type: "submit_rating",
           data: ratingData,
-        } as PendingOperation)
+          timestamp: new Date().toISOString(),
+          retries: 0
+        })
 
         Alert.alert(t("rateDelivery.thankYou"), t("rateDelivery.offlineRatingSubmitted"), [
           {

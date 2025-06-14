@@ -851,6 +851,19 @@ export interface CourierVehicle {
 }
 
 // VehicleRecommendation Types
+export interface VehicleRecommendationData {
+  pickup_lat: number;
+  pickup_lng: number;
+  delivery_lat: number;
+  delivery_lng: number;
+  package_type: string;
+  package_weight: number;
+  package_size: string;
+  is_fragile: boolean;
+  distance: number;
+  weatherConditions?: string;
+}
+
 export interface VehicleRecommendationRequest {
   cargo_category: CargoCategory;
   package_weight: number;

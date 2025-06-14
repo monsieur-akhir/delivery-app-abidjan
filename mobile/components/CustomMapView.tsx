@@ -104,4 +104,4 @@ const styles = StyleSheet.create({
 
 export default CustomMapView
 export { CustomMapView }
-export type { MapRoute }
+export type { MapRoute as Route }
