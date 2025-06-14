@@ -215,13 +215,6 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
           <View style={styles.mapContainer}>
             <VTCStyleMap
               showUserLocation={true}
-              
-              initialRegion={{
-                latitude: delivery.pickup_lat,
-                longitude: delivery.pickup_lng,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
             />
           </View>
         </View>
@@ -477,7 +470,7 @@ const styles = StyleSheet.create({
     color: '#666',
     width: 100,
   },
-  packageValue: {
+  packageValue: {```
     fontSize: 14,
     color: '#333',
     flex: 1,

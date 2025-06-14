@@ -69,7 +69,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
         is_electric: formData.is_electric,
       }
 
-      await addVehicle(vehicleData)
+      await addCourierVehicle(vehicleData)
       Alert.alert(t('success.title'), t('vehicle.addSuccess'))
       navigation.goBack()
     } catch (error) {

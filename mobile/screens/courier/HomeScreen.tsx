@@ -1,3 +1,7 @@
+` tags. I will ensure that no parts are skipped, the indentation and structure are preserved, and no forbidden words are used.
+
+```
+<replit_final_file>
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View,
@@ -20,7 +24,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useDelivery } from '../../hooks/useDelivery'
 import GamificationService from '../../services/GamificationService'
 import { formatPrice, formatDistance } from '../../utils/formatters'
-import { WeatherInfo } from '../../components/WeatherInfo'
+import WeatherInfo from '../../components/WeatherInfo'
 import { Delivery, CourierStats, AvailableDelivery as AvailableDeliveryType } from '../../types/models'
 import DeliveryService from '../../services/DeliveryService'
 
@@ -95,10 +99,10 @@ const CourierHomeScreen: React.FC = () => {
         const statsResponse = await GamificationService.getCourierStats()
         setStats({
           completed_today: statsResponse?.total_deliveries || 0,
-          earnings_today: statsResponse?.total_earnings || 0,
+          earnings_today: statsResponse?.daily_earnings || 0,
           total_deliveries: statsResponse?.total_deliveries || 0,
           average_rating: statsResponse?.average_rating || 0,
-          total_distance: statsResponse?.total_distance || 0,
+          total_distance: statsResponse?.distance_covered || 0,
         })
       }
     } catch (error) {
@@ -330,211 +334,135 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    paddingTop: 50,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#757575',
-  },
-  statusCard: {
-    backgroundColor: '#FFFFFF',
-    margin: 16,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  statusHeader: {
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212121',
-  },
-  statusToggle: {
+  profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
-  toggleText: {
-    marginRight: 8,
+  profileInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  welcomeText: {
     fontSize: 14,
-    color: '#757575',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
-  statusContent: {
-    padding: 16,
-  },
-  statusDescription: {
-    fontSize: 14,
-    color: '#757575',
-    lineHeight: 20,
-  },
-  statsContainer: {
-    margin: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    backgroundColor: '#FFFFFF',
-    width: '48%',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  statValue: {
-    fontSize: 24,
+  userName: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#FF6B00',
-    marginBottom: 4,
+    color: 'white',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#757575',
-    textTransform: 'uppercase',
+  statusText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 4,
   },
-  quickActions: {
-    margin: 16,
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  statsCard: {
+    marginBottom: 16,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#212121',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  actionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  actionContent: {
+  statsRow: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
     alignItems: 'center',
-    padding: 16,
   },
-  actionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4CAF50',
   },
-  actionText: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
-    marginBottom: 4,
-  },
-  actionSubtitle: {
-    fontSize: 14,
+  statLabel: {
+    fontSize: 12,
     color: '#757575',
+    marginTop: 4,
   },
-  actionArrow: {
-    opacity: 0.5,
-  },
-  recentDeliveries: {
-    margin: 16,
+  section: {
+    marginBottom: 24,
   },
   deliveryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
     marginBottom: 12,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  deliveryContent: {
-    padding: 16,
   },
   deliveryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  deliveryId: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212121',
+    marginBottom: 12,
   },
   deliveryPrice: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#4CAF50',
   },
-  deliveryRoute: {
-    marginBottom: 8,
+  activeDeliveryPrice: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF6B00',
   },
-  routeText: {
+  deliveryDistance: {
     fontSize: 14,
     color: '#757575',
-    marginBottom: 2,
   },
-  deliveryFooter: {
+  statusChip: {
+    backgroundColor: '#E3F2FD',
+  },
+  addressContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  deliveryTime: {
-    fontSize: 12,
-    color: '#9E9E9E',
+  addressText: {
+    fontSize: 14,
+    color: '#212121',
+    marginLeft: 8,
+    flex: 1,
+  },
+  clientPhone: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 12,
+  },
+  acceptButton: {
+    backgroundColor: '#4CAF50',
+  },
+  trackButton: {
+    backgroundColor: '#FF6B00',
+  },
+  emptyCard: {
+    padding: 20,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#757575',
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: '#FF6B00',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    color: '#757575',
-    textAlign: 'center',
-    marginTop: 16,
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 })
 
-export default HomeScreen
+export default CourierHomeScreen
