@@ -64,6 +64,9 @@ interface DeliveryCreateRequest {
   delivery_lng: number
   package_type: string
   package_description?: string
+  package_size?: string
+  package_weight?: number
+  is_fragile?: boolean
   proposed_price: number
   recipient_name: string
   recipient_phone?: string
@@ -91,19 +94,22 @@ const CreateDeliveryScreen: React.FC = () => {
   const mapRef = useRef<any>(null)
 
   // Form states
+  const [packageType, setPackageType] = useState<string>('small')
+  const [selectedPackageType, setSelectedPackageType] = useState<string>('small')
+  const [packageSize, setPackageSize] = useState<string>('small')
+  const [packageWeight, setPackageWeight] = useState<string>('')
+  const [isFragile, setIsFragile] = useState<boolean>(false)
   const [pickupAddress, setPickupAddress] = useState<string>('')
   const [deliveryAddress, setDeliveryAddress] = useState<string>('')
   const [pickupLocation, setPickupLocation] = useState<Address | null>(null)
   const [deliveryLocation, setDeliveryLocation] = useState<Address | null>(null)
-  const [packageType, setPackageType] = useState<string>('small')
-  const [packageDescription, setPackageDescription] = useState<string>('')
-  const [packageWeight, setPackageWeight] = useState<string>('')
-  const [specialInstructions, setSpecialInstructions] = useState<string>('')
   const [proposedPrice, setProposedPrice] = useState<string>('')
+  const [packageDescription, setPackageDescription] = useState<string>('')
+  const [specialInstructions, setSpecialInstructions] = useState<string>('')
+  const [weather, setWeather] = useState<any>(null)
   const [recipientName, setRecipientName] = useState<string>('')
   const [recipientPhone, setRecipientPhone] = useState<string>('')
   const [isUrgent, setIsUrgent] = useState<boolean>(false)
-  const [isFragile, setIsFragile] = useState<boolean>(false)
 
   // UI states
   const [loading, setLoading] = useState<boolean>(false)
@@ -186,9 +192,9 @@ const CreateDeliveryScreen: React.FC = () => {
         pickup_lng: pickupLocation.longitude,
         delivery_lat: deliveryLocation.latitude,
         delivery_lng: deliveryLocation.longitude,
-        package_type: packageType,
+        package_type: selectedPackageType,
         package_weight: parseFloat(packageWeight) || 1,
-        package_size: 'medium',
+        package_size: packageSize,
         is_fragile: isFragile || false,
         distance: calculateDistance(
           { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
@@ -248,7 +254,6 @@ const CreateDeliveryScreen: React.FC = () => {
     const deliveryData: DeliveryCreateRequest = {
       pickup_address: pickupAddress,
       pickup_commune: extractCommune(pickupAddress),
-      delivery_commune: extractCommune(deliveryAddress),
       delivery_address: deliveryAddress,
       delivery_commune: extractCommune(deliveryAddress),
       pickup_lat: pickupLocation.latitude,
@@ -257,7 +262,6 @@ const CreateDeliveryScreen: React.FC = () => {
       delivery_lng: deliveryLocation.longitude,
       package_type: packageType,
       package_description: packageDescription,
-      special_instructions: specialInstructions,
       proposed_price: parseFloat(proposedPrice),
       recipient_name: recipientName,
       recipient_phone: recipientPhone,
@@ -282,8 +286,7 @@ const CreateDeliveryScreen: React.FC = () => {
           text: 'OK',
           onPress: () => navigation.navigate('TrackDelivery', { deliveryId: result.id })
         }
-      ])
-    } catch (error) {
+      ])    } catch (error) {
       Alert.alert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.')
     } finally {
       setLoading(false)
