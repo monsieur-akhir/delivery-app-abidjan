@@ -27,7 +27,7 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   review_count: 0,
   is_open: merchantInfo.is_open,
   opening_hours: merchantInfo.opening_hours || '',
-  phone: merchantInfo.phone,
+  phone: merchantInfo.phone || '',
   lat: merchantInfo.lat || 0,
   lng: merchantInfo.lng || 0,
   logo: '',
@@ -35,7 +35,7 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   cover_image: '',
   created_at: '',
   updated_at: '',
-  delivery_time: '30'
+  delivery_time: 30
 })
 
 type MarketplaceScreenProps = {
@@ -91,18 +91,18 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (merchant) => merchant.name.toLowerCase().includes(query) || merchant.description.toLowerCase().includes(query),
+        (merchant) => merchant.name.toLowerCase().includes(query) || (merchant.description && merchant.description.toLowerCase().includes(query)),
       )
     }
 
     // Filtrer par catégorie
     if (selectedCategory) {
-      filtered = filtered.filter((merchant) => merchant.categories.includes(selectedCategory))
+      filtered = filtered.filter((merchant) => merchant.categories && merchant.categories.includes(selectedCategory))
     }
 
     // Filtrer par commune
     if (selectedCommune) {
-      filtered = filtered.filter((merchant) => merchant.commune === selectedCommune)
+      filtered = filtered.filter((merchant) => merchant.address?.includes(selectedCommune))
     }
 
     setFilteredMerchants(filtered)
@@ -154,7 +154,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
           <Text style={styles.merchantName}>{item.name}</Text>
           <View style={styles.ratingContainer}>
             <IconButton icon="star" size={16} color="#FFC107" style={styles.ratingIcon} />
-            <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+            <Text style={styles.ratingText}>{(item.rating || 0).toFixed(1)}</Text>
           </View>
         </View>
 
@@ -163,7 +163,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
         </Text>
 
         <View style={styles.merchantFooter}>
-          <Chip style={styles.communeChip}>{item.commune}</Chip>
+          <Chip style={styles.communeChip}>{item.address || 'Abidjan'}</Chip>
 
           <Text style={styles.deliveryTime}>
             <IconButton icon="clock" size={14} color="#757575" style={styles.timeIcon} />

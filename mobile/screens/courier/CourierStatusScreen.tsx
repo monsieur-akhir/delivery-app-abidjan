@@ -272,13 +272,17 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
             <Card.Content>
               <Text style={styles.sectionTitle}>Conditions météo</Text>
               <View style={styles.weatherContent}>
-                <View style={styles.weatherIcon}>
-                  <FeatherIcon name={getWeatherIcon(weather.current.condition)} size={48} color="#FF6B00" />
-                </View>
-                <View style={styles.weatherInfo}>
-                  <Text style={styles.temperature}>{weather.current.temperature}°C</Text>
-                  <Text style={styles.weatherCondition}>{weather.current.condition}</Text>
-                  <Text style={styles.weatherLocation}>{weather.location}</Text>
+                <FeatherIcon name={getWeatherIcon(weather.current?.condition || 'sunny')} size={48} color="#FF6B00" />
+                  <View style={styles.weatherInfo}>
+                  <Text style={styles.temperature}>{weather.current?.temperature || 0}°C</Text>
+                  <Text style={styles.weatherCondition}>{weather.current?.condition || 'Clear'}</Text>
+                  </View>
+                  <View style={styles.weatherDetails}>
+                    <Text style={styles.weatherDetailLabel}>Humidité</Text>
+                    <Text style={styles.weatherDetailText}>{weather.current?.humidity || 0}%</Text>
+                    <Text style={styles.weatherDetailLabel}>Vent</Text>
+                    <Text style={styles.weatherDetailText}>{weather.current?.wind_speed || 0} km/h</Text>
+
                 </View>
                 <View style={styles.weatherDetails}>
                   <View style={styles.weatherDetail}>
