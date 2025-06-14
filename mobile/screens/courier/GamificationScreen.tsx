@@ -43,7 +43,6 @@ const GamificationScreen: React.FC = () => {
         total_earnings: 0,
         totalDistance: 0,
         total_points: statsData.total_points || 0,
-        experience: statsData.total_points || 0,
         nextLevelExperience: levelThresholds[statsData.level + 1] || 0,
         badges: [],
         deliveriesCompleted: statsData.total_deliveries || 0,
@@ -352,6 +351,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 20,
     fontWeight: "bold",
+    ```
     marginBottom: 4,
   },
   userLevel:{

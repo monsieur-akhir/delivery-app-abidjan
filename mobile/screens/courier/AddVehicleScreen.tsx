@@ -60,7 +60,6 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
 
       // Préparation des données pour l'API
       const vehicleData: VehicleCreateRequest = {
-        type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : formData.type,
         brand: formData.brand,
         model: formData.model,
         year: parseInt(formData.year) || new Date().getFullYear(),
@@ -69,7 +68,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
         is_electric: formData.is_electric,
       }
 
-      await addCourierVehicle(vehicleData)
+      await addVehicle(vehicleData)
       Alert.alert(t('success.title'), t('vehicle.addSuccess'))
       navigation.goBack()
     } catch (error) {
