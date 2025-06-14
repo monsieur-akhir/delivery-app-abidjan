@@ -85,7 +85,7 @@ const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
   'external-link': 'open-outline',
   'file': 'document-outline',
   'folder': 'folder-outline',
-  'shopping-bag': 'bag', // Assuming 'bag' is a valid icon. If not, replace with a valid icon like 'bug-outline'.
+  'shopping-bag': 'bag-outline', // Replaced 'bag' with 'bag-outline' to be a valid Ionicon
   'shopping-cart': 'cart-outline',
   'credit-card': 'card-outline',
   'gift': 'gift-outline',
