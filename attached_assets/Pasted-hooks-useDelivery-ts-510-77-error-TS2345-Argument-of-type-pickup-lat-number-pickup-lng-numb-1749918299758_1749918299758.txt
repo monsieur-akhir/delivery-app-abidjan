@@ -1,0 +1,235 @@
+hooks/useDelivery.ts:510:77 - error TS2345: Argument of type '{ pickup_lat: number; pickup_lng: number; delivery_lat: number; delivery_lng: number; package_weight: number; package_size: string; is_fragile: boolean; distance: number; package_type?: string; }' is not assignable to parameter of type 'VehicleRecommendationData'.
+  Types of property 'package_type' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+510       const recommendation = await DeliveryService.getVehicleRecommendation(requestData)
+                                                                                ~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:231:12 - error TS7053: Element implicitly has an 'any' type because expression of type 'VehicleType' can't be used to index type '{ bicycle: string; motorcycle: string; scooter: string; car: string; van: string; truck: string; }'.
+  Property 'custom' does not exist on type '{ bicycle: string; motorcycle: string; scooter: string; car: string; van: string; truck: string; }'.
+
+231     return names[type] || 'Véhicule'
+               ~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:23:3 - error TS2561: Object literal may only specify known properties, but 'categories' does not exist in type 'Merchant'. Did you mean to write 'category'?
+
+23   categories: [merchantInfo.category],
+     ~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:92:70 - error TS18048: 'merchant.category' is possibly 'undefined'.
+
+92         (merchant) => merchant.name.toLowerCase().includes(query) || merchant.category.toLowerCase().includes(query),
+                                                                        ~~~~~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:26:3 - error TS2353: Object literal may only specify known properties, and 'commune' does not exist in type 'Merchant'.
+
+26   commune: merchantInfo.commune,
+     ~~~~~~~
+
+screens/client/OrdersScreen.tsx:203:17 - error TS2322: Type 'Element' is not assignable to type '((string | number | boolean | Value | AnimatedInterpolation<string | number> | WithAnimatedObject<ReactElement<any, string | JSXElementConstructor<any>>> | WithAnimatedObject<...> | WithAnimatedObject<...> | null) & (string | number)) | undefined'.
+  Type 'ReactElement<any, any>' is not assignable to type 'WithAnimatedObject<ReactPortal> & number'.
+    Property 'children' is missing in type 'ReactElement<any, any>' but required in type 'WithAnimatedObject<ReactPortal>'.
+
+203                 <Text style={{ color: 'white', fontSize: 12 }}>●</Text>
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  node_modules/@types/react/index.d.ts:192:9
+    192         children: ReactNode;
+                ~~~~~~~~
+    'children' is declared here.
+  node_modules/react-native/Libraries/Text/Text.d.ts:110:3
+    110   children?: React.ReactNode;
+          ~~~~~~~~
+    The expected type comes from property 'children' which is declared here on type 'IntrinsicAttributes & AnimatedProps<TextProps & RefAttributes<Text>> & { visible?: boolean | undefined; ... 4 more ...; theme?: ThemeProp | undefined; }'
+
+screens/courier/AddVehicleScreen.tsx:36:11 - error TS2693: 'VehicleType' only refers to a type, but is being used as a value here.
+
+36     type: VehicleType.MOTORCYCLE,
+             ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:67:9 - error TS2561: Object literal may only specify known properties, but 'isElectric' does not exist in type 'VehicleCreateRequest'. Did you mean to write 'is_electric'?
+
+67         isElectric: false,
+           ~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:107:50 - error TS2693: 'VehicleType' only refers to a type, but is being used as a value here.
+
+107                 <Picker.Item label="Moto" value={VehicleType.MOTORCYCLE} />                <Picker.Item label="Voiture" value={VehicleType.PICKUP} />
+                                                     ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:107:128 - error TS2693: 'VehicleType' only refers to a type, but is being used as a value here.
+
+107                 <Picker.Item label="Moto" value={VehicleType.MOTORCYCLE} />                <Picker.Item label="Voiture" value={VehicleType.PICKUP} />
+                                                                                                                                   ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:108:50 - error TS2693: 'VehicleType' only refers to a type, but is being used as a value here.
+
+108                 <Picker.Item label="Vélo" value={VehicleType.BICYCLE} />
+                                                     ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:109:52 - error TS2693: 'VehicleType' only refers to a type, but is being used as a value here.
+
+109                 <Picker.Item label="Camion" value={VehicleType.VAN} />
+                                                       ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:110:51 - error TS2693: 'VehicleType' only refers to a type, but is being used as a value here.
+
+110                 <Picker.Item label="Autre" value={VehicleType.CUSTOM} />
+                                                      ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:115:30 - error TS2693: 'VehicleType' only refers to a type, but is being used as a value here.
+
+115           {formData.type === VehicleType.CUSTOM && (
+                                 ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:197:17 - error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: TextInputProps | Readonly<TextInputProps>): TextInput', gave the following error.
+    Type 'number | undefined' is not assignable to type 'string | undefined'.
+      Type 'number' is not assignable to type 'string'.
+  Overload 2 of 2, '(props: TextInputProps, context: any): TextInput', gave the following error.
+    Type 'number | undefined' is not assignable to type 'string | undefined'.
+      Type 'number' is not assignable to type 'string'.
+
+197                 value={formData.capacity}
+                    ~~~~~
+
+  node_modules/react-native/Libraries/Components/TextInput/TextInput.d.ts:788:3
+    788   value?: string | undefined;
+          ~~~~~
+    The expected type comes from property 'value' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<TextInput> & Readonly<TextInputProps>'
+  node_modules/react-native/Libraries/Components/TextInput/TextInput.d.ts:788:3
+    788   value?: string | undefined;
+          ~~~~~
+    The expected type comes from property 'value' which is declared here on type 'IntrinsicAttributes & IntrinsicClassAttributes<TextInput> & Readonly<TextInputProps>'
+
+screens/courier/AddVehicleScreen.tsx:209:31 - error TS2339: Property 'isElectric' does not exist on type 'VehicleFormData'.
+
+209               value={formData.isElectric}
+                                  ~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:212:36 - error TS2339: Property 'isElectric' does not exist on type 'VehicleFormData'.
+
+212               thumbColor={formData.isElectric ? colors.primary : "#f4f3f4"}
+                                       ~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:55:9 - error TS2322: Type 'string | number' is not assignable to type 'number'.
+  Type 'string' is not assignable to type 'number'.
+
+55         user_id: profileData.id || user?.id || 0,
+           ~~~~~~~
+
+  types/models.ts:329:3
+    329   user_id: number
+          ~~~~~~~
+    The expected type comes from property 'user_id' which is declared here on type 'CourierProfile'
+
+screens/courier/CourierStatusScreen.tsx:61:35 - error TS2339: Property 'available' does not exist on type 'CourierProfile'.
+
+61         is_available: profileData.available ?? true,
+                                     ~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type '{ showUserLocation: true; showRoute: boolean; initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'showRoute' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'.
+
+218               showRoute={true}
+                  ~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:43:29 - error TS2339: Property 'startDelivery' does not exist on type 'typeof DeliveryService'.
+
+43       await DeliveryService.startDelivery(id.toString())
+                               ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:43:9 - error TS2353: Object literal may only specify known properties, and 'totalEarnings' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+43         totalEarnings: 0,
+           ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:55:22 - error TS2345: Argument of type 'Leaderboard[]' is not assignable to parameter of type 'SetStateAction<Leaderboard[]>'.
+  Type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard[]' is not assignable to type 'import("/home/runner/workspace/mobile/types/models").Leaderboard[]'.
+    Property 'deliveriescount' is missing in type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard' but required in type 'import("/home/runner/workspace/mobile/types/models").Leaderboard'.
+
+55       setLeaderboard(leaderboardData)
+                        ~~~~~~~~~~~~~~~
+
+  types/models.ts:1348:3
+    1348   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/GamificationScreen.tsx:176:57 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+176                   <Text style={styles.statValue}>{stats.averageRating?.toFixed(1) || "N/A"}</Text>
+                                                            ~~~~~~~~~~~~~
+
+  types/models.ts:344:3
+    344   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/GamificationScreen.tsx:263:30 - error TS2551: Property 'deliveries_count' does not exist on type 'Leaderboard'. Did you mean 'deliveriescount'?
+
+263                       {entry.deliveries_count} livraisons • {entry.points} pts
+                                 ~~~~~~~~~~~~~~~~
+
+  types/models.ts:1348:3
+    1348   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/HomeScreen.tsx:23:10 - error TS2614: Module '"../../components/WeatherInfo"' has no exported member 'WeatherInfo'. Did you mean to use 'import WeatherInfo from "../../components/WeatherInfo"' instead?
+
+23 import { WeatherInfo } from '../../components/WeatherInfo'
+            ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:97:43 - error TS2339: Property 'deliveries_count' does not exist on type 'CourierStats'.
+
+97           completed_today: statsResponse?.deliveries_count || 0,
+                                             ~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:98:42 - error TS2339: Property 'earnings' does not exist on type 'CourierStats'.
+
+98           earnings_today: statsResponse?.earnings || 0,
+                                            ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:101:42 - error TS2339: Property 'distance_traveled' does not exist on type 'CourierStats'.
+
+101           total_distance: statsResponse?.distance_traveled || 0,
+                                             ~~~~~~~~~~~~~~~~~
+
+
+Found 33 errors in 12 files.
+
+Errors  Files
+     1  hooks/useDelivery.ts:510
+     1  screens/client/CreateDeliveryScreen.tsx:231
+     2  screens/client/MarketplaceScreen.tsx:23
+     1  screens/client/MerchantDetailsScreen.tsx:26
+     1  screens/client/OrdersScreen.tsx:203
+    11  screens/courier/AddVehicleScreen.tsx:36
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     2  screens/courier/CourierStatusScreen.tsx:55
+     1  screens/courier/DeliveryDetailsScreen.tsx:218
+     1  screens/courier/ExpressDeliveriesScreen.tsx:43
+     4  screens/courier/GamificationScreen.tsx:43
+     4  screens/courier/HomeScreen.tsx:23

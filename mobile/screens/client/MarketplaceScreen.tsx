@@ -395,4 +395,3 @@ const styles = StyleSheet.create({
 })
 
 export default MarketplaceScreen
-```The primary goal is achieved by removing the `commune` property from the `adaptMerchantInfo` function.
