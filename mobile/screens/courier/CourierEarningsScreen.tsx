@@ -64,10 +64,10 @@ const CourierEarningsScreen: React.FC<CourierEarningsScreenProps> = ({ navigatio
       const data = await getCourierEarnings(selectedPeriod)
       setEarningsSummary({
         total_earnings: data.total_earnings,
-        available_balance: data.available_balance,
-        pending_balance: data.pending_balance,
-        total_deliveries: data.total_deliveries,
-        total_distance: data.total_distance || 0,
+        available_balance: (data as any).available_balance || 0,
+        pending_balance: (data as any).pending_balance || 0,
+        total_deliveries: (data as any).total_deliveries || 0,
+        total_distance: (data as any).total_distance || 0,
         average_rating: data.average_rating,
       })
       setEarningsHistory((data.earnings_history || []).map(item => ({

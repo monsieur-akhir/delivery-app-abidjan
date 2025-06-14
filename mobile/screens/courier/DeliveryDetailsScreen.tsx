@@ -215,7 +215,7 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
           <View style={styles.mapContainer}>
             <VTCStyleMap
               showUserLocation={true}
-              deliveryStatus="en_route"
+              deliveryStatus="transit"
             />
           </View>
         </View>
