@@ -214,7 +214,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
         { 
           text: t('common.delete'), 
           style: 'destructive',
-          onPress={() => handleDeleteNotification(notificationId)
+          onPress: () => handleDeleteNotification(notificationId)
         },
       ]
     )
