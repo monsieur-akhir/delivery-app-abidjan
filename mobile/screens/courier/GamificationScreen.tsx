@@ -7,6 +7,7 @@ import * as Animatable from "react-native-animatable"
 import { useAuth } from "../../contexts/AuthContext"
 import GamificationService from "../../services/GamificationService"
 import type { Achievement, Leaderboard, CourierStats } from "../../types/models"
+import { VehicleType } from "../../types"
 
 const GamificationScreen: React.FC = () => {
   const { user } = useAuth()
@@ -72,11 +73,25 @@ const GamificationScreen: React.FC = () => {
       setAchievements(adaptedAchievements)
 
       // Adapter les données du leaderboard
-      const adaptedLeaderboard = leaderboardData.map((entry, index) => ({
-        ...entry,
+      const adaptedLeaderboard: Leaderboard[] = leaderboardData.map((entry: any, index: number) => ({
+        id: entry.id || entry.courier_id || index,
         position: index + 1,
-        total_points: entry.points
+        total_points: entry.total_points || entry.points || 0,
+        courier_id: entry.courier_id || entry.id,
+        courier: {
+          id: entry.courier_id || entry.id,
+          user_id: entry.courier_id || entry.id,
+          vehicle_type: 'motorcycle' as VehicleType,
+          license_plate: '',
+          is_available: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          name: entry.name || entry.courier?.name || 'Utilisateur inconnu',
+          profile_picture: entry.profile_picture || entry.courier?.profile_picture,
+          total_deliveries: entry.deliveries_count || entry.total_deliveries || 0
+        }
       }))
+
       setLeaderboard(adaptedLeaderboard)
     } catch (error) {
       console.error("Error loading gamification data:", error)
@@ -271,9 +286,9 @@ const GamificationScreen: React.FC = () => {
                   <Avatar.Image
                     size={40}
                     source={
-                      entry.profile_picture
-                        ? { uri: entry.profile_picture }
-                        : require("../../assets/images/default-avatar.png")
+                      entry.courier?.profile_picture
+                        ? { uri: entry.courier.profile_picture }
+                        : require('../../assets/images/default-avatar.png')
                     }
                   />
 
@@ -282,10 +297,10 @@ const GamificationScreen: React.FC = () => {
                       styles.leaderboardName,
                       entry.courier_id === user?.id && styles.currentUser
                     ]}>
-                      {entry.courier_id === user?.id ? "Vous" : entry.name}
+                      {entry.courier_id === user?.id ? "Vous" : (entry.courier?.name || 'Utilisateur inconnu')}
                     </Text>
                     <Text style={styles.leaderboardStats}>
-                      {entry.deliveries_count || 0} livraisons • {entry.points || 0} pts
+                      {entry.courier?.total_deliveries || 0} livraisons • {entry.total_points || 0} pts
                     </Text>
                   </View>
                 </View>

@@ -63,8 +63,8 @@ const CourierProfileScreen: React.FC = () => {
         />
         <Text style={styles.name}>{`${user?.name}`}</Text>
         <View style={styles.ratingContainer}>
-          <StarRating rating={stats.average_rating} size={20} />
-          <Text style={styles.ratingText}>{stats.average_rating.toFixed(1)}</Text>
+          <StarRating rating={stats.average_rating || 0} size={20} />
+          <Text style={styles.ratingText}>{(stats.average_rating || 0).toFixed(1)}</Text>
         </View>
         <Text style={styles.role}>{t("profile.courier")}</Text>
       </View>
@@ -85,7 +85,7 @@ const CourierProfileScreen: React.FC = () => {
             </View>
             <View style={styles.statItem}>
               <FeatherIcon name="map-pin" size={24} color="#FF6B00" />
-              <Text style={styles.statValue}>{((stats.totalDistance || (stats as any).total_distance || 0) / 1000).toFixed(1)} km</Text>
+              <Text style={styles.statValue}>{((stats.distance_traveled || 0) / 1000).toFixed(1)} km</Text>
               <Text style={styles.statLabel}>{t("profile.distance")}</Text>
             </View>
           </View>
@@ -113,7 +113,8 @@ const CourierProfileScreen: React.FC = () => {
         <Card.Title title={t("profile.badges")} />
         <Card.Content>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesScroll}>
-            {stats.badges?.map((badge: any) => (
+            {/* Badges will be implemented later */}
+            {false && (
               <View key={badge.id} style={styles.badgeItem}>
                 <View style={styles.badgeIconContainer}>
                   <FeatherIcon name={badge.icon as any} size={24} color="#FFFFFF" />
