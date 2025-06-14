@@ -22,6 +22,7 @@ import GamificationService from '../../services/GamificationService'
 import { formatPrice, formatDistance } from '../../utils/formatters'
 import { WeatherInfo } from '../../components/WeatherInfo'
 import { Delivery, CourierStats, AvailableDelivery as AvailableDeliveryType } from '../../types/models'
+import DeliveryService from '../../services/DeliveryService'
 
 const { width } = Dimensions.get('window')
 
@@ -69,26 +70,32 @@ const CourierHomeScreen: React.FC = () => {
     try {
       // Charger les livraisons disponibles
       await getAvailableDeliveries()
-      const response = await GamificationService.getAvailableDeliveries()
-      setAvailableDeliveries((response || []).map(delivery => ({
+      const response = await DeliveryService.getAvailableDeliveries()
+      setAvailableDeliveries((response || []).map((delivery: any) => ({
         ...delivery,
-        package_weight: delivery.package_weight || 0
+        pickup_address: delivery.pickup_address || 'Adresse non définie',
+        delivery_address: delivery.delivery_address || 'Adresse non définie',
+        package_type: delivery.package_type || 'standard',
+        proposed_price: delivery.proposed_price || 0
       })))
 
       // Charger les livraisons actives
       await getCourierActiveDeliveries()
-      const activeResponse = await GamificationService.getCourierActiveDeliveries()
-      setActiveDeliveries((activeResponse || []).map(delivery => ({
+      const activeResponse = await DeliveryService.getCourierActiveDeliveries()
+      setActiveDeliveries((activeResponse || []).map((delivery: any) => ({
         ...delivery,
-        client_name: delivery.client?.full_name || 'Client inconnu'
+        pickup_address: delivery.pickup_address || 'Adresse non définie',
+        delivery_address: delivery.delivery_address || 'Adresse non définie',
+        package_type: delivery.package_type || 'standard',
+        proposed_price: delivery.proposed_price || 0
       })))
 
       // Charger les statistiques
       if (user?.id) {
-        const statsResponse = await GamificationService.getCourierStats(user.id.toString())
+        const statsResponse = await GamificationService.getCourierStats()
         setStats({
-          completed_today: statsResponse?.completed_today || 0,
-          earnings_today: statsResponse?.earnings_today || 0,
+          completed_deliveries: statsResponse?.completed_deliveries || 0,
+          total_earnings: statsResponse?.total_earnings || 0,
           total_deliveries: statsResponse?.total_deliveries || 0,
           average_rating: statsResponse?.average_rating || 0,
           total_distance: statsResponse?.total_distance || 0,
@@ -137,7 +144,7 @@ const CourierHomeScreen: React.FC = () => {
   const renderActiveDelivery = ({ item }: { item: ActiveDelivery }) => (
     <Card style={styles.deliveryCard} key={item.id}>
       <TouchableOpacity
-        onPress={() => navigation.navigate('CourierTrackDelivery' as never, { deliveryId: item.id } as never)}
+        onPress={() => navigation.navigate('CourierTrackDelivery', { deliveryId: item.id.toString() })}
       >
         <Card.Content>
           <View style={styles.deliveryHeader}>
@@ -165,7 +172,7 @@ const CourierHomeScreen: React.FC = () => {
 
           <Button
             mode="contained"
-            onPress={() => navigation.navigate('CourierTrackDelivery' as never, { deliveryId: item.id } as never)}
+            onPress={() => navigation.navigate('CourierTrackDelivery', { deliveryId: item.id.toString() })}
             style={styles.trackButton}
           >
             Suivre la livraison

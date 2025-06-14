@@ -47,22 +47,22 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
       },
       {
         text: t("common.confirm"),
-        onPress: clearAllNotifications,
+        onPress": clearAllNotifications,
       },
     ])
   }
 
   const handleNotificationPress = (notification: Notification) => {
-    markAsRead(notification.id)
+    // Mark as read functionality would be implemented here
 
-    if (notification.type === "delivery_assigned" || notification.type === "delivery_status") {
-      navigation.navigate("TrackDelivery", { deliveryId: notification.data.delivery_id })
-    } else if (notification.type === "bid_accepted") {
-      navigation.navigate("CourierTrackDelivery", { deliveryId: notification.data.delivery_id })
-    } else if (notification.type === "payment") {
-      navigation.navigate("Wallet", {})
-    } else if (notification.type === "delivery_completed") {
-      navigation.navigate("RateDelivery", { deliveryId: notification.data.delivery_id })
+    if (notification.type === 'delivery_assigned' && notification.data?.delivery_id) {
+      navigation.navigate("TrackDelivery", { deliveryId: notification.data.delivery_id.toString() })
+    } else if (notification.type === 'delivery_status' && notification.data?.delivery_id) {
+      navigation.navigate("CourierTrackDelivery", { deliveryId: notification.data.delivery_id.toString() })
+    } else if (notification.type === 'payment') {
+      navigation.navigate("Wallet")
+    } else if (notification.type === 'delivery_completed' && notification.data?.delivery_id) {
+      navigation.navigate("RateDelivery", { deliveryId: notification.data.delivery_id.toString() })
     }
   }
 
@@ -74,7 +74,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
       },
       {
         text: t("common.confirm"),
-        onPress: () => deleteNotification(id),
+        onPress": () => deleteNotification(id),
       },
     ])
   }

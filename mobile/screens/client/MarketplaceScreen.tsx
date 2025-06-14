@@ -90,13 +90,13 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (merchant) => merchant.name.toLowerCase().includes(query) || (merchant.description && merchant.description.toLowerCase().includes(query)),
+        (merchant) => merchant.name.toLowerCase().includes(query) || merchant.category.toLowerCase().includes(query),
       )
     }
 
     // Filtrer par catégorie
     if (selectedCategory) {
-      filtered = filtered.filter((merchant) => merchant.categories && merchant.categories.includes(selectedCategory))
+      filtered = filtered.filter((merchant) => merchant.category === selectedCategory)
     }
 
     // Filtrer par commune
@@ -158,7 +158,7 @@ const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({ navigation }) => 
         </View>
 
         <Text style={styles.merchantDescription} numberOfLines={2}>
-          {item.description}
+          {item.address}
         </Text>
 
         <View style={styles.merchantFooter}>

@@ -92,6 +92,10 @@ export interface VehicleRecommendationData {
   package_size: string
   is_fragile: boolean
   distance: number
+  pickup_lat?: number
+  pickup_lng?: number
+  delivery_lat?: number
+  delivery_lng?: number
 }
 
 export interface VehicleRecommendation {
@@ -492,19 +496,19 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
-const getVehicleRecommendation = useCallback(async (data: VehicleRecommendationData): Promise<VehicleRecommendation | null> => {
+const getVehicleRecommendation = useCallback(async (data: VehicleRecommendationData): Promise<VehicleRecommendation> => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      
+      if (!data.pickup_lat || !data.pickup_lng || !data.delivery_lat || !data.delivery_lng) {
+        throw new Error('Coordonnées manquantes')
+      }
+
       const recommendation = await DeliveryService.getVehicleRecommendation(data)
-      setState(prev => ({ ...prev, isLoading: false }))
+      if (!recommendation) {
+        throw new Error('Aucune recommandation disponible')
+      }
       return recommendation
     } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
-        error: error instanceof Error ? error.message : 'Erreur lors de la recommandation',
-        isLoading: false 
-      }))
+      console.error('Erreur lors de la recommandation de véhicule:', error)
       throw error
     }
   }, [])
