@@ -1,15 +1,15 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { API_URL } from '@/config'
 
 /**
  * Télécharger une image
  * @param {FormData} formData - Données du formulaire avec le fichier
  * @returns {Promise} - Promesse avec l'URL de l'image téléchargée
  */
-export const uploadImage = (formData) => {
+export const uploadImage = formData => {
   return axios.post(`${API_URL}/storage/images`, formData, {
     headers: {
-      "Content-Type": "multipart/form-data",
+      'Content-Type': 'multipart/form-data',
     },
   })
 }
@@ -19,10 +19,10 @@ export const uploadImage = (formData) => {
  * @param {FormData} formData - Données du formulaire avec le fichier
  * @returns {Promise} - Promesse avec l'URL du fichier téléchargé
  */
-export const uploadFile = (formData) => {
+export const uploadFile = formData => {
   return axios.post(`${API_URL}/storage/files`, formData, {
     headers: {
-      "Content-Type": "multipart/form-data",
+      'Content-Type': 'multipart/form-data',
     },
   })
 }
@@ -32,7 +32,7 @@ export const uploadFile = (formData) => {
  * @param {String} fileUrl - URL du fichier à supprimer
  * @returns {Promise} - Promesse avec le résultat de la suppression
  */
-export const deleteFile = (fileUrl) => {
+export const deleteFile = fileUrl => {
   return axios.delete(`${API_URL}/storage/files`, {
     params: { url: fileUrl },
   })

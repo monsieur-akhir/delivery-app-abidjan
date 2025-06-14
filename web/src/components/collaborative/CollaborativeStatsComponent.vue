@@ -113,7 +113,12 @@
               <tr v-for="courier in stats.topCouriers" :key="courier.id">
                 <td>
                   <div class="courier-info">
-                    <img v-if="courier.avatar" :src="courier.avatar" :alt="courier.name" class="courier-avatar" />
+                    <img
+                      v-if="courier.avatar"
+                      :src="courier.avatar"
+                      :alt="courier.name"
+                      class="courier-avatar"
+                    />
                     <div v-else class="courier-avatar-fallback">
                       {{ getInitials(courier.name) }}
                     </div>
@@ -171,30 +176,30 @@ import collaborativeApi from '@/api/collaborative'
 
 export default {
   name: 'CollaborativeStatsComponent',
-  
+
   setup() {
     const stats = ref({})
     const loading = ref(true)
     const error = ref(null)
     const selectedPeriod = ref('month')
-    
+
     const deliveriesChart = ref(null)
     const statusChart = ref(null)
-    
+
     let deliveriesChartInstance = null
     let statusChartInstance = null
-    
+
     const fetchStats = async () => {
       try {
         loading.value = true
         error.value = null
-        
+
         const response = await collaborativeApi.getCollaborativeStats({
-          period: selectedPeriod.value
+          period: selectedPeriod.value,
         })
-        
+
         stats.value = response
-        
+
         // Mettre à jour les graphiques
         await nextTick()
         updateCharts()
@@ -205,115 +210,123 @@ export default {
         loading.value = false
       }
     }
-    
+
     const updateCharts = () => {
       updateDeliveriesChart()
       updateStatusChart()
     }
-    
+
     const updateDeliveriesChart = () => {
       if (!deliveriesChart.value || !stats.value.deliveriesOverTime) return
-      
+
       // Détruire le graphique existant
       if (deliveriesChartInstance) {
         deliveriesChartInstance.destroy()
       }
-      
+
       const ctx = deliveriesChart.value.getContext('2d')
       deliveriesChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: stats.value.deliveriesOverTime.labels,
-          datasets: [{
-            label: 'Livraisons collaboratives',
-            data: stats.value.deliveriesOverTime.data,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            tension: 0.4,
-            fill: true
-          }]
+          datasets: [
+            {
+              label: 'Livraisons collaboratives',
+              data: stats.value.deliveriesOverTime.data,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+              fill: true,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
+              beginAtZero: true,
+            },
           },
           plugins: {
             legend: {
-              display: false
-            }
-          }
-        }
+              display: false,
+            },
+          },
+        },
       })
     }
-    
+
     const updateStatusChart = () => {
       if (!statusChart.value || !stats.value.statusDistribution) return
-      
+
       // Détruire le graphique existant
       if (statusChartInstance) {
         statusChartInstance.destroy()
       }
-      
+
       const ctx = statusChart.value.getContext('2d')
       statusChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: stats.value.statusDistribution.labels,
-          datasets: [{
-            data: stats.value.statusDistribution.data,
-            backgroundColor: [
-              '#10b981', // Terminées
-              '#3b82f6', // En cours
-              '#f59e0b', // En attente
-              '#ef4444'  // Annulées
-            ]
-          }]
+          datasets: [
+            {
+              data: stats.value.statusDistribution.data,
+              backgroundColor: [
+                '#10b981', // Terminées
+                '#3b82f6', // En cours
+                '#f59e0b', // En attente
+                '#ef4444', // Annulées
+              ],
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'bottom'
-            }
-          }
-        }
+              position: 'bottom',
+            },
+          },
+        },
       })
     }
-    
-    const formatCurrency = (amount) => {
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
+        minimumFractionDigits: 0,
       }).format(amount)
     }
-    
-    const getChangeClass = (change) => {
+
+    const getChangeClass = change => {
       if (change > 0) return 'positive'
       if (change < 0) return 'negative'
       return 'neutral'
     }
-    
-    const getChangeIcon = (change) => {
+
+    const getChangeIcon = change => {
       if (change > 0) return 'fas fa-arrow-up'
       if (change < 0) return 'fas fa-arrow-down'
       return 'fas fa-minus'
     }
-    
-    const getInitials = (name) => {
+
+    const getInitials = name => {
       if (!name) return '?'
-      return name.split(' ').map(n => n[0]).join('').toUpperCase()
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
     }
-    
+
     onMounted(() => {
       fetchStats()
     })
-    
+
     return {
       stats,
       loading,
@@ -325,9 +338,9 @@ export default {
       formatCurrency,
       getChangeClass,
       getChangeIcon,
-      getInitials
+      getInitials,
     }
-  }
+  },
 }
 </script>
 
@@ -377,7 +390,9 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container i {
@@ -581,11 +596,11 @@ export default {
   .charts-section {
     grid-template-columns: 1fr;
   }
-  
+
   .details-section {
     grid-template-columns: 1fr;
   }
-  
+
   .metrics-grid {
     grid-template-columns: 1fr;
   }

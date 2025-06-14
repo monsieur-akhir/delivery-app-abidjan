@@ -1,4 +1,3 @@
-
 <template>
   <div class="couriers-management">
     <div class="page-header">
@@ -49,28 +48,18 @@
         <i class="fas fa-spinner fa-spin"></i>
         <p>Chargement des coursiers...</p>
       </div>
-      
+
       <div v-else-if="couriers.length === 0" class="empty-state">
         <img src="/empty-couriers.svg" alt="Aucun coursier" />
         <h3>Aucun coursier trouvé</h3>
         <p>Invitez des coursiers pour commencer à livrer vos commandes</p>
-        <button @click="showInviteModal = true" class="btn btn-primary">
-          Inviter un coursier
-        </button>
+        <button @click="showInviteModal = true" class="btn btn-primary">Inviter un coursier</button>
       </div>
 
-      <div
-        v-else
-        v-for="courier in couriers"
-        :key="courier.id"
-        class="courier-card"
-      >
+      <div v-else v-for="courier in couriers" :key="courier.id" class="courier-card">
         <div class="courier-header">
           <div class="courier-avatar">
-            <img
-              :src="courier.profile_picture || '/default-avatar.png'"
-              :alt="courier.full_name"
-            />
+            <img :src="courier.profile_picture || '/default-avatar.png'" :alt="courier.full_name" />
             <div v-if="courier.is_online" class="online-indicator"></div>
           </div>
           <div class="courier-info">
@@ -100,8 +89,8 @@
                   <i :class="courier.is_favorite ? 'fas fa-star-half-alt' : 'fas fa-star'"></i>
                   {{ courier.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
                 </button>
-                <button 
-                  @click="sendMessage(courier)" 
+                <button
+                  @click="sendMessage(courier)"
                   class="dropdown-item"
                   :disabled="!courier.is_online"
                 >
@@ -109,16 +98,16 @@
                   Envoyer un message
                 </button>
                 <div class="dropdown-divider"></div>
-                <button 
-                  @click="suspendCourier(courier)" 
+                <button
+                  @click="suspendCourier(courier)"
                   class="dropdown-item danger"
                   v-if="courier.status === 'active'"
                 >
                   <i class="fas fa-ban"></i>
                   Suspendre
                 </button>
-                <button 
-                  @click="reactivateCourier(courier)" 
+                <button
+                  @click="reactivateCourier(courier)"
                   class="dropdown-item"
                   v-if="courier.status === 'suspended'"
                 >
@@ -161,8 +150,8 @@
             <i class="fas fa-clock"></i>
             <span>Dernière activité: {{ formatLastActivity(courier.last_activity) }}</span>
           </div>
-          <button 
-            @click="assignDelivery(courier)" 
+          <button
+            @click="assignDelivery(courier)"
             class="btn btn-sm btn-outline"
             :disabled="!courier.is_online || courier.status !== 'active'"
           >
@@ -174,7 +163,7 @@
 
     <!-- Pagination -->
     <div class="pagination" v-if="totalPages > 1">
-      <button 
+      <button
         @click="changePage(currentPage - 1)"
         :disabled="currentPage === 1"
         class="btn btn-outline"
@@ -182,7 +171,7 @@
         <i class="fas fa-chevron-left"></i>
         Précédent
       </button>
-      
+
       <div class="page-numbers">
         <button
           v-for="page in visiblePages"
@@ -193,8 +182,8 @@
           {{ page }}
         </button>
       </div>
-      
-      <button 
+
+      <button
         @click="changePage(currentPage + 1)"
         :disabled="currentPage === totalPages"
         class="btn btn-outline"
@@ -247,16 +236,14 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button @click="closeInviteModal" class="btn btn-outline">
-            Annuler
-          </button>
-          <button 
-            @click="inviteCourier" 
+          <button @click="closeInviteModal" class="btn btn-outline">Annuler</button>
+          <button
+            @click="inviteCourier"
             class="btn btn-primary"
             :disabled="!inviteForm.phone || inviting"
           >
             <i v-if="inviting" class="fas fa-spinner fa-spin"></i>
-            {{ inviting ? 'Envoi...' : 'Envoyer l\'invitation' }}
+            {{ inviting ? 'Envoi...' : "Envoyer l'invitation" }}
           </button>
         </div>
       </div>
@@ -275,10 +262,10 @@
 <script>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  fetchBusinessCouriers, 
+import {
+  fetchBusinessCouriers,
   inviteBusinessCourier,
-  toggleBusinessCourierFavorite 
+  toggleBusinessCourierFavorite,
 } from '@/api/business'
 import { useToast } from '@/composables/useToast'
 import CourierDetailsModal from '@/components/modals/CourierDetailsModal.vue'
@@ -286,7 +273,7 @@ import CourierDetailsModal from '@/components/modals/CourierDetailsModal.vue'
 export default {
   name: 'BusinessCouriersManagementView',
   components: {
-    CourierDetailsModal
+    CourierDetailsModal,
   },
   setup() {
     const router = useRouter()
@@ -298,7 +285,7 @@ export default {
     const statusFilter = ref('')
     const vehicleTypeFilter = ref('')
     const sortBy = ref('created_at')
-    
+
     const currentPage = ref(1)
     const totalPages = ref(1)
     const itemsPerPage = 12
@@ -308,7 +295,7 @@ export default {
     const inviteForm = ref({
       phone: '',
       message: '',
-      commission: 15
+      commission: 15,
     })
 
     const selectedCourier = ref(null)
@@ -317,7 +304,7 @@ export default {
       const pages = []
       const start = Math.max(1, currentPage.value - 2)
       const end = Math.min(totalPages.value, start + 4)
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i)
       }
@@ -333,7 +320,7 @@ export default {
           search: searchQuery.value,
           status: statusFilter.value,
           vehicle_type: vehicleTypeFilter.value,
-          sort: sortBy.value
+          sort: sortBy.value,
         }
 
         const response = await fetchBusinessCouriers(params)
@@ -359,18 +346,18 @@ export default {
       }
     })()
 
-    const changePage = (page) => {
+    const changePage = page => {
       if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
         loadCouriers(page)
       }
     }
 
-    const viewCourierDetails = (courier) => {
+    const viewCourierDetails = courier => {
       selectedCourier.value = courier
     }
 
-    const toggleFavorite = async (courier) => {
+    const toggleFavorite = async courier => {
       try {
         await toggleBusinessCourierFavorite(courier.id, !courier.is_favorite)
         courier.is_favorite = !courier.is_favorite
@@ -384,17 +371,17 @@ export default {
       }
     }
 
-    const sendMessage = (courier) => {
+    const sendMessage = courier => {
       // Rediriger vers l'interface de messagerie
       router.push(`/business/messages?courier=${courier.id}`)
     }
 
-    const assignDelivery = (courier) => {
+    const assignDelivery = courier => {
       // Rediriger vers la création de livraison avec le coursier pré-sélectionné
       router.push(`/business/deliveries/new?courier=${courier.id}`)
     }
 
-    const suspendCourier = async (courier) => {
+    const suspendCourier = async courier => {
       if (confirm(`Êtes-vous sûr de vouloir suspendre ${courier.full_name} ?`)) {
         try {
           // API call to suspend courier
@@ -407,7 +394,7 @@ export default {
       }
     }
 
-    const reactivateCourier = async (courier) => {
+    const reactivateCourier = async courier => {
       try {
         // API call to reactivate courier
         showToast('Coursier réactivé avec succès', 'success')
@@ -426,8 +413,8 @@ export default {
         closeInviteModal()
         loadCouriers(currentPage.value)
       } catch (error) {
-        console.error('Erreur lors de l\'envoi de l\'invitation:', error)
-        showToast('Erreur lors de l\'envoi de l\'invitation', 'error')
+        console.error("Erreur lors de l'envoi de l'invitation:", error)
+        showToast("Erreur lors de l'envoi de l'invitation", 'error')
       } finally {
         inviting.value = false
       }
@@ -438,61 +425,61 @@ export default {
       inviteForm.value = {
         phone: '',
         message: '',
-        commission: 15
+        commission: 15,
       }
     }
 
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'EUR'
+        currency: 'EUR',
       }).format(amount / 100)
     }
 
-    const formatLastActivity = (date) => {
+    const formatLastActivity = date => {
       if (!date) return 'Jamais'
-      
+
       const now = new Date()
       const activity = new Date(date)
       const diff = now - activity
-      
+
       const minutes = Math.floor(diff / 60000)
       const hours = Math.floor(diff / 3600000)
       const days = Math.floor(diff / 86400000)
-      
+
       if (minutes < 60) return `Il y a ${minutes} min`
       if (hours < 24) return `Il y a ${hours}h`
       return `Il y a ${days} jour(s)`
     }
 
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       const labels = {
         active: 'Actif',
         inactive: 'Inactif',
         suspended: 'Suspendu',
-        pending_verification: 'En attente'
+        pending_verification: 'En attente',
       }
       return labels[status] || status
     }
 
-    const getVehicleIcon = (type) => {
+    const getVehicleIcon = type => {
       const icons = {
         motorcycle: 'fas fa-motorcycle',
         scooter: 'fas fa-motorcycle',
         bicycle: 'fas fa-bicycle',
         van: 'fas fa-truck',
-        car: 'fas fa-car'
+        car: 'fas fa-car',
       }
       return icons[type] || 'fas fa-question'
     }
 
-    const getVehicleLabel = (type) => {
+    const getVehicleLabel = type => {
       const labels = {
         motorcycle: 'Moto',
         scooter: 'Scooter',
         bicycle: 'Vélo',
         van: 'Camionnette',
-        car: 'Voiture'
+        car: 'Voiture',
       }
       return labels[type] || type
     }
@@ -530,9 +517,9 @@ export default {
       formatLastActivity,
       getStatusLabel,
       getVehicleIcon,
-      getVehicleLabel
+      getVehicleLabel,
     }
-  }
+  },
 }
 </script>
 
@@ -552,7 +539,7 @@ export default {
 
 .page-header h1 {
   margin: 0;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .filters-section {
@@ -573,13 +560,13 @@ export default {
   left: 15px;
   top: 50%;
   transform: translateY(-50%);
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .search-box input {
   width: 100%;
   padding: 12px 12px 12px 45px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 16px;
 }
@@ -592,7 +579,7 @@ export default {
 
 .filters select {
   padding: 10px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
   background: white;
 }
@@ -639,7 +626,7 @@ export default {
   right: 2px;
   width: 12px;
   height: 12px;
-  background: #10B981;
+  background: #10b981;
   border: 2px solid white;
   border-radius: 50%;
 }
@@ -650,12 +637,12 @@ export default {
 
 .courier-info h3 {
   margin: 0 0 5px 0;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .courier-phone {
   margin: 0 0 8px 0;
-  color: #6B7280;
+  color: #6b7280;
   font-size: 14px;
 }
 
@@ -671,13 +658,22 @@ export default {
   font-weight: 500;
 }
 
-.status-badge.active { background: #D1FAE5; color: #059669; }
-.status-badge.inactive { background: #F3F4F6; color: #6B7280; }
-.status-badge.suspended { background: #FEE2E2; color: #DC2626; }
+.status-badge.active {
+  background: #d1fae5;
+  color: #059669;
+}
+.status-badge.inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.status-badge.suspended {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 .favorite-badge {
-  background: #FEF3C7;
-  color: #D97706;
+  background: #fef3c7;
+  color: #d97706;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
@@ -697,7 +693,7 @@ export default {
   border: none;
   padding: 8px;
   cursor: pointer;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .dropdown-menu {
@@ -705,7 +701,7 @@ export default {
   top: 100%;
   right: 0;
   background: white;
-  border: 1px solid #E5E7EB;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 200px;
@@ -731,16 +727,16 @@ export default {
 }
 
 .dropdown-item:hover {
-  background: #F9FAFB;
+  background: #f9fafb;
 }
 
 .dropdown-item.danger {
-  color: #DC2626;
+  color: #dc2626;
 }
 
 .dropdown-divider {
   height: 1px;
-  background: #E5E7EB;
+  background: #e5e7eb;
   margin: 5px 0;
 }
 
@@ -750,7 +746,7 @@ export default {
   gap: 15px;
   margin-bottom: 15px;
   padding: 15px;
-  background: #F9FAFB;
+  background: #f9fafb;
   border-radius: 8px;
 }
 
@@ -767,22 +763,28 @@ export default {
 
 .stat-item span {
   font-weight: 600;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .stat-item small {
-  color: #6B7280;
+  color: #6b7280;
   font-size: 12px;
 }
 
-.text-yellow { color: #F59E0B; }
-.text-blue { color: #3B82F6; }
-.text-green { color: #10B981; }
+.text-yellow {
+  color: #f59e0b;
+}
+.text-blue {
+  color: #3b82f6;
+}
+.text-green {
+  color: #10b981;
+}
 
 .courier-vehicle {
   margin-bottom: 15px;
   padding: 10px;
-  background: #F3F4F6;
+  background: #f3f4f6;
   border-radius: 6px;
 }
 
@@ -796,7 +798,7 @@ export default {
 .vehicle-plate {
   margin-left: auto;
   font-weight: 600;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .courier-footer {
@@ -804,7 +806,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding-top: 15px;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid #e5e7eb;
 }
 
 .last-activity {
@@ -812,7 +814,7 @@ export default {
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .pagination {
@@ -830,7 +832,7 @@ export default {
 
 .btn {
   padding: 8px 16px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
   background: white;
   color: #374151;
@@ -843,17 +845,17 @@ export default {
 }
 
 .btn:hover {
-  background: #F9FAFB;
+  background: #f9fafb;
 }
 
 .btn.btn-primary {
-  background: #3B82F6;
+  background: #3b82f6;
   color: white;
-  border-color: #3B82F6;
+  border-color: #3b82f6;
 }
 
 .btn.btn-primary:hover {
-  background: #2563EB;
+  background: #2563eb;
 }
 
 .btn.btn-outline {
@@ -866,9 +868,9 @@ export default {
 }
 
 .btn.active {
-  background: #3B82F6;
+  background: #3b82f6;
   color: white;
-  border-color: #3B82F6;
+  border-color: #3b82f6;
 }
 
 .btn:disabled {
@@ -880,7 +882,7 @@ export default {
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .empty-state img {
@@ -891,7 +893,7 @@ export default {
 }
 
 .empty-state h3 {
-  color: #1F2937;
+  color: #1f2937;
   margin-bottom: 10px;
 }
 
@@ -922,12 +924,12 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-header h2 {
   margin: 0;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .close-btn {
@@ -935,7 +937,7 @@ export default {
   border: none;
   font-size: 18px;
   cursor: pointer;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .modal-body {
@@ -957,7 +959,7 @@ export default {
 .form-group textarea {
   width: 100%;
   padding: 10px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 16px;
 }
@@ -965,7 +967,7 @@ export default {
 .form-group small {
   display: block;
   margin-top: 5px;
-  color: #6B7280;
+  color: #6b7280;
   font-size: 14px;
 }
 
@@ -974,29 +976,29 @@ export default {
   justify-content: flex-end;
   gap: 10px;
   padding: 20px;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid #e5e7eb;
 }
 
 @media (max-width: 768px) {
   .couriers-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .filters {
     grid-template-columns: 1fr;
   }
-  
+
   .courier-stats {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-  
+
   .courier-footer {
     flex-direction: column;
     gap: 10px;
     align-items: stretch;
   }
-  
+
   .modal {
     width: 95%;
   }

@@ -86,8 +86,14 @@
                     <td>
                       <div class="user-info">
                         <div class="user-avatar">
-                          <img v-if="courier.profile_picture" :src="courier.profile_picture" :alt="courier.name">
-                          <div v-else class="avatar-placeholder">{{ getInitials(courier.name) }}</div>
+                          <img
+                            v-if="courier.profile_picture"
+                            :src="courier.profile_picture"
+                            :alt="courier.name"
+                          />
+                          <div v-else class="avatar-placeholder">
+                            {{ getInitials(courier.name) }}
+                          </div>
                         </div>
                         <div class="user-details">
                           <div class="user-name">{{ courier.name }}</div>
@@ -120,9 +126,7 @@
           <div class="card-header">
             <h2>Livraisons récentes</h2>
             <div class="card-actions">
-              <router-link to="/manager/deliveries" class="btn-link">
-                Voir tout
-              </router-link>
+              <router-link to="/manager/deliveries" class="btn-link"> Voir tout </router-link>
             </div>
           </div>
           <div class="card-body">
@@ -181,52 +185,52 @@ export default {
     const deliveriesChart = ref(null)
     const revenueChart = ref(null)
     const chartPeriod = ref('week')
-    
+
     const stats = computed(() => {
       if (!dashboardData.value) return []
-      
+
       return [
         {
           label: 'Utilisateurs',
           value: getTotalUsers(),
           icon: 'users',
-          color: 'primary'
+          color: 'primary',
         },
         {
           label: 'Livraisons actives',
           value: dashboardData.value.active_deliveries || 0,
           icon: 'truck',
-          color: 'info'
+          color: 'info',
         },
         {
           label: 'Livraisons terminées',
           value: dashboardData.value.completed_deliveries || 0,
           icon: 'check',
-          color: 'success'
+          color: 'success',
         },
         {
           label: 'Revenus totaux',
           value: formatPrice(dashboardData.value.total_revenue || 0) + ' FCFA',
           icon: 'money-bill',
-          color: 'warning'
-        }
+          color: 'warning',
+        },
       ]
     })
-    
+
     const topCouriers = computed(() => {
       return dashboardData.value?.top_couriers || []
     })
-    
+
     const recentDeliveries = computed(() => {
       return dashboardData.value?.recent_deliveries || []
     })
-    
+
     function getTotalUsers() {
       if (!dashboardData.value?.total_users) return 0
-      
+
       return Object.values(dashboardData.value.total_users).reduce((sum, count) => sum + count, 0)
     }
-    
+
     async function loadDashboardData() {
       try {
         loading.value = true
@@ -238,23 +242,23 @@ export default {
         loading.value = false
       }
     }
-    
+
     function renderCharts() {
       if (!dashboardData.value) return
-      
+
       renderDeliveriesChart()
       renderRevenueChart()
     }
-    
+
     function renderDeliveriesChart() {
       const ctx = deliveriesChart.value.getContext('2d')
-      
+
       // Préparer les données pour le graphique
       const deliveryStats = dashboardData.value.delivery_stats_by_day || {}
       const dates = Object.keys(deliveryStats).sort()
       const createdData = dates.map(date => deliveryStats[date].created || 0)
       const completedData = dates.map(date => deliveryStats[date].completed || 0)
-      
+
       // Créer le graphique
       new Chart(ctx, {
         type: 'line',
@@ -267,7 +271,7 @@ export default {
               borderColor: '#2196F3',
               backgroundColor: 'rgba(33, 150, 243, 0.1)',
               tension: 0.4,
-              fill: true
+              fill: true,
             },
             {
               label: 'Terminées',
@@ -275,9 +279,9 @@ export default {
               borderColor: '#4CAF50',
               backgroundColor: 'rgba(76, 175, 80, 0.1)',
               tension: 0.4,
-              fill: true
-            }
-          ]
+              fill: true,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -289,34 +293,42 @@ export default {
             tooltip: {
               mode: 'index',
               intersect: false,
-            }
+            },
           },
           scales: {
             y: {
               beginAtZero: true,
               ticks: {
-                precision: 0
-              }
-            }
-          }
-        }
+                precision: 0,
+              },
+            },
+          },
+        },
       })
     }
-    
+
     function renderRevenueChart() {
       const ctx = revenueChart.value.getContext('2d')
-      
+
       // Préparer les données pour le graphique
       const revenueByCommune = dashboardData.value.revenue_by_commune || {}
       const communes = Object.keys(revenueByCommune)
       const revenueData = communes.map(commune => revenueByCommune[commune])
-      
+
       // Couleurs pour les communes
       const colors = [
-        '#FF6B00', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0',
-        '#E91E63', '#3F51B5', '#00BCD4', '#009688', '#FF5722'
+        '#FF6B00',
+        '#4CAF50',
+        '#2196F3',
+        '#FFC107',
+        '#9C27B0',
+        '#E91E63',
+        '#3F51B5',
+        '#00BCD4',
+        '#009688',
+        '#FF5722',
       ]
-      
+
       // Créer le graphique
       new Chart(ctx, {
         type: 'doughnut',
@@ -326,9 +338,9 @@ export default {
             {
               data: revenueData,
               backgroundColor: colors.slice(0, communes.length),
-              borderWidth: 1
-            }
-          ]
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -339,32 +351,32 @@ export default {
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function (context) {
                   const value = context.raw
                   return `${context.label}: ${formatPrice(value)} FCFA`
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       })
     }
-    
+
     function changeChartPeriod(period) {
       chartPeriod.value = period
       // Recharger les données avec la nouvelle période
       loadDashboardData()
     }
-    
+
     function refreshData() {
       loadDashboardData()
     }
-    
+
     function exportData() {
       // Implémenter l'exportation des données
-      alert('Fonctionnalité d\'exportation à implémenter')
+      alert("Fonctionnalité d'exportation à implémenter")
     }
-    
+
     function getInitials(name) {
       if (!name) return ''
       return name
@@ -373,12 +385,12 @@ export default {
         .join('')
         .toUpperCase()
     }
-    
+
     function getRankClass(index) {
       const classes = ['rank-1', 'rank-2', 'rank-3']
       return index < 3 ? classes[index] : ''
     }
-    
+
     function getStatusClass(status) {
       const statusClasses = {
         pending: 'status-pending',
@@ -386,12 +398,12 @@ export default {
         in_progress: 'status-in-progress',
         delivered: 'status-delivered',
         completed: 'status-completed',
-        cancelled: 'status-cancelled'
+        cancelled: 'status-cancelled',
       }
-      
+
       return statusClasses[status] || ''
     }
-    
+
     function getStatusLabel(status) {
       const statusLabels = {
         pending: 'En attente',
@@ -399,16 +411,16 @@ export default {
         in_progress: 'En cours',
         delivered: 'Livrée',
         completed: 'Terminée',
-        cancelled: 'Annulée'
+        cancelled: 'Annulée',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     onMounted(() => {
       loadDashboardData()
     })
-    
+
     return {
       loading,
       stats,
@@ -424,9 +436,9 @@ export default {
       getStatusClass,
       getStatusLabel,
       formatDate,
-      formatPrice
+      formatPrice,
     }
-  }
+  },
 }
 </script>
 

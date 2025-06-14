@@ -2,29 +2,31 @@
   <div class="sanction-parameter-form">
     <div class="form-group">
       <label for="title" class="form-label">Titre <span class="required">*</span></label>
-      <input 
-        type="text" 
-        id="title" 
-        v-model="formData.title" 
-        class="form-input" 
+      <input
+        type="text"
+        id="title"
+        v-model="formData.title"
+        class="form-input"
         placeholder="Titre du paramètre"
         required
       />
     </div>
-    
+
     <div class="form-group">
       <label for="description" class="form-label">Description</label>
-      <textarea 
-        id="description" 
-        v-model="formData.description" 
-        class="form-textarea" 
+      <textarea
+        id="description"
+        v-model="formData.description"
+        class="form-textarea"
         placeholder="Description détaillée du paramètre"
         rows="3"
       ></textarea>
     </div>
-    
+
     <div class="form-group">
-      <label for="violation-type" class="form-label">Type d'infraction <span class="required">*</span></label>
+      <label for="violation-type" class="form-label"
+        >Type d'infraction <span class="required">*</span></label
+      >
       <select id="violation-type" v-model="formData.violation_type" class="form-select">
         <option value="late_delivery">Retard de livraison</option>
         <option value="cancellation">Annulation</option>
@@ -33,48 +35,50 @@
         <option value="safety">Sécurité</option>
       </select>
     </div>
-    
+
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="warning-threshold" class="form-label">Seuil d'avertissement <span class="required">*</span></label>
-        <input 
-          type="number" 
-          id="warning-threshold" 
-          v-model.number="formData.warning_threshold" 
-          class="form-input" 
+        <label for="warning-threshold" class="form-label"
+          >Seuil d'avertissement <span class="required">*</span></label
+        >
+        <input
+          type="number"
+          id="warning-threshold"
+          v-model.number="formData.warning_threshold"
+          class="form-input"
           min="1"
           required
         />
-        <div class="form-hint">
-          Nombre d'infractions avant l'envoi d'un avertissement
-        </div>
+        <div class="form-hint">Nombre d'infractions avant l'envoi d'un avertissement</div>
       </div>
-      
+
       <div class="form-group flex-1">
-        <label for="suspension-threshold" class="form-label">Seuil de suspension <span class="required">*</span></label>
-        <input 
-          type="number" 
-          id="suspension-threshold" 
-          v-model.number="formData.suspension_threshold" 
-          class="form-input" 
+        <label for="suspension-threshold" class="form-label"
+          >Seuil de suspension <span class="required">*</span></label
+        >
+        <input
+          type="number"
+          id="suspension-threshold"
+          v-model.number="formData.suspension_threshold"
+          class="form-input"
           min="1"
           required
         />
-        <div class="form-hint">
-          Nombre d'infractions avant la suspension du compte
-        </div>
+        <div class="form-hint">Nombre d'infractions avant la suspension du compte</div>
       </div>
     </div>
-    
+
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="suspension-duration" class="form-label">Durée de suspension <span class="required">*</span></label>
+        <label for="suspension-duration" class="form-label"
+          >Durée de suspension <span class="required">*</span></label
+        >
         <div class="input-group">
-          <input 
-            type="number" 
-            id="suspension-duration" 
-            v-model.number="formData.suspension_duration" 
-            class="form-input" 
+          <input
+            type="number"
+            id="suspension-duration"
+            v-model.number="formData.suspension_duration"
+            class="form-input"
             min="1"
             required
           />
@@ -83,15 +87,17 @@
           </div>
         </div>
       </div>
-      
+
       <div class="form-group flex-1">
-        <label for="expiration-period" class="form-label">Période d'expiration <span class="required">*</span></label>
+        <label for="expiration-period" class="form-label"
+          >Période d'expiration <span class="required">*</span></label
+        >
         <div class="input-group">
-          <input 
-            type="number" 
-            id="expiration-period" 
-            v-model.number="formData.expiration_period" 
-            class="form-input" 
+          <input
+            type="number"
+            id="expiration-period"
+            v-model.number="formData.expiration_period"
+            class="form-input"
             min="1"
             required
           />
@@ -99,12 +105,10 @@
             <span class="input-group-text">jours</span>
           </div>
         </div>
-        <div class="form-hint">
-          Nombre de jours après lesquels les infractions sont effacées
-        </div>
+        <div class="form-hint">Nombre de jours après lesquels les infractions sont effacées</div>
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">S'applique à <span class="required">*</span></label>
       <div class="checkbox-group">
@@ -125,7 +129,7 @@
         Le paramètre doit s'appliquer à au moins un type d'utilisateur
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Statut</label>
       <div class="toggle-switch">
@@ -134,15 +138,10 @@
         <span class="toggle-label">{{ formData.active ? 'Actif' : 'Inactif' }}</span>
       </div>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isFormValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isFormValid">
         {{ isEditing ? 'Mettre à jour' : 'Créer' }}
       </button>
     </div>
@@ -150,15 +149,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'SanctionParameterForm',
   props: {
     parameter: {
       type: Object,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
@@ -174,58 +173,62 @@ export default {
       applies_to: {
         clients: false,
         couriers: true,
-        businesses: false
-      }
-    });
-    
-    const isEditing = computed(() => !!props.parameter?.id);
-    
+        businesses: false,
+      },
+    })
+
+    const isEditing = computed(() => !!props.parameter?.id)
+
     const isAppliesValid = computed(() => {
-      return formData.value.applies_to.clients || 
-             formData.value.applies_to.couriers || 
-             formData.value.applies_to.businesses;
-    });
-    
+      return (
+        formData.value.applies_to.clients ||
+        formData.value.applies_to.couriers ||
+        formData.value.applies_to.businesses
+      )
+    })
+
     const isFormValid = computed(() => {
-      return formData.value.title.trim() !== '' && 
-             isAppliesValid.value && 
-             formData.value.warning_threshold > 0 && 
-             formData.value.suspension_threshold > 0 && 
-             formData.value.suspension_duration > 0 && 
-             formData.value.expiration_period > 0;
-    });
-    
+      return (
+        formData.value.title.trim() !== '' &&
+        isAppliesValid.value &&
+        formData.value.warning_threshold > 0 &&
+        formData.value.suspension_threshold > 0 &&
+        formData.value.suspension_duration > 0 &&
+        formData.value.expiration_period > 0
+      )
+    })
+
     const initForm = () => {
       if (props.parameter) {
-        formData.value = { ...props.parameter };
+        formData.value = { ...props.parameter }
       }
-    };
-    
+    }
+
     const save = () => {
-      if (!isFormValid.value) return;
-      
-      const parameterData = { ...formData.value };
-      emit('save', parameterData);
-    };
-    
+      if (!isFormValid.value) return
+
+      const parameterData = { ...formData.value }
+      emit('save', parameterData)
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     onMounted(() => {
-      initForm();
-    });
-    
+      initForm()
+    })
+
     return {
       formData,
       isEditing,
       isAppliesValid,
       isFormValid,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

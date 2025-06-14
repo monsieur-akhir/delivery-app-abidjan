@@ -627,35 +627,35 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filter-group {
     min-width: 100%;
   }
-  
+
   .stats-container {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .data-table {
     display: block;
     overflow-x: auto;
   }
-  
+
   .modal-content {
     width: 95%;
   }
-  
+
   .detail-grid,
   .stats-grid,
   .hours-list {
     grid-template-columns: 1fr;
   }
-  
+
   .business-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .business-logo-large,
   .business-avatar-large {
     margin-right: 0;
@@ -667,26 +667,26 @@ export default {
   .stats-container {
     grid-template-columns: 1fr;
   }
-  
+
   .actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .filters-actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .modal-footer {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn {
     width: 100%;
   }
-  
+
   .document-verification-actions {
     flex-direction: column;
     width: 100%;

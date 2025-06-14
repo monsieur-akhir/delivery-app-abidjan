@@ -2,9 +2,9 @@
   <div class="real-time-notifications">
     <div class="notifications-container" v-if="notifications.length > 0">
       <transition-group name="notification">
-        <div 
-          v-for="notification in visibleNotifications" 
-          :key="notification.id" 
+        <div
+          v-for="notification in visibleNotifications"
+          :key="notification.id"
           class="notification-item"
           :class="getTypeClass(notification.type)"
         >
@@ -25,152 +25,162 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { getCurrentInstance } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { getCurrentInstance } from 'vue'
 
 export default {
   name: 'RealTimeNotifications',
   props: {
     maxVisible: {
       type: Number,
-      default: 3
+      default: 3,
     },
     autoDismiss: {
       type: Boolean,
-      default: true
+      default: true,
     },
     dismissTime: {
       type: Number,
-      default: 5000
-    }
+      default: 5000,
+    },
   },
   setup(props, { emit }) {
-    const notifications = ref([]);
-    const dismissTimers = ref({});
-    let socket = null;
-    
+    const notifications = ref([])
+    const dismissTimers = ref({})
+    let socket = null
+
     // Notifications visibles (limitées par maxVisible)
     const visibleNotifications = computed(() => {
-      return notifications.value.slice(0, props.maxVisible);
-    });
-    
+      return notifications.value.slice(0, props.maxVisible)
+    })
+
     // Ajouter une notification
-    const addNotification = (notification) => {
+    const addNotification = notification => {
       // Générer un ID unique si non fourni
       if (!notification.id) {
-        notification.id = Date.now();
+        notification.id = Date.now()
       }
-      
+
       // Ajouter la notification au début de la liste
-      notifications.value.unshift(notification);
-      
+      notifications.value.unshift(notification)
+
       // Configurer le timer de suppression automatique si activé
       if (props.autoDismiss) {
         dismissTimers.value[notification.id] = setTimeout(() => {
-          dismissNotification(notification.id);
-        }, props.dismissTime);
+          dismissNotification(notification.id)
+        }, props.dismissTime)
       }
-      
+
       // Émettre l'événement d'ajout
-      emit('notification-added', notification);
-    };
-    
+      emit('notification-added', notification)
+    }
+
     // Supprimer une notification
-    const dismissNotification = (id) => {
+    const dismissNotification = id => {
       // Trouver l'index de la notification
-      const index = notifications.value.findIndex(n => n.id === id);
-      
+      const index = notifications.value.findIndex(n => n.id === id)
+
       if (index !== -1) {
         // Supprimer la notification
-        const notification = notifications.value[index];
-        notifications.value.splice(index, 1);
-        
+        const notification = notifications.value[index]
+        notifications.value.splice(index, 1)
+
         // Supprimer le timer associé
         if (dismissTimers.value[id]) {
-          clearTimeout(dismissTimers.value[id]);
-          delete dismissTimers.value[id];
+          clearTimeout(dismissTimers.value[id])
+          delete dismissTimers.value[id]
         }
-        
+
         // Émettre l'événement de suppression
-        emit('notification-dismissed', notification);
+        emit('notification-dismissed', notification)
       }
-    };
-    
+    }
+
     // Supprimer toutes les notifications
     const clearAllNotifications = () => {
       // Supprimer tous les timers
       Object.values(dismissTimers.value).forEach(timer => {
-        clearTimeout(timer);
-      });
-      
+        clearTimeout(timer)
+      })
+
       // Réinitialiser les collections
-      notifications.value = [];
-      dismissTimers.value = {};
-      
+      notifications.value = []
+      dismissTimers.value = {}
+
       // Émettre l'événement de suppression de toutes les notifications
-      emit('all-notifications-cleared');
-    };
-    
+      emit('all-notifications-cleared')
+    }
+
     // Obtenir la classe CSS pour un type
-    const getTypeClass = (type) => {
+    const getTypeClass = type => {
       switch (type) {
-        case 'info': return 'notification-info';
-        case 'success': return 'notification-success';
-        case 'warning': return 'notification-warning';
-        case 'error': return 'notification-error';
-        default: return '';
+        case 'info':
+          return 'notification-info'
+        case 'success':
+          return 'notification-success'
+        case 'warning':
+          return 'notification-warning'
+        case 'error':
+          return 'notification-error'
+        default:
+          return ''
       }
-    };
-    
+    }
+
     // Obtenir l'icône pour un type
-    const getTypeIcon = (type) => {
+    const getTypeIcon = type => {
       switch (type) {
-        case 'info': return 'fas fa-info-circle';
-        case 'success': return 'fas fa-check-circle';
-        case 'warning': return 'fas fa-exclamation-triangle';
-        case 'error': return 'fas fa-times-circle';
-        default: return 'fas fa-bell';
+        case 'info':
+          return 'fas fa-info-circle'
+        case 'success':
+          return 'fas fa-check-circle'
+        case 'warning':
+          return 'fas fa-exclamation-triangle'
+        case 'error':
+          return 'fas fa-times-circle'
+        default:
+          return 'fas fa-bell'
       }
-    };
-    
+    }
+
     // Initialiser la connexion WebSocket
     const initWebSocket = () => {
       // Dans un environnement réel, cette fonction se connecterait à un serveur WebSocket
       // Pour la démonstration, nous simulons la réception de notifications
-      
+
       // Simuler la réception de notifications toutes les 10 secondes
       const interval = setInterval(() => {
         // Générer une notification aléatoire
-        const types = ['info', 'success', 'warning', 'error'];
-        const type = types[Math.floor(Math.random() * types.length)];
-        
+        const types = ['info', 'success', 'warning', 'error']
+        const type = types[Math.floor(Math.random() * types.length)]
+
         const titles = {
           info: 'Nouvelle livraison disponible',
           success: 'Livraison complétée',
           warning: 'Retard de livraison',
-          error: 'Problème de paiement'
-        };
-        
+          error: 'Problème de paiement',
+        }
+
         const messages = {
           info: 'Une nouvelle livraison est disponible dans votre zone.',
           success: 'La livraison #123 a été livrée avec succès.',
           warning: 'La livraison #456 est retardée de 15 minutes.',
-          error: 'Le paiement pour la livraison #789 a échoué.'
-        };
-        
+          error: 'Le paiement pour la livraison #789 a échoué.',
+        }
+
         addNotification({
           id: Date.now(),
           type,
           title: titles[type],
           message: messages[type],
-          timestamp: new Date()
-        });
-      }, 10000);
-      
+          timestamp: new Date(),
+        })
+      }, 10000)
+
       // Stocker l'intervalle pour le nettoyage
-      return interval;
-    };
-    
+      return interval
+    }
+
     // Exposer les méthodes pour une utilisation externe
     const showNotification = (title, message, type = 'info') => {
       addNotification({
@@ -178,48 +188,48 @@ export default {
         type,
         title,
         message,
-        timestamp: new Date()
-      });
-    };
-    
+        timestamp: new Date(),
+      })
+    }
+
     // Initialiser au montage du composant
     onMounted(() => {
       // Initialiser la connexion WebSocket
-      socket = initWebSocket();
-      
+      socket = initWebSocket()
+
       // Exposer les méthodes au parent via $refs
-      const instance = getCurrentInstance();
+      const instance = getCurrentInstance()
       if (instance) {
         instance.exposed = {
           showNotification,
           dismissNotification,
-          clearAllNotifications
-        };
+          clearAllNotifications,
+        }
       }
-    });
-    
+    })
+
     // Nettoyer les ressources au démontage du composant
     onUnmounted(() => {
       // Supprimer tous les timers
       Object.values(dismissTimers.value).forEach(timer => {
-        clearTimeout(timer);
-      });
-      
+        clearTimeout(timer)
+      })
+
       // Arrêter la simulation
       if (socket) {
-        clearInterval(socket);
+        clearInterval(socket)
       }
-    });
-    
+    })
+
     return {
       notifications,
       visibleNotifications,
       dismissNotification,
       getTypeClass,
-      getTypeIcon
-    };
-  }
-};
+      getTypeIcon,
+    }
+  },
+}
 </script>
 
 <style scoped>

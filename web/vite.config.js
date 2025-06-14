@@ -1,14 +1,14 @@
-import { defineConfig } from "vite"
-import vue from "@vitejs/plugin-vue"
-import { resolve } from "path"
-import { visualizer } from "rollup-plugin-visualizer"
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
     visualizer({
-      filename: "stats.html",
+      filename: 'stats.html',
       open: true,
       gzipSize: true,
       brotliSize: true,
@@ -16,35 +16,35 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src"),
+      '@': resolve(__dirname, 'src'),
     },
   },
   server: {
     port: 5173,
     host: true,
     proxy: {
-      "/api": {
-        target: "http://localhost:8000",
+      '/api': {
+        target: 'http://localhost:8000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        rewrite: path => path.replace(/^\/api/, ''),
       },
-      "/ws": {
-        target: "ws://localhost:8000",
+      '/ws': {
+        target: 'ws://localhost:8000',
         ws: true,
         changeOrigin: true,
       },
     },
   },
   build: {
-    outDir: "dist",
+    outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["vue", "vue-router", "pinia"],
-          charts: ["chart.js"],
-          maps: ["leaflet", "leaflet-draw"],
-          icons: ["@fortawesome/fontawesome-svg-core", "@fortawesome/free-solid-svg-icons"],
+          vendor: ['vue', 'vue-router', 'pinia'],
+          charts: ['chart.js'],
+          maps: ['leaflet', 'leaflet-draw'],
+          icons: ['@fortawesome/fontawesome-svg-core', '@fortawesome/free-solid-svg-icons'],
         },
       },
     },

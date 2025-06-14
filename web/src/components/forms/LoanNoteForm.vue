@@ -1,25 +1,22 @@
 <template>
   <div class="loan-note-form">
     <div class="form-group">
-      <label for="note-content" class="form-label">Contenu de la note <span class="required">*</span></label>
-      <textarea 
-        id="note-content" 
-        v-model="noteContent" 
-        class="form-textarea" 
+      <label for="note-content" class="form-label"
+        >Contenu de la note <span class="required">*</span></label
+      >
+      <textarea
+        id="note-content"
+        v-model="noteContent"
+        class="form-textarea"
         placeholder="Saisissez votre note ici..."
         rows="5"
         required
       ></textarea>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isValid">
         Enregistrer
       </button>
     </div>
@@ -27,36 +24,36 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 
 export default {
   name: 'LoanNoteForm',
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
-    const noteContent = ref('');
-    
+    const noteContent = ref('')
+
     const isValid = computed(() => {
-      return noteContent.value.trim() !== '';
-    });
-    
+      return noteContent.value.trim() !== ''
+    })
+
     const save = () => {
-      if (!isValid.value) return;
-      
-      emit('save', noteContent.value);
-    };
-    
+      if (!isValid.value) return
+
+      emit('save', noteContent.value)
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     return {
       noteContent,
       isValid,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

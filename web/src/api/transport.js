@@ -1,5 +1,5 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { API_URL } from '@/config'
 
 const api = axios.create({
   baseURL: API_URL,
@@ -12,13 +12,13 @@ const api = axios.create({
  */
 export const fetchVehicles = async (params = {}) => {
   try {
-    const response = await api.get("/transport/vehicles", { params })
+    const response = await api.get('/transport/vehicles', { params })
     return {
       items: response.data,
-      total: Number.parseInt(response.headers["x-total-count"] || response.data.length),
+      total: Number.parseInt(response.headers['x-total-count'] || response.data.length),
     }
   } catch (error) {
-    console.error("Error fetching vehicles:", error)
+    console.error('Error fetching vehicles:', error)
     throw error
   }
 }
@@ -28,7 +28,7 @@ export const fetchVehicles = async (params = {}) => {
  * @param {string|number} id - ID du véhicule
  * @returns {Promise<Object>} - Détails du véhicule
  */
-export const fetchVehicleDetails = async (id) => {
+export const fetchVehicleDetails = async id => {
   try {
     const response = await api.get(`/transport/vehicles/${id}`)
     return response.data
@@ -43,12 +43,12 @@ export const fetchVehicleDetails = async (id) => {
  * @param {Object} vehicleData - Données du véhicule
  * @returns {Promise<Object>} - Véhicule créé
  */
-export const createVehicle = async (vehicleData) => {
+export const createVehicle = async vehicleData => {
   try {
-    const response = await api.post("/transport/vehicles", vehicleData)
+    const response = await api.post('/transport/vehicles', vehicleData)
     return response.data
   } catch (error) {
-    console.error("Error creating vehicle:", error)
+    console.error('Error creating vehicle:', error)
     throw error
   }
 }
@@ -74,7 +74,7 @@ export const updateVehicle = async (id, vehicleData) => {
  * @param {string|number} id - ID du véhicule
  * @returns {Promise<void>}
  */
-export const deleteVehicle = async (id) => {
+export const deleteVehicle = async id => {
   try {
     await api.delete(`/transport/vehicles/${id}`)
   } catch (error) {
@@ -93,7 +93,7 @@ export const uploadVehicleDocument = async (id, formData) => {
   try {
     const response = await api.post(`/transport/vehicles/${id}/documents`, formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     })
     return response.data
@@ -108,7 +108,7 @@ export const uploadVehicleDocument = async (id, formData) => {
  * @param {string|number} courierId - ID du coursier
  * @returns {Promise<Array>} - Liste des véhicules du coursier
  */
-export const fetchCourierVehicles = async (courierId) => {
+export const fetchCourierVehicles = async courierId => {
   try {
     const response = await api.get(`/transport/courier/${courierId}/vehicles`)
     return response.data
@@ -155,7 +155,7 @@ export const updateCourierVehicle = async (courierVehicleId, updateData) => {
  * @param {string|number} courierVehicleId - ID de l'association coursier-véhicule
  * @returns {Promise<void>}
  */
-export const removeCourierVehicle = async (courierVehicleId) => {
+export const removeCourierVehicle = async courierVehicleId => {
   try {
     await api.delete(`/transport/courier/vehicles/${courierVehicleId}`)
   } catch (error) {
@@ -169,7 +169,7 @@ export const removeCourierVehicle = async (courierVehicleId) => {
  * @param {string|number} courierVehicleId - ID de l'association coursier-véhicule
  * @returns {Promise<Object>} - Association coursier-véhicule mise à jour
  */
-export const setPrimaryVehicle = async (courierVehicleId) => {
+export const setPrimaryVehicle = async courierVehicleId => {
   try {
     const response = await api.put(`/transport/courier/vehicles/${courierVehicleId}/primary`)
     return response.data
@@ -186,13 +186,13 @@ export const setPrimaryVehicle = async (courierVehicleId) => {
  */
 export const fetchTransportRules = async (params = {}) => {
   try {
-    const response = await api.get("/transport/rules", { params })
+    const response = await api.get('/transport/rules', { params })
     return {
       items: response.data,
-      total: Number.parseInt(response.headers["x-total-count"] || response.data.length),
+      total: Number.parseInt(response.headers['x-total-count'] || response.data.length),
     }
   } catch (error) {
-    console.error("Error fetching transport rules:", error)
+    console.error('Error fetching transport rules:', error)
     throw error
   }
 }
@@ -202,7 +202,7 @@ export const fetchTransportRules = async (params = {}) => {
  * @param {string|number} id - ID de la règle
  * @returns {Promise<Object>} - Détails de la règle
  */
-export const fetchTransportRuleDetails = async (id) => {
+export const fetchTransportRuleDetails = async id => {
   try {
     const response = await api.get(`/transport/rules/${id}`)
     return response.data
@@ -217,12 +217,12 @@ export const fetchTransportRuleDetails = async (id) => {
  * @param {Object} ruleData - Données de la règle
  * @returns {Promise<Object>} - Règle créée
  */
-export const createTransportRule = async (ruleData) => {
+export const createTransportRule = async ruleData => {
   try {
-    const response = await api.post("/transport/rules", ruleData)
+    const response = await api.post('/transport/rules', ruleData)
     return response.data
   } catch (error) {
-    console.error("Error creating transport rule:", error)
+    console.error('Error creating transport rule:', error)
     throw error
   }
 }
@@ -248,7 +248,7 @@ export const updateTransportRule = async (id, ruleData) => {
  * @param {string|number} id - ID de la règle
  * @returns {Promise<void>}
  */
-export const deleteTransportRule = async (id) => {
+export const deleteTransportRule = async id => {
   try {
     await api.delete(`/transport/rules/${id}`)
   } catch (error) {
@@ -262,12 +262,12 @@ export const deleteTransportRule = async (id) => {
  * @param {Object} deliveryData - Données de la livraison
  * @returns {Promise<Object>} - Recommandation de véhicule
  */
-export const getVehicleRecommendation = async (deliveryData) => {
+export const getVehicleRecommendation = async deliveryData => {
   try {
-    const response = await api.post("/transport/recommend", deliveryData)
+    const response = await api.post('/transport/recommend', deliveryData)
     return response.data
   } catch (error) {
-    console.error("Error getting vehicle recommendation:", error)
+    console.error('Error getting vehicle recommendation:', error)
     throw error
   }
 }
@@ -279,10 +279,10 @@ export const getVehicleRecommendation = async (deliveryData) => {
  */
 export const fetchVehicleUsageStats = async (params = {}) => {
   try {
-    const response = await api.get("/transport/stats/usage", { params })
+    const response = await api.get('/transport/stats/usage', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching vehicle usage stats:", error)
+    console.error('Error fetching vehicle usage stats:', error)
     throw error
   }
 }
@@ -294,10 +294,10 @@ export const fetchVehicleUsageStats = async (params = {}) => {
  */
 export const fetchVehiclePerformanceStats = async (params = {}) => {
   try {
-    const response = await api.get("/transport/stats/performance", { params })
+    const response = await api.get('/transport/stats/performance', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching vehicle performance stats:", error)
+    console.error('Error fetching vehicle performance stats:', error)
     throw error
   }
 }
@@ -309,10 +309,10 @@ export const fetchVehiclePerformanceStats = async (params = {}) => {
  */
 export const fetchVehicleEnvironmentalStats = async (params = {}) => {
   try {
-    const response = await api.get("/transport/stats/environmental", { params })
+    const response = await api.get('/transport/stats/environmental', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching vehicle environmental stats:", error)
+    console.error('Error fetching vehicle environmental stats:', error)
     throw error
   }
 }
@@ -323,10 +323,10 @@ export const fetchVehicleEnvironmentalStats = async (params = {}) => {
  */
 export const getVehicleTypes = async () => {
   try {
-    const response = await api.get("/transport/vehicle-types")
+    const response = await api.get('/transport/vehicle-types')
     return response.data
   } catch (error) {
-    console.error("Error fetching vehicle types:", error)
+    console.error('Error fetching vehicle types:', error)
     throw error
   }
 }
@@ -337,10 +337,10 @@ export const getVehicleTypes = async () => {
  */
 export const getCargoCategories = async () => {
   try {
-    const response = await api.get("/transport/cargo-categories")
+    const response = await api.get('/transport/cargo-categories')
     return response.data
   } catch (error) {
-    console.error("Error fetching cargo categories:", error)
+    console.error('Error fetching cargo categories:', error)
     throw error
   }
 }
@@ -351,10 +351,10 @@ export const getCargoCategories = async () => {
  */
 export const getTransportStats = async () => {
   try {
-    const response = await api.get("/transport/stats")
+    const response = await api.get('/transport/stats')
     return response.data
   } catch (error) {
-    console.error("Error fetching transport statistics:", error)
+    console.error('Error fetching transport statistics:', error)
     throw error
   }
 }
@@ -382,5 +382,5 @@ export default {
   fetchVehicleEnvironmentalStats,
   getVehicleTypes,
   getCargoCategories,
-  getTransportStats
+  getTransportStats,
 }

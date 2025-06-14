@@ -1,4 +1,3 @@
-
 import apiService from './apiService'
 
 export const walletApi = {
@@ -22,7 +21,7 @@ export const walletApi = {
   async addFunds(amount, paymentMethod) {
     const response = await apiService.post('/api/v1/wallet/add-funds', {
       amount,
-      payment_method: paymentMethod
+      payment_method: paymentMethod,
     })
     return response.data
   },
@@ -31,7 +30,7 @@ export const walletApi = {
     const response = await apiService.post('/api/v1/wallet/withdraw', {
       amount,
       withdrawal_method: withdrawalMethod,
-      account_details: details
+      account_details: details,
     })
     return response.data
   },
@@ -40,7 +39,7 @@ export const walletApi = {
     const response = await apiService.post('/api/v1/wallet/transfer', {
       recipient_id: recipientId,
       amount,
-      note
+      note,
     })
     return response.data
   },
@@ -75,13 +74,15 @@ export const walletApi = {
   async contributeToCommunity(amount, cause) {
     const response = await apiService.post('/api/v1/wallet/community/contribute', {
       amount,
-      cause
+      cause,
     })
     return response.data
   },
 
   async getCommunityContributions(filters = {}) {
-    const response = await apiService.get('/api/v1/wallet/community/contributions', { params: filters })
+    const response = await apiService.get('/api/v1/wallet/community/contributions', {
+      params: filters,
+    })
     return response.data
   },
 
@@ -92,7 +93,9 @@ export const walletApi = {
   },
 
   async getSpendingAnalytics(period = 'month') {
-    const response = await apiService.get('/api/v1/wallet/analytics/spending', { params: { period } })
+    const response = await apiService.get('/api/v1/wallet/analytics/spending', {
+      params: { period },
+    })
     return response.data
   },
 
@@ -101,7 +104,7 @@ export const walletApi = {
     const response = await apiService.post('/api/v1/wallet/refund', {
       transaction_id: transactionId,
       reason,
-      amount
+      amount,
     })
     return response.data
   },
@@ -130,7 +133,7 @@ export const walletApi = {
   async disableTwoFactor(code) {
     const response = await apiService.post('/api/v1/wallet/2fa/disable', { code })
     return response.data
-  }
+  },
 }
 
 export default walletApi

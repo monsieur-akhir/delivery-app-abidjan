@@ -23,18 +23,18 @@
       <div class="filter-group">
         <label for="search">Recherche</label>
         <div class="search-input">
-          <input 
-            type="text" 
-            id="search" 
-            v-model="filters.search" 
-            placeholder="ID, livraison..." 
+          <input
+            type="text"
+            id="search"
+            v-model="filters.search"
+            placeholder="ID, livraison..."
             @input="debounceSearch"
           />
           <i class="fas fa-search"></i>
         </div>
       </div>
     </div>
-    
+
     <div v-if="loading" class="loading-state">
       <i class="fas fa-spinner fa-spin fa-2x"></i>
       <p>Chargement des dons...</p>
@@ -63,9 +63,9 @@
             <td>{{ formatCurrency(donation.amount) }}</td>
             <td>{{ donation.organization }}</td>
             <td>
-              <a 
-                v-if="donation.delivery_id" 
-                href="#" 
+              <a
+                v-if="donation.delivery_id"
+                href="#"
                 @click.prevent="viewDelivery(donation.delivery_id)"
               >
                 #{{ donation.delivery_id }}
@@ -79,16 +79,16 @@
             </td>
             <td v-if="showActions">
               <div class="table-actions">
-                <button 
-                  class="btn-icon" 
-                  @click="viewDonationDetails(donation.id)" 
+                <button
+                  class="btn-icon"
+                  @click="viewDonationDetails(donation.id)"
                   title="Voir les détails"
                 >
                   <i class="fas fa-eye"></i>
                 </button>
-                <button 
-                  class="btn-icon" 
-                  @click="exportDonationDetails(donation.id)" 
+                <button
+                  class="btn-icon"
+                  @click="exportDonationDetails(donation.id)"
                   title="Exporter"
                 >
                   <i class="fas fa-file-export"></i>
@@ -99,19 +99,19 @@
         </tbody>
       </table>
     </div>
-    
+
     <div class="donation-pagination" v-if="donations.length > 0 && totalPages > 1">
-      <button 
-        class="pagination-button" 
-        :disabled="currentPage === 1" 
+      <button
+        class="pagination-button"
+        :disabled="currentPage === 1"
         @click="changePage(currentPage - 1)"
       >
         <i class="fas fa-chevron-left"></i>
       </button>
       <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
-      <button 
-        class="pagination-button" 
-        :disabled="currentPage === totalPages" 
+      <button
+        class="pagination-button"
+        :disabled="currentPage === totalPages"
         @click="changePage(currentPage + 1)"
       >
         <i class="fas fa-chevron-right"></i>
@@ -121,128 +121,139 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue'
 
 export default {
   name: 'DonationList',
   props: {
     donations: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     organizations: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     loading: {
       type: Boolean,
-      default: false
+      default: false,
     },
     showFilters: {
       type: Boolean,
-      default: true
+      default: true,
     },
     showActions: {
       type: Boolean,
-      default: true
+      default: true,
     },
     totalItems: {
       type: Number,
-      default: 0
+      default: 0,
     },
     itemsPerPage: {
       type: Number,
-      default: 10
-    }
+      default: 10,
+    },
   },
   emits: ['filter', 'view-details', 'view-delivery', 'export', 'page-change'],
   setup(props, { emit }) {
     const filters = ref({
       organization: '',
       dateRange: 'all',
-      search: ''
-    });
-    
-    const currentPage = ref(1);
-    
+      search: '',
+    })
+
+    const currentPage = ref(1)
+
     const totalPages = computed(() => {
-      return Math.ceil(props.totalItems / props.itemsPerPage);
-    });
-    
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
+      return Math.ceil(props.totalItems / props.itemsPerPage)
+    })
+
+    const formatDate = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
-      });
-    };
-    
-    const formatCurrency = (amount) => {
+        year: 'numeric',
+      })
+    }
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
-    const getStatusClass = (status) => {
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
+    const getStatusClass = status => {
       switch (status) {
-        case 'pending': return 'status-pending';
-        case 'completed': return 'status-completed';
-        case 'cancelled': return 'status-cancelled';
-        default: return '';
+        case 'pending':
+          return 'status-pending'
+        case 'completed':
+          return 'status-completed'
+        case 'cancelled':
+          return 'status-cancelled'
+        default:
+          return ''
       }
-    };
-    
-    const getStatusLabel = (status) => {
+    }
+
+    const getStatusLabel = status => {
       switch (status) {
-        case 'pending': return 'En attente';
-        case 'completed': return 'Complété';
-        case 'cancelled': return 'Annulé';
-        default: return status;
+        case 'pending':
+          return 'En attente'
+        case 'completed':
+          return 'Complété'
+        case 'cancelled':
+          return 'Annulé'
+        default:
+          return status
       }
-    };
-    
+    }
+
     const applyFilters = () => {
-      currentPage.value = 1;
-      emit('filter', { ...filters.value, page: currentPage.value });
-    };
-    
+      currentPage.value = 1
+      emit('filter', { ...filters.value, page: currentPage.value })
+    }
+
     const debounceSearch = () => {
-      clearTimeout(window.searchTimeout);
+      clearTimeout(window.searchTimeout)
       window.searchTimeout = setTimeout(() => {
-        applyFilters();
-      }, 300);
-    };
-    
-    const changePage = (page) => {
-      currentPage.value = page;
-      emit('page-change', { ...filters.value, page });
-    };
-    
-    const viewDonationDetails = (donationId) => {
-      emit('view-details', donationId);
-    };
-    
-    const viewDelivery = (deliveryId) => {
-      emit('view-delivery', deliveryId);
-    };
-    
-    const exportDonationDetails = (donationId) => {
-      emit('export', donationId);
-    };
-    
+        applyFilters()
+      }, 300)
+    }
+
+    const changePage = page => {
+      currentPage.value = page
+      emit('page-change', { ...filters.value, page })
+    }
+
+    const viewDonationDetails = donationId => {
+      emit('view-details', donationId)
+    }
+
+    const viewDelivery = deliveryId => {
+      emit('view-delivery', deliveryId)
+    }
+
+    const exportDonationDetails = donationId => {
+      emit('export', donationId)
+    }
+
     onMounted(() => {
-      applyFilters();
-    });
-    
-    watch(() => props.donations, () => {
-      if (currentPage.value > totalPages.value && totalPages.value > 0) {
-        changePage(totalPages.value);
+      applyFilters()
+    })
+
+    watch(
+      () => props.donations,
+      () => {
+        if (currentPage.value > totalPages.value && totalPages.value > 0) {
+          changePage(totalPages.value)
+        }
       }
-    });
-    
+    )
+
     return {
       filters,
       currentPage,
@@ -256,10 +267,10 @@ export default {
       changePage,
       viewDonationDetails,
       viewDelivery,
-      exportDonationDetails
-    };
-  }
-};
+      exportDonationDetails,
+    }
+  },
+}
 </script>
 
 <style scoped>

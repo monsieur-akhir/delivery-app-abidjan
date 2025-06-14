@@ -6,11 +6,11 @@
     </div>
 
     <nav class="nav-links">
-      <router-link 
-        v-for="link in navLinks" 
-        :key="link.name" 
-        :to="link.path" 
-        class="nav-link" 
+      <router-link
+        v-for="link in navLinks"
+        :key="link.name"
+        :to="link.path"
+        class="nav-link"
         active-class="active"
       >
         <font-awesome-icon :icon="link.icon" class="nav-icon" />
@@ -41,48 +41,138 @@ export default {
   name: 'Sidebar',
   setup() {
     const store = useStore()
-    
+
     const userRole = computed(() => store.getters['auth/currentRole'])
-    
+
     const navLinks = computed(() => {
       if (userRole.value === 'manager') {
         return [
-          { name: 'manager-dashboard', path: '/manager/dashboard', label: 'Tableau de bord', icon: 'chart-line' },
+          {
+            name: 'manager-dashboard',
+            path: '/manager/dashboard',
+            label: 'Tableau de bord',
+            icon: 'chart-line',
+          },
           { name: 'manager-users', path: '/manager/users', label: 'Utilisateurs', icon: 'users' },
-          { name: 'manager-couriers', path: '/manager/couriers', label: 'Coursiers', icon: 'truck' },
-          { name: 'manager-businesses', path: '/manager/businesses', label: 'Entreprises', icon: 'store' },
-          { name: 'manager-deliveries', path: '/manager/deliveries', label: 'Livraisons', icon: 'shipping-fast' },
-          { name: 'manager-finances', path: '/manager/finances', label: 'Finances', icon: 'money-bill' },
-          { name: 'manager-reports', path: '/manager/reports', label: 'Rapports', icon: 'file-alt' },
-          { name: 'manager-promotions', path: '/manager/promotions', label: 'Promotions', icon: 'tags' },
-          { name: 'manager-notifications', path: '/manager/notifications', label: 'Notifications', icon: 'bell' },
-          { name: 'manager-analytics', path: '/manager/analytics', label: 'Analytique', icon: 'chart-pie' },
+          {
+            name: 'manager-couriers',
+            path: '/manager/couriers',
+            label: 'Coursiers',
+            icon: 'truck',
+          },
+          {
+            name: 'manager-businesses',
+            path: '/manager/businesses',
+            label: 'Entreprises',
+            icon: 'store',
+          },
+          {
+            name: 'manager-deliveries',
+            path: '/manager/deliveries',
+            label: 'Livraisons',
+            icon: 'shipping-fast',
+          },
+          {
+            name: 'manager-finances',
+            path: '/manager/finances',
+            label: 'Finances',
+            icon: 'money-bill',
+          },
+          {
+            name: 'manager-reports',
+            path: '/manager/reports',
+            label: 'Rapports',
+            icon: 'file-alt',
+          },
+          {
+            name: 'manager-promotions',
+            path: '/manager/promotions',
+            label: 'Promotions',
+            icon: 'tags',
+          },
+          {
+            name: 'manager-notifications',
+            path: '/manager/notifications',
+            label: 'Notifications',
+            icon: 'bell',
+          },
+          {
+            name: 'manager-analytics',
+            path: '/manager/analytics',
+            label: 'Analytique',
+            icon: 'chart-pie',
+          },
           { name: 'manager-settings', path: '/manager/settings', label: 'Paramètres', icon: 'cog' },
           { name: 'manager-zones', path: '/manager/zones', label: 'Zones', icon: 'map-marked-alt' },
-          { name: 'manager-vehicles', path: '/manager/vehicles', label: 'Gestion des véhicules', icon: 'truck' },
-          { name: 'manager-transport-rules', path: '/manager/transport-rules', label: 'Règles de transport', icon: 'cogs' }
+          {
+            name: 'manager-vehicles',
+            path: '/manager/vehicles',
+            label: 'Gestion des véhicules',
+            icon: 'truck',
+          },
+          {
+            name: 'manager-transport-rules',
+            path: '/manager/transport-rules',
+            label: 'Règles de transport',
+            icon: 'cogs',
+          },
         ]
       } else if (userRole.value === 'business') {
         return [
-          { name: 'business-dashboard', path: '/business/dashboard', label: 'Tableau de bord', icon: 'chart-line' },
-          { name: 'business-deliveries', path: '/business/deliveries', label: 'Livraisons', icon: 'shipping-fast' },
-          { name: 'business-couriers', path: '/business/couriers', label: 'Coursiers', icon: 'truck' },
-          { name: 'business-finances', path: '/business/finances', label: 'Finances', icon: 'money-bill' },
-          { name: 'business-marketplace', path: '/business/marketplace', label: 'Marketplace', icon: 'store' },
-          { name: 'business-complaints', path: '/business/complaints', label: 'Plaintes', icon: 'exclamation-triangle' },
-          { name: 'business-settings', path: '/business/settings', label: 'Paramètres', icon: 'cog' },
-          { name: 'business-profile', path: '/business/profile', label: 'Profil', icon: 'user' }
+          {
+            name: 'business-dashboard',
+            path: '/business/dashboard',
+            label: 'Tableau de bord',
+            icon: 'chart-line',
+          },
+          {
+            name: 'business-deliveries',
+            path: '/business/deliveries',
+            label: 'Livraisons',
+            icon: 'shipping-fast',
+          },
+          {
+            name: 'business-couriers',
+            path: '/business/couriers',
+            label: 'Coursiers',
+            icon: 'truck',
+          },
+          {
+            name: 'business-finances',
+            path: '/business/finances',
+            label: 'Finances',
+            icon: 'money-bill',
+          },
+          {
+            name: 'business-marketplace',
+            path: '/business/marketplace',
+            label: 'Marketplace',
+            icon: 'store',
+          },
+          {
+            name: 'business-complaints',
+            path: '/business/complaints',
+            label: 'Plaintes',
+            icon: 'exclamation-triangle',
+          },
+          {
+            name: 'business-settings',
+            path: '/business/settings',
+            label: 'Paramètres',
+            icon: 'cog',
+          },
+          { name: 'business-profile', path: '/business/profile', label: 'Profil', icon: 'user' },
         ]
       } else {
         return []
       }
     })
-    
+
     return {
       navLinks,
-      userRole
+      userRole,
     }
-  }
+  },
 }
 </script>
 

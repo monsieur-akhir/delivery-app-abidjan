@@ -46,12 +46,12 @@
         <div class="filter-group">
           <label for="search">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search" 
-              v-model="filters.search" 
-              class="form-control" 
-              placeholder="Nom, téléphone, commune..." 
+            <input
+              type="text"
+              id="search"
+              v-model="filters.search"
+              class="form-control"
+              placeholder="Nom, téléphone, commune..."
             />
             <button class="search-button" @click="applyFilters">
               <font-awesome-icon icon="search" />
@@ -115,16 +115,16 @@
         <h2>Liste des coursiers</h2>
         <div class="card-actions">
           <div class="view-toggle">
-            <button 
-              class="view-toggle-btn" 
-              :class="{ active: viewMode === 'list' }" 
+            <button
+              class="view-toggle-btn"
+              :class="{ active: viewMode === 'list' }"
               @click="viewMode = 'list'"
             >
               <font-awesome-icon icon="list" />
             </button>
-            <button 
-              class="view-toggle-btn" 
-              :class="{ active: viewMode === 'grid' }" 
+            <button
+              class="view-toggle-btn"
+              :class="{ active: viewMode === 'grid' }"
               @click="viewMode = 'grid'"
             >
               <font-awesome-icon icon="th-large" />
@@ -140,15 +140,13 @@
           <font-awesome-icon icon="spinner" spin size="2x" />
           <p>Chargement des coursiers...</p>
         </div>
-        
+
         <div v-else-if="couriers.length === 0" class="empty-state">
           <font-awesome-icon icon="user-slash" size="2x" />
           <p>Aucun coursier trouvé</p>
-          <button class="btn btn-primary" @click="openInviteModal">
-            Inviter un coursier
-          </button>
+          <button class="btn btn-primary" @click="openInviteModal">Inviter un coursier</button>
         </div>
-        
+
         <div v-else>
           <!-- Vue liste -->
           <div v-if="viewMode === 'list'" class="table-responsive">
@@ -170,8 +168,14 @@
                   <td>
                     <div class="user-info">
                       <div class="user-avatar">
-                        <img v-if="courier.profile_picture" :src="courier.profile_picture" :alt="courier.full_name">
-                        <div v-else class="avatar-placeholder">{{ getInitials(courier.full_name) }}</div>
+                        <img
+                          v-if="courier.profile_picture"
+                          :src="courier.profile_picture"
+                          :alt="courier.full_name"
+                        />
+                        <div v-else class="avatar-placeholder">
+                          {{ getInitials(courier.full_name) }}
+                        </div>
                       </div>
                       <div class="user-name">{{ courier.full_name }}</div>
                     </div>
@@ -185,7 +189,10 @@
                   <td>{{ courier.commune || 'Non spécifié' }}</td>
                   <td>
                     <div class="vehicle-info" v-if="courier.vehicle_type">
-                      <font-awesome-icon :icon="getVehicleIcon(courier.vehicle_type)" class="vehicle-icon" />
+                      <font-awesome-icon
+                        :icon="getVehicleIcon(courier.vehicle_type)"
+                        class="vehicle-icon"
+                      />
                       <span>{{ getVehicleLabel(courier.vehicle_type) }}</span>
                     </div>
                     <span v-else class="text-muted">Non spécifié</span>
@@ -193,11 +200,11 @@
                   <td>
                     <div class="rating-stars">
                       <div class="stars">
-                        <font-awesome-icon 
-                          v-for="i in 5" 
-                          :key="i" 
-                          :icon="i <= Math.round(courier.rating) ? 'star' : 'star-o'" 
-                          :class="i <= Math.round(courier.rating) ? 'star-filled' : 'star-empty'" 
+                        <font-awesome-icon
+                          v-for="i in 5"
+                          :key="i"
+                          :icon="i <= Math.round(courier.rating) ? 'star' : 'star-o'"
+                          :class="i <= Math.round(courier.rating) ? 'star-filled' : 'star-empty'"
                         />
                       </div>
                       <span class="rating-value">{{ courier.rating.toFixed(1) }}</span>
@@ -205,8 +212,12 @@
                   </td>
                   <td>
                     <div class="deliveries-info">
-                      <div class="deliveries-total">{{ courier.deliveries_completed }} terminées</div>
-                      <div class="deliveries-success-rate">{{ courier.success_rate }}% de succès</div>
+                      <div class="deliveries-total">
+                        {{ courier.deliveries_completed }} terminées
+                      </div>
+                      <div class="deliveries-success-rate">
+                        {{ courier.success_rate }}% de succès
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -216,11 +227,22 @@
                   </td>
                   <td>
                     <div class="table-actions">
-                      <button class="btn-icon" @click="viewCourierDetails(courier)" title="Voir les détails">
+                      <button
+                        class="btn-icon"
+                        @click="viewCourierDetails(courier)"
+                        title="Voir les détails"
+                      >
                         <font-awesome-icon icon="eye" />
                       </button>
-                      <button class="btn-icon" @click="toggleFavorite(courier)" :title="courier.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'">
-                        <font-awesome-icon :icon="courier.is_favorite ? 'star' : 'star-o'" :class="courier.is_favorite ? 'text-warning' : ''" />
+                      <button
+                        class="btn-icon"
+                        @click="toggleFavorite(courier)"
+                        :title="courier.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+                      >
+                        <font-awesome-icon
+                          :icon="courier.is_favorite ? 'star' : 'star-o'"
+                          :class="courier.is_favorite ? 'text-warning' : ''"
+                        />
                       </button>
                     </div>
                   </td>
@@ -228,16 +250,24 @@
               </tbody>
             </table>
           </div>
-          
+
           <!-- Vue grille -->
           <div v-else-if="viewMode === 'grid'" class="couriers-grid">
             <div v-for="courier in couriers" :key="courier.id" class="courier-card">
               <div class="courier-header">
                 <div class="courier-avatar">
-                  <img v-if="courier.profile_picture" :src="courier.profile_picture" :alt="courier.full_name">
+                  <img
+                    v-if="courier.profile_picture"
+                    :src="courier.profile_picture"
+                    :alt="courier.full_name"
+                  />
                   <div v-else class="avatar-placeholder">{{ getInitials(courier.full_name) }}</div>
                 </div>
-                <button class="favorite-button" @click="toggleFavorite(courier)" :class="{ 'active': courier.is_favorite }">
+                <button
+                  class="favorite-button"
+                  @click="toggleFavorite(courier)"
+                  :class="{ active: courier.is_favorite }"
+                >
                   <font-awesome-icon :icon="courier.is_favorite ? 'star' : 'star-o'" />
                 </button>
               </div>
@@ -245,11 +275,11 @@
                 <h3 class="courier-name">{{ courier.full_name }}</h3>
                 <div class="courier-rating">
                   <div class="stars">
-                    <font-awesome-icon 
-                      v-for="i in 5" 
-                      :key="i" 
-                      :icon="i <= Math.round(courier.rating) ? 'star' : 'star-o'" 
-                      :class="i <= Math.round(courier.rating) ? 'star-filled' : 'star-empty'" 
+                    <font-awesome-icon
+                      v-for="i in 5"
+                      :key="i"
+                      :icon="i <= Math.round(courier.rating) ? 'star' : 'star-o'"
+                      :class="i <= Math.round(courier.rating) ? 'star-filled' : 'star-empty'"
                     />
                   </div>
                   <span class="rating-value">{{ courier.rating.toFixed(1) }}</span>
@@ -268,7 +298,10 @@
                     <span>{{ courier.commune }}</span>
                   </div>
                   <div class="info-item" v-if="courier.vehicle_type">
-                    <font-awesome-icon :icon="getVehicleIcon(courier.vehicle_type)" class="info-icon" />
+                    <font-awesome-icon
+                      :icon="getVehicleIcon(courier.vehicle_type)"
+                      class="info-icon"
+                    />
                     <span>{{ getVehicleLabel(courier.vehicle_type) }}</span>
                   </div>
                   <div class="info-item">
@@ -292,34 +325,35 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Pagination -->
           <div class="pagination-container">
             <div class="pagination-info">
-              Affichage de {{ paginationInfo.from }}-{{ paginationInfo.to }} sur {{ paginationInfo.total }} coursiers
+              Affichage de {{ paginationInfo.from }}-{{ paginationInfo.to }} sur
+              {{ paginationInfo.total }} coursiers
             </div>
             <div class="pagination-controls">
-              <button 
-                class="pagination-button" 
-                :disabled="currentPage === 1" 
+              <button
+                class="pagination-button"
+                :disabled="currentPage === 1"
                 @click="changePage(currentPage - 1)"
               >
                 <font-awesome-icon icon="chevron-left" />
               </button>
               <div class="pagination-pages">
-                <button 
-                  v-for="page in displayedPages" 
-                  :key="page" 
-                  class="pagination-page" 
+                <button
+                  v-for="page in displayedPages"
+                  :key="page"
+                  class="pagination-page"
                   :class="{ active: currentPage === page }"
                   @click="changePage(page)"
                 >
                   {{ page }}
                 </button>
               </div>
-              <button 
-                class="pagination-button" 
-                :disabled="currentPage === totalPages" 
+              <button
+                class="pagination-button"
+                :disabled="currentPage === totalPages"
                 @click="changePage(currentPage + 1)"
               >
                 <font-awesome-icon icon="chevron-right" />
@@ -351,11 +385,24 @@
           <form @submit.prevent="inviteCourier">
             <div class="form-group">
               <label for="invite_phone">Numéro de téléphone</label>
-              <input type="tel" id="invite_phone" v-model="inviteForm.phone" class="form-control" placeholder="+225 XX XX XX XX XX" required />
+              <input
+                type="tel"
+                id="invite_phone"
+                v-model="inviteForm.phone"
+                class="form-control"
+                placeholder="+225 XX XX XX XX XX"
+                required
+              />
             </div>
             <div class="form-group">
               <label for="invite_message">Message personnalisé (optionnel)</label>
-              <textarea id="invite_message" v-model="inviteForm.message" class="form-control" rows="3" placeholder="Écrivez un message personnalisé pour le coursier..."></textarea>
+              <textarea
+                id="invite_message"
+                v-model="inviteForm.message"
+                class="form-control"
+                rows="3"
+                placeholder="Écrivez un message personnalisé pour le coursier..."
+              ></textarea>
             </div>
             <div class="form-actions">
               <button type="button" class="btn btn-outline" @click="showInviteModal = false">
@@ -385,8 +432,14 @@
           <div class="courier-profile">
             <div class="courier-profile-header">
               <div class="courier-profile-avatar">
-                <img v-if="selectedCourier.profile_picture" :src="selectedCourier.profile_picture" :alt="selectedCourier.full_name">
-                <div v-else class="avatar-placeholder">{{ getInitials(selectedCourier.full_name) }}</div>
+                <img
+                  v-if="selectedCourier.profile_picture"
+                  :src="selectedCourier.profile_picture"
+                  :alt="selectedCourier.full_name"
+                />
+                <div v-else class="avatar-placeholder">
+                  {{ getInitials(selectedCourier.full_name) }}
+                </div>
               </div>
               <div class="courier-profile-info">
                 <h2>{{ selectedCourier.full_name }}</h2>
@@ -406,19 +459,30 @@
                 </div>
                 <div class="courier-profile-rating">
                   <div class="stars">
-                    <font-awesome-icon 
-                      v-for="i in 5" 
-                      :key="i" 
-                      :icon="i <= Math.round(selectedCourier.rating) ? 'star' : 'star-o'" 
-                      :class="i <= Math.round(selectedCourier.rating) ? 'star-filled' : 'star-empty'" 
+                    <font-awesome-icon
+                      v-for="i in 5"
+                      :key="i"
+                      :icon="i <= Math.round(selectedCourier.rating) ? 'star' : 'star-o'"
+                      :class="
+                        i <= Math.round(selectedCourier.rating) ? 'star-filled' : 'star-empty'
+                      "
                     />
                   </div>
-                  <span class="rating-value">{{ selectedCourier.rating.toFixed(1) }} ({{ selectedCourier.ratings_count }} évaluations)</span>
+                  <span class="rating-value"
+                    >{{ selectedCourier.rating.toFixed(1) }} ({{
+                      selectedCourier.ratings_count
+                    }}
+                    évaluations)</span
+                  >
                 </div>
               </div>
               <div class="courier-profile-actions">
                 <button class="btn btn-outline" @click="toggleFavorite(selectedCourier)">
-                  <font-awesome-icon :icon="selectedCourier.is_favorite ? 'star' : 'star-o'" class="mr-1" :class="selectedCourier.is_favorite ? 'text-warning' : ''" />
+                  <font-awesome-icon
+                    :icon="selectedCourier.is_favorite ? 'star' : 'star-o'"
+                    class="mr-1"
+                    :class="selectedCourier.is_favorite ? 'text-warning' : ''"
+                  />
                   {{ selectedCourier.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
                 </button>
               </div>
@@ -450,7 +514,10 @@
                   <div class="details-item">
                     <div class="details-label">Type de véhicule</div>
                     <div class="details-value">
-                      <font-awesome-icon :icon="getVehicleIcon(selectedCourier.vehicle_type)" class="mr-1" />
+                      <font-awesome-icon
+                        :icon="getVehicleIcon(selectedCourier.vehicle_type)"
+                        class="mr-1"
+                      />
                       {{ getVehicleLabel(selectedCourier.vehicle_type) }}
                     </div>
                   </div>
@@ -479,8 +546,17 @@
               <div class="details-section">
                 <h3>Dernières livraisons</h3>
                 <div class="details-content">
-                  <div v-if="selectedCourier.recent_deliveries && selectedCourier.recent_deliveries.length > 0">
-                    <div class="recent-delivery" v-for="delivery in selectedCourier.recent_deliveries" :key="delivery.id">
+                  <div
+                    v-if="
+                      selectedCourier.recent_deliveries &&
+                      selectedCourier.recent_deliveries.length > 0
+                    "
+                  >
+                    <div
+                      class="recent-delivery"
+                      v-for="delivery in selectedCourier.recent_deliveries"
+                      :key="delivery.id"
+                    >
                       <div class="delivery-header">
                         <div class="delivery-id">#{{ delivery.id }}</div>
                         <div class="delivery-date">{{ formatDate(delivery.created_at) }}</div>
@@ -502,7 +578,12 @@
                         <span class="status-badge" :class="getStatusClass(delivery.status)">
                           {{ getStatusLabel(delivery.status) }}
                         </span>
-                        <span class="delivery-price">{{ formatPrice(delivery.final_price || delivery.proposed_price) }} FCFA</span>
+                        <span class="delivery-price"
+                          >{{
+                            formatPrice(delivery.final_price || delivery.proposed_price)
+                          }}
+                          FCFA</span
+                        >
                       </div>
                     </div>
                   </div>
@@ -513,15 +594,23 @@
               <div class="details-section">
                 <h3>Évaluations récentes</h3>
                 <div class="details-content">
-                  <div v-if="selectedCourier.recent_ratings && selectedCourier.recent_ratings.length > 0">
-                    <div class="recent-rating" v-for="rating in selectedCourier.recent_ratings" :key="rating.id">
+                  <div
+                    v-if="
+                      selectedCourier.recent_ratings && selectedCourier.recent_ratings.length > 0
+                    "
+                  >
+                    <div
+                      class="recent-rating"
+                      v-for="rating in selectedCourier.recent_ratings"
+                      :key="rating.id"
+                    >
                       <div class="rating-header">
                         <div class="rating-stars">
-                          <font-awesome-icon 
-                            v-for="i in 5" 
-                            :key="i" 
-                            :icon="i <= rating.score ? 'star' : 'star-o'" 
-                            :class="i <= rating.score ? 'star-filled' : 'star-empty'" 
+                          <font-awesome-icon
+                            v-for="i in 5"
+                            :key="i"
+                            :icon="i <= rating.score ? 'star' : 'star-o'"
+                            :class="i <= rating.score ? 'star-filled' : 'star-empty'"
                           />
                         </div>
                         <div class="rating-date">{{ formatDate(rating.created_at) }}</div>
@@ -530,7 +619,10 @@
                         {{ rating.comment }}
                       </div>
                       <div class="rating-delivery">
-                        Pour la livraison <router-link :to="`/business/deliveries/${rating.delivery_id}`">#{{ rating.delivery_id }}</router-link>
+                        Pour la livraison
+                        <router-link :to="`/business/deliveries/${rating.delivery_id}`"
+                          >#{{ rating.delivery_id }}</router-link
+                        >
                       </div>
                     </div>
                   </div>
@@ -547,7 +639,11 @@
 
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { fetchBusinessCouriers, inviteBusinessCourier, toggleBusinessCourierFavorite } from '@/api/business'
+import {
+  fetchBusinessCouriers,
+  inviteBusinessCourier,
+  toggleBusinessCourierFavorite,
+} from '@/api/business'
 import { formatDate, formatPrice, getInitials } from '@/utils/formatters'
 import { VEHICLE_TYPES, PAGE_SIZE_OPTIONS, DEFAULT_PAGE_SIZE } from '@/config'
 
@@ -565,34 +661,34 @@ export default {
     const showInviteModal = ref(false)
     const showDetailsModal = ref(false)
     const selectedCourier = ref(null)
-    
+
     const inviteForm = reactive({
       phone: '',
-      message: ''
+      message: '',
     })
-    
+
     const filters = reactive({
       status: '',
       rating: '',
       vehicleType: '',
-      search: ''
+      search: '',
     })
-    
+
     const paginationInfo = computed(() => {
       const from = totalItems.value === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1
       const to = Math.min(from + pageSize.value - 1, totalItems.value)
-      
+
       return {
         from,
         to,
-        total: totalItems.value
+        total: totalItems.value,
       }
     })
-    
+
     const displayedPages = computed(() => {
       const pages = []
       const maxPagesToShow = 5
-      
+
       if (totalPages.value <= maxPagesToShow) {
         // Afficher toutes les pages si leur nombre est inférieur ou égal à maxPagesToShow
         for (let i = 1; i <= totalPages.value; i++) {
@@ -601,68 +697,68 @@ export default {
       } else {
         // Toujours afficher la première page
         pages.push(1)
-        
+
         // Calculer les pages à afficher autour de la page courante
         let startPage = Math.max(2, currentPage.value - Math.floor(maxPagesToShow / 2))
         let endPage = Math.min(totalPages.value - 1, startPage + maxPagesToShow - 3)
-        
+
         // Ajuster startPage si endPage est trop petit
         startPage = Math.max(2, endPage - (maxPagesToShow - 3))
-        
+
         // Ajouter des points de suspension si nécessaire
         if (startPage > 2) {
           pages.push('...')
         }
-        
+
         // Ajouter les pages intermédiaires
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
-        
+
         // Ajouter des points de suspension si nécessaire
         if (endPage < totalPages.value - 1) {
           pages.push('...')
         }
-        
+
         // Toujours afficher la dernière page
         pages.push(totalPages.value)
       }
-      
+
       return pages
     })
-    
+
     const courierStats = computed(() => {
       // Calculer les statistiques à partir des données
       const total = totalItems.value
       const active = couriers.value.filter(c => c.status === 'active').length
       const busy = couriers.value.filter(c => c.status === 'busy').length
-      
+
       // Calculer la note moyenne
       let totalRating = 0
       let ratedCouriers = 0
-      
+
       couriers.value.forEach(courier => {
         if (courier.rating > 0) {
           totalRating += courier.rating
           ratedCouriers++
         }
       })
-      
+
       const averageRating = ratedCouriers > 0 ? totalRating / ratedCouriers : 0
-      
+
       return {
         total,
         active,
         busy,
-        averageRating
+        averageRating,
       }
     })
-    
+
     // Charger les coursiers
     const loadCouriers = async () => {
       try {
         loading.value = true
-        
+
         // Préparer les paramètres de requête
         const params = {
           page: currentPage.value,
@@ -670,15 +766,15 @@ export default {
           status: filters.status || undefined,
           rating: filters.rating || undefined,
           vehicle_type: filters.vehicleType || undefined,
-          search: filters.search || undefined
+          search: filters.search || undefined,
         }
-        
+
         const response = await fetchBusinessCouriers(params)
-        
+
         couriers.value = response.items
         totalItems.value = response.total
         totalPages.value = Math.ceil(response.total / pageSize.value)
-        
+
         // Ajuster la page courante si elle dépasse le nombre total de pages
         if (currentPage.value > totalPages.value && totalPages.value > 0) {
           currentPage.value = totalPages.value
@@ -690,67 +786,67 @@ export default {
         loading.value = false
       }
     }
-    
+
     // Changer de page
-    const changePage = (page) => {
+    const changePage = page => {
       if (page === '...') return
-      
+
       currentPage.value = page
       loadCouriers()
     }
-    
+
     // Changer la taille de page
     const changePageSize = () => {
       currentPage.value = 1
       loadCouriers()
     }
-    
+
     // Appliquer les filtres
     const applyFilters = () => {
       currentPage.value = 1
       loadCouriers()
     }
-    
+
     // Réinitialiser les filtres
     const resetFilters = () => {
       filters.status = ''
       filters.rating = ''
       filters.vehicleType = ''
       filters.search = ''
-      
+
       currentPage.value = 1
       loadCouriers()
     }
-    
+
     // Rafraîchir les données
     const refreshData = () => {
       loadCouriers()
     }
-    
+
     // Exporter les coursiers
     const exportCouriers = () => {
       // Implémenter l'exportation des coursiers (CSV, Excel, etc.)
-      alert('Fonctionnalité d\'exportation à implémenter')
+      alert("Fonctionnalité d'exportation à implémenter")
     }
-    
+
     // Ouvrir le modal d'invitation
     const openInviteModal = () => {
       // Réinitialiser le formulaire
       inviteForm.phone = ''
       inviteForm.message = ''
-      
+
       showInviteModal.value = true
     }
-    
+
     // Inviter un coursier
     const inviteCourier = async () => {
       try {
         isSubmitting.value = true
-        
+
         await inviteBusinessCourier(inviteForm)
-        
+
         showInviteModal.value = false
-        
+
         // Afficher un message de succès
         alert('Invitation envoyée avec succès')
       } catch (error) {
@@ -760,23 +856,23 @@ export default {
         isSubmitting.value = false
       }
     }
-    
+
     // Voir les détails d'un coursier
-    const viewCourierDetails = async (courier) => {
+    const viewCourierDetails = async courier => {
       selectedCourier.value = courier
       showDetailsModal.value = true
     }
-    
+
     // Ajouter/retirer un coursier des favoris
-    const toggleFavorite = async (courier) => {
+    const toggleFavorite = async courier => {
       try {
         const isFavorite = !courier.is_favorite
-        
+
         await toggleBusinessCourierFavorite(courier.id, isFavorite)
-        
+
         // Mettre à jour l'état local
         courier.is_favorite = isFavorite
-        
+
         // Si le coursier sélectionné est le même, mettre à jour également
         if (selectedCourier.value && selectedCourier.value.id === courier.id) {
           selectedCourier.value.is_favorite = isFavorite
@@ -786,45 +882,45 @@ export default {
         alert(`Erreur lors de la modification des favoris: ${error.message}`)
       }
     }
-    
+
     // Obtenir l'icône pour un type de véhicule
-    const getVehicleIcon = (type) => {
+    const getVehicleIcon = type => {
       return VEHICLE_TYPES[type]?.icon || 'car'
     }
-    
+
     // Obtenir le libellé d'un type de véhicule
-    const getVehicleLabel = (type) => {
+    const getVehicleLabel = type => {
       return VEHICLE_TYPES[type]?.label || type
     }
-    
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       const statusClasses = {
         active: 'status-active',
         inactive: 'status-inactive',
         busy: 'status-busy',
-        suspended: 'status-suspended'
+        suspended: 'status-suspended',
       }
-      
+
       return statusClasses[status] || ''
     }
-    
+
     // Obtenir le libellé d'un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       const statusLabels = {
         active: 'Actif',
         inactive: 'Inactif',
         busy: 'Occupé',
-        suspended: 'Suspendu'
+        suspended: 'Suspendu',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     onMounted(() => {
       loadCouriers()
     })
-    
+
     return {
       loading,
       isSubmitting,
@@ -860,9 +956,9 @@ export default {
       getStatusLabel,
       formatDate,
       formatPrice,
-      getInitials
+      getInitials,
     }
-  }
+  },
 }
 </script>
 
@@ -1182,15 +1278,15 @@ export default {
 .stars {
   display: flex;
   margin-right: 0.5rem;
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .star-filled {
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .star-empty {
-  color: #E0E0E0;
+  color: #e0e0e0;
 }
 
 .rating-value {
@@ -1223,23 +1319,23 @@ export default {
 }
 
 .status-active {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-inactive {
-  background-color: #EEEEEE;
+  background-color: #eeeeee;
   color: #757575;
 }
 
 .status-busy {
-  background-color: #FFF0E8;
-  color: #FF6B00;
+  background-color: #fff0e8;
+  color: #ff6b00;
 }
 
 .status-suspended {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .table-actions {
@@ -1306,7 +1402,7 @@ export default {
 }
 
 .favorite-button.active {
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .courier-content {
@@ -1725,7 +1821,7 @@ export default {
 }
 
 .text-warning {
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .text-muted {
@@ -1736,47 +1832,47 @@ export default {
   .filters-row {
     flex-direction: column;
   }
-  
+
   .filter-group {
     width: 100%;
   }
-  
+
   .pagination-container {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .pagination-info {
     order: 3;
   }
-  
+
   .pagination-controls {
     order: 1;
   }
-  
+
   .pagination-size {
     order: 2;
     width: 100%;
   }
-  
+
   .courier-profile-header {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .courier-profile-meta,
   .courier-profile-rating {
     justify-content: center;
   }
-  
+
   .courier-profile-actions {
     margin-top: 1rem;
   }
-  
+
   .details-item {
     flex-direction: column;
   }
-  
+
   .details-label {
     width: 100%;
     margin-bottom: 0.25rem;
@@ -1789,15 +1885,15 @@ export default {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-actions {
     width: 100%;
   }
-  
+
   .header-actions .btn {
     flex: 1;
   }
-  
+
   .couriers-grid {
     grid-template-columns: 1fr;
   }

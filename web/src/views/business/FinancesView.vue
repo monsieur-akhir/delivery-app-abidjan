@@ -18,7 +18,12 @@
       <div class="filters-row">
         <div class="filter-group">
           <label for="period-filter">Période</label>
-          <select id="period-filter" v-model="filters.period" class="form-control" @change="handlePeriodChange">
+          <select
+            id="period-filter"
+            v-model="filters.period"
+            class="form-control"
+            @change="handlePeriodChange"
+          >
             <option value="week">Cette semaine</option>
             <option value="month">Ce mois</option>
             <option value="quarter">Ce trimestre</option>
@@ -164,17 +169,24 @@
                   <td>{{ formatDate(transaction.date) }}</td>
                   <td>{{ transaction.description }}</td>
                   <td>
-                    <router-link v-if="transaction.delivery_id" :to="`/business/deliveries/${transaction.delivery_id}`">
+                    <router-link
+                      v-if="transaction.delivery_id"
+                      :to="`/business/deliveries/${transaction.delivery_id}`"
+                    >
                       #{{ transaction.delivery_id }}
                     </router-link>
                     <span v-else>-</span>
                   </td>
                   <td :class="transaction.type === 'credit' ? 'text-success' : 'text-danger'">
-                    {{ transaction.type === 'credit' ? '+' : '-' }} {{ formatPrice(transaction.amount) }} FCFA
+                    {{ transaction.type === 'credit' ? '+' : '-' }}
+                    {{ formatPrice(transaction.amount) }} FCFA
                   </td>
                   <td>
                     <div class="payment-method">
-                      <font-awesome-icon :icon="getPaymentMethodIcon(transaction.payment_method)" class="mr-1" />
+                      <font-awesome-icon
+                        :icon="getPaymentMethodIcon(transaction.payment_method)"
+                        class="mr-1"
+                      />
                       {{ getPaymentMethodLabel(transaction.payment_method) }}
                     </div>
                   </td>
@@ -185,21 +197,25 @@
                   </td>
                   <td>
                     <div class="table-actions">
-                      <button class="btn-icon" @click="viewTransactionDetails(transaction)" title="Voir les détails">
+                      <button
+                        class="btn-icon"
+                        @click="viewTransactionDetails(transaction)"
+                        title="Voir les détails"
+                      >
                         <font-awesome-icon icon="eye" />
                       </button>
-                      <button 
-                        v-if="transaction.status === 'pending'" 
-                        class="btn-icon" 
-                        @click="markAsPaid(transaction.id)" 
+                      <button
+                        v-if="transaction.status === 'pending'"
+                        class="btn-icon"
+                        @click="markAsPaid(transaction.id)"
                         title="Marquer comme payé"
                       >
                         <font-awesome-icon icon="check" />
                       </button>
-                      <button 
-                        v-if="transaction.invoice_url" 
-                        class="btn-icon" 
-                        @click="downloadInvoice(transaction)" 
+                      <button
+                        v-if="transaction.invoice_url"
+                        class="btn-icon"
+                        @click="downloadInvoice(transaction)"
                         title="Télécharger la facture"
                       >
                         <font-awesome-icon icon="file-invoice" />
@@ -214,30 +230,31 @@
           <!-- Pagination -->
           <div class="pagination-container" v-if="financialData.transactions.length > 0">
             <div class="pagination-info">
-              Affichage de {{ paginationInfo.from }}-{{ paginationInfo.to }} sur {{ paginationInfo.total }} transactions
+              Affichage de {{ paginationInfo.from }}-{{ paginationInfo.to }} sur
+              {{ paginationInfo.total }} transactions
             </div>
             <div class="pagination-controls">
-              <button 
-                class="pagination-button" 
-                :disabled="currentPage === 1" 
+              <button
+                class="pagination-button"
+                :disabled="currentPage === 1"
                 @click="changePage(currentPage - 1)"
               >
                 <font-awesome-icon icon="chevron-left" />
               </button>
               <div class="pagination-pages">
-                <button 
-                  v-for="page in displayedPages" 
-                  :key="page" 
-                  class="pagination-page" 
+                <button
+                  v-for="page in displayedPages"
+                  :key="page"
+                  class="pagination-page"
                   :class="{ active: currentPage === page }"
                   @click="changePage(page)"
                 >
                   {{ page }}
                 </button>
               </div>
-              <button 
-                class="pagination-button" 
-                :disabled="currentPage === totalPages" 
+              <button
+                class="pagination-button"
+                :disabled="currentPage === totalPages"
                 @click="changePage(currentPage + 1)"
               >
                 <font-awesome-icon icon="chevron-right" />
@@ -268,8 +285,12 @@
         <div class="modal-body" v-if="selectedTransaction">
           <div class="transaction-details">
             <div class="transaction-header">
-              <div class="transaction-amount" :class="selectedTransaction.type === 'credit' ? 'text-success' : 'text-danger'">
-                {{ selectedTransaction.type === 'credit' ? '+' : '-' }} {{ formatPrice(selectedTransaction.amount) }} FCFA
+              <div
+                class="transaction-amount"
+                :class="selectedTransaction.type === 'credit' ? 'text-success' : 'text-danger'"
+              >
+                {{ selectedTransaction.type === 'credit' ? '+' : '-' }}
+                {{ formatPrice(selectedTransaction.amount) }} FCFA
               </div>
               <span class="status-badge" :class="getPaymentStatusClass(selectedTransaction.status)">
                 {{ getPaymentStatusLabel(selectedTransaction.status) }}
@@ -291,12 +312,17 @@
               </div>
               <div class="details-item">
                 <div class="details-label">Type</div>
-                <div class="details-value">{{ selectedTransaction.type === 'credit' ? 'Crédit' : 'Débit' }}</div>
+                <div class="details-value">
+                  {{ selectedTransaction.type === 'credit' ? 'Crédit' : 'Débit' }}
+                </div>
               </div>
               <div class="details-item">
                 <div class="details-label">Méthode de paiement</div>
                 <div class="details-value">
-                  <font-awesome-icon :icon="getPaymentMethodIcon(selectedTransaction.payment_method)" class="mr-1" />
+                  <font-awesome-icon
+                    :icon="getPaymentMethodIcon(selectedTransaction.payment_method)"
+                    class="mr-1"
+                  />
                   {{ getPaymentMethodLabel(selectedTransaction.payment_method) }}
                 </div>
               </div>
@@ -357,7 +383,7 @@ export default {
       pending_amount: 0,
       total_deliveries: 0,
       transactions: [],
-      total_transactions: 0
+      total_transactions: 0,
     })
     const revenueChart = ref(null)
     const paymentChart = ref(null)
@@ -368,29 +394,32 @@ export default {
     const selectedTransaction = ref(null)
     let revenueChartInstance = null
     let paymentChartInstance = null
-    
+
     const filters = reactive({
       period: 'month',
       startDate: '',
       endDate: '',
-      paymentStatus: ''
+      paymentStatus: '',
     })
-    
+
     const paginationInfo = computed(() => {
-      const from = financialData.value.transactions.length === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1
+      const from =
+        financialData.value.transactions.length === 0
+          ? 0
+          : (currentPage.value - 1) * pageSize.value + 1
       const to = Math.min(from + pageSize.value - 1, financialData.value.total_transactions)
-      
+
       return {
         from,
         to,
-        total: financialData.value.total_transactions
+        total: financialData.value.total_transactions,
       }
     })
-    
+
     const displayedPages = computed(() => {
       const pages = []
       const maxPagesToShow = 5
-      
+
       if (totalPages.value <= maxPagesToShow) {
         // Afficher toutes les pages si leur nombre est inférieur ou égal à maxPagesToShow
         for (let i = 1; i <= totalPages.value; i++) {
@@ -399,41 +428,41 @@ export default {
       } else {
         // Toujours afficher la première page
         pages.push(1)
-        
+
         // Calculer les pages à afficher autour de la page courante
         let startPage = Math.max(2, currentPage.value - Math.floor(maxPagesToShow / 2))
         let endPage = Math.min(totalPages.value - 1, startPage + maxPagesToShow - 3)
-        
+
         // Ajuster startPage si endPage est trop petit
         startPage = Math.max(2, endPage - (maxPagesToShow - 3))
-        
+
         // Ajouter des points de suspension si nécessaire
         if (startPage > 2) {
           pages.push('...')
         }
-        
+
         // Ajouter les pages intermédiaires
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
-        
+
         // Ajouter des points de suspension si nécessaire
         if (endPage < totalPages.value - 1) {
           pages.push('...')
         }
-        
+
         // Toujours afficher la dernière page
         pages.push(totalPages.value)
       }
-      
+
       return pages
     })
-    
+
     // Charger les données financières
     const loadFinancialData = async () => {
       try {
         loading.value = true
-        
+
         // Préparer les paramètres de requête
         const params = {
           page: currentPage.value,
@@ -441,13 +470,13 @@ export default {
           period: filters.period !== 'custom' ? filters.period : undefined,
           start_date: filters.period === 'custom' ? filters.startDate : undefined,
           end_date: filters.period === 'custom' ? filters.endDate : undefined,
-          payment_status: filters.paymentStatus || undefined
+          payment_status: filters.paymentStatus || undefined,
         }
-        
+
         const data = await fetchBusinessFinances(params)
         financialData.value = data
         totalPages.value = Math.ceil(data.total_transactions / pageSize.value)
-        
+
         // Ajuster la page courante si elle dépasse le nombre total de pages
         if (currentPage.value > totalPages.value && totalPages.value > 0) {
           currentPage.value = totalPages.value
@@ -461,7 +490,7 @@ export default {
         loading.value = false
       }
     }
-    
+
     // Gérer le changement de période
     const handlePeriodChange = () => {
       if (filters.period !== 'custom') {
@@ -473,99 +502,99 @@ export default {
         const today = new Date()
         const lastMonth = new Date()
         lastMonth.setMonth(lastMonth.getMonth() - 1)
-        
+
         filters.endDate = today.toISOString().split('T')[0]
         filters.startDate = lastMonth.toISOString().split('T')[0]
       }
     }
-    
+
     // Appliquer les filtres
     const applyFilters = () => {
       currentPage.value = 1
       loadFinancialData()
     }
-    
+
     // Réinitialiser les filtres
     const resetFilters = () => {
       filters.period = 'month'
       filters.startDate = ''
       filters.endDate = ''
       filters.paymentStatus = ''
-      
+
       currentPage.value = 1
       loadFinancialData()
     }
-    
+
     // Changer de page
-    const changePage = (page) => {
+    const changePage = page => {
       if (page === '...') return
-      
+
       currentPage.value = page
       loadFinancialData()
     }
-    
+
     // Changer la taille de page
     const changePageSize = () => {
       currentPage.value = 1
       loadFinancialData()
     }
-    
+
     // Rafraîchir les données
     const refreshData = () => {
       loadFinancialData()
     }
-    
+
     // Exporter les données financières
     const exportFinancialData = () => {
       // Implémenter l'exportation des données financières (CSV, Excel, etc.)
-      alert('Fonctionnalité d\'exportation à implémenter')
+      alert("Fonctionnalité d'exportation à implémenter")
     }
-    
+
     // Exporter les transactions
     const exportTransactions = () => {
       // Implémenter l'exportation des transactions (CSV, Excel, etc.)
-      alert('Fonctionnalité d\'exportation à implémenter')
+      alert("Fonctionnalité d'exportation à implémenter")
     }
-    
+
     // Télécharger le graphique des revenus
     const downloadRevenueChart = () => {
       if (!revenueChartInstance) return
-      
+
       const link = document.createElement('a')
       link.download = 'revenus.png'
       link.href = revenueChartInstance.toBase64Image()
       link.click()
     }
-    
+
     // Télécharger le graphique des paiements
     const downloadPaymentChart = () => {
       if (!paymentChartInstance) return
-      
+
       const link = document.createElement('a')
       link.download = 'paiements.png'
       link.href = paymentChartInstance.toBase64Image()
       link.click()
     }
-    
+
     // Voir les détails d'une transaction
-    const viewTransactionDetails = (transaction) => {
+    const viewTransactionDetails = transaction => {
       selectedTransaction.value = transaction
       showTransactionModal.value = true
     }
-    
+
     // Marquer une transaction comme payée
-    const markAsPaid = async (transactionId) => {
+    const markAsPaid = async transactionId => {
       try {
         await markTransactionAsPaid(transactionId)
-        
+
         // Mettre à jour l'état local
         if (selectedTransaction.value && selectedTransaction.value.id === transactionId) {
           selectedTransaction.value.status = 'paid'
         }
-        
+
         // Rafraîchir les données
         await loadFinancialData()
-        
+
         // Afficher un message de succès
         alert('Transaction marquée comme payée avec succès')
       } catch (error) {
@@ -573,84 +602,84 @@ export default {
         alert(`Erreur lors du marquage de la transaction comme payée: ${error.message}`)
       }
     }
-    
+
     // Télécharger une facture
-    const downloadInvoice = (transaction) => {
+    const downloadInvoice = transaction => {
       if (!transaction.invoice_url) return
-      
+
       window.open(transaction.invoice_url, '_blank')
     }
-    
+
     // Obtenir l'icône pour une méthode de paiement
-    const getPaymentMethodIcon = (method) => {
+    const getPaymentMethodIcon = method => {
       const methodIcons = {
-        'cash': 'money-bill',
-        'orange_money': 'mobile-alt',
-        'mtn_money': 'mobile-alt',
-        'credit_card': 'credit-card',
-        'bank_transfer': 'university'
+        cash: 'money-bill',
+        orange_money: 'mobile-alt',
+        mtn_money: 'mobile-alt',
+        credit_card: 'credit-card',
+        bank_transfer: 'university',
       }
-      
+
       return methodIcons[method] || 'money-bill'
     }
-    
+
     // Obtenir le libellé pour une méthode de paiement
-    const getPaymentMethodLabel = (method) => {
+    const getPaymentMethodLabel = method => {
       const methodLabels = {
-        'cash': 'Espèces',
-        'orange_money': 'Orange Money',
-        'mtn_money': 'MTN Money',
-        'credit_card': 'Carte bancaire',
-        'bank_transfer': 'Virement bancaire'
+        cash: 'Espèces',
+        orange_money: 'Orange Money',
+        mtn_money: 'MTN Money',
+        credit_card: 'Carte bancaire',
+        bank_transfer: 'Virement bancaire',
       }
-      
+
       return methodLabels[method] || method
     }
-    
+
     // Obtenir la classe CSS pour un statut de paiement
-    const getPaymentStatusClass = (status) => {
+    const getPaymentStatusClass = status => {
       const statusClasses = {
-        'paid': 'status-paid',
-        'pending': 'status-pending',
-        'failed': 'status-failed'
+        paid: 'status-paid',
+        pending: 'status-pending',
+        failed: 'status-failed',
       }
-      
+
       return statusClasses[status] || ''
     }
-    
+
     // Obtenir le libellé pour un statut de paiement
-    const getPaymentStatusLabel = (status) => {
+    const getPaymentStatusLabel = status => {
       const statusLabels = {
-        'paid': 'Payé',
-        'pending': 'En attente',
-        'failed': 'Échoué'
+        paid: 'Payé',
+        pending: 'En attente',
+        failed: 'Échoué',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     // Rendre les graphiques
     const renderCharts = () => {
       renderRevenueChart()
       renderPaymentChart()
     }
-    
+
     // Rendre le graphique des revenus
     const renderRevenueChart = () => {
       if (!revenueChart.value || !financialData.value.revenue_by_day) return
-      
+
       const ctx = revenueChart.value.getContext('2d')
-      
+
       // Détruire le graphique existant s'il existe
       if (revenueChartInstance) {
         revenueChartInstance.destroy()
       }
-      
+
       // Préparer les données pour le graphique
       const revenueByDay = financialData.value.revenue_by_day
       const dates = Object.keys(revenueByDay).sort()
       const revenues = dates.map(date => revenueByDay[date])
-      
+
       // Créer le graphique
       revenueChartInstance = new Chart(ctx, {
         type: 'bar',
@@ -662,70 +691,70 @@ export default {
               data: revenues,
               backgroundColor: 'rgba(255, 107, 0, 0.7)',
               borderColor: '#FF6B00',
-              borderWidth: 1
-            }
-          ]
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function (context) {
                   const value = context.raw
                   return `${formatPrice(value)} FCFA`
-                }
-              }
-            }
+                },
+              },
+            },
           },
           scales: {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
+                callback: function (value) {
                   return formatPrice(value) + ' FCFA'
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       })
     }
-    
+
     // Rendre le graphique des paiements
     const renderPaymentChart = () => {
       if (!paymentChart.value || !financialData.value.payment_status_distribution) return
-      
+
       const ctx = paymentChart.value.getContext('2d')
-      
+
       // Détruire le graphique existant s'il existe
       if (paymentChartInstance) {
         paymentChartInstance.destroy()
       }
-      
+
       // Préparer les données pour le graphique
       const distribution = financialData.value.payment_status_distribution
       const statuses = Object.keys(distribution)
       const amounts = statuses.map(status => distribution[status])
-      
+
       // Définir les couleurs pour chaque statut
       const colors = {
-        'paid': '#4CAF50',
-        'pending': '#FFC107',
-        'failed': '#F44336'
+        paid: '#4CAF50',
+        pending: '#FFC107',
+        failed: '#F44336',
       }
-      
+
       // Définir les libellés pour chaque statut
       const labels = {
-        'paid': 'Payé',
-        'pending': 'En attente',
-        'failed': 'Échoué'
+        paid: 'Payé',
+        pending: 'En attente',
+        failed: 'Échoué',
       }
-      
+
       // Créer le graphique
       paymentChartInstance = new Chart(ctx, {
         type: 'doughnut',
@@ -735,53 +764,56 @@ export default {
             {
               data: amounts,
               backgroundColor: statuses.map(status => colors[status] || '#9E9E9E'),
-              borderWidth: 1
-            }
-          ]
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'right'
+              position: 'right',
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function (context) {
                   const value = context.raw
                   const total = context.dataset.data.reduce((a, b) => a + b, 0)
                   const percentage = ((value / total) * 100).toFixed(1)
                   return `${context.label}: ${formatPrice(value)} FCFA (${percentage}%)`
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       })
     }
-    
+
     // Surveiller les changements de taille de fenêtre pour redimensionner les graphiques
     const handleResize = () => {
       if (revenueChartInstance) {
         revenueChartInstance.resize()
       }
-      
+
       if (paymentChartInstance) {
         paymentChartInstance.resize()
       }
     }
-    
+
     // Surveiller les changements de période pour mettre à jour les graphiques
-    watch(() => filters.period, () => {
-      handlePeriodChange()
-    })
-    
+    watch(
+      () => filters.period,
+      () => {
+        handlePeriodChange()
+      }
+    )
+
     onMounted(() => {
       loadFinancialData()
       window.addEventListener('resize', handleResize)
     })
-    
+
     return {
       loading,
       financialData,
@@ -814,9 +846,9 @@ export default {
       getPaymentStatusClass,
       getPaymentStatusLabel,
       formatDate,
-      formatPrice
+      formatPrice,
     }
-  }
+  },
 }
 </script>
 
@@ -1075,18 +1107,18 @@ export default {
 }
 
 .status-paid {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-pending {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #fff8e1;
+  color: #ffa000;
 }
 
 .status-failed {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .table-actions {
@@ -1095,11 +1127,11 @@ export default {
 }
 
 .text-success {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .text-danger {
-  color: #F44336;
+  color: #f44336;
 }
 
 .pagination-container {
@@ -1294,28 +1326,28 @@ export default {
   .filters-row {
     flex-direction: column;
   }
-  
+
   .filter-group {
     width: 100%;
   }
-  
+
   .charts-row {
     grid-template-columns: 1fr;
   }
-  
+
   .pagination-container {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .pagination-info {
     order: 3;
   }
-  
+
   .pagination-controls {
     order: 1;
   }
-  
+
   .pagination-size {
     order: 2;
     width: 100%;
@@ -1328,21 +1360,21 @@ export default {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-actions {
     width: 100%;
   }
-  
+
   .header-actions .btn {
     flex: 1;
   }
-  
+
   .transaction-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .details-grid {
     grid-template-columns: 1fr;
   }

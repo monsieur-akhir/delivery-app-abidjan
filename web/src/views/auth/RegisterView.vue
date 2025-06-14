@@ -12,12 +12,12 @@
         <label for="full_name">Nom complet</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="user" class="input-icon" />
-          <input 
-            type="text" 
-            id="full_name" 
-            v-model="formData.full_name" 
-            class="form-control" 
-            placeholder="Votre nom complet" 
+          <input
+            type="text"
+            id="full_name"
+            v-model="formData.full_name"
+            class="form-control"
+            placeholder="Votre nom complet"
             required
           />
         </div>
@@ -27,12 +27,12 @@
         <label for="phone">Numéro de téléphone</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="phone" class="input-icon" />
-          <input 
-            type="tel" 
-            id="phone" 
-            v-model="formData.phone" 
-            class="form-control" 
-            placeholder="+225 XX XX XX XX XX" 
+          <input
+            type="tel"
+            id="phone"
+            v-model="formData.phone"
+            class="form-control"
+            placeholder="+225 XX XX XX XX XX"
             required
           />
         </div>
@@ -42,11 +42,11 @@
         <label for="email">Email (optionnel)</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="envelope" class="input-icon" />
-          <input 
-            type="email" 
-            id="email" 
-            v-model="formData.email" 
-            class="form-control" 
+          <input
+            type="email"
+            id="email"
+            v-model="formData.email"
+            class="form-control"
             placeholder="Votre adresse email"
           />
         </div>
@@ -69,12 +69,12 @@
         <label for="business_name">Nom de l'entreprise</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="building" class="input-icon" />
-          <input 
-            type="text" 
-            id="business_name" 
-            v-model="formData.business_name" 
-            class="form-control" 
-            placeholder="Nom de votre entreprise" 
+          <input
+            type="text"
+            id="business_name"
+            v-model="formData.business_name"
+            class="form-control"
+            placeholder="Nom de votre entreprise"
             required
           />
         </div>
@@ -97,26 +97,22 @@
         <label for="password">Mot de passe</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="lock" class="input-icon" />
-          <input 
-            :type="showPassword ? 'text' : 'password'" 
-            id="password" 
-            v-model="formData.password" 
-            class="form-control" 
-            placeholder="Votre mot de passe" 
+          <input
+            :type="showPassword ? 'text' : 'password'"
+            id="password"
+            v-model="formData.password"
+            class="form-control"
+            placeholder="Votre mot de passe"
             required
           />
-          <button 
-            type="button" 
-            class="password-toggle" 
-            @click="showPassword = !showPassword"
-          >
+          <button type="button" class="password-toggle" @click="showPassword = !showPassword">
             <font-awesome-icon :icon="showPassword ? 'eye-slash' : 'eye'" />
           </button>
         </div>
         <div class="password-strength" v-if="formData.password">
           <div class="strength-bar">
-            <div 
-              class="strength-progress" 
+            <div
+              class="strength-progress"
               :style="{ width: passwordStrength.score * 25 + '%' }"
               :class="passwordStrengthClass"
             ></div>
@@ -131,22 +127,26 @@
         <label for="confirm_password">Confirmer le mot de passe</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="lock" class="input-icon" />
-          <input 
-            :type="showPassword ? 'text' : 'password'" 
-            id="confirm_password" 
-            v-model="formData.confirm_password" 
-            class="form-control" 
-            placeholder="Confirmez votre mot de passe" 
+          <input
+            :type="showPassword ? 'text' : 'password'"
+            id="confirm_password"
+            v-model="formData.confirm_password"
+            class="form-control"
+            placeholder="Confirmez votre mot de passe"
             required
           />
         </div>
         <div class="password-match" v-if="formData.password && formData.confirm_password">
-          <font-awesome-icon 
-            :icon="passwordsMatch ? 'check' : 'times'" 
-            :class="passwordsMatch ? 'text-success' : 'text-danger'" 
+          <font-awesome-icon
+            :icon="passwordsMatch ? 'check' : 'times'"
+            :class="passwordsMatch ? 'text-success' : 'text-danger'"
           />
           <span :class="passwordsMatch ? 'text-success' : 'text-danger'">
-            {{ passwordsMatch ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas' }}
+            {{
+              passwordsMatch
+                ? 'Les mots de passe correspondent'
+                : 'Les mots de passe ne correspondent pas'
+            }}
           </span>
         </div>
       </div>
@@ -154,7 +154,9 @@
       <div class="form-group terms-checkbox">
         <input type="checkbox" id="terms" v-model="formData.terms" required />
         <label for="terms">
-          J'accepte les <router-link to="/terms" target="_blank">conditions d'utilisation</router-link> et la <router-link to="/privacy" target="_blank">politique de confidentialité</router-link>
+          J'accepte les
+          <router-link to="/terms" target="_blank">conditions d'utilisation</router-link> et la
+          <router-link to="/privacy" target="_blank">politique de confidentialité</router-link>
         </label>
       </div>
 
@@ -166,9 +168,7 @@
 
     <div class="auth-footer">
       <p>Vous avez déjà un compte ?</p>
-      <router-link to="/login" class="btn btn-outline btn-block">
-        Se connecter
-      </router-link>
+      <router-link to="/login" class="btn btn-outline btn-block"> Se connecter </router-link>
     </div>
   </div>
 </template>
@@ -184,12 +184,12 @@ export default {
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()
-    
+
     const loading = ref(false)
     const error = ref(null)
     const showPassword = ref(false)
     const communes = ref(COMMUNES)
-    
+
     const formData = reactive({
       full_name: '',
       phone: '',
@@ -199,41 +199,41 @@ export default {
       commune: '',
       password: '',
       confirm_password: '',
-      terms: false
+      terms: false,
     })
-    
+
     const passwordsMatch = computed(() => {
       return formData.password === formData.confirm_password
     })
-    
+
     const passwordStrength = computed(() => {
       if (!formData.password) {
         return { score: 0, message: '' }
       }
-      
+
       let score = 0
       let message = 'Très faible'
-      
+
       // Longueur minimale
       if (formData.password.length >= 8) score++
-      
+
       // Contient des chiffres
       if (/\d/.test(formData.password)) score++
-      
+
       // Contient des lettres minuscules et majuscules
       if (/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password)) score++
-      
+
       // Contient des caractères spéciaux
       if (/[^a-zA-Z0-9]/.test(formData.password)) score++
-      
+
       if (score === 1) message = 'Faible'
       else if (score === 2) message = 'Moyen'
       else if (score === 3) message = 'Fort'
       else if (score === 4) message = 'Très fort'
-      
+
       return { score, message }
     })
-    
+
     const passwordStrengthClass = computed(() => {
       const score = passwordStrength.value.score
       if (score <= 1) return 'strength-weak'
@@ -241,7 +241,7 @@ export default {
       if (score === 3) return 'strength-good'
       return 'strength-strong'
     })
-    
+
     const canSubmit = computed(() => {
       return (
         formData.full_name &&
@@ -256,46 +256,49 @@ export default {
         (formData.role !== 'business' || formData.business_name)
       )
     })
-    
+
     // Réinitialiser le nom de l'entreprise si le rôle change
-    watch(() => formData.role, (newRole) => {
-      if (newRole !== 'business') {
-        formData.business_name = ''
+    watch(
+      () => formData.role,
+      newRole => {
+        if (newRole !== 'business') {
+          formData.business_name = ''
+        }
       }
-    })
-    
+    )
+
     const handleRegister = async () => {
       if (!canSubmit.value) return
-      
+
       try {
         loading.value = true
         error.value = null
-        
+
         // Préparer les données d'inscription
         const userData = { ...formData }
         delete userData.confirm_password
         delete userData.terms
-        
+
         const result = await authStore.registerUser(userData)
-        
+
         if (result.success) {
           if (result.require_otp) {
             // Rediriger vers la page de vérification OTP
             router.push({
               name: 'otp-verification',
-              params: { 
+              params: {
                 phone: result.phone,
-                userId: result.user_id
+                userId: result.user_id,
               },
               query: {
-                redirect: '/login?registered=true'
-              }
+                redirect: '/login?registered=true',
+              },
             })
           } else {
             // Rediriger vers la page de connexion avec un message de succès
-            router.push({ 
-              path: '/login', 
-              query: { registered: 'true' } 
+            router.push({
+              path: '/login',
+              query: { registered: 'true' },
             })
           }
         } else {
@@ -307,7 +310,7 @@ export default {
         loading.value = false
       }
     }
-    
+
     return {
       formData,
       loading,
@@ -318,9 +321,9 @@ export default {
       passwordStrength,
       passwordStrengthClass,
       canSubmit,
-      handleRegister
+      handleRegister,
     }
-  }
+  },
 }
 </script>
 
@@ -423,23 +426,23 @@ export default {
 }
 
 .strength-weak {
-  background-color: #F44336;
-  color: #F44336;
+  background-color: #f44336;
+  color: #f44336;
 }
 
 .strength-medium {
-  background-color: #FFC107;
-  color: #FFC107;
+  background-color: #ffc107;
+  color: #ffc107;
 }
 
 .strength-good {
-  background-color: #4CAF50;
-  color: #4CAF50;
+  background-color: #4caf50;
+  color: #4caf50;
 }
 
 .strength-strong {
-  background-color: #2196F3;
-  color: #2196F3;
+  background-color: #2196f3;
+  color: #2196f3;
 }
 
 .password-match {

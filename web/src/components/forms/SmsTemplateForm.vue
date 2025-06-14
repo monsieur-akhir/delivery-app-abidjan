@@ -2,18 +2,20 @@
   <div class="sms-template-form">
     <div class="form-group">
       <label for="name" class="form-label">Nom <span class="required">*</span></label>
-      <input 
-        type="text" 
-        id="name" 
-        v-model="formData.name" 
-        class="form-input" 
+      <input
+        type="text"
+        id="name"
+        v-model="formData.name"
+        class="form-input"
         placeholder="Nom du modèle"
         required
       />
     </div>
-    
+
     <div class="form-group">
-      <label for="event-type" class="form-label">Type d'événement <span class="required">*</span></label>
+      <label for="event-type" class="form-label"
+        >Type d'événement <span class="required">*</span></label
+      >
       <select id="event-type" v-model="formData.event_type" class="form-select">
         <option value="delivery_created">Création de livraison</option>
         <option value="delivery_accepted">Acceptation de livraison</option>
@@ -25,13 +27,15 @@
         <option value="critical_alert">Alerte critique</option>
       </select>
     </div>
-    
+
     <div class="form-group">
-      <label for="content" class="form-label">Contenu du message <span class="required">*</span></label>
-      <textarea 
-        id="content" 
-        v-model="formData.content" 
-        class="form-textarea" 
+      <label for="content" class="form-label"
+        >Contenu du message <span class="required">*</span></label
+      >
+      <textarea
+        id="content"
+        v-model="formData.content"
+        class="form-textarea"
         placeholder="Contenu du message SMS"
         rows="5"
         required
@@ -43,7 +47,7 @@
         {{ contentLength }}/160 caractères
       </div>
     </div>
-    
+
     <div class="form-group">
       <label for="priority" class="form-label">Priorité <span class="required">*</span></label>
       <select id="priority" v-model="formData.priority" class="form-select">
@@ -53,7 +57,7 @@
         <option value="critical">Critique</option>
       </select>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">S'applique à <span class="required">*</span></label>
       <div class="checkbox-group">
@@ -74,7 +78,7 @@
         Le modèle doit s'appliquer à au moins un type d'utilisateur
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Statut</label>
       <div class="toggle-switch">
@@ -83,7 +87,7 @@
         <span class="toggle-label">{{ formData.active ? 'Actif' : 'Inactif' }}</span>
       </div>
     </div>
-    
+
     <div class="preview-section">
       <h3 class="preview-title">Aperçu du message</h3>
       <div class="sms-preview">
@@ -92,15 +96,10 @@
         </div>
       </div>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isFormValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isFormValid">
         {{ isEditing ? 'Mettre à jour' : 'Créer' }}
       </button>
     </div>
@@ -108,15 +107,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'SmsTemplateForm',
   props: {
     template: {
       type: Object,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
@@ -129,49 +128,53 @@ export default {
       applies_to: {
         clients: true,
         couriers: false,
-        businesses: false
-      }
-    });
-    
-    const isEditing = computed(() => !!props.template?.id);
-    
+        businesses: false,
+      },
+    })
+
+    const isEditing = computed(() => !!props.template?.id)
+
     const contentLength = computed(() => {
-      return formData.value.content.length;
-    });
-    
+      return formData.value.content.length
+    })
+
     const isAppliesValid = computed(() => {
-      return formData.value.applies_to.clients || 
-             formData.value.applies_to.couriers || 
-             formData.value.applies_to.businesses;
-    });
-    
+      return (
+        formData.value.applies_to.clients ||
+        formData.value.applies_to.couriers ||
+        formData.value.applies_to.businesses
+      )
+    })
+
     const isFormValid = computed(() => {
-      return formData.value.name.trim() !== '' && 
-             formData.value.content.trim() !== '' && 
-             isAppliesValid.value;
-    });
-    
+      return (
+        formData.value.name.trim() !== '' &&
+        formData.value.content.trim() !== '' &&
+        isAppliesValid.value
+      )
+    })
+
     const initForm = () => {
       if (props.template) {
-        formData.value = { ...props.template };
+        formData.value = { ...props.template }
       }
-    };
-    
+    }
+
     const save = () => {
-      if (!isFormValid.value) return;
-      
-      const templateData = { ...formData.value };
-      emit('save', templateData);
-    };
-    
+      if (!isFormValid.value) return
+
+      const templateData = { ...formData.value }
+      emit('save', templateData)
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     onMounted(() => {
-      initForm();
-    });
-    
+      initForm()
+    })
+
     return {
       formData,
       isEditing,
@@ -179,10 +182,10 @@ export default {
       isAppliesValid,
       isFormValid,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

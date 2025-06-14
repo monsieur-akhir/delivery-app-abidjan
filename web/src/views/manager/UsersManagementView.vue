@@ -1,4 +1,3 @@
-
 <template>
   <div class="users-management">
     <div class="header">
@@ -26,7 +25,7 @@
         />
         <i class="fas fa-search"></i>
       </div>
-      
+
       <div class="filters">
         <select v-model="filters.role" class="filter-select">
           <option value="">{{ $t('users.allRoles') }}</option>
@@ -35,7 +34,7 @@
           <option value="business">{{ $t('roles.business') }}</option>
           <option value="manager">{{ $t('roles.manager') }}</option>
         </select>
-        
+
         <select v-model="filters.status" class="filter-select">
           <option value="">{{ $t('users.allStatuses') }}</option>
           <option value="active">{{ $t('status.active') }}</option>
@@ -43,14 +42,14 @@
           <option value="suspended">{{ $t('status.suspended') }}</option>
           <option value="pending_verification">{{ $t('status.pendingVerification') }}</option>
         </select>
-        
+
         <select v-model="filters.kycStatus" class="filter-select">
           <option value="">{{ $t('kyc.allStatuses') }}</option>
           <option value="pending">{{ $t('kyc.pending') }}</option>
           <option value="verified">{{ $t('kyc.verified') }}</option>
           <option value="rejected">{{ $t('kyc.rejected') }}</option>
         </select>
-        
+
         <button @click="clearFilters" class="btn btn-outline">
           {{ $t('common.clear') }}
         </button>
@@ -110,7 +109,11 @@
             <td>{{ user.id }}</td>
             <td>
               <div class="user-info">
-                <img :src="user.profile_picture || '/default-avatar.png'" :alt="user.full_name" class="user-avatar">
+                <img
+                  :src="user.profile_picture || '/default-avatar.png'"
+                  :alt="user.full_name"
+                  class="user-avatar"
+                />
                 {{ user.full_name }}
               </div>
             </td>
@@ -140,9 +143,9 @@
                 <button @click="editUser(user)" class="action-btn edit">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button 
-                  v-if="user.kyc_status === 'pending'" 
-                  @click="reviewKyc(user)" 
+                <button
+                  v-if="user.kyc_status === 'pending'"
+                  @click="reviewKyc(user)"
                   class="action-btn kyc"
                 >
                   <i class="fas fa-check-circle"></i>
@@ -159,28 +162,22 @@
 
     <!-- Pagination -->
     <div class="pagination">
-      <button 
-        @click="currentPage--" 
-        :disabled="currentPage === 1"
-        class="pagination-btn"
-      >
+      <button @click="currentPage--" :disabled="currentPage === 1" class="pagination-btn">
         {{ $t('common.previous') }}
       </button>
-      
+
       <span class="pagination-info">
-        {{ $t('pagination.info', { 
-          current: currentPage, 
-          total: totalPages,
-          showing: paginatedUsers.length,
-          total_items: filteredUsers.length
-        }) }}
+        {{
+          $t('pagination.info', {
+            current: currentPage,
+            total: totalPages,
+            showing: paginatedUsers.length,
+            total_items: filteredUsers.length,
+          })
+        }}
       </span>
-      
-      <button 
-        @click="currentPage++" 
-        :disabled="currentPage === totalPages"
-        class="pagination-btn"
-      >
+
+      <button @click="currentPage++" :disabled="currentPage === totalPages" class="pagination-btn">
         {{ $t('common.next') }}
       </button>
     </div>
@@ -194,23 +191,23 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        
+
         <form @submit.prevent="saveUser" class="user-form">
           <div class="form-group">
             <label>{{ $t('users.fullName') }} *</label>
-            <input v-model="userForm.full_name" type="text" required>
+            <input v-model="userForm.full_name" type="text" required />
           </div>
-          
+
           <div class="form-group">
             <label>{{ $t('users.phone') }} *</label>
-            <input v-model="userForm.phone" type="tel" required>
+            <input v-model="userForm.phone" type="tel" required />
           </div>
-          
+
           <div class="form-group">
             <label>{{ $t('users.email') }}</label>
-            <input v-model="userForm.email" type="email">
+            <input v-model="userForm.email" type="email" />
           </div>
-          
+
           <div class="form-group">
             <label>{{ $t('users.role') }} *</label>
             <select v-model="userForm.role" required>
@@ -220,17 +217,17 @@
               <option value="manager">{{ $t('roles.manager') }}</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label>{{ $t('users.commune') }}</label>
-            <input v-model="userForm.commune" type="text">
+            <input v-model="userForm.commune" type="text" />
           </div>
-          
+
           <div v-if="!editingUser" class="form-group">
             <label>{{ $t('users.password') }} *</label>
-            <input v-model="userForm.password" type="password" required>
+            <input v-model="userForm.password" type="password" required />
           </div>
-          
+
           <div class="form-actions">
             <button type="button" @click="closeModal" class="btn btn-secondary">
               {{ $t('common.cancel') }}
@@ -273,11 +270,11 @@ export default {
   name: 'UsersManagementView',
   components: {
     KYCReviewModal,
-    UserDetailsModal
+    UserDetailsModal,
   },
   setup() {
     const { showToast } = useToast()
-    
+
     // État réactif
     const users = ref([])
     const loading = ref(false)
@@ -288,19 +285,19 @@ export default {
     const kycReviewUser = ref(null)
     const currentPage = ref(1)
     const itemsPerPage = ref(10)
-    
+
     // Filtres
     const filters = reactive({
       search: '',
       role: '',
       status: '',
-      kycStatus: ''
+      kycStatus: '',
     })
-    
+
     // Tri
     const sortField = ref('created_at')
     const sortDirection = ref('desc')
-    
+
     // Formulaire utilisateur
     const userForm = reactive({
       full_name: '',
@@ -308,72 +305,73 @@ export default {
       email: '',
       role: 'client',
       commune: '',
-      password: ''
+      password: '',
     })
-    
+
     // Statistiques
     const stats = reactive({
       totalUsers: 0,
       activeUsers: 0,
       pendingKyc: 0,
-      newToday: 0
+      newToday: 0,
     })
-    
+
     // Computed
     const filteredUsers = computed(() => {
       let result = users.value
-      
+
       if (filters.search) {
         const search = filters.search.toLowerCase()
-        result = result.filter(user => 
-          user.full_name.toLowerCase().includes(search) ||
-          user.phone.includes(search) ||
-          (user.email && user.email.toLowerCase().includes(search))
+        result = result.filter(
+          user =>
+            user.full_name.toLowerCase().includes(search) ||
+            user.phone.includes(search) ||
+            (user.email && user.email.toLowerCase().includes(search))
         )
       }
-      
+
       if (filters.role) {
         result = result.filter(user => user.role === filters.role)
       }
-      
+
       if (filters.status) {
         result = result.filter(user => user.status === filters.status)
       }
-      
+
       if (filters.kycStatus) {
         result = result.filter(user => user.kyc_status === filters.kycStatus)
       }
-      
+
       // Tri
       result.sort((a, b) => {
         let aVal = a[sortField.value]
         let bVal = b[sortField.value]
-        
+
         if (typeof aVal === 'string') {
           aVal = aVal.toLowerCase()
           bVal = bVal.toLowerCase()
         }
-        
+
         if (sortDirection.value === 'asc') {
           return aVal > bVal ? 1 : -1
         } else {
           return aVal < bVal ? 1 : -1
         }
       })
-      
+
       return result
     })
-    
+
     const paginatedUsers = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage.value
       const end = start + itemsPerPage.value
       return filteredUsers.value.slice(start, end)
     })
-    
+
     const totalPages = computed(() => {
       return Math.ceil(filteredUsers.value.length / itemsPerPage.value)
     })
-    
+
     // Méthodes
     const fetchUsers = async () => {
       try {
@@ -387,19 +385,19 @@ export default {
         loading.value = false
       }
     }
-    
+
     const updateStats = () => {
       stats.totalUsers = users.value.length
       stats.activeUsers = users.value.filter(u => u.status === 'active').length
       stats.pendingKyc = users.value.filter(u => u.kyc_status === 'pending').length
-      
+
       const today = new Date().toDateString()
-      stats.newToday = users.value.filter(u => 
-        new Date(u.created_at).toDateString() === today
+      stats.newToday = users.value.filter(
+        u => new Date(u.created_at).toDateString() === today
       ).length
     }
-    
-    const sortBy = (field) => {
+
+    const sortBy = field => {
       if (sortField.value === field) {
         sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
       } else {
@@ -407,12 +405,12 @@ export default {
         sortDirection.value = 'asc'
       }
     }
-    
-    const getSortIcon = (field) => {
+
+    const getSortIcon = field => {
       if (sortField.value !== field) return ''
       return sortDirection.value === 'asc' ? 'fa-sort-up' : 'fa-sort-down'
     }
-    
+
     const clearFilters = () => {
       filters.search = ''
       filters.role = ''
@@ -420,12 +418,12 @@ export default {
       filters.kycStatus = ''
       currentPage.value = 1
     }
-    
-    const viewUser = (user) => {
+
+    const viewUser = user => {
       viewingUser.value = user
     }
-    
-    const editUser = (user) => {
+
+    const editUser = user => {
       editingUser.value = user
       Object.assign(userForm, {
         full_name: user.full_name,
@@ -433,17 +431,17 @@ export default {
         email: user.email || '',
         role: user.role,
         commune: user.commune || '',
-        password: ''
+        password: '',
       })
     }
-    
+
     const closeModal = () => {
       showCreateUser.value = false
       editingUser.value = null
       viewingUser.value = null
       resetForm()
     }
-    
+
     const resetForm = () => {
       Object.assign(userForm, {
         full_name: '',
@@ -451,14 +449,14 @@ export default {
         email: '',
         role: 'client',
         commune: '',
-        password: ''
+        password: '',
       })
     }
-    
+
     const saveUser = async () => {
       try {
         saving.value = true
-        
+
         if (editingUser.value) {
           await managerApi.updateUser(editingUser.value.id, userForm)
           showToast('Utilisateur mis à jour avec succès', 'success')
@@ -466,7 +464,7 @@ export default {
           await managerApi.createUser(userForm)
           showToast('Utilisateur créé avec succès', 'success')
         }
-        
+
         await fetchUsers()
         closeModal()
       } catch (error) {
@@ -475,12 +473,12 @@ export default {
         saving.value = false
       }
     }
-    
-    const reviewKyc = (user) => {
+
+    const reviewKyc = user => {
       kycReviewUser.value = user
     }
-    
-    const approveKyc = async (userId) => {
+
+    const approveKyc = async userId => {
       try {
         await managerApi.updateKycStatus(userId, { status: 'verified' })
         showToast('KYC approuvé avec succès', 'success')
@@ -490,12 +488,12 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
+
     const rejectKyc = async (userId, reason) => {
       try {
-        await managerApi.updateKycStatus(userId, { 
-          status: 'rejected', 
-          rejection_reason: reason 
+        await managerApi.updateKycStatus(userId, {
+          status: 'rejected',
+          rejection_reason: reason,
         })
         showToast('KYC rejeté', 'success')
         await fetchUsers()
@@ -504,17 +502,17 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
-    const suspendUser = async (user) => {
+
+    const suspendUser = async user => {
       if (!confirm(`Êtes-vous sûr de vouloir suspendre ${user.full_name} ?`)) {
         return
       }
-      
+
       try {
         const newStatus = user.status === 'suspended' ? 'active' : 'suspended'
         await managerApi.updateUserStatus(user.id, { status: newStatus })
         showToast(
-          newStatus === 'suspended' ? 'Utilisateur suspendu' : 'Utilisateur réactivé', 
+          newStatus === 'suspended' ? 'Utilisateur suspendu' : 'Utilisateur réactivé',
           'success'
         )
         await fetchUsers()
@@ -522,7 +520,7 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
+
     const exportUsers = async () => {
       try {
         const response = await managerApi.exportUsers()
@@ -538,27 +536,31 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
-    const formatDate = (dateString) => {
+
+    const formatDate = dateString => {
       return new Date(dateString).toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
-    
+
     // Watchers
-    watch(filters, () => {
-      currentPage.value = 1
-    }, { deep: true })
-    
+    watch(
+      filters,
+      () => {
+        currentPage.value = 1
+      },
+      { deep: true }
+    )
+
     // Lifecycle
     onMounted(() => {
       fetchUsers()
     })
-    
+
     return {
       users,
       loading,
@@ -587,9 +589,9 @@ export default {
       rejectKyc,
       suspendUser,
       exportUsers,
-      formatDate
+      formatDate,
     }
-  }
+  },
 }
 </script>
 
@@ -620,7 +622,7 @@ export default {
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-bar {
@@ -668,14 +670,14 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
 .stat-value {
   font-size: 2rem;
   font-weight: bold;
-  color: #2196F3;
+  color: #2196f3;
   margin-bottom: 5px;
 }
 
@@ -688,7 +690,7 @@ export default {
   background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
 
@@ -741,19 +743,52 @@ export default {
   font-weight: 500;
 }
 
-.role-client { background: #e3f2fd; color: #1976d2; }
-.role-courier { background: #f3e5f5; color: #7b1fa2; }
-.role-business { background: #e8f5e8; color: #388e3c; }
-.role-manager { background: #fff3e0; color: #f57c00; }
+.role-client {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+.role-courier {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+.role-business {
+  background: #e8f5e8;
+  color: #388e3c;
+}
+.role-manager {
+  background: #fff3e0;
+  color: #f57c00;
+}
 
-.status-active { background: #e8f5e8; color: #4caf50; }
-.status-inactive { background: #f5f5f5; color: #757575; }
-.status-suspended { background: #ffebee; color: #f44336; }
-.status-pending_verification { background: #fff3e0; color: #ff9800; }
+.status-active {
+  background: #e8f5e8;
+  color: #4caf50;
+}
+.status-inactive {
+  background: #f5f5f5;
+  color: #757575;
+}
+.status-suspended {
+  background: #ffebee;
+  color: #f44336;
+}
+.status-pending_verification {
+  background: #fff3e0;
+  color: #ff9800;
+}
 
-.kyc-verified { background: #e8f5e8; color: #4caf50; }
-.kyc-pending { background: #fff3e0; color: #ff9800; }
-.kyc-rejected { background: #ffebee; color: #f44336; }
+.kyc-verified {
+  background: #e8f5e8;
+  color: #4caf50;
+}
+.kyc-pending {
+  background: #fff3e0;
+  color: #ff9800;
+}
+.kyc-rejected {
+  background: #ffebee;
+  color: #f44336;
+}
 
 .actions {
   display: flex;
@@ -768,10 +803,22 @@ export default {
   font-size: 12px;
 }
 
-.action-btn.view { background: #e3f2fd; color: #1976d2; }
-.action-btn.edit { background: #f3e5f5; color: #7b1fa2; }
-.action-btn.kyc { background: #e8f5e8; color: #4caf50; }
-.action-btn.suspend { background: #ffebee; color: #f44336; }
+.action-btn.view {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+.action-btn.edit {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+.action-btn.kyc {
+  background: #e8f5e8;
+  color: #4caf50;
+}
+.action-btn.suspend {
+  background: #ffebee;
+  color: #f44336;
+}
 
 .pagination {
   display: flex;
@@ -780,7 +827,7 @@ export default {
   padding: 20px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .pagination-btn {
@@ -802,7 +849,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -879,7 +926,7 @@ export default {
 }
 
 .btn-primary {
-  background: #2196F3;
+  background: #2196f3;
   color: white;
 }
 
@@ -890,8 +937,8 @@ export default {
 
 .btn-outline {
   background: transparent;
-  color: #2196F3;
-  border: 1px solid #2196F3;
+  color: #2196f3;
+  border: 1px solid #2196f3;
 }
 
 .btn:disabled {

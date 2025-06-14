@@ -21,26 +21,22 @@
         <label for="password">Nouveau mot de passe</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="lock" class="input-icon" />
-          <input 
-            :type="showPassword ? 'text' : 'password'" 
-            id="password" 
-            v-model="formData.password" 
-            class="form-control" 
-            placeholder="Votre nouveau mot de passe" 
+          <input
+            :type="showPassword ? 'text' : 'password'"
+            id="password"
+            v-model="formData.password"
+            class="form-control"
+            placeholder="Votre nouveau mot de passe"
             required
           />
-          <button 
-            type="button" 
-            class="password-toggle" 
-            @click="showPassword = !showPassword"
-          >
+          <button type="button" class="password-toggle" @click="showPassword = !showPassword">
             <font-awesome-icon :icon="showPassword ? 'eye-slash' : 'eye'" />
           </button>
         </div>
         <div class="password-strength" v-if="formData.password">
           <div class="strength-bar">
-            <div 
-              class="strength-progress" 
+            <div
+              class="strength-progress"
               :style="{ width: passwordStrength.score * 25 + '%' }"
               :class="passwordStrengthClass"
             ></div>
@@ -55,22 +51,26 @@
         <label for="confirm_password">Confirmer le mot de passe</label>
         <div class="input-with-icon">
           <font-awesome-icon icon="lock" class="input-icon" />
-          <input 
-            :type="showPassword ? 'text' : 'password'" 
-            id="confirm_password" 
-            v-model="formData.confirm_password" 
-            class="form-control" 
-            placeholder="Confirmez votre nouveau mot de passe" 
+          <input
+            :type="showPassword ? 'text' : 'password'"
+            id="confirm_password"
+            v-model="formData.confirm_password"
+            class="form-control"
+            placeholder="Confirmez votre nouveau mot de passe"
             required
           />
         </div>
         <div class="password-match" v-if="formData.password && formData.confirm_password">
-          <font-awesome-icon 
-            :icon="passwordsMatch ? 'check' : 'times'" 
-            :class="passwordsMatch ? 'text-success' : 'text-danger'" 
+          <font-awesome-icon
+            :icon="passwordsMatch ? 'check' : 'times'"
+            :class="passwordsMatch ? 'text-success' : 'text-danger'"
           />
           <span :class="passwordsMatch ? 'text-success' : 'text-danger'">
-            {{ passwordsMatch ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas' }}
+            {{
+              passwordsMatch
+                ? 'Les mots de passe correspondent'
+                : 'Les mots de passe ne correspondent pas'
+            }}
           </span>
         </div>
       </div>
@@ -99,49 +99,49 @@ export default {
   setup() {
     const route = useRoute()
     const token = route.params.token
-    
+
     const loading = ref(false)
     const error = ref(null)
     const success = ref(null)
     const showPassword = ref(false)
-    
+
     const formData = reactive({
       password: '',
-      confirm_password: ''
+      confirm_password: '',
     })
-    
+
     const passwordsMatch = computed(() => {
       return formData.password === formData.confirm_password
     })
-    
+
     const passwordStrength = computed(() => {
       if (!formData.password) {
         return { score: 0, message: '' }
       }
-      
+
       let score = 0
       let message = 'Très faible'
-      
+
       // Longueur minimale
       if (formData.password.length >= 8) score++
-      
+
       // Contient des chiffres
       if (/\d/.test(formData.password)) score++
-      
+
       // Contient des lettres minuscules et majuscules
       if (/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password)) score++
-      
+
       // Contient des caractères spéciaux
       if (/[^a-zA-Z0-9]/.test(formData.password)) score++
-      
+
       if (score === 1) message = 'Faible'
       else if (score === 2) message = 'Moyen'
       else if (score === 3) message = 'Fort'
       else if (score === 4) message = 'Très fort'
-      
+
       return { score, message }
     })
-    
+
     const passwordStrengthClass = computed(() => {
       const score = passwordStrength.value.score
       if (score <= 1) return 'strength-weak'
@@ -149,7 +149,7 @@ export default {
       if (score === 3) return 'strength-good'
       return 'strength-strong'
     })
-    
+
     const canSubmit = computed(() => {
       return (
         formData.password &&
@@ -158,23 +158,24 @@ export default {
         passwordStrength.value.score >= 2
       )
     })
-    
+
     const handleSubmit = async () => {
       if (!canSubmit.value) return
-      
+
       try {
         loading.value = true
         error.value = null
-        
+
         // Appeler l'API pour réinitialiser le mot de passe
         await resetPassword({
           token,
-          password: formData.password
+          password: formData.password,
         })
-        
+
         // Afficher un message de succès
-        success.value = "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
-        
+        success.value =
+          'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.'
+
         // Réinitialiser le formulaire
         formData.password = ''
         formData.confirm_password = ''
@@ -184,7 +185,7 @@ export default {
         loading.value = false
       }
     }
-    
+
     return {
       formData,
       loading,
@@ -195,9 +196,9 @@ export default {
       passwordStrength,
       passwordStrengthClass,
       canSubmit,
-      handleSubmit
+      handleSubmit,
     }
-  }
+  },
 }
 </script>
 
@@ -300,23 +301,23 @@ export default {
 }
 
 .strength-weak {
-  background-color: #F44336;
-  color: #F44336;
+  background-color: #f44336;
+  color: #f44336;
 }
 
 .strength-medium {
-  background-color: #FFC107;
-  color: #FFC107;
+  background-color: #ffc107;
+  color: #ffc107;
 }
 
 .strength-good {
-  background-color: #4CAF50;
-  color: #4CAF50;
+  background-color: #4caf50;
+  color: #4caf50;
 }
 
 .strength-strong {
-  background-color: #2196F3;
-  color: #2196F3;
+  background-color: #2196f3;
+  color: #2196f3;
 }
 
 .password-match {

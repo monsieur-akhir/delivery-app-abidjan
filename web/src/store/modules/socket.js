@@ -1,5 +1,5 @@
-import io from "socket.io-client"
-import config from "@/config"
+import io from 'socket.io-client'
+import config from '@/config'
 
 const state = {
   socket: null,
@@ -8,9 +8,9 @@ const state = {
 }
 
 const getters = {
-  instance: (state) => state.socket,
-  isConnected: (state) => state.connected,
-  error: (state) => state.error,
+  instance: state => state.socket,
+  isConnected: state => state.connected,
+  error: state => state.error,
 }
 
 const mutations = {
@@ -29,10 +29,10 @@ const actions = {
   // Initialiser la connexion WebSocket
   initSocket({ commit, rootGetters }) {
     // Récupérer le token d'authentification
-    const token = rootGetters["auth/token"]
+    const token = rootGetters['auth/token']
 
     if (!token) {
-      commit("SET_ERROR", "Authentification requise pour établir une connexion WebSocket")
+      commit('SET_ERROR', 'Authentification requise pour établir une connexion WebSocket')
       return
     }
 
@@ -46,40 +46,40 @@ const actions = {
       auth: {
         token,
       },
-      transports: ["websocket"],
+      transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
     })
 
     // Configurer les écouteurs d'événements
-    socket.on("connect", () => {
-      commit("SET_CONNECTED", true)
-      commit("SET_ERROR", null)
-      console.log("WebSocket connected")
+    socket.on('connect', () => {
+      commit('SET_CONNECTED', true)
+      commit('SET_ERROR', null)
+      console.log('WebSocket connected')
     })
 
-    socket.on("disconnect", (reason) => {
-      commit("SET_CONNECTED", false)
+    socket.on('disconnect', reason => {
+      commit('SET_CONNECTED', false)
       console.log(`WebSocket disconnected: ${reason}`)
     })
 
-    socket.on("connect_error", (error) => {
-      commit("SET_CONNECTED", false)
-      commit("SET_ERROR", `Erreur de connexion WebSocket: ${error.message}`)
-      console.error("WebSocket connection error:", error)
+    socket.on('connect_error', error => {
+      commit('SET_CONNECTED', false)
+      commit('SET_ERROR', `Erreur de connexion WebSocket: ${error.message}`)
+      console.error('WebSocket connection error:', error)
     })
 
     // Stocker l'instance de socket
-    commit("SET_SOCKET", socket)
+    commit('SET_SOCKET', socket)
   },
 
   // Déconnecter le WebSocket
   disconnect({ commit, state }) {
     if (state.socket) {
       state.socket.disconnect()
-      commit("SET_SOCKET", null)
-      commit("SET_CONNECTED", false)
+      commit('SET_SOCKET', null)
+      commit('SET_CONNECTED', false)
     }
   },
 

@@ -60,19 +60,31 @@
           <tr>
             <th @click="sortBy('name')">
               Nom
-              <font-awesome-icon v-if="sortKey === 'name'" :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'" />
+              <font-awesome-icon
+                v-if="sortKey === 'name'"
+                :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'"
+              />
             </th>
             <th @click="sortBy('type')">
               Type
-              <font-awesome-icon v-if="sortKey === 'type'" :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'" />
+              <font-awesome-icon
+                v-if="sortKey === 'type'"
+                :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'"
+              />
             </th>
             <th @click="sortBy('license_plate')">
               Plaque
-              <font-awesome-icon v-if="sortKey === 'license_plate'" :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'" />
+              <font-awesome-icon
+                v-if="sortKey === 'license_plate'"
+                :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'"
+              />
             </th>
             <th @click="sortBy('status')">
               Statut
-              <font-awesome-icon v-if="sortKey === 'status'" :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'" />
+              <font-awesome-icon
+                v-if="sortKey === 'status'"
+                :icon="sortOrder === 'asc' ? 'sort-up' : 'sort-down'"
+              />
             </th>
             <th>Électrique</th>
             <th>Documents</th>
@@ -100,26 +112,32 @@
             </td>
             <td>
               <div class="document-badges">
-                <span 
-                  class="document-badge" 
+                <span
+                  class="document-badge"
                   :class="vehicle.registration_document_url ? 'document-valid' : 'document-missing'"
-                  :title="vehicle.registration_document_url ? 'Document présent' : 'Document manquant'"
+                  :title="
+                    vehicle.registration_document_url ? 'Document présent' : 'Document manquant'
+                  "
                 >
-                  <font-awesome-icon :icon="vehicle.registration_document_url ? 'check' : 'times'" />
+                  <font-awesome-icon
+                    :icon="vehicle.registration_document_url ? 'check' : 'times'"
+                  />
                   Immatriculation
                 </span>
-                <span 
-                  class="document-badge" 
+                <span
+                  class="document-badge"
                   :class="vehicle.insurance_document_url ? 'document-valid' : 'document-missing'"
                   :title="vehicle.insurance_document_url ? 'Document présent' : 'Document manquant'"
                 >
                   <font-awesome-icon :icon="vehicle.insurance_document_url ? 'check' : 'times'" />
                   Assurance
                 </span>
-                <span 
-                  class="document-badge" 
+                <span
+                  class="document-badge"
                   :class="vehicle.technical_inspection_url ? 'document-valid' : 'document-missing'"
-                  :title="vehicle.technical_inspection_url ? 'Document présent' : 'Document manquant'"
+                  :title="
+                    vehicle.technical_inspection_url ? 'Document présent' : 'Document manquant'
+                  "
                 >
                   <font-awesome-icon :icon="vehicle.technical_inspection_url ? 'check' : 'times'" />
                   Contrôle technique
@@ -167,17 +185,17 @@
 
     <!-- Pagination -->
     <div class="pagination-container">
-      <button 
-        @click="changePage(currentPage - 1)" 
-        class="btn btn-outline-primary" 
+      <button
+        @click="changePage(currentPage - 1)"
+        class="btn btn-outline-primary"
         :disabled="currentPage === 1"
       >
         <font-awesome-icon icon="chevron-left" /> Précédent
       </button>
       <span class="page-info">Page {{ currentPage }} sur {{ totalPages }}</span>
-      <button 
-        @click="changePage(currentPage + 1)" 
-        class="btn btn-outline-primary" 
+      <button
+        @click="changePage(currentPage + 1)"
+        class="btn btn-outline-primary"
         :disabled="currentPage === totalPages"
       >
         Suivant <font-awesome-icon icon="chevron-right" />
@@ -185,7 +203,13 @@
     </div>
 
     <!-- Modal d'ajout de véhicule -->
-    <div class="modal fade" :class="{ 'show': showAddVehicleModal }" tabindex="-1" role="dialog" aria-hidden="true">
+    <div
+      class="modal fade"
+      :class="{ show: showAddVehicleModal }"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -199,7 +223,13 @@
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label for="name">Nom du véhicule</label>
-                  <input type="text" class="form-control" id="name" v-model="vehicleForm.name" required>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="name"
+                    v-model="vehicleForm.name"
+                    required
+                  />
                 </div>
                 <div class="form-group col-md-6">
                   <label for="type">Type de véhicule</label>
@@ -213,18 +243,34 @@
 
               <div class="form-group" v-if="vehicleForm.type === 'custom'">
                 <label for="custom_type">Type personnalisé</label>
-                <input type="text" class="form-control" id="custom_type" v-model="vehicleForm.custom_type" required>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="custom_type"
+                  v-model="vehicleForm.custom_type"
+                  required
+                />
               </div>
 
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label for="license_plate">Plaque d'immatriculation</label>
-                  <input type="text" class="form-control" id="license_plate" v-model="vehicleForm.license_plate" required>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="license_plate"
+                    v-model="vehicleForm.license_plate"
+                    required
+                  />
                 </div>
                 <div class="form-group col-md-6">
                   <label for="status">Statut</label>
                   <select class="form-control" id="status" v-model="vehicleForm.status">
-                    <option v-for="status in vehicleStatuses" :key="status.value" :value="status.value">
+                    <option
+                      v-for="status in vehicleStatuses"
+                      :key="status.value"
+                      :value="status.value"
+                    >
                       {{ status.label }}
                     </option>
                   </select>
@@ -234,37 +280,55 @@
               <div class="form-row">
                 <div class="form-group col-md-4">
                   <label for="brand">Marque</label>
-                  <input type="text" class="form-control" id="brand" v-model="vehicleForm.brand">
+                  <input type="text" class="form-control" id="brand" v-model="vehicleForm.brand" />
                 </div>
                 <div class="form-group col-md-4">
                   <label for="model">Modèle</label>
-                  <input type="text" class="form-control" id="model" v-model="vehicleForm.model">
+                  <input type="text" class="form-control" id="model" v-model="vehicleForm.model" />
                 </div>
                 <div class="form-group col-md-4">
                   <label for="year">Année</label>
-                  <input type="number" class="form-control" id="year" v-model="vehicleForm.year">
+                  <input type="number" class="form-control" id="year" v-model="vehicleForm.year" />
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group col-md-4">
                   <label for="color">Couleur</label>
-                  <input type="text" class="form-control" id="color" v-model="vehicleForm.color">
+                  <input type="text" class="form-control" id="color" v-model="vehicleForm.color" />
                 </div>
                 <div class="form-group col-md-4">
                   <label for="max_weight">Poids max (kg)</label>
-                  <input type="number" step="0.1" class="form-control" id="max_weight" v-model="vehicleForm.max_weight">
+                  <input
+                    type="number"
+                    step="0.1"
+                    class="form-control"
+                    id="max_weight"
+                    v-model="vehicleForm.max_weight"
+                  />
                 </div>
                 <div class="form-group col-md-4">
                   <label for="max_volume">Volume max (m³)</label>
-                  <input type="number" step="0.1" class="form-control" id="max_volume" v-model="vehicleForm.max_volume">
+                  <input
+                    type="number"
+                    step="0.1"
+                    class="form-control"
+                    id="max_volume"
+                    v-model="vehicleForm.max_volume"
+                  />
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label for="max_distance">Distance max (km)</label>
-                  <input type="number" step="0.1" class="form-control" id="max_distance" v-model="vehicleForm.max_distance">
+                  <input
+                    type="number"
+                    step="0.1"
+                    class="form-control"
+                    id="max_distance"
+                    v-model="vehicleForm.max_distance"
+                  />
                 </div>
                 <div class="form-group col-md-6">
                   <label for="business_id">Entreprise</label>
@@ -279,20 +343,41 @@
 
               <div class="form-group">
                 <div class="custom-control custom-switch">
-                  <input type="checkbox" class="custom-control-input" id="is_electric" v-model="vehicleForm.is_electric">
+                  <input
+                    type="checkbox"
+                    class="custom-control-input"
+                    id="is_electric"
+                    v-model="vehicleForm.is_electric"
+                  />
                   <label class="custom-control-label" for="is_electric">Véhicule électrique</label>
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="photo_url">URL de la photo</label>
-                <input type="url" class="form-control" id="photo_url" v-model="vehicleForm.photo_url">
+                <input
+                  type="url"
+                  class="form-control"
+                  id="photo_url"
+                  v-model="vehicleForm.photo_url"
+                />
               </div>
 
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @click="showAddVehicleModal = false">Annuler</button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  @click="showAddVehicleModal = false"
+                >
+                  Annuler
+                </button>
                 <button type="submit" class="btn btn-primary" :disabled="submitting">
-                  <span v-if="submitting" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
+                  <span
+                    v-if="submitting"
+                    class="spinner-border spinner-border-sm mr-1"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
                   {{ editMode ? 'Mettre à jour' : 'Ajouter' }}
                 </button>
               </div>
@@ -303,7 +388,13 @@
     </div>
 
     <!-- Modal de confirmation de suppression -->
-    <div class="modal fade" :class="{ 'show': showDeleteModal }" tabindex="-1" role="dialog" aria-hidden="true">
+    <div
+      class="modal fade"
+      :class="{ show: showDeleteModal }"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -313,13 +404,28 @@
             </button>
           </div>
           <div class="modal-body">
-            <p>Êtes-vous sûr de vouloir supprimer le véhicule <strong>{{ vehicleToDelete?.name }}</strong> ?</p>
+            <p>
+              Êtes-vous sûr de vouloir supprimer le véhicule
+              <strong>{{ vehicleToDelete?.name }}</strong> ?
+            </p>
             <p class="text-danger">Cette action est irréversible.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showDeleteModal = false">Annuler</button>
-            <button type="button" class="btn btn-danger" @click="deleteVehicle" :disabled="deleting">
-              <span v-if="deleting" class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span>
+            <button type="button" class="btn btn-secondary" @click="showDeleteModal = false">
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="deleteVehicle"
+              :disabled="deleting"
+            >
+              <span
+                v-if="deleting"
+                class="spinner-border spinner-border-sm mr-1"
+                role="status"
+                aria-hidden="true"
+              ></span>
               Supprimer
             </button>
           </div>
@@ -328,7 +434,13 @@
     </div>
 
     <!-- Modal de détails du véhicule -->
-    <div class="modal fade" :class="{ 'show': showViewModal }" tabindex="-1" role="dialog" aria-hidden="true">
+    <div
+      class="modal fade"
+      :class="{ show: showViewModal }"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -341,12 +453,18 @@
             <div class="vehicle-details">
               <div class="vehicle-header">
                 <div class="vehicle-image">
-                  <img :src="selectedVehicle.photo_url || '/placeholder-vehicle.jpg'" alt="Photo du véhicule">
+                  <img
+                    :src="selectedVehicle.photo_url || '/placeholder-vehicle.jpg'"
+                    alt="Photo du véhicule"
+                  />
                 </div>
                 <div class="vehicle-info">
                   <h3>{{ selectedVehicle.name }}</h3>
                   <div class="vehicle-badges">
-                    <span class="vehicle-type-badge" :class="getVehicleTypeClass(selectedVehicle.type)">
+                    <span
+                      class="vehicle-type-badge"
+                      :class="getVehicleTypeClass(selectedVehicle.type)"
+                    >
                       <font-awesome-icon :icon="getVehicleTypeIcon(selectedVehicle.type)" />
                       {{ getVehicleTypeLabel(selectedVehicle.type) }}
                     </span>
@@ -400,42 +518,92 @@
                 <div class="document-list">
                   <div class="document-item">
                     <div class="document-info">
-                      <font-awesome-icon :icon="selectedVehicle.registration_document_url ? 'check-circle' : 'times-circle'" :class="selectedVehicle.registration_document_url ? 'text-success' : 'text-danger'" />
+                      <font-awesome-icon
+                        :icon="
+                          selectedVehicle.registration_document_url
+                            ? 'check-circle'
+                            : 'times-circle'
+                        "
+                        :class="
+                          selectedVehicle.registration_document_url ? 'text-success' : 'text-danger'
+                        "
+                      />
                       <span>Certificat d'immatriculation</span>
                     </div>
                     <div class="document-actions">
-                      <a v-if="selectedVehicle.registration_document_url" :href="selectedVehicle.registration_document_url" target="_blank" class="btn btn-sm btn-outline-primary">
+                      <a
+                        v-if="selectedVehicle.registration_document_url"
+                        :href="selectedVehicle.registration_document_url"
+                        target="_blank"
+                        class="btn btn-sm btn-outline-primary"
+                      >
                         <font-awesome-icon icon="eye" /> Voir
                       </a>
-                      <button v-else class="btn btn-sm btn-outline-secondary" @click="uploadDocument(selectedVehicle.id, 'registration')">
+                      <button
+                        v-else
+                        class="btn btn-sm btn-outline-secondary"
+                        @click="uploadDocument(selectedVehicle.id, 'registration')"
+                      >
                         <font-awesome-icon icon="upload" /> Télécharger
                       </button>
                     </div>
                   </div>
                   <div class="document-item">
                     <div class="document-info">
-                      <font-awesome-icon :icon="selectedVehicle.insurance_document_url ? 'check-circle' : 'times-circle'" :class="selectedVehicle.insurance_document_url ? 'text-success' : 'text-danger'" />
+                      <font-awesome-icon
+                        :icon="
+                          selectedVehicle.insurance_document_url ? 'check-circle' : 'times-circle'
+                        "
+                        :class="
+                          selectedVehicle.insurance_document_url ? 'text-success' : 'text-danger'
+                        "
+                      />
                       <span>Assurance</span>
                     </div>
                     <div class="document-actions">
-                      <a v-if="selectedVehicle.insurance_document_url" :href="selectedVehicle.insurance_document_url" target="_blank" class="btn btn-sm btn-outline-primary">
+                      <a
+                        v-if="selectedVehicle.insurance_document_url"
+                        :href="selectedVehicle.insurance_document_url"
+                        target="_blank"
+                        class="btn btn-sm btn-outline-primary"
+                      >
                         <font-awesome-icon icon="eye" /> Voir
                       </a>
-                      <button v-else class="btn btn-sm btn-outline-secondary" @click="uploadDocument(selectedVehicle.id, 'insurance')">
+                      <button
+                        v-else
+                        class="btn btn-sm btn-outline-secondary"
+                        @click="uploadDocument(selectedVehicle.id, 'insurance')"
+                      >
                         <font-awesome-icon icon="upload" /> Télécharger
                       </button>
                     </div>
                   </div>
                   <div class="document-item">
                     <div class="document-info">
-                      <font-awesome-icon :icon="selectedVehicle.technical_inspection_url ? 'check-circle' : 'times-circle'" :class="selectedVehicle.technical_inspection_url ? 'text-success' : 'text-danger'" />
+                      <font-awesome-icon
+                        :icon="
+                          selectedVehicle.technical_inspection_url ? 'check-circle' : 'times-circle'
+                        "
+                        :class="
+                          selectedVehicle.technical_inspection_url ? 'text-success' : 'text-danger'
+                        "
+                      />
                       <span>Contrôle technique</span>
                     </div>
                     <div class="document-actions">
-                      <a v-if="selectedVehicle.technical_inspection_url" :href="selectedVehicle.technical_inspection_url" target="_blank" class="btn btn-sm btn-outline-primary">
+                      <a
+                        v-if="selectedVehicle.technical_inspection_url"
+                        :href="selectedVehicle.technical_inspection_url"
+                        target="_blank"
+                        class="btn btn-sm btn-outline-primary"
+                      >
                         <font-awesome-icon icon="eye" /> Voir
                       </a>
-                      <button v-else class="btn btn-sm btn-outline-secondary" @click="uploadDocument(selectedVehicle.id, 'technical_inspection')">
+                      <button
+                        v-else
+                        class="btn btn-sm btn-outline-secondary"
+                        @click="uploadDocument(selectedVehicle.id, 'technical_inspection')"
+                      >
                         <font-awesome-icon icon="upload" /> Télécharger
                       </button>
                     </div>
@@ -445,7 +613,9 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showViewModal = false">Fermer</button>
+            <button type="button" class="btn btn-secondary" @click="showViewModal = false">
+              Fermer
+            </button>
             <button type="button" class="btn btn-primary" @click="editVehicle(selectedVehicle)">
               <font-awesome-icon icon="edit" /> Modifier
             </button>
@@ -455,25 +625,25 @@
     </div>
 
     <!-- Input file caché pour l'upload de documents -->
-    <input 
-      type="file" 
-      ref="fileInput" 
-      style="display: none" 
-      @change="handleFileUpload" 
+    <input
+      type="file"
+      ref="fileInput"
+      style="display: none"
+      @change="handleFileUpload"
       accept=".pdf,.jpg,.jpeg,.png"
-    >
+    />
   </div>
 </template>
 
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
-import { 
-  fetchVehicles, 
-  createVehicle, 
-  updateVehicle, 
+import {
+  fetchVehicles,
+  createVehicle,
+  updateVehicle,
   deleteVehicle as apiDeleteVehicle,
-  uploadVehicleDocument
+  uploadVehicleDocument,
 } from '@/api/transport'
 import { fetchBusinesses } from '@/api/business'
 import { exportToCSV } from '@/utils/export-utils'
@@ -482,7 +652,7 @@ export default {
   name: 'VehiclesManagementView',
   setup() {
     const { showToast } = useToast()
-    
+
     // État
     const vehicles = ref([])
     const businesses = ref([])
@@ -492,23 +662,23 @@ export default {
     const uploadingDocument = ref(false)
     const currentDocumentType = ref(null)
     const currentVehicleId = ref(null)
-    
+
     // Pagination
     const currentPage = ref(1)
     const itemsPerPage = ref(10)
     const totalItems = ref(0)
-    
+
     // Tri
     const sortKey = ref('name')
     const sortOrder = ref('asc')
-    
+
     // Filtres
     const filters = reactive({
       vehicleType: '',
       status: '',
-      businessId: ''
+      businessId: '',
     })
-    
+
     // Modals
     const showAddVehicleModal = ref(false)
     const showDeleteModal = ref(false)
@@ -516,7 +686,7 @@ export default {
     const editMode = ref(false)
     const vehicleToDelete = ref(null)
     const selectedVehicle = ref(null)
-    
+
     // Formulaire
     const vehicleForm = reactive({
       name: '',
@@ -533,12 +703,12 @@ export default {
       photo_url: '',
       status: 'active',
       is_electric: false,
-      business_id: ''
+      business_id: '',
     })
-    
+
     // Référence au input file
     const fileInput = ref(null)
-    
+
     // Options pour les types de véhicules
     const vehicleTypes = [
       { value: 'scooter', label: 'Trottinette', icon: 'walking' },
@@ -548,32 +718,36 @@ export default {
       { value: 'pickup', label: 'Pick-up', icon: 'truck-pickup' },
       { value: 'kia_truck', label: 'Camion Kia', icon: 'truck' },
       { value: 'moving_truck', label: 'Camion de déménagement', icon: 'truck-moving' },
-      { value: 'custom', label: 'Personnalisé', icon: 'car-alt' }
+      { value: 'custom', label: 'Personnalisé', icon: 'car-alt' },
     ]
-    
+
     // Options pour les statuts
     const vehicleStatuses = [
       { value: 'active', label: 'Actif', class: 'status-active' },
       { value: 'maintenance', label: 'En maintenance', class: 'status-maintenance' },
       { value: 'inactive', label: 'Inactif', class: 'status-inactive' },
-      { value: 'pending_verification', label: 'En attente de vérification', class: 'status-pending' }
+      {
+        value: 'pending_verification',
+        label: 'En attente de vérification',
+        class: 'status-pending',
+      },
     ]
-    
+
     // Calcul du nombre total de pages
     const totalPages = computed(() => {
       return Math.ceil(totalItems.value / itemsPerPage.value)
     })
-    
+
     // Tri des véhicules
     const sortedVehicles = computed(() => {
       return [...vehicles.value].sort((a, b) => {
         let aValue = a[sortKey.value]
         let bValue = b[sortKey.value]
-        
+
         // Gestion des valeurs nulles
         if (aValue === null) aValue = ''
         if (bValue === null) bValue = ''
-        
+
         // Comparaison
         if (sortOrder.value === 'asc') {
           return aValue > bValue ? 1 : -1
@@ -582,17 +756,17 @@ export default {
         }
       })
     })
-    
+
     // Chargement des données
     onMounted(async () => {
       try {
         loading.value = true
-        
+
         // Charger les véhicules
         const response = await fetchVehicles()
         vehicles.value = response.items
         totalItems.value = response.total
-        
+
         // Charger les entreprises
         const businessesResponse = await fetchBusinesses()
         businesses.value = businessesResponse.items
@@ -603,22 +777,22 @@ export default {
         loading.value = false
       }
     })
-    
+
     // Méthodes
     const loadVehicles = async () => {
       try {
         loading.value = true
-        
+
         const params = {
           skip: (currentPage.value - 1) * itemsPerPage.value,
-          limit: itemsPerPage.value
+          limit: itemsPerPage.value,
         }
-        
+
         // Ajouter les filtres
         if (filters.vehicleType) params.vehicle_type = filters.vehicleType
         if (filters.status) params.status = filters.status
         if (filters.businessId) params.business_id = filters.businessId
-        
+
         const response = await fetchVehicles(params)
         vehicles.value = response.items
         totalItems.value = response.total
@@ -629,7 +803,7 @@ export default {
         loading.value = false
       }
     }
-    
+
     const resetForm = () => {
       Object.keys(vehicleForm).forEach(key => {
         if (typeof vehicleForm[key] === 'boolean') {
@@ -640,31 +814,31 @@ export default {
           vehicleForm[key] = ''
         }
       })
-      
+
       vehicleForm.type = 'van'
       vehicleForm.status = 'active'
     }
-    
+
     const submitVehicleForm = async () => {
       try {
         submitting.value = true
-        
+
         // Validation
         if (vehicleForm.type === 'custom' && !vehicleForm.custom_type) {
           showToast('Veuillez spécifier un type personnalisé', 'error')
           return
         }
-        
+
         // Préparer les données
         const vehicleData = { ...vehicleForm }
-        
+
         // Convertir les valeurs vides en null
         Object.keys(vehicleData).forEach(key => {
           if (vehicleData[key] === '') {
             vehicleData[key] = null
           }
         })
-        
+
         if (editMode.value) {
           // Mise à jour
           await updateVehicle(selectedVehicle.value.id, vehicleData)
@@ -674,58 +848,58 @@ export default {
           await createVehicle(vehicleData)
           showToast('Véhicule ajouté avec succès', 'success')
         }
-        
+
         // Recharger les véhicules
         await loadVehicles()
-        
+
         // Fermer le modal et réinitialiser le formulaire
         showAddVehicleModal.value = false
         resetForm()
       } catch (error) {
         console.error('Error submitting vehicle form:', error)
-        showToast('Erreur lors de l\'enregistrement du véhicule', 'error')
+        showToast("Erreur lors de l'enregistrement du véhicule", 'error')
       } finally {
         submitting.value = false
       }
     }
-    
-    const editVehicle = (vehicle) => {
+
+    const editVehicle = vehicle => {
       // Remplir le formulaire avec les données du véhicule
       Object.keys(vehicleForm).forEach(key => {
         vehicleForm[key] = vehicle[key] !== undefined ? vehicle[key] : vehicleForm[key]
       })
-      
+
       // Activer le mode édition
       editMode.value = true
       selectedVehicle.value = vehicle
-      
+
       // Fermer le modal de détails si ouvert
       showViewModal.value = false
-      
+
       // Ouvrir le modal d'édition
       showAddVehicleModal.value = true
     }
-    
-    const viewVehicle = (vehicle) => {
+
+    const viewVehicle = vehicle => {
       selectedVehicle.value = vehicle
       showViewModal.value = true
     }
-    
-    const confirmDeleteVehicle = (vehicle) => {
+
+    const confirmDeleteVehicle = vehicle => {
       vehicleToDelete.value = vehicle
       showDeleteModal.value = true
     }
-    
+
     const deleteVehicle = async () => {
       try {
         deleting.value = true
-        
+
         await apiDeleteVehicle(vehicleToDelete.value.id)
         showToast('Véhicule supprimé avec succès', 'success')
-        
+
         // Recharger les véhicules
         await loadVehicles()
-        
+
         // Fermer le modal
         showDeleteModal.value = false
         vehicleToDelete.value = null
@@ -736,31 +910,31 @@ export default {
         deleting.value = false
       }
     }
-    
+
     const uploadDocument = (vehicleId, documentType) => {
       currentVehicleId.value = vehicleId
       currentDocumentType.value = documentType
       fileInput.value.click()
     }
-    
-    const handleFileUpload = async (event) => {
+
+    const handleFileUpload = async event => {
       const file = event.target.files[0]
       if (!file) return
-      
+
       try {
         uploadingDocument.value = true
-        
+
         // Créer un FormData
         const formData = new FormData()
         formData.append('file', file)
         formData.append('document_type', currentDocumentType.value)
-        
+
         // Envoyer le fichier
         await uploadVehicleDocument(currentVehicleId.value, formData)
-        
+
         // Recharger les véhicules
         await loadVehicles()
-        
+
         // Mettre à jour le véhicule sélectionné si nécessaire
         if (selectedVehicle.value && selectedVehicle.value.id === currentVehicleId.value) {
           const updatedVehicle = vehicles.value.find(v => v.id === currentVehicleId.value)
@@ -768,7 +942,7 @@ export default {
             selectedVehicle.value = updatedVehicle
           }
         }
-        
+
         showToast('Document téléchargé avec succès', 'success')
       } catch (error) {
         console.error('Error uploading document:', error)
@@ -777,13 +951,13 @@ export default {
         uploadingDocument.value = false
         currentVehicleId.value = null
         currentDocumentType.value = null
-        
+
         // Réinitialiser l'input file
         event.target.value = null
       }
     }
-    
-    const sortBy = (key) => {
+
+    const sortBy = key => {
       if (sortKey.value === key) {
         // Inverser l'ordre si on clique sur la même colonne
         sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
@@ -793,18 +967,18 @@ export default {
         sortOrder.value = 'asc'
       }
     }
-    
-    const changePage = (page) => {
+
+    const changePage = page => {
       if (page < 1 || page > totalPages.value) return
       currentPage.value = page
       loadVehicles()
     }
-    
+
     const applyFilters = () => {
       currentPage.value = 1 // Revenir à la première page
       loadVehicles()
     }
-    
+
     const resetFilters = () => {
       filters.vehicleType = ''
       filters.status = ''
@@ -812,51 +986,51 @@ export default {
       currentPage.value = 1
       loadVehicles()
     }
-    
+
     const exportVehicles = () => {
       const data = vehicles.value.map(vehicle => ({
-        'Nom': vehicle.name,
-        'Type': getVehicleTypeLabel(vehicle.type),
-        'Plaque': vehicle.license_plate,
-        'Marque': vehicle.brand || '',
-        'Modèle': vehicle.model || '',
-        'Année': vehicle.year || '',
-        'Statut': getStatusLabel(vehicle.status),
-        'Électrique': vehicle.is_electric ? 'Oui' : 'Non',
+        Nom: vehicle.name,
+        Type: getVehicleTypeLabel(vehicle.type),
+        Plaque: vehicle.license_plate,
+        Marque: vehicle.brand || '',
+        Modèle: vehicle.model || '',
+        Année: vehicle.year || '',
+        Statut: getStatusLabel(vehicle.status),
+        Électrique: vehicle.is_electric ? 'Oui' : 'Non',
         'Poids max (kg)': vehicle.max_weight || '',
         'Volume max (m³)': vehicle.max_volume || '',
-        'Distance max (km)': vehicle.max_distance || ''
+        'Distance max (km)': vehicle.max_distance || '',
       }))
-      
+
       exportToCSV(data, 'vehicles_export.csv')
       showToast('Export réussi', 'success')
     }
-    
+
     // Fonctions utilitaires
-    const getVehicleTypeLabel = (type) => {
+    const getVehicleTypeLabel = type => {
       const vehicleType = vehicleTypes.find(t => t.value === type)
       return vehicleType ? vehicleType.label : type
     }
-    
-    const getVehicleTypeIcon = (type) => {
+
+    const getVehicleTypeIcon = type => {
       const vehicleType = vehicleTypes.find(t => t.value === type)
       return vehicleType ? vehicleType.icon : 'car-alt'
     }
-    
-    const getVehicleTypeClass = (type) => {
+
+    const getVehicleTypeClass = type => {
       return `vehicle-type-${type}`
     }
-    
-    const getStatusLabel = (status) => {
+
+    const getStatusLabel = status => {
       const vehicleStatus = vehicleStatuses.find(s => s.value === status)
       return vehicleStatus ? vehicleStatus.label : status
     }
-    
-    const getStatusClass = (status) => {
+
+    const getStatusClass = status => {
       const vehicleStatus = vehicleStatuses.find(s => s.value === status)
       return vehicleStatus ? vehicleStatus.class : ''
     }
-    
+
     return {
       vehicles,
       businesses,
@@ -896,9 +1070,9 @@ export default {
       getVehicleTypeIcon,
       getVehicleTypeClass,
       getStatusLabel,
-      getStatusClass
+      getStatusClass,
     }
-  }
+  },
 }
 </script>
 

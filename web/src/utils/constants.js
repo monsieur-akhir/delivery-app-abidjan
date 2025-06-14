@@ -11,8 +11,8 @@ export const COMMUNES = [
   { id: 'plateau', name: 'Plateau' },
   { id: 'port_bouet', name: 'Port-Bouët' },
   { id: 'treichville', name: 'Treichville' },
-  { id: 'yopougon', name: 'Yopougon' }
-];
+  { id: 'yopougon', name: 'Yopougon' },
+]
 
 // Statuts des commandes
 export const ORDER_STATUSES = {
@@ -22,26 +22,26 @@ export const ORDER_STATUSES = {
   READY_FOR_PICKUP: 'ready_for_pickup',
   IN_TRANSIT: 'in_transit',
   DELIVERED: 'delivered',
-  CANCELLED: 'cancelled'
-};
+  CANCELLED: 'cancelled',
+}
 
 // Rôles des utilisateurs
 export const USER_ROLES = {
   ADMIN: 'admin',
   BUSINESS: 'business',
   CUSTOMER: 'customer',
-  COURIER: 'courier'
-};
+  COURIER: 'courier',
+}
 
 // Types de paiement
 export const PAYMENT_METHODS = {
   CASH: 'cash',
   ORANGE_MONEY: 'orange_money',
   MTN_MOMO: 'mtn_momo',
-  WAVE: 'wave'
-};
+  WAVE: 'wave',
+}
 
 // Constantes de l'API
 export const API = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-};
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+}

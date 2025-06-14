@@ -39,11 +39,11 @@
         <div class="filter-group">
           <label for="search">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search" 
-              v-model="filters.search" 
-              placeholder="Nom, description..." 
+            <input
+              type="text"
+              id="search"
+              v-model="filters.search"
+              placeholder="Nom, description..."
               @input="debounceSearch"
             />
             <i class="fas fa-search"></i>
@@ -96,15 +96,14 @@
             <td>{{ report.created_by }}</td>
             <td>
               <div class="actions-cell">
-                <a 
-                  class="btn-icon" 
-                  :href="report.download_url" 
-                  download 
-                  title="Télécharger"
-                >
+                <a class="btn-icon" :href="report.download_url" download title="Télécharger">
                   <i class="fas fa-download"></i>
                 </a>
-                <button class="btn-icon" @click="viewReportDetails(report.id)" title="Voir les détails">
+                <button
+                  class="btn-icon"
+                  @click="viewReportDetails(report.id)"
+                  title="Voir les détails"
+                >
                   <i class="fas fa-eye"></i>
                 </button>
                 <button class="btn-icon" @click="regenerateReport(report.id)" title="Régénérer">
@@ -121,27 +120,23 @@
 
       <!-- Pagination -->
       <div class="pagination">
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === 1" 
-          @click="changePage(currentPage - 1)"
-        >
+        <button class="btn-page" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
           <i class="fas fa-chevron-left"></i>
         </button>
-        
-        <button 
-          v-for="page in displayedPages" 
-          :key="page" 
-          class="btn-page" 
+
+        <button
+          v-for="page in displayedPages"
+          :key="page"
+          class="btn-page"
           :class="{ active: currentPage === page }"
           @click="changePage(page)"
         >
           {{ page }}
         </button>
-        
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === totalPages" 
+
+        <button
+          class="btn-page"
+          :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
           <i class="fas fa-chevron-right"></i>
@@ -155,8 +150,12 @@
         <i class="fas fa-file-alt"></i>
       </div>
       <h3>Aucun rapport trouvé</h3>
-      <p>Aucun rapport ne correspond à vos critères de recherche ou aucun rapport n'a été généré.</p>
-      <button class="btn btn-primary" @click="showGenerateReportModal = true">Générer un rapport</button>
+      <p>
+        Aucun rapport ne correspond à vos critères de recherche ou aucun rapport n'a été généré.
+      </p>
+      <button class="btn btn-primary" @click="showGenerateReportModal = true">
+        Générer un rapport
+      </button>
     </div>
 
     <!-- Chargement -->
@@ -178,14 +177,14 @@
           <div class="report-form">
             <div class="form-group">
               <label for="report-name">Nom du rapport</label>
-              <input 
-                type="text" 
-                id="report-name" 
-                v-model="reportForm.name" 
+              <input
+                type="text"
+                id="report-name"
+                v-model="reportForm.name"
                 placeholder="Entrez un nom pour ce rapport"
               />
             </div>
-            
+
             <div class="form-group">
               <label for="report-type-select">Type de rapport</label>
               <select id="report-type-select" v-model="reportForm.type">
@@ -196,7 +195,7 @@
                 <option value="performance">Rapport de performance</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label for="report-period">Période</label>
               <select id="report-period" v-model="reportForm.period" @change="handlePeriodChange">
@@ -210,7 +209,7 @@
                 <option value="custom">Personnalisée</option>
               </select>
             </div>
-            
+
             <div class="form-group date-range" v-if="reportForm.period === 'custom'">
               <label>Période personnalisée</label>
               <div class="date-range-picker">
@@ -219,7 +218,7 @@
                 <input type="date" v-model="reportForm.endDate" />
               </div>
             </div>
-            
+
             <div class="form-group">
               <label for="report-format">Format</label>
               <select id="report-format" v-model="reportForm.format">
@@ -228,17 +227,17 @@
                 <option value="csv">CSV</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label for="report-description">Description (optionnelle)</label>
-              <textarea 
-                id="report-description" 
-                v-model="reportForm.description" 
-                rows="3" 
+              <textarea
+                id="report-description"
+                v-model="reportForm.description"
+                rows="3"
                 placeholder="Ajoutez une description pour ce rapport"
               ></textarea>
             </div>
-            
+
             <div class="form-group" v-if="reportForm.type === 'financial'">
               <label>Options financières</label>
               <div class="checkbox-group">
@@ -256,7 +255,7 @@
                 </label>
               </div>
             </div>
-            
+
             <div class="form-group" v-if="reportForm.type === 'delivery'">
               <label>Options de livraison</label>
               <div class="checkbox-group">
@@ -274,8 +273,11 @@
                 </label>
               </div>
             </div>
-            
-            <div class="form-group" v-if="reportForm.type === 'user' || reportForm.type === 'business'">
+
+            <div
+              class="form-group"
+              v-if="reportForm.type === 'user' || reportForm.type === 'business'"
+            >
               <label>Options d'utilisateurs/entreprises</label>
               <div class="checkbox-group">
                 <label class="checkbox-label">
@@ -295,10 +297,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showGenerateReportModal = false">Annuler</button>
-          <button 
-            class="btn btn-primary" 
-            @click="generateReport" 
+          <button class="btn btn-secondary" @click="showGenerateReportModal = false">
+            Annuler
+          </button>
+          <button
+            class="btn btn-primary"
+            @click="generateReport"
             :disabled="!isReportFormValid || generatingReport"
           >
             <i class="fas fa-spinner fa-spin" v-if="generatingReport"></i>
@@ -332,7 +336,10 @@
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Type</span>
-                  <span class="detail-value report-type" :class="getReportTypeClass(selectedReport.type)">
+                  <span
+                    class="detail-value report-type"
+                    :class="getReportTypeClass(selectedReport.type)"
+                  >
                     {{ getReportTypeLabel(selectedReport.type) }}
                   </span>
                 </div>
@@ -357,7 +364,9 @@
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Dernière génération</span>
-                  <span class="detail-value">{{ formatDateTime(selectedReport.last_generated_at) }}</span>
+                  <span class="detail-value">{{
+                    formatDateTime(selectedReport.last_generated_at)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -388,7 +397,11 @@
             <div class="detail-section">
               <h3>Paramètres du rapport</h3>
               <div class="report-parameters">
-                <div class="parameter-item" v-for="(value, key) in selectedReport.parameters" :key="key">
+                <div
+                  class="parameter-item"
+                  v-for="(value, key) in selectedReport.parameters"
+                  :key="key"
+                >
                   <span class="parameter-label">{{ formatParameterLabel(key) }}:</span>
                   <span class="parameter-value">{{ formatParameterValue(key, value) }}</span>
                 </div>
@@ -416,7 +429,11 @@
             <div class="detail-section" v-if="selectedReport.summary">
               <h3>Résumé</h3>
               <div class="report-summary">
-                <div class="summary-item" v-for="(item, index) in selectedReport.summary" :key="index">
+                <div
+                  class="summary-item"
+                  v-for="(item, index) in selectedReport.summary"
+                  :key="index"
+                >
                   <div class="summary-label">{{ item.label }}</div>
                   <div class="summary-value">{{ item.value }}</div>
                 </div>
@@ -426,11 +443,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeReportDetailsModal">Fermer</button>
-          <a 
-            class="btn btn-primary" 
-            :href="selectedReport?.download_url" 
-            download
-          >
+          <a class="btn btn-primary" :href="selectedReport?.download_url" download>
             <i class="fas fa-download"></i> Télécharger
           </a>
           <button class="btn btn-outline" @click="regenerateReport(selectedReport?.id)">
@@ -465,7 +478,12 @@
 
 <script>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { fetchReports, fetchReportDetails, generateReport as generateReportApi, deleteReport as deleteReportApi } from '@/api/manager'
+import {
+  fetchReports,
+  fetchReportDetails,
+  generateReport as generateReportApi,
+  deleteReport as deleteReportApi,
+} from '@/api/manager'
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters'
 
 export default {
@@ -484,14 +502,14 @@ export default {
     const totalPages = ref(1)
     const itemsPerPage = ref(10)
     const totalItems = ref(0)
-    
+
     const filters = reactive({
       reportType: '',
       startDate: '',
       endDate: '',
-      search: ''
+      search: '',
     })
-    
+
     const reportForm = reactive({
       name: '',
       type: 'financial',
@@ -509,8 +527,8 @@ export default {
         includeGeographicData: false,
         includeActivityMetrics: true,
         includeGrowthData: true,
-        includeRetentionData: false
-      }
+        includeRetentionData: false,
+      },
     })
 
     // Méthodes
@@ -523,9 +541,9 @@ export default {
           type: filters.reportType,
           start_date: filters.startDate,
           end_date: filters.endDate,
-          search: filters.search
+          search: filters.search,
         }
-        
+
         const response = await fetchReports(params)
         reports.value = response.items
         totalItems.value = response.total
@@ -537,16 +555,16 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const applyFilters = () => {
       currentPage.value = 1
       fetchData()
     }
-    
+
     const resetFilters = () => {
       filters.reportType = ''
       filters.startDate = ''
@@ -555,12 +573,12 @@ export default {
       currentPage.value = 1
       fetchData()
     }
-    
-    const changePage = (page) => {
+
+    const changePage = page => {
       currentPage.value = page
       fetchData()
     }
-    
+
     const handlePeriodChange = () => {
       if (reportForm.period !== 'custom') {
         // Réinitialiser les dates personnalisées si une période prédéfinie est sélectionnée
@@ -571,20 +589,20 @@ export default {
         const today = new Date()
         const lastMonth = new Date()
         lastMonth.setMonth(lastMonth.getMonth() - 1)
-        
+
         reportForm.endDate = formatDateForInput(today)
         reportForm.startDate = formatDateForInput(lastMonth)
       }
     }
-    
-    const formatDateForInput = (date) => {
+
+    const formatDateForInput = date => {
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     }
-    
-    const viewReportDetails = async (reportId) => {
+
+    const viewReportDetails = async reportId => {
       try {
         loading.value = true
         const response = await fetchReportDetails(reportId)
@@ -597,41 +615,41 @@ export default {
         loading.value = false
       }
     }
-    
+
     const closeReportDetailsModal = () => {
       showReportDetailsModal.value = false
       selectedReport.value = null
     }
-    
+
     const generateReport = async () => {
       try {
         generatingReport.value = true
-        
+
         const payload = {
           name: reportForm.name,
           type: reportForm.type,
           period: reportForm.period,
           format: reportForm.format,
           description: reportForm.description,
-          options: reportForm.options
+          options: reportForm.options,
         }
-        
+
         if (reportForm.period === 'custom') {
           payload.start_date = reportForm.startDate
           payload.end_date = reportForm.endDate
         }
-        
+
         await generateReportApi(payload)
-        
+
         // Fermer le modal
         showGenerateReportModal.value = false
-        
+
         // Réinitialiser le formulaire
         resetReportForm()
-        
+
         // Rafraîchir les données
         fetchData()
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la génération du rapport:', error)
@@ -640,7 +658,7 @@ export default {
         generatingReport.value = false
       }
     }
-    
+
     const resetReportForm = () => {
       reportForm.name = ''
       reportForm.type = 'financial'
@@ -649,33 +667,37 @@ export default {
       reportForm.endDate = ''
       reportForm.format = 'pdf'
       reportForm.description = ''
-      
+
       // Réinitialiser les options
       Object.keys(reportForm.options).forEach(key => {
         reportForm.options[key] = key.includes('include')
       })
     }
-    
-    const regenerateReport = async (reportId) => {
+
+    const regenerateReport = async reportId => {
       try {
         loading.value = true
-        
+
         // Récupérer les détails du rapport pour obtenir les paramètres originaux
         const reportDetails = await fetchReportDetails(reportId)
-        
+
         // Régénérer le rapport avec les mêmes paramètres
         await generateReportApi({
-          regenerate_id: reportId
+          regenerate_id: reportId,
         })
-        
+
         // Fermer le modal de détails si ouvert
-        if (showReportDetailsModal.value && selectedReport.value && selectedReport.value.id === reportId) {
+        if (
+          showReportDetailsModal.value &&
+          selectedReport.value &&
+          selectedReport.value.id === reportId
+        ) {
           closeReportDetailsModal()
         }
-        
+
         // Rafraîchir les données
         fetchData()
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la régénération du rapport:', error)
@@ -684,24 +706,24 @@ export default {
         loading.value = false
       }
     }
-    
-    const deleteReport = (reportId) => {
+
+    const deleteReport = reportId => {
       reportToDelete.value = reportId
       showDeleteConfirmModal.value = true
     }
-    
+
     const confirmDeleteReport = async () => {
       try {
         if (!reportToDelete.value) return
-        
+
         await deleteReportApi(reportToDelete.value)
-        
+
         // Fermer le modal de confirmation
         showDeleteConfirmModal.value = false
-        
+
         // Rafraîchir les données
         fetchData()
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la suppression du rapport:', error)
@@ -710,18 +732,18 @@ export default {
         reportToDelete.value = null
       }
     }
-    
+
     // Utilitaires
     const formatDateRange = (startDate, endDate) => {
       return `${formatDate(startDate)} - ${formatDate(endDate)}`
     }
-    
+
     const formatDateRangeDuration = (startDate, endDate) => {
       const start = new Date(startDate)
       const end = new Date(endDate)
       const diffTime = Math.abs(end - start)
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      
+
       if (diffDays === 0) {
         return 'Même jour'
       } else if (diffDays === 1) {
@@ -739,69 +761,67 @@ export default {
         return years === 1 ? '1 an' : `${years} ans`
       }
     }
-    
-    const getReportTypeClass = (type) => {
+
+    const getReportTypeClass = type => {
       const typeMap = {
         financial: 'type-financial',
         delivery: 'type-delivery',
         user: 'type-user',
         business: 'type-business',
-        performance: 'type-performance'
+        performance: 'type-performance',
       }
       return typeMap[type] || 'type-unknown'
     }
-    
-    const getReportTypeLabel = (type) => {
+
+    const getReportTypeLabel = type => {
       const typeMap = {
         financial: 'Financier',
         delivery: 'Livraisons',
         user: 'Utilisateurs',
         business: 'Entreprises',
-        performance: 'Performance'
+        performance: 'Performance',
       }
       return typeMap[type] || 'Inconnu'
     }
-    
-    const getFormatIcon = (format) => {
+
+    const getFormatIcon = format => {
       const formatMap = {
         pdf: 'fas fa-file-pdf',
         excel: 'fas fa-file-excel',
-        csv: 'fas fa-file-csv'
+        csv: 'fas fa-file-csv',
       }
       return formatMap[format] || 'fas fa-file'
     }
-    
-    const getFormatLabel = (format) => {
+
+    const getFormatLabel = format => {
       const formatMap = {
         pdf: 'PDF',
         excel: 'Excel',
-        csv: 'CSV'
+        csv: 'CSV',
       }
       return formatMap[format] || format.toUpperCase()
     }
-    
-    const formatFileSize = (sizeInBytes) => {
+
+    const formatFileSize = sizeInBytes => {
       if (!sizeInBytes) return '0 B'
-      
+
       const units = ['B', 'KB', 'MB', 'GB', 'TB']
       let size = sizeInBytes
       let unitIndex = 0
-      
+
       while (size >= 1024 && unitIndex < units.length - 1) {
         size /= 1024
         unitIndex++
       }
-      
+
       return `${size.toFixed(1)} ${units[unitIndex]}`
     }
-    
-    const formatParameterLabel = (key) => {
+
+    const formatParameterLabel = key => {
       // Convertir camelCase en mots séparés avec première lettre majuscule
-      return key
-        .replace(/([A-Z])/g, ' $1')
-        .replace(/^./, str => str.toUpperCase())
+      return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
     }
-    
+
     const formatParameterValue = (key, value) => {
       if (typeof value === 'boolean') {
         return value ? 'Oui' : 'Non'
@@ -813,28 +833,28 @@ export default {
         return value
       }
     }
-    
+
     // Validation du formulaire
     const isReportFormValid = computed(() => {
       if (!reportForm.name.trim()) return false
-      
+
       if (reportForm.period === 'custom') {
         if (!reportForm.startDate || !reportForm.endDate) return false
-        
+
         // Vérifier que la date de début est antérieure à la date de fin
         const startDate = new Date(reportForm.startDate)
         const endDate = new Date(reportForm.endDate)
         if (startDate > endDate) return false
       }
-      
+
       return true
     })
-    
+
     // Pagination calculée
     const displayedPages = computed(() => {
       const pages = []
       const maxVisiblePages = 5
-      
+
       if (totalPages.value <= maxVisiblePages) {
         // Afficher toutes les pages si le nombre total est inférieur ou égal au maximum visible
         for (let i = 1; i <= totalPages.value; i++) {
@@ -844,20 +864,20 @@ export default {
         // Calculer les pages à afficher
         let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
         let endPage = startPage + maxVisiblePages - 1
-        
+
         if (endPage > totalPages.value) {
           endPage = totalPages.value
           startPage = Math.max(1, endPage - maxVisiblePages + 1)
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
       }
-      
+
       return pages
     })
-    
+
     // Debounce pour la recherche
     let searchTimeout = null
     const debounceSearch = () => {
@@ -866,18 +886,18 @@ export default {
         applyFilters()
       }, 500)
     }
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
       handlePeriodChange() // Initialiser les dates pour le formulaire
     })
-    
+
     // Surveiller les changements de page
     watch(currentPage, () => {
       fetchData()
     })
-    
+
     return {
       reports,
       selectedReport,
@@ -895,7 +915,7 @@ export default {
       reportForm,
       isReportFormValid,
       displayedPages,
-      
+
       fetchData,
       refreshData,
       applyFilters,
@@ -910,7 +930,7 @@ export default {
       deleteReport,
       confirmDeleteReport,
       debounceSearch,
-      
+
       formatDateRange,
       formatDateRangeDuration,
       getReportTypeClass,
@@ -920,12 +940,12 @@ export default {
       formatFileSize,
       formatParameterLabel,
       formatParameterValue,
-      
+
       formatCurrency,
       formatDate,
-      formatDateTime
+      formatDateTime,
     }
-  }
+  },
 }
 </script>
 
@@ -1542,20 +1562,20 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filter-group {
     min-width: 100%;
   }
-  
+
   .data-table {
     display: block;
     overflow-x: auto;
   }
-  
+
   .modal-content {
     width: 95%;
   }
-  
+
   .detail-grid,
   .report-summary {
     grid-template-columns: 1fr;
@@ -1567,17 +1587,17 @@ export default {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .filters-actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .modal-footer {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn {
     width: 100%;
   }

@@ -1,4 +1,3 @@
-
 <template>
   <div class="modal-overlay" @click="$emit('close')">
     <div class="modal user-details-modal" @click.stop>
@@ -8,12 +7,16 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <div class="modal-content">
         <!-- Informations de base -->
         <div class="user-profile-section">
           <div class="profile-header">
-            <img :src="user.profile_picture || '/default-avatar.png'" :alt="user.full_name" class="profile-avatar">
+            <img
+              :src="user.profile_picture || '/default-avatar.png'"
+              :alt="user.full_name"
+              class="profile-avatar"
+            />
             <div class="profile-info">
               <h3>{{ user.full_name }}</h3>
               <p class="user-role">{{ $t(`roles.${user.role}`) }}</p>
@@ -27,7 +30,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="contact-info">
             <div class="info-item">
               <i class="fas fa-phone"></i>
@@ -51,12 +54,12 @@
         <!-- Statistiques utilisateur -->
         <div class="stats-section">
           <h3>{{ $t('users.statistics') }}</h3>
-          
+
           <div v-if="loadingStats" class="loading">
             <i class="fas fa-spinner fa-spin"></i>
             {{ $t('common.loading') }}
           </div>
-          
+
           <div v-else class="stats-grid">
             <!-- Statistiques communes -->
             <div class="stat-card">
@@ -68,7 +71,7 @@
                 <div class="stat-label">{{ $t('stats.totalDeliveries') }}</div>
               </div>
             </div>
-            
+
             <div class="stat-card">
               <div class="stat-icon">
                 <i class="fas fa-star"></i>
@@ -78,7 +81,7 @@
                 <div class="stat-label">{{ $t('stats.averageRating') }}</div>
               </div>
             </div>
-            
+
             <!-- Statistiques spécifiques aux coursiers -->
             <div v-if="user.role === 'courier'" class="stat-card">
               <div class="stat-icon">
@@ -89,7 +92,7 @@
                 <div class="stat-label">{{ $t('stats.totalEarnings') }}</div>
               </div>
             </div>
-            
+
             <div v-if="user.role === 'courier'" class="stat-card">
               <div class="stat-icon">
                 <i class="fas fa-route"></i>
@@ -99,7 +102,7 @@
                 <div class="stat-label">{{ $t('stats.distanceCovered') }}</div>
               </div>
             </div>
-            
+
             <!-- Statistiques spécifiques aux clients -->
             <div v-if="user.role === 'client'" class="stat-card">
               <div class="stat-icon">
@@ -110,7 +113,7 @@
                 <div class="stat-label">{{ $t('stats.totalSpent') }}</div>
               </div>
             </div>
-            
+
             <!-- Statistiques spécifiques aux entreprises -->
             <div v-if="user.role === 'business'" class="stat-card">
               <div class="stat-icon">
@@ -127,17 +130,17 @@
         <!-- Activité récente -->
         <div class="activity-section">
           <h3>{{ $t('users.recentActivity') }}</h3>
-          
+
           <div v-if="loadingActivity" class="loading">
             <i class="fas fa-spinner fa-spin"></i>
             {{ $t('common.loading') }}
           </div>
-          
+
           <div v-else-if="recentActivity.length === 0" class="no-activity">
             <i class="fas fa-history"></i>
             {{ $t('users.noRecentActivity') }}
           </div>
-          
+
           <div v-else class="activity-list">
             <div v-for="activity in recentActivity" :key="activity.id" class="activity-item">
               <div class="activity-icon">
@@ -154,7 +157,7 @@
         <!-- Profil spécifique au rôle -->
         <div v-if="user.role === 'courier'" class="courier-profile-section">
           <h3>{{ $t('courier.profile') }}</h3>
-          
+
           <div v-if="courierProfile" class="courier-info">
             <div class="info-grid">
               <div class="info-item">
@@ -177,7 +180,7 @@
 
         <div v-if="user.role === 'business'" class="business-profile-section">
           <h3>{{ $t('business.profile') }}</h3>
-          
+
           <div v-if="businessProfile" class="business-info">
             <div class="info-grid">
               <div class="info-item">
@@ -202,19 +205,19 @@
             <i class="fas fa-edit"></i>
             {{ $t('common.edit') }}
           </button>
-          
+
           <button v-if="user.kyc_status === 'pending'" @click="reviewKyc" class="btn btn-warning">
             <i class="fas fa-check-circle"></i>
             {{ $t('kyc.review') }}
           </button>
-          
+
           <button @click="sendMessage" class="btn btn-info">
             <i class="fas fa-envelope"></i>
             {{ $t('users.sendMessage') }}
           </button>
-          
-          <button 
-            @click="toggleUserStatus" 
+
+          <button
+            @click="toggleUserStatus"
             :class="user.status === 'suspended' ? 'btn-success' : 'btn-danger'"
             class="btn"
           >
@@ -237,20 +240,20 @@ export default {
   props: {
     user: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['close', 'edit'],
   setup(props, { emit }) {
     const { showToast } = useToast()
-    
+
     const loadingStats = ref(false)
     const loadingActivity = ref(false)
     const userStats = reactive({})
     const recentActivity = ref([])
     const courierProfile = ref(null)
     const businessProfile = ref(null)
-    
+
     const loadUserStats = async () => {
       try {
         loadingStats.value = true
@@ -262,7 +265,7 @@ export default {
         loadingStats.value = false
       }
     }
-    
+
     const loadRecentActivity = async () => {
       try {
         loadingActivity.value = true
@@ -274,7 +277,7 @@ export default {
         loadingActivity.value = false
       }
     }
-    
+
     const loadRoleSpecificData = async () => {
       try {
         if (props.user.role === 'courier') {
@@ -288,70 +291,73 @@ export default {
         console.error('Error loading role-specific data:', error)
       }
     }
-    
-    const getActivityIcon = (type) => {
+
+    const getActivityIcon = type => {
       const icons = {
         delivery_created: 'fas fa-plus-circle',
         delivery_completed: 'fas fa-check-circle',
         payment_made: 'fas fa-credit-card',
         kyc_submitted: 'fas fa-id-card',
         profile_updated: 'fas fa-user-edit',
-        login: 'fas fa-sign-in-alt'
+        login: 'fas fa-sign-in-alt',
       }
       return icons[type] || 'fas fa-circle'
     }
-    
+
     const reviewKyc = () => {
       // Ouvrir le modal de révision KYC
       // Cette fonctionnalité sera gérée par le composant parent
       showToast('Fonctionnalité de révision KYC à implémenter', 'info')
     }
-    
+
     const sendMessage = () => {
       // Ouvrir le modal d'envoi de message
-      showToast('Fonctionnalité d\'envoi de message à implémenter', 'info')
+      showToast("Fonctionnalité d'envoi de message à implémenter", 'info')
     }
-    
+
     const toggleUserStatus = async () => {
       const newStatus = props.user.status === 'suspended' ? 'active' : 'suspended'
       const action = newStatus === 'suspended' ? 'suspendre' : 'activer'
-      
+
       if (!confirm(`Êtes-vous sûr de vouloir ${action} cet utilisateur ?`)) {
         return
       }
-      
+
       try {
         await managerApi.updateUserStatus(props.user.id, { status: newStatus })
         props.user.status = newStatus
-        showToast(`Utilisateur ${action === 'suspendre' ? 'suspendu' : 'activé'} avec succès`, 'success')
+        showToast(
+          `Utilisateur ${action === 'suspendre' ? 'suspendu' : 'activé'} avec succès`,
+          'success'
+        )
       } catch (error) {
         showToast(error.message, 'error')
       }
     }
-    
-    const formatDate = (dateString) => {
+
+    const formatDate = dateString => {
       return new Date(dateString).toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
-    
-    const formatCurrency = (amount) => {
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'XOF'
+        currency: 'XOF',
       }).format(amount)
     }
-    
+
     onMounted(() => {
       loadUserStats()
       loadRecentActivity()
       loadRoleSpecificData()
     })
-    
+
     return {
       loadingStats,
       loadingActivity,
@@ -364,9 +370,9 @@ export default {
       sendMessage,
       toggleUserStatus,
       formatDate,
-      formatCurrency
+      formatCurrency,
     }
-  }
+  },
 }
 </script>
 
@@ -445,7 +451,7 @@ export default {
 
 .info-item i {
   width: 16px;
-  color: #2196F3;
+  color: #2196f3;
 }
 
 .stats-section,
@@ -494,7 +500,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2196F3;
+  color: #2196f3;
 }
 
 .stat-content {
@@ -538,7 +544,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2196F3;
+  color: #2196f3;
   font-size: 14px;
 }
 
@@ -617,7 +623,7 @@ export default {
 }
 
 .btn-primary {
-  background: #2196F3;
+  background: #2196f3;
   color: white;
 }
 

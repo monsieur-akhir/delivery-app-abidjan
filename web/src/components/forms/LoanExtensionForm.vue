@@ -1,55 +1,52 @@
 <template>
   <div class="loan-extension-form">
     <div class="form-group">
-      <label for="extension-days" class="form-label">Nombre de jours supplémentaires <span class="required">*</span></label>
-      <input 
-        type="number" 
-        id="extension-days" 
-        v-model.number="extensionDays" 
-        class="form-input" 
+      <label for="extension-days" class="form-label"
+        >Nombre de jours supplémentaires <span class="required">*</span></label
+      >
+      <input
+        type="number"
+        id="extension-days"
+        v-model.number="extensionDays"
+        class="form-input"
         min="1"
         max="90"
         required
       />
-      <div class="form-hint">
-        Nombre de jours à ajouter à la date d'échéance actuelle
-      </div>
+      <div class="form-hint">Nombre de jours à ajouter à la date d'échéance actuelle</div>
     </div>
-    
+
     <div class="form-group">
-      <label for="extension-reason" class="form-label">Raison de la prolongation <span class="required">*</span></label>
-      <textarea 
-        id="extension-reason" 
-        v-model="extensionReason" 
-        class="form-textarea" 
+      <label for="extension-reason" class="form-label"
+        >Raison de la prolongation <span class="required">*</span></label
+      >
+      <textarea
+        id="extension-reason"
+        v-model="extensionReason"
+        class="form-textarea"
         placeholder="Raison de la prolongation..."
         rows="3"
         required
       ></textarea>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Nouvelle date d'échéance</label>
       <div class="new-deadline">
         {{ formattedNewDeadline }}
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="checkbox-label">
         <input type="checkbox" v-model="sendNotification" />
         <span>Envoyer une notification à l'emprunteur</span>
       </label>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isValid">
         Prolonger
       </button>
     </div>
@@ -57,51 +54,51 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 
 export default {
   name: 'LoanExtensionForm',
   props: {
     currentDeadline: {
       type: Date,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
-    const extensionDays = ref(7);
-    const extensionReason = ref('');
-    const sendNotification = ref(true);
-    
+    const extensionDays = ref(7)
+    const extensionReason = ref('')
+    const sendNotification = ref(true)
+
     const formattedNewDeadline = computed(() => {
-      const newDeadline = new Date(props.currentDeadline);
-      newDeadline.setDate(newDeadline.getDate() + extensionDays.value);
-      
+      const newDeadline = new Date(props.currentDeadline)
+      newDeadline.setDate(newDeadline.getDate() + extensionDays.value)
+
       return newDeadline.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
-      });
-    });
-    
+        year: 'numeric',
+      })
+    })
+
     const isValid = computed(() => {
-      return extensionDays.value > 0 && extensionReason.value.trim() !== '';
-    });
-    
+      return extensionDays.value > 0 && extensionReason.value.trim() !== ''
+    })
+
     const save = () => {
-      if (!isValid.value) return;
-      
+      if (!isValid.value) return
+
       emit('save', {
         extensionDays: extensionDays.value,
         extensionReason: extensionReason.value,
-        sendNotification: sendNotification.value
-      });
-    };
-    
+        sendNotification: sendNotification.value,
+      })
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     return {
       extensionDays,
       extensionReason,
@@ -109,10 +106,10 @@ export default {
       formattedNewDeadline,
       isValid,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

@@ -6,24 +6,24 @@
  */
 export const exportToCSV = (data, headers, filename) => {
   // Créer les en-têtes CSV
-  const headerRow = headers.map((header) => `"${header.label}"`).join(",")
+  const headerRow = headers.map(header => `"${header.label}"`).join(',')
 
   // Créer les lignes de données
-  const rows = data.map((item) => {
+  const rows = data.map(item => {
     return headers
-      .map((header) => {
+      .map(header => {
         const value = item[header.key]
         // Échapper les guillemets et entourer de guillemets
         return `"${String(value).replace(/"/g, '""')}"`
       })
-      .join(",")
+      .join(',')
   })
 
   // Combiner les en-têtes et les lignes
-  const csv = [headerRow, ...rows].join("\n")
+  const csv = [headerRow, ...rows].join('\n')
 
   // Créer un blob et télécharger
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   downloadBlob(blob, filename)
 }
 
@@ -33,10 +33,10 @@ export const exportToCSV = (data, headers, filename) => {
 export const exportToExcel = async (data, headers, filename) => {
   try {
     // Fallback vers CSV si xlsx n'est pas disponible
-    console.warn("XLSX non disponible, export en CSV à la place")
-    return exportToCSV(data, headers, filename.replace(".xlsx", ".csv"))
+    console.warn('XLSX non disponible, export en CSV à la place')
+    return exportToCSV(data, headers, filename.replace('.xlsx', '.csv'))
   } catch (error) {
-    console.error("Error exporting to Excel:", error)
+    console.error('Error exporting to Excel:', error)
     throw new Error("Erreur lors de l'exportation en Excel.")
   }
 }
@@ -47,21 +47,21 @@ export const exportToExcel = async (data, headers, filename) => {
 export const exportToPDF = async (data, columns, options = {}) => {
   try {
     // Fallback vers CSV si jsPDF n'est pas disponible
-    console.warn("jsPDF non disponible, export en CSV à la place")
-    const csvData = data.map((item) => {
+    console.warn('jsPDF non disponible, export en CSV à la place')
+    const csvData = data.map(item => {
       const row = {}
-      columns.forEach((col) => {
+      columns.forEach(col => {
         row[col.header] = item[col.dataKey]
       })
       return row
     })
     return exportToCSV(
       csvData,
-      columns.map((col) => ({ key: col.dataKey, label: col.header })),
-      options.fileName || "export.csv",
+      columns.map(col => ({ key: col.dataKey, label: col.header })),
+      options.fileName || 'export.csv'
     )
   } catch (error) {
-    console.error("Error exporting to PDF:", error)
+    console.error('Error exporting to PDF:', error)
     throw new Error("Erreur lors de l'exportation en PDF.")
   }
 }
@@ -70,9 +70,9 @@ export const exportToPDF = async (data, columns, options = {}) => {
  * Imprimer un élément DOM
  * @param {HTMLElement} element - Élément à imprimer
  */
-export const printElement = (element) => {
+export const printElement = element => {
   // Créer une fenêtre d'impression
-  const printWindow = window.open("", "_blank")
+  const printWindow = window.open('', '_blank')
 
   // Ajouter les styles
   printWindow.document.write(`
@@ -145,7 +145,7 @@ export const printElement = (element) => {
 const downloadBlob = (blob, filename) => {
   // Créer un lien de téléchargement
   const url = URL.createObjectURL(blob)
-  const link = document.createElement("a")
+  const link = document.createElement('a')
   link.href = url
   link.download = filename
 

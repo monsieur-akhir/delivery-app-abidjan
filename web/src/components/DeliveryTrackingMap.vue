@@ -27,9 +27,9 @@
           <div class="progress-value" :style="{ width: getProgressPercentage() + '%' }"></div>
         </div>
         <div class="progress-steps">
-          <div 
-            v-for="(step, index) in deliverySteps" 
-            :key="index" 
+          <div
+            v-for="(step, index) in deliverySteps"
+            :key="index"
             class="progress-step"
             :class="{ 'step-completed': isStepCompleted(step.status) }"
           >
@@ -45,83 +45,83 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
-import { google } from 'google-maps';
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { google } from 'google-maps'
 
 export default {
   name: 'DeliveryTrackingMap',
   props: {
     delivery: {
       type: Object,
-      required: true
+      required: true,
     },
     showControls: {
       type: Boolean,
-      default: true
+      default: true,
     },
     showInfo: {
       type: Boolean,
-      default: true
+      default: true,
     },
     height: {
       type: String,
-      default: '400px'
-    }
+      default: '400px',
+    },
   },
   setup(props) {
-    const mapContainer = ref(null);
-    let map = null;
-    let directionsService = null;
-    let directionsRenderer = null;
-    let trafficLayer = null;
-    let courierMarker = null;
-    let pickupMarker = null;
-    let deliveryMarker = null;
-    let updateInterval = null;
-    let isSatelliteView = false;
-    
+    const mapContainer = ref(null)
+    let map = null
+    let directionsService = null
+    let directionsRenderer = null
+    let trafficLayer = null
+    let courierMarker = null
+    let pickupMarker = null
+    let deliveryMarker = null
+    let updateInterval = null
+    let isSatelliteView = false
+
     // Étapes de livraison
     const deliverySteps = [
-      { 
-        label: 'Commande', 
-        status: 'ordered', 
-        icon: 'fas fa-shopping-cart' 
+      {
+        label: 'Commande',
+        status: 'ordered',
+        icon: 'fas fa-shopping-cart',
       },
-      { 
-        label: 'Préparation', 
-        status: 'preparing', 
-        icon: 'fas fa-box' 
+      {
+        label: 'Préparation',
+        status: 'preparing',
+        icon: 'fas fa-box',
       },
-      { 
-        label: 'Ramassage', 
-        status: 'picked_up', 
-        icon: 'fas fa-store' 
+      {
+        label: 'Ramassage',
+        status: 'picked_up',
+        icon: 'fas fa-store',
       },
-      { 
-        label: 'En route', 
-        status: 'in_transit', 
-        icon: 'fas fa-motorcycle' 
+      {
+        label: 'En route',
+        status: 'in_transit',
+        icon: 'fas fa-motorcycle',
       },
-      { 
-        label: 'Livré', 
-        status: 'delivered', 
-        icon: 'fas fa-check-circle' 
-      }
-    ];
-    
+      {
+        label: 'Livré',
+        status: 'delivered',
+        icon: 'fas fa-check-circle',
+      },
+    ]
+
     // Initialiser la carte
     const initMap = () => {
-      if (!mapContainer.value) return;
-      
+      if (!mapContainer.value) return
+
       // Vérifier si l'API Google Maps est chargée
       if (!window.google || !window.google.maps) {
-        console.error('Google Maps API not loaded');
-        return;
+        console.error('Google Maps API not loaded')
+        return
       }
-      
+
       // Coordonnées par défaut (Abidjan)
-      const defaultCenter = { lat: 5.3599517, lng: -4.0082563 };
-      
+      const defaultCenter = { lat: 5.3599517, lng: -4.0082563 }
+
       // Options de la carte
       const mapOptions = {
         center: defaultCenter,
@@ -132,42 +132,42 @@ export default {
         fullscreenControl: false,
         zoomControl: true,
         zoomControlOptions: {
-          position: google.maps.ControlPosition.RIGHT_BOTTOM
-        }
-      };
-      
+          position: google.maps.ControlPosition.RIGHT_BOTTOM,
+        },
+      }
+
       // Créer la carte
-      map = new google.maps.Map(mapContainer.value, mapOptions);
-      
+      map = new google.maps.Map(mapContainer.value, mapOptions)
+
       // Initialiser les services de directions
-      directionsService = new google.maps.DirectionsService();
+      directionsService = new google.maps.DirectionsService()
       directionsRenderer = new google.maps.DirectionsRenderer({
         map: map,
         suppressMarkers: true,
         polylineOptions: {
           strokeColor: '#4f46e5',
           strokeWeight: 5,
-          strokeOpacity: 0.7
-        }
-      });
-      
+          strokeOpacity: 0.7,
+        },
+      })
+
       // Initialiser la couche de trafic
-      trafficLayer = new google.maps.TrafficLayer();
-      
+      trafficLayer = new google.maps.TrafficLayer()
+
       // Créer les marqueurs
-      createMarkers();
-      
+      createMarkers()
+
       // Calculer et afficher l'itinéraire
-      calculateRoute();
-      
+      calculateRoute()
+
       // Démarrer la mise à jour de la position du coursier
-      startCourierTracking();
-    };
-    
+      startCourierTracking()
+    }
+
     // Créer les marqueurs
     const createMarkers = () => {
-      if (!map || !props.delivery) return;
-      
+      if (!map || !props.delivery) return
+
       // Marqueur du point de ramassage
       if (props.delivery.pickup_location) {
         pickupMarker = new google.maps.Marker({
@@ -175,11 +175,11 @@ export default {
           map: map,
           icon: {
             url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-            scaledSize: new google.maps.Size(32, 32)
+            scaledSize: new google.maps.Size(32, 32),
           },
-          title: 'Point de ramassage'
-        });
-        
+          title: 'Point de ramassage',
+        })
+
         // Info-bulle pour le point de ramassage
         const pickupInfoWindow = new google.maps.InfoWindow({
           content: `
@@ -187,14 +187,14 @@ export default {
               <div class="info-title">Point de ramassage</div>
               <div class="info-address">${props.delivery.pickup_address}</div>
             </div>
-          `
-        });
-        
+          `,
+        })
+
         pickupMarker.addListener('click', () => {
-          pickupInfoWindow.open(map, pickupMarker);
-        });
+          pickupInfoWindow.open(map, pickupMarker)
+        })
       }
-      
+
       // Marqueur du point de livraison
       if (props.delivery.delivery_location) {
         deliveryMarker = new google.maps.Marker({
@@ -202,11 +202,11 @@ export default {
           map: map,
           icon: {
             url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-            scaledSize: new google.maps.Size(32, 32)
+            scaledSize: new google.maps.Size(32, 32),
           },
-          title: 'Point de livraison'
-        });
-        
+          title: 'Point de livraison',
+        })
+
         // Info-bulle pour le point de livraison
         const deliveryInfoWindow = new google.maps.InfoWindow({
           content: `
@@ -214,14 +214,14 @@ export default {
               <div class="info-title">Point de livraison</div>
               <div class="info-address">${props.delivery.delivery_address}</div>
             </div>
-          `
-        });
-        
+          `,
+        })
+
         deliveryMarker.addListener('click', () => {
-          deliveryInfoWindow.open(map, deliveryMarker);
-        });
+          deliveryInfoWindow.open(map, deliveryMarker)
+        })
       }
-      
+
       // Marqueur du coursier
       if (props.delivery.courier_location) {
         courierMarker = new google.maps.Marker({
@@ -229,214 +229,239 @@ export default {
           map: map,
           icon: {
             url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-            scaledSize: new google.maps.Size(32, 32)
+            scaledSize: new google.maps.Size(32, 32),
           },
-          title: 'Coursier'
-        });
-        
+          title: 'Coursier',
+        })
+
         // Info-bulle pour le coursier
         const courierInfoWindow = new google.maps.InfoWindow({
           content: `
             <div class="info-window">
               <div class="info-title">Coursier</div>
-              <div class="info-name">${props.delivery.courier ? props.delivery.courier.name : 'Coursier'}</div>
+              <div class="info-name">${
+                props.delivery.courier ? props.delivery.courier.name : 'Coursier'
+              }</div>
             </div>
-          `
-        });
-        
+          `,
+        })
+
         courierMarker.addListener('click', () => {
-          courierInfoWindow.open(map, courierMarker);
-        });
+          courierInfoWindow.open(map, courierMarker)
+        })
       }
-    };
-    
+    }
+
     // Calculer et afficher l'itinéraire
     const calculateRoute = () => {
-      if (!directionsService || !directionsRenderer || !props.delivery) return;
-      
+      if (!directionsService || !directionsRenderer || !props.delivery) return
+
       // Vérifier si les points de ramassage et de livraison sont définis
-      if (!props.delivery.pickup_location || !props.delivery.delivery_location) return;
-      
+      if (!props.delivery.pickup_location || !props.delivery.delivery_location) return
+
       const request = {
         origin: props.delivery.pickup_location,
         destination: props.delivery.delivery_location,
         travelMode: google.maps.TravelMode.DRIVING,
-        optimizeWaypoints: true
-      };
-      
+        optimizeWaypoints: true,
+      }
+
       directionsService.route(request, (result, status) => {
         if (status === google.maps.DirectionsStatus.OK) {
-          directionsRenderer.setDirections(result);
-          
+          directionsRenderer.setDirections(result)
+
           // Ajuster la vue de la carte pour afficher l'itinéraire complet
-          const bounds = new google.maps.LatLngBounds();
-          bounds.extend(props.delivery.pickup_location);
-          bounds.extend(props.delivery.delivery_location);
-          
+          const bounds = new google.maps.LatLngBounds()
+          bounds.extend(props.delivery.pickup_location)
+          bounds.extend(props.delivery.delivery_location)
+
           if (props.delivery.courier_location) {
-            bounds.extend(props.delivery.courier_location);
+            bounds.extend(props.delivery.courier_location)
           }
-          
-          map.fitBounds(bounds);
+
+          map.fitBounds(bounds)
         } else {
-          console.error('Directions request failed due to ' + status);
+          console.error('Directions request failed due to ' + status)
         }
-      });
-    };
-    
+      })
+    }
+
     // Démarrer la mise à jour de la position du coursier
     const startCourierTracking = () => {
-      if (!props.delivery || !map) return;
-      
+      if (!props.delivery || !map) return
+
       // Simuler la mise à jour de la position du coursier toutes les 5 secondes
       updateInterval = setInterval(() => {
         // Dans un environnement réel, cette fonction appellerait l'API pour obtenir la position actuelle du coursier
         // Pour la démonstration, nous simulons un déplacement aléatoire
         if (courierMarker && props.delivery.status === 'in_transit') {
-          const currentPosition = courierMarker.getPosition();
-          
+          const currentPosition = courierMarker.getPosition()
+
           // Simuler un déplacement aléatoire
-          const newLat = currentPosition.lat() + (Math.random() - 0.5) * 0.001;
-          const newLng = currentPosition.lng() + (Math.random() - 0.5) * 0.001;
-          
+          const newLat = currentPosition.lat() + (Math.random() - 0.5) * 0.001
+          const newLng = currentPosition.lng() + (Math.random() - 0.5) * 0.001
+
           // Mettre à jour la position du marqueur
-          courierMarker.setPosition({ lat: newLat, lng: newLng });
+          courierMarker.setPosition({ lat: newLat, lng: newLng })
         }
-      }, 5000);
-    };
-    
+      }, 5000)
+    }
+
     // Centrer la carte
     const centerMap = () => {
-      if (!map) return;
-      
-      const bounds = new google.maps.LatLngBounds();
-      
-      if (pickupMarker) bounds.extend(pickupMarker.getPosition());
-      if (deliveryMarker) bounds.extend(deliveryMarker.getPosition());
-      if (courierMarker) bounds.extend(courierMarker.getPosition());
-      
-      map.fitBounds(bounds);
-    };
-    
+      if (!map) return
+
+      const bounds = new google.maps.LatLngBounds()
+
+      if (pickupMarker) bounds.extend(pickupMarker.getPosition())
+      if (deliveryMarker) bounds.extend(deliveryMarker.getPosition())
+      if (courierMarker) bounds.extend(courierMarker.getPosition())
+
+      map.fitBounds(bounds)
+    }
+
     // Afficher/masquer la couche de trafic
     const toggleTraffic = () => {
-      if (!trafficLayer || !map) return;
-      
+      if (!trafficLayer || !map) return
+
       if (trafficLayer.getMap()) {
-        trafficLayer.setMap(null);
+        trafficLayer.setMap(null)
       } else {
-        trafficLayer.setMap(map);
+        trafficLayer.setMap(map)
       }
-    };
-    
+    }
+
     // Basculer entre la vue satellite et la vue normale
     const toggleSatellite = () => {
-      if (!map) return;
-      
-      isSatelliteView = !isSatelliteView;
-      map.setMapTypeId(isSatelliteView ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP);
-    };
-    
+      if (!map) return
+
+      isSatelliteView = !isSatelliteView
+      map.setMapTypeId(
+        isSatelliteView ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP
+      )
+    }
+
     // Formater le temps estimé
-    const formatTime = (minutes) => {
+    const formatTime = minutes => {
       if (minutes < 60) {
-        return `${minutes} min`;
+        return `${minutes} min`
       } else {
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-        return `${hours} h ${remainingMinutes > 0 ? remainingMinutes + ' min' : ''}`;
+        const hours = Math.floor(minutes / 60)
+        const remainingMinutes = minutes % 60
+        return `${hours} h ${remainingMinutes > 0 ? remainingMinutes + ' min' : ''}`
       }
-    };
-    
+    }
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       switch (status) {
-        case 'ordered': return 'status-ordered';
-        case 'preparing': return 'status-preparing';
-        case 'picked_up': return 'status-picked-up';
-        case 'in_transit': return 'status-in-transit';
-        case 'delivered': return 'status-delivered';
-        case 'cancelled': return 'status-cancelled';
-        default: return '';
+        case 'ordered':
+          return 'status-ordered'
+        case 'preparing':
+          return 'status-preparing'
+        case 'picked_up':
+          return 'status-picked-up'
+        case 'in_transit':
+          return 'status-in-transit'
+        case 'delivered':
+          return 'status-delivered'
+        case 'cancelled':
+          return 'status-cancelled'
+        default:
+          return ''
       }
-    };
-    
+    }
+
     // Obtenir le libellé pour un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       switch (status) {
-        case 'ordered': return 'Commandé';
-        case 'preparing': return 'En préparation';
-        case 'picked_up': return 'Ramassé';
-        case 'in_transit': return 'En cours de livraison';
-        case 'delivered': return 'Livré';
-        case 'cancelled': return 'Annulé';
-        default: return status;
+        case 'ordered':
+          return 'Commandé'
+        case 'preparing':
+          return 'En préparation'
+        case 'picked_up':
+          return 'Ramassé'
+        case 'in_transit':
+          return 'En cours de livraison'
+        case 'delivered':
+          return 'Livré'
+        case 'cancelled':
+          return 'Annulé'
+        default:
+          return status
       }
-    };
-    
+    }
+
     // Vérifier si une étape est complétée
-    const isStepCompleted = (stepStatus) => {
-      const statusOrder = ['ordered', 'preparing', 'picked_up', 'in_transit', 'delivered'];
-      const currentStatusIndex = statusOrder.indexOf(props.delivery.status);
-      const stepStatusIndex = statusOrder.indexOf(stepStatus);
-      
-      return stepStatusIndex <= currentStatusIndex;
-    };
-    
+    const isStepCompleted = stepStatus => {
+      const statusOrder = ['ordered', 'preparing', 'picked_up', 'in_transit', 'delivered']
+      const currentStatusIndex = statusOrder.indexOf(props.delivery.status)
+      const stepStatusIndex = statusOrder.indexOf(stepStatus)
+
+      return stepStatusIndex <= currentStatusIndex
+    }
+
     // Obtenir le pourcentage de progression
     const getProgressPercentage = () => {
-      const statusOrder = ['ordered', 'preparing', 'picked_up', 'in_transit', 'delivered'];
-      const currentStatusIndex = statusOrder.indexOf(props.delivery.status);
-      
-      if (currentStatusIndex === -1) return 0;
-      
-      return (currentStatusIndex / (statusOrder.length - 1)) * 100;
-    };
-    
+      const statusOrder = ['ordered', 'preparing', 'picked_up', 'in_transit', 'delivered']
+      const currentStatusIndex = statusOrder.indexOf(props.delivery.status)
+
+      if (currentStatusIndex === -1) return 0
+
+      return (currentStatusIndex / (statusOrder.length - 1)) * 100
+    }
+
     // Surveiller les changements de livraison
-    watch(() => props.delivery, (newDelivery, oldDelivery) => {
-      if (!newDelivery) return;
-      
-      // Mettre à jour les marqueurs si nécessaire
-      if (!oldDelivery || 
-          JSON.stringify(newDelivery.pickup_location) !== JSON.stringify(oldDelivery.pickup_location) ||
-          JSON.stringify(newDelivery.delivery_location) !== JSON.stringify(oldDelivery.delivery_location)) {
-        
-        // Supprimer les anciens marqueurs
-        if (pickupMarker) pickupMarker.setMap(null);
-        if (deliveryMarker) deliveryMarker.setMap(null);
-        
-        // Créer les nouveaux marqueurs
-        createMarkers();
-        
-        // Recalculer l'itinéraire
-        calculateRoute();
-      }
-      
-      // Mettre à jour la position du coursier
-      if (courierMarker && newDelivery.courier_location) {
-        courierMarker.setPosition(newDelivery.courier_location);
-      }
-    }, { deep: true });
-    
+    watch(
+      () => props.delivery,
+      (newDelivery, oldDelivery) => {
+        if (!newDelivery) return
+
+        // Mettre à jour les marqueurs si nécessaire
+        if (
+          !oldDelivery ||
+          JSON.stringify(newDelivery.pickup_location) !==
+            JSON.stringify(oldDelivery.pickup_location) ||
+          JSON.stringify(newDelivery.delivery_location) !==
+            JSON.stringify(oldDelivery.delivery_location)
+        ) {
+          // Supprimer les anciens marqueurs
+          if (pickupMarker) pickupMarker.setMap(null)
+          if (deliveryMarker) deliveryMarker.setMap(null)
+
+          // Créer les nouveaux marqueurs
+          createMarkers()
+
+          // Recalculer l'itinéraire
+          calculateRoute()
+        }
+
+        // Mettre à jour la position du coursier
+        if (courierMarker && newDelivery.courier_location) {
+          courierMarker.setPosition(newDelivery.courier_location)
+        }
+      },
+      { deep: true }
+    )
+
     // Initialiser la carte au montage du composant
     onMounted(() => {
       // Définir la hauteur du conteneur de carte
       if (mapContainer.value) {
-        mapContainer.value.style.height = props.height;
+        mapContainer.value.style.height = props.height
       }
-      
+
       // Initialiser la carte
-      initMap();
-    });
-    
+      initMap()
+    })
+
     // Nettoyer les ressources au démontage du composant
     onUnmounted(() => {
       if (updateInterval) {
-        clearInterval(updateInterval);
+        clearInterval(updateInterval)
       }
-    });
-    
+    })
+
     return {
       mapContainer,
       deliverySteps,
@@ -447,10 +472,10 @@ export default {
       getStatusClass,
       getStatusLabel,
       isStepCompleted,
-      getProgressPercentage
-    };
-  }
-};
+      getProgressPercentage,
+    }
+  },
+}
 </script>
 
 <style scoped>

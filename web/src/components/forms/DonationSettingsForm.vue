@@ -1,13 +1,15 @@
 <template>
   <div class="donation-settings-form">
     <div class="form-group">
-      <label for="default-donation" class="form-label">Pourcentage de don par défaut <span class="required">*</span></label>
+      <label for="default-donation" class="form-label"
+        >Pourcentage de don par défaut <span class="required">*</span></label
+      >
       <div class="input-group">
-        <input 
-          type="number" 
-          id="default-donation" 
-          v-model.number="formData.defaultDonationPercentage" 
-          class="form-input" 
+        <input
+          type="number"
+          id="default-donation"
+          v-model.number="formData.defaultDonationPercentage"
+          class="form-input"
           min="0"
           max="100"
           step="5"
@@ -21,20 +23,20 @@
         Pourcentage du supplément express reversé à des œuvres caritatives par défaut
       </div>
     </div>
-    
+
     <div class="form-group">
       <label for="donation-options" class="form-label">Options de pourcentage de don</label>
       <div class="donation-options">
-        <div 
-          v-for="(option, index) in formData.donationOptions" 
-          :key="index" 
+        <div
+          v-for="(option, index) in formData.donationOptions"
+          :key="index"
           class="donation-option"
         >
           <div class="input-group">
-            <input 
-              type="number" 
-              v-model.number="formData.donationOptions[index]" 
-              class="form-input" 
+            <input
+              type="number"
+              v-model.number="formData.donationOptions[index]"
+              class="form-input"
               min="0"
               max="100"
               step="5"
@@ -43,9 +45,9 @@
               <span class="input-group-text">%</span>
             </div>
           </div>
-          <button 
-            v-if="formData.donationOptions.length > 1" 
-            class="btn-icon" 
+          <button
+            v-if="formData.donationOptions.length > 1"
+            class="btn-icon"
             @click="removeDonationOption(index)"
             title="Supprimer"
           >
@@ -57,36 +59,34 @@
           Ajouter une option
         </button>
       </div>
-      <div class="form-hint">
-        Options de pourcentage de don proposées aux clients
-      </div>
+      <div class="form-hint">Options de pourcentage de don proposées aux clients</div>
     </div>
-    
+
     <div class="form-group">
       <label for="charity-organizations" class="form-label">Organisations caritatives</label>
       <div class="charity-organizations">
-        <div 
-          v-for="(org, index) in formData.charityOrganizations" 
-          :key="index" 
+        <div
+          v-for="(org, index) in formData.charityOrganizations"
+          :key="index"
           class="charity-organization"
         >
           <div class="charity-inputs">
-            <input 
-              type="text" 
-              v-model="formData.charityOrganizations[index].name" 
-              class="form-input" 
+            <input
+              type="text"
+              v-model="formData.charityOrganizations[index].name"
+              class="form-input"
               placeholder="Nom de l'organisation"
             />
-            <input 
-              type="text" 
-              v-model="formData.charityOrganizations[index].category" 
-              class="form-input" 
+            <input
+              type="text"
+              v-model="formData.charityOrganizations[index].category"
+              class="form-input"
               placeholder="Catégorie"
             />
           </div>
-          <button 
-            v-if="formData.charityOrganizations.length > 1" 
-            class="btn-icon" 
+          <button
+            v-if="formData.charityOrganizations.length > 1"
+            class="btn-icon"
             @click="removeCharityOrganization(index)"
             title="Supprimer"
           >
@@ -98,19 +98,12 @@
           Ajouter une organisation
         </button>
       </div>
-      <div class="form-hint">
-        Organisations caritatives bénéficiaires des dons
-      </div>
+      <div class="form-hint">Organisations caritatives bénéficiaires des dons</div>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isValid">
         Enregistrer
       </button>
     </div>
@@ -118,7 +111,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 
 export default {
   name: 'DonationSettingsForm',
@@ -131,65 +124,70 @@ export default {
         charityOrganizations: [
           { name: 'Éducation Pour Tous', category: 'Éducation' },
           { name: 'Santé Communautaire', category: 'Santé' },
-          { name: 'Planète Verte', category: 'Environnement' }
-        ]
-      })
-    }
+          { name: 'Planète Verte', category: 'Environnement' },
+        ],
+      }),
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
     const formData = ref({
       defaultDonationPercentage: props.settings.defaultDonationPercentage,
       donationOptions: [...props.settings.donationOptions],
-      charityOrganizations: props.settings.charityOrganizations.map(org => ({ ...org }))
-    });
-    
+      charityOrganizations: props.settings.charityOrganizations.map(org => ({ ...org })),
+    })
+
     const isValid = computed(() => {
-      if (formData.value.defaultDonationPercentage < 0 || formData.value.defaultDonationPercentage > 100) {
-        return false;
+      if (
+        formData.value.defaultDonationPercentage < 0 ||
+        formData.value.defaultDonationPercentage > 100
+      ) {
+        return false
       }
-      
+
       if (formData.value.donationOptions.some(option => option < 0 || option > 100)) {
-        return false;
+        return false
       }
-      
-      if (formData.value.charityOrganizations.some(org => !org.name.trim() || !org.category.trim())) {
-        return false;
+
+      if (
+        formData.value.charityOrganizations.some(org => !org.name.trim() || !org.category.trim())
+      ) {
+        return false
       }
-      
-      return true;
-    });
-    
+
+      return true
+    })
+
     const addDonationOption = () => {
-      formData.value.donationOptions.push(0);
-    };
-    
-    const removeDonationOption = (index) => {
-      formData.value.donationOptions.splice(index, 1);
-    };
-    
+      formData.value.donationOptions.push(0)
+    }
+
+    const removeDonationOption = index => {
+      formData.value.donationOptions.splice(index, 1)
+    }
+
     const addCharityOrganization = () => {
-      formData.value.charityOrganizations.push({ name: '', category: '' });
-    };
-    
-    const removeCharityOrganization = (index) => {
-      formData.value.charityOrganizations.splice(index, 1);
-    };
-    
+      formData.value.charityOrganizations.push({ name: '', category: '' })
+    }
+
+    const removeCharityOrganization = index => {
+      formData.value.charityOrganizations.splice(index, 1)
+    }
+
     const save = () => {
-      if (!isValid.value) return;
-      
+      if (!isValid.value) return
+
       emit('save', {
         defaultDonationPercentage: formData.value.defaultDonationPercentage,
         donationOptions: [...formData.value.donationOptions],
-        charityOrganizations: formData.value.charityOrganizations.map(org => ({ ...org }))
-      });
-    };
-    
+        charityOrganizations: formData.value.charityOrganizations.map(org => ({ ...org })),
+      })
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     return {
       formData,
       isValid,
@@ -198,10 +196,10 @@ export default {
       addCharityOrganization,
       removeCharityOrganization,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

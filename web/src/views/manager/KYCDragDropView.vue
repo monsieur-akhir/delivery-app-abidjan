@@ -68,10 +68,10 @@
               <option value="business">Entreprises</option>
             </select>
             <div class="search-input">
-              <input 
-                type="text" 
-                v-model="filters.search" 
-                placeholder="Rechercher..." 
+              <input
+                type="text"
+                v-model="filters.search"
+                placeholder="Rechercher..."
                 @input="debounceSearch"
               />
               <font-awesome-icon icon="search" />
@@ -88,8 +88,8 @@
           <p>Aucun document en attente de vérification</p>
         </div>
         <div v-else class="kyc-documents-grid">
-          <div 
-            v-for="document in pendingDocuments" 
+          <div
+            v-for="document in pendingDocuments"
             :key="document.id"
             class="kyc-document-card"
             draggable="true"
@@ -107,7 +107,11 @@
             <div class="document-info">
               <div class="user-info">
                 <div class="user-avatar">
-                  <img v-if="document.user.profile_picture" :src="document.user.profile_picture" :alt="document.user.name" />
+                  <img
+                    v-if="document.user.profile_picture"
+                    :src="document.user.profile_picture"
+                    :alt="document.user.name"
+                  />
                   <div v-else class="avatar-placeholder">{{ getInitials(document.user.name) }}</div>
                 </div>
                 <div class="user-details">
@@ -137,35 +141,23 @@
       </div>
 
       <div class="kyc-drop-zones">
-        <div 
-          class="kyc-drop-zone approve-zone"
-          @dragover.prevent
-          @drop="onDrop($event, 'approve')"
-        >
+        <div class="kyc-drop-zone approve-zone" @dragover.prevent @drop="onDrop($event, 'approve')">
           <div class="drop-zone-icon">
             <font-awesome-icon icon="check-circle" size="2x" />
           </div>
           <div class="drop-zone-label">Déposer pour approuver</div>
           <div class="drop-zone-counter">{{ stats.verifiedToday }} aujourd'hui</div>
         </div>
-        
-        <div 
-          class="kyc-drop-zone reject-zone"
-          @dragover.prevent
-          @drop="onDrop($event, 'reject')"
-        >
+
+        <div class="kyc-drop-zone reject-zone" @dragover.prevent @drop="onDrop($event, 'reject')">
           <div class="drop-zone-icon">
             <font-awesome-icon icon="times-circle" size="2x" />
           </div>
           <div class="drop-zone-label">Déposer pour rejeter</div>
           <div class="drop-zone-counter">{{ stats.rejectedToday }} aujourd'hui</div>
         </div>
-        
-        <div 
-          class="kyc-drop-zone review-zone"
-          @dragover.prevent
-          @drop="onDrop($event, 'review')"
-        >
+
+        <div class="kyc-drop-zone review-zone" @dragover.prevent @drop="onDrop($event, 'review')">
           <div class="drop-zone-icon">
             <font-awesome-icon icon="search-plus" size="2x" />
           </div>
@@ -198,11 +190,20 @@
           </div>
           <div class="form-group" v-if="rejectionReason === 'other'">
             <label for="custom-rejection-reason">Raison personnalisée</label>
-            <input id="custom-rejection-reason" v-model="customRejectionReason" class="form-control" />
+            <input
+              id="custom-rejection-reason"
+              v-model="customRejectionReason"
+              class="form-control"
+            />
           </div>
           <div class="form-group">
             <label for="rejection-details">Détails</label>
-            <textarea id="rejection-details" v-model="rejectionDetails" class="form-control" rows="3"></textarea>
+            <textarea
+              id="rejection-details"
+              v-model="rejectionDetails"
+              class="form-control"
+              rows="3"
+            ></textarea>
           </div>
           <div class="form-group">
             <label class="checkbox-label">
@@ -219,7 +220,11 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeRejectModal">Annuler</button>
-          <button class="btn btn-primary" @click="confirmReject" :disabled="!isValidRejectionReason">
+          <button
+            class="btn btn-primary"
+            @click="confirmReject"
+            :disabled="!isValidRejectionReason"
+          >
             <font-awesome-icon icon="save" class="mr-1" />
             Confirmer
           </button>
@@ -246,8 +251,14 @@
             <div class="document-view-header">
               <div class="user-info">
                 <div class="user-avatar">
-                  <img v-if="selectedDocument.user.profile_picture" :src="selectedDocument.user.profile_picture" :alt="selectedDocument.user.name" />
-                  <div v-else class="avatar-placeholder">{{ getInitials(selectedDocument.user.name) }}</div>
+                  <img
+                    v-if="selectedDocument.user.profile_picture"
+                    :src="selectedDocument.user.profile_picture"
+                    :alt="selectedDocument.user.name"
+                  />
+                  <div v-else class="avatar-placeholder">
+                    {{ getInitials(selectedDocument.user.name) }}
+                  </div>
                 </div>
                 <div class="user-details">
                   <div class="user-name">{{ selectedDocument.user.name }}</div>
@@ -270,15 +281,15 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="document-image-container">
-              <img 
-                :src="selectedDocument.full_url" 
-                :alt="selectedDocument.type" 
-                class="document-image" 
+              <img
+                :src="selectedDocument.full_url"
+                :alt="selectedDocument.type"
+                class="document-image"
                 :style="{ transform: `scale(${zoomLevel})` }"
               />
-              
+
               <div class="document-zoom-controls">
                 <button class="btn btn-sm btn-outline" @click="zoomOut">
                   <font-awesome-icon icon="search-minus" />
@@ -291,7 +302,7 @@
                 </button>
               </div>
             </div>
-            
+
             <div class="document-verification-tools">
               <div class="verification-section">
                 <h4>Vérification d'identité</h4>
@@ -302,7 +313,11 @@
                   </div>
                   <div class="verification-field">
                     <label>Numéro de document</label>
-                    <input type="text" v-model="verificationData.documentNumber" class="form-control" />
+                    <input
+                      type="text"
+                      v-model="verificationData.documentNumber"
+                      class="form-control"
+                    />
                   </div>
                   <div class="verification-field">
                     <label>Date d'expiration</label>
@@ -310,17 +325,17 @@
                   </div>
                 </div>
               </div>
-              
+
               <div class="verification-section">
                 <h4>Notes de vérification</h4>
-                <textarea 
-                  v-model="verificationData.notes" 
-                  class="form-control" 
+                <textarea
+                  v-model="verificationData.notes"
+                  class="form-control"
                   rows="3"
                   placeholder="Ajouter des notes sur la vérification..."
                 ></textarea>
               </div>
-              
+
               <div class="verification-actions">
                 <button class="btn btn-success" @click="approveDocument(selectedDocument.id)">
                   <font-awesome-icon icon="check" class="mr-1" />
@@ -363,34 +378,34 @@ export default {
     const sendRejectionNotification = ref(true)
     const allowResubmission = ref(true)
     const zoomLevel = ref(1)
-    
+
     const verificationData = reactive({
       fullName: '',
       documentNumber: '',
       expiryDate: '',
-      notes: ''
+      notes: '',
     })
-    
+
     const stats = reactive({
       pendingVerifications: 15,
       verifiedToday: 8,
       rejectedToday: 3,
-      averageVerificationTime: 4
+      averageVerificationTime: 4,
     })
-    
+
     const filters = reactive({
       documentType: '',
       userType: '',
-      search: ''
+      search: '',
     })
-    
+
     // Méthodes
     const fetchData = async () => {
       loading.value = true
       try {
         // Simuler l'appel API
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Données fictives pour la démonstration
         pendingDocuments.value = [
           {
@@ -403,21 +418,22 @@ export default {
               id: 101,
               name: 'Amadou Koné',
               role: 'courier',
-              profile_picture: null
-            }
+              profile_picture: null,
+            },
           },
           {
             id: 2,
             type: 'driving_license',
             submitted_at: new Date(2023, 4, 16),
             preview_url: '/placeholder.svg?height=200&width=320&query=Driving%20License',
-            full_url: '/placeholder.svg?height=800&width=1200&query=Driving%20License%20Full%20Size',
+            full_url:
+              '/placeholder.svg?height=800&width=1200&query=Driving%20License%20Full%20Size',
             user: {
               id: 102,
               name: 'Marie Kouassi',
               role: 'courier',
-              profile_picture: null
-            }
+              profile_picture: null,
+            },
           },
           {
             id: 3,
@@ -429,22 +445,23 @@ export default {
               id: 103,
               name: 'Ibrahim Diallo',
               role: 'client',
-              profile_picture: null
-            }
+              profile_picture: null,
+            },
           },
           {
             id: 4,
             type: 'business_registration',
             submitted_at: new Date(2023, 4, 13),
             preview_url: '/placeholder.svg?height=200&width=320&query=Business%20Registration',
-            full_url: '/placeholder.svg?height=800&width=1200&query=Business%20Registration%20Full%20Size',
+            full_url:
+              '/placeholder.svg?height=800&width=1200&query=Business%20Registration%20Full%20Size',
             user: {
               id: 104,
               name: 'Café Abidjan',
               role: 'business',
-              profile_picture: null
-            }
-          }
+              profile_picture: null,
+            },
+          },
         ]
       } catch (error) {
         console.error('Erreur lors du chargement des documents:', error)
@@ -452,21 +469,21 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const applyFilters = () => {
       console.log('Filtres appliqués:', filters)
-      
+
       // Simuler le chargement des données filtrées
       loading.value = true
       setTimeout(() => {
         loading.value = false
       }, 500)
     }
-    
+
     const debounceSearch = () => {
       // Implémenter un debounce pour la recherche
       clearTimeout(window.searchTimeout)
@@ -474,17 +491,17 @@ export default {
         applyFilters()
       }, 300)
     }
-    
+
     const startDrag = (event, document) => {
       event.dataTransfer.dropEffect = 'move'
       event.dataTransfer.effectAllowed = 'move'
       event.dataTransfer.setData('documentId', document.id.toString())
     }
-    
+
     const onDrop = async (event, action) => {
       const documentId = parseInt(event.dataTransfer.getData('documentId'))
       console.log(`Document ${documentId} déposé dans la zone ${action}`)
-      
+
       if (action === 'approve') {
         await approveDocument(documentId)
       } else if (action === 'reject') {
@@ -493,80 +510,82 @@ export default {
         viewDocument(documentId)
       }
     }
-    
-    const viewDocument = async (documentId) => {
+
+    const viewDocument = async documentId => {
       selectedDocumentId.value = documentId
       selectedDocument.value = null
       showDocumentViewModal.value = true
-      
+
       // Réinitialiser le zoom
       zoomLevel.value = 1
-      
+
       // Simuler le chargement du document
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // Trouver le document
       const document = pendingDocuments.value.find(doc => doc.id === documentId)
       if (document) {
         selectedDocument.value = document
-        
+
         // Pré-remplir les données de vérification (simulé)
         verificationData.fullName = document.user.name
         verificationData.documentNumber = `DOC-${Math.floor(Math.random() * 1000000)}`
-        verificationData.expiryDate = new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString().split('T')[0]
+        verificationData.expiryDate = new Date(new Date().setFullYear(new Date().getFullYear() + 5))
+          .toISOString()
+          .split('T')[0]
         verificationData.notes = ''
       }
     }
-    
+
     const closeDocumentViewModal = () => {
       showDocumentViewModal.value = false
       selectedDocument.value = null
       selectedDocumentId.value = null
     }
-    
+
     const zoomIn = () => {
       zoomLevel.value = Math.min(zoomLevel.value + 0.25, 3)
     }
-    
+
     const zoomOut = () => {
       zoomLevel.value = Math.max(zoomLevel.value - 0.25, 0.5)
     }
-    
+
     const resetZoom = () => {
       zoomLevel.value = 1
     }
-    
+
     const saveVerificationData = async () => {
       console.log('Enregistrement des données de vérification:', verificationData)
-      
+
       // Simuler l'appel API
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // Afficher une notification de succès
       alert('Données de vérification enregistrées avec succès')
     }
-    
-    const approveDocument = async (documentId) => {
+
+    const approveDocument = async documentId => {
       console.log(`Approbation du document ${documentId}`)
-      
+
       // Simuler l'appel API
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // Mettre à jour les données
       pendingDocuments.value = pendingDocuments.value.filter(doc => doc.id !== documentId)
       stats.pendingVerifications--
       stats.verifiedToday++
-      
+
       // Fermer le modal de visualisation si ouvert
       if (showDocumentViewModal.value) {
         closeDocumentViewModal()
       }
-      
+
       // Afficher une notification de succès
       alert(`Document #${documentId} approuvé avec succès`)
     }
-    
-    const showRejectModal = (documentId) => {
+
+    const showRejectModal = documentId => {
       selectedDocumentId.value = documentId
       rejectionReason.value = 'blurry_image'
       customRejectionReason.value = ''
@@ -575,77 +594,80 @@ export default {
       allowResubmission.value = true
       showRejectDocumentModal.value = true
     }
-    
+
     const closeRejectModal = () => {
       showRejectDocumentModal.value = false
     }
-    
+
     const confirmReject = async () => {
-      const reason = rejectionReason.value === 'other' ? customRejectionReason.value : rejectionReason.value
+      const reason =
+        rejectionReason.value === 'other' ? customRejectionReason.value : rejectionReason.value
       console.log(`Rejet du document ${selectedDocumentId.value} pour la raison: ${reason}`)
       console.log(`Détails: ${rejectionDetails.value}`)
       console.log(`Envoyer notification: ${sendRejectionNotification.value}`)
       console.log(`Autoriser nouvelle soumission: ${allowResubmission.value}`)
-      
+
       // Simuler l'appel API
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // Mettre à jour les données
-      pendingDocuments.value = pendingDocuments.value.filter(doc => doc.id !== selectedDocumentId.value)
+      pendingDocuments.value = pendingDocuments.value.filter(
+        doc => doc.id !== selectedDocumentId.value
+      )
       stats.pendingVerifications--
       stats.rejectedToday++
-      
+
       closeRejectModal()
-      
+
       // Fermer le modal de visualisation si ouvert
       if (showDocumentViewModal.value) {
         closeDocumentViewModal()
       }
-      
+
       // Afficher une notification de succès
       alert(`Document #${selectedDocumentId.value} rejeté avec succès`)
     }
-    
-    const getDocumentTypeClass = (type) => {
+
+    const getDocumentTypeClass = type => {
       const typeClasses = {
-        'id_card': 'type-id-card',
-        'passport': 'type-passport',
-        'driving_license': 'type-driving-license',
-        'business_registration': 'type-business'
+        id_card: 'type-id-card',
+        passport: 'type-passport',
+        driving_license: 'type-driving-license',
+        business_registration: 'type-business',
       }
       return typeClasses[type] || ''
     }
-    
-    const getDocumentTypeLabel = (type) => {
+
+    const getDocumentTypeLabel = type => {
       const typeLabels = {
-        'id_card': 'Carte d\'identité',
-        'passport': 'Passeport',
-        'driving_license': 'Permis de conduire',
-        'business_registration': 'Registre de commerce'
+        id_card: "Carte d'identité",
+        passport: 'Passeport',
+        driving_license: 'Permis de conduire',
+        business_registration: 'Registre de commerce',
       }
       return typeLabels[type] || type
     }
-    
-    const getRoleClass = (role) => {
+
+    const getRoleClass = role => {
       const roleClasses = {
-        'client': 'role-client',
-        'courier': 'role-courier',
-        'business': 'role-business',
-        'manager': 'role-manager'
+        client: 'role-client',
+        courier: 'role-courier',
+        business: 'role-business',
+        manager: 'role-manager',
       }
       return roleClasses[role] || ''
     }
-    
-    const getRoleLabel = (role) => {
+
+    const getRoleLabel = role => {
       const roleLabels = {
-        'client': 'Client',
-        'courier': 'Coursier',
-        'business': 'Entreprise',
-        'manager': 'Gestionnaire'
+        client: 'Client',
+        courier: 'Coursier',
+        business: 'Entreprise',
+        manager: 'Gestionnaire',
       }
       return roleLabels[role] || role
     }
-    
+
     // Propriétés calculées
     const isValidRejectionReason = computed(() => {
       if (rejectionReason.value === 'other') {
@@ -653,12 +675,12 @@ export default {
       }
       return true
     })
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
     })
-    
+
     return {
       loading,
       pendingDocuments,
@@ -675,7 +697,7 @@ export default {
       verificationData,
       stats,
       filters,
-      
+
       fetchData,
       refreshData,
       applyFilters,
@@ -697,11 +719,11 @@ export default {
       getRoleClass,
       getRoleLabel,
       isValidRejectionReason,
-      
+
       formatDate,
-      getInitials
+      getInitials,
     }
-  }
+  },
 }
 </script>
 
@@ -1376,39 +1398,39 @@ export default {
   .kyc-container {
     grid-template-columns: 1fr;
   }
-  
+
   .kyc-section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .kyc-filters {
     width: 100%;
     flex-wrap: wrap;
   }
-  
+
   .document-view-header {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .document-meta {
     width: 100%;
   }
-  
+
   .verification-actions {
     flex-direction: column;
   }
-  
+
   .verification-actions .btn {
     width: 100%;
   }
-  
+
   .modal-footer {
     flex-direction: column;
   }
-  
+
   .modal-footer .btn {
     width: 100%;
   }

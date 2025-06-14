@@ -3,17 +3,17 @@
     <div class="chart-header">
       <h3>{{ chartData.title }}</h3>
       <div class="chart-actions" v-if="showActions">
-        <button 
-          class="btn-chart-action" 
-          :class="{ active: chartType === 'pie' }" 
+        <button
+          class="btn-chart-action"
+          :class="{ active: chartType === 'pie' }"
           @click="changeChartType('pie')"
           title="Graphique circulaire"
         >
           <font-awesome-icon icon="chart-pie" />
         </button>
-        <button 
-          class="btn-chart-action" 
-          :class="{ active: chartType === 'doughnut' }" 
+        <button
+          class="btn-chart-action"
+          :class="{ active: chartType === 'doughnut' }"
           @click="changeChartType('doughnut')"
           title="Graphique en anneau"
         >
@@ -30,28 +30,28 @@
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { Pie } from 'vue-chartjs'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend)
 
 export default {
   name: 'PieChart',
   components: {
-    Pie
+    Pie,
   },
   props: {
     chartData: {
       type: Object,
-      required: true
+      required: true,
     },
     options: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     showActions: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
   setup(props, { emit }) {
     const chartType = ref(props.chartData.type || 'pie')
@@ -64,28 +64,29 @@ export default {
       }
 
       // Générer des couleurs si elles ne sont pas fournies
-      const colors = props.chartData.colors || generatePaletteColors(props.chartData.datasets[0].data.length)
-      
+      const colors =
+        props.chartData.colors || generatePaletteColors(props.chartData.datasets[0].data.length)
+
       // Appliquer les couleurs au dataset
-      const chartDataCopy = JSON.parse(JSON.stringify(props.chartData));
-      chartDataCopy.datasets[0].backgroundColor = colors;
+      const chartDataCopy = JSON.parse(JSON.stringify(props.chartData))
+      chartDataCopy.datasets[0].backgroundColor = colors
 
       if (chartType.value === 'pie') {
         chart.value = new ChartJS(document.getElementById(props.chartData.chartId), {
           type: 'pie',
           data: chartDataCopy,
-          options: props.options
+          options: props.options,
         })
       } else {
         chart.value = new ChartJS(document.getElementById(props.chartData.chartId), {
           type: 'doughnut',
           data: chartDataCopy,
-          options: props.options
+          options: props.options,
         })
       }
     }
 
-    const changeChartType = (type) => {
+    const changeChartType = type => {
       chartType.value = type
       // On évite de modifier directement la prop
       createChart()
@@ -106,20 +107,28 @@ export default {
     })
 
     // Surveiller les changements de données
-    watch(() => props.chartData.datasets[0].data, () => {
-      createChart()
-    }, { deep: true })
+    watch(
+      () => props.chartData.datasets[0].data,
+      () => {
+        createChart()
+      },
+      { deep: true }
+    )
 
     // Surveiller les changements d'étiquettes
-    watch(() => props.chartData.labels, () => {
-      createChart()
-    }, { deep: true })
+    watch(
+      () => props.chartData.labels,
+      () => {
+        createChart()
+      },
+      { deep: true }
+    )
 
     return {
       chartType,
-      changeChartType
+      changeChartType,
     }
-  }
+  },
 }
 
 function generatePaletteColors(length) {

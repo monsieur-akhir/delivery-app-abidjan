@@ -1,4 +1,4 @@
-import authApi from "./auth"
+import authApi from './auth'
 
 /**
  * Récupérer les notifications
@@ -11,7 +11,7 @@ import authApi from "./auth"
  */
 export const fetchNotifications = async (params = {}) => {
   try {
-    const response = await authApi.get("/notifications", { params })
+    const response = await authApi.get('/notifications', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -24,7 +24,7 @@ export const fetchNotifications = async (params = {}) => {
  */
 export const fetchUnreadCount = async () => {
   try {
-    const response = await authApi.get("/notifications/unread-count")
+    const response = await authApi.get('/notifications/unread-count')
     return response.data.count
   } catch (error) {
     handleApiError(error)
@@ -36,7 +36,7 @@ export const fetchUnreadCount = async () => {
  * @param {number} id - ID de la notification
  * @returns {Promise<Object>} - Notification mise à jour
  */
-export const markNotificationAsRead = async (id) => {
+export const markNotificationAsRead = async id => {
   try {
     const response = await authApi.put(`/notifications/${id}/read`)
     return response.data
@@ -51,7 +51,7 @@ export const markNotificationAsRead = async (id) => {
  */
 export const markAllNotificationsAsRead = async () => {
   try {
-    const response = await authApi.put("/notifications/read-all")
+    const response = await authApi.put('/notifications/read-all')
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -63,7 +63,7 @@ export const markAllNotificationsAsRead = async () => {
  * @param {number|string} id - ID de la notification ou 'all' pour toutes
  * @returns {Promise<Object>} - Résultat de l'opération
  */
-export const deleteNotification = async (id) => {
+export const deleteNotification = async id => {
   try {
     const response = await authApi.delete(`/notifications/${id}`)
     return response.data
@@ -82,9 +82,9 @@ export const deleteNotification = async (id) => {
  * @param {number[]} notification.user_ids - IDs des utilisateurs destinataires
  * @returns {Promise<Object>} - Notification créée
  */
-export const sendNotification = async (notification) => {
+export const sendNotification = async notification => {
   try {
-    const response = await authApi.post("/notifications/send", notification)
+    const response = await authApi.post('/notifications/send', notification)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -96,17 +96,18 @@ export const sendNotification = async (notification) => {
  * @param {Error} error - Erreur axios
  * @throws {Error} - Erreur formatée
  */
-const handleApiError = (error) => {
+const handleApiError = error => {
   if (error.response) {
     // La requête a été faite et le serveur a répondu avec un code d'état
     // qui n'est pas dans la plage 2xx
-    const errorMessage = error.response.data.detail || error.response.data.message || "Une erreur est survenue"
+    const errorMessage =
+      error.response.data.detail || error.response.data.message || 'Une erreur est survenue'
     throw new Error(errorMessage)
   } else if (error.request) {
     // La requête a été faite mais aucune réponse n'a été reçue
-    throw new Error("Aucune réponse du serveur. Vérifiez votre connexion Internet.")
+    throw new Error('Aucune réponse du serveur. Vérifiez votre connexion Internet.')
   } else {
     // Une erreur s'est produite lors de la configuration de la requête
-    throw new Error(error.message || "Une erreur est survenue")
+    throw new Error(error.message || 'Une erreur est survenue')
   }
 }

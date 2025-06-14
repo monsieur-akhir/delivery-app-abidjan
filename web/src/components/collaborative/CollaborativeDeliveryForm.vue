@@ -8,15 +8,15 @@
             <i class="fas fa-info-circle"></i>
             Informations de base
           </h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="pickup-commune" class="required">Commune de ramassage</label>
-              <select 
-                id="pickup-commune" 
-                v-model="form.pickupCommune" 
+              <select
+                id="pickup-commune"
+                v-model="form.pickupCommune"
                 class="form-control"
-                :class="{ 'error': errors.pickupCommune }"
+                :class="{ error: errors.pickupCommune }"
                 required
               >
                 <option value="">Sélectionner une commune</option>
@@ -24,16 +24,18 @@
                   {{ commune }}
                 </option>
               </select>
-              <span v-if="errors.pickupCommune" class="error-message">{{ errors.pickupCommune }}</span>
+              <span v-if="errors.pickupCommune" class="error-message">{{
+                errors.pickupCommune
+              }}</span>
             </div>
-            
+
             <div class="form-group">
               <label for="delivery-commune" class="required">Commune de livraison</label>
-              <select 
-                id="delivery-commune" 
-                v-model="form.deliveryCommune" 
+              <select
+                id="delivery-commune"
+                v-model="form.deliveryCommune"
                 class="form-control"
-                :class="{ 'error': errors.deliveryCommune }"
+                :class="{ error: errors.deliveryCommune }"
                 required
               >
                 <option value="">Sélectionner une commune</option>
@@ -41,37 +43,43 @@
                   {{ commune }}
                 </option>
               </select>
-              <span v-if="errors.deliveryCommune" class="error-message">{{ errors.deliveryCommune }}</span>
+              <span v-if="errors.deliveryCommune" class="error-message">{{
+                errors.deliveryCommune
+              }}</span>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="pickup-address" class="required">Adresse de ramassage</label>
-              <textarea 
+              <textarea
                 id="pickup-address"
-                v-model="form.pickupAddress" 
+                v-model="form.pickupAddress"
                 class="form-control"
-                :class="{ 'error': errors.pickupAddress }"
+                :class="{ error: errors.pickupAddress }"
                 placeholder="Adresse complète de ramassage"
                 rows="2"
                 required
               ></textarea>
-              <span v-if="errors.pickupAddress" class="error-message">{{ errors.pickupAddress }}</span>
+              <span v-if="errors.pickupAddress" class="error-message">{{
+                errors.pickupAddress
+              }}</span>
             </div>
-            
+
             <div class="form-group">
               <label for="delivery-address" class="required">Adresse de livraison</label>
-              <textarea 
+              <textarea
                 id="delivery-address"
-                v-model="form.deliveryAddress" 
+                v-model="form.deliveryAddress"
                 class="form-control"
-                :class="{ 'error': errors.deliveryAddress }"
+                :class="{ error: errors.deliveryAddress }"
                 placeholder="Adresse complète de livraison"
                 rows="2"
                 required
               ></textarea>
-              <span v-if="errors.deliveryAddress" class="error-message">{{ errors.deliveryAddress }}</span>
+              <span v-if="errors.deliveryAddress" class="error-message">{{
+                errors.deliveryAddress
+              }}</span>
             </div>
           </div>
         </div>
@@ -82,35 +90,37 @@
             <i class="fas fa-box"></i>
             Détails du colis
           </h3>
-          
+
           <div class="form-group">
             <label for="package-description" class="required">Description du colis</label>
-            <textarea 
+            <textarea
               id="package-description"
-              v-model="form.packageDescription" 
+              v-model="form.packageDescription"
               class="form-control"
-              :class="{ 'error': errors.packageDescription }"
+              :class="{ error: errors.packageDescription }"
               placeholder="Décrivez le contenu du colis"
               rows="3"
               required
             ></textarea>
-            <span v-if="errors.packageDescription" class="error-message">{{ errors.packageDescription }}</span>
+            <span v-if="errors.packageDescription" class="error-message">{{
+              errors.packageDescription
+            }}</span>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="package-weight">Poids estimé (kg)</label>
-              <input 
+              <input
                 id="package-weight"
-                type="number" 
-                v-model.number="form.packageWeight" 
+                type="number"
+                v-model.number="form.packageWeight"
                 class="form-control"
                 placeholder="0"
                 min="0"
                 step="0.1"
               />
             </div>
-            
+
             <div class="form-group">
               <label for="package-size">Taille du colis</label>
               <select id="package-size" v-model="form.packageSize" class="form-control">
@@ -121,7 +131,7 @@
               </select>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
@@ -130,7 +140,7 @@
                 Colis fragile
               </label>
             </div>
-            
+
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="form.requiresRefrigeration" />
@@ -147,26 +157,32 @@
             <i class="fas fa-users"></i>
             Collaboration et prix
           </h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="proposed-price" class="required">Prix proposé (FCFA)</label>
-              <input 
+              <input
                 id="proposed-price"
-                type="number" 
-                v-model.number="form.proposedPrice" 
+                type="number"
+                v-model.number="form.proposedPrice"
                 class="form-control"
-                :class="{ 'error': errors.proposedPrice }"
+                :class="{ error: errors.proposedPrice }"
                 placeholder="0"
                 min="0"
                 required
               />
-              <span v-if="errors.proposedPrice" class="error-message">{{ errors.proposedPrice }}</span>
+              <span v-if="errors.proposedPrice" class="error-message">{{
+                errors.proposedPrice
+              }}</span>
             </div>
-            
+
             <div class="form-group">
               <label for="max-collaborators">Nombre max de collaborateurs</label>
-              <select id="max-collaborators" v-model.number="form.maxCollaborators" class="form-control">
+              <select
+                id="max-collaborators"
+                v-model.number="form.maxCollaborators"
+                class="form-control"
+              >
                 <option :value="2">2 collaborateurs</option>
                 <option :value="3">3 collaborateurs</option>
                 <option :value="4">4 collaborateurs</option>
@@ -174,12 +190,12 @@
               </select>
             </div>
           </div>
-          
+
           <div class="form-group">
             <label for="collaboration-notes">Instructions pour les collaborateurs</label>
-            <textarea 
+            <textarea
               id="collaboration-notes"
-              v-model="form.collaborationNotes" 
+              v-model="form.collaborationNotes"
               class="form-control"
               placeholder="Instructions spéciales, points de rendez-vous, etc."
               rows="3"
@@ -193,19 +209,19 @@
             <i class="fas fa-cog"></i>
             Options avancées
           </h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="delivery-deadline">Date limite de livraison</label>
-              <input 
+              <input
                 id="delivery-deadline"
-                type="datetime-local" 
-                v-model="form.deliveryDeadline" 
+                type="datetime-local"
+                v-model="form.deliveryDeadline"
                 class="form-control"
                 :min="minDateTime"
               />
             </div>
-            
+
             <div class="form-group">
               <label for="priority">Priorité</label>
               <select id="priority" v-model="form.priority" class="form-control">
@@ -215,7 +231,7 @@
               </select>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
@@ -224,7 +240,7 @@
                 Assurance requise
               </label>
             </div>
-            
+
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="form.allowsPartialDelivery" />
@@ -233,13 +249,13 @@
               </label>
             </div>
           </div>
-          
+
           <div class="form-group" v-if="form.requiresInsurance">
             <label for="insurance-value">Valeur assurée (FCFA)</label>
-            <input 
+            <input
               id="insurance-value"
-              type="number" 
-              v-model.number="form.insuranceValue" 
+              type="number"
+              v-model.number="form.insuranceValue"
               class="form-control"
               placeholder="0"
               min="0"
@@ -254,7 +270,9 @@
           <h4>Résumé de la livraison</h4>
           <div class="summary-item">
             <span class="label">Trajet:</span>
-            <span class="value">{{ form.pickupCommune || '?' }} → {{ form.deliveryCommune || '?' }}</span>
+            <span class="value"
+              >{{ form.pickupCommune || '?' }} → {{ form.deliveryCommune || '?' }}</span
+            >
           </div>
           <div class="summary-item">
             <span class="label">Prix proposé:</span>
@@ -276,9 +294,7 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="btn-outline">
-          Annuler
-        </button>
+        <button type="button" @click="$emit('cancel')" class="btn-outline">Annuler</button>
         <button type="submit" :disabled="!isFormValid || submitting" class="btn-primary">
           <span v-if="submitting" class="spinner"></span>
           {{ isEditing ? 'Mettre à jour' : 'Créer la livraison' }}
@@ -293,16 +309,16 @@ import { ref, computed, onMounted, watch } from 'vue'
 
 export default {
   name: 'CollaborativeDeliveryForm',
-  
+
   props: {
     delivery: {
       type: Object,
-      default: null
-    }
+      default: null,
+    },
   },
-  
+
   emits: ['submit', 'cancel'],
-  
+
   setup(props, { emit }) {
     const form = ref({
       pickupCommune: '',
@@ -321,35 +337,45 @@ export default {
       priority: 'normal',
       requiresInsurance: false,
       allowsPartialDelivery: false,
-      insuranceValue: null
+      insuranceValue: null,
     })
-    
+
     const errors = ref({})
     const submitting = ref(false)
-    
+
     const communes = [
-      'Abobo', 'Adjamé', 'Attécoubé', 'Cocody', 'Koumassi',
-      'Marcory', 'Plateau', 'Port-Bouët', 'Treichville', 'Yopougon'
+      'Abobo',
+      'Adjamé',
+      'Attécoubé',
+      'Cocody',
+      'Koumassi',
+      'Marcory',
+      'Plateau',
+      'Port-Bouët',
+      'Treichville',
+      'Yopougon',
     ]
-    
+
     const isEditing = computed(() => !!props.delivery)
-    
+
     const minDateTime = computed(() => {
       const now = new Date()
       now.setHours(now.getHours() + 1) // Au moins 1 heure dans le futur
       return now.toISOString().slice(0, 16)
     })
-    
+
     const isFormValid = computed(() => {
-      return form.value.pickupCommune &&
-             form.value.deliveryCommune &&
-             form.value.pickupAddress &&
-             form.value.deliveryAddress &&
-             form.value.packageDescription &&
-             form.value.proposedPrice > 0 &&
-             Object.keys(errors.value).length === 0
+      return (
+        form.value.pickupCommune &&
+        form.value.deliveryCommune &&
+        form.value.pickupAddress &&
+        form.value.deliveryAddress &&
+        form.value.packageDescription &&
+        form.value.proposedPrice > 0 &&
+        Object.keys(errors.value).length === 0
+      )
     })
-    
+
     // Initialiser le formulaire si on édite une livraison existante
     const initializeForm = () => {
       if (props.delivery) {
@@ -360,7 +386,7 @@ export default {
         })
       }
     }
-    
+
     // Validation en temps réel
     const validateField = (field, value) => {
       switch (field) {
@@ -372,16 +398,16 @@ export default {
             delete errors.value[field]
           }
           break
-          
+
         case 'pickupAddress':
         case 'deliveryAddress':
           if (!value || value.trim().length < 10) {
-            errors.value[field] = 'L\'adresse doit contenir au moins 10 caractères'
+            errors.value[field] = "L'adresse doit contenir au moins 10 caractères"
           } else {
             delete errors.value[field]
           }
           break
-          
+
         case 'packageDescription':
           if (!value || value.trim().length < 5) {
             errors.value[field] = 'La description doit contenir au moins 5 caractères'
@@ -389,7 +415,7 @@ export default {
             delete errors.value[field]
           }
           break
-          
+
         case 'proposedPrice':
           if (!value || value <= 0) {
             errors.value[field] = 'Le prix doit être supérieur à 0'
@@ -401,61 +427,92 @@ export default {
           break
       }
     }
-    
+
     // Watchers pour la validation
-    watch(() => form.value.pickupCommune, (value) => validateField('pickupCommune', value))
-    watch(() => form.value.deliveryCommune, (value) => validateField('deliveryCommune', value))
-    watch(() => form.value.pickupAddress, (value) => validateField('pickupAddress', value))
-    watch(() => form.value.deliveryAddress, (value) => validateField('deliveryAddress', value))
-    watch(() => form.value.packageDescription, (value) => validateField('packageDescription', value))
-    watch(() => form.value.proposedPrice, (value) => validateField('proposedPrice', value))
-    
+    watch(
+      () => form.value.pickupCommune,
+      value => validateField('pickupCommune', value)
+    )
+    watch(
+      () => form.value.deliveryCommune,
+      value => validateField('deliveryCommune', value)
+    )
+    watch(
+      () => form.value.pickupAddress,
+      value => validateField('pickupAddress', value)
+    )
+    watch(
+      () => form.value.deliveryAddress,
+      value => validateField('deliveryAddress', value)
+    )
+    watch(
+      () => form.value.packageDescription,
+      value => validateField('packageDescription', value)
+    )
+    watch(
+      () => form.value.proposedPrice,
+      value => validateField('proposedPrice', value)
+    )
+
     // Validation spéciale pour éviter les trajets identiques
-    watch([() => form.value.pickupCommune, () => form.value.deliveryCommune], ([pickup, delivery]) => {
-      if (pickup && delivery && pickup === delivery) {
-        errors.value.deliveryCommune = 'La commune de livraison doit être différente de celle de ramassage'
-      } else if (pickup && delivery && pickup !== delivery) {
-        delete errors.value.deliveryCommune
-        validateField('deliveryCommune', delivery)
+    watch(
+      [() => form.value.pickupCommune, () => form.value.deliveryCommune],
+      ([pickup, delivery]) => {
+        if (pickup && delivery && pickup === delivery) {
+          errors.value.deliveryCommune =
+            'La commune de livraison doit être différente de celle de ramassage'
+        } else if (pickup && delivery && pickup !== delivery) {
+          delete errors.value.deliveryCommune
+          validateField('deliveryCommune', delivery)
+        }
       }
-    })
-    
-    const formatCurrency = (amount) => {
+    )
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
+        minimumFractionDigits: 0,
       }).format(amount)
     }
-    
+
     const handleSubmit = async () => {
       // Validation finale
       Object.keys(form.value).forEach(key => {
-        if (['pickupCommune', 'deliveryCommune', 'pickupAddress', 'deliveryAddress', 'packageDescription', 'proposedPrice'].includes(key)) {
+        if (
+          [
+            'pickupCommune',
+            'deliveryCommune',
+            'pickupAddress',
+            'deliveryAddress',
+            'packageDescription',
+            'proposedPrice',
+          ].includes(key)
+        ) {
           validateField(key, form.value[key])
         }
       })
-      
+
       if (!isFormValid.value) {
         return
       }
-      
+
       try {
         submitting.value = true
-        
+
         // Préparer les données à envoyer
         const deliveryData = {
           ...form.value,
-          deliveryType: 'collaborative'
+          deliveryType: 'collaborative',
         }
-        
+
         // Nettoyer les valeurs nulles ou vides
         Object.keys(deliveryData).forEach(key => {
           if (deliveryData[key] === null || deliveryData[key] === '') {
             delete deliveryData[key]
           }
         })
-        
+
         emit('submit', deliveryData)
       } catch (error) {
         console.error('Erreur lors de la soumission:', error)
@@ -463,11 +520,11 @@ export default {
         submitting.value = false
       }
     }
-    
+
     onMounted(() => {
       initializeForm()
     })
-    
+
     return {
       form,
       errors,
@@ -477,9 +534,9 @@ export default {
       minDateTime,
       isFormValid,
       formatCurrency,
-      handleSubmit
+      handleSubmit,
     }
-  }
+  },
 }
 </script>
 
@@ -577,7 +634,7 @@ export default {
   margin: 0;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   margin-right: 8px;
 }
 
@@ -682,23 +739,25 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
   .delivery-form {
     padding: 16px;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .btn-outline,
   .btn-primary {
     width: 100%;

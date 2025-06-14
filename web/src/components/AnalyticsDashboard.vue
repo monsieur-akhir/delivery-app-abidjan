@@ -183,9 +183,9 @@
                     <div class="rating-display">
                       <span class="rating-value">{{ commune.rating.toFixed(1) }}</span>
                       <div class="rating-stars">
-                        <i 
-                          v-for="star in 5" 
-                          :key="star" 
+                        <i
+                          v-for="star in 5"
+                          :key="star"
                           class="fas fa-star"
                           :class="{ 'star-filled': star <= Math.round(commune.rating) }"
                         ></i>
@@ -235,9 +235,9 @@
                     <div class="rating-display">
                       <span class="rating-value">{{ courier.rating.toFixed(1) }}</span>
                       <div class="rating-stars">
-                        <i 
-                          v-for="star in 5" 
-                          :key="star" 
+                        <i
+                          v-for="star in 5"
+                          :key="star"
                           class="fas fa-star"
                           :class="{ 'star-filled': star <= Math.round(courier.rating) }"
                         ></i>
@@ -255,21 +255,21 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
-import Chart from 'chart.js/auto';
-import { getAnalyticsData, getCourierPerformance } from '@/api/manager';
+import { ref, onMounted, onUnmounted } from 'vue'
+import Chart from 'chart.js/auto'
+import { getAnalyticsData, getCourierPerformance } from '@/api/manager'
 
 export default {
   name: 'AnalyticsDashboard',
   setup() {
-    const loading = ref(true);
+    const loading = ref(true)
     const filters = ref({
       dateRange: 'last_7_days',
       startDate: null,
       endDate: null,
-      commune: ''
-    });
-    
+      commune: '',
+    })
+
     // Données statistiques
     const stats = ref({
       totalDeliveries: 0,
@@ -279,25 +279,25 @@ export default {
       totalUsers: 0,
       usersChange: 0,
       averageRating: 0,
-      ratingChange: 0
-    });
-    
+      ratingChange: 0,
+    })
+
     // Références aux éléments canvas pour les graphiques
-    const deliveriesChart = ref(null);
-    const revenueChart = ref(null);
-    const distributionChart = ref(null);
-    const couriersChart = ref(null);
-    
+    const deliveriesChart = ref(null)
+    const revenueChart = ref(null)
+    const distributionChart = ref(null)
+    const couriersChart = ref(null)
+
     // Instances des graphiques
-    let deliveriesChartInstance = null;
-    let revenueChartInstance = null;
-    let distributionChartInstance = null;
-    let couriersChartInstance = null;
-    
+    let deliveriesChartInstance = null
+    let revenueChartInstance = null
+    let distributionChartInstance = null
+    let couriersChartInstance = null
+
     // Données pour les tableaux
-    const topCommunes = ref([]);
-    const topCouriers = ref([]);
-    
+    const topCommunes = ref([])
+    const topCouriers = ref([])
+
     // Liste des communes
     const communes = ref([
       'Abobo',
@@ -311,55 +311,55 @@ export default {
       'Treichville',
       'Yopougon',
       'Bingerville',
-      'Songon'
-    ]);
-    
+      'Songon',
+    ])
+
     // Gérer le changement de plage de dates
     const handleDateRangeChange = () => {
       if (filters.value.dateRange !== 'custom') {
         // Calculer les dates en fonction de la plage sélectionnée
-        const now = new Date();
-        let startDate = new Date();
-        let endDate = new Date();
-        
+        const now = new Date()
+        let startDate = new Date()
+        let endDate = new Date()
+
         switch (filters.value.dateRange) {
           case 'today':
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            endDate = now;
-            break;
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            endDate = now
+            break
           case 'yesterday':
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
-            break;
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59)
+            break
           case 'last_7_days':
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
-            endDate = now;
-            break;
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6)
+            endDate = now
+            break
           case 'last_30_days':
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
-            endDate = now;
-            break;
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29)
+            endDate = now
+            break
           case 'this_month':
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-            endDate = now;
-            break;
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+            endDate = now
+            break
           case 'last_month':
-            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-            break;
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+            endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
+            break
         }
-        
-        filters.value.startDate = startDate.toISOString().split('T')[0];
-        filters.value.endDate = endDate.toISOString().split('T')[0];
+
+        filters.value.startDate = startDate.toISOString().split('T')[0]
+        filters.value.endDate = endDate.toISOString().split('T')[0]
       }
-      
-      loadData();
-    };
-    
+
+      loadData()
+    }
+
     // Charger les données
     const loadData = async () => {
-      loading.value = true;
-      
+      loading.value = true
+
       try {
         // Dans un environnement réel, ces données viendraient de l'API
         // Appeler l'API pour obtenir les données analytiques
@@ -367,46 +367,46 @@ export default {
           dateRange: filters.value.dateRange,
           startDate: filters.value.startDate,
           endDate: filters.value.endDate,
-          commune: filters.value.commune
-        });
-        
+          commune: filters.value.commune,
+        })
+
         // Appeler l'API pour obtenir les performances des coursiers
         const courierPerformance = await getCourierPerformance({
           dateRange: filters.value.dateRange,
           startDate: filters.value.startDate,
           endDate: filters.value.endDate,
-          commune: filters.value.commune
-        });
-        
+          commune: filters.value.commune,
+        })
+
         // Mettre à jour les statistiques
-        updateStats(analyticsData);
-        
+        updateStats(analyticsData)
+
         // Mettre à jour les graphiques
-        updateCharts(analyticsData);
-        
+        updateCharts(analyticsData)
+
         // Mettre à jour les tableaux
-        updateTables(analyticsData, courierPerformance);
+        updateTables(analyticsData, courierPerformance)
       } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-        
+        console.error('Erreur lors du chargement des données:', error)
+
         // Utiliser des données fictives pour la démonstration
-        const mockData = generateMockData();
-        
+        const mockData = generateMockData()
+
         // Mettre à jour les statistiques
-        updateStats(mockData);
-        
+        updateStats(mockData)
+
         // Mettre à jour les graphiques
-        updateCharts(mockData);
-        
+        updateCharts(mockData)
+
         // Mettre à jour les tableaux
-        updateTables(mockData, mockData.courierPerformance);
+        updateTables(mockData, mockData.courierPerformance)
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Mettre à jour les statistiques
-    const updateStats = (data) => {
+    const updateStats = data => {
       stats.value = {
         totalDeliveries: data.totalDeliveries || 0,
         deliveriesChange: data.deliveriesChange || 0,
@@ -415,211 +415,219 @@ export default {
         totalUsers: data.totalUsers || 0,
         usersChange: data.usersChange || 0,
         averageRating: data.averageRating || 0,
-        ratingChange: data.ratingChange || 0
-      };
-    };
-    
+        ratingChange: data.ratingChange || 0,
+      }
+    }
+
     // Mettre à jour les graphiques
-    const updateCharts = (data) => {
+    const updateCharts = data => {
       // Mettre à jour le graphique des livraisons
-      updateDeliveriesChart(data.deliveriesByDay || []);
-      
+      updateDeliveriesChart(data.deliveriesByDay || [])
+
       // Mettre à jour le graphique des revenus
-      updateRevenueChart(data.revenueByDay || []);
-      
+      updateRevenueChart(data.revenueByDay || [])
+
       // Mettre à jour le graphique de répartition
-      updateDistributionChart(data.deliveryDistribution || {});
-      
+      updateDistributionChart(data.deliveryDistribution || {})
+
       // Mettre à jour le graphique des coursiers
-      updateCouriersChart(data.courierPerformance || []);
-    };
-    
+      updateCouriersChart(data.courierPerformance || [])
+    }
+
     // Mettre à jour les tableaux
     const updateTables = (data, courierPerformance) => {
       // Mettre à jour le tableau des communes
-      topCommunes.value = data.topCommunes || [];
-      
+      topCommunes.value = data.topCommunes || []
+
       // Mettre à jour le tableau des coursiers
-      topCouriers.value = courierPerformance.topCouriers || [];
-    };
-    
+      topCouriers.value = courierPerformance.topCouriers || []
+    }
+
     // Mettre à jour le graphique des livraisons
-    const updateDeliveriesChart = (data) => {
+    const updateDeliveriesChart = data => {
       if (deliveriesChartInstance) {
-        deliveriesChartInstance.destroy();
+        deliveriesChartInstance.destroy()
       }
-      
-      const ctx = deliveriesChart.value.getContext('2d');
-      
+
+      const ctx = deliveriesChart.value.getContext('2d')
+
       deliveriesChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: data.map(item => item.date),
-          datasets: [{
-            label: 'Livraisons',
-            data: data.map(item => item.count),
-            backgroundColor: 'rgba(79, 70, 229, 0.2)',
-            borderColor: 'rgba(79, 70, 229, 1)',
-            borderWidth: 2,
-            tension: 0.4,
-            fill: true
-          }]
+          datasets: [
+            {
+              label: 'Livraisons',
+              data: data.map(item => item.count),
+              backgroundColor: 'rgba(79, 70, 229, 0.2)',
+              borderColor: 'rgba(79, 70, 229, 1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               mode: 'index',
-              intersect: false
-            }
+              intersect: false,
+            },
           },
           scales: {
             x: {
               grid: {
-                display: false
-              }
+                display: false,
+              },
             },
             y: {
               beginAtZero: true,
               grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                color: 'rgba(0, 0, 0, 0.05)',
+              },
+            },
+          },
+        },
+      })
+    }
+
     // Mettre à jour le graphique des revenus
-    const updateRevenueChart = (data) => {
+    const updateRevenueChart = data => {
       if (revenueChartInstance) {
-        revenueChartInstance.destroy();
+        revenueChartInstance.destroy()
       }
-      
-      const ctx = revenueChart.value.getContext('2d');
-      
+
+      const ctx = revenueChart.value.getContext('2d')
+
       revenueChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: data.map(item => item.date),
-          datasets: [{
-            label: 'Revenus',
-            data: data.map(item => item.amount),
-            backgroundColor: 'rgba(16, 185, 129, 0.7)',
-            borderRadius: 4
-          }]
+          datasets: [
+            {
+              label: 'Revenus',
+              data: data.map(item => item.amount),
+              backgroundColor: 'rgba(16, 185, 129, 0.7)',
+              borderRadius: 4,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               mode: 'index',
               intersect: false,
               callbacks: {
-                label: function(context) {
-                  return formatCurrency(context.raw);
-                }
-              }
-            }
+                label: function (context) {
+                  return formatCurrency(context.raw)
+                },
+              },
+            },
           },
           scales: {
             x: {
               grid: {
-                display: false
-              }
+                display: false,
+              },
             },
             y: {
               beginAtZero: true,
               grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
+                color: 'rgba(0, 0, 0, 0.05)',
               },
               ticks: {
-                callback: function(value) {
-                  return formatCurrency(value, true);
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                callback: function (value) {
+                  return formatCurrency(value, true)
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
     // Mettre à jour le graphique de répartition
-    const updateDistributionChart = (data) => {
+    const updateDistributionChart = data => {
       if (distributionChartInstance) {
-        distributionChartInstance.destroy();
+        distributionChartInstance.destroy()
       }
-      
-      const ctx = distributionChart.value.getContext('2d');
-      
-      const labels = Object.keys(data);
-      const values = Object.values(data);
-      
+
+      const ctx = distributionChart.value.getContext('2d')
+
+      const labels = Object.keys(data)
+      const values = Object.values(data)
+
       distributionChartInstance = new Chart(ctx, {
         type: 'pie',
         data: {
           labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: [
-              'rgba(79, 70, 229, 0.7)',
-              'rgba(16, 185, 129, 0.7)',
-              'rgba(245, 158, 11, 0.7)',
-              'rgba(239, 68, 68, 0.7)',
-              'rgba(59, 130, 246, 0.7)'
-            ],
-            borderWidth: 1
-          }]
+          datasets: [
+            {
+              data: values,
+              backgroundColor: [
+                'rgba(79, 70, 229, 0.7)',
+                'rgba(16, 185, 129, 0.7)',
+                'rgba(245, 158, 11, 0.7)',
+                'rgba(239, 68, 68, 0.7)',
+                'rgba(59, 130, 246, 0.7)',
+              ],
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'right'
+              position: 'right',
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  const label = context.label || '';
-                  const value = context.raw;
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = Math.round((value / total) * 100);
-                  return `${label}: ${value} (${percentage}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                label: function (context) {
+                  const label = context.label || ''
+                  const value = context.raw
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                  const percentage = Math.round((value / total) * 100)
+                  return `${label}: ${value} (${percentage}%)`
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
     // Mettre à jour le graphique des coursiers
-    const updateCouriersChart = (data) => {
+    const updateCouriersChart = data => {
       if (couriersChartInstance) {
-        couriersChartInstance.destroy();
+        couriersChartInstance.destroy()
       }
-      
-      const ctx = couriersChart.value.getContext('2d');
-      
+
+      const ctx = couriersChart.value.getContext('2d')
+
       couriersChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: data.map(item => item.name),
-          datasets: [{
-            label: 'Livraisons',
-            data: data.map(item => item.deliveries),
-            backgroundColor: 'rgba(79, 70, 229, 0.7)',
-            borderRadius: 4
-          }]
+          datasets: [
+            {
+              label: 'Livraisons',
+              data: data.map(item => item.deliveries),
+              backgroundColor: 'rgba(79, 70, 229, 0.7)',
+              borderRadius: 4,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -627,228 +635,218 @@ export default {
           indexAxis: 'y',
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               mode: 'index',
-              intersect: false
-            }
+              intersect: false,
+            },
           },
           scales: {
             x: {
               beginAtZero: true,
               grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
-              }
+                color: 'rgba(0, 0, 0, 0.05)',
+              },
             },
             y: {
               grid: {
-                display: false
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                display: false,
+              },
+            },
+          },
+        },
+      })
+    }
+
     // Exporter un graphique
-    const exportChart = (chartType) => {
-      let chartInstance;
-      let fileName;
-      
+    const exportChart = chartType => {
+      let chartInstance
+      let fileName
+
       switch (chartType) {
         case 'deliveries':
-          chartInstance = deliveriesChartInstance;
-          fileName = 'livraisons_par_jour';
-          break;
+          chartInstance = deliveriesChartInstance
+          fileName = 'livraisons_par_jour'
+          break
         case 'revenue':
-          chartInstance = revenueChartInstance;
-          fileName = 'revenus_par_jour';
-          break;
+          chartInstance = revenueChartInstance
+          fileName = 'revenus_par_jour'
+          break
         case 'distribution':
-          chartInstance = distributionChartInstance;
-          fileName = 'repartition_livraisons';
-          break;
+          chartInstance = distributionChartInstance
+          fileName = 'repartition_livraisons'
+          break
         case 'couriers':
-          chartInstance = couriersChartInstance;
-          fileName = 'performance_coursiers';
-          break;
+          chartInstance = couriersChartInstance
+          fileName = 'performance_coursiers'
+          break
       }
-      
+
       if (chartInstance) {
-        const link = document.createElement('a');
-        link.href = chartInstance.toBase64Image();
-        link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.png`;
-        link.click();
+        const link = document.createElement('a')
+        link.href = chartInstance.toBase64Image()
+        link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.png`
+        link.click()
       }
-    };
-    
+    }
+
     // Exporter un tableau
-    const exportTable = (tableType) => {
-      let data;
-      let fileName;
-      let headers;
-      
+    const exportTable = tableType => {
+      let data
+      let fileName
+      let headers
+
       switch (tableType) {
         case 'communes':
-          data = topCommunes.value;
-          fileName = 'meilleures_communes';
-          headers = ['Commune', 'Livraisons', 'Revenus', 'Note moyenne'];
-          break;
+          data = topCommunes.value
+          fileName = 'meilleures_communes'
+          headers = ['Commune', 'Livraisons', 'Revenus', 'Note moyenne']
+          break
         case 'couriers':
-          data = topCouriers.value;
-          fileName = 'meilleurs_coursiers';
-          headers = ['Coursier', 'Livraisons', 'Revenus générés', 'Note moyenne'];
-          break;
+          data = topCouriers.value
+          fileName = 'meilleurs_coursiers'
+          headers = ['Coursier', 'Livraisons', 'Revenus générés', 'Note moyenne']
+          break
       }
-      
+
       if (data && data.length > 0) {
         // Créer le contenu CSV
-        let csvContent = headers.join(',') + '\n';
-        
+        let csvContent = headers.join(',') + '\n'
+
         data.forEach(item => {
-          let row;
-          
+          let row
+
           if (tableType === 'communes') {
-            row = [
-              item.name,
-              item.deliveries,
-              item.revenue,
-              item.rating.toFixed(1)
-            ];
+            row = [item.name, item.deliveries, item.revenue, item.rating.toFixed(1)]
           } else {
-            row = [
-              item.name,
-              item.deliveries,
-              item.revenue,
-              item.rating.toFixed(1)
-            ];
+            row = [item.name, item.deliveries, item.revenue, item.rating.toFixed(1)]
           }
-          
-          csvContent += row.join(',') + '\n';
-        });
-        
+
+          csvContent += row.join(',') + '\n'
+        })
+
         // Créer un objet Blob et un lien de téléchargement
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.csv`
+        link.click()
       }
-    };
-    
+    }
+
     // Formater la devise
     const formatCurrency = (amount, short = false) => {
       if (short) {
         if (amount >= 1000000) {
-          return (amount / 1000000).toFixed(1) + ' M';
+          return (amount / 1000000).toFixed(1) + ' M'
         } else if (amount >= 1000) {
-          return (amount / 1000).toFixed(1) + ' k';
+          return (amount / 1000).toFixed(1) + ' k'
         }
-        return amount.toString();
+        return amount.toString()
       }
-      
+
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
     // Formater le pourcentage
-    const formatPercentage = (value) => {
-      const sign = value >= 0 ? '+' : '';
-      return `${sign}${value.toFixed(1)}%`;
-    };
-    
+    const formatPercentage = value => {
+      const sign = value >= 0 ? '+' : ''
+      return `${sign}${value.toFixed(1)}%`
+    }
+
     // Obtenir la classe CSS pour un changement
-    const getChangeClass = (value) => {
-      if (value > 0) return 'change-positive';
-      if (value < 0) return 'change-negative';
-      return '';
-    };
-    
+    const getChangeClass = value => {
+      if (value > 0) return 'change-positive'
+      if (value < 0) return 'change-negative'
+      return ''
+    }
+
     // Obtenir l'icône pour un changement
-    const getChangeIcon = (value) => {
-      if (value > 0) return 'fas fa-arrow-up';
-      if (value < 0) return 'fas fa-arrow-down';
-      return 'fas fa-minus';
-    };
-    
+    const getChangeIcon = value => {
+      if (value > 0) return 'fas fa-arrow-up'
+      if (value < 0) return 'fas fa-arrow-down'
+      return 'fas fa-minus'
+    }
+
     // Obtenir les initiales d'un nom
-    const getInitials = (name) => {
-      if (!name) return '';
-      
-      const parts = name.split(' ');
-      if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-      
-      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
-    };
-    
+    const getInitials = name => {
+      if (!name) return ''
+
+      const parts = name.split(' ')
+      if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase()
+    }
+
     // Générer des données fictives pour la démonstration
     const generateMockData = () => {
       // Générer des dates pour les 7 derniers jours
-      const dates = [];
+      const dates = []
       for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        dates.push(date.toISOString().split('T')[0]);
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        dates.push(date.toISOString().split('T')[0])
       }
-      
+
       // Générer des données de livraisons par jour
       const deliveriesByDay = dates.map(date => ({
         date,
-        count: Math.floor(Math.random() * 50) + 10
-      }));
-      
+        count: Math.floor(Math.random() * 50) + 10,
+      }))
+
       // Générer des données de revenus par jour
       const revenueByDay = dates.map(date => ({
         date,
-        amount: Math.floor(Math.random() * 500000) + 100000
-      }));
-      
+        amount: Math.floor(Math.random() * 500000) + 100000,
+      }))
+
       // Générer des données de répartition des livraisons
       const deliveryDistribution = {
-        'Standard': Math.floor(Math.random() * 100) + 50,
-        'Express': Math.floor(Math.random() * 50) + 20,
-        'Collaboratif': Math.floor(Math.random() * 30) + 10,
-        'Programmé': Math.floor(Math.random() * 20) + 5,
-        'Spécial': Math.floor(Math.random() * 10) + 1
-      };
-      
+        Standard: Math.floor(Math.random() * 100) + 50,
+        Express: Math.floor(Math.random() * 50) + 20,
+        Collaboratif: Math.floor(Math.random() * 30) + 10,
+        Programmé: Math.floor(Math.random() * 20) + 5,
+        Spécial: Math.floor(Math.random() * 10) + 1,
+      }
+
       // Générer des données de performance des coursiers
       const courierNames = [
         'Jean Kouassi',
         'Marie Koné',
         'Pierre Diallo',
         'Sophie Touré',
-        'Paul Ouattara'
-      ];
-      
+        'Paul Ouattara',
+      ]
+
       const courierPerformance = {
         topCouriers: courierNames.map((name, index) => ({
           name,
           deliveries: Math.floor(Math.random() * 50) + 10,
           revenue: Math.floor(Math.random() * 300000) + 50000,
           rating: Math.random() * 2 + 3,
-          avatar: null
-        }))
-      };
-      
+          avatar: null,
+        })),
+      }
+
       // Générer des données de meilleures communes
       const topCommunes = communes.value.slice(0, 5).map(name => ({
         name,
         deliveries: Math.floor(Math.random() * 100) + 20,
         revenue: Math.floor(Math.random() * 500000) + 100000,
-        rating: Math.random() * 2 + 3
-      }));
-      
+        rating: Math.random() * 2 + 3,
+      }))
+
       // Calculer les totaux et les changements
-      const totalDeliveries = deliveriesByDay.reduce((sum, item) => sum + item.count, 0);
-      const totalRevenue = revenueByDay.reduce((sum, item) => sum + item.amount, 0);
-      const totalUsers = Math.floor(Math.random() * 500) + 100;
-      const averageRating = 4.2;
-      
+      const totalDeliveries = deliveriesByDay.reduce((sum, item) => sum + item.count, 0)
+      const totalRevenue = revenueByDay.reduce((sum, item) => sum + item.amount, 0)
+      const totalUsers = Math.floor(Math.random() * 500) + 100
+      const averageRating = 4.2
+
       return {
         totalDeliveries,
         deliveriesChange: Math.random() * 20 - 10,
@@ -862,25 +860,25 @@ export default {
         revenueByDay,
         deliveryDistribution,
         courierPerformance,
-        topCommunes
-      };
-    };
-    
+        topCommunes,
+      }
+    }
+
     // Initialiser au montage du composant
     onMounted(() => {
       // Initialiser les dates par défaut
-      handleDateRangeChange();
-    });
-    
+      handleDateRangeChange()
+    })
+
     // Nettoyer les ressources au démontage du composant
     onUnmounted(() => {
       // Détruire les instances de graphiques
-      if (deliveriesChartInstance) deliveriesChartInstance.destroy();
-      if (revenueChartInstance) revenueChartInstance.destroy();
-      if (distributionChartInstance) distributionChartInstance.destroy();
-      if (couriersChartInstance) couriersChartInstance.destroy();
-    });
-    
+      if (deliveriesChartInstance) deliveriesChartInstance.destroy()
+      if (revenueChartInstance) revenueChartInstance.destroy()
+      if (distributionChartInstance) distributionChartInstance.destroy()
+      if (couriersChartInstance) couriersChartInstance.destroy()
+    })
+
     return {
       loading,
       filters,
@@ -901,10 +899,10 @@ export default {
       getChangeClass,
       getChangeIcon,
       getInitials,
-      mr1: 'mr-1'
-    };
-  }
-};
+      mr1: 'mr-1',
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -1236,11 +1234,11 @@ export default {
   .dashboard-filters {
     flex-direction: column;
   }
-  
+
   .filter-group {
     width: 100%;
   }
-  
+
   .charts-grid,
   .data-tables {
     grid-template-columns: 1fr;

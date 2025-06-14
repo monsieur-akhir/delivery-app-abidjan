@@ -1,13 +1,15 @@
 <template>
   <div class="participant-share-form">
     <div class="form-group">
-      <label for="share-percentage" class="form-label">Pourcentage de partage <span class="required">*</span></label>
+      <label for="share-percentage" class="form-label"
+        >Pourcentage de partage <span class="required">*</span></label
+      >
       <div class="input-group">
-        <input 
-          type="number" 
-          id="share-percentage" 
-          v-model.number="sharePercentage" 
-          class="form-input" 
+        <input
+          type="number"
+          id="share-percentage"
+          v-model.number="sharePercentage"
+          class="form-input"
           min="0"
           max="100"
           step="1"
@@ -17,16 +19,18 @@
           <span class="input-group-text">%</span>
         </div>
       </div>
-      <div class="form-hint">
-        Pourcentage des gains attribués à ce participant
-      </div>
+      <div class="form-hint">Pourcentage des gains attribués à ce participant</div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Participant</label>
       <div class="participant-info">
         <div class="participant-avatar">
-          <img v-if="participant.profile_picture" :src="participant.profile_picture" :alt="participant.name" />
+          <img
+            v-if="participant.profile_picture"
+            :src="participant.profile_picture"
+            :alt="participant.name"
+          />
           <div v-else class="avatar-placeholder">{{ getInitials(participant.name) }}</div>
         </div>
         <div class="participant-details">
@@ -38,7 +42,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Montant estimé</label>
       <div class="estimated-amount">
@@ -48,22 +52,17 @@
         Basé sur le prix total de la livraison et le pourcentage de partage
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="checkbox-label">
         <input type="checkbox" v-model="sendNotification" />
         <span>Envoyer une notification au participant</span>
       </label>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isValid">
         Enregistrer
       </button>
     </div>
@@ -71,68 +70,68 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 
 export default {
   name: 'ParticipantShareForm',
   props: {
     participant: {
       type: Object,
-      required: true
+      required: true,
     },
     currentShare: {
       type: Number,
-      default: 0
+      default: 0,
     },
     deliveryPrice: {
       type: Number,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
-    const sharePercentage = ref(props.currentShare);
-    const sendNotification = ref(true);
-    
-    const getInitials = (name) => {
-      if (!name) return '';
+    const sharePercentage = ref(props.currentShare)
+    const sendNotification = ref(true)
+
+    const getInitials = name => {
+      if (!name) return ''
       return name
         .split(' ')
         .map(part => part.charAt(0))
         .join('')
-        .toUpperCase();
-    };
-    
-    const formatCurrency = (amount) => {
+        .toUpperCase()
+    }
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
     const estimatedAmount = computed(() => {
-      return (props.deliveryPrice * sharePercentage.value) / 100;
-    });
-    
+      return (props.deliveryPrice * sharePercentage.value) / 100
+    })
+
     const isValid = computed(() => {
-      return sharePercentage.value >= 0 && sharePercentage.value <= 100;
-    });
-    
+      return sharePercentage.value >= 0 && sharePercentage.value <= 100
+    })
+
     const save = () => {
-      if (!isValid.value) return;
-      
+      if (!isValid.value) return
+
       emit('save', {
         participantId: props.participant.id,
         sharePercentage: sharePercentage.value,
-        sendNotification: sendNotification.value
-      });
-    };
-    
+        sendNotification: sendNotification.value,
+      })
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     return {
       sharePercentage,
       sendNotification,
@@ -141,10 +140,10 @@ export default {
       getInitials,
       formatCurrency,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

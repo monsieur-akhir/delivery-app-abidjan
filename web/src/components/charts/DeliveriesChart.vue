@@ -3,17 +3,17 @@
     <div class="chart-header">
       <h3>{{ title }}</h3>
       <div class="chart-actions">
-        <button 
-          class="btn-chart-action" 
-          :class="{ active: chartType === 'line' }" 
+        <button
+          class="btn-chart-action"
+          :class="{ active: chartType === 'line' }"
           @click="changeChartType('line')"
           title="Graphique linéaire"
         >
           <font-awesome-icon icon="chart-line" />
         </button>
-        <button 
-          class="btn-chart-action" 
-          :class="{ active: chartType === 'bar' }" 
+        <button
+          class="btn-chart-action"
+          :class="{ active: chartType === 'bar' }"
           @click="changeChartType('bar')"
           title="Graphique à barres"
         >
@@ -35,23 +35,23 @@ export default {
   props: {
     chartData: {
       type: Object,
-      required: true
+      required: true,
     },
     title: {
       type: String,
-      default: 'Graphique des livraisons'
+      default: 'Graphique des livraisons',
     },
     options: {
       type: Object,
-      default: () => ({})
-    }
+      default: () => ({}),
+    },
   },
   setup(props) {
     const chartType = ref('line')
     const chartCanvas = ref(null)
     let chartInstance = null
 
-    const changeChartType = (type) => {
+    const changeChartType = type => {
       chartType.value = type
       createChart()
     }
@@ -70,15 +70,15 @@ export default {
         Chart.register(...registerables)
 
         const ctx = chartCanvas.value.getContext('2d')
-        
+
         chartInstance = new Chart(ctx, {
           type: chartType.value,
           data: props.chartData,
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            ...props.options
-          }
+            ...props.options,
+          },
         })
       } catch (error) {
         console.error('Erreur lors de la création du graphique:', error)
@@ -95,16 +95,20 @@ export default {
       }
     })
 
-    watch(() => props.chartData, () => {
-      createChart()
-    }, { deep: true })
+    watch(
+      () => props.chartData,
+      () => {
+        createChart()
+      },
+      { deep: true }
+    )
 
     return {
       chartType,
       chartCanvas,
-      changeChartType
+      changeChartType,
     }
-  }
+  },
 }
 </script>
 
@@ -157,8 +161,8 @@ export default {
 }
 
 .btn-chart-action.active {
-  background-color: #FF6B00;
-  border-color: #FF6B00;
+  background-color: #ff6b00;
+  border-color: #ff6b00;
   color: white;
 }
 

@@ -1,12 +1,7 @@
 <template>
   <div class="toast-container">
     <transition-group name="toast">
-      <div 
-        v-for="toast in toasts" 
-        :key="toast.id" 
-        class="toast"
-        :class="[`toast-${toast.type}`]"
-      >
+      <div v-for="toast in toasts" :key="toast.id" class="toast" :class="[`toast-${toast.type}`]">
         <div class="toast-content">
           <i :class="getIconClass(toast.type)"></i>
           <span>{{ toast.message }}</span>
@@ -20,30 +15,34 @@
 </template>
 
 <script>
-import { useToast } from '@/composables/useToast';
+import { useToast } from '@/composables/useToast'
 
 export default {
   name: 'ToastContainer',
   setup() {
-    const { toasts, removeToast } = useToast();
-    
-    const getIconClass = (type) => {
+    const { toasts, removeToast } = useToast()
+
+    const getIconClass = type => {
       switch (type) {
-        case 'success': return 'fas fa-check-circle';
-        case 'error': return 'fas fa-exclamation-circle';
-        case 'warning': return 'fas fa-exclamation-triangle';
-        case 'info': 
-        default: return 'fas fa-info-circle';
+        case 'success':
+          return 'fas fa-check-circle'
+        case 'error':
+          return 'fas fa-exclamation-circle'
+        case 'warning':
+          return 'fas fa-exclamation-triangle'
+        case 'info':
+        default:
+          return 'fas fa-info-circle'
       }
-    };
-    
+    }
+
     return {
       toasts,
       removeToast,
-      getIconClass
-    };
-  }
-};
+      getIconClass,
+    }
+  },
+}
 </script>
 
 <style scoped>

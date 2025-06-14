@@ -4,9 +4,9 @@
       <div class="header-content">
         <h1>Tableau de bord</h1>
         <div class="period-selector">
-          <button 
-            v-for="period in periods" 
-            :key="period.value" 
+          <button
+            v-for="period in periods"
+            :key="period.value"
             :class="['period-btn', { active: selectedPeriod === period.value }]"
             @click="changePeriod(period.value)"
           >
@@ -99,7 +99,11 @@
             <h3>Livraisons par jour</h3>
             <div class="chart-actions">
               <button class="btn-icon" @click="toggleChartType('deliveries')">
-                <i :class="chartTypes.deliveries === 'bar' ? 'fas fa-chart-line' : 'fas fa-chart-bar'"></i>
+                <i
+                  :class="
+                    chartTypes.deliveries === 'bar' ? 'fas fa-chart-line' : 'fas fa-chart-bar'
+                  "
+                ></i>
               </button>
             </div>
           </div>
@@ -112,7 +116,9 @@
             <h3>Revenus par jour</h3>
             <div class="chart-actions">
               <button class="btn-icon" @click="toggleChartType('revenue')">
-                <i :class="chartTypes.revenue === 'bar' ? 'fas fa-chart-line' : 'fas fa-chart-bar'"></i>
+                <i
+                  :class="chartTypes.revenue === 'bar' ? 'fas fa-chart-line' : 'fas fa-chart-bar'"
+                ></i>
               </button>
             </div>
           </div>
@@ -127,9 +133,9 @@
         <div class="chart-header">
           <h3>Répartition par commune</h3>
           <div class="chart-actions">
-            <button 
-              v-for="view in communeViews" 
-              :key="view.value" 
+            <button
+              v-for="view in communeViews"
+              :key="view.value"
               :class="['btn-text', { active: selectedCommuneView === view.value }]"
               @click="changeCommuneView(view.value)"
             >
@@ -142,21 +148,18 @@
             <canvas ref="communeChart"></canvas>
           </div>
           <div class="commune-list">
-            <div 
-              v-for="(commune, index) in topCommunes" 
-              :key="commune.name" 
-              class="commune-item"
-            >
+            <div v-for="(commune, index) in topCommunes" :key="commune.name" class="commune-item">
               <div class="commune-rank">{{ index + 1 }}</div>
               <div class="commune-name">{{ commune.name }}</div>
               <div class="commune-value">
-                {{ selectedCommuneView === 'deliveries' ? commune.deliveries : formatPrice(commune.revenue) + ' FCFA' }}
+                {{
+                  selectedCommuneView === 'deliveries'
+                    ? commune.deliveries
+                    : formatPrice(commune.revenue) + ' FCFA'
+                }}
               </div>
               <div class="commune-bar-container">
-                <div 
-                  class="commune-bar" 
-                  :style="{ width: `${commune.percentage}%` }"
-                ></div>
+                <div class="commune-bar" :style="{ width: `${commune.percentage}%` }"></div>
               </div>
             </div>
           </div>
@@ -177,9 +180,9 @@
               <p>Aucune livraison récente</p>
             </div>
             <div v-else class="deliveries-list">
-              <div 
-                v-for="delivery in recentDeliveries" 
-                :key="delivery.id" 
+              <div
+                v-for="delivery in recentDeliveries"
+                :key="delivery.id"
                 class="delivery-item"
                 @click="viewDeliveryDetails(delivery.id)"
               >
@@ -214,9 +217,9 @@
               <p>Aucune alerte</p>
             </div>
             <div v-else class="alerts-list">
-              <div 
-                v-for="alert in alerts" 
-                :key="alert.id" 
+              <div
+                v-for="alert in alerts"
+                :key="alert.id"
                 class="alert-item"
                 :class="alert.severity"
                 @click="handleAlert(alert)"
@@ -239,38 +242,38 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
-import Chart from 'chart.js/auto';
-import { fetchBusinessDashboard } from '@/api/business';
-import { formatPrice, formatDate, formatTime } from '@/utils/formatters';
-import { exportToExcel } from '@/utils/export-utils';
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import Chart from 'chart.js/auto'
+import { fetchBusinessDashboard } from '@/api/business'
+import { formatPrice, formatDate, formatTime } from '@/utils/formatters'
+import { exportToExcel } from '@/utils/export-utils'
 
 export default {
   name: 'DashboardView',
   setup() {
-    const router = useRouter();
-    
+    const router = useRouter()
+
     // Références pour les graphiques
-    const deliveriesChart = ref(null);
-    const revenueChart = ref(null);
-    const communeChart = ref(null);
-    
+    const deliveriesChart = ref(null)
+    const revenueChart = ref(null)
+    const communeChart = ref(null)
+
     // Instances de graphiques
-    let deliveriesChartInstance = null;
-    let revenueChartInstance = null;
-    let communeChartInstance = null;
-    
+    let deliveriesChartInstance = null
+    let revenueChartInstance = null
+    let communeChartInstance = null
+
     // État
-    const loading = ref(true);
-    const error = ref(null);
-    const selectedPeriod = ref('week');
-    const selectedCommuneView = ref('deliveries');
+    const loading = ref(true)
+    const error = ref(null)
+    const selectedPeriod = ref('week')
+    const selectedCommuneView = ref('deliveries')
     const chartTypes = reactive({
       deliveries: 'bar',
-      revenue: 'line'
-    });
-    
+      revenue: 'line',
+    })
+
     // Données du tableau de bord
     const dashboardData = reactive({
       deliveries_count: 0,
@@ -283,122 +286,124 @@ export default {
       clients_trend: 0,
       deliveries_by_day: [],
       revenue_by_day: [],
-      communes_data: []
-    });
-    
+      communes_data: [],
+    })
+
     // Livraisons récentes
-    const recentDeliveries = ref([]);
-    
+    const recentDeliveries = ref([])
+
     // Alertes
-    const alerts = ref([]);
-    
+    const alerts = ref([])
+
     // Options
     const periods = [
       { value: 'week', label: 'Semaine' },
       { value: 'month', label: 'Mois' },
       { value: 'quarter', label: 'Trimestre' },
-      { value: 'year', label: 'Année' }
-    ];
-    
+      { value: 'year', label: 'Année' },
+    ]
+
     const communeViews = [
       { value: 'deliveries', label: 'Livraisons' },
-      { value: 'revenue', label: 'Revenus' }
-    ];
-    
+      { value: 'revenue', label: 'Revenus' },
+    ]
+
     // Computed
-    const topCommunes = ref([]);
-    
+    const topCommunes = ref([])
+
     // Méthodes
     const fetchDashboardData = async () => {
-      loading.value = true;
-      error.value = null;
-      
+      loading.value = true
+      error.value = null
+
       try {
-        const response = await fetchBusinessDashboard(selectedPeriod.value);
-        
+        const response = await fetchBusinessDashboard(selectedPeriod.value)
+
         // Mettre à jour les données du tableau de bord
-        Object.assign(dashboardData, response.data);
-        
+        Object.assign(dashboardData, response.data)
+
         // Mettre à jour les livraisons récentes
-        recentDeliveries.value = response.data.recent_deliveries || [];
-        
+        recentDeliveries.value = response.data.recent_deliveries || []
+
         // Mettre à jour les alertes
-        alerts.value = response.data.alerts || [];
-        
+        alerts.value = response.data.alerts || []
+
         // Mettre à jour les communes
-        updateCommunesData();
-        
+        updateCommunesData()
+
         // Mettre à jour les graphiques
-        updateCharts();
+        updateCharts()
       } catch (err) {
-        console.error('Erreur lors du chargement des données du tableau de bord:', err);
-        error.value = 'Impossible de charger les données du tableau de bord. Veuillez réessayer.';
+        console.error('Erreur lors du chargement des données du tableau de bord:', err)
+        error.value = 'Impossible de charger les données du tableau de bord. Veuillez réessayer.'
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     const updateCommunesData = () => {
       if (!dashboardData.communes_data || dashboardData.communes_data.length === 0) {
-        topCommunes.value = [];
-        return;
+        topCommunes.value = []
+        return
       }
-      
+
       // Trier les communes par livraisons ou revenus
       const sortedCommunes = [...dashboardData.communes_data].sort((a, b) => {
         if (selectedCommuneView.value === 'deliveries') {
-          return b.deliveries - a.deliveries;
+          return b.deliveries - a.deliveries
         } else {
-          return b.revenue - a.revenue;
+          return b.revenue - a.revenue
         }
-      });
-      
+      })
+
       // Calculer le pourcentage pour chaque commune
-      const maxValue = sortedCommunes[0][selectedCommuneView.value];
-      
+      const maxValue = sortedCommunes[0][selectedCommuneView.value]
+
       topCommunes.value = sortedCommunes.map(commune => ({
         ...commune,
-        percentage: (commune[selectedCommuneView.value] / maxValue) * 100
-      }));
-    };
-    
+        percentage: (commune[selectedCommuneView.value] / maxValue) * 100,
+      }))
+    }
+
     const updateCharts = () => {
       // Mettre à jour le graphique des livraisons
-      updateDeliveriesChart();
-      
+      updateDeliveriesChart()
+
       // Mettre à jour le graphique des revenus
-      updateRevenueChart();
-      
+      updateRevenueChart()
+
       // Mettre à jour le graphique des communes
-      updateCommuneChart();
-    };
-    
+      updateCommuneChart()
+    }
+
     const updateDeliveriesChart = () => {
-      if (!deliveriesChart.value) return;
-      
+      if (!deliveriesChart.value) return
+
       // Détruire l'instance existante si elle existe
       if (deliveriesChartInstance) {
-        deliveriesChartInstance.destroy();
+        deliveriesChartInstance.destroy()
       }
-      
+
       // Créer une nouvelle instance
-      const ctx = deliveriesChart.value.getContext('2d');
-      
-      const labels = dashboardData.deliveries_by_day.map(item => item.date);
-      const data = dashboardData.deliveries_by_day.map(item => item.count);
-      
+      const ctx = deliveriesChart.value.getContext('2d')
+
+      const labels = dashboardData.deliveries_by_day.map(item => item.date)
+      const data = dashboardData.deliveries_by_day.map(item => item.count)
+
       deliveriesChartInstance = new Chart(ctx, {
         type: chartTypes.deliveries,
         data: {
           labels,
-          datasets: [{
-            label: 'Livraisons',
-            data,
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1,
-            tension: 0.4
-          }]
+          datasets: [
+            {
+              label: 'Livraisons',
+              data,
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+              tension: 0.4,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -407,49 +412,51 @@ export default {
             y: {
               beginAtZero: true,
               ticks: {
-                precision: 0
-              }
-            }
+                precision: 0,
+              },
+            },
           },
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               mode: 'index',
-              intersect: false
-            }
-          }
-        }
-      });
-    };
-    
+              intersect: false,
+            },
+          },
+        },
+      })
+    }
+
     const updateRevenueChart = () => {
-      if (!revenueChart.value) return;
-      
+      if (!revenueChart.value) return
+
       // Détruire l'instance existante si elle existe
       if (revenueChartInstance) {
-        revenueChartInstance.destroy();
+        revenueChartInstance.destroy()
       }
-      
+
       // Créer une nouvelle instance
-      const ctx = revenueChart.value.getContext('2d');
-      
-      const labels = dashboardData.revenue_by_day.map(item => item.date);
-      const data = dashboardData.revenue_by_day.map(item => item.amount);
-      
+      const ctx = revenueChart.value.getContext('2d')
+
+      const labels = dashboardData.revenue_by_day.map(item => item.date)
+      const data = dashboardData.revenue_by_day.map(item => item.amount)
+
       revenueChartInstance = new Chart(ctx, {
         type: chartTypes.revenue,
         data: {
           labels,
-          datasets: [{
-            label: 'Revenus (FCFA)',
-            data,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
-            tension: 0.4
-          }]
+          datasets: [
+            {
+              label: 'Revenus (FCFA)',
+              data,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+              tension: 0.4,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -458,272 +465,274 @@ export default {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
-                  return formatPrice(value) + ' FCFA';
-                }
-              }
-            }
+                callback: function (value) {
+                  return formatPrice(value) + ' FCFA'
+                },
+              },
+            },
           },
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               mode: 'index',
               intersect: false,
               callbacks: {
-                label: function(context) {
-                  return formatPrice(context.raw) + ' FCFA';
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                label: function (context) {
+                  return formatPrice(context.raw) + ' FCFA'
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
     const updateCommuneChart = () => {
-      if (!communeChart.value) return;
-      
+      if (!communeChart.value) return
+
       // Détruire l'instance existante si elle existe
       if (communeChartInstance) {
-        communeChartInstance.destroy();
+        communeChartInstance.destroy()
       }
-      
+
       // Créer une nouvelle instance
-      const ctx = communeChart.value.getContext('2d');
-      
-      const labels = topCommunes.value.map(commune => commune.name);
-      const data = topCommunes.value.map(commune => 
+      const ctx = communeChart.value.getContext('2d')
+
+      const labels = topCommunes.value.map(commune => commune.name)
+      const data = topCommunes.value.map(commune =>
         selectedCommuneView.value === 'deliveries' ? commune.deliveries : commune.revenue
-      );
-      
+      )
+
       communeChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels,
-          datasets: [{
-            data,
-            backgroundColor: [
-              'rgba(255, 99, 132, 0.7)',
-              'rgba(54, 162, 235, 0.7)',
-              'rgba(255, 206, 86, 0.7)',
-              'rgba(75, 192, 192, 0.7)',
-              'rgba(153, 102, 255, 0.7)',
-              'rgba(255, 159, 64, 0.7)',
-              'rgba(199, 199, 199, 0.7)',
-              'rgba(83, 102, 255, 0.7)',
-              'rgba(40, 159, 64, 0.7)',
-              'rgba(210, 199, 199, 0.7)'
-            ],
-            borderColor: [
-              'rgba(255, 99, 132, 1)',
-              'rgba(54, 162, 235, 1)',
-              'rgba(255, 206, 86, 1)',
-              'rgba(75, 192, 192, 1)',
-              'rgba(153, 102, 255, 1)',
-              'rgba(255, 159, 64, 1)',
-              'rgba(199, 199, 199, 1)',
-              'rgba(83, 102, 255, 1)',
-              'rgba(40, 159, 64, 1)',
-              'rgba(210, 199, 199, 1)'
-            ],
-            borderWidth: 1
-          }]
+          datasets: [
+            {
+              data,
+              backgroundColor: [
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(199, 199, 199, 0.7)',
+                'rgba(83, 102, 255, 0.7)',
+                'rgba(40, 159, 64, 0.7)',
+                'rgba(210, 199, 199, 0.7)',
+              ],
+              borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(199, 199, 199, 1)',
+                'rgba(83, 102, 255, 1)',
+                'rgba(40, 159, 64, 1)',
+                'rgba(210, 199, 199, 1)',
+              ],
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  const value = context.raw;
+                label: function (context) {
+                  const value = context.raw
                   if (selectedCommuneView.value === 'deliveries') {
-                    return `${context.label}: ${value} livraisons`;
+                    return `${context.label}: ${value} livraisons`
                   } else {
-                    return `${context.label}: ${formatPrice(value)} FCFA`;
+                    return `${context.label}: ${formatPrice(value)} FCFA`
                   }
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-    
-    const changePeriod = (period) => {
-      selectedPeriod.value = period;
-      fetchDashboardData();
-    };
-    
-    const changeCommuneView = (view) => {
-      selectedCommuneView.value = view;
-      updateCommunesData();
-      updateCommuneChart();
-    };
-    
-    const toggleChartType = (chartName) => {
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
+    const changePeriod = period => {
+      selectedPeriod.value = period
+      fetchDashboardData()
+    }
+
+    const changeCommuneView = view => {
+      selectedCommuneView.value = view
+      updateCommunesData()
+      updateCommuneChart()
+    }
+
+    const toggleChartType = chartName => {
       if (chartName === 'deliveries') {
-        chartTypes.deliveries = chartTypes.deliveries === 'bar' ? 'line' : 'bar';
-        updateDeliveriesChart();
+        chartTypes.deliveries = chartTypes.deliveries === 'bar' ? 'line' : 'bar'
+        updateDeliveriesChart()
       } else if (chartName === 'revenue') {
-        chartTypes.revenue = chartTypes.revenue === 'bar' ? 'line' : 'bar';
-        updateRevenueChart();
+        chartTypes.revenue = chartTypes.revenue === 'bar' ? 'line' : 'bar'
+        updateRevenueChart()
       }
-    };
-    
+    }
+
     const refreshData = () => {
-      fetchDashboardData();
-    };
-    
+      fetchDashboardData()
+    }
+
     const exportDashboard = () => {
       // Préparer les données pour l'export
       const deliveriesData = dashboardData.deliveries_by_day.map(item => ({
-        'Date': item.date,
-        'Nombre de livraisons': item.count
-      }));
-      
+        Date: item.date,
+        'Nombre de livraisons': item.count,
+      }))
+
       const revenueData = dashboardData.revenue_by_day.map(item => ({
-        'Date': item.date,
-        'Revenus (FCFA)': item.amount
-      }));
-      
+        Date: item.date,
+        'Revenus (FCFA)': item.amount,
+      }))
+
       const communesData = dashboardData.communes_data.map(commune => ({
-        'Commune': commune.name,
-        'Livraisons': commune.deliveries,
-        'Revenus (FCFA)': commune.revenue
-      }));
-      
+        Commune: commune.name,
+        Livraisons: commune.deliveries,
+        'Revenus (FCFA)': commune.revenue,
+      }))
+
       // Créer un workbook avec plusieurs feuilles
       const workbook = {
-        'Résumé': [
+        Résumé: [
           {
-            'Métrique': 'Livraisons',
-            'Valeur': dashboardData.deliveries_count,
-            'Tendance (%)': dashboardData.deliveries_trend
+            Métrique: 'Livraisons',
+            Valeur: dashboardData.deliveries_count,
+            'Tendance (%)': dashboardData.deliveries_trend,
           },
           {
-            'Métrique': 'Revenus',
-            'Valeur': dashboardData.revenue,
-            'Tendance (%)': dashboardData.revenue_trend
+            Métrique: 'Revenus',
+            Valeur: dashboardData.revenue,
+            'Tendance (%)': dashboardData.revenue_trend,
           },
           {
-            'Métrique': 'Satisfaction',
-            'Valeur': dashboardData.satisfaction_rate,
-            'Tendance (%)': dashboardData.satisfaction_trend
+            Métrique: 'Satisfaction',
+            Valeur: dashboardData.satisfaction_rate,
+            'Tendance (%)': dashboardData.satisfaction_trend,
           },
           {
-            'Métrique': 'Clients',
-            'Valeur': dashboardData.clients_count,
-            'Tendance (%)': dashboardData.clients_trend
-          }
+            Métrique: 'Clients',
+            Valeur: dashboardData.clients_count,
+            'Tendance (%)': dashboardData.clients_trend,
+          },
         ],
         'Livraisons par jour': deliveriesData,
         'Revenus par jour': revenueData,
-        'Communes': communesData
-      };
-      
-      // Exporter en Excel
-      exportToExcel(workbook, `tableau-de-bord-${selectedPeriod.value}`);
-    };
-    
-    const viewAllDeliveries = () => {
-      router.push({ name: 'business-deliveries' });
-    };
-    
-    const viewDeliveryDetails = (deliveryId) => {
-      router.push({ name: 'business-delivery-detail', params: { id: deliveryId } });
-    };
-    
-    const viewAllAlerts = () => {
-      router.push({ name: 'business-notifications' });
-    };
-    
-    const handleAlert = (alert) => {
-      if (alert.action_url) {
-        router.push(alert.action_url);
-      } else if (alert.type === 'delivery') {
-        router.push({ name: 'business-delivery-detail', params: { id: alert.reference_id } });
-      } else if (alert.type === 'complaint') {
-        router.push({ name: 'business-complaints' });
-      } else {
-        router.push({ name: 'business-notifications' });
+        Communes: communesData,
       }
-    };
-    
-    const getTrendClass = (trend) => {
-      if (trend > 0) return 'positive';
-      if (trend < 0) return 'negative';
-      return 'neutral';
-    };
-    
-    const getTrendIcon = (trend) => {
-      if (trend > 0) return 'fas fa-arrow-up';
-      if (trend < 0) return 'fas fa-arrow-down';
-      return 'fas fa-minus';
-    };
-    
-    const formatTrend = (trend) => {
-      const sign = trend > 0 ? '+' : '';
-      return `${sign}${trend}%`;
-    };
-    
-    const getStatusIcon = (status) => {
+
+      // Exporter en Excel
+      exportToExcel(workbook, `tableau-de-bord-${selectedPeriod.value}`)
+    }
+
+    const viewAllDeliveries = () => {
+      router.push({ name: 'business-deliveries' })
+    }
+
+    const viewDeliveryDetails = deliveryId => {
+      router.push({ name: 'business-delivery-detail', params: { id: deliveryId } })
+    }
+
+    const viewAllAlerts = () => {
+      router.push({ name: 'business-notifications' })
+    }
+
+    const handleAlert = alert => {
+      if (alert.action_url) {
+        router.push(alert.action_url)
+      } else if (alert.type === 'delivery') {
+        router.push({ name: 'business-delivery-detail', params: { id: alert.reference_id } })
+      } else if (alert.type === 'complaint') {
+        router.push({ name: 'business-complaints' })
+      } else {
+        router.push({ name: 'business-notifications' })
+      }
+    }
+
+    const getTrendClass = trend => {
+      if (trend > 0) return 'positive'
+      if (trend < 0) return 'negative'
+      return 'neutral'
+    }
+
+    const getTrendIcon = trend => {
+      if (trend > 0) return 'fas fa-arrow-up'
+      if (trend < 0) return 'fas fa-arrow-down'
+      return 'fas fa-minus'
+    }
+
+    const formatTrend = trend => {
+      const sign = trend > 0 ? '+' : ''
+      return `${sign}${trend}%`
+    }
+
+    const getStatusIcon = status => {
       const statusIcons = {
         pending: 'fas fa-clock',
         accepted: 'fas fa-check',
         in_progress: 'fas fa-truck',
         completed: 'fas fa-flag-checkered',
-        cancelled: 'fas fa-times'
-      };
-      
-      return statusIcons[status] || 'fas fa-question';
-    };
-    
-    const getAlertIcon = (type) => {
+        cancelled: 'fas fa-times',
+      }
+
+      return statusIcons[status] || 'fas fa-question'
+    }
+
+    const getAlertIcon = type => {
       const alertIcons = {
         delivery: 'fas fa-truck',
         payment: 'fas fa-money-bill-wave',
         system: 'fas fa-cogs',
         complaint: 'fas fa-exclamation-circle',
-        security: 'fas fa-shield-alt'
-      };
-      
-      return alertIcons[type] || 'fas fa-bell';
-    };
-    
+        security: 'fas fa-shield-alt',
+      }
+
+      return alertIcons[type] || 'fas fa-bell'
+    }
+
     // Cycle de vie
     onMounted(() => {
-      fetchDashboardData();
-      
+      fetchDashboardData()
+
       // Mettre à jour les données toutes les 5 minutes
       const interval = setInterval(() => {
-        fetchDashboardData();
-      }, 5 * 60 * 1000);
-      
+        fetchDashboardData()
+      }, 5 * 60 * 1000)
+
       // Nettoyer l'intervalle lors du démontage
       onUnmounted(() => {
-        clearInterval(interval);
-        
+        clearInterval(interval)
+
         // Détruire les instances de graphiques
         if (deliveriesChartInstance) {
-          deliveriesChartInstance.destroy();
+          deliveriesChartInstance.destroy()
         }
-        
+
         if (revenueChartInstance) {
-          revenueChartInstance.destroy();
+          revenueChartInstance.destroy()
         }
-        
+
         if (communeChartInstance) {
-          communeChartInstance.destroy();
+          communeChartInstance.destroy()
         }
-      });
-    });
-    
+      })
+    })
+
     return {
       loading,
       error,
@@ -739,7 +748,7 @@ export default {
       deliveriesChart,
       revenueChart,
       communeChart,
-      
+
       fetchDashboardData,
       changePeriod,
       changeCommuneView,
@@ -755,13 +764,13 @@ export default {
       formatTrend,
       getStatusIcon,
       getAlertIcon,
-      
+
       formatPrice,
       formatDate,
-      formatTime
-    };
-  }
-};
+      formatTime,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -1251,8 +1260,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container i {
@@ -1267,21 +1280,21 @@ export default {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-actions {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .charts-container,
   .bottom-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .commune-chart {
     flex-direction: column;
   }
-  
+
   .commune-map {
     max-width: 100%;
     margin-bottom: 1.5rem;

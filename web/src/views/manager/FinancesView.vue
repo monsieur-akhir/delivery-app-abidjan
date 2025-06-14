@@ -79,11 +79,11 @@
         <div class="filter-group">
           <label for="search">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search" 
-              v-model="filters.search" 
-              placeholder="ID, client, coursier..." 
+            <input
+              type="text"
+              id="search"
+              v-model="filters.search"
+              placeholder="ID, client, coursier..."
               @input="debounceSearch"
             />
             <i class="fas fa-search"></i>
@@ -176,10 +176,10 @@
         <div class="chart-header">
           <h3>Revenus par jour</h3>
           <div class="chart-actions">
-            <button 
-              v-for="period in ['week', 'month', 'year']" 
+            <button
+              v-for="period in ['week', 'month', 'year']"
               :key="period"
-              class="btn-chart-period" 
+              class="btn-chart-period"
               :class="{ active: chartPeriod === period }"
               @click="changeChartPeriod(period)"
             >
@@ -207,15 +207,15 @@
         </div>
         <div class="chart-legend">
           <div class="legend-item">
-            <div class="legend-color" style="background-color: #4e73df;"></div>
+            <div class="legend-color" style="background-color: #4e73df"></div>
             <div class="legend-label">Commissions ({{ formatPercentage(65) }})</div>
           </div>
           <div class="legend-item">
-            <div class="legend-color" style="background-color: #1cc88a;"></div>
+            <div class="legend-color" style="background-color: #1cc88a"></div>
             <div class="legend-label">Frais de livraison ({{ formatPercentage(25) }})</div>
           </div>
           <div class="legend-item">
-            <div class="legend-color" style="background-color: #36b9cc;"></div>
+            <div class="legend-color" style="background-color: #36b9cc"></div>
             <div class="legend-label">Abonnements ({{ formatPercentage(10) }})</div>
           </div>
         </div>
@@ -265,21 +265,25 @@
             </td>
             <td>
               <div class="actions-cell">
-                <button class="btn-icon" @click="viewTransactionDetails(transaction.id)" title="Voir les détails">
+                <button
+                  class="btn-icon"
+                  @click="viewTransactionDetails(transaction.id)"
+                  title="Voir les détails"
+                >
                   <i class="fas fa-eye"></i>
                 </button>
-                <button 
-                  class="btn-icon" 
-                  v-if="transaction.status === 'pending'" 
-                  @click="processTransaction(transaction.id)" 
+                <button
+                  class="btn-icon"
+                  v-if="transaction.status === 'pending'"
+                  @click="processTransaction(transaction.id)"
                   title="Traiter"
                 >
                   <i class="fas fa-check"></i>
                 </button>
-                <button 
-                  class="btn-icon" 
-                  v-if="transaction.status === 'disputed'" 
-                  @click="resolveDispute(transaction.id)" 
+                <button
+                  class="btn-icon"
+                  v-if="transaction.status === 'disputed'"
+                  @click="resolveDispute(transaction.id)"
                   title="Résoudre le litige"
                 >
                   <i class="fas fa-gavel"></i>
@@ -292,27 +296,23 @@
 
       <!-- Pagination -->
       <div class="pagination">
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === 1" 
-          @click="changePage(currentPage - 1)"
-        >
+        <button class="btn-page" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
           <i class="fas fa-chevron-left"></i>
         </button>
-        
-        <button 
-          v-for="page in displayedPages" 
-          :key="page" 
-          class="btn-page" 
+
+        <button
+          v-for="page in displayedPages"
+          :key="page"
+          class="btn-page"
           :class="{ active: currentPage === page }"
           @click="changePage(page)"
         >
           {{ page }}
         </button>
-        
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === totalPages" 
+
+        <button
+          class="btn-page"
+          :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
           <i class="fas fa-chevron-right"></i>
@@ -364,13 +364,19 @@
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Type</span>
-                  <span class="detail-value transaction-type" :class="getTransactionTypeClass(selectedTransaction.type)">
+                  <span
+                    class="detail-value transaction-type"
+                    :class="getTransactionTypeClass(selectedTransaction.type)"
+                  >
                     {{ getTransactionTypeLabel(selectedTransaction.type) }}
                   </span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Statut</span>
-                  <span class="detail-value status-badge" :class="getStatusClass(selectedTransaction.status)">
+                  <span
+                    class="detail-value status-badge"
+                    :class="getStatusClass(selectedTransaction.status)"
+                  >
                     {{ getStatusLabel(selectedTransaction.status) }}
                   </span>
                 </div>
@@ -399,11 +405,15 @@
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Montant net</span>
-                  <span class="detail-value">{{ formatCurrency(selectedTransaction.net_amount) }}</span>
+                  <span class="detail-value">{{
+                    formatCurrency(selectedTransaction.net_amount)
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Solde après transaction</span>
-                  <span class="detail-value">{{ formatCurrency(selectedTransaction.balance) }}</span>
+                  <span class="detail-value">{{
+                    formatCurrency(selectedTransaction.balance)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -421,38 +431,56 @@
               <h3>Entité associée</h3>
               <div class="related-entity">
                 <div class="entity-type">
-                  {{ getEntityTypeLabel(selectedTransaction.related_entity.type) }} #{{ selectedTransaction.related_entity.id }}
+                  {{ getEntityTypeLabel(selectedTransaction.related_entity.type) }} #{{
+                    selectedTransaction.related_entity.id
+                  }}
                 </div>
                 <div class="entity-link">
-                  <button class="btn btn-link" @click="viewRelatedEntity(selectedTransaction.related_entity)">
+                  <button
+                    class="btn btn-link"
+                    @click="viewRelatedEntity(selectedTransaction.related_entity)"
+                  >
                     Voir les détails
                   </button>
                 </div>
               </div>
             </div>
 
-            <div class="detail-section" v-if="selectedTransaction.parties && selectedTransaction.parties.length > 0">
+            <div
+              class="detail-section"
+              v-if="selectedTransaction.parties && selectedTransaction.parties.length > 0"
+            >
               <h3>Parties impliquées</h3>
               <div class="parties-list">
-                <div class="party-item" v-for="(party, index) in selectedTransaction.parties" :key="index">
+                <div
+                  class="party-item"
+                  v-for="(party, index) in selectedTransaction.parties"
+                  :key="index"
+                >
                   <div class="party-role">{{ getPartyRoleLabel(party.role) }}</div>
                   <div class="party-details">
                     <div class="party-name">{{ party.name }}</div>
                     <div class="party-id">ID: {{ party.id }}</div>
                     <div class="party-amount" v-if="party.amount">
-                      Montant: <span :class="getAmountClass(party.amount)">{{ formatCurrency(party.amount) }}</span>
+                      Montant:
+                      <span :class="getAmountClass(party.amount)">{{
+                        formatCurrency(party.amount)
+                      }}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="detail-section" v-if="selectedTransaction.timeline && selectedTransaction.timeline.length > 0">
+            <div
+              class="detail-section"
+              v-if="selectedTransaction.timeline && selectedTransaction.timeline.length > 0"
+            >
               <h3>Chronologie</h3>
               <div class="timeline">
-                <div 
-                  class="timeline-item" 
-                  v-for="(event, index) in selectedTransaction.timeline" 
+                <div
+                  class="timeline-item"
+                  v-for="(event, index) in selectedTransaction.timeline"
                   :key="index"
                 >
                   <div class="timeline-icon" :class="getTimelineIconClass(event.status)">
@@ -461,7 +489,9 @@
                   <div class="timeline-content">
                     <div class="timeline-time">{{ formatDateTime(event.timestamp) }}</div>
                     <div class="timeline-title">{{ getTimelineTitle(event.status) }}</div>
-                    <div class="timeline-description" v-if="event.description">{{ event.description }}</div>
+                    <div class="timeline-description" v-if="event.description">
+                      {{ event.description }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -480,17 +510,24 @@
                 </div>
                 <div class="dispute-item">
                   <span class="dispute-label">Statut</span>
-                  <span class="dispute-value dispute-status" :class="getDisputeStatusClass(selectedTransaction.dispute.status)">
+                  <span
+                    class="dispute-value dispute-status"
+                    :class="getDisputeStatusClass(selectedTransaction.dispute.status)"
+                  >
                     {{ getDisputeStatusLabel(selectedTransaction.dispute.status) }}
                   </span>
                 </div>
                 <div class="dispute-item">
                   <span class="dispute-label">Date d'ouverture</span>
-                  <span class="dispute-value">{{ formatDateTime(selectedTransaction.dispute.created_at) }}</span>
+                  <span class="dispute-value">{{
+                    formatDateTime(selectedTransaction.dispute.created_at)
+                  }}</span>
                 </div>
                 <div class="dispute-item" v-if="selectedTransaction.dispute.resolved_at">
                   <span class="dispute-label">Date de résolution</span>
-                  <span class="dispute-value">{{ formatDateTime(selectedTransaction.dispute.resolved_at) }}</span>
+                  <span class="dispute-value">{{
+                    formatDateTime(selectedTransaction.dispute.resolved_at)
+                  }}</span>
                 </div>
                 <div class="dispute-item" v-if="selectedTransaction.dispute.resolution">
                   <span class="dispute-label">Résolution</span>
@@ -502,15 +539,15 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeModal">Fermer</button>
-          <button 
-            class="btn btn-primary" 
+          <button
+            class="btn btn-primary"
             v-if="selectedTransaction && selectedTransaction.status === 'pending'"
             @click="processTransaction(selectedTransaction.id)"
           >
             Traiter la transaction
           </button>
-          <button 
-            class="btn btn-danger" 
+          <button
+            class="btn btn-danger"
             v-if="selectedTransaction && selectedTransaction.status === 'disputed'"
             @click="resolveDispute(selectedTransaction.id)"
           >
@@ -535,12 +572,12 @@
               <label>Raison du litige</label>
               <div class="readonly-field">{{ selectedTransaction.dispute.reason }}</div>
             </div>
-            
+
             <div class="form-group">
               <label>Description du litige</label>
               <div class="readonly-field">{{ selectedTransaction.dispute.description }}</div>
             </div>
-            
+
             <div class="form-group">
               <label for="resolution-decision">Décision</label>
               <select id="resolution-decision" v-model="disputeResolution.decision">
@@ -550,32 +587,36 @@
                 <option value="reject">Rejeter la réclamation</option>
               </select>
             </div>
-            
+
             <div class="form-group" v-if="disputeResolution.decision === 'partial_refund'">
               <label for="refund-amount">Montant du remboursement (FCFA)</label>
-              <input 
-                type="number" 
-                id="refund-amount" 
-                v-model.number="disputeResolution.refundAmount" 
-                min="0" 
+              <input
+                type="number"
+                id="refund-amount"
+                v-model.number="disputeResolution.refundAmount"
+                min="0"
                 :max="Math.abs(selectedTransaction.amount)"
               />
             </div>
-            
+
             <div class="form-group">
               <label for="resolution-notes">Notes de résolution</label>
-              <textarea 
-                id="resolution-notes" 
-                v-model="disputeResolution.notes" 
-                rows="4" 
+              <textarea
+                id="resolution-notes"
+                v-model="disputeResolution.notes"
+                rows="4"
                 placeholder="Expliquez votre décision..."
               ></textarea>
             </div>
-            
+
             <div class="form-group">
               <label for="notify-parties">Notifier les parties</label>
               <div class="checkbox-group">
-                <label class="checkbox-label" v-for="(party, index) in selectedTransaction.parties" :key="index">
+                <label
+                  class="checkbox-label"
+                  v-for="(party, index) in selectedTransaction.parties"
+                  :key="index"
+                >
                   <input type="checkbox" v-model="disputeResolution.notifyParties[party.id]" />
                   Notifier {{ party.name }} ({{ getPartyRoleLabel(party.role) }})
                 </label>
@@ -585,7 +626,9 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeDisputeModal">Annuler</button>
-          <button class="btn btn-primary" @click="submitDisputeResolution">Résoudre le litige</button>
+          <button class="btn btn-primary" @click="submitDisputeResolution">
+            Résoudre le litige
+          </button>
         </div>
       </div>
     </div>
@@ -594,7 +637,13 @@
 
 <script>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { fetchFinances, fetchTransactions, fetchTransactionDetails, processTransaction as processTransactionApi, resolveTransactionDispute } from '@/api/manager'
+import {
+  fetchFinances,
+  fetchTransactions,
+  fetchTransactionDetails,
+  processTransaction as processTransactionApi,
+  resolveTransactionDispute,
+} from '@/api/manager'
 import { formatCurrency, formatDate, formatDateTime, formatPercentage } from '@/utils/formatters'
 
 export default {
@@ -611,7 +660,7 @@ export default {
     const itemsPerPage = ref(10)
     const totalItems = ref(0)
     const chartPeriod = ref('month')
-    
+
     const summary = reactive({
       revenue: 0,
       revenueChange: 0,
@@ -620,9 +669,9 @@ export default {
       refunds: 0,
       refundsChange: 0,
       netProfit: 0,
-      netProfitChange: 0
+      netProfitChange: 0,
     })
-    
+
     const filters = reactive({
       period: 'this_month',
       startDate: '',
@@ -630,16 +679,16 @@ export default {
       transactionType: '',
       paymentMethod: '',
       status: '',
-      search: ''
+      search: '',
     })
-    
+
     const sortBy = ref('date_desc')
-    
+
     const disputeResolution = reactive({
       decision: 'approve',
       refundAmount: 0,
       notes: '',
-      notifyParties: {}
+      notifyParties: {},
     })
 
     // Méthodes
@@ -650,9 +699,9 @@ export default {
         const financeResponse = await fetchFinances({
           period: filters.period,
           start_date: filters.startDate,
-          end_date: filters.endDate
+          end_date: filters.endDate,
         })
-        
+
         // Mettre à jour le résumé
         summary.revenue = financeResponse.revenue
         summary.revenueChange = financeResponse.revenue_change
@@ -662,7 +711,7 @@ export default {
         summary.refundsChange = financeResponse.refunds_change
         summary.netProfit = financeResponse.net_profit
         summary.netProfitChange = financeResponse.net_profit_change
-        
+
         // Récupérer les transactions
         const params = {
           page: currentPage.value,
@@ -674,9 +723,9 @@ export default {
           type: filters.transactionType,
           payment_method: filters.paymentMethod,
           status: filters.status,
-          search: filters.search
+          search: filters.search,
         }
-        
+
         const transactionsResponse = await fetchTransactions(params)
         transactions.value = transactionsResponse.items
         totalItems.value = transactionsResponse.total
@@ -688,11 +737,11 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const handlePeriodChange = () => {
       if (filters.period !== 'custom') {
         // Réinitialiser les dates personnalisées si une période prédéfinie est sélectionnée
@@ -703,26 +752,26 @@ export default {
         const today = new Date()
         const lastMonth = new Date()
         lastMonth.setMonth(lastMonth.getMonth() - 1)
-        
+
         filters.endDate = formatDateForInput(today)
         filters.startDate = formatDateForInput(lastMonth)
       }
-      
+
       applyFilters()
     }
-    
-    const formatDateForInput = (date) => {
+
+    const formatDateForInput = date => {
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     }
-    
+
     const applyFilters = () => {
       currentPage.value = 1
       fetchData()
     }
-    
+
     const resetFilters = () => {
       filters.period = 'this_month'
       filters.startDate = ''
@@ -735,23 +784,23 @@ export default {
       currentPage.value = 1
       fetchData()
     }
-    
-    const changePage = (page) => {
+
+    const changePage = page => {
       currentPage.value = page
       fetchData()
     }
-    
-    const changeChartPeriod = (period) => {
+
+    const changeChartPeriod = period => {
       chartPeriod.value = period
       // Ici, vous pourriez recharger les données du graphique
     }
-    
-    const viewTransactionDetails = async (transactionId) => {
+
+    const viewTransactionDetails = async transactionId => {
       try {
         loading.value = true
         const response = await fetchTransactionDetails(transactionId)
         selectedTransaction.value = response
-        
+
         // Réinitialiser les notifications pour la résolution de litige
         if (selectedTransaction.value && selectedTransaction.value.parties) {
           disputeResolution.notifyParties = {}
@@ -759,7 +808,7 @@ export default {
             disputeResolution.notifyParties[party.id] = true
           })
         }
-        
+
         showTransactionModal.value = true
       } catch (error) {
         console.error('Erreur lors du chargement des détails de la transaction:', error)
@@ -768,19 +817,23 @@ export default {
         loading.value = false
       }
     }
-    
+
     const closeModal = () => {
       showTransactionModal.value = false
       selectedTransaction.value = null
     }
-    
-    const processTransaction = async (transactionId) => {
+
+    const processTransaction = async transactionId => {
       try {
         await processTransactionApi(transactionId)
         // Mettre à jour la liste des transactions
         fetchData()
         // Fermer le modal si ouvert
-        if (showTransactionModal.value && selectedTransaction.value && selectedTransaction.value.id === transactionId) {
+        if (
+          showTransactionModal.value &&
+          selectedTransaction.value &&
+          selectedTransaction.value.id === transactionId
+        ) {
           closeModal()
         }
         // Afficher une notification de succès
@@ -789,13 +842,13 @@ export default {
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
-    const resolveDispute = (transactionId) => {
+
+    const resolveDispute = transactionId => {
       // Réinitialiser le formulaire de résolution de litige
       disputeResolution.decision = 'approve'
       disputeResolution.refundAmount = 0
       disputeResolution.notes = ''
-      
+
       // Afficher le modal de résolution de litige
       if (!selectedTransaction.value || selectedTransaction.value.id !== transactionId) {
         viewTransactionDetails(transactionId).then(() => {
@@ -805,67 +858,67 @@ export default {
         showDisputeModal.value = true
       }
     }
-    
+
     const closeDisputeModal = () => {
       showDisputeModal.value = false
     }
-    
+
     const submitDisputeResolution = async () => {
       try {
         if (!selectedTransaction.value || !selectedTransaction.value.dispute) {
           return
         }
-        
+
         const payload = {
           decision: disputeResolution.decision,
           notes: disputeResolution.notes,
-          notify_parties: disputeResolution.notifyParties
+          notify_parties: disputeResolution.notifyParties,
         }
-        
+
         if (disputeResolution.decision === 'partial_refund') {
           payload.refund_amount = disputeResolution.refundAmount
         }
-        
+
         await resolveTransactionDispute(selectedTransaction.value.id, payload)
-        
+
         // Fermer les modals
         closeDisputeModal()
         closeModal()
-        
+
         // Rafraîchir les données
         fetchData()
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la résolution du litige:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
-    const viewRelatedEntity = (entity) => {
+
+    const viewRelatedEntity = entity => {
       // Rediriger vers la page de détails de l'entité associée
       if (entity.type === 'delivery') {
         // router.push(`/manager/deliveries/${entity.id}`)
         console.log('Voir la livraison:', entity.id)
       } else if (entity.type === 'business') {
         // router.push(`/manager/businesses/${entity.id}`)
-        console.log('Voir l\'entreprise:', entity.id)
+        console.log("Voir l'entreprise:", entity.id)
       } else if (entity.type === 'user') {
         // router.push(`/manager/users/${entity.id}`)
-        console.log('Voir l\'utilisateur:', entity.id)
+        console.log("Voir l'utilisateur:", entity.id)
       }
     }
-    
+
     const exportData = () => {
       // Implémenter l'exportation des données (CSV, Excel, etc.)
       console.log('Exporter les données')
     }
-    
+
     // Utilitaires
     const formatPeriodLabel = () => {
       switch (filters.period) {
         case 'today':
-          return 'Aujourd\'hui'
+          return "Aujourd'hui"
         case 'yesterday':
           return 'Hier'
         case 'this_week':
@@ -887,8 +940,8 @@ export default {
           return ''
       }
     }
-    
-    const getPeriodLabel = (period) => {
+
+    const getPeriodLabel = period => {
       switch (period) {
         case 'week':
           return 'Semaine'
@@ -900,8 +953,8 @@ export default {
           return period
       }
     }
-    
-    const getChangeClass = (change) => {
+
+    const getChangeClass = change => {
       if (change > 0) {
         return 'change-positive'
       } else if (change < 0) {
@@ -909,8 +962,8 @@ export default {
       }
       return 'change-neutral'
     }
-    
-    const getChangeIconClass = (change) => {
+
+    const getChangeIconClass = change => {
       if (change > 0) {
         return 'fas fa-arrow-up'
       } else if (change < 0) {
@@ -918,30 +971,30 @@ export default {
       }
       return 'fas fa-minus'
     }
-    
-    const getTransactionTypeClass = (type) => {
+
+    const getTransactionTypeClass = type => {
       const typeMap = {
         payment: 'type-payment',
         refund: 'type-refund',
         commission: 'type-commission',
         withdrawal: 'type-withdrawal',
-        adjustment: 'type-adjustment'
+        adjustment: 'type-adjustment',
       }
       return typeMap[type] || 'type-unknown'
     }
-    
-    const getTransactionTypeLabel = (type) => {
+
+    const getTransactionTypeLabel = type => {
       const typeMap = {
         payment: 'Paiement',
         refund: 'Remboursement',
         commission: 'Commission',
         withdrawal: 'Retrait',
-        adjustment: 'Ajustement'
+        adjustment: 'Ajustement',
       }
       return typeMap[type] || 'Inconnu'
     }
-    
-    const getPaymentMethodIcon = (method) => {
+
+    const getPaymentMethodIcon = method => {
       const methodMap = {
         cash: 'fas fa-money-bill',
         card: 'fas fa-credit-card',
@@ -949,12 +1002,12 @@ export default {
         mtn_money: 'fas fa-mobile-alt',
         moov_money: 'fas fa-mobile-alt',
         wave: 'fas fa-wave-square',
-        bank_transfer: 'fas fa-university'
+        bank_transfer: 'fas fa-university',
       }
       return methodMap[method] || 'fas fa-question-circle'
     }
-    
-    const getPaymentMethodLabel = (method) => {
+
+    const getPaymentMethodLabel = method => {
       const methodMap = {
         cash: 'Espèces',
         card: 'Carte bancaire',
@@ -962,12 +1015,12 @@ export default {
         mtn_money: 'MTN Money',
         moov_money: 'Moov Money',
         wave: 'Wave',
-        bank_transfer: 'Virement bancaire'
+        bank_transfer: 'Virement bancaire',
       }
       return methodMap[method] || 'Inconnu'
     }
-    
-    const getAmountClass = (amount) => {
+
+    const getAmountClass = amount => {
       if (amount > 0) {
         return 'amount-positive'
       } else if (amount < 0) {
@@ -975,48 +1028,48 @@ export default {
       }
       return 'amount-neutral'
     }
-    
-    const getStatusClass = (status) => {
+
+    const getStatusClass = status => {
       const statusMap = {
         completed: 'status-completed',
         pending: 'status-pending',
         failed: 'status-failed',
-        disputed: 'status-disputed'
+        disputed: 'status-disputed',
       }
       return statusMap[status] || 'status-unknown'
     }
-    
-    const getStatusLabel = (status) => {
+
+    const getStatusLabel = status => {
       const statusMap = {
         completed: 'Complété',
         pending: 'En attente',
         failed: 'Échoué',
-        disputed: 'Litigieux'
+        disputed: 'Litigieux',
       }
       return statusMap[status] || 'Inconnu'
     }
-    
-    const getEntityTypeLabel = (type) => {
+
+    const getEntityTypeLabel = type => {
       const typeMap = {
         delivery: 'Livraison',
         business: 'Entreprise',
         user: 'Utilisateur',
-        subscription: 'Abonnement'
+        subscription: 'Abonnement',
       }
       return typeMap[type] || 'Entité'
     }
-    
-    const getPartyRoleLabel = (role) => {
+
+    const getPartyRoleLabel = role => {
       const roleMap = {
         platform: 'Plateforme',
         business: 'Entreprise',
         courier: 'Coursier',
-        client: 'Client'
+        client: 'Client',
       }
       return roleMap[role] || role
     }
-    
-    const getTimelineIconClass = (status) => {
+
+    const getTimelineIconClass = status => {
       const statusMap = {
         created: 'timeline-icon-created',
         pending: 'timeline-icon-pending',
@@ -1024,12 +1077,12 @@ export default {
         completed: 'timeline-icon-completed',
         failed: 'timeline-icon-failed',
         disputed: 'timeline-icon-disputed',
-        resolved: 'timeline-icon-resolved'
+        resolved: 'timeline-icon-resolved',
       }
       return statusMap[status] || 'timeline-icon-default'
     }
-    
-    const getTimelineIcon = (status) => {
+
+    const getTimelineIcon = status => {
       const statusMap = {
         created: 'fas fa-plus-circle',
         pending: 'fas fa-clock',
@@ -1037,12 +1090,12 @@ export default {
         completed: 'fas fa-check-circle',
         failed: 'fas fa-times-circle',
         disputed: 'fas fa-exclamation-triangle',
-        resolved: 'fas fa-gavel'
+        resolved: 'fas fa-gavel',
       }
       return statusMap[status] || 'fas fa-circle'
     }
-    
-    const getTimelineTitle = (status) => {
+
+    const getTimelineTitle = status => {
       const statusMap = {
         created: 'Transaction créée',
         pending: 'En attente de traitement',
@@ -1050,36 +1103,36 @@ export default {
         completed: 'Transaction complétée',
         failed: 'Transaction échouée',
         disputed: 'Litige ouvert',
-        resolved: 'Litige résolu'
+        resolved: 'Litige résolu',
       }
       return statusMap[status] || 'Événement'
     }
-    
-    const getDisputeStatusClass = (status) => {
+
+    const getDisputeStatusClass = status => {
       const statusMap = {
         open: 'dispute-open',
         in_review: 'dispute-in-review',
         resolved: 'dispute-resolved',
-        closed: 'dispute-closed'
+        closed: 'dispute-closed',
       }
       return statusMap[status] || 'dispute-unknown'
     }
-    
-    const getDisputeStatusLabel = (status) => {
+
+    const getDisputeStatusLabel = status => {
       const statusMap = {
         open: 'Ouvert',
-        in_review: 'En cours d\'examen',
+        in_review: "En cours d'examen",
         resolved: 'Résolu',
-        closed: 'Fermé'
+        closed: 'Fermé',
       }
       return statusMap[status] || 'Inconnu'
     }
-    
+
     // Pagination calculée
     const displayedPages = computed(() => {
       const pages = []
       const maxVisiblePages = 5
-      
+
       if (totalPages.value <= maxVisiblePages) {
         // Afficher toutes les pages si le nombre total est inférieur ou égal au maximum visible
         for (let i = 1; i <= totalPages.value; i++) {
@@ -1089,20 +1142,20 @@ export default {
         // Calculer les pages à afficher
         let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
         let endPage = startPage + maxVisiblePages - 1
-        
+
         if (endPage > totalPages.value) {
           endPage = totalPages.value
           startPage = Math.max(1, endPage - maxVisiblePages + 1)
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
       }
-      
+
       return pages
     })
-    
+
     // Debounce pour la recherche
     let searchTimeout = null
     const debounceSearch = () => {
@@ -1111,17 +1164,17 @@ export default {
         applyFilters()
       }, 500)
     }
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
     })
-    
+
     // Surveiller les changements de page
     watch(currentPage, () => {
       fetchData()
     })
-    
+
     return {
       transactions,
       selectedTransaction,
@@ -1138,7 +1191,7 @@ export default {
       sortBy,
       disputeResolution,
       displayedPages,
-      
+
       fetchData,
       refreshData,
       handlePeriodChange,
@@ -1155,7 +1208,7 @@ export default {
       viewRelatedEntity,
       exportData,
       debounceSearch,
-      
+
       formatPeriodLabel,
       getPeriodLabel,
       getChangeClass,
@@ -1174,13 +1227,13 @@ export default {
       getTimelineTitle,
       getDisputeStatusClass,
       getDisputeStatusLabel,
-      
+
       formatCurrency,
       formatDate,
       formatDateTime,
-      formatPercentage
+      formatPercentage,
     }
-  }
+  },
 }
 </script>
 
@@ -2121,28 +2174,28 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filter-group {
     min-width: 100%;
   }
-  
+
   .finance-summary {
     grid-template-columns: 1fr;
   }
-  
+
   .charts-container {
     grid-template-columns: 1fr;
   }
-  
+
   .data-table {
     display: block;
     overflow-x: auto;
   }
-  
+
   .modal-content {
     width: 95%;
   }
-  
+
   .detail-grid {
     grid-template-columns: 1fr;
   }
@@ -2153,23 +2206,23 @@ export default {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .filters-actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .chart-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .modal-footer {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn {
     width: 100%;
   }

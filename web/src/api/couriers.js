@@ -1,5 +1,5 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { API_URL } from '@/config'
 
 /**
  * Récupérer la liste des coursiers récents
@@ -15,7 +15,7 @@ export const getRecentCouriers = (params = {}) => {
  * @param {Number} id - ID du coursier
  * @returns {Promise} - Promesse avec les détails du coursier
  */
-export const getCourierDetails = (id) => {
+export const getCourierDetails = id => {
   return axios.get(`${API_URL}/couriers/${id}`)
 }
 
@@ -24,7 +24,7 @@ export const getCourierDetails = (id) => {
  * @param {Number} id - ID du coursier
  * @returns {Promise} - Promesse avec les performances du coursier
  */
-export const getCourierPerformance = (id) => {
+export const getCourierPerformance = id => {
   return axios.get(`${API_URL}/couriers/${id}/performance`)
 }
 

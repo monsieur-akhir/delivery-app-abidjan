@@ -5,8 +5,8 @@ const API_BASE_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000'
 const settingsApi = axios.create({
   baseURL: `${API_BASE_URL}/api/v1/settings`,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 })
 
 // Intercepteur pour ajouter le token d'authentification
@@ -49,7 +49,7 @@ export default {
   // Exporter la configuration
   async exportSettings() {
     const response = await settingsApi.get('/export', {
-      responseType: 'blob'
+      responseType: 'blob',
     })
     return response
   },
@@ -61,8 +61,8 @@ export default {
 
     const response = await settingsApi.post('/import', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     })
     return response.data
   },
@@ -77,5 +77,5 @@ export default {
   async testConnections() {
     const response = await settingsApi.post('/test-connections')
     return response.data
-  }
+  },
 }

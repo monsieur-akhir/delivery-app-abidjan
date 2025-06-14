@@ -3,10 +3,7 @@
     <div class="page-header">
       <h1 class="text-2xl font-bold">Gestion des politiques</h1>
       <div class="actions">
-        <button 
-          class="btn btn-primary" 
-          @click="showPolicyTypeSelector = true"
-        >
+        <button class="btn btn-primary" @click="showPolicyTypeSelector = true">
           <i class="fas fa-plus mr-2"></i> Ajouter une politique
         </button>
       </div>
@@ -15,8 +12,8 @@
     <!-- Tabs de navigation -->
     <div class="tabs-container mt-6">
       <div class="tabs">
-        <button 
-          v-for="tab in tabs" 
+        <button
+          v-for="tab in tabs"
           :key="tab.id"
           :class="['tab-button', { active: activeTab === tab.id }]"
           @click="activeTab = tab.id"
@@ -51,12 +48,12 @@
             </select>
           </div>
           <div class="search-group ml-auto">
-            <input 
-              type="text" 
-              v-model="moderationFilters.search" 
-              placeholder="Rechercher..." 
+            <input
+              type="text"
+              v-model="moderationFilters.search"
+              placeholder="Rechercher..."
               class="form-input"
-            >
+            />
           </div>
         </div>
 
@@ -94,15 +91,15 @@
                   </div>
                 </td>
                 <td class="px-4 py-2 text-right">
-                  <button 
-                    class="btn-icon btn-edit mr-2" 
+                  <button
+                    class="btn-icon btn-edit mr-2"
                     @click="editModerationRule(rule)"
                     title="Modifier"
                   >
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button 
-                    class="btn-icon btn-delete" 
+                  <button
+                    class="btn-icon btn-delete"
                     @click="confirmDeleteRule(rule)"
                     title="Supprimer"
                   >
@@ -132,12 +129,12 @@
             </select>
           </div>
           <div class="search-group ml-auto">
-            <input 
-              type="text" 
-              v-model="refundFilters.search" 
-              placeholder="Rechercher..." 
+            <input
+              type="text"
+              v-model="refundFilters.search"
+              placeholder="Rechercher..."
               class="form-input"
-            >
+            />
           </div>
         </div>
 
@@ -169,15 +166,15 @@
                   </span>
                 </td>
                 <td class="px-4 py-2 text-right">
-                  <button 
-                    class="btn-icon btn-edit mr-2" 
+                  <button
+                    class="btn-icon btn-edit mr-2"
                     @click="editRefundCriteria(criteria)"
                     title="Modifier"
                   >
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button 
-                    class="btn-icon btn-delete" 
+                  <button
+                    class="btn-icon btn-delete"
                     @click="confirmDeleteCriteria(criteria)"
                     title="Supprimer"
                   >
@@ -218,12 +215,12 @@
             </select>
           </div>
           <div class="search-group ml-auto">
-            <input 
-              type="text" 
-              v-model="sanctionFilters.search" 
-              placeholder="Rechercher..." 
+            <input
+              type="text"
+              v-model="sanctionFilters.search"
+              placeholder="Rechercher..."
               class="form-input"
-            >
+            />
           </div>
         </div>
 
@@ -240,7 +237,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="parameter in filteredSanctionParameters" :key="parameter.id" class="border-t">
+              <tr
+                v-for="parameter in filteredSanctionParameters"
+                :key="parameter.id"
+                class="border-t"
+              >
                 <td class="px-4 py-2">{{ parameter.title }}</td>
                 <td class="px-4 py-2">{{ getViolationTypeLabel(parameter.violation_type) }}</td>
                 <td class="px-4 py-2">{{ parameter.warning_threshold }}</td>
@@ -251,15 +252,15 @@
                   </span>
                 </td>
                 <td class="px-4 py-2 text-right">
-                  <button 
-                    class="btn-icon btn-edit mr-2" 
+                  <button
+                    class="btn-icon btn-edit mr-2"
                     @click="editSanctionParameter(parameter)"
                     title="Modifier"
                   >
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button 
-                    class="btn-icon btn-delete" 
+                  <button
+                    class="btn-icon btn-delete"
                     @click="confirmDeleteParameter(parameter)"
                     title="Supprimer"
                   >
@@ -303,12 +304,12 @@
             </select>
           </div>
           <div class="search-group ml-auto">
-            <input 
-              type="text" 
-              v-model="smsFilters.search" 
-              placeholder="Rechercher..." 
+            <input
+              type="text"
+              v-model="smsFilters.search"
+              placeholder="Rechercher..."
               class="form-input"
-            >
+            />
           </div>
         </div>
 
@@ -342,26 +343,28 @@
                   <div class="flex flex-wrap gap-1">
                     <span v-if="template.applies_to.clients" class="badge-info">Clients</span>
                     <span v-if="template.applies_to.couriers" class="badge-info">Coursiers</span>
-                    <span v-if="template.applies_to.businesses" class="badge-info">Entreprises</span>
+                    <span v-if="template.applies_to.businesses" class="badge-info"
+                      >Entreprises</span
+                    >
                   </div>
                 </td>
                 <td class="px-4 py-2 text-right">
-                  <button 
-                    class="btn-icon btn-test mr-2" 
+                  <button
+                    class="btn-icon btn-test mr-2"
                     @click="testSmsTemplate(template)"
                     title="Tester"
                   >
                     <i class="fas fa-paper-plane"></i>
                   </button>
-                  <button 
-                    class="btn-icon btn-edit mr-2" 
+                  <button
+                    class="btn-icon btn-edit mr-2"
                     @click="editSmsTemplate(template)"
                     title="Modifier"
                   >
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button 
-                    class="btn-icon btn-delete" 
+                  <button
+                    class="btn-icon btn-delete"
                     @click="confirmDeleteTemplate(template)"
                     title="Supprimer"
                   >
@@ -382,11 +385,15 @@
 
     <!-- Modals -->
     <!-- Sélecteur de type de politique -->
-    <modal v-if="showPolicyTypeSelector" @close="showPolicyTypeSelector = false" title="Ajouter une politique">
+    <modal
+      v-if="showPolicyTypeSelector"
+      @close="showPolicyTypeSelector = false"
+      title="Ajouter une politique"
+    >
       <div class="policy-type-selector">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div 
-            v-for="type in policyTypes" 
+          <div
+            v-for="type in policyTypes"
             :key="type.id"
             class="policy-type-card p-4 border rounded cursor-pointer hover:bg-gray-50"
             @click="selectPolicyType(type.id)"
@@ -406,66 +413,68 @@
     </modal>
 
     <!-- Formulaire de règle de modération -->
-    <modal 
-      v-if="showModerationRuleForm" 
-      @close="showModerationRuleForm = false" 
+    <modal
+      v-if="showModerationRuleForm"
+      @close="showModerationRuleForm = false"
       :title="editingRule ? 'Modifier la règle de modération' : 'Nouvelle règle de modération'"
     >
-      <moderation-rule-form 
-        :rule="currentRule" 
-        @save="saveModerationRule" 
+      <moderation-rule-form
+        :rule="currentRule"
+        @save="saveModerationRule"
         @cancel="showModerationRuleForm = false"
       />
     </modal>
 
     <!-- Formulaire de critère de remboursement -->
-    <modal 
-      v-if="showRefundCriteriaForm" 
-      @close="showRefundCriteriaForm = false" 
-      :title="editingCriteria ? 'Modifier le critère de remboursement' : 'Nouveau critère de remboursement'"
+    <modal
+      v-if="showRefundCriteriaForm"
+      @close="showRefundCriteriaForm = false"
+      :title="
+        editingCriteria
+          ? 'Modifier le critère de remboursement'
+          : 'Nouveau critère de remboursement'
+      "
     >
-      <refund-criteria-form 
-        :criteria="currentCriteria" 
-        @save="saveRefundCriteria" 
+      <refund-criteria-form
+        :criteria="currentCriteria"
+        @save="saveRefundCriteria"
         @cancel="showRefundCriteriaForm = false"
       />
     </modal>
 
     <!-- Formulaire de paramètre de sanction -->
-    <modal 
-      v-if="showSanctionParameterForm" 
-      @close="showSanctionParameterForm = false" 
-      :title="editingParameter ? 'Modifier le paramètre de sanction' : 'Nouveau paramètre de sanction'"
+    <modal
+      v-if="showSanctionParameterForm"
+      @close="showSanctionParameterForm = false"
+      :title="
+        editingParameter ? 'Modifier le paramètre de sanction' : 'Nouveau paramètre de sanction'
+      "
     >
-      <sanction-parameter-form 
-        :parameter="currentParameter" 
-        @save="saveSanctionParameter" 
+      <sanction-parameter-form
+        :parameter="currentParameter"
+        @save="saveSanctionParameter"
         @cancel="showSanctionParameterForm = false"
       />
     </modal>
 
     <!-- Formulaire de modèle SMS -->
-    <modal 
-      v-if="showSmsTemplateForm" 
-      @close="showSmsTemplateForm = false" 
+    <modal
+      v-if="showSmsTemplateForm"
+      @close="showSmsTemplateForm = false"
       :title="editingTemplate ? 'Modifier le modèle SMS' : 'Nouveau modèle SMS'"
     >
-      <sms-template-form 
-        :template="currentTemplate" 
-        @save="saveSmsTemplate" 
+      <sms-template-form
+        :template="currentTemplate"
+        @save="saveSmsTemplate"
         @cancel="showSmsTemplateForm = false"
       />
     </modal>
 
     <!-- Formulaire de test SMS -->
-    <modal 
-      v-if="showSmsTestForm" 
-      @close="showSmsTestForm = false" 
-      title="Tester l'envoi de SMS"
-    >
-      <sms-test-form 
-        :template="currentTemplate" 
-        @send="sendTestSms" 
+    <modal v-if="showSmsTestForm" @close="showSmsTestForm = false" title="Tester l'envoi de SMS">
+      <sms-test-form
+        :template="currentTemplate"
+        @send="sendTestSms"
         @cancel="showSmsTestForm = false"
       />
     </modal>
@@ -482,16 +491,16 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import Modal from '@/components/ui/Modal.vue';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
-import ModerationRuleForm from '@/components/forms/ModerationRuleForm.vue';
-import RefundCriteriaForm from '@/components/forms/RefundCriteriaForm.vue';
-import SanctionParameterForm from '@/components/forms/SanctionParameterForm.vue';
-import SmsTemplateForm from '@/components/forms/SmsTemplateForm.vue';
-import SmsTestForm from '@/components/forms/SmsTestForm.vue';
-import { useToast } from '@/composables/useToast';
-import * as policiesApi from '@/api/policies';
+import { ref, computed, onMounted } from 'vue'
+import Modal from '@/components/ui/Modal.vue'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import ModerationRuleForm from '@/components/forms/ModerationRuleForm.vue'
+import RefundCriteriaForm from '@/components/forms/RefundCriteriaForm.vue'
+import SanctionParameterForm from '@/components/forms/SanctionParameterForm.vue'
+import SmsTemplateForm from '@/components/forms/SmsTemplateForm.vue'
+import SmsTestForm from '@/components/forms/SmsTestForm.vue'
+import { useToast } from '@/composables/useToast'
+import * as policiesApi from '@/api/policies'
 
 export default {
   name: 'PoliciesView',
@@ -502,282 +511,328 @@ export default {
     RefundCriteriaForm,
     SanctionParameterForm,
     SmsTemplateForm,
-    SmsTestForm
+    SmsTestForm,
   },
   setup() {
-    const { showToast } = useToast();
-    
+    const { showToast } = useToast()
+
     // État des onglets
-    const activeTab = ref('moderation');
+    const activeTab = ref('moderation')
     const tabs = [
       { id: 'moderation', label: 'Règles de modération', icon: 'fas fa-gavel' },
       { id: 'refund', label: 'Critères de remboursement', icon: 'fas fa-money-bill-wave' },
       { id: 'sanction', label: 'Paramètres de sanction', icon: 'fas fa-ban' },
-      { id: 'sms', label: 'Modèles SMS', icon: 'fas fa-sms' }
-    ];
-    
+      { id: 'sms', label: 'Modèles SMS', icon: 'fas fa-sms' },
+    ]
+
     // Types de politiques pour le sélecteur
     const policyTypes = [
-      { 
-        id: 'moderation', 
-        label: 'Règle de modération', 
+      {
+        id: 'moderation',
+        label: 'Règle de modération',
         icon: 'fas fa-gavel',
-        description: 'Définir les règles pour modérer le comportement des utilisateurs'
+        description: 'Définir les règles pour modérer le comportement des utilisateurs',
       },
-      { 
-        id: 'refund', 
-        label: 'Critère de remboursement', 
+      {
+        id: 'refund',
+        label: 'Critère de remboursement',
         icon: 'fas fa-money-bill-wave',
-        description: 'Définir les conditions de remboursement pour les clients'
+        description: 'Définir les conditions de remboursement pour les clients',
       },
-      { 
-        id: 'sanction', 
-        label: 'Paramètre de sanction', 
+      {
+        id: 'sanction',
+        label: 'Paramètre de sanction',
         icon: 'fas fa-ban',
-        description: 'Définir les seuils et durées des sanctions pour les infractions'
+        description: 'Définir les seuils et durées des sanctions pour les infractions',
       },
-      { 
-        id: 'sms', 
-        label: 'Modèle SMS', 
+      {
+        id: 'sms',
+        label: 'Modèle SMS',
         icon: 'fas fa-sms',
-        description: 'Créer des modèles de messages SMS pour différents événements'
-      }
-    ];
-    
+        description: 'Créer des modèles de messages SMS pour différents événements',
+      },
+    ]
+
     // État des données
-    const moderationRules = ref([]);
-    const refundCriteria = ref([]);
-    const sanctionParameters = ref([]);
-    const smsTemplates = ref([]);
-    
+    const moderationRules = ref([])
+    const refundCriteria = ref([])
+    const sanctionParameters = ref([])
+    const smsTemplates = ref([])
+
     // État des filtres
     const moderationFilters = ref({
       active: null,
       severity: '',
-      search: ''
-    });
-    
+      search: '',
+    })
+
     const refundFilters = ref({
       active: null,
-      search: ''
-    });
-    
+      search: '',
+    })
+
     const sanctionFilters = ref({
       active: null,
       violationType: '',
-      search: ''
-    });
-    
+      search: '',
+    })
+
     const smsFilters = ref({
       active: null,
       eventType: '',
-      search: ''
-    });
-    
+      search: '',
+    })
+
     // État des modals
-    const showPolicyTypeSelector = ref(false);
-    const showModerationRuleForm = ref(false);
-    const showRefundCriteriaForm = ref(false);
-    const showSanctionParameterForm = ref(false);
-    const showSmsTemplateForm = ref(false);
-    const showSmsTestForm = ref(false);
-    const showDeleteConfirm = ref(false);
-    
+    const showPolicyTypeSelector = ref(false)
+    const showModerationRuleForm = ref(false)
+    const showRefundCriteriaForm = ref(false)
+    const showSanctionParameterForm = ref(false)
+    const showSmsTemplateForm = ref(false)
+    const showSmsTestForm = ref(false)
+    const showDeleteConfirm = ref(false)
+
     // État des éléments en cours d'édition
-    const currentRule = ref(null);
-    const currentCriteria = ref(null);
-    const currentParameter = ref(null);
-    const currentTemplate = ref(null);
-    const editingRule = ref(false);
-    const editingCriteria = ref(false);
-    const editingParameter = ref(false);
-    const editingTemplate = ref(false);
-    
+    const currentRule = ref(null)
+    const currentCriteria = ref(null)
+    const currentParameter = ref(null)
+    const currentTemplate = ref(null)
+    const editingRule = ref(false)
+    const editingCriteria = ref(false)
+    const editingParameter = ref(false)
+    const editingTemplate = ref(false)
+
     // État de la confirmation de suppression
-    const deleteType = ref('');
-    const deleteId = ref(null);
-    const deleteConfirmTitle = ref('');
-    const deleteConfirmMessage = ref('');
-    
+    const deleteType = ref('')
+    const deleteId = ref(null)
+    const deleteConfirmTitle = ref('')
+    const deleteConfirmMessage = ref('')
+
     // Données filtrées
     const filteredModerationRules = computed(() => {
-      let filtered = [...moderationRules.value];
-      
+      let filtered = [...moderationRules.value]
+
       if (moderationFilters.value.active !== null) {
-        filtered = filtered.filter(rule => rule.active === moderationFilters.value.active);
+        filtered = filtered.filter(rule => rule.active === moderationFilters.value.active)
       }
-      
+
       if (moderationFilters.value.severity) {
-        filtered = filtered.filter(rule => rule.severity === moderationFilters.value.severity);
+        filtered = filtered.filter(rule => rule.severity === moderationFilters.value.severity)
       }
-      
+
       if (moderationFilters.value.search) {
-        const search = moderationFilters.value.search.toLowerCase();
-        filtered = filtered.filter(rule => 
-          rule.title.toLowerCase().includes(search) || 
-          (rule.description && rule.description.toLowerCase().includes(search))
-        );
+        const search = moderationFilters.value.search.toLowerCase()
+        filtered = filtered.filter(
+          rule =>
+            rule.title.toLowerCase().includes(search) ||
+            (rule.description && rule.description.toLowerCase().includes(search))
+        )
       }
-      
-      return filtered;
-    });
-    
+
+      return filtered
+    })
+
     const filteredRefundCriteria = computed(() => {
-      let filtered = [...refundCriteria.value];
-      
+      let filtered = [...refundCriteria.value]
+
       if (refundFilters.value.active !== null) {
-        filtered = filtered.filter(criteria => criteria.active === refundFilters.value.active);
+        filtered = filtered.filter(criteria => criteria.active === refundFilters.value.active)
       }
-      
+
       if (refundFilters.value.search) {
-        const search = refundFilters.value.search.toLowerCase();
-        filtered = filtered.filter(criteria => 
-          criteria.title.toLowerCase().includes(search) || 
-          (criteria.description && criteria.description.toLowerCase().includes(search))
-        );
+        const search = refundFilters.value.search.toLowerCase()
+        filtered = filtered.filter(
+          criteria =>
+            criteria.title.toLowerCase().includes(search) ||
+            (criteria.description && criteria.description.toLowerCase().includes(search))
+        )
       }
-      
-      return filtered;
-    });
-    
+
+      return filtered
+    })
+
     const filteredSanctionParameters = computed(() => {
-      let filtered = [...sanctionParameters.value];
-      
+      let filtered = [...sanctionParameters.value]
+
       if (sanctionFilters.value.active !== null) {
-        filtered = filtered.filter(parameter => parameter.active === sanctionFilters.value.active);
+        filtered = filtered.filter(parameter => parameter.active === sanctionFilters.value.active)
       }
-      
+
       if (sanctionFilters.value.violationType) {
-        filtered = filtered.filter(parameter => parameter.violation_type === sanctionFilters.value.violationType);
+        filtered = filtered.filter(
+          parameter => parameter.violation_type === sanctionFilters.value.violationType
+        )
       }
-      
+
       if (sanctionFilters.value.search) {
-        const search = sanctionFilters.value.search.toLowerCase();
-        filtered = filtered.filter(parameter => 
-          parameter.title.toLowerCase().includes(search) || 
-          (parameter.description && parameter.description.toLowerCase().includes(search))
-        );
+        const search = sanctionFilters.value.search.toLowerCase()
+        filtered = filtered.filter(
+          parameter =>
+            parameter.title.toLowerCase().includes(search) ||
+            (parameter.description && parameter.description.toLowerCase().includes(search))
+        )
       }
-      
-      return filtered;
-    });
-    
+
+      return filtered
+    })
+
     const filteredSmsTemplates = computed(() => {
-      let filtered = [...smsTemplates.value];
-      
+      let filtered = [...smsTemplates.value]
+
       if (smsFilters.value.active !== null) {
-        filtered = filtered.filter(template => template.active === smsFilters.value.active);
+        filtered = filtered.filter(template => template.active === smsFilters.value.active)
       }
-      
+
       if (smsFilters.value.eventType) {
-        filtered = filtered.filter(template => template.event_type === smsFilters.value.eventType);
+        filtered = filtered.filter(template => template.event_type === smsFilters.value.eventType)
       }
-      
+
       if (smsFilters.value.search) {
-        const search = smsFilters.value.search.toLowerCase();
-        filtered = filtered.filter(template => 
-          template.name.toLowerCase().includes(search) || 
-          template.content.toLowerCase().includes(search)
-        );
+        const search = smsFilters.value.search.toLowerCase()
+        filtered = filtered.filter(
+          template =>
+            template.name.toLowerCase().includes(search) ||
+            template.content.toLowerCase().includes(search)
+        )
       }
-      
-      return filtered;
-    });
-    
+
+      return filtered
+    })
+
     // Chargement des données
     const loadData = async () => {
       try {
-        const policies = await policiesApi.getAllPolicies();
-        moderationRules.value = policies.moderation_rules || [];
-        refundCriteria.value = policies.refund_criteria || [];
-        sanctionParameters.value = policies.sanction_parameters || [];
-        smsTemplates.value = policies.sms_templates || [];
+        const policies = await policiesApi.getAllPolicies()
+        moderationRules.value = policies.moderation_rules || []
+        refundCriteria.value = policies.refund_criteria || []
+        sanctionParameters.value = policies.sanction_parameters || []
+        smsTemplates.value = policies.sms_templates || []
       } catch (error) {
-        console.error('Erreur lors du chargement des politiques:', error);
-        showToast('Erreur lors du chargement des politiques', 'error');
+        console.error('Erreur lors du chargement des politiques:', error)
+        showToast('Erreur lors du chargement des politiques', 'error')
       }
-    };
-    
+    }
+
     // Fonctions utilitaires
-    const getSeverityClass = (severity) => {
+    const getSeverityClass = severity => {
       switch (severity) {
-        case 'low': return 'badge-info';
-        case 'medium': return 'badge-warning';
-        case 'high': return 'badge-danger';
-        case 'critical': return 'badge-critical';
-        default: return 'badge-info';
+        case 'low':
+          return 'badge-info'
+        case 'medium':
+          return 'badge-warning'
+        case 'high':
+          return 'badge-danger'
+        case 'critical':
+          return 'badge-critical'
+        default:
+          return 'badge-info'
       }
-    };
-    
-    const getSeverityLabel = (severity) => {
+    }
+
+    const getSeverityLabel = severity => {
       switch (severity) {
-        case 'low': return 'Faible';
-        case 'medium': return 'Moyenne';
-        case 'high': return 'Élevée';
-        case 'critical': return 'Critique';
-        default: return severity;
+        case 'low':
+          return 'Faible'
+        case 'medium':
+          return 'Moyenne'
+        case 'high':
+          return 'Élevée'
+        case 'critical':
+          return 'Critique'
+        default:
+          return severity
       }
-    };
-    
-    const getActionLabel = (action) => {
+    }
+
+    const getActionLabel = action => {
       switch (action) {
-        case 'warning': return 'Avertissement';
-        case 'temporary_ban': return 'Suspension temporaire';
-        case 'permanent_ban': return 'Bannissement permanent';
-        case 'review': return 'Révision manuelle';
-        default: return action;
+        case 'warning':
+          return 'Avertissement'
+        case 'temporary_ban':
+          return 'Suspension temporaire'
+        case 'permanent_ban':
+          return 'Bannissement permanent'
+        case 'review':
+          return 'Révision manuelle'
+        default:
+          return action
       }
-    };
-    
-    const getViolationTypeLabel = (type) => {
+    }
+
+    const getViolationTypeLabel = type => {
       switch (type) {
-        case 'late_delivery': return 'Retard de livraison';
-        case 'cancellation': return 'Annulation';
-        case 'bad_behavior': return 'Mauvais comportement';
-        case 'fraud': return 'Fraude';
-        case 'safety': return 'Sécurité';
-        default: return type;
+        case 'late_delivery':
+          return 'Retard de livraison'
+        case 'cancellation':
+          return 'Annulation'
+        case 'bad_behavior':
+          return 'Mauvais comportement'
+        case 'fraud':
+          return 'Fraude'
+        case 'safety':
+          return 'Sécurité'
+        default:
+          return type
       }
-    };
-    
-    const getEventTypeLabel = (type) => {
+    }
+
+    const getEventTypeLabel = type => {
       switch (type) {
-        case 'delivery_created': return 'Création de livraison';
-        case 'delivery_accepted': return 'Acceptation de livraison';
-        case 'delivery_picked_up': return 'Prise en charge';
-        case 'delivery_completed': return 'Livraison terminée';
-        case 'delivery_delayed': return 'Livraison retardée';
-        case 'payment_received': return 'Paiement reçu';
-        case 'account_suspended': return 'Compte suspendu';
-        case 'critical_alert': return 'Alerte critique';
-        default: return type;
+        case 'delivery_created':
+          return 'Création de livraison'
+        case 'delivery_accepted':
+          return 'Acceptation de livraison'
+        case 'delivery_picked_up':
+          return 'Prise en charge'
+        case 'delivery_completed':
+          return 'Livraison terminée'
+        case 'delivery_delayed':
+          return 'Livraison retardée'
+        case 'payment_received':
+          return 'Paiement reçu'
+        case 'account_suspended':
+          return 'Compte suspendu'
+        case 'critical_alert':
+          return 'Alerte critique'
+        default:
+          return type
       }
-    };
-    
-    const getPriorityClass = (priority) => {
+    }
+
+    const getPriorityClass = priority => {
       switch (priority) {
-        case 'low': return 'badge-info';
-        case 'normal': return 'badge-success';
-        case 'high': return 'badge-warning';
-        case 'critical': return 'badge-critical';
-        default: return 'badge-info';
+        case 'low':
+          return 'badge-info'
+        case 'normal':
+          return 'badge-success'
+        case 'high':
+          return 'badge-warning'
+        case 'critical':
+          return 'badge-critical'
+        default:
+          return 'badge-info'
       }
-    };
-    
-    const getPriorityLabel = (priority) => {
+    }
+
+    const getPriorityLabel = priority => {
       switch (priority) {
-        case 'low': return 'Basse';
-        case 'normal': return 'Normale';
-        case 'high': return 'Haute';
-        case 'critical': return 'Critique';
-        default: return priority;
+        case 'low':
+          return 'Basse'
+        case 'normal':
+          return 'Normale'
+        case 'high':
+          return 'Haute'
+        case 'critical':
+          return 'Critique'
+        default:
+          return priority
       }
-    };
-    
+    }
+
     // Gestion des actions
-    const selectPolicyType = (type) => {
-      showPolicyTypeSelector.value = false;
-      
+    const selectPolicyType = type => {
+      showPolicyTypeSelector.value = false
+
       switch (type) {
         case 'moderation':
           currentRule.value = {
@@ -790,12 +845,12 @@ export default {
             applies_to: {
               clients: true,
               couriers: true,
-              businesses: true
-            }
-          };
-          editingRule.value = false;
-          showModerationRuleForm.value = true;
-          break;
+              businesses: true,
+            },
+          }
+          editingRule.value = false
+          showModerationRuleForm.value = true
+          break
         case 'refund':
           currentCriteria.value = {
             title: '',
@@ -807,12 +862,12 @@ export default {
             required_proofs: {
               photo: true,
               receipt: false,
-              description: true
-            }
-          };
-          editingCriteria.value = false;
-          showRefundCriteriaForm.value = true;
-          break;
+              description: true,
+            },
+          }
+          editingCriteria.value = false
+          showRefundCriteriaForm.value = true
+          break
         case 'sanction':
           currentParameter.value = {
             title: '',
@@ -826,12 +881,12 @@ export default {
             applies_to: {
               clients: false,
               couriers: true,
-              businesses: false
-            }
-          };
-          editingParameter.value = false;
-          showSanctionParameterForm.value = true;
-          break;
+              businesses: false,
+            },
+          }
+          editingParameter.value = false
+          showSanctionParameterForm.value = true
+          break
         case 'sms':
           currentTemplate.value = {
             name: '',
@@ -842,224 +897,224 @@ export default {
             applies_to: {
               clients: true,
               couriers: false,
-              businesses: false
-            }
-          };
-          editingTemplate.value = false;
-          showSmsTemplateForm.value = true;
-          break;
+              businesses: false,
+            },
+          }
+          editingTemplate.value = false
+          showSmsTemplateForm.value = true
+          break
       }
-    };
-    
+    }
+
     // Gestion des règles de modération
-    const editModerationRule = (rule) => {
-      currentRule.value = { ...rule };
-      editingRule.value = true;
-      showModerationRuleForm.value = true;
-    };
-    
-    const saveModerationRule = async (rule) => {
+    const editModerationRule = rule => {
+      currentRule.value = { ...rule }
+      editingRule.value = true
+      showModerationRuleForm.value = true
+    }
+
+    const saveModerationRule = async rule => {
       try {
         if (editingRule.value) {
-          await policiesApi.updateModerationRule(rule.id, rule);
-          showToast('Règle de modération mise à jour avec succès', 'success');
+          await policiesApi.updateModerationRule(rule.id, rule)
+          showToast('Règle de modération mise à jour avec succès', 'success')
         } else {
-          await policiesApi.createModerationRule(rule);
-          showToast('Règle de modération créée avec succès', 'success');
+          await policiesApi.createModerationRule(rule)
+          showToast('Règle de modération créée avec succès', 'success')
         }
-        
-        showModerationRuleForm.value = false;
-        loadData();
+
+        showModerationRuleForm.value = false
+        loadData()
       } catch (error) {
-        console.error('Erreur lors de l\'enregistrement de la règle de modération:', error);
-        showToast('Erreur lors de l\'enregistrement de la règle de modération', 'error');
+        console.error("Erreur lors de l'enregistrement de la règle de modération:", error)
+        showToast("Erreur lors de l'enregistrement de la règle de modération", 'error')
       }
-    };
-    
-    const confirmDeleteRule = (rule) => {
-      deleteType.value = 'moderation';
-      deleteId.value = rule.id;
-      deleteConfirmTitle.value = 'Supprimer la règle de modération';
-      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer la règle "${rule.title}" ? Cette action est irréversible.`;
-      showDeleteConfirm.value = true;
-    };
-    
+    }
+
+    const confirmDeleteRule = rule => {
+      deleteType.value = 'moderation'
+      deleteId.value = rule.id
+      deleteConfirmTitle.value = 'Supprimer la règle de modération'
+      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer la règle "${rule.title}" ? Cette action est irréversible.`
+      showDeleteConfirm.value = true
+    }
+
     // Gestion des critères de remboursement
-    const editRefundCriteria = (criteria) => {
-      currentCriteria.value = { ...criteria };
-      editingCriteria.value = true;
-      showRefundCriteriaForm.value = true;
-    };
-    
-    const saveRefundCriteria = async (criteria) => {
+    const editRefundCriteria = criteria => {
+      currentCriteria.value = { ...criteria }
+      editingCriteria.value = true
+      showRefundCriteriaForm.value = true
+    }
+
+    const saveRefundCriteria = async criteria => {
       try {
         if (editingCriteria.value) {
-          await policiesApi.updateRefundCriteria(criteria.id, criteria);
-          showToast('Critère de remboursement mis à jour avec succès', 'success');
+          await policiesApi.updateRefundCriteria(criteria.id, criteria)
+          showToast('Critère de remboursement mis à jour avec succès', 'success')
         } else {
-          await policiesApi.createRefundCriteria(criteria);
-          showToast('Critère de remboursement créé avec succès', 'success');
+          await policiesApi.createRefundCriteria(criteria)
+          showToast('Critère de remboursement créé avec succès', 'success')
         }
-        
-        showRefundCriteriaForm.value = false;
-        loadData();
+
+        showRefundCriteriaForm.value = false
+        loadData()
       } catch (error) {
-        console.error('Erreur lors de l\'enregistrement du critère de remboursement:', error);
-        showToast('Erreur lors de l\'enregistrement du critère de remboursement', 'error');
+        console.error("Erreur lors de l'enregistrement du critère de remboursement:", error)
+        showToast("Erreur lors de l'enregistrement du critère de remboursement", 'error')
       }
-    };
-    
-    const confirmDeleteCriteria = (criteria) => {
-      deleteType.value = 'refund';
-      deleteId.value = criteria.id;
-      deleteConfirmTitle.value = 'Supprimer le critère de remboursement';
-      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer le critère "${criteria.title}" ? Cette action est irréversible.`;
-      showDeleteConfirm.value = true;
-    };
-    
+    }
+
+    const confirmDeleteCriteria = criteria => {
+      deleteType.value = 'refund'
+      deleteId.value = criteria.id
+      deleteConfirmTitle.value = 'Supprimer le critère de remboursement'
+      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer le critère "${criteria.title}" ? Cette action est irréversible.`
+      showDeleteConfirm.value = true
+    }
+
     // Gestion des paramètres de sanction
-    const editSanctionParameter = (parameter) => {
-      currentParameter.value = { ...parameter };
-      editingParameter.value = true;
-      showSanctionParameterForm.value = true;
-    };
-    
-    const saveSanctionParameter = async (parameter) => {
+    const editSanctionParameter = parameter => {
+      currentParameter.value = { ...parameter }
+      editingParameter.value = true
+      showSanctionParameterForm.value = true
+    }
+
+    const saveSanctionParameter = async parameter => {
       try {
         if (editingParameter.value) {
-          await policiesApi.updateSanctionParameter(parameter.id, parameter);
-          showToast('Paramètre de sanction mis à jour avec succès', 'success');
+          await policiesApi.updateSanctionParameter(parameter.id, parameter)
+          showToast('Paramètre de sanction mis à jour avec succès', 'success')
         } else {
-          await policiesApi.createSanctionParameter(parameter);
-          showToast('Paramètre de sanction créé avec succès', 'success');
+          await policiesApi.createSanctionParameter(parameter)
+          showToast('Paramètre de sanction créé avec succès', 'success')
         }
-        
-        showSanctionParameterForm.value = false;
-        loadData();
+
+        showSanctionParameterForm.value = false
+        loadData()
       } catch (error) {
-        console.error('Erreur lors de l\'enregistrement du paramètre de sanction:', error);
-        showToast('Erreur lors de l\'enregistrement du paramètre de sanction', 'error');
+        console.error("Erreur lors de l'enregistrement du paramètre de sanction:", error)
+        showToast("Erreur lors de l'enregistrement du paramètre de sanction", 'error')
       }
-    };
-    
-    const confirmDeleteParameter = (parameter) => {
-      deleteType.value = 'sanction';
-      deleteId.value = parameter.id;
-      deleteConfirmTitle.value = 'Supprimer le paramètre de sanction';
-      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer le paramètre "${parameter.title}" ? Cette action est irréversible.`;
-      showDeleteConfirm.value = true;
-    };
-    
+    }
+
+    const confirmDeleteParameter = parameter => {
+      deleteType.value = 'sanction'
+      deleteId.value = parameter.id
+      deleteConfirmTitle.value = 'Supprimer le paramètre de sanction'
+      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer le paramètre "${parameter.title}" ? Cette action est irréversible.`
+      showDeleteConfirm.value = true
+    }
+
     // Gestion des modèles SMS
-    const editSmsTemplate = (template) => {
-      currentTemplate.value = { ...template };
-      editingTemplate.value = true;
-      showSmsTemplateForm.value = true;
-    };
-    
-    const saveSmsTemplate = async (template) => {
+    const editSmsTemplate = template => {
+      currentTemplate.value = { ...template }
+      editingTemplate.value = true
+      showSmsTemplateForm.value = true
+    }
+
+    const saveSmsTemplate = async template => {
       try {
         if (editingTemplate.value) {
-          await policiesApi.updateSmsTemplate(template.id, template);
-          showToast('Modèle SMS mis à jour avec succès', 'success');
+          await policiesApi.updateSmsTemplate(template.id, template)
+          showToast('Modèle SMS mis à jour avec succès', 'success')
         } else {
-          await policiesApi.createSmsTemplate(template);
-          showToast('Modèle SMS créé avec succès', 'success');
+          await policiesApi.createSmsTemplate(template)
+          showToast('Modèle SMS créé avec succès', 'success')
         }
-        
-        showSmsTemplateForm.value = false;
-        loadData();
+
+        showSmsTemplateForm.value = false
+        loadData()
       } catch (error) {
-        console.error('Erreur lors de l\'enregistrement du modèle SMS:', error);
-        showToast('Erreur lors de l\'enregistrement du modèle SMS', 'error');
+        console.error("Erreur lors de l'enregistrement du modèle SMS:", error)
+        showToast("Erreur lors de l'enregistrement du modèle SMS", 'error')
       }
-    };
-    
-    const testSmsTemplate = (template) => {
-      currentTemplate.value = { ...template };
-      showSmsTestForm.value = true;
-    };
-    
-    const sendTestSms = async (testData) => {
+    }
+
+    const testSmsTemplate = template => {
+      currentTemplate.value = { ...template }
+      showSmsTestForm.value = true
+    }
+
+    const sendTestSms = async testData => {
       try {
-        await policiesApi.testSmsTemplate(testData);
-        showToast('SMS de test envoyé avec succès', 'success');
-        showSmsTestForm.value = false;
+        await policiesApi.testSmsTemplate(testData)
+        showToast('SMS de test envoyé avec succès', 'success')
+        showSmsTestForm.value = false
       } catch (error) {
-        console.error('Erreur lors de l\'envoi du SMS de test:', error);
-        showToast('Erreur lors de l\'envoi du SMS de test', 'error');
+        console.error("Erreur lors de l'envoi du SMS de test:", error)
+        showToast("Erreur lors de l'envoi du SMS de test", 'error')
       }
-    };
-    
-    const confirmDeleteTemplate = (template) => {
-      deleteType.value = 'sms';
-      deleteId.value = template.id;
-      deleteConfirmTitle.value = 'Supprimer le modèle SMS';
-      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer le modèle "${template.name}" ? Cette action est irréversible.`;
-      showDeleteConfirm.value = true;
-    };
-    
+    }
+
+    const confirmDeleteTemplate = template => {
+      deleteType.value = 'sms'
+      deleteId.value = template.id
+      deleteConfirmTitle.value = 'Supprimer le modèle SMS'
+      deleteConfirmMessage.value = `Êtes-vous sûr de vouloir supprimer le modèle "${template.name}" ? Cette action est irréversible.`
+      showDeleteConfirm.value = true
+    }
+
     // Confirmation de suppression
     const confirmDelete = async () => {
       try {
         switch (deleteType.value) {
           case 'moderation':
-            await policiesApi.deleteModerationRule(deleteId.value);
-            showToast('Règle de modération supprimée avec succès', 'success');
-            break;
+            await policiesApi.deleteModerationRule(deleteId.value)
+            showToast('Règle de modération supprimée avec succès', 'success')
+            break
           case 'refund':
-            await policiesApi.deleteRefundCriteria(deleteId.value);
-            showToast('Critère de remboursement supprimé avec succès', 'success');
-            break;
+            await policiesApi.deleteRefundCriteria(deleteId.value)
+            showToast('Critère de remboursement supprimé avec succès', 'success')
+            break
           case 'sanction':
-            await policiesApi.deleteSanctionParameter(deleteId.value);
-            showToast('Paramètre de sanction supprimé avec succès', 'success');
-            break;
+            await policiesApi.deleteSanctionParameter(deleteId.value)
+            showToast('Paramètre de sanction supprimé avec succès', 'success')
+            break
           case 'sms':
-            await policiesApi.deleteSmsTemplate(deleteId.value);
-            showToast('Modèle SMS supprimé avec succès', 'success');
-            break;
+            await policiesApi.deleteSmsTemplate(deleteId.value)
+            showToast('Modèle SMS supprimé avec succès', 'success')
+            break
         }
-        
-        showDeleteConfirm.value = false;
-        loadData();
+
+        showDeleteConfirm.value = false
+        loadData()
       } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        showToast('Erreur lors de la suppression', 'error');
+        console.error('Erreur lors de la suppression:', error)
+        showToast('Erreur lors de la suppression', 'error')
       }
-    };
-    
+    }
+
     // Chargement initial des données
     onMounted(() => {
-      loadData();
-    });
-    
+      loadData()
+    })
+
     return {
       // État des onglets
       activeTab,
       tabs,
-      
+
       // Types de politiques
       policyTypes,
-      
+
       // Données
       moderationRules,
       refundCriteria,
       sanctionParameters,
       smsTemplates,
-      
+
       // Filtres
       moderationFilters,
       refundFilters,
       sanctionFilters,
       smsFilters,
-      
+
       // Données filtrées
       filteredModerationRules,
       filteredRefundCriteria,
       filteredSanctionParameters,
       filteredSmsTemplates,
-      
+
       // Modals
       showPolicyTypeSelector,
       showModerationRuleForm,
@@ -1068,7 +1123,7 @@ export default {
       showSmsTemplateForm,
       showSmsTestForm,
       showDeleteConfirm,
-      
+
       // Éléments en cours d'édition
       currentRule,
       currentCriteria,
@@ -1078,11 +1133,11 @@ export default {
       editingCriteria,
       editingParameter,
       editingTemplate,
-      
+
       // Confirmation de suppression
       deleteConfirmTitle,
       deleteConfirmMessage,
-      
+
       // Fonctions utilitaires
       getSeverityClass,
       getSeverityLabel,
@@ -1091,7 +1146,7 @@ export default {
       getEventTypeLabel,
       getPriorityClass,
       getPriorityLabel,
-      
+
       // Actions
       selectPolicyType,
       editModerationRule,
@@ -1108,10 +1163,10 @@ export default {
       testSmsTemplate,
       sendTestSms,
       confirmDeleteTemplate,
-      confirmDelete
-    };
-  }
-};
+      confirmDelete,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -1162,7 +1217,8 @@ export default {
   border-radius: 0.375rem;
 }
 
-.form-select, .form-input {
+.form-select,
+.form-input {
   padding: 0.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;

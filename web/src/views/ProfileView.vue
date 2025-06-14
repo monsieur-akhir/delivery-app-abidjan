@@ -13,20 +13,20 @@
     <div class="profile-content">
       <div class="profile-sidebar">
         <div class="profile-avatar">
-          <img v-if="user.profile_picture" :src="user.profile_picture" :alt="user.full_name">
+          <img v-if="user.profile_picture" :src="user.profile_picture" :alt="user.full_name" />
           <div v-else class="avatar-placeholder">{{ userInitials }}</div>
           <div class="avatar-overlay" v-if="isEditing">
             <label for="avatar-upload" class="avatar-upload-label">
               <font-awesome-icon icon="camera" />
               <span>Changer</span>
             </label>
-            <input 
-              type="file" 
-              id="avatar-upload" 
-              accept="image/*" 
-              @change="handleAvatarChange" 
+            <input
+              type="file"
+              id="avatar-upload"
+              accept="image/*"
+              @change="handleAvatarChange"
               class="avatar-upload-input"
-            >
+            />
           </div>
         </div>
         <div class="profile-info">
@@ -80,32 +80,21 @@
           <div class="form-grid">
             <div class="form-group">
               <label for="full_name">Nom complet</label>
-              <input 
-                type="text" 
-                id="full_name" 
-                v-model="formData.full_name" 
-                class="form-control" 
+              <input
+                type="text"
+                id="full_name"
+                v-model="formData.full_name"
+                class="form-control"
                 required
-              >
+              />
             </div>
             <div class="form-group">
               <label for="phone">Téléphone</label>
-              <input 
-                type="tel" 
-                id="phone" 
-                v-model="formData.phone" 
-                class="form-control" 
-                required
-              >
+              <input type="tel" id="phone" v-model="formData.phone" class="form-control" required />
             </div>
             <div class="form-group">
               <label for="email">Email</label>
-              <input 
-                type="email" 
-                id="email" 
-                v-model="formData.email" 
-                class="form-control"
-              >
+              <input type="email" id="email" v-model="formData.email" class="form-control" />
             </div>
             <div class="form-group">
               <label for="commune">Commune</label>
@@ -122,30 +111,30 @@
           <div class="form-grid">
             <div class="form-group">
               <label for="current_password">Mot de passe actuel</label>
-              <input 
-                type="password" 
-                id="current_password" 
-                v-model="passwordData.current_password" 
+              <input
+                type="password"
+                id="current_password"
+                v-model="passwordData.current_password"
                 class="form-control"
-              >
+              />
             </div>
             <div class="form-group">
               <label for="new_password">Nouveau mot de passe</label>
-              <input 
-                type="password" 
-                id="new_password" 
-                v-model="passwordData.new_password" 
+              <input
+                type="password"
+                id="new_password"
+                v-model="passwordData.new_password"
                 class="form-control"
-              >
+              />
             </div>
             <div class="form-group">
               <label for="confirm_password">Confirmer le mot de passe</label>
-              <input 
-                type="password" 
-                id="confirm_password" 
-                v-model="passwordData.confirm_password" 
+              <input
+                type="password"
+                id="confirm_password"
+                v-model="passwordData.confirm_password"
                 class="form-control"
-              >
+              />
             </div>
           </div>
 
@@ -194,13 +183,13 @@ export default {
   name: 'ProfileView',
   setup() {
     const authStore = useAuthStore()
-    
+
     const isEditing = ref(false)
     const isSubmitting = ref(false)
-    
+
     const user = computed(() => authStore.user || {})
     const userInitials = computed(() => authStore.userInitials)
-    
+
     // Données de formulaire
     const formData = reactive({
       full_name: user.value?.full_name || '',
@@ -208,19 +197,19 @@ export default {
       email: user.value?.email || '',
       commune: user.value?.commune || '',
     })
-    
+
     const passwordData = reactive({
       current_password: '',
       new_password: '',
       confirm_password: '',
     })
-    
+
     // Statistiques utilisateur (simulées)
     const userStats = reactive({
       deliveries: 24,
       rating: 4.8,
     })
-    
+
     // Activité récente (simulée)
     const userActivity = ref([
       {
@@ -242,77 +231,81 @@ export default {
         date: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
       },
     ])
-    
+
     // Liste des communes
     const communes = ref(COMMUNES)
-    
+
     // Gérer le changement d'avatar
-    const handleAvatarChange = (event) => {
+    const handleAvatarChange = event => {
       const file = event.target.files[0]
       if (!file) return
-      
+
       // Simuler le téléchargement
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.onload = e => {
         // Dans une application réelle, vous téléchargeriez le fichier sur le serveur
         console.log('Avatar changed:', file.name)
       }
       reader.readAsDataURL(file)
     }
-    
+
     // Enregistrer le profil
     const saveProfile = async () => {
       if (isSubmitting.value) return
-      
+
       // Valider le formulaire
       if (!formData.full_name || !formData.phone) {
         alert('Veuillez remplir tous les champs obligatoires')
         return
       }
-      
+
       // Valider le mot de passe si modifié
-      if (passwordData.current_password || passwordData.new_password || passwordData.confirm_password) {
+      if (
+        passwordData.current_password ||
+        passwordData.new_password ||
+        passwordData.confirm_password
+      ) {
         if (!passwordData.current_password) {
           alert('Veuillez saisir votre mot de passe actuel')
           return
         }
-        
+
         if (!passwordData.new_password) {
           alert('Veuillez saisir un nouveau mot de passe')
           return
         }
-        
+
         if (passwordData.new_password !== passwordData.confirm_password) {
           alert('Les mots de passe ne correspondent pas')
           return
         }
       }
-      
+
       isSubmitting.value = true
-      
+
       try {
         // Mettre à jour le profil
         await updateProfile(formData)
-        
+
         // Mettre à jour le mot de passe si nécessaire
         if (passwordData.current_password && passwordData.new_password) {
           await changePassword({
             current_password: passwordData.current_password,
             new_password: passwordData.new_password,
           })
-          
+
           // Réinitialiser les champs de mot de passe
           passwordData.current_password = ''
           passwordData.new_password = ''
           passwordData.confirm_password = ''
         }
-        
+
         // Mettre à jour les données utilisateur dans le store
         await authStore.fetchUserProfile()
-        
+
         // Désactiver le mode édition
         isEditing.value = false
-        
+
         alert('Profil mis à jour avec succès')
       } catch (error) {
         alert(`Erreur lors de la mise à jour du profil: ${error.message}`)
@@ -320,50 +313,50 @@ export default {
         isSubmitting.value = false
       }
     }
-    
+
     // Obtenir le libellé du rôle utilisateur
-    const getUserRoleLabel = (role) => {
+    const getUserRoleLabel = role => {
       return USER_ROLES[role]?.label || role
     }
-    
+
     // Obtenir le libellé du statut utilisateur
-    const getUserStatusLabel = (status) => {
+    const getUserStatusLabel = status => {
       return USER_STATUSES[status]?.label || status
     }
-    
+
     // Obtenir la classe CSS pour le statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       return `status-${status}`
     }
-    
+
     // Obtenir l'icône pour le type d'activité
-    const getActivityIcon = (type) => {
+    const getActivityIcon = type => {
       const icons = {
         delivery: 'truck',
         payment: 'money-bill',
         rating: 'star',
         system: 'info-circle',
         user: 'user',
-        default: 'history'
+        default: 'history',
       }
-      
+
       return icons[type] || icons.default
     }
-    
+
     // Obtenir la classe CSS pour l'icône d'activité
-    const getActivityIconClass = (type) => {
+    const getActivityIconClass = type => {
       const classes = {
         delivery: 'icon-delivery',
         payment: 'icon-payment',
         rating: 'icon-rating',
         system: 'icon-system',
         user: 'icon-user',
-        default: ''
+        default: '',
       }
-      
+
       return classes[type] || classes.default
     }
-    
+
     return {
       user,
       userInitials,
@@ -383,9 +376,9 @@ export default {
       getActivityIconClass,
       formatDate,
       formatPhoneNumber,
-      formatRelativeTime
+      formatRelativeTime,
     }
-  }
+  },
 }
 </script>
 
@@ -509,7 +502,7 @@ export default {
 
 .status-inactive {
   background-color: rgba(158, 158, 158, 0.1);
-  color: #9E9E9E;
+  color: #9e9e9e;
 }
 
 .status-suspended {
@@ -699,7 +692,7 @@ export default {
 
 .icon-user {
   background-color: rgba(156, 39, 176, 0.1);
-  color: #9C27B0;
+  color: #9c27b0;
 }
 
 .activity-content {
@@ -720,7 +713,7 @@ export default {
   .profile-content {
     grid-template-columns: 1fr;
   }
-  
+
   .profile-sidebar {
     max-width: 400px;
     margin: 0 auto;
@@ -731,13 +724,13 @@ export default {
   .profile-page {
     padding: 1rem;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .info-grid,
   .form-grid {
     grid-template-columns: 1fr;

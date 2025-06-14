@@ -116,7 +116,7 @@ export default {
   name: 'TrafficView',
   setup() {
     const router = useRouter()
-    
+
     // État
     const trafficReports = ref([])
     const loading = ref(true)
@@ -126,15 +126,23 @@ export default {
     const totalItems = ref(0)
     const trafficMap = ref(null)
     const communes = ref([
-      'Abobo', 'Adjamé', 'Attécoubé', 'Cocody', 'Koumassi', 
-      'Marcory', 'Plateau', 'Port-Bouët', 'Treichville', 'Yopougon'
+      'Abobo',
+      'Adjamé',
+      'Attécoubé',
+      'Cocody',
+      'Koumassi',
+      'Marcory',
+      'Plateau',
+      'Port-Bouët',
+      'Treichville',
+      'Yopougon',
     ])
-    
+
     const filters = reactive({
       startDate: '',
       endDate: '',
       commune: '',
-      timeOfDay: ''
+      timeOfDay: '',
     })
 
     // Méthodes
@@ -147,9 +155,9 @@ export default {
           start_date: filters.startDate,
           end_date: filters.endDate,
           commune: filters.commune,
-          time_of_day: filters.timeOfDay
+          time_of_day: filters.timeOfDay,
         }
-        
+
         const response = await getTrafficReports(params)
         trafficReports.value = response.items
         totalItems.value = response.total
@@ -161,16 +169,16 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const applyFilters = () => {
       currentPage.value = 1
       fetchData()
     }
-    
+
     const resetFilters = () => {
       filters.startDate = ''
       filters.endDate = ''
@@ -179,55 +187,54 @@ export default {
       currentPage.value = 1
       fetchData()
     }
-    
-    const changePage = (page) => {
+
+    const changePage = page => {
       currentPage.value = page
       fetchData()
     }
-    
+
     const generateReport = () => {
       // Implémenter la génération de rapport
       console.log('Générer un rapport')
     }
-    
-    const viewReportDetails = (reportId) => {
+
+    const viewReportDetails = reportId => {
       // Rediriger vers la page de détails du rapport
       console.log('Voir les détails du rapport:', reportId)
     }
-    
-    const deleteReport = async (reportId) => {
+
+    const deleteReport = async reportId => {
       if (!confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?')) {
         return
       }
-      
+
       try {
         await deleteTrafficReport(reportId)
-        
+
         // Mettre à jour la liste des rapports
         fetchData()
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la suppression du rapport:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
+
     const initMap = () => {
       if (!trafficMap.value) {
-        trafficMap.value = L.map('traffic-map').setView([5.3600, -4.0083], 12) // Coordonnées d'Abidjan
-        
+        trafficMap.value = L.map('traffic-map').setView([5.36, -4.0083], 12) // Coordonnées d'Abidjan
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(trafficMap.value)
-        
+
         // Ajouter des marqueurs pour les signalements d'embouteillages
         trafficReports.value.forEach(report => {
           // Vérifier si les coordonnées sont valides
           if (report.latitude && report.longitude) {
-            L.marker([report.latitude, report.longitude])
-              .addTo(trafficMap.value)
-              .bindPopup(`
+            L.marker([report.latitude, report.longitude]).addTo(trafficMap.value).bindPopup(`
                 <b>${report.location}</b><br>
                 ${report.description}<br>
                 <i>${formatDateTime(report.created_at)}</i>
@@ -236,12 +243,12 @@ export default {
         })
       }
     }
-    
+
     // Pagination calculée
     const displayedPages = computed(() => {
       const pages = []
       const maxVisiblePages = 5
-      
+
       if (totalPages.value <= maxVisiblePages) {
         // Afficher toutes les pages si le nombre total est inférieur ou égal au maximum visible
         for (let i = 1; i <= totalPages.value; i++) {
@@ -251,20 +258,20 @@ export default {
         // Calculer les pages à afficher
         let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
         let endPage = startPage + maxVisiblePages - 1
-        
+
         if (endPage > totalPages.value) {
           endPage = totalPages.value
           startPage = Math.max(1, endPage - maxVisiblePages + 1)
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
       }
-      
+
       return pages
     })
-    
+
     // Debounce pour la recherche
     let searchTimeout = null
     const debounceSearch = () => {
@@ -273,22 +280,22 @@ export default {
         applyFilters()
       }, 500)
     }
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
-      
+
       // Initialiser la carte après le rendu du DOM
       setTimeout(() => {
         initMap()
       }, 100)
     })
-    
+
     // Surveiller les changements de page
     watch(currentPage, () => {
       fetchData()
     })
-    
+
     // Surveiller les changements dans les rapports de trafic
     watch(trafficReports, () => {
       // Mettre à jour les marqueurs sur la carte
@@ -299,13 +306,11 @@ export default {
             trafficMap.value.removeLayer(layer)
           }
         })
-        
+
         // Ajouter les nouveaux marqueurs
         trafficReports.value.forEach(report => {
           if (report.latitude && report.longitude) {
-            L.marker([report.latitude, report.longitude])
-              .addTo(trafficMap.value)
-              .bindPopup(`
+            L.marker([report.latitude, report.longitude]).addTo(trafficMap.value).bindPopup(`
                 <b>${report.location}</b><br>
                 ${report.description}<br>
                 <i>${formatDateTime(report.created_at)}</i>
@@ -314,7 +319,7 @@ export default {
         })
       }
     })
-    
+
     return {
       trafficReports,
       loading,
@@ -325,7 +330,7 @@ export default {
       communes,
       filters,
       displayedPages,
-      
+
       fetchData,
       refreshData,
       applyFilters,
@@ -334,13 +339,13 @@ export default {
       generateReport,
       viewReportDetails,
       deleteReport,
-      
+
       formatCurrency,
       formatDate,
       formatDateTime,
-      debounceSearch
+      debounceSearch,
     }
-  }
+  },
 }
 </script>
 
@@ -535,7 +540,7 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filter-group {
     min-width: 100%;
   }

@@ -1,4 +1,3 @@
-
 <template>
   <div class="line-chart-container">
     <canvas ref="chartCanvas"></canvas>
@@ -14,16 +13,16 @@ export default {
   props: {
     data: {
       type: Object,
-      required: true
+      required: true,
     },
     options: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     height: {
       type: Number,
-      default: 400
-    }
+      default: 400,
+    },
   },
   setup(props) {
     const chartCanvas = ref(null)
@@ -34,61 +33,61 @@ export default {
       maintainAspectRatio: false,
       interaction: {
         intersect: false,
-        mode: 'index'
+        mode: 'index',
       },
       scales: {
         x: {
           display: true,
           grid: {
-            display: false
-          }
+            display: false,
+          },
         },
         y: {
           display: true,
           beginAtZero: true,
           grid: {
-            color: 'rgba(0, 0, 0, 0.1)'
-          }
-        }
+            color: 'rgba(0, 0, 0, 0.1)',
+          },
+        },
       },
       elements: {
         point: {
           radius: 4,
-          hoverRadius: 8
+          hoverRadius: 8,
         },
         line: {
-          tension: 0.4
-        }
+          tension: 0.4,
+        },
       },
       plugins: {
         legend: {
           display: true,
-          position: 'top'
+          position: 'top',
         },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           titleColor: 'white',
           bodyColor: 'white',
           borderColor: 'white',
-          borderWidth: 1
-        }
-      }
+          borderWidth: 1,
+        },
+      },
     }
 
     const createChart = () => {
       if (!chartCanvas.value) return
 
       const ctx = chartCanvas.value.getContext('2d')
-      
+
       const mergedOptions = {
         ...defaultOptions,
-        ...props.options
+        ...props.options,
       }
 
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: props.data,
-        options: mergedOptions
+        options: mergedOptions,
       })
     }
 
@@ -114,14 +113,18 @@ export default {
       destroyChart()
     })
 
-    watch(() => props.data, () => {
-      updateChart()
-    }, { deep: true })
+    watch(
+      () => props.data,
+      () => {
+        updateChart()
+      },
+      { deep: true }
+    )
 
     return {
-      chartCanvas
+      chartCanvas,
     }
-  }
+  },
 }
 </script>
 

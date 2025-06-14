@@ -1,8 +1,8 @@
-import { defineStore } from "pinia"
-import { ref, computed } from "vue"
-import { login, register, getUserProfile, refreshToken, logout } from "@/api/auth"
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { login, register, getUserProfile, refreshToken, logout } from '@/api/auth'
 
-export const useAuthStore = defineStore("auth", () => {
+export const useAuthStore = defineStore('auth', () => {
   // État
   const user = ref(null)
   const token = ref(null)
@@ -12,19 +12,19 @@ export const useAuthStore = defineStore("auth", () => {
   // Getters
   const isAuthenticated = computed(() => !!token.value)
   const userRole = computed(() => user.value?.role || null)
-  const userName = computed(() => user.value?.full_name || "")
+  const userName = computed(() => user.value?.full_name || '')
   const userInitials = computed(() => {
-    if (!user.value?.full_name) return ""
+    if (!user.value?.full_name) return ''
     return user.value.full_name
-      .split(" ")
-      .map((name) => name[0])
-      .join("")
+      .split(' ')
+      .map(name => name[0])
+      .join('')
       .toUpperCase()
   })
 
   // Actions
   async function initAuth() {
-    const storedToken = localStorage.getItem("token")
+    const storedToken = localStorage.getItem('token')
     if (storedToken) {
       token.value = storedToken
       await fetchUserProfile()
@@ -37,28 +37,28 @@ export const useAuthStore = defineStore("auth", () => {
       error.value = null
 
       const response = await login(credentials)
-      
+
       // Si l'API renvoie un access_token, l'authentification est immédiate
       if (response.access_token) {
         token.value = response.access_token
-        localStorage.setItem("token", response.access_token)
+        localStorage.setItem('token', response.access_token)
         await fetchUserProfile()
         return { success: true }
-      } 
-      
+      }
+
       // Si l'API renvoie un besoin de vérification OTP
       if (response.require_otp) {
-        return { 
-          success: true, 
-          require_otp: true, 
+        return {
+          success: true,
+          require_otp: true,
           phone: credentials.phone,
-          user_id: response.user_id
+          user_id: response.user_id,
         }
       }
 
       return { success: true }
     } catch (err) {
-      error.value = err.message || "Erreur de connexion"
+      error.value = err.message || 'Erreur de connexion'
       return { success: false, error: error.value }
     } finally {
       loading.value = false
@@ -71,14 +71,14 @@ export const useAuthStore = defineStore("auth", () => {
       error.value = null
 
       const response = await register(userData)
-      
+
       // Si l'inscription nécessite une vérification OTP
       if (response?.require_otp) {
-        return { 
-          success: true, 
-          require_otp: true, 
+        return {
+          success: true,
+          require_otp: true,
           phone: userData.phone,
-          user_id: response.user_id
+          user_id: response.user_id,
         }
       }
 
@@ -101,7 +101,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       return userData
     } catch (err) {
-      error.value = err.message || "Erreur de chargement du profil"
+      error.value = err.message || 'Erreur de chargement du profil'
       logoutUser()
       return null
     } finally {
@@ -116,11 +116,11 @@ export const useAuthStore = defineStore("auth", () => {
 
       const response = await refreshToken()
       token.value = response.access_token
-      localStorage.setItem("token", response.access_token)
+      localStorage.setItem('token', response.access_token)
 
       return true
     } catch (err) {
-      error.value = err.message || "Erreur de rafraîchissement du token"
+      error.value = err.message || 'Erreur de rafraîchissement du token'
       logoutUser()
       return false
     } finally {
@@ -135,7 +135,7 @@ export const useAuthStore = defineStore("auth", () => {
     // Nettoyer l'état local
     user.value = null
     token.value = null
-    localStorage.removeItem("token")
+    localStorage.removeItem('token')
   }
 
   return {

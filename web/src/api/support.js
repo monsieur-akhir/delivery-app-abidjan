@@ -1,4 +1,3 @@
-
 import apiService from './apiService'
 
 export const supportAPI = {
@@ -22,7 +21,7 @@ export const supportAPI = {
   // Messages
   async getTicketMessages(ticketId, includeInternal = false) {
     return await apiService.get(`/support/tickets/${ticketId}/messages`, {
-      params: { include_internal: includeInternal }
+      params: { include_internal: includeInternal },
     })
   },
 
@@ -34,11 +33,11 @@ export const supportAPI = {
   async addAttachment(ticketId, file) {
     const formData = new FormData()
     formData.append('file', file)
-    
+
     return await apiService.post(`/support/tickets/${ticketId}/attachments`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     })
   },
 
@@ -67,26 +66,26 @@ export const supportAPI = {
   // Agents (pour l'assignation)
   async getAgents() {
     return await apiService.get('/users', {
-      params: { role: 'manager' }
+      params: { role: 'manager' },
     })
   },
 
   // Statistiques avancées
   async getTicketStatistics(period = 'month') {
     return await apiService.get('/support/statistics', {
-      params: { period }
+      params: { period },
     })
   },
 
   async getSatisfactionReports(period = 'month') {
     return await apiService.get('/support/satisfaction', {
-      params: { period }
+      params: { period },
     })
   },
 
   async getPerformanceMetrics() {
     return await apiService.get('/support/performance')
-  }
+  },
 }
 
 export default supportAPI

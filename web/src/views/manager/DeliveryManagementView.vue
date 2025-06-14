@@ -1,4 +1,3 @@
-
 <template>
   <div class="delivery-management">
     <div class="page-header">
@@ -60,12 +59,12 @@
     <div class="filters-section">
       <div class="search-box">
         <i class="fas fa-search"></i>
-        <input 
-          v-model="searchQuery" 
-          type="text" 
+        <input
+          v-model="searchQuery"
+          type="text"
           placeholder="Rechercher par ID, client, coursier..."
           @input="debouncedSearch"
-        >
+        />
       </div>
       <div class="filters">
         <select v-model="filters.status" @change="fetchDeliveries">
@@ -82,16 +81,8 @@
             {{ commune }}
           </option>
         </select>
-        <input 
-          v-model="filters.startDate" 
-          type="date" 
-          @change="fetchDeliveries"
-        >
-        <input 
-          v-model="filters.endDate" 
-          type="date" 
-          @change="fetchDeliveries"
-        >
+        <input v-model="filters.startDate" type="date" @change="fetchDeliveries" />
+        <input v-model="filters.endDate" type="date" @change="fetchDeliveries" />
       </div>
     </div>
 
@@ -101,18 +92,18 @@
         <div class="spinner"></div>
         <p>Chargement des livraisons...</p>
       </div>
-      
+
       <div v-else-if="error" class="error-state">
         <i class="fas fa-exclamation-triangle"></i>
         <p>{{ error }}</p>
         <button class="btn btn-primary" @click="fetchDeliveries">Réessayer</button>
       </div>
-      
+
       <div v-else-if="deliveries.length === 0" class="empty-state">
         <i class="fas fa-inbox"></i>
         <p>Aucune livraison trouvée</p>
       </div>
-      
+
       <table v-else class="deliveries-table">
         <thead>
           <tr>
@@ -131,11 +122,11 @@
             <td class="delivery-id">#{{ delivery.id }}</td>
             <td class="client-info">
               <div class="user-info">
-                <img 
-                  :src="delivery.client?.avatar || '/default-avatar.png'" 
+                <img
+                  :src="delivery.client?.avatar || '/default-avatar.png'"
                   :alt="delivery.client?.name"
                   class="user-avatar"
-                >
+                />
                 <div>
                   <div class="user-name">{{ delivery.client?.name || 'Inconnu' }}</div>
                   <div class="user-phone">{{ delivery.client?.phone || '' }}</div>
@@ -144,11 +135,11 @@
             </td>
             <td class="courier-info">
               <div v-if="delivery.courier" class="user-info">
-                <img 
-                  :src="delivery.courier.avatar || '/default-avatar.png'" 
+                <img
+                  :src="delivery.courier.avatar || '/default-avatar.png'"
                   :alt="delivery.courier.name"
                   class="user-avatar"
-                >
+                />
                 <div>
                   <div class="user-name">{{ delivery.courier.name }}</div>
                   <div class="user-rating">
@@ -179,23 +170,23 @@
             <td class="price">{{ formatPrice(delivery.price) }} FCFA</td>
             <td class="date">{{ formatDate(delivery.created_at) }}</td>
             <td class="actions">
-              <button 
-                class="btn-icon btn-primary" 
+              <button
+                class="btn-icon btn-primary"
                 @click="viewDelivery(delivery)"
                 title="Voir détails"
               >
                 <i class="fas fa-eye"></i>
               </button>
-              <button 
-                v-if="delivery.status === 'pending'" 
-                class="btn-icon btn-warning" 
+              <button
+                v-if="delivery.status === 'pending'"
+                class="btn-icon btn-warning"
                 @click="assignCourier(delivery)"
                 title="Assigner coursier"
               >
                 <i class="fas fa-user-plus"></i>
               </button>
-              <button 
-                class="btn-icon btn-danger" 
+              <button
+                class="btn-icon btn-danger"
                 @click="cancelDelivery(delivery)"
                 title="Annuler"
                 :disabled="delivery.status === 'completed' || delivery.status === 'cancelled'"
@@ -210,18 +201,16 @@
 
     <!-- Pagination -->
     <div v-if="totalPages > 1" class="pagination">
-      <button 
-        class="btn btn-outline" 
+      <button
+        class="btn btn-outline"
         :disabled="currentPage === 1"
         @click="changePage(currentPage - 1)"
       >
         <i class="fas fa-chevron-left"></i>
       </button>
-      <span class="page-info">
-        Page {{ currentPage }} sur {{ totalPages }}
-      </span>
-      <button 
-        class="btn btn-outline" 
+      <span class="page-info"> Page {{ currentPage }} sur {{ totalPages }} </span>
+      <button
+        class="btn btn-outline"
         :disabled="currentPage === totalPages"
         @click="changePage(currentPage + 1)"
       >
@@ -288,7 +277,11 @@
           <div class="detail-section">
             <h4>Historique</h4>
             <div class="timeline">
-              <div v-for="event in selectedDelivery.timeline || []" :key="event.id" class="timeline-item">
+              <div
+                v-for="event in selectedDelivery.timeline || []"
+                :key="event.id"
+                class="timeline-item"
+              >
                 <div class="timeline-icon">
                   <i :class="getTimelineIcon(event.type)"></i>
                 </div>
@@ -302,12 +295,10 @@
         </div>
       </template>
       <template #footer>
-        <button class="btn btn-outline" @click="selectedDelivery = null">
-          Fermer
-        </button>
-        <button 
+        <button class="btn btn-outline" @click="selectedDelivery = null">Fermer</button>
+        <button
           v-if="selectedDelivery.status !== 'completed' && selectedDelivery.status !== 'cancelled'"
-          class="btn btn-danger" 
+          class="btn btn-danger"
           @click="cancelDelivery(selectedDelivery)"
         >
           Annuler la livraison
@@ -328,18 +319,18 @@
               <p>Aucun coursier disponible dans la zone</p>
             </div>
             <div v-else class="couriers-list">
-              <div 
-                v-for="courier in availableCouriers" 
-                :key="courier.id" 
+              <div
+                v-for="courier in availableCouriers"
+                :key="courier.id"
                 class="courier-item"
                 :class="{ selected: selectedCourierId === courier.id }"
                 @click="selectedCourierId = courier.id"
               >
-                <img 
-                  :src="courier.avatar || '/default-avatar.png'" 
+                <img
+                  :src="courier.avatar || '/default-avatar.png'"
                   :alt="courier.name"
                   class="courier-avatar"
-                >
+                />
                 <div class="courier-info">
                   <div class="courier-name">{{ courier.name }}</div>
                   <div class="courier-rating">
@@ -348,20 +339,16 @@
                   </div>
                   <div class="courier-vehicle">{{ courier.vehicle_type }}</div>
                 </div>
-                <div class="courier-distance">
-                  {{ courier.distance || 'N/A' }} km
-                </div>
+                <div class="courier-distance">{{ courier.distance || 'N/A' }} km</div>
               </div>
             </div>
           </div>
         </div>
       </template>
       <template #footer>
-        <button class="btn btn-outline" @click="showAssignCourier = false">
-          Annuler
-        </button>
-        <button 
-          class="btn btn-primary" 
+        <button class="btn btn-outline" @click="showAssignCourier = false">Annuler</button>
+        <button
+          class="btn btn-primary"
           @click="confirmCourierAssignment"
           :disabled="!selectedCourierId"
         >
@@ -389,29 +376,29 @@
             </div>
             <div class="form-group">
               <label for="pickupAddress">Adresse de collecte</label>
-              <input 
+              <input
                 id="pickupAddress"
-                v-model="newDelivery.pickup_address" 
-                type="text" 
+                v-model="newDelivery.pickup_address"
+                type="text"
                 required
                 placeholder="Entrez l'adresse de collecte"
-              >
+              />
             </div>
             <div class="form-group">
               <label for="deliveryAddress">Adresse de livraison</label>
-              <input 
+              <input
                 id="deliveryAddress"
-                v-model="newDelivery.delivery_address" 
-                type="text" 
+                v-model="newDelivery.delivery_address"
+                type="text"
                 required
                 placeholder="Entrez l'adresse de livraison"
-              >
+              />
             </div>
             <div class="form-group">
               <label for="description">Description</label>
-              <textarea 
+              <textarea
                 id="description"
-                v-model="newDelivery.description" 
+                v-model="newDelivery.description"
                 placeholder="Description du colis (optionnel)"
               ></textarea>
             </div>
@@ -425,22 +412,14 @@
             </div>
             <div class="form-group">
               <label for="scheduledFor">Programmer pour (optionnel)</label>
-              <input 
-                id="scheduledFor"
-                v-model="newDelivery.scheduled_for" 
-                type="datetime-local"
-              >
+              <input id="scheduledFor" v-model="newDelivery.scheduled_for" type="datetime-local" />
             </div>
           </div>
         </form>
       </template>
       <template #footer>
-        <button class="btn btn-outline" @click="showCreateDelivery = false">
-          Annuler
-        </button>
-        <button class="btn btn-primary" @click="createDelivery">
-          Créer la Livraison
-        </button>
+        <button class="btn btn-outline" @click="showCreateDelivery = false">Annuler</button>
+        <button class="btn btn-primary" @click="createDelivery">Créer la Livraison</button>
       </template>
     </Modal>
   </div>
@@ -456,7 +435,7 @@ import { formatPrice, formatDate, formatDateTime } from '@/utils/formatters'
 export default {
   name: 'DeliveryManagementView',
   components: {
-    Modal
+    Modal,
   },
   setup() {
     // État réactif
@@ -472,8 +451,16 @@ export default {
     const selectedCourierId = ref(null)
     const clients = ref([])
     const communes = ref([
-      'Plateau', 'Cocody', 'Yopougon', 'Marcory', 'Treichville',
-      'Adjamé', 'Attécoubé', 'Koumassi', 'Port-Bouët', 'Abobo'
+      'Plateau',
+      'Cocody',
+      'Yopougon',
+      'Marcory',
+      'Treichville',
+      'Adjamé',
+      'Attécoubé',
+      'Koumassi',
+      'Port-Bouët',
+      'Abobo',
     ])
 
     // Pagination
@@ -486,7 +473,7 @@ export default {
       status: '',
       commune: '',
       startDate: '',
-      endDate: ''
+      endDate: '',
     })
 
     // Nouvelle livraison
@@ -496,7 +483,7 @@ export default {
       delivery_address: '',
       description: '',
       priority: 'normal',
-      scheduled_for: ''
+      scheduled_for: '',
     })
 
     // Computed
@@ -512,7 +499,7 @@ export default {
           page: currentPage.value,
           limit: pageSize.value,
           search: searchQuery.value,
-          ...filters
+          ...filters,
         }
 
         const response = await deliveriesApi.getAllDeliveries(params)
@@ -536,27 +523,27 @@ export default {
       fetchDeliveries()
     }
 
-    const changePage = (page) => {
+    const changePage = page => {
       currentPage.value = page
       fetchDeliveries()
     }
 
-    const viewDelivery = (delivery) => {
+    const viewDelivery = delivery => {
       selectedDelivery.value = delivery
     }
 
-    const assignCourier = async (delivery) => {
+    const assignCourier = async delivery => {
       try {
         selectedDelivery.value = delivery
         showAssignCourier.value = true
-        
+
         // Charger les coursiers disponibles
         const response = await deliveriesApi.getAvailableCouriers({
           pickup_lat: delivery.pickup_latitude,
           pickup_lng: delivery.pickup_longitude,
-          radius: 10
+          radius: 10,
         })
-        
+
         availableCouriers.value = response
       } catch (err) {
         console.error('Erreur lors du chargement des coursiers:', err)
@@ -567,37 +554,37 @@ export default {
     const confirmCourierAssignment = async () => {
       try {
         loading.value = true
-        
+
         await deliveriesApi.assignCourier(selectedDelivery.value.id, selectedCourierId.value)
-        
+
         showAssignCourier.value = false
         selectedCourierId.value = null
         selectedDelivery.value = null
-        
+
         await fetchDeliveries()
       } catch (err) {
-        console.error('Erreur lors de l\'assignation:', err)
-        error.value = 'Impossible d\'assigner le coursier'
+        console.error("Erreur lors de l'assignation:", err)
+        error.value = "Impossible d'assigner le coursier"
       } finally {
         loading.value = false
       }
     }
 
-    const cancelDelivery = async (delivery) => {
+    const cancelDelivery = async delivery => {
       if (!confirm('Êtes-vous sûr de vouloir annuler cette livraison ?')) {
         return
       }
 
       try {
         loading.value = true
-        
+
         await deliveriesApi.updateDeliveryStatus(delivery.id, 'cancelled')
-        
+
         selectedDelivery.value = null
         await fetchDeliveries()
       } catch (err) {
-        console.error('Erreur lors de l\'annulation:', err)
-        error.value = 'Impossible d\'annuler la livraison'
+        console.error("Erreur lors de l'annulation:", err)
+        error.value = "Impossible d'annuler la livraison"
       } finally {
         loading.value = false
       }
@@ -606,11 +593,11 @@ export default {
     const createDelivery = async () => {
       try {
         loading.value = true
-        
+
         await deliveriesApi.createDelivery(newDelivery)
-        
+
         showCreateDelivery.value = false
-        
+
         // Réinitialiser le formulaire
         Object.assign(newDelivery, {
           client_id: '',
@@ -618,9 +605,9 @@ export default {
           delivery_address: '',
           description: '',
           priority: 'normal',
-          scheduled_for: ''
+          scheduled_for: '',
         })
-        
+
         await fetchDeliveries()
       } catch (err) {
         console.error('Erreur lors de la création:', err)
@@ -631,29 +618,29 @@ export default {
     }
 
     // Utilitaires
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       const labels = {
         pending: 'En attente',
         accepted: 'Acceptée',
         in_progress: 'En cours',
         completed: 'Terminée',
-        cancelled: 'Annulée'
+        cancelled: 'Annulée',
       }
       return labels[status] || status
     }
 
-    const truncateAddress = (address) => {
+    const truncateAddress = address => {
       if (!address) return ''
       return address.length > 30 ? address.substring(0, 30) + '...' : address
     }
 
-    const getTimelineIcon = (type) => {
+    const getTimelineIcon = type => {
       const icons = {
         created: 'fas fa-plus',
         assigned: 'fas fa-user-check',
         pickup: 'fas fa-box',
         delivery: 'fas fa-check',
-        cancelled: 'fas fa-times'
+        cancelled: 'fas fa-times',
       }
       return icons[type] || 'fas fa-circle'
     }
@@ -699,9 +686,9 @@ export default {
       // Utilitaires
       formatPrice,
       formatDate,
-      formatDateTime
+      formatDateTime,
     }
-  }
+  },
 }
 </script>
 
@@ -745,7 +732,7 @@ export default {
   background: white;
   border-radius: 0.5rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
 }
@@ -760,10 +747,22 @@ export default {
   margin-right: 1rem;
 }
 
-.stat-icon.pending { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
-.stat-icon.progress { background: rgba(0, 123, 255, 0.1); color: #007bff; }
-.stat-icon.completed { background: rgba(40, 167, 69, 0.1); color: #28a745; }
-.stat-icon.revenue { background: rgba(108, 117, 125, 0.1); color: #6c757d; }
+.stat-icon.pending {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+.stat-icon.progress {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+.stat-icon.completed {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+.stat-icon.revenue {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
 
 .stat-content h3 {
   margin: 0 0 0.5rem;
@@ -782,7 +781,7 @@ export default {
   border-radius: 0.5rem;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-box {
@@ -823,7 +822,7 @@ export default {
 .deliveries-table-container {
   background: white;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -997,8 +996,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .pagination {
@@ -1036,7 +1039,7 @@ export default {
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn:disabled {
@@ -1242,33 +1245,33 @@ export default {
   .delivery-management {
     padding: 1rem;
   }
-  
+
   .page-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .stats-overview {
     grid-template-columns: 1fr;
   }
-  
+
   .filters {
     grid-template-columns: 1fr;
   }
-  
+
   .deliveries-table-container {
     overflow-x: auto;
   }
-  
+
   .deliveries-table {
     min-width: 800px;
   }
-  
+
   .detail-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .form-grid {
     grid-template-columns: 1fr;
   }

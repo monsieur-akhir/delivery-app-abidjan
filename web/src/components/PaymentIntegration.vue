@@ -15,9 +15,9 @@
       <div class="payment-methods" v-if="!selectedMethod">
         <h3 class="payment-title">Choisissez un moyen de paiement</h3>
         <div class="methods-grid">
-          <div 
-            v-for="method in availableMethods" 
-            :key="method.id" 
+          <div
+            v-for="method in availableMethods"
+            :key="method.id"
             class="payment-method-card"
             @click="selectPaymentMethod(method)"
           >
@@ -32,7 +32,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="payment-form" v-else>
         <div class="payment-header">
           <button class="btn-back" @click="selectedMethod = null">
@@ -41,17 +41,17 @@
           </button>
           <h3 class="payment-title">{{ selectedMethod.name }}</h3>
         </div>
-        
+
         <!-- Formulaire de carte de crédit -->
         <div v-if="selectedMethod.id === 'card'" class="card-form">
           <div class="form-group">
             <label for="card-number">Numéro de carte</label>
             <div class="card-number-input">
-              <input 
-                type="text" 
-                id="card-number" 
-                v-model="cardForm.number" 
-                placeholder="1234 5678 9012 3456" 
+              <input
+                type="text"
+                id="card-number"
+                v-model="cardForm.number"
+                placeholder="1234 5678 9012 3456"
                 maxlength="19"
                 @input="formatCardNumber"
               />
@@ -60,42 +60,37 @@
               </div>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="card-expiry">Date d'expiration</label>
-              <input 
-                type="text" 
-                id="card-expiry" 
-                v-model="cardForm.expiry" 
-                placeholder="MM/AA" 
+              <input
+                type="text"
+                id="card-expiry"
+                v-model="cardForm.expiry"
+                placeholder="MM/AA"
                 maxlength="5"
                 @input="formatCardExpiry"
               />
             </div>
             <div class="form-group">
               <label for="card-cvv">CVV</label>
-              <input 
-                type="text" 
-                id="card-cvv" 
-                v-model="cardForm.cvv" 
-                placeholder="123" 
+              <input
+                type="text"
+                id="card-cvv"
+                v-model="cardForm.cvv"
+                placeholder="123"
                 maxlength="4"
               />
             </div>
           </div>
-          
+
           <div class="form-group">
             <label for="card-name">Nom sur la carte</label>
-            <input 
-              type="text" 
-              id="card-name" 
-              v-model="cardForm.name" 
-              placeholder="JEAN DUPONT"
-            />
+            <input type="text" id="card-name" v-model="cardForm.name" placeholder="JEAN DUPONT" />
           </div>
         </div>
-        
+
         <!-- Formulaire de mobile money -->
         <div v-if="selectedMethod.id === 'mobile_money'" class="mobile-money-form">
           <div class="form-group">
@@ -108,31 +103,31 @@
               <option value="wave">Wave</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="mobile-number">Numéro de téléphone</label>
-            <input 
-              type="tel" 
-              id="mobile-number" 
-              v-model="mobileMoneyForm.number" 
+            <input
+              type="tel"
+              id="mobile-number"
+              v-model="mobileMoneyForm.number"
               placeholder="07 XX XX XX XX"
             />
           </div>
         </div>
-        
+
         <!-- Formulaire de paiement à la livraison -->
         <div v-if="selectedMethod.id === 'cash'" class="cash-form">
           <div class="cash-notice">
             <i class="fas fa-info-circle"></i>
             <p>Vous paierez le montant total au coursier lors de la livraison.</p>
           </div>
-          
+
           <div class="form-group">
             <label for="cash-amount">Montant à préparer</label>
             <div class="amount-display">{{ formatCurrency(amount) }}</div>
           </div>
         </div>
-        
+
         <div class="payment-summary">
           <div class="summary-row">
             <div class="summary-label">Sous-total</div>
@@ -147,10 +142,10 @@
             <div class="summary-value">{{ formatCurrency(amount) }}</div>
           </div>
         </div>
-        
+
         <div class="payment-actions">
-          <button 
-            class="btn btn-primary btn-pay" 
+          <button
+            class="btn btn-primary btn-pay"
             @click="processPayment"
             :disabled="!isPaymentFormValid || processing"
           >
@@ -164,57 +159,57 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'PaymentIntegration',
   props: {
     amount: {
       type: Number,
-      required: true
+      required: true,
     },
     currency: {
       type: String,
-      default: 'XOF'
+      default: 'XOF',
     },
     orderId: {
       type: String,
-      default: null
+      default: null,
     },
     customerEmail: {
       type: String,
-      default: null
+      default: null,
     },
     customerPhone: {
       type: String,
-      default: null
+      default: null,
     },
     description: {
       type: String,
-      default: 'Paiement de livraison'
-    }
+      default: 'Paiement de livraison',
+    },
   },
   emits: ['payment-success', 'payment-error', 'payment-cancel'],
   setup(props, { emit }) {
-    const loading = ref(true);
-    const error = ref(null);
-    const processing = ref(false);
-    const selectedMethod = ref(null);
-    
+    const loading = ref(true)
+    const error = ref(null)
+    const processing = ref(false)
+    const selectedMethod = ref(null)
+
     // Formulaire de carte de crédit
     const cardForm = ref({
       number: '',
       expiry: '',
       cvv: '',
-      name: ''
-    });
-    
+      name: '',
+    })
+
     // Formulaire de mobile money
     const mobileMoneyForm = ref({
       operator: '',
-      number: ''
-    });
-    
+      number: '',
+    })
+
     // Méthodes de paiement disponibles
     const availableMethods = ref([
       {
@@ -222,146 +217,146 @@ export default {
         name: 'Carte de crédit / débit',
         description: 'Visa, Mastercard, etc.',
         iconClass: 'fas fa-credit-card',
-        fees: 0
+        fees: 0,
       },
       {
         id: 'mobile_money',
         name: 'Mobile Money',
         description: 'Orange Money, MTN Mobile Money, etc.',
         iconClass: 'fas fa-mobile-alt',
-        fees: 100
+        fees: 100,
       },
       {
         id: 'cash',
         name: 'Paiement à la livraison',
         description: 'Payez en espèces à la réception',
         iconClass: 'fas fa-money-bill-wave',
-        fees: 0
-      }
-    ]);
-    
+        fees: 0,
+      },
+    ])
+
     // Sous-total (montant sans frais)
     const subtotal = computed(() => {
-      return props.amount;
-    });
-    
+      return props.amount
+    })
+
     // Frais de paiement
     const fees = computed(() => {
-      if (!selectedMethod.value) return 0;
-      return selectedMethod.value.fees || 0;
-    });
-    
+      if (!selectedMethod.value) return 0
+      return selectedMethod.value.fees || 0
+    })
+
     // Validation du formulaire de paiement
     const isPaymentFormValid = computed(() => {
-      if (!selectedMethod.value) return false;
-      
+      if (!selectedMethod.value) return false
+
       if (selectedMethod.value.id === 'card') {
         return (
           cardForm.value.number.replace(/\s/g, '').length === 16 &&
           cardForm.value.expiry.length === 5 &&
           cardForm.value.cvv.length >= 3 &&
           cardForm.value.name.trim().length > 0
-        );
+        )
       } else if (selectedMethod.value.id === 'mobile_money') {
         return (
           mobileMoneyForm.value.operator &&
           mobileMoneyForm.value.number.replace(/\s/g, '').length >= 10
-        );
+        )
       } else if (selectedMethod.value.id === 'cash') {
-        return true;
+        return true
       }
-      
-      return false;
-    });
-    
+
+      return false
+    })
+
     // Initialiser le système de paiement
     const initPayment = async () => {
-      loading.value = true;
-      error.value = null;
-      
+      loading.value = true
+      error.value = null
+
       try {
         // Dans un environnement réel, cette fonction initialiserait le système de paiement
         // Pour la démonstration, nous simulons un délai
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        loading.value = false;
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        loading.value = false
       } catch (err) {
-        console.error('Erreur lors de l\'initialisation du paiement:', err);
-        error.value = 'Impossible d\'initialiser le système de paiement. Veuillez réessayer.';
-        loading.value = false;
+        console.error("Erreur lors de l'initialisation du paiement:", err)
+        error.value = "Impossible d'initialiser le système de paiement. Veuillez réessayer."
+        loading.value = false
       }
-    };
-    
+    }
+
     // Sélectionner une méthode de paiement
-    const selectPaymentMethod = (method) => {
-      selectedMethod.value = method;
-    };
-    
+    const selectPaymentMethod = method => {
+      selectedMethod.value = method
+    }
+
     // Formater le numéro de carte
     const formatCardNumber = () => {
-      let value = cardForm.value.number.replace(/\s/g, '');
-      
+      let value = cardForm.value.number.replace(/\s/g, '')
+
       // Limiter à 16 chiffres
-      value = value.replace(/[^0-9]/g, '').substring(0, 16);
-      
+      value = value.replace(/[^0-9]/g, '').substring(0, 16)
+
       // Ajouter des espaces tous les 4 chiffres
-      const parts = [];
+      const parts = []
       for (let i = 0; i < value.length; i += 4) {
-        parts.push(value.substring(i, i + 4));
+        parts.push(value.substring(i, i + 4))
       }
-      
-      cardForm.value.number = parts.join(' ');
-    };
-    
+
+      cardForm.value.number = parts.join(' ')
+    }
+
     // Formater la date d'expiration
     const formatCardExpiry = () => {
-      let value = cardForm.value.expiry.replace(/[^0-9]/g, '');
-      
+      let value = cardForm.value.expiry.replace(/[^0-9]/g, '')
+
       if (value.length > 2) {
-        cardForm.value.expiry = value.substring(0, 2) + '/' + value.substring(2, 4);
+        cardForm.value.expiry = value.substring(0, 2) + '/' + value.substring(2, 4)
       } else {
-        cardForm.value.expiry = value;
+        cardForm.value.expiry = value
       }
-    };
-    
+    }
+
     // Obtenir l'icône du type de carte
     const getCardTypeIcon = () => {
-      const number = cardForm.value.number.replace(/\s/g, '');
-      
+      const number = cardForm.value.number.replace(/\s/g, '')
+
       if (number.startsWith('4')) {
-        return 'fab fa-cc-visa';
+        return 'fab fa-cc-visa'
       } else if (number.startsWith('5')) {
-        return 'fab fa-cc-mastercard';
+        return 'fab fa-cc-mastercard'
       } else if (number.startsWith('3')) {
-        return 'fab fa-cc-amex';
+        return 'fab fa-cc-amex'
       } else {
-        return 'fas fa-credit-card';
+        return 'fas fa-credit-card'
       }
-    };
-    
+    }
+
     // Formater la devise
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: props.currency,
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
     // Traiter le paiement
     const processPayment = async () => {
-      if (!isPaymentFormValid.value) return;
-      
-      processing.value = true;
-      
+      if (!isPaymentFormValid.value) return
+
+      processing.value = true
+
       try {
         // Dans un environnement réel, cette fonction appellerait l'API de paiement
         // Pour la démonstration, nous simulons un délai et un résultat aléatoire
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
         // Simuler un résultat aléatoire (80% de succès, 20% d'échec)
-        const success = Math.random() < 0.8;
-        
+        const success = Math.random() < 0.8
+
         if (success) {
           // Créer un objet de résultat de paiement
           const paymentResult = {
@@ -372,34 +367,34 @@ export default {
             status: 'success',
             date: new Date(),
             orderId: props.orderId,
-            transactionId: 'txn_' + Math.random().toString(36).substring(2, 15)
-          };
-          
+            transactionId: 'txn_' + Math.random().toString(36).substring(2, 15),
+          }
+
           // Émettre l'événement de succès
-          emit('payment-success', paymentResult);
+          emit('payment-success', paymentResult)
         } else {
           // Simuler une erreur
-          throw new Error('Transaction refusée par l\'émetteur de la carte');
+          throw new Error("Transaction refusée par l'émetteur de la carte")
         }
       } catch (err) {
-        console.error('Erreur lors du traitement du paiement:', err);
-        error.value = err.message || 'Une erreur est survenue lors du traitement du paiement';
-        emit('payment-error', { error: error.value });
+        console.error('Erreur lors du traitement du paiement:', err)
+        error.value = err.message || 'Une erreur est survenue lors du traitement du paiement'
+        emit('payment-error', { error: error.value })
       } finally {
-        processing.value = false;
+        processing.value = false
       }
-    };
-    
+    }
+
     // Annuler le paiement
     const cancelPayment = () => {
-      emit('payment-cancel');
-    };
-    
+      emit('payment-cancel')
+    }
+
     // Initialiser au montage du composant
     onMounted(() => {
-      initPayment();
-    });
-    
+      initPayment()
+    })
+
     return {
       loading,
       error,
@@ -418,10 +413,10 @@ export default {
       getCardTypeIcon,
       formatCurrency,
       processPayment,
-      cancelPayment
-    };
-  }
-};
+      cancelPayment,
+    }
+  },
+}
 </script>
 
 <style scoped>

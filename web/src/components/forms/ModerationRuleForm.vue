@@ -2,30 +2,32 @@
   <div class="moderation-rule-form">
     <div class="form-group">
       <label for="title" class="form-label">Titre <span class="required">*</span></label>
-      <input 
-        type="text" 
-        id="title" 
-        v-model="formData.title" 
-        class="form-input" 
+      <input
+        type="text"
+        id="title"
+        v-model="formData.title"
+        class="form-input"
         placeholder="Titre de la règle"
         required
       />
     </div>
-    
+
     <div class="form-group">
       <label for="description" class="form-label">Description</label>
-      <textarea 
-        id="description" 
-        v-model="formData.description" 
-        class="form-textarea" 
+      <textarea
+        id="description"
+        v-model="formData.description"
+        class="form-textarea"
         placeholder="Description détaillée de la règle"
         rows="3"
       ></textarea>
     </div>
-    
+
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="severity" class="form-label">Niveau de sévérité <span class="required">*</span></label>
+        <label for="severity" class="form-label"
+          >Niveau de sévérité <span class="required">*</span></label
+        >
         <select id="severity" v-model="formData.severity" class="form-select">
           <option value="low">Faible</option>
           <option value="medium">Moyen</option>
@@ -33,9 +35,11 @@
           <option value="critical">Critique</option>
         </select>
       </div>
-      
+
       <div class="form-group flex-1">
-        <label for="action" class="form-label">Action automatique <span class="required">*</span></label>
+        <label for="action" class="form-label"
+          >Action automatique <span class="required">*</span></label
+        >
         <select id="action" v-model="formData.action" class="form-select">
           <option value="warning">Avertissement</option>
           <option value="temporary_ban">Suspension temporaire</option>
@@ -44,19 +48,21 @@
         </select>
       </div>
     </div>
-    
+
     <div class="form-group" v-if="formData.action === 'temporary_ban'">
-      <label for="ban-duration" class="form-label">Durée de suspension (jours) <span class="required">*</span></label>
-      <input 
-        type="number" 
-        id="ban-duration" 
-        v-model.number="formData.ban_duration" 
-        class="form-input" 
+      <label for="ban-duration" class="form-label"
+        >Durée de suspension (jours) <span class="required">*</span></label
+      >
+      <input
+        type="number"
+        id="ban-duration"
+        v-model.number="formData.ban_duration"
+        class="form-input"
         min="1"
         required
       />
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">S'applique à <span class="required">*</span></label>
       <div class="checkbox-group">
@@ -77,7 +83,7 @@
         La règle doit s'appliquer à au moins un type d'utilisateur
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Statut</label>
       <div class="toggle-switch">
@@ -86,15 +92,10 @@
         <span class="toggle-label">{{ formData.active ? 'Actif' : 'Inactif' }}</span>
       </div>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isFormValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isFormValid">
         {{ isEditing ? 'Mettre à jour' : 'Créer' }}
       </button>
     </div>
@@ -102,15 +103,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'ModerationRuleForm',
   props: {
     rule: {
       type: Object,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
@@ -124,61 +125,65 @@ export default {
       applies_to: {
         clients: true,
         couriers: true,
-        businesses: true
-      }
-    });
-    
-    const isEditing = computed(() => !!props.rule?.id);
-    
+        businesses: true,
+      },
+    })
+
+    const isEditing = computed(() => !!props.rule?.id)
+
     const isAppliesValid = computed(() => {
-      return formData.value.applies_to.clients || 
-             formData.value.applies_to.couriers || 
-             formData.value.applies_to.businesses;
-    });
-    
+      return (
+        formData.value.applies_to.clients ||
+        formData.value.applies_to.couriers ||
+        formData.value.applies_to.businesses
+      )
+    })
+
     const isFormValid = computed(() => {
-      return formData.value.title.trim() !== '' && 
-             isAppliesValid.value && 
-             (formData.value.action !== 'temporary_ban' || formData.value.ban_duration > 0);
-    });
-    
+      return (
+        formData.value.title.trim() !== '' &&
+        isAppliesValid.value &&
+        (formData.value.action !== 'temporary_ban' || formData.value.ban_duration > 0)
+      )
+    })
+
     const initForm = () => {
       if (props.rule) {
-        formData.value = { ...props.rule };
+        formData.value = { ...props.rule }
       }
-    };
-    
+    }
+
     const save = () => {
-      if (!isFormValid.value) return;
-      
-      const ruleData = { ...formData.value };
-      
+      if (!isFormValid.value) return
+
+      const ruleData = { ...formData.value }
+
       // Si l'action n'est pas une suspension temporaire, la durée n'est pas nécessaire
       if (ruleData.action !== 'temporary_ban') {
-        ruleData.ban_duration = 0;
+        ruleData.ban_duration = 0
       }
-      
-      emit('save', ruleData);
-    };
-    
+
+      emit('save', ruleData)
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     onMounted(() => {
-      initForm();
-    });
-    
+      initForm()
+    })
+
     return {
       formData,
       isEditing,
       isAppliesValid,
       isFormValid,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

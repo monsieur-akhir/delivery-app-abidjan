@@ -1,4 +1,3 @@
-
 import apiService from './apiService'
 
 export const deliveriesApi = {
@@ -35,7 +34,9 @@ export const deliveriesApi = {
   },
 
   async assignCourier(deliveryId, courierId) {
-    const response = await apiService.post(`/api/v1/deliveries/${deliveryId}/assign`, { courier_id: courierId })
+    const response = await apiService.post(`/api/v1/deliveries/${deliveryId}/assign`, {
+      courier_id: courierId,
+    })
     return response.data
   },
 
@@ -62,7 +63,9 @@ export const deliveriesApi = {
   },
 
   async rejectBid(deliveryId, bidId, reason) {
-    const response = await apiService.post(`/api/v1/deliveries/${deliveryId}/reject-bid/${bidId}`, { reason })
+    const response = await apiService.post(`/api/v1/deliveries/${deliveryId}/reject-bid/${bidId}`, {
+      reason,
+    })
     return response.data
   },
 
@@ -101,7 +104,9 @@ export const deliveriesApi = {
   },
 
   async joinCollaborativeDelivery(id, message) {
-    const response = await apiService.post(`/api/v1/deliveries/collaborative/${id}/join`, { message })
+    const response = await apiService.post(`/api/v1/deliveries/collaborative/${id}/join`, {
+      message,
+    })
     return response.data
   },
 
@@ -120,7 +125,7 @@ export const deliveriesApi = {
   async sendDeliveryNotification(id, notification) {
     const response = await apiService.post(`/api/v1/deliveries/${id}/notify`, notification)
     return response.data
-  }
+  },
 }
 
 export default deliveriesApi

@@ -6,7 +6,7 @@
         {{ formatDateRange(startDate, endDate) }}
       </div>
     </div>
-    
+
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-icon">
@@ -17,7 +17,7 @@
           <div class="metric-label">Livraisons</div>
         </div>
       </div>
-      
+
       <div class="metric-card">
         <div class="metric-icon">
           <i class="fas fa-money-bill-wave"></i>
@@ -27,7 +27,7 @@
           <div class="metric-label">Gains</div>
         </div>
       </div>
-      
+
       <div class="metric-card">
         <div class="metric-icon">
           <i class="fas fa-star"></i>
@@ -36,16 +36,16 @@
           <div class="metric-value">{{ metrics.averageRating.toFixed(1) }}</div>
           <div class="metric-label">Note moyenne</div>
           <div class="rating-stars">
-            <i 
-              v-for="star in 5" 
-              :key="star" 
+            <i
+              v-for="star in 5"
+              :key="star"
               class="fas fa-star"
               :class="{ 'star-filled': star <= Math.round(metrics.averageRating) }"
             ></i>
           </div>
         </div>
       </div>
-      
+
       <div class="metric-card">
         <div class="metric-icon">
           <i class="fas fa-clock"></i>
@@ -56,7 +56,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="metrics-details">
       <div class="metrics-section">
         <h4 class="section-title">Répartition des livraisons</h4>
@@ -64,7 +64,7 @@
           <canvas ref="deliveryTypeChart"></canvas>
         </div>
       </div>
-      
+
       <div class="metrics-section">
         <h4 class="section-title">Performance par jour</h4>
         <div class="chart-container">
@@ -72,7 +72,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="metrics-details">
       <div class="metrics-section">
         <h4 class="section-title">Statistiques détaillées</h4>
@@ -81,44 +81,44 @@
             <div class="stat-label">Taux d'acceptation</div>
             <div class="stat-value">{{ metrics.acceptanceRate.toFixed(1) }}%</div>
             <div class="progress-bar">
-              <div 
-                class="progress-value" 
+              <div
+                class="progress-value"
                 :style="{ width: `${metrics.acceptanceRate}%` }"
                 :class="getProgressClass(metrics.acceptanceRate)"
               ></div>
             </div>
           </div>
-          
+
           <div class="stat-item">
             <div class="stat-label">Taux de complétion</div>
             <div class="stat-value">{{ metrics.completionRate.toFixed(1) }}%</div>
             <div class="progress-bar">
-              <div 
-                class="progress-value" 
+              <div
+                class="progress-value"
                 :style="{ width: `${metrics.completionRate}%` }"
                 :class="getProgressClass(metrics.completionRate)"
               ></div>
             </div>
           </div>
-          
+
           <div class="stat-item">
             <div class="stat-label">Livraisons à l'heure</div>
             <div class="stat-value">{{ metrics.onTimeRate.toFixed(1) }}%</div>
             <div class="progress-bar">
-              <div 
-                class="progress-value" 
+              <div
+                class="progress-value"
                 :style="{ width: `${metrics.onTimeRate}%` }"
                 :class="getProgressClass(metrics.onTimeRate)"
               ></div>
             </div>
           </div>
-          
+
           <div class="stat-item">
             <div class="stat-label">Satisfaction client</div>
             <div class="stat-value">{{ metrics.customerSatisfaction.toFixed(1) }}%</div>
             <div class="progress-bar">
-              <div 
-                class="progress-value" 
+              <div
+                class="progress-value"
                 :style="{ width: `${metrics.customerSatisfaction}%` }"
                 :class="getProgressClass(metrics.customerSatisfaction)"
               ></div>
@@ -126,20 +126,16 @@
           </div>
         </div>
       </div>
-      
+
       <div class="metrics-section">
         <h4 class="section-title">Commentaires récents</h4>
         <div class="reviews-list">
-          <div 
-            v-for="(review, index) in metrics.recentReviews" 
-            :key="index" 
-            class="review-item"
-          >
+          <div v-for="(review, index) in metrics.recentReviews" :key="index" class="review-item">
             <div class="review-header">
               <div class="review-rating">
-                <i 
-                  v-for="star in 5" 
-                  :key="star" 
+                <i
+                  v-for="star in 5"
+                  :key="star"
                   class="fas fa-star"
                   :class="{ 'star-filled': star <= review.rating }"
                 ></i>
@@ -156,28 +152,28 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import Chart from 'chart.js/auto';
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import Chart from 'chart.js/auto'
 
 export default {
   name: 'CourierPerformanceMetrics',
   props: {
     courierId: {
       type: [Number, String],
-      required: true
+      required: true,
     },
     startDate: {
       type: Date,
       default: () => {
-        const date = new Date();
-        date.setDate(date.getDate() - 30);
-        return date;
-      }
+        const date = new Date()
+        date.setDate(date.getDate() - 30)
+        return date
+      },
     },
     endDate: {
       type: Date,
-      default: () => new Date()
-    }
+      default: () => new Date(),
+    },
   },
   setup(props) {
     const metrics = ref({
@@ -191,101 +187,103 @@ export default {
       customerSatisfaction: 0,
       deliveryTypes: {},
       dailyPerformance: [],
-      recentReviews: []
-    });
-    
+      recentReviews: [],
+    })
+
     // Références aux éléments canvas pour les graphiques
-    const deliveryTypeChart = ref(null);
-    const dailyPerformanceChart = ref(null);
-    
+    const deliveryTypeChart = ref(null)
+    const dailyPerformanceChart = ref(null)
+
     // Instances des graphiques
-    let deliveryTypeChartInstance = null;
-    let dailyPerformanceChartInstance = null;
-    
+    let deliveryTypeChartInstance = null
+    let dailyPerformanceChartInstance = null
+
     // Charger les données
     const loadData = async () => {
       try {
         // Dans un environnement réel, ces données viendraient de l'API
         // Pour la démonstration, nous utilisons des données fictives
-        const mockData = generateMockData();
-        
+        const mockData = generateMockData()
+
         // Mettre à jour les métriques
-        metrics.value = mockData;
-        
+        metrics.value = mockData
+
         // Mettre à jour les graphiques
-        updateCharts();
+        updateCharts()
       } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
+        console.error('Erreur lors du chargement des données:', error)
       }
-    };
-    
+    }
+
     // Mettre à jour les graphiques
     const updateCharts = () => {
       // Mettre à jour le graphique des types de livraison
-      updateDeliveryTypeChart();
-      
+      updateDeliveryTypeChart()
+
       // Mettre à jour le graphique de performance quotidienne
-      updateDailyPerformanceChart();
-    };
-    
+      updateDailyPerformanceChart()
+    }
+
     // Mettre à jour le graphique des types de livraison
     const updateDeliveryTypeChart = () => {
       if (deliveryTypeChartInstance) {
-        deliveryTypeChartInstance.destroy();
+        deliveryTypeChartInstance.destroy()
       }
-      
-      const ctx = deliveryTypeChart.value.getContext('2d');
-      
-      const labels = Object.keys(metrics.value.deliveryTypes);
-      const values = Object.values(metrics.value.deliveryTypes);
-      
+
+      const ctx = deliveryTypeChart.value.getContext('2d')
+
+      const labels = Object.keys(metrics.value.deliveryTypes)
+      const values = Object.values(metrics.value.deliveryTypes)
+
       deliveryTypeChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: [
-              'rgba(79, 70, 229, 0.7)',
-              'rgba(16, 185, 129, 0.7)',
-              'rgba(245, 158, 11, 0.7)',
-              'rgba(239, 68, 68, 0.7)',
-              'rgba(59, 130, 246, 0.7)'
-            ],
-            borderWidth: 1
-          }]
+          datasets: [
+            {
+              data: values,
+              backgroundColor: [
+                'rgba(79, 70, 229, 0.7)',
+                'rgba(16, 185, 129, 0.7)',
+                'rgba(245, 158, 11, 0.7)',
+                'rgba(239, 68, 68, 0.7)',
+                'rgba(59, 130, 246, 0.7)',
+              ],
+              borderWidth: 1,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'right'
+              position: 'right',
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  const label = context.label || '';
-                  const value = context.raw;
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = Math.round((value / total) * 100);
-                  return `${label}: ${value} (${percentage}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                label: function (context) {
+                  const label = context.label || ''
+                  const value = context.raw
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                  const percentage = Math.round((value / total) * 100)
+                  return `${label}: ${value} (${percentage}%)`
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
     // Mettre à jour le graphique de performance quotidienne
     const updateDailyPerformanceChart = () => {
       if (dailyPerformanceChartInstance) {
-        dailyPerformanceChartInstance.destroy();
+        dailyPerformanceChartInstance.destroy()
       }
-      
-      const ctx = dailyPerformanceChart.value.getContext('2d');
-      
+
+      const ctx = dailyPerformanceChart.value.getContext('2d')
+
       dailyPerformanceChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -297,7 +295,7 @@ export default {
               borderColor: 'rgba(79, 70, 229, 1)',
               backgroundColor: 'rgba(79, 70, 229, 0.1)',
               tension: 0.4,
-              fill: true
+              fill: true,
             },
             {
               label: 'Gains (XOF)',
@@ -305,9 +303,9 @@ export default {
               borderColor: 'rgba(16, 185, 129, 1)',
               backgroundColor: 'transparent',
               tension: 0.4,
-              yAxisID: 'y1'
-            }
-          ]
+              yAxisID: 'y1',
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -317,161 +315,161 @@ export default {
               mode: 'index',
               intersect: false,
               callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
+                label: function (context) {
+                  let label = context.dataset.label || ''
                   if (label) {
-                    label += ': ';
+                    label += ': '
                   }
                   if (context.datasetIndex === 1) {
-                    return label + formatCurrency(context.raw);
+                    return label + formatCurrency(context.raw)
                   }
-                  return label + context.raw;
-                }
-              }
-            }
+                  return label + context.raw
+                },
+              },
+            },
           },
           scales: {
             x: {
               grid: {
-                display: false
-              }
+                display: false,
+              },
             },
             y: {
               beginAtZero: true,
               grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
+                color: 'rgba(0, 0, 0, 0.05)',
               },
               title: {
                 display: true,
-                text: 'Livraisons'
-              }
+                text: 'Livraisons',
+              },
             },
             y1: {
               beginAtZero: true,
               position: 'right',
               grid: {
-                display: false
+                display: false,
               },
               title: {
                 display: true,
-                text: 'Gains (XOF)'
+                text: 'Gains (XOF)',
               },
               ticks: {
-                callback: function(value) {
-                  return formatCurrency(value, true);
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                callback: function (value) {
+                  return formatCurrency(value, true)
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
     // Formater la devise
     const formatCurrency = (amount, short = false) => {
       if (short) {
         if (amount >= 1000000) {
-          return (amount / 1000000).toFixed(1) + ' M';
+          return (amount / 1000000).toFixed(1) + ' M'
         } else if (amount >= 1000) {
-          return (amount / 1000).toFixed(1) + ' k';
+          return (amount / 1000).toFixed(1) + ' k'
         }
-        return amount.toString();
+        return amount.toString()
       }
-      
+
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
     // Formater le temps
-    const formatTime = (minutes) => {
+    const formatTime = minutes => {
       if (minutes < 60) {
-        return `${minutes} min`;
+        return `${minutes} min`
       } else {
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-        return `${hours} h ${remainingMinutes > 0 ? remainingMinutes + ' min' : ''}`;
+        const hours = Math.floor(minutes / 60)
+        const remainingMinutes = minutes % 60
+        return `${hours} h ${remainingMinutes > 0 ? remainingMinutes + ' min' : ''}`
       }
-    };
-    
+    }
+
     // Formater la date
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
+    const formatDate = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
-      });
-    };
-    
+        year: 'numeric',
+      })
+    }
+
     // Formater la plage de dates
     const formatDateRange = (startDate, endDate) => {
-      const start = formatDate(startDate);
-      const end = formatDate(endDate);
-      return `${start} - ${end}`;
-    };
-    
+      const start = formatDate(startDate)
+      const end = formatDate(endDate)
+      return `${start} - ${end}`
+    }
+
     // Obtenir la classe CSS pour une barre de progression
-    const getProgressClass = (value) => {
-      if (value >= 90) return 'progress-excellent';
-      if (value >= 75) return 'progress-good';
-      if (value >= 50) return 'progress-average';
-      return 'progress-poor';
-    };
-    
+    const getProgressClass = value => {
+      if (value >= 90) return 'progress-excellent'
+      if (value >= 75) return 'progress-good'
+      if (value >= 50) return 'progress-average'
+      return 'progress-poor'
+    }
+
     // Générer des données fictives pour la démonstration
     const generateMockData = () => {
       // Générer des dates pour les 7 derniers jours
-      const dates = [];
+      const dates = []
       for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        dates.push(date.toISOString().split('T')[0]);
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        dates.push(date.toISOString().split('T')[0])
       }
-      
+
       // Générer des données de performance quotidienne
       const dailyPerformance = dates.map(date => ({
         date,
         deliveries: Math.floor(Math.random() * 8) + 1,
-        earnings: Math.floor(Math.random() * 30000) + 5000
-      }));
-      
+        earnings: Math.floor(Math.random() * 30000) + 5000,
+      }))
+
       // Générer des données de types de livraison
       const deliveryTypes = {
-        'Standard': Math.floor(Math.random() * 30) + 10,
-        'Express': Math.floor(Math.random() * 20) + 5,
-        'Collaboratif': Math.floor(Math.random() * 10) + 2,
-        'Programmé': Math.floor(Math.random() * 5) + 1
-      };
-      
+        Standard: Math.floor(Math.random() * 30) + 10,
+        Express: Math.floor(Math.random() * 20) + 5,
+        Collaboratif: Math.floor(Math.random() * 10) + 2,
+        Programmé: Math.floor(Math.random() * 5) + 1,
+      }
+
       // Générer des commentaires récents
       const comments = [
         'Très bon service, livraison rapide et coursier aimable.',
         'Livraison effectuée dans les délais, merci !',
         'Le coursier était très professionnel.',
         'Bonne communication et service impeccable.',
-        'Un peu de retard mais le coursier a été très gentil.'
-      ];
-      
-      const recentReviews = [];
+        'Un peu de retard mais le coursier a été très gentil.',
+      ]
+
+      const recentReviews = []
       for (let i = 0; i < 3; i++) {
-        const date = new Date();
-        date.setDate(date.getDate() - Math.floor(Math.random() * 7));
-        
+        const date = new Date()
+        date.setDate(date.getDate() - Math.floor(Math.random() * 7))
+
         recentReviews.push({
           rating: Math.floor(Math.random() * 2) + 4,
           comment: comments[Math.floor(Math.random() * comments.length)],
           date: date.toISOString(),
-          deliveryId: Math.floor(Math.random() * 1000) + 100
-        });
+          deliveryId: Math.floor(Math.random() * 1000) + 100,
+        })
       }
-      
+
       // Calculer les totaux
-      const totalDeliveries = dailyPerformance.reduce((sum, item) => sum + item.deliveries, 0);
-      const totalEarnings = dailyPerformance.reduce((sum, item) => sum + item.earnings, 0);
-      
+      const totalDeliveries = dailyPerformance.reduce((sum, item) => sum + item.deliveries, 0)
+      const totalEarnings = dailyPerformance.reduce((sum, item) => sum + item.earnings, 0)
+
       return {
         totalDeliveries,
         totalEarnings,
@@ -483,22 +481,22 @@ export default {
         customerSatisfaction: 94.2,
         deliveryTypes,
         dailyPerformance,
-        recentReviews
-      };
-    };
-    
+        recentReviews,
+      }
+    }
+
     // Initialiser au montage du composant
     onMounted(() => {
-      loadData();
-    });
-    
+      loadData()
+    })
+
     // Nettoyer les ressources au démontage du composant
     onUnmounted(() => {
       // Détruire les instances de graphiques
-      if (deliveryTypeChartInstance) deliveryTypeChartInstance.destroy();
-      if (dailyPerformanceChartInstance) dailyPerformanceChartInstance.destroy();
-    });
-    
+      if (deliveryTypeChartInstance) deliveryTypeChartInstance.destroy()
+      if (dailyPerformanceChartInstance) dailyPerformanceChartInstance.destroy()
+    })
+
     return {
       metrics,
       deliveryTypeChart,
@@ -507,10 +505,10 @@ export default {
       formatTime,
       formatDate,
       formatDateRange,
-      getProgressClass
-    };
-  }
-};
+      getProgressClass,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -726,11 +724,11 @@ export default {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .metrics-period {
     margin-top: 0.5rem;
   }
-  
+
   .metrics-details {
     grid-template-columns: 1fr;
   }

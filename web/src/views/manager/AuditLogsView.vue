@@ -51,12 +51,12 @@
         <div class="filter-group">
           <label for="search-filter">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search-filter" 
-              v-model="filters.search" 
-              class="form-control" 
-              placeholder="Description..." 
+            <input
+              type="text"
+              id="search-filter"
+              v-model="filters.search"
+              class="form-control"
+              placeholder="Description..."
               @input="debounceSearch"
             />
             <font-awesome-icon icon="search" />
@@ -94,7 +94,11 @@
             <td>
               <div class="user-info">
                 <div class="user-avatar">
-                  <img v-if="log.user.profile_picture" :src="log.user.profile_picture" :alt="log.user.name" />
+                  <img
+                    v-if="log.user.profile_picture"
+                    :src="log.user.profile_picture"
+                    :alt="log.user.name"
+                  />
                   <div v-else class="avatar-placeholder">{{ getInitials(log.user.name) }}</div>
                 </div>
                 <span>{{ log.user.name }}</span>
@@ -113,27 +117,23 @@
 
       <!-- Pagination -->
       <div class="pagination">
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === 1" 
-          @click="changePage(currentPage - 1)"
-        >
+        <button class="btn-page" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
           <font-awesome-icon icon="chevron-left" />
         </button>
-        
-        <button 
-          v-for="page in displayedPages" 
-          :key="page" 
-          class="btn-page" 
+
+        <button
+          v-for="page in displayedPages"
+          :key="page"
+          class="btn-page"
           :class="{ active: currentPage === page }"
           @click="changePage(page)"
         >
           {{ page }}
         </button>
-        
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === totalPages" 
+
+        <button
+          class="btn-page"
+          :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
           <font-awesome-icon icon="chevron-right" />
@@ -169,7 +169,7 @@ export default {
   name: 'AuditLogsView',
   setup() {
     const router = useRouter()
-    
+
     // État
     const auditLogs = ref([])
     const users = ref([])
@@ -178,15 +178,15 @@ export default {
     const totalPages = ref(1)
     const itemsPerPage = ref(10)
     const totalItems = ref(0)
-    
+
     const filters = reactive({
       userId: '',
       action: '',
       startDate: '',
       endDate: '',
-      search: ''
+      search: '',
     })
-    
+
     // Méthodes
     const fetchData = async () => {
       loading.value = true
@@ -198,21 +198,21 @@ export default {
           action: filters.action,
           start_date: filters.startDate,
           end_date: filters.endDate,
-          search: filters.search
+          search: filters.search,
         }
-        
+
         const response = await fetchAuditLogs(params)
         auditLogs.value = response.items
         totalItems.value = response.total
         totalPages.value = response.pages
       } catch (error) {
-        console.error('Erreur lors du chargement des logs d\'audit:', error)
+        console.error("Erreur lors du chargement des logs d'audit:", error)
         // Gérer l'erreur (afficher une notification, etc.)
       } finally {
         loading.value = false
       }
     }
-    
+
     const fetchAllUsers = async () => {
       try {
         const response = await fetchUsers()
@@ -221,16 +221,16 @@ export default {
         console.error('Erreur lors du chargement des utilisateurs:', error)
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const applyFilters = () => {
       currentPage.value = 1
       fetchData()
     }
-    
+
     const resetFilters = () => {
       filters.userId = ''
       filters.action = ''
@@ -240,19 +240,19 @@ export default {
       currentPage.value = 1
       fetchData()
     }
-    
-    const changePage = (page) => {
+
+    const changePage = page => {
       currentPage.value = page
       fetchData()
     }
-    
+
     const exportData = () => {
       // Implémenter l'exportation des données (CSV, Excel, etc.)
       console.log('Exporter les données')
     }
-    
+
     // Utilitaires
-    const getInitials = (name) => {
+    const getInitials = name => {
       if (!name) return '?'
       return name
         .split(' ')
@@ -261,34 +261,34 @@ export default {
         .toUpperCase()
         .substring(0, 2)
     }
-    
-    const getActionClass = (action) => {
+
+    const getActionClass = action => {
       const actionMap = {
         create: 'action-create',
         update: 'action-update',
         delete: 'action-delete',
         login: 'action-login',
-        logout: 'action-logout'
+        logout: 'action-logout',
       }
       return actionMap[action] || 'action-unknown'
     }
-    
-    const getActionLabel = (action) => {
+
+    const getActionLabel = action => {
       const actionMap = {
         create: 'Création',
         update: 'Mise à jour',
         delete: 'Suppression',
         login: 'Connexion',
-        logout: 'Déconnexion'
+        logout: 'Déconnexion',
       }
       return actionMap[action] || 'Inconnu'
     }
-    
+
     // Pagination calculée
     const displayedPages = computed(() => {
       const pages = []
       const maxVisiblePages = 5
-      
+
       if (totalPages.value <= maxVisiblePages) {
         // Afficher toutes les pages si le nombre total est inférieur ou égal au maximum visible
         for (let i = 1; i <= totalPages.value; i++) {
@@ -298,20 +298,20 @@ export default {
         // Calculer les pages à afficher
         let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
         let endPage = startPage + maxVisiblePages - 1
-        
+
         if (endPage > totalPages.value) {
           endPage = totalPages.value
           startPage = Math.max(1, endPage - maxVisiblePages + 1)
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
       }
-      
+
       return pages
     })
-    
+
     // Debounce pour la recherche
     let searchTimeout = null
     const debounceSearch = () => {
@@ -320,18 +320,18 @@ export default {
         applyFilters()
       }, 500)
     }
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
       fetchAllUsers()
     })
-    
+
     // Surveiller les changements de page
     watch(currentPage, () => {
       fetchData()
     })
-    
+
     return {
       auditLogs,
       users,
@@ -342,24 +342,24 @@ export default {
       totalItems,
       filters,
       displayedPages,
-      
+
       fetchData,
       refreshData,
       applyFilters,
       resetFilters,
       changePage,
       exportData,
-      
+
       getInitials,
       getActionClass,
       getActionLabel,
-      
+
       formatCurrency,
       formatDate,
       formatDateTime,
-      debounceSearch
+      debounceSearch,
     }
-  }
+  },
 }
 </script>
 
@@ -693,7 +693,7 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filter-group {
     min-width: 100%;
   }

@@ -22,15 +22,19 @@
           <font-awesome-icon :icon="mobileMenuOpen ? 'times' : 'bars'" />
         </button>
       </div>
-      <div class="mobile-menu" :class="{ 'open': mobileMenuOpen }">
+      <div class="mobile-menu" :class="{ open: mobileMenuOpen }">
         <ul>
           <li><a href="#features" @click="closeMobileMenu">Fonctionnalités</a></li>
           <li><a href="#how-it-works" @click="closeMobileMenu">Comment ça marche</a></li>
           <li><a href="#pricing" @click="closeMobileMenu">Tarifs</a></li>
           <li><a href="#contact" @click="closeMobileMenu">Contact</a></li>
           <li class="mobile-auth">
-            <router-link to="/login" class="btn btn-outline" @click="closeMobileMenu">Connexion</router-link>
-            <router-link to="/register" class="btn btn-primary" @click="closeMobileMenu">Inscription</router-link>
+            <router-link to="/login" class="btn btn-outline" @click="closeMobileMenu"
+              >Connexion</router-link
+            >
+            <router-link to="/register" class="btn btn-primary" @click="closeMobileMenu"
+              >Inscription</router-link
+            >
           </li>
         </ul>
       </div>
@@ -40,9 +44,14 @@
       <div class="container">
         <div class="hero-content">
           <h1>Livraison rapide et fiable à Abidjan</h1>
-          <p>Faites livrer vos colis, repas et courses en quelques clics. Notre réseau de coursiers est disponible 24/7 pour vous servir.</p>
+          <p>
+            Faites livrer vos colis, repas et courses en quelques clics. Notre réseau de coursiers
+            est disponible 24/7 pour vous servir.
+          </p>
           <div class="hero-buttons">
-            <router-link to="/register" class="btn btn-primary btn-lg">Commencer maintenant</router-link>
+            <router-link to="/register" class="btn btn-primary btn-lg"
+              >Commencer maintenant</router-link
+            >
             <a href="#how-it-works" class="btn btn-outline btn-lg">En savoir plus</a>
           </div>
         </div>
@@ -64,21 +73,29 @@
               <font-awesome-icon icon="map-marked-alt" />
             </div>
             <h3>Suivi en temps réel</h3>
-            <p>Suivez votre livraison en temps réel sur la carte et recevez des notifications à chaque étape.</p>
+            <p>
+              Suivez votre livraison en temps réel sur la carte et recevez des notifications à
+              chaque étape.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
               <font-awesome-icon icon="hand-holding-usd" />
             </div>
             <h3>Paiement sécurisé</h3>
-            <p>Payez en toute sécurité via Orange Money, MTN Mobile Money ou en espèces à la livraison.</p>
+            <p>
+              Payez en toute sécurité via Orange Money, MTN Mobile Money ou en espèces à la
+              livraison.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
               <font-awesome-icon icon="store" />
             </div>
             <h3>Marketplace intégrée</h3>
-            <p>Commandez directement auprès de nos commerçants partenaires et faites-vous livrer.</p>
+            <p>
+              Commandez directement auprès de nos commerçants partenaires et faites-vous livrer.
+            </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
@@ -116,7 +133,10 @@
             <div class="step-number">1</div>
             <div class="step-content">
               <h3>Créez votre demande</h3>
-              <p>Remplissez le formulaire avec les détails de votre livraison : adresse de ramassage, adresse de livraison et description du colis.</p>
+              <p>
+                Remplissez le formulaire avec les détails de votre livraison : adresse de ramassage,
+                adresse de livraison et description du colis.
+              </p>
             </div>
             <div class="step-image">
               <img src="@/assets/step1.png" alt="Créez votre demande" />
@@ -126,7 +146,10 @@
             <div class="step-number">2</div>
             <div class="step-content">
               <h3>Choisissez votre coursier</h3>
-              <p>Recevez des offres de nos coursiers et choisissez celui qui vous convient le mieux en fonction du prix et des évaluations.</p>
+              <p>
+                Recevez des offres de nos coursiers et choisissez celui qui vous convient le mieux
+                en fonction du prix et des évaluations.
+              </p>
             </div>
             <div class="step-image">
               <img src="@/assets/step2.png" alt="Choisissez votre coursier" />
@@ -136,7 +159,10 @@
             <div class="step-number">3</div>
             <div class="step-content">
               <h3>Suivez votre livraison</h3>
-              <p>Suivez votre livraison en temps réel sur la carte et recevez des notifications à chaque étape jusqu'à la livraison.</p>
+              <p>
+                Suivez votre livraison en temps réel sur la carte et recevez des notifications à
+                chaque étape jusqu'à la livraison.
+              </p>
             </div>
             <div class="step-image">
               <img src="@/assets/step3.png" alt="Suivez votre livraison" />
@@ -187,7 +213,9 @@
               </ul>
             </div>
             <div class="pricing-footer">
-              <router-link to="/register" class="btn btn-outline btn-block">Choisir ce plan</router-link>
+              <router-link to="/register" class="btn btn-outline btn-block"
+                >Choisir ce plan</router-link
+              >
             </div>
           </div>
           <div class="pricing-card featured">
@@ -225,7 +253,9 @@
               </ul>
             </div>
             <div class="pricing-footer">
-              <router-link to="/register" class="btn btn-primary btn-block">Choisir ce plan</router-link>
+              <router-link to="/register" class="btn btn-primary btn-block"
+                >Choisir ce plan</router-link
+              >
             </div>
           </div>
           <div class="pricing-card">
@@ -272,7 +302,10 @@
       <div class="container">
         <div class="app-download-content">
           <h2>Téléchargez notre application mobile</h2>
-          <p>Profitez de toutes nos fonctionnalités directement depuis votre smartphone. Notre application est disponible sur iOS et Android.</p>
+          <p>
+            Profitez de toutes nos fonctionnalités directement depuis votre smartphone. Notre
+            application est disponible sur iOS et Android.
+          </p>
           <div class="app-buttons">
             <a href="#" class="app-button">
               <img src="@/assets/app-store.png" alt="App Store" />
@@ -342,19 +375,43 @@
             <form @submit.prevent="submitContactForm">
               <div class="form-group">
                 <label for="name">Nom complet</label>
-                <input type="text" id="name" v-model="contactForm.name" class="form-control" required />
+                <input
+                  type="text"
+                  id="name"
+                  v-model="contactForm.name"
+                  class="form-control"
+                  required
+                />
               </div>
               <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" v-model="contactForm.email" class="form-control" required />
+                <input
+                  type="email"
+                  id="email"
+                  v-model="contactForm.email"
+                  class="form-control"
+                  required
+                />
               </div>
               <div class="form-group">
                 <label for="subject">Sujet</label>
-                <input type="text" id="subject" v-model="contactForm.subject" class="form-control" required />
+                <input
+                  type="text"
+                  id="subject"
+                  v-model="contactForm.subject"
+                  class="form-control"
+                  required
+                />
               </div>
               <div class="form-group">
                 <label for="message">Message</label>
-                <textarea id="message" v-model="contactForm.message" class="form-control" rows="5" required></textarea>
+                <textarea
+                  id="message"
+                  v-model="contactForm.message"
+                  class="form-control"
+                  rows="5"
+                  required
+                ></textarea>
               </div>
               <button type="submit" class="btn btn-primary btn-block" :disabled="contactLoading">
                 <font-awesome-icon icon="spinner" spin v-if="contactLoading" class="mr-1" />
@@ -434,19 +491,19 @@ export default {
   setup() {
     const mobileMenuOpen = ref(false)
     const contactLoading = ref(false)
-    
+
     const contactForm = reactive({
       name: '',
       email: '',
       subject: '',
-      message: ''
+      message: '',
     })
-    
+
     const currentYear = computed(() => new Date().getFullYear())
-    
+
     const toggleMobileMenu = () => {
       mobileMenuOpen.value = !mobileMenuOpen.value
-      
+
       // Empêcher le défilement du body quand le menu est ouvert
       if (mobileMenuOpen.value) {
         document.body.style.overflow = 'hidden'
@@ -454,34 +511,36 @@ export default {
         document.body.style.overflow = ''
       }
     }
-    
+
     const closeMobileMenu = () => {
       mobileMenuOpen.value = false
       document.body.style.overflow = ''
     }
-    
+
     const submitContactForm = async () => {
       try {
         contactLoading.value = true
-        
+
         // Simuler l'envoi du formulaire
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Réinitialiser le formulaire
         contactForm.name = ''
         contactForm.email = ''
         contactForm.subject = ''
         contactForm.message = ''
-        
+
         // Afficher un message de succès
-        alert('Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.')
+        alert(
+          'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.'
+        )
       } catch (error) {
-        alert('Une erreur est survenue lors de l\'envoi du message. Veuillez réessayer.')
+        alert("Une erreur est survenue lors de l'envoi du message. Veuillez réessayer.")
       } finally {
         contactLoading.value = false
       }
     }
-    
+
     return {
       mobileMenuOpen,
       contactLoading,
@@ -489,9 +548,9 @@ export default {
       currentYear,
       toggleMobileMenu,
       closeMobileMenu,
-      submitContactForm
+      submitContactForm,
     }
-  }
+  },
 }
 </script>
 
@@ -1113,41 +1172,41 @@ export default {
   .app-download-section .container {
     flex-direction: column;
   }
-  
+
   .hero-content,
   .app-download-content {
     text-align: center;
     margin-bottom: 2rem;
   }
-  
+
   .hero-buttons,
   .app-buttons {
     justify-content: center;
   }
-  
+
   .step,
   .step:nth-child(even) {
     flex-direction: column;
   }
-  
+
   .step-content {
     text-align: center;
   }
-  
+
   .contact-container {
     grid-template-columns: 1fr;
   }
-  
+
   .footer-content {
     flex-direction: column;
     gap: 2rem;
   }
-  
+
   .footer-logo {
     text-align: center;
     margin: 0 auto;
   }
-  
+
   .footer-links {
     flex-wrap: wrap;
     justify-content: center;
@@ -1159,40 +1218,40 @@ export default {
   .auth-buttons {
     display: none;
   }
-  
+
   .mobile-menu-toggle {
     display: block;
   }
-  
+
   .mobile-menu {
     display: block;
   }
-  
+
   .hero-content h1 {
     font-size: 2rem;
   }
-  
+
   .hero-content p,
   .app-download-content p {
     font-size: 1rem;
   }
-  
+
   .section-header h2 {
     font-size: 2rem;
   }
-  
+
   .section-header p {
     font-size: 1rem;
   }
-  
+
   .pricing-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .pricing-card.featured {
     transform: none;
   }
-  
+
   .footer-bottom {
     flex-direction: column;
     gap: 1rem;

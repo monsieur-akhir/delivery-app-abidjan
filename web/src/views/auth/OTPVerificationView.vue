@@ -12,11 +12,7 @@
 
     <form @submit.prevent="verifyOTP" class="auth-form">
       <div class="otp-container">
-        <div 
-          v-for="(digit, index) in otpDigits" 
-          :key="index" 
-          class="otp-input-container"
-        >
+        <div v-for="(digit, index) in otpDigits" :key="index" class="otp-input-container">
           <input
             ref="otpInputs"
             type="text"
@@ -35,10 +31,10 @@
         <p v-if="countdown > 0">
           Renvoyer le code dans <span class="countdown">{{ countdown }}</span> secondes
         </p>
-        <button 
-          v-else 
-          @click.prevent="resendOTP" 
-          type="button" 
+        <button
+          v-else
+          @click.prevent="resendOTP"
+          type="button"
           class="btn-link"
           :disabled="loading"
         >
@@ -62,178 +58,182 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { verifyOTP as verifyOTPApi } from '@/api/auth';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { verifyOTP as verifyOTPApi } from '@/api/auth'
 
 export default {
   name: 'OTPVerificationView',
   setup() {
-    const router = useRouter();
-    const route = useRoute();
-    const authStore = useAuthStore();
+    const router = useRouter()
+    const route = useRoute()
+    const authStore = useAuthStore()
 
-    const phone = ref(route.params.phone || '');
-    const userId = ref(route.params.userId || '');
-    const redirectPath = ref(route.query.redirect || '');
-    const otpDigits = ref(['', '', '', '', '', '']);
-    const otpInputs = ref([]);
-    const loading = ref(false);
-    const error = ref(null);
-    const countdown = ref(60);
-    const timer = ref(null);
+    const phone = ref(route.params.phone || '')
+    const userId = ref(route.params.userId || '')
+    const redirectPath = ref(route.query.redirect || '')
+    const otpDigits = ref(['', '', '', '', '', ''])
+    const otpInputs = ref([])
+    const loading = ref(false)
+    const error = ref(null)
+    const countdown = ref(60)
+    const timer = ref(null)
 
     const isOtpComplete = computed(() => {
-      return otpDigits.value.every(digit => digit !== '');
-    });
+      return otpDigits.value.every(digit => digit !== '')
+    })
 
     const startCountdown = () => {
-      clearInterval(timer.value);
-      countdown.value = 60;
+      clearInterval(timer.value)
+      countdown.value = 60
       timer.value = setInterval(() => {
         if (countdown.value > 0) {
-          countdown.value -= 1;
+          countdown.value -= 1
         } else {
-          clearInterval(timer.value);
+          clearInterval(timer.value)
         }
-      }, 1000);
-    };
+      }, 1000)
+    }
 
-    const handleInput = (index) => {
+    const handleInput = index => {
       // Force les entrées à être uniquement des chiffres
-      otpDigits.value[index] = otpDigits.value[index].replace(/[^0-9]/g, '');
-      
+      otpDigits.value[index] = otpDigits.value[index].replace(/[^0-9]/g, '')
+
       // Auto-avance au champ suivant quand un chiffre est entré
       if (otpDigits.value[index] && index < 5) {
-        otpInputs.value[index + 1].focus();
+        otpInputs.value[index + 1].focus()
       }
-    };
+    }
 
     const handleKeyDown = (event, index) => {
       // Retour au champ précédent lors de l'appui sur Backspace avec un champ vide
       if (event.key === 'Backspace' && !otpDigits.value[index] && index > 0) {
-        otpInputs.value[index - 1].focus();
+        otpInputs.value[index - 1].focus()
       }
-    };
+    }
 
-    const handlePaste = (event) => {
-      event.preventDefault();
-      const pastedData = event.clipboardData.getData('text');
-      const digits = pastedData.replace(/\D/g, '').split('').slice(0, 6);
-      
+    const handlePaste = event => {
+      event.preventDefault()
+      const pastedData = event.clipboardData.getData('text')
+      const digits = pastedData.replace(/\D/g, '').split('').slice(0, 6)
+
       digits.forEach((digit, index) => {
         if (index < 6) {
-          otpDigits.value[index] = digit;
+          otpDigits.value[index] = digit
         }
-      });
-      
-      // Focus on the next empty input or the last input
-      const nextEmptyIndex = otpDigits.value.findIndex(digit => !digit);
-      if (nextEmptyIndex !== -1 && nextEmptyIndex < 6) {
-        otpInputs.value[nextEmptyIndex].focus();
-      } else if (otpDigits.value[5]) {
-        otpInputs.value[5].focus();
-      }
-    };
+      })
 
-    const hidePhoneNumber = (phoneNumber) => {
-      if (!phoneNumber) return '';
-      // Format: +XXX XX XXX XX XX -> +XXX XX XXX ** **
-      const parts = phoneNumber.split(' ');
-      if (parts.length >= 3) {
-        const lastTwoParts = parts.slice(-2).map(() => '**');
-        return [...parts.slice(0, -2), ...lastTwoParts].join(' ');
+      // Focus on the next empty input or the last input
+      const nextEmptyIndex = otpDigits.value.findIndex(digit => !digit)
+      if (nextEmptyIndex !== -1 && nextEmptyIndex < 6) {
+        otpInputs.value[nextEmptyIndex].focus()
+      } else if (otpDigits.value[5]) {
+        otpInputs.value[5].focus()
       }
-      return phoneNumber.substring(0, phoneNumber.length - 4) + '****';
-    };
+    }
+
+    const hidePhoneNumber = phoneNumber => {
+      if (!phoneNumber) return ''
+      // Format: +XXX XX XXX XX XX -> +XXX XX XXX ** **
+      const parts = phoneNumber.split(' ')
+      if (parts.length >= 3) {
+        const lastTwoParts = parts.slice(-2).map(() => '**')
+        return [...parts.slice(0, -2), ...lastTwoParts].join(' ')
+      }
+      return phoneNumber.substring(0, phoneNumber.length - 4) + '****'
+    }
 
     const verifyOTP = async () => {
-      if (!isOtpComplete.value) return;
+      if (!isOtpComplete.value) return
 
       try {
-        loading.value = true;
-        error.value = null;
-        
-        const otpCode = otpDigits.value.join('');
-        const response = await verifyOTPApi({ phone: phone.value, otp: otpCode, user_id: userId.value });
-        
+        loading.value = true
+        error.value = null
+
+        const otpCode = otpDigits.value.join('')
+        const response = await verifyOTPApi({
+          phone: phone.value,
+          otp: otpCode,
+          user_id: userId.value,
+        })
+
         if (response && response.access_token) {
           // Stockage du token et redirection
-          localStorage.setItem('token', response.access_token);
-          
+          localStorage.setItem('token', response.access_token)
+
           // Initialisation de l'authentification avec le nouveau token
-          await authStore.initAuth();
-          
+          await authStore.initAuth()
+
           // Redirection en fonction du rôle ou de la redirection spécifiée
-          const targetPath = redirectPath.value || getDefaultRedirect();
-          router.push(targetPath);
+          const targetPath = redirectPath.value || getDefaultRedirect()
+          router.push(targetPath)
         } else {
-          error.value = "La vérification a échoué. Veuillez réessayer.";
+          error.value = 'La vérification a échoué. Veuillez réessayer.'
         }
       } catch (err) {
-        error.value = err.message || "Une erreur s'est produite lors de la vérification du code.";
+        error.value = err.message || "Une erreur s'est produite lors de la vérification du code."
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
+    }
 
     const resendOTP = async () => {
       try {
-        loading.value = true;
-        error.value = null;
-        
+        loading.value = true
+        error.value = null
+
         // Implémenter l'appel API pour renvoyer le code OTP
         // await resendOTPCode({ phone: phone.value });
-        
-        startCountdown();
-        error.value = "Un nouveau code a été envoyé à votre numéro.";
+
+        startCountdown()
+        error.value = 'Un nouveau code a été envoyé à votre numéro.'
       } catch (err) {
-        error.value = err.message || "Une erreur s'est produite lors de l'envoi du code.";
+        error.value = err.message || "Une erreur s'est produite lors de l'envoi du code."
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
+    }
 
     const goBack = () => {
-      router.back();
-    };
+      router.back()
+    }
 
     const getDefaultRedirect = () => {
-      const userRole = authStore.userRole;
-      
+      const userRole = authStore.userRole
+
       if (userRole === 'business') {
-        return '/business';
+        return '/business'
       } else if (userRole === 'manager') {
-        return '/manager';
+        return '/manager'
       } else if (userRole === 'courier') {
-        return '/courier';
+        return '/courier'
       } else {
-        return '/';
+        return '/'
       }
-    };
+    }
 
     onMounted(() => {
       if (!phone.value) {
-        router.replace('/login');
-        return;
+        router.replace('/login')
+        return
       }
-      
-      startCountdown();
-      
+
+      startCountdown()
+
       // Focus sur le premier input au chargement
       setTimeout(() => {
         if (otpInputs.value[0]) {
-          otpInputs.value[0].focus();
+          otpInputs.value[0].focus()
         }
-      }, 100);
-    });
+      }, 100)
+    })
 
     onBeforeUnmount(() => {
       if (timer.value) {
-        clearInterval(timer.value);
+        clearInterval(timer.value)
       }
-    });
+    })
 
     return {
       phone,
@@ -249,10 +249,10 @@ export default {
       verifyOTP,
       resendOTP,
       goBack,
-      hidePhoneNumber
-    };
-  }
-};
+      hidePhoneNumber,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -360,7 +360,8 @@ export default {
   font-size: 1rem;
   line-height: 1.5;
   border-radius: 4px;
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   cursor: pointer;
 }
 
