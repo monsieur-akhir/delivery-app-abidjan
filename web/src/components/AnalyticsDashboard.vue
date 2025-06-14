@@ -175,7 +175,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(commune, index) in topCommunes" :key="index">
+                <tr v-for="commune in topCommunes" :key="commune.name">
                   <td>{{ commune.name }}</td>
                   <td>{{ commune.deliveries }}</td>
                   <td>{{ formatCurrency(commune.revenue) }}</td>

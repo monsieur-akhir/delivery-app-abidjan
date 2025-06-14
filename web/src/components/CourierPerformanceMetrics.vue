@@ -152,8 +152,8 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
-import { getCourierPerformance } from '@/api/manager'
+import { ref, onMounted, onUnmounted } from 'vue'
+import Chart from 'chart.js/auto'
 
 export default {
   name: 'CourierPerformanceMetrics',
@@ -175,7 +175,7 @@ export default {
       default: () => new Date(),
     },
   },
-  setup(props) {
+  setup() {
     const metrics = ref({
       totalDeliveries: 0,
       totalEarnings: 0,

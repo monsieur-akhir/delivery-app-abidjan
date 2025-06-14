@@ -1,6 +1,6 @@
+
 import authApi from './auth'
 import { handleApiError } from '../services/errorHandler'
-import axios from 'axios'
 
 /**
  * @typedef {Object} Delivery
@@ -445,5 +445,3 @@ export async function fetchBusinesses(params = {}) {
     return handleApiError(error)
   }
 }
-
-// Using imported handleApiError from auth.js
