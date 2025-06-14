@@ -19,6 +19,7 @@ interface CustomMapViewProps {
   route?: MapRoute
   onRegionChange?: (region: Region) => void
   style?: any
+  showsTraffic?: boolean
 }
 
 const CustomMapView: React.FC<CustomMapViewProps> = ({
@@ -27,7 +28,8 @@ const CustomMapView: React.FC<CustomMapViewProps> = ({
   trackingPoints = [],
   route,
   onRegionChange,
-  style
+  style,
+  showsTraffic
 }) => {
   const defaultRegion: Region = {
     latitude: 5.316667,
@@ -44,6 +46,7 @@ const CustomMapView: React.FC<CustomMapViewProps> = ({
         onRegionChangeComplete={onRegionChange}
         showsUserLocation
         showsMyLocationButton
+        showsTraffic={showsTraffic}
       >
         {deliveries.map((delivery) => (
           <React.Fragment key={delivery.id}>
