@@ -1,4 +1,3 @@
-
 import axios, { AxiosInstance } from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../config/environment'
@@ -12,6 +11,8 @@ export interface Achievement {
   unlocked_at?: string
   progress?: number
   required_value?: number
+  name?: string
+  icon?: string
 }
 
 export interface CourierStats {
@@ -33,6 +34,9 @@ export interface Leaderboard {
   points: number
   deliveries_count: number
   rank: number
+  profile_picture?: string
+  name?: string
+  deliveries_count?: number
 }
 
 export interface Challenge {
