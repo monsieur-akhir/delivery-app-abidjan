@@ -1,6 +1,10 @@
 <template>
   <div class="collaborators-list">
-    <div v-for="(collaborator, index) in collaborators" :key="collaborator.id || index" class="collaborator-card">
+    <div
+      v-for="(collaborator, index) in collaborators"
+      :key="collaborator.id || index"
+      class="collaborator-card"
+    >
       {{ collaborator.name }}
     </div>
   </div>
@@ -15,7 +19,7 @@ export default {
       required: true,
     },
   },
-};
+}
 </script>
 
 <style scoped>
