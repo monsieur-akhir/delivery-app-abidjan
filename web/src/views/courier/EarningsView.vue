@@ -1088,7 +1088,7 @@ export default {
 
 .amount-positive {
   color: #388e3c;
-font-weight: 600;
+  font-weight: 600;
 }
 
 .amount-negative {

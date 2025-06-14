@@ -168,8 +168,6 @@ import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters'
 export default {
   name: 'AuditLogsView',
   setup() {
-    
-
     // État
     const auditLogs = ref([])
     const users = ref([])

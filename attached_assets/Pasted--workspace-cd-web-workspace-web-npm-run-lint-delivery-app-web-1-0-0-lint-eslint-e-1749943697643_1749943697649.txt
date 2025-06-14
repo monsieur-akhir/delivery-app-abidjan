@@ -1,0 +1,57 @@
+~/workspace$ cd web/
+~/workspace/web$ npm run lint
+
+> delivery-app-web@1.0.0 lint
+> eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore
+
+
+/home/runner/workspace/web/src/api/manager.js
+   899:16  error  'getAuthHeaders' is not defined                         no-undef
+   917:7   error  'updateManagerUser' is assigned a value but never used  no-unused-vars
+  1047:3   error  Duplicate key 'getRevenueStats'                         no-dupe-keys
+
+/home/runner/workspace/web/src/components/AnalyticsDashboard.vue
+  827:46  error  'index' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/components/collaborative/CollaboratorsListComponent.vue
+  2:5  warning  Parsing error: Unexpected character "EOF"  prettier/prettier
+
+/home/runner/workspace/web/src/views/ProfileView.vue
+  245:23  error    'e' is defined but never used                                                                                                                                                                                                        no-unused-vars
+  741:1   error    Parsing error: x-invalid-end-tag                                                                                                                                                                                                     vue/no-parsing-error
+  741:2   warning  Parsing error: Unexpected closing tag "replit_final_file". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags  prettier/prettier
+
+/home/runner/workspace/web/src/views/business/BusinessCouriersManagementView.vue
+   59:36  error  'index' is defined but never used    vue/no-unused-vars
+  397:37  error  'courier' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/business/DeliveryDetailView.vue
+  497:11  error  'router' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/business/MarketplaceView.vue
+  333:11  error  'paginatedProducts' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/AuditLogsView.vue
+  164:10  error  'useRouter' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/CollaborativeDeliveryView.vue
+  881:9  error  'i' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/CouriersManagementView.vue
+  1197:10  error  'useRouter' is defined but never used       no-unused-vars
+  1223:11  error  'route' is assigned a value but never used  no-unused-vars
+  1749:32  error  'courierId' is defined but never used       no-unused-vars
+  1830:30  error  'courierId' is defined but never used       no-unused-vars
+  1857:21  error  '_' is defined but never used               no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/SettingsView.vue
+  589:1  error    Parsing error: x-invalid-end-tag                                                                                                                                                                                            vue/no-parsing-error
+  589:2  warning  Parsing error: Unexpected closing tag "template". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags  prettier/prettier
+
+/home/runner/workspace/web/src/views/manager/TrafficView.vue
+  109:10  error  'useRouter' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/UsersView.vue
+  1098:3  error  'addUser' is defined but never used  no-unused-vars
+
+✖ 23 problems (20 errors, 3 warnings)
