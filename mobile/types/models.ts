@@ -1,6 +1,7 @@
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  loading?: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
@@ -173,10 +174,10 @@ export interface TrackingPoint {
 }
 
 export interface Notification {
-  id: string
+  id: string | number
   title: string
   message: string
-  type: 'info' | 'success' | 'warning' | 'error'
+  type: 'info' | 'success' | 'warning' | 'error' | 'delivery_update' | 'payment' | 'promotion' | 'system' | 'message'
   read: boolean
   created_at: string
   data?: any
@@ -245,6 +246,18 @@ export interface Weather {
   current?: WeatherCurrent
   forecast?: any[]
   alerts?: WeatherAlert[]
+  is_day?: number
+  wind_mph?: number
+  wind_kph?: number
+  wind_degree?: number
+  wind_dir?: string
+  pressure_mb?: number
+  pressure_in?: number
+  precip_mm?: number
+  precip_in?: number
+  cloud?: number
+  vis_km?: number
+  vis_miles?: number
 }
 
 export interface WeatherData {
@@ -348,7 +361,7 @@ export interface SupportTicket {
   attachments?: string[];
   created_at: string;
   updated_at: string;
-  messages: SupportMessage[];
+  messages?: SupportMessage[];
   assigned_to?: number;
   resolution?: string;
 }
