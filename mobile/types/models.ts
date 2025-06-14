@@ -180,6 +180,10 @@ export interface Notification {
   type: string
   created_at: string
   read: boolean
+  is_read: boolean
+  date: string
+  user_id?: number
+  data?: NotificationData
 }
 
 export interface NotificationData {
@@ -382,8 +386,116 @@ export interface VehicleRecommendationData {
 
 export interface VehicleRecommendation {
   recommended_type: string
+  recommended_vehicle: string
   reasoning: string
+  reason: string
   alternatives: string[]
+}
+
+// Missing types for screens
+export interface Product {
+  id: number
+  name: string
+  description?: string
+  price: number
+  category?: string
+  image_url?: string
+}
+
+export interface Order {
+  id: number
+  user_id: number
+  status: OrderStatus
+  total_amount: number
+  created_at: string
+  items: OrderItem[]
+}
+
+export interface OrderItem {
+  id: number
+  order_id: number
+  product_id: number
+  quantity: number
+  unit_price: number
+}
+
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+
+export interface PaymentMethod {
+  id: string
+  type: 'card' | 'mobile_money' | 'cash'
+  name: string
+  is_default: boolean
+}
+
+export type TransactionType = 'payment' | 'refund' | 'withdrawal' | 'deposit'
+export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'cancelled'
+
+export interface AppSettings {
+  theme: 'light' | 'dark' | 'auto'
+  language: string
+  notifications_enabled: boolean
+}
+
+export interface LocationData {
+  latitude: number
+  longitude: number
+  accuracy?: number
+  timestamp?: number
+}
+
+export interface RouteData {
+  coordinates: LocationData[]
+  distance: number
+  duration: number
+}
+
+export interface NetworkState {
+  isConnected: boolean
+  isInternetReachable: boolean
+  type: string
+}
+
+export interface Theme {
+  colors: Record<string, string>
+  spacing: Record<string, number>
+  typography: Record<string, any>
+}
+
+export type ThemeMode = 'light' | 'dark' | 'auto'
+
+export interface Address {
+  id: string
+  name: string
+  description: string
+  commune: string
+  latitude: number
+  longitude: number
+  type: string
+}
+
+export interface Weather {
+  temperature: number
+  condition: string
+  humidity: number
+  wind_speed: number
+  feels_like: number
+  location?: string
+  current?: WeatherCurrent
+  forecast?: any[]
+  alerts?: WeatherAlert[]
+  is_day?: number
+  wind_mph?: number
+  wind_kph?: number
+  wind_degree?: number
+  wind_dir?: string
+  pressure_mb?: number
+  pressure_in?: number
+  precip_mm?: number
+  precip_in?: number
+  cloud?: number
+  vis_km?: number
+  vis_miles?: number
 }
 
 export interface AvailableDelivery {
@@ -398,6 +510,7 @@ export interface DeliverySearchParams {
   min_price?: number
   max_price?: number
   vehicle_type?: string
+  limit?: number
 }
 
 // Types pour les requêtes API
@@ -861,17 +974,6 @@ export interface ExpressDelivery extends Delivery {
   guaranteed_delivery_time?: string
 }
 
-export interface DeliveryEstimate {
-  estimated_price: number
-  estimated_duration: number
-  distance: number
-}
-
-export interface ExpressDelivery extends Delivery {
-  is_priority: boolean
-  guaranteed_delivery_time?: string
-}
-
 export interface CollaborativeDelivery extends Delivery {
   max_participants: number
   contribution_amount: number
@@ -886,6 +988,10 @@ export interface Notification {
   type: string
   created_at: string
   read: boolean
+  is_read: boolean
+  date: string
+  user_id?: number
+  data?: NotificationData
 }
 
 export interface AvailableDelivery extends Delivery {
@@ -908,6 +1014,7 @@ export interface DeliverySearchParams {
   min_price?: number
   max_price?: number
   vehicle_type?: string
+  limit?: number
 }
 
 export interface DeliveryCreateRequest {
@@ -969,12 +1076,6 @@ export interface VehicleRecommendationData {
   package_size: string
   is_fragile: boolean
   distance: number
-}
-
-export interface VehicleRecommendation {
-  recommended_type: string
-  reasoning: string
-  alternatives: string[]
 }
 
 export interface ExpressDeliveryRequest extends DeliveryCreateRequest {

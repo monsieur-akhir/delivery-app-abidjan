@@ -143,4 +143,5 @@ const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size = 24, color = '#00
   )
 }
 
-export default FeatherIcon;
+export default FeatherIcon
+export { FeatherIcon };

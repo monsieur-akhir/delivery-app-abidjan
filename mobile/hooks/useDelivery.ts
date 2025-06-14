@@ -27,8 +27,8 @@ export interface DeliverySearchParams {
   vehicle_type?: string
 }
 
-export interface AvailableDelivery extends Delivery {
-  distance?: number
+export interface AvailableDelivery extends Omit<Delivery, 'distance'> {
+  distance: number
   score?: number
   eta_minutes?: number
 }
@@ -693,3 +693,6 @@ export const useDelivery = (): UseDeliveryReturn => {
     clientConfirmDelivery
   }
 }
+
+export default useDelivery
+export { useDelivery }
