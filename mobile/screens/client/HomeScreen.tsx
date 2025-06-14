@@ -386,11 +386,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <CustomMapView
               initialRegion={mapRegion}
               style={styles.mapPreview}
-              showsUserLocation={true}
-              zoomEnabled={true}
-              scrollEnabled={false}
-              pitchEnabled={false}
-              rotateEnabled={false}
             />
             <TouchableOpacity 
               style={styles.mapOverlay}

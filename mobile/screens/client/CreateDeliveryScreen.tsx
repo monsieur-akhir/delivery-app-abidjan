@@ -24,7 +24,7 @@ import { useNetwork } from '../../contexts/NetworkContext'
 import { useDelivery } from '../../hooks/useDelivery'
 import { useUser } from '../../hooks/useUser'
 import DeliveryService from '../../services/DeliveryService'
-import { formatPrice } from '../../utils/formatters'
+
 import type {
   User,
   Delivery,
@@ -146,8 +146,18 @@ const CreateDeliveryScreen: React.FC = () => {
       const distance = calculateDistance(
         pickupLocation.latitude,
         pickupLocation.longitude,
-        deliveryLocation.latitude,
-        deliveryLocation.longitude
+        {
+          pickup_lat: pickupLocation.latitude,
+          pickup_lng: pickupLocation.longitude,
+          delivery_lat: deliveryLocation.latitude,
+          delivery_lng: deliveryLocation.longitude,
+          package_type: selectedPackageType,
+          package_weight: parseFloat(packageWeight) || 0,
+          package_size: packageSize,
+          is_fragile: isFragile,
+          distance: distance,
+          weatherConditions: weather?.condition
+        }
       )
 
       const estimateData = {
@@ -191,7 +201,7 @@ const CreateDeliveryScreen: React.FC = () => {
       if (vehicleRec) {
         setRecommendedVehicle({
           type: vehicleRec.recommended_vehicle as VehicleType,
-          name: getVehicleName(vehicleRec.recommended_vehicle),
+          name: getVehicleName(vehicleRec.recommended_vehicle as VehicleType),
           reason: vehicleRec.reason,
           priceMultiplier: 1
         })
@@ -238,6 +248,7 @@ const CreateDeliveryScreen: React.FC = () => {
     const deliveryData: DeliveryCreateRequest = {
       pickup_address: pickupAddress,
       pickup_commune: extractCommune(pickupAddress),
+      delivery_commune: extractCommune(deliveryAddress),
       delivery_address: deliveryAddress,
       delivery_commune: extractCommune(deliveryAddress),
       pickup_lat: pickupLocation.latitude,

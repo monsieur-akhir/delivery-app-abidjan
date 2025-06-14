@@ -38,7 +38,7 @@ const GamificationScreen: React.FC = () => {
 
       setStats({
         ...statsData,
-        averageRating: statsData.average_rating || 0,
+        average_rating: statsData.average_rating || 0,
         total_deliveries: statsData.total_deliveries || 0,
         totalEarnings: 0,
         totalDistance: 0,
@@ -106,8 +106,8 @@ const GamificationScreen: React.FC = () => {
     )
   }
 
-  const currentLevel = getCurrentLevel(stats.total_points || 0)
-  const progress = getProgressToNextLevel(stats.total_points || 0)
+  const currentLevel = getCurrentLevel(stats?.total_points || 0)
+  const progress = getProgressToNextLevel(stats?.total_points || 0)
 
   return (
     <SafeAreaView style={styles.container}>
