@@ -897,6 +897,8 @@ export interface NotificationSettings {
   email_notifications: boolean
   sms_notifications: boolean
   whatsapp_enabled?: boolean
+  sound_enabled?: boolean
+  vibration_enabled?: boolean
 }
 
 // UserPreferences Type
