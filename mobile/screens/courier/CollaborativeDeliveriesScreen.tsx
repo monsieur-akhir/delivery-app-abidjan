@@ -36,7 +36,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
         data = result || []
       } else if (activeTab === "available") {
         const result = await getCollaborativeDeliveries({ status: "pending" })
-        data = result || []
+        data = result ? result : []
       } else if (activeTab === "completed") {
         const result = await getCollaborativeDeliveries({ status: "completed" })
         data = result || []

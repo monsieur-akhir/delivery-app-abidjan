@@ -31,7 +31,6 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   phone: merchantInfo.phone || '',
   latitude: (merchantInfo as any).latitude || 0,
   longitude: (merchantInfo as any).longitude || 0,
-  cover_image: undefined,
   cover_image: '',
   created_at: '',
   updated_at: '',
