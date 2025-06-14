@@ -331,12 +331,12 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
 
       // Convert service format to models format
       const notificationSettings: NotificationSettings = {
+        delivery_updates: serviceSettings.delivery_updates || false,
         delivery_notifications: serviceSettings.delivery_notifications || false,
         bid_notifications: serviceSettings.bid_notifications || false,
         payment_notifications: serviceSettings.payment_notifications || false,
-        delivery_updates: true,
         promotional_offers: serviceSettings.promotional_offers || false,
-        security_alerts: true,
+        security_alerts: serviceSettings.security_alerts || false,
         push_notifications: serviceSettings.push_notifications || false,
         email_notifications: serviceSettings.email_notifications || false,
         sms_notifications: serviceSettings.sms_notifications || false,
