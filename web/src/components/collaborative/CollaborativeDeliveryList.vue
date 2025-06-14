@@ -10,7 +10,7 @@
         <i class="fas fa-plus"></i> Créer une livraison
       </button>
     </div>
-    
+
     <div v-else class="table-responsive">
       <table class="deliveries-table">
         <thead>
@@ -50,18 +50,33 @@
             </td>
             <td class="price-cell">
               <div class="price">{{ formatCurrency(delivery.proposedPrice) }}</div>
-              <div v-if="delivery.finalPrice && delivery.finalPrice !== delivery.proposedPrice" class="final-price">
+              <div
+                v-if="delivery.finalPrice && delivery.finalPrice !== delivery.proposedPrice"
+                class="final-price"
+              >
                 {{ formatCurrency(delivery.finalPrice) }}
               </div>
             </td>
             <td class="collaborators-cell">
               <div class="collaborators">
                 <div class="collaborator-count">
-                  <i class="fas fa-users"></i> {{ delivery.collaborators ? delivery.collaborators.length : 0 }}/{{ delivery.maxCollaborators || 3 }}
+                  <i class="fas fa-users"></i>
+                  {{ delivery.collaborators ? delivery.collaborators.length : 0 }}/{{
+                    delivery.maxCollaborators || 3
+                  }}
                 </div>
                 <div class="collaborator-avatars">
-                  <div v-for="(collaborator, index) in limitedCollaborators(delivery)" :key="index" class="avatar-wrapper">
-                    <img v-if="collaborator.avatar" :src="collaborator.avatar" :alt="collaborator.name" class="avatar" />
+                  <div
+                    v-for="(collaborator, index) in limitedCollaborators(delivery)"
+                    :key="index"
+                    class="avatar-wrapper"
+                  >
+                    <img
+                      v-if="collaborator.avatar"
+                      :src="collaborator.avatar"
+                      :alt="collaborator.name"
+                      class="avatar"
+                    />
                     <div v-else class="avatar-fallback">
                       {{ getInitials(collaborator.name) }}
                     </div>
@@ -75,29 +90,33 @@
             </td>
             <td class="actions-cell">
               <div class="actions">
-                <button class="action-btn view-btn" @click="$emit('view-delivery', delivery)" title="Voir les détails">
+                <button
+                  class="action-btn view-btn"
+                  @click="$emit('view-delivery', delivery)"
+                  title="Voir les détails"
+                >
                   <i class="fas fa-eye"></i>
                 </button>
-                <button 
-                  v-if="canEdit(delivery)" 
-                  class="action-btn edit-btn" 
-                  @click="$emit('edit-delivery', delivery)" 
+                <button
+                  v-if="canEdit(delivery)"
+                  class="action-btn edit-btn"
+                  @click="$emit('edit-delivery', delivery)"
                   title="Modifier"
                 >
                   <i class="fas fa-edit"></i>
                 </button>
-                <button 
-                  v-if="canJoin(delivery)" 
-                  class="action-btn join-btn" 
-                  @click="$emit('join-delivery', delivery)" 
+                <button
+                  v-if="canJoin(delivery)"
+                  class="action-btn join-btn"
+                  @click="$emit('join-delivery', delivery)"
                   title="Rejoindre"
                 >
                   <i class="fas fa-sign-in-alt"></i>
                 </button>
-                <button 
-                  v-if="canCancel(delivery)" 
-                  class="action-btn cancel-btn" 
-                  @click="$emit('cancel-delivery', delivery)" 
+                <button
+                  v-if="canCancel(delivery)"
+                  class="action-btn cancel-btn"
+                  @click="$emit('cancel-delivery', delivery)"
                   title="Annuler"
                 >
                   <i class="fas fa-times"></i>
@@ -114,42 +133,42 @@
 <script>
 export default {
   name: 'CollaborativeDeliveryList',
-  
+
   props: {
     deliveries: {
       type: Array,
-      required: true
+      required: true,
     },
     userRole: {
       type: String,
-      default: 'manager'
-    }
+      default: 'manager',
+    },
   },
-  
+
   emits: ['view-delivery', 'edit-delivery', 'join-delivery', 'cancel-delivery', 'create-delivery'],
-  
+
   methods: {
     formatId(id) {
       return id.substring(0, 8)
     },
-    
+
     formatDate(dateString) {
       const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
+        year: 'numeric',
       })
     },
-    
+
     formatTime(dateString) {
       const date = new Date(dateString)
       return date.toLocaleTimeString('fr-FR', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     },
-    
+
     formatStatus(status) {
       switch (status) {
         case 'pending':
@@ -166,7 +185,7 @@ export default {
           return status
       }
     },
-    
+
     getStatusClass(status) {
       switch (status) {
         case 'pending':
@@ -183,31 +202,35 @@ export default {
           return ''
       }
     },
-    
+
     formatCurrency(amount) {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
+        minimumFractionDigits: 0,
       }).format(amount)
     },
-    
+
     limitedCollaborators(delivery) {
       if (!delivery.collaborators || delivery.collaborators.length === 0) {
         return []
       }
       return delivery.collaborators.slice(0, 3)
     },
-    
+
     hasMoreCollaborators(delivery) {
       return delivery.collaborators && delivery.collaborators.length > 3
     },
-    
+
     getInitials(name) {
       if (!name) return '?'
-      return name.split(' ').map(n => n[0]).join('').toUpperCase()
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
     },
-    
+
     getRoleClass(role) {
       switch (role) {
         case 'primary':
@@ -220,32 +243,35 @@ export default {
           return ''
       }
     },
-    
+
     getRowClass(delivery) {
       return {
         'cancelled-row': delivery.status === 'cancelled',
         'completed-row': delivery.status === 'completed',
         'in-progress-row': delivery.status === 'in_progress',
-        'accepted-row': delivery.status === 'accepted'
+        'accepted-row': delivery.status === 'accepted',
       }
     },
-    
+
     canEdit(delivery) {
       // Seuls les livraisons en attente ou acceptées peuvent être modifiées
       return ['pending', 'accepted'].includes(delivery.status)
     },
-    
+
     canJoin(delivery) {
       // On peut rejoindre une livraison en attente ou acceptée si elle n'a pas atteint le nombre max de collaborateurs
-      return ['pending', 'accepted'].includes(delivery.status) && 
-             (!delivery.collaborators || delivery.collaborators.length < (delivery.maxCollaborators || 3))
+      return (
+        ['pending', 'accepted'].includes(delivery.status) &&
+        (!delivery.collaborators ||
+          delivery.collaborators.length < (delivery.maxCollaborators || 3))
+      )
     },
-    
+
     canCancel(delivery) {
       // On peut annuler une livraison en attente, acceptée ou en cours
       return ['pending', 'accepted', 'in_progress'].includes(delivery.status)
-    }
-  }
+    },
+  },
 }
 </script>
 

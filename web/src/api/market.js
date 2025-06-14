@@ -1,5 +1,5 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { API_URL } from '@/config'
 
 /**
  * Récupérer la liste des produits
@@ -15,7 +15,7 @@ export const getProducts = (params = {}) => {
  * @param {Number} id - ID du produit
  * @returns {Promise} - Promesse avec les détails du produit
  */
-export const getProduct = (id) => {
+export const getProduct = id => {
   return axios.get(`${API_URL}/market/products/${id}`)
 }
 
@@ -24,7 +24,7 @@ export const getProduct = (id) => {
  * @param {Object} data - Données du produit
  * @returns {Promise} - Promesse avec le produit créé
  */
-export const createProduct = (data) => {
+export const createProduct = data => {
   return axios.post(`${API_URL}/market/products`, data)
 }
 
@@ -43,7 +43,7 @@ export const updateProduct = (id, data) => {
  * @param {Number} id - ID du produit
  * @returns {Promise} - Promesse avec le résultat de la suppression
  */
-export const deleteProduct = (id) => {
+export const deleteProduct = id => {
   return axios.delete(`${API_URL}/market/products/${id}`)
 }
 

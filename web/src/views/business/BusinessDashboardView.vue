@@ -1,4 +1,3 @@
-
 <template>
   <div class="business-dashboard">
     <!-- Header avec statistiques principales -->
@@ -73,9 +72,7 @@
       <div class="content-section">
         <div class="section-header">
           <h2>Livraisons récentes</h2>
-          <router-link to="/business/deliveries" class="view-all-btn">
-            Voir tout
-          </router-link>
+          <router-link to="/business/deliveries" class="view-all-btn"> Voir tout </router-link>
         </div>
         <div v-if="loading.deliveries" class="loading">
           <i class="fas fa-spinner fa-spin"></i> Chargement...
@@ -105,7 +102,9 @@
               <span :class="['status-badge', delivery.status]">
                 {{ getStatusLabel(delivery.status) }}
               </span>
-              <span class="delivery-price">{{ formatCurrency(delivery.final_price || delivery.proposed_price) }}</span>
+              <span class="delivery-price">{{
+                formatCurrency(delivery.final_price || delivery.proposed_price)
+              }}</span>
             </div>
           </div>
         </div>
@@ -145,9 +144,7 @@
       <div class="content-section">
         <div class="section-header">
           <h2>Top coursiers</h2>
-          <router-link to="/business/couriers" class="view-all-btn">
-            Voir tout
-          </router-link>
+          <router-link to="/business/couriers" class="view-all-btn"> Voir tout </router-link>
         </div>
         <div v-if="loading.couriers" class="loading">
           <i class="fas fa-spinner fa-spin"></i> Chargement...
@@ -156,11 +153,7 @@
           <p>Aucun coursier</p>
         </div>
         <div v-else class="couriers-list">
-          <div
-            v-for="courier in topCouriers"
-            :key="courier.id"
-            class="courier-item"
-          >
+          <div v-for="courier in topCouriers" :key="courier.id" class="courier-item">
             <div class="courier-avatar">
               <img
                 :src="courier.profile_picture || '/default-avatar.png'"
@@ -191,11 +184,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import {
-  fetchBusinessDashboard,
-  getRecentDeliveries,
-  fetchBusinessCouriers
-} from '@/api/business'
+import { fetchBusinessDashboard, getRecentDeliveries, fetchBusinessCouriers } from '@/api/business'
 import LineChart from '@/components/charts/LineChart.vue'
 import PieChart from '@/components/charts/PieChart.vue'
 
@@ -203,7 +192,7 @@ export default {
   name: 'BusinessDashboardView',
   components: {
     LineChart,
-    PieChart
+    PieChart,
   },
   setup() {
     const router = useRouter()
@@ -215,11 +204,11 @@ export default {
     const topCouriers = ref([])
     const chartData = ref({})
     const chartPeriod = ref('week')
-    
+
     const loading = ref({
       deliveries: false,
       couriers: false,
-      dashboard: false
+      dashboard: false,
     })
 
     const chartOptions = {
@@ -227,28 +216,28 @@ export default {
         responsive: true,
         plugins: {
           legend: {
-            display: false
-          }
+            display: false,
+          },
         },
         scales: {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: function(value) {
+              callback: function (value) {
                 return value.toLocaleString() + ' €'
-              }
-            }
-          }
-        }
+              },
+            },
+          },
+        },
       },
       status: {
         responsive: true,
         plugins: {
           legend: {
-            position: 'bottom'
-          }
-        }
-      }
+            position: 'bottom',
+          },
+        },
+      },
     }
 
     const loadDashboardData = async () => {
@@ -292,63 +281,62 @@ export default {
       try {
         // Charger les données de graphique depuis l'API
         const response = await fetchBusinessDashboard(chartPeriod.value)
-        
+
         chartData.value = {
           revenue: {
             labels: response.revenue_by_day?.labels || [],
-            datasets: [{
-              label: 'Revenus (€)',
-              data: response.revenue_by_day?.data || [],
-              borderColor: '#10B981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              tension: 0.4
-            }]
+            datasets: [
+              {
+                label: 'Revenus (€)',
+                data: response.revenue_by_day?.data || [],
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+              },
+            ],
           },
           status: {
             labels: ['En attente', 'En cours', 'Terminées', 'Annulées'],
-            datasets: [{
-              data: [
-                response.pending_deliveries || 0,
-                response.active_deliveries || 0,
-                response.completed_deliveries || 0,
-                response.cancelled_deliveries || 0
-              ],
-              backgroundColor: [
-                '#F59E0B',
-                '#3B82F6',
-                '#10B981',
-                '#EF4444'
-              ]
-            }]
-          }
+            datasets: [
+              {
+                data: [
+                  response.pending_deliveries || 0,
+                  response.active_deliveries || 0,
+                  response.completed_deliveries || 0,
+                  response.cancelled_deliveries || 0,
+                ],
+                backgroundColor: ['#F59E0B', '#3B82F6', '#10B981', '#EF4444'],
+              },
+            ],
+          },
         }
       } catch (error) {
         console.error('Erreur lors du chargement des graphiques:', error)
       }
     }
 
-    const viewDelivery = (deliveryId) => {
+    const viewDelivery = deliveryId => {
       router.push(`/business/deliveries/${deliveryId}`)
     }
 
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'EUR'
+        currency: 'EUR',
       }).format(amount / 100)
     }
 
-    const formatDate = (date) => {
+    const formatDate = date => {
       return new Date(date).toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
 
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       const labels = {
         pending: 'En attente',
         bidding: 'Enchères',
@@ -356,7 +344,7 @@ export default {
         in_progress: 'En cours',
         delivered: 'Livrée',
         completed: 'Terminée',
-        cancelled: 'Annulée'
+        cancelled: 'Annulée',
       }
       return labels[status] || status
     }
@@ -381,9 +369,9 @@ export default {
       viewDelivery,
       formatCurrency,
       formatDate,
-      getStatusLabel
+      getStatusLabel,
     }
-  }
+  },
 }
 </script>
 
@@ -396,7 +384,7 @@ export default {
 
 .dashboard-header h1 {
   margin-bottom: 20px;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .stats-grid {
@@ -427,21 +415,29 @@ export default {
   font-size: 20px;
 }
 
-.stat-icon.deliveries { background: #3B82F6; }
-.stat-icon.active { background: #F59E0B; }
-.stat-icon.revenue { background: #10B981; }
-.stat-icon.couriers { background: #8B5CF6; }
+.stat-icon.deliveries {
+  background: #3b82f6;
+}
+.stat-icon.active {
+  background: #f59e0b;
+}
+.stat-icon.revenue {
+  background: #10b981;
+}
+.stat-icon.couriers {
+  background: #8b5cf6;
+}
 
 .stat-content h3 {
   margin: 0;
   font-size: 24px;
   font-weight: bold;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .stat-content p {
   margin: 0;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .quick-actions {
@@ -450,7 +446,7 @@ export default {
 
 .quick-actions h2 {
   margin-bottom: 15px;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .actions-grid {
@@ -465,7 +461,7 @@ export default {
   padding: 20px;
   text-align: center;
   text-decoration: none;
-  color: #1F2937;
+  color: #1f2937;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -477,7 +473,7 @@ export default {
 
 .action-card i {
   font-size: 24px;
-  color: #3B82F6;
+  color: #3b82f6;
   margin-bottom: 10px;
   display: block;
 }
@@ -503,18 +499,18 @@ export default {
 
 .section-header h2 {
   margin: 0;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .view-all-btn {
-  color: #3B82F6;
+  color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
 }
 
 .period-select {
   padding: 8px 12px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
   background: white;
 }
@@ -530,14 +526,14 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .delivery-item:hover {
-  background-color: #F9FAFB;
+  background-color: #f9fafb;
 }
 
 .delivery-route {
@@ -548,7 +544,7 @@ export default {
 }
 
 .delivery-route i {
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .delivery-meta {
@@ -556,7 +552,7 @@ export default {
   gap: 15px;
   margin-top: 5px;
   font-size: 14px;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .delivery-status {
@@ -572,15 +568,30 @@ export default {
   margin-bottom: 5px;
 }
 
-.status-badge.pending { background: #FEF3C7; color: #D97706; }
-.status-badge.accepted { background: #DBEAFE; color: #2563EB; }
-.status-badge.in_progress { background: #FEE2E2; color: #DC2626; }
-.status-badge.completed { background: #D1FAE5; color: #059669; }
-.status-badge.cancelled { background: #F3F4F6; color: #6B7280; }
+.status-badge.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+.status-badge.accepted {
+  background: #dbeafe;
+  color: #2563eb;
+}
+.status-badge.in_progress {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.status-badge.completed {
+  background: #d1fae5;
+  color: #059669;
+}
+.status-badge.cancelled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
 
 .delivery-price {
   font-weight: 600;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .charts-grid {
@@ -591,13 +602,13 @@ export default {
 
 .chart-container {
   padding: 15px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
 
 .chart-container h3 {
   margin: 0 0 15px 0;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .couriers-list {
@@ -611,7 +622,7 @@ export default {
   align-items: center;
   gap: 15px;
   padding: 15px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
 
@@ -628,12 +639,12 @@ export default {
 
 .courier-info h4 {
   margin: 0 0 5px 0;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .courier-info p {
   margin: 0;
-  color: #6B7280;
+  color: #6b7280;
   font-size: 14px;
 }
 
@@ -642,7 +653,7 @@ export default {
 }
 
 .rating {
-  color: #F59E0B;
+  color: #f59e0b;
   margin-bottom: 5px;
 }
 
@@ -652,40 +663,40 @@ export default {
 
 .earnings {
   font-weight: 600;
-  color: #1F2937;
+  color: #1f2937;
 }
 
 .loading {
   text-align: center;
   padding: 40px;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .actions-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .charts-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .delivery-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
-  
+
   .delivery-status {
     text-align: left;
     width: 100%;

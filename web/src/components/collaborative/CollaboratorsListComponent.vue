@@ -32,7 +32,12 @@
       <div v-for="collaborator in collaborators" :key="collaborator.id" class="collaborator-card">
         <div class="collaborator-header">
           <div class="avatar-section">
-            <img v-if="collaborator.avatar" :src="collaborator.avatar" :alt="collaborator.name" class="avatar" />
+            <img
+              v-if="collaborator.avatar"
+              :src="collaborator.avatar"
+              :alt="collaborator.name"
+              class="avatar"
+            />
             <div v-else class="avatar-fallback">
               {{ getInitials(collaborator.name) }}
             </div>
@@ -46,9 +51,7 @@
               <span class="rating">
                 <i class="fas fa-star"></i> {{ collaborator.rating || 'N/A' }}
               </span>
-              <span class="deliveries">
-                {{ collaborator.totalDeliveries || 0 }} livraisons
-              </span>
+              <span class="deliveries"> {{ collaborator.totalDeliveries || 0 }} livraisons </span>
             </div>
           </div>
           <div class="status-section">
@@ -62,11 +65,11 @@
           <div class="share-section">
             <label>Part des gains</label>
             <div class="share-input-group">
-              <input 
-                v-model.number="collaborator.sharePercentage" 
-                type="number" 
-                min="0" 
-                max="100" 
+              <input
+                v-model.number="collaborator.sharePercentage"
+                type="number"
+                min="0"
+                max="100"
                 :disabled="!canEditShare(collaborator)"
                 @change="updateShare(collaborator)"
                 class="share-input"
@@ -104,37 +107,34 @@
         </div>
 
         <div class="collaborator-actions">
-          <button 
-            v-if="canApprove(collaborator)" 
-            class="action-btn approve-btn" 
+          <button
+            v-if="canApprove(collaborator)"
+            class="action-btn approve-btn"
             @click="approveCollaborator(collaborator)"
             :disabled="processing"
           >
             <i class="fas fa-check"></i> Approuver
           </button>
-          
-          <button 
-            v-if="canReject(collaborator)" 
-            class="action-btn reject-btn" 
+
+          <button
+            v-if="canReject(collaborator)"
+            class="action-btn reject-btn"
             @click="rejectCollaborator(collaborator)"
             :disabled="processing"
           >
             <i class="fas fa-times"></i> Rejeter
           </button>
-          
-          <button 
-            v-if="canRemove(collaborator)" 
-            class="action-btn remove-btn" 
+
+          <button
+            v-if="canRemove(collaborator)"
+            class="action-btn remove-btn"
             @click="removeCollaborator(collaborator)"
             :disabled="processing"
           >
             <i class="fas fa-user-minus"></i> Retirer
           </button>
-          
-          <button 
-            class="action-btn message-btn" 
-            @click="messageCollaborator(collaborator)"
-          >
+
+          <button class="action-btn message-btn" @click="messageCollaborator(collaborator)">
             <i class="fas fa-comment"></i> Message
           </button>
         </div>
@@ -146,15 +146,15 @@
       <div class="invite-form">
         <div class="form-group">
           <label for="invite-email">Email du coursier</label>
-          <input 
+          <input
             id="invite-email"
-            v-model="inviteForm.email" 
-            type="email" 
+            v-model="inviteForm.email"
+            type="email"
             placeholder="email@exemple.com"
             class="form-control"
           />
         </div>
-        
+
         <div class="form-group">
           <label for="invite-role">Rôle proposé</label>
           <select id="invite-role" v-model="inviteForm.role" class="form-control">
@@ -163,37 +163,35 @@
             <option value="primary" v-if="!hasPrimaryCollaborator">Principal</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="invite-share">Part proposée (%)</label>
-          <input 
+          <input
             id="invite-share"
-            v-model.number="inviteForm.sharePercentage" 
-            type="number" 
-            min="0" 
+            v-model.number="inviteForm.sharePercentage"
+            type="number"
+            min="0"
             max="100"
             class="form-control"
           />
         </div>
-        
+
         <div class="form-group">
           <label for="invite-message">Message (optionnel)</label>
-          <textarea 
+          <textarea
             id="invite-message"
-            v-model="inviteForm.message" 
+            v-model="inviteForm.message"
             placeholder="Message d'invitation..."
             class="form-control"
             rows="3"
           ></textarea>
         </div>
-        
+
         <div class="form-actions">
           <button @click="sendInvitation" :disabled="!canSendInvite" class="btn-primary">
             <i class="fas fa-paper-plane"></i> Envoyer l'invitation
           </button>
-          <button @click="showInviteModal = false" class="btn-outline">
-            Annuler
-          </button>
+          <button @click="showInviteModal = false" class="btn-outline">Annuler</button>
         </div>
       </div>
     </Modal>
@@ -208,62 +206,64 @@ import Modal from '@/components/ui/Modal.vue'
 
 export default {
   name: 'CollaboratorsListComponent',
-  
+
   components: {
-    Modal
+    Modal,
   },
-  
+
   props: {
     deliveryId: {
       type: String,
-      required: true
+      required: true,
     },
     deliveryPrice: {
       type: Number,
-      required: true
+      required: true,
     },
     maxCollaborators: {
       type: Number,
-      default: 3
+      default: 3,
     },
     canManage: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
-  
+
   emits: ['collaborator-updated', 'collaborator-removed'],
-  
+
   setup(props, { emit }) {
     const { showToast } = useToast()
-    
+
     const collaborators = ref([])
     const loading = ref(true)
     const processing = ref(false)
     const showInviteModal = ref(false)
-    
+
     const inviteForm = ref({
       email: '',
       role: 'secondary',
       sharePercentage: 20,
-      message: ''
+      message: '',
     })
-    
+
     const canInvite = computed(() => {
       return props.canManage && collaborators.value.length < props.maxCollaborators
     })
-    
+
     const hasPrimaryCollaborator = computed(() => {
       return collaborators.value.some(c => c.role === 'primary')
     })
-    
+
     const canSendInvite = computed(() => {
-      return inviteForm.value.email && 
-             inviteForm.value.role && 
-             inviteForm.value.sharePercentage > 0 &&
-             inviteForm.value.sharePercentage <= 100
+      return (
+        inviteForm.value.email &&
+        inviteForm.value.role &&
+        inviteForm.value.sharePercentage > 0 &&
+        inviteForm.value.sharePercentage <= 100
+      )
     })
-    
+
     const fetchCollaborators = async () => {
       try {
         loading.value = true
@@ -276,92 +276,107 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshList = () => {
       fetchCollaborators()
     }
-    
-    const getInitials = (name) => {
+
+    const getInitials = name => {
       if (!name) return '?'
-      return name.split(' ').map(n => n[0]).join('').toUpperCase()
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
     }
-    
-    const formatRole = (role) => {
+
+    const formatRole = role => {
       switch (role) {
-        case 'primary': return 'Principal'
-        case 'secondary': return 'Secondaire'
-        case 'support': return 'Support'
-        default: return role
+        case 'primary':
+          return 'Principal'
+        case 'secondary':
+          return 'Secondaire'
+        case 'support':
+          return 'Support'
+        default:
+          return role
       }
     }
-    
-    const getRoleClass = (role) => {
+
+    const getRoleClass = role => {
       return `role-${role}`
     }
-    
-    const formatStatus = (status) => {
+
+    const formatStatus = status => {
       switch (status) {
-        case 'pending': return 'En attente'
-        case 'accepted': return 'Accepté'
-        case 'rejected': return 'Rejeté'
-        case 'in_progress': return 'En cours'
-        case 'completed': return 'Terminé'
-        case 'cancelled': return 'Annulé'
-        default: return status
+        case 'pending':
+          return 'En attente'
+        case 'accepted':
+          return 'Accepté'
+        case 'rejected':
+          return 'Rejeté'
+        case 'in_progress':
+          return 'En cours'
+        case 'completed':
+          return 'Terminé'
+        case 'cancelled':
+          return 'Annulé'
+        default:
+          return status
       }
     }
-    
-    const getStatusClass = (status) => {
+
+    const getStatusClass = status => {
       return `status-${status}`
     }
-    
-    const formatDateTime = (dateString) => {
+
+    const formatDateTime = dateString => {
       const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
-    
-    const formatCurrency = (amount) => {
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
+        minimumFractionDigits: 0,
       }).format(amount)
     }
-    
-    const calculateEarnings = (collaborator) => {
+
+    const calculateEarnings = collaborator => {
       const platformFee = props.deliveryPrice * 0.1
       const distributableAmount = props.deliveryPrice - platformFee
       return distributableAmount * (collaborator.sharePercentage / 100)
     }
-    
-    const canEditShare = (collaborator) => {
+
+    const canEditShare = collaborator => {
       return props.canManage && ['pending', 'accepted'].includes(collaborator.status)
     }
-    
-    const canApprove = (collaborator) => {
+
+    const canApprove = collaborator => {
       return props.canManage && collaborator.status === 'pending'
     }
-    
-    const canReject = (collaborator) => {
+
+    const canReject = collaborator => {
       return props.canManage && collaborator.status === 'pending'
     }
-    
-    const canRemove = (collaborator) => {
+
+    const canRemove = collaborator => {
       return props.canManage && ['pending', 'accepted'].includes(collaborator.status)
     }
-    
-    const updateShare = async (collaborator) => {
+
+    const updateShare = async collaborator => {
       try {
         processing.value = true
         await collaborativeApi.updateCollaboratorShare(
-          props.deliveryId, 
-          collaborator.id, 
+          props.deliveryId,
+          collaborator.id,
           collaborator.sharePercentage
         )
         showToast('Part mise à jour avec succès', 'success')
@@ -374,32 +389,32 @@ export default {
         processing.value = false
       }
     }
-    
-    const approveCollaborator = async (collaborator) => {
+
+    const approveCollaborator = async collaborator => {
       try {
         processing.value = true
         await collaborativeApi.updateCollaboratorStatus(
-          props.deliveryId, 
-          collaborator.id, 
+          props.deliveryId,
+          collaborator.id,
           'accepted'
         )
         showToast('Collaborateur approuvé avec succès', 'success')
         await fetchCollaborators()
         emit('collaborator-updated', collaborator)
       } catch (error) {
-        console.error('Erreur lors de l\'approbation:', error)
-        showToast('Erreur lors de l\'approbation du collaborateur', 'error')
+        console.error("Erreur lors de l'approbation:", error)
+        showToast("Erreur lors de l'approbation du collaborateur", 'error')
       } finally {
         processing.value = false
       }
     }
-    
-    const rejectCollaborator = async (collaborator) => {
+
+    const rejectCollaborator = async collaborator => {
       try {
         processing.value = true
         await collaborativeApi.updateCollaboratorStatus(
-          props.deliveryId, 
-          collaborator.id, 
+          props.deliveryId,
+          collaborator.id,
           'rejected'
         )
         showToast('Collaborateur rejeté', 'success')
@@ -412,12 +427,12 @@ export default {
         processing.value = false
       }
     }
-    
-    const removeCollaborator = async (collaborator) => {
+
+    const removeCollaborator = async collaborator => {
       if (!confirm('Êtes-vous sûr de vouloir retirer ce collaborateur ?')) {
         return
       }
-      
+
       try {
         processing.value = true
         await collaborativeApi.removeCollaborator(props.deliveryId, collaborator.id)
@@ -431,40 +446,40 @@ export default {
         processing.value = false
       }
     }
-    
-    const messageCollaborator = (collaborator) => {
+
+    const messageCollaborator = collaborator => {
       // Ouvrir le chat ou rediriger vers la messagerie
       showToast('Fonctionnalité de messagerie à implémenter', 'info')
     }
-    
+
     const sendInvitation = async () => {
       try {
         processing.value = true
         await collaborativeApi.inviteCollaborator(props.deliveryId, inviteForm.value)
         showToast('Invitation envoyée avec succès', 'success')
         showInviteModal.value = false
-        
+
         // Réinitialiser le formulaire
         inviteForm.value = {
           email: '',
           role: 'secondary',
           sharePercentage: 20,
-          message: ''
+          message: '',
         }
-        
+
         await fetchCollaborators()
       } catch (error) {
-        console.error('Erreur lors de l\'envoi de l\'invitation:', error)
-        showToast('Erreur lors de l\'envoi de l\'invitation', 'error')
+        console.error("Erreur lors de l'envoi de l'invitation:", error)
+        showToast("Erreur lors de l'envoi de l'invitation", 'error')
       } finally {
         processing.value = false
       }
     }
-    
+
     onMounted(() => {
       fetchCollaborators()
     })
-    
+
     return {
       collaborators,
       loading,
@@ -492,9 +507,9 @@ export default {
       rejectCollaborator,
       removeCollaborator,
       messageCollaborator,
-      sendInvitation
+      sendInvitation,
     }
-  }
+  },
 }
 </script>
 
@@ -555,7 +570,9 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-state {

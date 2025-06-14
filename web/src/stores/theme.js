@@ -1,35 +1,35 @@
-import { defineStore } from "pinia"
-import { ref, computed, watch } from "vue"
+import { defineStore } from 'pinia'
+import { ref, computed, watch } from 'vue'
 
-export const useThemeStore = defineStore("theme", () => {
+export const useThemeStore = defineStore('theme', () => {
   // État
-  const theme = ref(localStorage.getItem("theme") || "light") // light, dark, system
+  const theme = ref(localStorage.getItem('theme') || 'light') // light, dark, system
 
   // Getters
   const isDarkMode = computed(() => {
-    if (theme.value === "system") {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches
+    if (theme.value === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
     }
-    return theme.value === "dark"
+    return theme.value === 'dark'
   })
 
   // Actions
   function setTheme(newTheme) {
     theme.value = newTheme
-    localStorage.setItem("theme", newTheme)
+    localStorage.setItem('theme', newTheme)
     applyTheme()
   }
 
   function toggleTheme() {
-    const newTheme = isDarkMode.value ? "light" : "dark"
+    const newTheme = isDarkMode.value ? 'light' : 'dark'
     setTheme(newTheme)
   }
 
   function applyTheme() {
     if (isDarkMode.value) {
-      document.documentElement.classList.add("dark-mode")
+      document.documentElement.classList.add('dark-mode')
     } else {
-      document.documentElement.classList.remove("dark-mode")
+      document.documentElement.classList.remove('dark-mode')
     }
   }
 
@@ -38,9 +38,9 @@ export const useThemeStore = defineStore("theme", () => {
     applyTheme()
 
     // Écouter les changements de préférence système
-    if (theme.value === "system") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-      mediaQuery.addEventListener("change", applyTheme)
+    if (theme.value === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      mediaQuery.addEventListener('change', applyTheme)
     }
   }
 

@@ -2,36 +2,38 @@
   <div class="refund-criteria-form">
     <div class="form-group">
       <label for="title" class="form-label">Titre <span class="required">*</span></label>
-      <input 
-        type="text" 
-        id="title" 
-        v-model="formData.title" 
-        class="form-input" 
+      <input
+        type="text"
+        id="title"
+        v-model="formData.title"
+        class="form-input"
         placeholder="Titre du critère"
         required
       />
     </div>
-    
+
     <div class="form-group">
       <label for="description" class="form-label">Description</label>
-      <textarea 
-        id="description" 
-        v-model="formData.description" 
-        class="form-textarea" 
+      <textarea
+        id="description"
+        v-model="formData.description"
+        class="form-textarea"
         placeholder="Description détaillée du critère"
         rows="3"
       ></textarea>
     </div>
-    
+
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="refund-percentage" class="form-label">Pourcentage de remboursement <span class="required">*</span></label>
+        <label for="refund-percentage" class="form-label"
+          >Pourcentage de remboursement <span class="required">*</span></label
+        >
         <div class="input-group">
-          <input 
-            type="number" 
-            id="refund-percentage" 
-            v-model.number="formData.refund_percentage" 
-            class="form-input" 
+          <input
+            type="number"
+            id="refund-percentage"
+            v-model.number="formData.refund_percentage"
+            class="form-input"
             min="0"
             max="100"
             step="5"
@@ -42,15 +44,17 @@
           </div>
         </div>
       </div>
-      
+
       <div class="form-group flex-1">
-        <label for="max-claim-time" class="form-label">Délai maximum de réclamation <span class="required">*</span></label>
+        <label for="max-claim-time" class="form-label"
+          >Délai maximum de réclamation <span class="required">*</span></label
+        >
         <div class="input-group">
-          <input 
-            type="number" 
-            id="max-claim-time" 
-            v-model.number="formData.max_claim_time" 
-            class="form-input" 
+          <input
+            type="number"
+            id="max-claim-time"
+            v-model.number="formData.max_claim_time"
+            class="form-input"
             min="1"
             required
           />
@@ -60,7 +64,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Preuves requises</label>
       <div class="checkbox-group">
@@ -78,7 +82,7 @@
         </label>
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Approbation automatique</label>
       <div class="toggle-switch">
@@ -87,10 +91,11 @@
         <span class="toggle-label">{{ formData.auto_approve ? 'Activée' : 'Désactivée' }}</span>
       </div>
       <div class="form-hint" v-if="formData.auto_approve">
-        Les demandes de remboursement qui répondent à ce critère seront automatiquement approuvées si toutes les preuves requises sont fournies.
+        Les demandes de remboursement qui répondent à ce critère seront automatiquement approuvées
+        si toutes les preuves requises sont fournies.
       </div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Statut</label>
       <div class="toggle-switch">
@@ -99,15 +104,10 @@
         <span class="toggle-label">{{ formData.active ? 'Actif' : 'Inactif' }}</span>
       </div>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save" 
-        :disabled="!isFormValid"
-      >
+      <button type="button" class="btn btn-primary" @click="save" :disabled="!isFormValid">
         {{ isEditing ? 'Mettre à jour' : 'Créer' }}
       </button>
     </div>
@@ -115,15 +115,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'RefundCriteriaForm',
   props: {
     criteria: {
       type: Object,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
@@ -137,49 +137,51 @@ export default {
       required_proofs: {
         photo: true,
         receipt: false,
-        description: true
-      }
-    });
-    
-    const isEditing = computed(() => !!props.criteria?.id);
-    
+        description: true,
+      },
+    })
+
+    const isEditing = computed(() => !!props.criteria?.id)
+
     const isFormValid = computed(() => {
-      return formData.value.title.trim() !== '' && 
-             formData.value.refund_percentage >= 0 && 
-             formData.value.refund_percentage <= 100 && 
-             formData.value.max_claim_time > 0;
-    });
-    
+      return (
+        formData.value.title.trim() !== '' &&
+        formData.value.refund_percentage >= 0 &&
+        formData.value.refund_percentage <= 100 &&
+        formData.value.max_claim_time > 0
+      )
+    })
+
     const initForm = () => {
       if (props.criteria) {
-        formData.value = { ...props.criteria };
+        formData.value = { ...props.criteria }
       }
-    };
-    
+    }
+
     const save = () => {
-      if (!isFormValid.value) return;
-      
-      const criteriaData = { ...formData.value };
-      emit('save', criteriaData);
-    };
-    
+      if (!isFormValid.value) return
+
+      const criteriaData = { ...formData.value }
+      emit('save', criteriaData)
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     onMounted(() => {
-      initForm();
-    });
-    
+      initForm()
+    })
+
     return {
       formData,
       isEditing,
       isFormValid,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

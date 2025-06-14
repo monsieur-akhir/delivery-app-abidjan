@@ -25,19 +25,23 @@
         <div class="summary-card available-balance">
           <div class="card-content">
             <h2>Solde disponible</h2>
-            <div class="balance-amount">{{ formatPrice(earningsSummary.available_balance) }} FCFA</div>
+            <div class="balance-amount">
+              {{ formatPrice(earningsSummary.available_balance) }} FCFA
+            </div>
             <p class="balance-info">Montant disponible pour retrait</p>
           </div>
         </div>
-        
+
         <div class="summary-card pending-balance">
           <div class="card-content">
             <h2>En attente</h2>
-            <div class="balance-amount">{{ formatPrice(earningsSummary.pending_balance) }} FCFA</div>
+            <div class="balance-amount">
+              {{ formatPrice(earningsSummary.pending_balance) }} FCFA
+            </div>
             <p class="balance-info">Sera disponible dans 24-48h</p>
           </div>
         </div>
-        
+
         <div class="summary-card total-earnings">
           <div class="card-content">
             <h2>Gains totaux</h2>
@@ -58,7 +62,7 @@
             <div class="stat-label">Livraisons</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
           <div class="stat-icon">
             <font-awesome-icon icon="route" />
@@ -68,7 +72,7 @@
             <div class="stat-label">Distance totale</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
           <div class="stat-icon">
             <font-awesome-icon icon="star" />
@@ -78,7 +82,7 @@
             <div class="stat-label">Note moyenne</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
           <div class="stat-icon">
             <font-awesome-icon icon="trophy" />
@@ -95,22 +99,22 @@
         <div class="chart-header">
           <h2>Évolution des gains</h2>
           <div class="period-selector">
-            <button 
-              class="period-btn" 
+            <button
+              class="period-btn"
               :class="{ active: selectedPeriod === 'week' }"
               @click="changePeriod('week')"
             >
               7 jours
             </button>
-            <button 
-              class="period-btn" 
+            <button
+              class="period-btn"
               :class="{ active: selectedPeriod === 'month' }"
               @click="changePeriod('month')"
             >
               30 jours
             </button>
-            <button 
-              class="period-btn" 
+            <button
+              class="period-btn"
               :class="{ active: selectedPeriod === 'year' }"
               @click="changePeriod('year')"
             >
@@ -118,7 +122,7 @@
             </button>
           </div>
         </div>
-        
+
         <div class="chart-container">
           <canvas ref="earningsChart"></canvas>
         </div>
@@ -133,7 +137,7 @@
             <font-awesome-icon icon="chevron-right" />
           </router-link>
         </div>
-        
+
         <div class="transactions-table-container">
           <table class="transactions-table">
             <thead>
@@ -183,7 +187,7 @@
             <font-awesome-icon icon="chevron-right" />
           </router-link>
         </div>
-        
+
         <div class="rewards-content">
           <div class="rewards-summary">
             <div class="points-card">
@@ -195,25 +199,27 @@
                 <div class="points-label">Points</div>
               </div>
             </div>
-            
+
             <div class="level-card">
               <div class="level-progress">
                 <div class="level-number">{{ earningsSummary.level || 1 }}</div>
                 <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
+                  <div
+                    class="progress-fill"
                     :style="{ width: getLevelProgressPercentage() + '%' }"
                   ></div>
                 </div>
                 <div class="level-next">Niveau {{ (earningsSummary.level || 1) + 1 }}</div>
               </div>
               <div class="level-info">
-                <div class="level-points">{{ earningsSummary.points_to_next_level || 100 }} points pour le prochain niveau</div>
+                <div class="level-points">
+                  {{ earningsSummary.points_to_next_level || 100 }} points pour le prochain niveau
+                </div>
                 <div class="level-benefits">Débloquez de nouvelles récompenses</div>
               </div>
             </div>
           </div>
-          
+
           <div class="rewards-list">
             <div v-for="reward in availableRewards" :key="reward.id" class="reward-card">
               <div class="reward-icon" :class="getRewardTypeClass(reward.type)">
@@ -227,8 +233,8 @@
                     <font-awesome-icon icon="medal" />
                     {{ reward.points_required }} points
                   </div>
-                  <button 
-                    class="btn btn-sm" 
+                  <button
+                    class="btn btn-sm"
                     :class="canRedeemReward(reward) ? 'btn-primary' : 'btn-disabled'"
                     :disabled="!canRedeemReward(reward)"
                     @click="redeemReward(reward)"
@@ -256,27 +262,29 @@
             <font-awesome-icon icon="times" />
           </button>
         </div>
-        
+
         <div class="modal-body">
           <div class="balance-info">
             <p>Solde disponible</p>
-            <div class="balance-amount">{{ formatPrice(earningsSummary.available_balance) }} FCFA</div>
+            <div class="balance-amount">
+              {{ formatPrice(earningsSummary.available_balance) }} FCFA
+            </div>
           </div>
-          
+
           <div class="form-group">
             <label for="withdrawAmount">Montant à retirer</label>
-            <input 
-              type="number" 
-              id="withdrawAmount" 
-              v-model="withdrawAmount" 
-              class="form-control" 
+            <input
+              type="number"
+              id="withdrawAmount"
+              v-model="withdrawAmount"
+              class="form-control"
               :max="earningsSummary.available_balance"
               min="1000"
               step="500"
             />
             <div class="amount-hint">Minimum: 1000 FCFA</div>
           </div>
-          
+
           <div class="form-group">
             <label for="withdrawMethod">Méthode de retrait</label>
             <select id="withdrawMethod" v-model="withdrawMethod" class="form-control">
@@ -285,22 +293,33 @@
               <option value="cash">Espèces</option>
             </select>
           </div>
-          
+
           <div v-if="withdrawMethod === 'mobile_money'" class="form-group">
             <label for="phoneNumber">Numéro de téléphone</label>
-            <input type="tel" id="phoneNumber" v-model="phoneNumber" class="form-control" placeholder="Ex: 0701234567" />
+            <input
+              type="tel"
+              id="phoneNumber"
+              v-model="phoneNumber"
+              class="form-control"
+              placeholder="Ex: 0701234567"
+            />
           </div>
-          
+
           <div v-if="withdrawMethod === 'bank_transfer'" class="form-group">
             <label for="bankAccount">Numéro de compte bancaire</label>
             <input type="text" id="bankAccount" v-model="bankAccount" class="form-control" />
           </div>
-          
+
           <div class="form-group">
             <label for="withdrawNote">Note (optionnel)</label>
-            <textarea id="withdrawNote" v-model="withdrawNote" class="form-control" rows="2"></textarea>
+            <textarea
+              id="withdrawNote"
+              v-model="withdrawNote"
+              class="form-control"
+              rows="2"
+            ></textarea>
           </div>
-          
+
           <div class="withdraw-summary">
             <div class="summary-row">
               <span>Montant du retrait:</span>
@@ -316,12 +335,12 @@
             </div>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button class="btn btn-outline" @click="showWithdrawModal = false">Annuler</button>
-          <button 
-            class="btn btn-primary" 
-            @click="processWithdrawal" 
+          <button
+            class="btn btn-primary"
+            @click="processWithdrawal"
             :disabled="!isWithdrawFormValid || withdrawLoading"
           >
             <font-awesome-icon v-if="withdrawLoading" icon="circle-notch" spin class="mr-1" />
@@ -336,7 +355,13 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import Chart from 'chart.js/auto'
-import { fetchCourierEarnings, fetchTransactions, fetchAvailableRewards, redeemReward as apiRedeemReward, withdrawFunds } from '@/api/courier'
+import {
+  fetchCourierEarnings,
+  fetchTransactions,
+  fetchAvailableRewards,
+  redeemReward as apiRedeemReward,
+  withdrawFunds,
+} from '@/api/courier'
 import { formatDate, formatPrice } from '@/utils/formatters'
 
 export default {
@@ -353,7 +378,7 @@ export default {
       ranking: null,
       points: 0,
       level: 1,
-      points_to_next_level: 100
+      points_to_next_level: 100,
     })
     const transactions = ref([])
     const availableRewards = ref([])
@@ -361,7 +386,7 @@ export default {
     const selectedPeriod = ref('week')
     const earningsChart = ref(null)
     let chartInstance = null
-    
+
     // Variables pour le retrait
     const showWithdrawModal = ref(false)
     const withdrawAmount = ref(1000)
@@ -370,21 +395,21 @@ export default {
     const bankAccount = ref('')
     const withdrawNote = ref('')
     const withdrawLoading = ref(false)
-    
+
     // Charger les données
     const loadData = async () => {
       try {
         loading.value = true
-        
+
         const data = await fetchCourierEarnings(selectedPeriod.value)
         earningsSummary.value = data.summary
         earningsHistory.value = data.history
         transactions.value = data.transactions
-        
+
         // Charger les récompenses disponibles
         const rewardsData = await fetchAvailableRewards()
         availableRewards.value = rewardsData
-        
+
         renderChart()
       } catch (error) {
         console.error('Error loading earnings data:', error)
@@ -392,33 +417,33 @@ export default {
         loading.value = false
       }
     }
-    
+
     // Actualiser les données
     const refreshData = () => {
       loadData()
     }
-    
+
     // Changer la période
-    const changePeriod = (period) => {
+    const changePeriod = period => {
       selectedPeriod.value = period
     }
-    
+
     // Surveiller les changements de période
     watch(selectedPeriod, () => {
       loadData()
     })
-    
+
     // Rendre le graphique
     const renderChart = () => {
       if (!earningsHistory.value || earningsHistory.value.length === 0) return
-      
+
       const ctx = earningsChart.value.getContext('2d')
-      
+
       // Détruire le graphique existant s'il existe
       if (chartInstance) {
         chartInstance.destroy()
       }
-      
+
       // Préparer les données
       const labels = earningsHistory.value.map(item => {
         const date = new Date(item.date)
@@ -430,10 +455,10 @@ export default {
           return date.toLocaleDateString('fr-FR', { month: 'short' })
         }
       })
-      
+
       const earningsData = earningsHistory.value.map(item => item.amount)
       const deliveriesData = earningsHistory.value.map(item => item.deliveries)
-      
+
       // Créer le graphique
       chartInstance = new Chart(ctx, {
         type: 'bar',
@@ -446,7 +471,7 @@ export default {
               backgroundColor: 'rgba(255, 107, 0, 0.7)',
               borderColor: '#FF6B00',
               borderWidth: 1,
-              yAxisID: 'y'
+              yAxisID: 'y',
             },
             {
               label: 'Livraisons',
@@ -459,9 +484,9 @@ export default {
               pointRadius: 4,
               fill: true,
               tension: 0.4,
-              yAxisID: 'y1'
-            }
-          ]
+              yAxisID: 'y1',
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -469,50 +494,50 @@ export default {
           plugins: {
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function (context) {
                   const label = context.dataset.label || ''
                   const value = context.raw
-                  
+
                   if (context.datasetIndex === 0) {
                     return `${label}: ${formatPrice(value)} FCFA`
                   } else {
                     return `${label}: ${value}`
                   }
-                }
-              }
-            }
+                },
+              },
+            },
           },
           scales: {
             y: {
               beginAtZero: true,
               title: {
                 display: true,
-                text: 'Gains (FCFA)'
+                text: 'Gains (FCFA)',
               },
               ticks: {
-                callback: function(value) {
+                callback: function (value) {
                   return formatPrice(value) + ' FCFA'
-                }
-              }
+                },
+              },
             },
             y1: {
               beginAtZero: true,
               position: 'right',
               title: {
                 display: true,
-                text: 'Livraisons'
+                text: 'Livraisons',
               },
               grid: {
-                drawOnChartArea: false
-              }
-            }
-          }
-        }
+                drawOnChartArea: false,
+              },
+            },
+          },
+        },
       })
     }
-    
+
     // Obtenir la classe CSS pour un type de transaction
-    const getTransactionTypeClass = (type) => {
+    const getTransactionTypeClass = type => {
       switch (type) {
         case 'earning':
           return 'type-earning'
@@ -526,9 +551,9 @@ export default {
           return ''
       }
     }
-    
+
     // Obtenir le libellé pour un type de transaction
-    const getTransactionTypeLabel = (type) => {
+    const getTransactionTypeLabel = type => {
       switch (type) {
         case 'earning':
           return 'Gain'
@@ -542,27 +567,27 @@ export default {
           return type
       }
     }
-    
+
     // Obtenir la classe CSS pour un montant
-    const getAmountClass = (transaction) => {
+    const getAmountClass = transaction => {
       if (transaction.type === 'earning' || transaction.type === 'bonus') {
         return 'amount-positive'
       } else {
         return 'amount-negative'
       }
     }
-    
+
     // Obtenir le préfixe pour un montant
-    const getAmountPrefix = (transaction) => {
+    const getAmountPrefix = transaction => {
       if (transaction.type === 'earning' || transaction.type === 'bonus') {
         return '+'
       } else {
         return '-'
       }
     }
-    
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       switch (status) {
         case 'completed':
           return 'status-completed'
@@ -574,9 +599,9 @@ export default {
           return ''
       }
     }
-    
+
     // Obtenir le libellé pour un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       switch (status) {
         case 'completed':
           return 'Terminé'
@@ -588,21 +613,21 @@ export default {
           return status
       }
     }
-    
+
     // Obtenir le pourcentage de progression du niveau
     const getLevelProgressPercentage = () => {
       if (!earningsSummary.value.points_to_next_level) return 0
-      
+
       const currentLevelPoints = earningsSummary.value.level * 100
       const nextLevelPoints = (earningsSummary.value.level + 1) * 100
       const pointsRange = nextLevelPoints - currentLevelPoints
       const pointsProgress = earningsSummary.value.points - currentLevelPoints
-      
+
       return Math.min(100, Math.max(0, (pointsProgress / pointsRange) * 100))
     }
-    
+
     // Obtenir la classe CSS pour un type de récompense
-    const getRewardTypeClass = (type) => {
+    const getRewardTypeClass = type => {
       switch (type) {
         case 'credit':
           return 'reward-credit'
@@ -616,9 +641,9 @@ export default {
           return ''
       }
     }
-    
+
     // Obtenir l'icône pour un type de récompense
-    const getRewardTypeIcon = (type) => {
+    const getRewardTypeIcon = type => {
       switch (type) {
         case 'credit':
           return 'mobile-alt'
@@ -632,23 +657,27 @@ export default {
           return 'award'
       }
     }
-    
+
     // Vérifier si l'utilisateur peut échanger une récompense
-    const canRedeemReward = (reward) => {
+    const canRedeemReward = reward => {
       return earningsSummary.value.points >= reward.points_required
     }
-    
+
     // Échanger une récompense
-    const redeemReward = async (reward) => {
+    const redeemReward = async reward => {
       if (!canRedeemReward(reward)) return
-      
-      if (confirm(`Êtes-vous sûr de vouloir échanger ${reward.points_required} points contre cette récompense ?`)) {
+
+      if (
+        confirm(
+          `Êtes-vous sûr de vouloir échanger ${reward.points_required} points contre cette récompense ?`
+        )
+      ) {
         try {
           await apiRedeemReward(reward.id)
-          
+
           // Actualiser les données
           loadData()
-          
+
           alert('Récompense échangée avec succès !')
         } catch (error) {
           console.error('Error redeeming reward:', error)
@@ -656,29 +685,32 @@ export default {
         }
       }
     }
-    
+
     // Vérifier si l'utilisateur peut retirer des fonds
     const canWithdraw = computed(() => {
       return earningsSummary.value.available_balance >= 1000
     })
-    
+
     // Vérifier si le formulaire de retrait est valide
     const isWithdrawFormValid = computed(() => {
-      if (withdrawAmount.value < 1000 || withdrawAmount.value > earningsSummary.value.available_balance) {
+      if (
+        withdrawAmount.value < 1000 ||
+        withdrawAmount.value > earningsSummary.value.available_balance
+      ) {
         return false
       }
-      
+
       if (withdrawMethod.value === 'mobile_money' && !phoneNumber.value) {
         return false
       }
-      
+
       if (withdrawMethod.value === 'bank_transfer' && !bankAccount.value) {
         return false
       }
-      
+
       return true
     })
-    
+
     // Calculer les frais de retrait
     const getWithdrawFees = () => {
       if (withdrawMethod.value === 'mobile_money') {
@@ -689,32 +721,32 @@ export default {
         return 0 // Pas de frais pour le retrait en espèces
       }
     }
-    
+
     // Traiter le retrait
     const processWithdrawal = async () => {
       if (!isWithdrawFormValid.value) return
-      
+
       try {
         withdrawLoading.value = true
-        
+
         await withdrawFunds({
           amount: withdrawAmount.value,
           method: withdrawMethod.value,
           phone_number: phoneNumber.value,
           bank_account: bankAccount.value,
-          note: withdrawNote.value
+          note: withdrawNote.value,
         })
-        
+
         // Fermer le modal
         showWithdrawModal.value = false
-        
+
         // Actualiser les données
         loadData()
-        
+
         // Réinitialiser le formulaire
         withdrawAmount.value = 1000
         withdrawNote.value = ''
-        
+
         alert('Retrait effectué avec succès ! Vous recevrez votre argent sous peu.')
       } catch (error) {
         console.error('Error processing withdrawal:', error)
@@ -723,11 +755,11 @@ export default {
         withdrawLoading.value = false
       }
     }
-    
+
     onMounted(() => {
       loadData()
     })
-    
+
     return {
       loading,
       earningsSummary,
@@ -762,9 +794,9 @@ export default {
       getWithdrawFees,
       processWithdrawal,
       formatDate,
-      formatPrice
+      formatPrice,
     }
-  }
+  },
 }
 </script>
 
@@ -834,15 +866,15 @@ export default {
 }
 
 .available-balance::before {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .pending-balance::before {
-  background-color: #FFC107;
+  background-color: #ffc107;
 }
 
 .total-earnings::before {
-  background-color: #2196F3;
+  background-color: #2196f3;
 }
 
 .card-content {
@@ -1036,32 +1068,32 @@ export default {
 }
 
 .type-earning {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .type-withdrawal {
-  background-color: #E3F2FD;
-  color: #1976D2;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .type-bonus {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #fff8e1;
+  color: #ffa000;
 }
 
 .type-fee {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .amount-positive {
-  color: #388E3C;
+  color: #388e3c;
   font-weight: 600;
 }
 
 .amount-negative {
-  color: #D32F2F;
+  color: #d32f2f;
   font-weight: 600;
 }
 
@@ -1074,18 +1106,18 @@ export default {
 }
 
 .status-completed {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-pending {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #fff8e1;
+  color: #ffa000;
 }
 
 .status-failed {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .empty-transactions {
@@ -1243,19 +1275,19 @@ export default {
 }
 
 .reward-credit {
-  background-color: #2196F3;
+  background-color: #2196f3;
 }
 
 .reward-discount {
-  background-color: #9C27B0;
+  background-color: #9c27b0;
 }
 
 .reward-cash {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .reward-gift {
-  background-color: #FF9800;
+  background-color: #ff9800;
 }
 
 .reward-content {
@@ -1452,21 +1484,21 @@ export default {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-actions {
     width: 100%;
   }
-  
+
   .header-actions .btn {
     flex: 1;
   }
-  
+
   .chart-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
+
   .transactions-table th:nth-child(2),
   .transactions-table td:nth-child(2) {
     display: none;

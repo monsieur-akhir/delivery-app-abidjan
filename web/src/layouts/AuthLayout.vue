@@ -30,11 +30,11 @@ export default {
   name: 'AuthLayout',
   setup() {
     const currentYear = computed(() => new Date().getFullYear())
-    
+
     return {
-      currentYear
+      currentYear,
     }
-  }
+  },
 }
 </script>
 
@@ -138,7 +138,7 @@ export default {
   .auth-container {
     padding: 1rem;
   }
-  
+
   .auth-card {
     padding: 1.5rem;
   }

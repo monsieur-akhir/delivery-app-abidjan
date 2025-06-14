@@ -7,9 +7,7 @@
           {{ getStatusLabel(delivery.status) }}
         </span>
       </div>
-      <div class="delivery-price">
-        {{ formatPrice(delivery.final_price) }} FCFA
-      </div>
+      <div class="delivery-price">{{ formatPrice(delivery.final_price) }} FCFA</div>
     </div>
 
     <div class="delivery-content">
@@ -35,9 +33,9 @@
               <div class="point-commune">{{ delivery.pickup_commune }}</div>
             </div>
           </div>
-          
+
           <div class="route-line"></div>
-          
+
           <div class="route-point">
             <div class="point-icon delivery">
               <i class="fas fa-circle"></i>
@@ -55,16 +53,16 @@
       <div class="team-section">
         <h4>Équipe collaborative</h4>
         <div class="team-members">
-          <div 
-            v-for="collaborator in delivery.collaborators" 
+          <div
+            v-for="collaborator in delivery.collaborators"
             :key="collaborator.courier_id"
             class="team-member"
           >
             <div class="member-avatar">
-              <img 
-                :src="collaborator.profile_picture || '/default-avatar.png'" 
+              <img
+                :src="collaborator.profile_picture || '/default-avatar.png'"
                 :alt="collaborator.courier_name"
-              >
+              />
               <div :class="['role-badge', getRoleClass(collaborator.role)]">
                 {{ getRoleLabel(collaborator.role) }}
               </div>
@@ -93,7 +91,7 @@
               <div class="timeline-time">{{ formatDateTime(delivery.created_at) }}</div>
             </div>
           </div>
-          
+
           <div v-if="delivery.accepted_at" class="timeline-item completed">
             <div class="timeline-icon">
               <i class="fas fa-handshake"></i>
@@ -103,7 +101,7 @@
               <div class="timeline-time">{{ formatDateTime(delivery.accepted_at) }}</div>
             </div>
           </div>
-          
+
           <div v-if="delivery.pickup_at" class="timeline-item completed">
             <div class="timeline-icon">
               <i class="fas fa-box"></i>
@@ -113,7 +111,7 @@
               <div class="timeline-time">{{ formatDateTime(delivery.pickup_at) }}</div>
             </div>
           </div>
-          
+
           <div v-if="delivery.delivered_at" class="timeline-item completed">
             <div class="timeline-icon">
               <i class="fas fa-check"></i>
@@ -139,130 +137,133 @@ export default {
   props: {
     delivery: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   setup(props) {
     let map = null
-    
+
     const initMap = () => {
       if (!props.delivery.pickup_lat || !props.delivery.delivery_lat) return
-      
+
       // Initialiser la carte
-      map = L.map('delivery-map').setView([
-        (props.delivery.pickup_lat + props.delivery.delivery_lat) / 2,
-        (props.delivery.pickup_lng + props.delivery.delivery_lng) / 2
-      ], 13)
-      
+      map = L.map('delivery-map').setView(
+        [
+          (props.delivery.pickup_lat + props.delivery.delivery_lat) / 2,
+          (props.delivery.pickup_lng + props.delivery.delivery_lng) / 2,
+        ],
+        13
+      )
+
       // Ajouter les tuiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors',
       }).addTo(map)
-      
+
       // Marqueur de ramassage
       const pickupIcon = L.divIcon({
         html: '<i class="fas fa-circle" style="color: #007bff;"></i>',
         iconSize: [20, 20],
-        className: 'custom-div-icon'
+        className: 'custom-div-icon',
       })
-      
+
       L.marker([props.delivery.pickup_lat, props.delivery.pickup_lng], { icon: pickupIcon })
         .addTo(map)
         .bindPopup(`<b>Ramassage</b><br>${props.delivery.pickup_address}`)
-      
+
       // Marqueur de livraison
       const deliveryIcon = L.divIcon({
         html: '<i class="fas fa-circle" style="color: #28a745;"></i>',
         iconSize: [20, 20],
-        className: 'custom-div-icon'
+        className: 'custom-div-icon',
       })
-      
+
       L.marker([props.delivery.delivery_lat, props.delivery.delivery_lng], { icon: deliveryIcon })
         .addTo(map)
         .bindPopup(`<b>Livraison</b><br>${props.delivery.delivery_address}`)
-      
+
       // Ligne entre les points
       const latlngs = [
         [props.delivery.pickup_lat, props.delivery.pickup_lng],
-        [props.delivery.delivery_lat, props.delivery.delivery_lng]
+        [props.delivery.delivery_lat, props.delivery.delivery_lng],
       ]
-      
+
       L.polyline(latlngs, { color: '#007bff', weight: 3 }).addTo(map)
-      
+
       // Ajuster la vue
       const group = new L.featureGroup([
         L.marker([props.delivery.pickup_lat, props.delivery.pickup_lng]),
-        L.marker([props.delivery.delivery_lat, props.delivery.delivery_lng])
+        L.marker([props.delivery.delivery_lat, props.delivery.delivery_lng]),
       ])
       map.fitBounds(group.getBounds().pad(0.1))
     }
-    
-    const getStatusClass = (status) => {
+
+    const getStatusClass = status => {
       const classes = {
         pending: 'status-pending',
         in_progress: 'status-progress',
         completed: 'status-completed',
-        cancelled: 'status-cancelled'
+        cancelled: 'status-cancelled',
       }
       return classes[status] || 'status-default'
     }
-    
-    const getStatusLabel = (status) => {
+
+    const getStatusLabel = status => {
       const labels = {
         pending: 'En attente',
         in_progress: 'En cours',
         completed: 'Terminée',
-        cancelled: 'Annulée'
+        cancelled: 'Annulée',
       }
       return labels[status] || status
     }
-    
-    const getRoleClass = (role) => {
+
+    const getRoleClass = role => {
       const classes = {
         primary: 'role-primary',
         secondary: 'role-secondary',
-        support: 'role-support'
+        support: 'role-support',
       }
       return classes[role] || 'role-default'
     }
-    
-    const getRoleLabel = (role) => {
+
+    const getRoleLabel = role => {
       const labels = {
         primary: 'Principal',
         secondary: 'Secondaire',
-        support: 'Support'
+        support: 'Support',
       }
       return labels[role] || role
     }
-    
-    const getCollaboratorStatusClass = (status) => {
+
+    const getCollaboratorStatusClass = status => {
       const classes = {
         pending: 'collab-pending',
         accepted: 'collab-accepted',
-        completed: 'collab-completed'
+        completed: 'collab-completed',
       }
       return classes[status] || 'collab-default'
     }
-    
-    const getCollaboratorStatusLabel = (status) => {
+
+    const getCollaboratorStatusLabel = status => {
       const labels = {
         pending: 'En attente',
         accepted: 'Accepté',
-        completed: 'Terminé'
+        completed: 'Terminé',
       }
       return labels[status] || status
     }
-    
+
     onMounted(() => {
       setTimeout(initMap, 100) // Délai pour s'assurer que le DOM est prêt
     })
-    
+
     onUnmounted(() => {
       if (map) {
         map.remove()
       }
     })
-    
+
     return {
       formatPrice,
       formatDateTime,
@@ -271,9 +272,9 @@ export default {
       getRoleClass,
       getRoleLabel,
       getCollaboratorStatusClass,
-      getCollaboratorStatusLabel
+      getCollaboratorStatusLabel,
     }
-  }
+  },
 }
 </script>
 
@@ -547,7 +548,7 @@ export default {
   .delivery-content {
     grid-template-columns: 1fr;
   }
-  
+
   .delivery-header {
     flex-direction: column;
     align-items: flex-start;

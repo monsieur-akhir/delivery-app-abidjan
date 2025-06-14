@@ -20,7 +20,7 @@
           <div class="stat-info">Sur {{ rules.length }} règles au total</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-box"></i>
@@ -31,7 +31,7 @@
           <div class="stat-info">Sur 11 catégories disponibles</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-truck"></i>
@@ -42,7 +42,7 @@
           <div class="stat-info">Sur {{ vehicles.length }} véhicules disponibles</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-sort-amount-up"></i>
@@ -58,9 +58,11 @@
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">Règles de transport</h2>
-        <p class="card-description">Définissez les règles d'attribution des véhicules selon le type de livraison</p>
+        <p class="card-description">
+          Définissez les règles d'attribution des véhicules selon le type de livraison
+        </p>
       </div>
-      
+
       <div class="card-body">
         <div class="filters">
           <div class="filter-group">
@@ -72,17 +74,21 @@
               </option>
             </select>
           </div>
-          
+
           <div class="filter-group">
             <label for="category-filter">Catégorie</label>
             <select id="category-filter" v-model="filters.category" class="form-control">
               <option value="">Toutes les catégories</option>
-              <option v-for="category in allCategories" :key="category.value" :value="category.value">
+              <option
+                v-for="category in allCategories"
+                :key="category.value"
+                :value="category.value"
+              >
                 {{ category.label }}
               </option>
             </select>
           </div>
-          
+
           <div class="filter-group">
             <label for="status-filter">Statut</label>
             <select id="status-filter" v-model="filters.isActive" class="form-control">
@@ -91,12 +97,10 @@
               <option :value="false">Inactif</option>
             </select>
           </div>
-          
-          <button class="btn btn-outline" @click="resetFilters">
-            Réinitialiser les filtres
-          </button>
+
+          <button class="btn btn-outline" @click="resetFilters">Réinitialiser les filtres</button>
         </div>
-        
+
         <div class="table-responsive">
           <table class="table">
             <thead>
@@ -151,7 +155,9 @@
                 </td>
                 <td>x{{ rule.priceMultiplier.toFixed(2) }}</td>
                 <td>
-                  <span :class="['status-badge', rule.isActive ? 'status-active' : 'status-inactive']">
+                  <span
+                    :class="['status-badge', rule.isActive ? 'status-active' : 'status-inactive']"
+                  >
                     {{ rule.isActive ? 'Actif' : 'Inactif' }}
                   </span>
                 </td>
@@ -178,9 +184,11 @@
     <!-- Rule Modal -->
     <modal v-if="showRuleModal" @close="closeRuleModal">
       <template #header>
-        <h3>{{ editingRule ? 'Modifier la règle de transport' : 'Ajouter une règle de transport' }}</h3>
+        <h3>
+          {{ editingRule ? 'Modifier la règle de transport' : 'Ajouter une règle de transport' }}
+        </h3>
       </template>
-      
+
       <template #body>
         <form @submit.prevent="saveRule" class="rule-form">
           <div class="form-group">
@@ -192,71 +200,133 @@
               </option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="category">Catégorie de cargaison</label>
             <select id="category" v-model="ruleForm.cargoCategory" class="form-control" required>
               <option value="" disabled>Sélectionnez une catégorie</option>
-              <option v-for="category in allCategories" :key="category.value" :value="category.value">
+              <option
+                v-for="category in allCategories"
+                :key="category.value"
+                :value="category.value"
+              >
                 {{ category.label }}
               </option>
             </select>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group half">
               <label for="min-distance">Distance minimale (km)</label>
-              <input id="min-distance" type="number" v-model.number="ruleForm.minDistance" class="form-control" min="0" step="0.1">
+              <input
+                id="min-distance"
+                type="number"
+                v-model.number="ruleForm.minDistance"
+                class="form-control"
+                min="0"
+                step="0.1"
+              />
             </div>
             <div class="form-group half">
               <label for="max-distance">Distance maximale (km)</label>
-              <input id="max-distance" type="number" v-model.number="ruleForm.maxDistance" class="form-control" min="0" step="0.1">
+              <input
+                id="max-distance"
+                type="number"
+                v-model.number="ruleForm.maxDistance"
+                class="form-control"
+                min="0"
+                step="0.1"
+              />
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group half">
               <label for="min-weight">Poids minimal (kg)</label>
-              <input id="min-weight" type="number" v-model.number="ruleForm.minWeight" class="form-control" min="0" step="0.1">
+              <input
+                id="min-weight"
+                type="number"
+                v-model.number="ruleForm.minWeight"
+                class="form-control"
+                min="0"
+                step="0.1"
+              />
             </div>
             <div class="form-group half">
               <label for="max-weight">Poids maximal (kg)</label>
-              <input id="max-weight" type="number" v-model.number="ruleForm.maxWeight" class="form-control" min="0" step="0.1">
+              <input
+                id="max-weight"
+                type="number"
+                v-model.number="ruleForm.maxWeight"
+                class="form-control"
+                min="0"
+                step="0.1"
+              />
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group half">
               <label for="min-volume">Volume minimal (m³)</label>
-              <input id="min-volume" type="number" v-model.number="ruleForm.minVolume" class="form-control" min="0" step="0.01">
+              <input
+                id="min-volume"
+                type="number"
+                v-model.number="ruleForm.minVolume"
+                class="form-control"
+                min="0"
+                step="0.01"
+              />
             </div>
             <div class="form-group half">
               <label for="max-volume">Volume maximal (m³)</label>
-              <input id="max-volume" type="number" v-model.number="ruleForm.maxVolume" class="form-control" min="0" step="0.01">
+              <input
+                id="max-volume"
+                type="number"
+                v-model.number="ruleForm.maxVolume"
+                class="form-control"
+                min="0"
+                step="0.01"
+              />
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group half">
               <label for="priority">Priorité (1-10)</label>
-              <input id="priority" type="number" v-model.number="ruleForm.priority" class="form-control" min="1" max="10" required>
+              <input
+                id="priority"
+                type="number"
+                v-model.number="ruleForm.priority"
+                class="form-control"
+                min="1"
+                max="10"
+                required
+              />
             </div>
             <div class="form-group half">
               <label for="price-multiplier">Multiplicateur de prix</label>
-              <input id="price-multiplier" type="number" v-model.number="ruleForm.priceMultiplier" class="form-control" min="0.1" step="0.1" required>
+              <input
+                id="price-multiplier"
+                type="number"
+                v-model.number="ruleForm.priceMultiplier"
+                class="form-control"
+                min="0.1"
+                step="0.1"
+                required
+              />
             </div>
           </div>
-          
+
           <div class="form-group">
             <label class="checkbox-container">
-              <input type="checkbox" v-model="ruleForm.isActive">
+              <input type="checkbox" v-model="ruleForm.isActive" />
               <span class="checkmark"></span>
               Règle active
             </label>
           </div>
         </form>
       </template>
-      
+
       <template #footer>
         <button class="btn btn-secondary" @click="closeRuleModal">Annuler</button>
         <button class="btn btn-primary" @click="saveRule">
@@ -279,31 +349,31 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, reactive } from 'vue';
-import { useToast } from '@/composables/useToast';
-import transportApi from '@/api/transport';
-import vehiclesApi from '@/api/vehicles';
-import Modal from '@/components/ui/Modal.vue';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import { ref, computed, onMounted, reactive } from 'vue'
+import { useToast } from '@/composables/useToast'
+import transportApi from '@/api/transport'
+import vehiclesApi from '@/api/vehicles'
+import Modal from '@/components/ui/Modal.vue'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 
 export default {
   name: 'TransportRulesView',
   components: {
     Modal,
-    ConfirmDialog
+    ConfirmDialog,
   },
   setup() {
-    const { showToast } = useToast();
-    
+    const { showToast } = useToast()
+
     // Data
-    const rules = ref([]);
-    const vehicles = ref([]);
-    const loading = ref(true);
-    const showRuleModal = ref(false);
-    const showDeleteConfirm = ref(false);
-    const editingRule = ref(null);
-    const ruleToDelete = ref(null);
-    
+    const rules = ref([])
+    const vehicles = ref([])
+    const loading = ref(true)
+    const showRuleModal = ref(false)
+    const showDeleteConfirm = ref(false)
+    const editingRule = ref(null)
+    const ruleToDelete = ref(null)
+
     const ruleForm = reactive({
       vehicleId: '',
       cargoCategory: '',
@@ -315,45 +385,45 @@ export default {
       maxVolume: null,
       priority: 5,
       priceMultiplier: 1.0,
-      isActive: true
-    });
-    
+      isActive: true,
+    })
+
     const filters = reactive({
       vehicleId: '',
       category: '',
-      isActive: ''
-    });
-    
+      isActive: '',
+    })
+
     // Computed properties
     const activeRulesCount = computed(() => {
-      return rules.value.filter(rule => rule.isActive).length;
-    });
-    
+      return rules.value.filter(rule => rule.isActive).length
+    })
+
     const uniqueCategories = computed(() => {
-      const categories = new Set(rules.value.map(rule => rule.cargoCategory));
-      return Array.from(categories);
-    });
-    
+      const categories = new Set(rules.value.map(rule => rule.cargoCategory))
+      return Array.from(categories)
+    })
+
     const uniqueVehicles = computed(() => {
-      const vehicleIds = new Set(rules.value.map(rule => rule.vehicleId));
-      return Array.from(vehicleIds);
-    });
-    
+      const vehicleIds = new Set(rules.value.map(rule => rule.vehicleId))
+      return Array.from(vehicleIds)
+    })
+
     const averagePriority = computed(() => {
-      if (rules.value.length === 0) return 0;
-      const sum = rules.value.reduce((acc, rule) => acc + rule.priority, 0);
-      return sum / rules.value.length;
-    });
-    
+      if (rules.value.length === 0) return 0
+      const sum = rules.value.reduce((acc, rule) => acc + rule.priority, 0)
+      return sum / rules.value.length
+    })
+
     const filteredRules = computed(() => {
       return rules.value.filter(rule => {
-        if (filters.vehicleId && rule.vehicleId !== filters.vehicleId) return false;
-        if (filters.category && rule.cargoCategory !== filters.category) return false;
-        if (filters.isActive !== '' && rule.isActive !== filters.isActive) return false;
-        return true;
-      });
-    });
-    
+        if (filters.vehicleId && rule.vehicleId !== filters.vehicleId) return false
+        if (filters.category && rule.cargoCategory !== filters.category) return false
+        if (filters.isActive !== '' && rule.isActive !== filters.isActive) return false
+        return true
+      })
+    })
+
     const allCategories = [
       { value: 'documents', label: 'Documents' },
       { value: 'small_packages', label: 'Petits colis' },
@@ -365,42 +435,42 @@ export default {
       { value: 'furniture', label: 'Meubles' },
       { value: 'appliances', label: 'Électroménager' },
       { value: 'construction', label: 'Matériaux de construction' },
-      { value: 'custom', label: 'Personnalisé' }
-    ];
-    
+      { value: 'custom', label: 'Personnalisé' },
+    ]
+
     // Methods
     const fetchRules = async () => {
       try {
-        loading.value = true;
-        const response = await transportApi.getTransportRules();
-        rules.value = response.data;
+        loading.value = true
+        const response = await transportApi.getTransportRules()
+        rules.value = response.data
       } catch (error) {
-        console.error('Error fetching transport rules:', error);
-        showToast('Erreur lors du chargement des règles de transport', 'error');
+        console.error('Error fetching transport rules:', error)
+        showToast('Erreur lors du chargement des règles de transport', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     const fetchVehicles = async () => {
       try {
-        const response = await vehiclesApi.getVehicles({ status: 'active' });
-        vehicles.value = response.data;
+        const response = await vehiclesApi.getVehicles({ status: 'active' })
+        vehicles.value = response.data
       } catch (error) {
-        console.error('Error fetching vehicles:', error);
-        showToast('Erreur lors du chargement des véhicules', 'error');
+        console.error('Error fetching vehicles:', error)
+        showToast('Erreur lors du chargement des véhicules', 'error')
       }
-    };
-    
+    }
+
     const resetFilters = () => {
-      filters.vehicleId = '';
-      filters.category = '';
-      filters.isActive = '';
-    };
-    
+      filters.vehicleId = ''
+      filters.category = ''
+      filters.isActive = ''
+    }
+
     const openRuleModal = (rule = null) => {
       if (rule) {
-        editingRule.value = rule;
+        editingRule.value = rule
         Object.assign(ruleForm, {
           vehicleId: rule.vehicleId,
           cargoCategory: rule.cargoCategory,
@@ -412,10 +482,10 @@ export default {
           maxVolume: rule.maxVolume,
           priority: rule.priority,
           priceMultiplier: rule.priceMultiplier,
-          isActive: rule.isActive
-        });
+          isActive: rule.isActive,
+        })
       } else {
-        editingRule.value = null;
+        editingRule.value = null
         Object.assign(ruleForm, {
           vehicleId: '',
           cargoCategory: '',
@@ -427,67 +497,67 @@ export default {
           maxVolume: null,
           priority: 5,
           priceMultiplier: 1.0,
-          isActive: true
-        });
+          isActive: true,
+        })
       }
-      showRuleModal.value = true;
-    };
-    
+      showRuleModal.value = true
+    }
+
     const closeRuleModal = () => {
-      showRuleModal.value = false;
-      editingRule.value = null;
-    };
-    
+      showRuleModal.value = false
+      editingRule.value = null
+    }
+
     const saveRule = async () => {
       try {
         if (editingRule.value) {
-          await transportApi.updateTransportRule(editingRule.value.id, ruleForm);
-          showToast('Règle de transport mise à jour avec succès', 'success');
+          await transportApi.updateTransportRule(editingRule.value.id, ruleForm)
+          showToast('Règle de transport mise à jour avec succès', 'success')
         } else {
-          await transportApi.createTransportRule(ruleForm);
-          showToast('Règle de transport créée avec succès', 'success');
+          await transportApi.createTransportRule(ruleForm)
+          showToast('Règle de transport créée avec succès', 'success')
         }
-        closeRuleModal();
-        fetchRules();
+        closeRuleModal()
+        fetchRules()
       } catch (error) {
-        console.error('Error saving transport rule:', error);
-        showToast('Erreur lors de l\'enregistrement de la règle de transport', 'error');
+        console.error('Error saving transport rule:', error)
+        showToast("Erreur lors de l'enregistrement de la règle de transport", 'error')
       }
-    };
-    
-    const toggleRuleStatus = async (rule) => {
+    }
+
+    const toggleRuleStatus = async rule => {
       try {
         await transportApi.updateTransportRule(rule.id, {
-          isActive: !rule.isActive
-        });
-        rule.isActive = !rule.isActive;
-        showToast(`Règle ${rule.isActive ? 'activée' : 'désactivée'} avec succès`, 'success');
+          isActive: !rule.isActive,
+        })
+        rule.isActive = !rule.isActive
+        showToast(`Règle ${rule.isActive ? 'activée' : 'désactivée'} avec succès`, 'success')
       } catch (error) {
-        console.error('Error toggling rule status:', error);
-        showToast('Erreur lors de la modification du statut de la règle', 'error');
+        console.error('Error toggling rule status:', error)
+        showToast('Erreur lors de la modification du statut de la règle', 'error')
       }
-    };
-    
-    const confirmDeleteRule = (rule) => {
-      ruleToDelete.value = rule;
-      showDeleteConfirm.value = true;
-    };
-    
+    }
+
+    const confirmDeleteRule = rule => {
+      ruleToDelete.value = rule
+      showDeleteConfirm.value = true
+    }
+
     const deleteRule = async () => {
       try {
-        await transportApi.deleteTransportRule(ruleToDelete.value.id);
-        rules.value = rules.value.filter(r => r.id !== ruleToDelete.value.id);
-        showToast('Règle de transport supprimée avec succès', 'success');
+        await transportApi.deleteTransportRule(ruleToDelete.value.id)
+        rules.value = rules.value.filter(r => r.id !== ruleToDelete.value.id)
+        showToast('Règle de transport supprimée avec succès', 'success')
       } catch (error) {
-        console.error('Error deleting transport rule:', error);
-        showToast('Erreur lors de la suppression de la règle de transport', 'error');
+        console.error('Error deleting transport rule:', error)
+        showToast('Erreur lors de la suppression de la règle de transport', 'error')
       } finally {
-        showDeleteConfirm.value = false;
-        ruleToDelete.value = null;
+        showDeleteConfirm.value = false
+        ruleToDelete.value = null
       }
-    };
-    
-    const getVehicleTypeLabel = (type) => {
+    }
+
+    const getVehicleTypeLabel = type => {
       const labels = {
         scooter: 'Trottinette',
         bicycle: 'Vélo',
@@ -496,32 +566,32 @@ export default {
         pickup: 'Pick-up',
         kia_truck: 'Camion KIA',
         moving_truck: 'Camion de déménagement',
-        custom: 'Personnalisé'
-      };
-      return labels[type] || type;
-    };
-    
-    const getCargoCategoryLabel = (category) => {
-      const found = allCategories.find(c => c.value === category);
-      return found ? found.label : category;
-    };
-    
+        custom: 'Personnalisé',
+      }
+      return labels[type] || type
+    }
+
+    const getCargoCategoryLabel = category => {
+      const found = allCategories.find(c => c.value === category)
+      return found ? found.label : category
+    }
+
     const formatRange = (min, max, unit = '') => {
       if (min !== null && min !== undefined && max !== null && max !== undefined) {
-        return `${min} - ${max}${unit}`;
+        return `${min} - ${max}${unit}`
       } else if (min !== null && min !== undefined) {
-        return `> ${min}${unit}`;
+        return `> ${min}${unit}`
       } else if (max !== null && max !== undefined) {
-        return `< ${max}${unit}`;
+        return `< ${max}${unit}`
       } else {
-        return 'Tous';
+        return 'Tous'
       }
-    };
-    
+    }
+
     onMounted(async () => {
-      await Promise.all([fetchRules(), fetchVehicles()]);
-    });
-    
+      await Promise.all([fetchRules(), fetchVehicles()])
+    })
+
     return {
       rules,
       vehicles,
@@ -546,10 +616,10 @@ export default {
       deleteRule,
       getVehicleTypeLabel,
       getCargoCategoryLabel,
-      formatRange
-    };
-  }
-};
+      formatRange,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -768,12 +838,16 @@ export default {
   vertical-align: middle;
 }
 
-.vehicle-cell, .category-cell, .priority-cell {
+.vehicle-cell,
+.category-cell,
+.priority-cell {
   display: flex;
   align-items: center;
 }
 
-.vehicle-cell i, .category-cell i, .priority-cell i {
+.vehicle-cell i,
+.category-cell i,
+.priority-cell i {
   margin-right: 8px;
   color: #6b7280;
 }
@@ -836,8 +910,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .rule-form {
@@ -902,7 +980,7 @@ export default {
 }
 
 .checkmark:after {
-  content: "";
+  content: '';
   position: absolute;
   display: none;
 }

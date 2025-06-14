@@ -54,8 +54,8 @@
 
     <!-- Onglets -->
     <div class="tabs">
-      <button 
-        v-for="tab in tabs" 
+      <button
+        v-for="tab in tabs"
         :key="tab.id"
         :class="['tab-button', { active: activeTab === tab.id }]"
         @click="activeTab = tab.id"
@@ -88,13 +88,13 @@
             <option value="referral_bonus">Bonus parrainage</option>
           </select>
 
-          <input 
-            type="text" 
-            v-model="searchQuery" 
+          <input
+            type="text"
+            v-model="searchQuery"
             @input="searchPromotions"
             placeholder="Rechercher une promotion..."
             class="search-input"
-          >
+          />
         </div>
 
         <!-- Table des promotions -->
@@ -142,9 +142,7 @@
                     <span v-else-if="promotion.promotion_type === 'discount_fixed'">
                       {{ formatCurrency(promotion.discount_value) }}
                     </span>
-                    <span v-else-if="promotion.promotion_type === 'free_delivery'">
-                      Gratuite
-                    </span>
+                    <span v-else-if="promotion.promotion_type === 'free_delivery'"> Gratuite </span>
                     <span v-else-if="promotion.promotion_type === 'cashback'">
                       {{ promotion.cashback_percentage }}%
                     </span>
@@ -167,16 +165,16 @@
                     <button @click="editPromotion(promotion)" class="btn-icon">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button 
+                    <button
                       v-if="promotion.status === 'draft'"
-                      @click="activatePromotion(promotion.id)" 
+                      @click="activatePromotion(promotion.id)"
                       class="btn-icon success"
                     >
                       <i class="fas fa-play"></i>
                     </button>
-                    <button 
+                    <button
                       v-if="promotion.status === 'active'"
-                      @click="pausePromotion(promotion.id)" 
+                      @click="pausePromotion(promotion.id)"
                       class="btn-icon warning"
                     >
                       <i class="fas fa-pause"></i>
@@ -230,12 +228,12 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Nom de la promotion *</label>
-              <input type="text" v-model="promotionForm.name" required>
+              <input type="text" v-model="promotionForm.name" required />
             </div>
 
             <div class="form-group">
               <label>Code promo (optionnel)</label>
-              <input type="text" v-model="promotionForm.code" placeholder="Ex: SAVE20">
+              <input type="text" v-model="promotionForm.code" placeholder="Ex: SAVE20" />
             </div>
 
             <div class="form-group">
@@ -251,52 +249,52 @@
 
             <div class="form-group" v-if="promotionForm.promotion_type === 'discount_percentage'">
               <label>Pourcentage de remise (%)</label>
-              <input type="number" v-model="promotionForm.discount_value" min="0" max="100">
+              <input type="number" v-model="promotionForm.discount_value" min="0" max="100" />
             </div>
 
             <div class="form-group" v-if="promotionForm.promotion_type === 'discount_fixed'">
               <label>Montant de remise (XOF)</label>
-              <input type="number" v-model="promotionForm.discount_value" min="0">
+              <input type="number" v-model="promotionForm.discount_value" min="0" />
             </div>
 
             <div class="form-group" v-if="promotionForm.promotion_type === 'cashback'">
               <label>Pourcentage de cashback (%)</label>
-              <input type="number" v-model="promotionForm.cashback_percentage" min="0" max="100">
+              <input type="number" v-model="promotionForm.cashback_percentage" min="0" max="100" />
             </div>
 
             <div class="form-group">
               <label>Remise maximale (XOF)</label>
-              <input type="number" v-model="promotionForm.max_discount" min="0">
+              <input type="number" v-model="promotionForm.max_discount" min="0" />
             </div>
 
             <div class="form-group">
               <label>Commande minimale (XOF)</label>
-              <input type="number" v-model="promotionForm.min_order_value" min="0">
+              <input type="number" v-model="promotionForm.min_order_value" min="0" />
             </div>
 
             <div class="form-group">
               <label>Utilisations maximales</label>
-              <input type="number" v-model="promotionForm.max_uses_total" min="1">
+              <input type="number" v-model="promotionForm.max_uses_total" min="1" />
             </div>
 
             <div class="form-group">
               <label>Utilisations par utilisateur</label>
-              <input type="number" v-model="promotionForm.max_uses_per_user" min="1">
+              <input type="number" v-model="promotionForm.max_uses_per_user" min="1" />
             </div>
 
             <div class="form-group">
               <label>Date de début *</label>
-              <input type="datetime-local" v-model="promotionForm.start_date" required>
+              <input type="datetime-local" v-model="promotionForm.start_date" required />
             </div>
 
             <div class="form-group">
               <label>Date de fin *</label>
-              <input type="datetime-local" v-model="promotionForm.end_date" required>
+              <input type="datetime-local" v-model="promotionForm.end_date" required />
             </div>
 
             <div class="form-group">
               <label>Budget alloué (XOF)</label>
-              <input type="number" v-model="promotionForm.budget_allocated" min="0">
+              <input type="number" v-model="promotionForm.budget_allocated" min="0" />
             </div>
           </div>
 
@@ -307,17 +305,17 @@
 
           <div class="form-options">
             <label class="checkbox-label">
-              <input type="checkbox" v-model="promotionForm.is_auto_apply">
+              <input type="checkbox" v-model="promotionForm.is_auto_apply" />
               Application automatique
             </label>
 
             <label class="checkbox-label">
-              <input type="checkbox" v-model="promotionForm.is_stackable">
+              <input type="checkbox" v-model="promotionForm.is_stackable" />
               Cumulable avec d'autres promotions
             </label>
 
             <label class="checkbox-label">
-              <input type="checkbox" v-model="promotionForm.requires_referral">
+              <input type="checkbox" v-model="promotionForm.requires_referral" />
               Nécessite un parrainage
             </label>
           </div>
@@ -350,7 +348,7 @@ export default {
     HorizontalBarChart,
     LineChart,
     PieChart,
-    AreaChart
+    AreaChart,
   },
   setup() {
     const activeTab = ref('list')
@@ -360,10 +358,10 @@ export default {
         total_promotions: 0,
         active_promotions: 0,
         total_usage: 0,
-        total_discount: 0
+        total_discount: 0,
       },
       top_promotions: [],
-      daily_usage: []
+      daily_usage: [],
     })
 
     const showCreateModal = ref(false)
@@ -372,7 +370,7 @@ export default {
 
     const filters = reactive({
       status: '',
-      type: ''
+      type: '',
     })
 
     const promotionForm = reactive({
@@ -391,38 +389,42 @@ export default {
       budget_allocated: null,
       is_auto_apply: false,
       is_stackable: false,
-      requires_referral: false
+      requires_referral: false,
     })
 
     const tabs = [
       { id: 'list', label: 'Promotions' },
-      { id: 'analytics', label: 'Analyses' }
+      { id: 'analytics', label: 'Analyses' },
     ]
 
     const topPromotionsChart = computed(() => ({
       labels: analytics.value.top_promotions.map(item => item.name),
-      datasets: [{
-        label: 'Utilisations',
-        data: analytics.value.top_promotions.map(item => item.usage_count),
-        backgroundColor: '#FF6B00'
-      }]
+      datasets: [
+        {
+          label: 'Utilisations',
+          data: analytics.value.top_promotions.map(item => item.usage_count),
+          backgroundColor: '#FF6B00',
+        },
+      ],
     }))
 
     const dailyUsageChart = computed(() => ({
       labels: analytics.value.daily_usage.map(item => item.date),
-      datasets: [{
-        label: 'Utilisations',
-        data: analytics.value.daily_usage.map(item => item.count),
-        borderColor: '#2563eb',
-        tension: 0.1
-      }]
+      datasets: [
+        {
+          label: 'Utilisations',
+          data: analytics.value.daily_usage.map(item => item.count),
+          borderColor: '#2563eb',
+          tension: 0.1,
+        },
+      ],
     }))
 
     const loadPromotions = async () => {
       try {
         const response = await promotionsAPI.getPromotions({
           status: filters.status,
-          promotion_type: filters.type
+          promotion_type: filters.type,
         })
         promotions.value = response.data
       } catch (error) {
@@ -455,7 +457,7 @@ export default {
       }
     }
 
-    const editPromotion = (promotion) => {
+    const editPromotion = promotion => {
       editingPromotion.value = promotion
       Object.keys(promotionForm).forEach(key => {
         if (promotion[key] !== undefined) {
@@ -465,16 +467,16 @@ export default {
       showCreateModal.value = true
     }
 
-    const activatePromotion = async (id) => {
+    const activatePromotion = async id => {
       try {
         await promotionsAPI.activatePromotion(id)
         loadPromotions()
       } catch (error) {
-        console.error('Erreur lors de l\'activation:', error)
+        console.error("Erreur lors de l'activation:", error)
       }
     }
 
-    const deletePromotion = async (id) => {
+    const deletePromotion = async id => {
       if (confirm('Êtes-vous sûr de vouloir supprimer cette promotion ?')) {
         try {
           await promotionsAPI.deletePromotion(id)
@@ -493,36 +495,36 @@ export default {
       })
     }
 
-    const getTypeLabel = (type) => {
+    const getTypeLabel = type => {
       const labels = {
-        'discount_percentage': 'Pourcentage',
-        'discount_fixed': 'Montant fixe',
-        'free_delivery': 'Livraison gratuite',
-        'cashback': 'Cashback',
-        'referral_bonus': 'Parrainage'
+        discount_percentage: 'Pourcentage',
+        discount_fixed: 'Montant fixe',
+        free_delivery: 'Livraison gratuite',
+        cashback: 'Cashback',
+        referral_bonus: 'Parrainage',
       }
       return labels[type] || type
     }
 
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       const labels = {
-        'draft': 'Brouillon',
-        'active': 'Active',
-        'paused': 'Suspendue',
-        'expired': 'Expirée',
-        'completed': 'Terminée'
+        draft: 'Brouillon',
+        active: 'Active',
+        paused: 'Suspendue',
+        expired: 'Expirée',
+        completed: 'Terminée',
       }
       return labels[status] || status
     }
 
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'XOF'
+        currency: 'XOF',
       }).format(amount || 0)
     }
 
-    const formatDate = (date) => {
+    const formatDate = date => {
       return new Date(date).toLocaleDateString('fr-FR')
     }
 
@@ -552,9 +554,9 @@ export default {
       getTypeLabel,
       getStatusLabel,
       formatCurrency,
-      formatDate
+      formatDate,
     }
-  }
+  },
 }
 </script>
 
@@ -581,7 +583,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
 }
@@ -598,9 +600,18 @@ export default {
   color: #6b7280;
 }
 
-.stat-icon.active { background: #dcfce7; color: #16a34a; }
-.stat-icon.usage { background: #dbeafe; color: #2563eb; }
-.stat-icon.discount { background: #fef3c7; color: #d97706; }
+.stat-icon.active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.stat-icon.usage {
+  background: #dbeafe;
+  color: #2563eb;
+}
+.stat-icon.discount {
+  background: #fef3c7;
+  color: #d97706;
+}
 
 .stat-number {
   font-size: 2em;
@@ -655,7 +666,7 @@ export default {
   background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .promotions-table {
@@ -708,15 +719,39 @@ export default {
   font-weight: bold;
 }
 
-.type-badge.discount_percentage { background: #dbeafe; color: #1e40af; }
-.type-badge.discount_fixed { background: #dcfce7; color: #15803d; }
-.type-badge.free_delivery { background: #fef3c7; color: #a16207; }
-.type-badge.cashback { background: #f3e8ff; color: #7c3aed; }
+.type-badge.discount_percentage {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.type-badge.discount_fixed {
+  background: #dcfce7;
+  color: #15803d;
+}
+.type-badge.free_delivery {
+  background: #fef3c7;
+  color: #a16207;
+}
+.type-badge.cashback {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
 
-.status-badge.draft { background: #f3f4f6; color: #374151; }
-.status-badge.active { background: #dcfce7; color: #15803d; }
-.status-badge.paused { background: #fef3c7; color: #a16207; }
-.status-badge.expired { background: #fee2e2; color: #dc2626; }
+.status-badge.draft {
+  background: #f3f4f6;
+  color: #374151;
+}
+.status-badge.active {
+  background: #dcfce7;
+  color: #15803d;
+}
+.status-badge.paused {
+  background: #fef3c7;
+  color: #a16207;
+}
+.status-badge.expired {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 .actions {
   display: flex;
@@ -736,11 +771,25 @@ export default {
   color: #6b7280;
 }
 
-.btn-icon:hover { background: #e5e7eb; }
-.btn-icon.success { background: #dcfce7; color: #15803d; }
-.btn-icon.warning { background: #fef3c7; color: #a16207; }
-.btn-icon.info { background: #dbeafe; color: #1e40af; }
-.btn-icon.danger { background: #fee2e2; color: #dc2626; }
+.btn-icon:hover {
+  background: #e5e7eb;
+}
+.btn-icon.success {
+  background: #dcfce7;
+  color: #15803d;
+}
+.btn-icon.warning {
+  background: #fef3c7;
+  color: #a16207;
+}
+.btn-icon.info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.btn-icon.danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 .charts-grid {
   display: grid;
@@ -752,7 +801,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .promotion-form {

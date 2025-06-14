@@ -1,6 +1,6 @@
-import axios from "axios"
-import { getToken } from "./auth"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { getToken } from './auth'
+import { API_URL } from '@/config'
 
 const API_ENDPOINT = `${API_URL}/policies`
 
@@ -20,7 +20,7 @@ export const getAllPolicies = async () => {
     const response = await axios.get(`${API_ENDPOINT}/`, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des politiques:", error)
+    console.error('Erreur lors de la récupération des politiques:', error)
     throw error
   }
 }
@@ -29,16 +29,18 @@ export const getAllPolicies = async () => {
 export const getModerationRules = async (active = null) => {
   try {
     const url =
-      active !== null ? `${API_ENDPOINT}/moderation-rules?active=${active}` : `${API_ENDPOINT}/moderation-rules`
+      active !== null
+        ? `${API_ENDPOINT}/moderation-rules?active=${active}`
+        : `${API_ENDPOINT}/moderation-rules`
     const response = await axios.get(url, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des règles de modération:", error)
+    console.error('Erreur lors de la récupération des règles de modération:', error)
     throw error
   }
 }
 
-export const getModerationRule = async (ruleId) => {
+export const getModerationRule = async ruleId => {
   try {
     const response = await axios.get(`${API_ENDPOINT}/moderation-rules/${ruleId}`, getAuthHeader())
     return response.data
@@ -48,19 +50,23 @@ export const getModerationRule = async (ruleId) => {
   }
 }
 
-export const createModerationRule = async (ruleData) => {
+export const createModerationRule = async ruleData => {
   try {
     const response = await axios.post(`${API_ENDPOINT}/moderation-rules`, ruleData, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la création de la règle de modération:", error)
+    console.error('Erreur lors de la création de la règle de modération:', error)
     throw error
   }
 }
 
 export const updateModerationRule = async (ruleId, ruleData) => {
   try {
-    const response = await axios.put(`${API_ENDPOINT}/moderation-rules/${ruleId}`, ruleData, getAuthHeader())
+    const response = await axios.put(
+      `${API_ENDPOINT}/moderation-rules/${ruleId}`,
+      ruleData,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors de la mise à jour de la règle de modération ${ruleId}:`, error)
@@ -68,7 +74,7 @@ export const updateModerationRule = async (ruleId, ruleData) => {
   }
 }
 
-export const deleteModerationRule = async (ruleId) => {
+export const deleteModerationRule = async ruleId => {
   try {
     await axios.delete(`${API_ENDPOINT}/moderation-rules/${ruleId}`, getAuthHeader())
     return true
@@ -81,38 +87,55 @@ export const deleteModerationRule = async (ruleId) => {
 // Fonctions pour les critères de remboursement
 export const getRefundCriteria = async (active = null) => {
   try {
-    const url = active !== null ? `${API_ENDPOINT}/refund-criteria?active=${active}` : `${API_ENDPOINT}/refund-criteria`
+    const url =
+      active !== null
+        ? `${API_ENDPOINT}/refund-criteria?active=${active}`
+        : `${API_ENDPOINT}/refund-criteria`
     const response = await axios.get(url, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des critères de remboursement:", error)
+    console.error('Erreur lors de la récupération des critères de remboursement:', error)
     throw error
   }
 }
 
-export const getRefundCriterion = async (criteriaId) => {
+export const getRefundCriterion = async criteriaId => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/refund-criteria/${criteriaId}`, getAuthHeader())
+    const response = await axios.get(
+      `${API_ENDPOINT}/refund-criteria/${criteriaId}`,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
-    console.error(`Erreur lors de la récupération du critère de remboursement ${criteriaId}:`, error)
+    console.error(
+      `Erreur lors de la récupération du critère de remboursement ${criteriaId}:`,
+      error
+    )
     throw error
   }
 }
 
-export const createRefundCriteria = async (criteriaData) => {
+export const createRefundCriteria = async criteriaData => {
   try {
-    const response = await axios.post(`${API_ENDPOINT}/refund-criteria`, criteriaData, getAuthHeader())
+    const response = await axios.post(
+      `${API_ENDPOINT}/refund-criteria`,
+      criteriaData,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la création du critère de remboursement:", error)
+    console.error('Erreur lors de la création du critère de remboursement:', error)
     throw error
   }
 }
 
 export const updateRefundCriteria = async (criteriaId, criteriaData) => {
   try {
-    const response = await axios.put(`${API_ENDPOINT}/refund-criteria/${criteriaId}`, criteriaData, getAuthHeader())
+    const response = await axios.put(
+      `${API_ENDPOINT}/refund-criteria/${criteriaId}`,
+      criteriaData,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors de la mise à jour du critère de remboursement ${criteriaId}:`, error)
@@ -120,7 +143,7 @@ export const updateRefundCriteria = async (criteriaId, criteriaData) => {
   }
 }
 
-export const deleteRefundCriteria = async (criteriaId) => {
+export const deleteRefundCriteria = async criteriaId => {
   try {
     await axios.delete(`${API_ENDPOINT}/refund-criteria/${criteriaId}`, getAuthHeader())
     return true
@@ -134,18 +157,23 @@ export const deleteRefundCriteria = async (criteriaId) => {
 export const getSanctionParameters = async (active = null) => {
   try {
     const url =
-      active !== null ? `${API_ENDPOINT}/sanction-parameters?active=${active}` : `${API_ENDPOINT}/sanction-parameters`
+      active !== null
+        ? `${API_ENDPOINT}/sanction-parameters?active=${active}`
+        : `${API_ENDPOINT}/sanction-parameters`
     const response = await axios.get(url, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des paramètres de sanction:", error)
+    console.error('Erreur lors de la récupération des paramètres de sanction:', error)
     throw error
   }
 }
 
-export const getSanctionParameter = async (parameterId) => {
+export const getSanctionParameter = async parameterId => {
   try {
-    const response = await axios.get(`${API_ENDPOINT}/sanction-parameters/${parameterId}`, getAuthHeader())
+    const response = await axios.get(
+      `${API_ENDPOINT}/sanction-parameters/${parameterId}`,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors de la récupération du paramètre de sanction ${parameterId}:`, error)
@@ -153,12 +181,16 @@ export const getSanctionParameter = async (parameterId) => {
   }
 }
 
-export const createSanctionParameter = async (parameterData) => {
+export const createSanctionParameter = async parameterData => {
   try {
-    const response = await axios.post(`${API_ENDPOINT}/sanction-parameters`, parameterData, getAuthHeader())
+    const response = await axios.post(
+      `${API_ENDPOINT}/sanction-parameters`,
+      parameterData,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la création du paramètre de sanction:", error)
+    console.error('Erreur lors de la création du paramètre de sanction:', error)
     throw error
   }
 }
@@ -168,7 +200,7 @@ export const updateSanctionParameter = async (parameterId, parameterData) => {
     const response = await axios.put(
       `${API_ENDPOINT}/sanction-parameters/${parameterId}`,
       parameterData,
-      getAuthHeader(),
+      getAuthHeader()
     )
     return response.data
   } catch (error) {
@@ -177,7 +209,7 @@ export const updateSanctionParameter = async (parameterId, parameterData) => {
   }
 }
 
-export const deleteSanctionParameter = async (parameterId) => {
+export const deleteSanctionParameter = async parameterId => {
   try {
     await axios.delete(`${API_ENDPOINT}/sanction-parameters/${parameterId}`, getAuthHeader())
     return true
@@ -202,18 +234,18 @@ export const getSmsTemplates = async (active = null, eventType = null) => {
     }
 
     if (params.length > 0) {
-      url += `?${params.join("&")}`
+      url += `?${params.join('&')}`
     }
 
     const response = await axios.get(url, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des modèles SMS:", error)
+    console.error('Erreur lors de la récupération des modèles SMS:', error)
     throw error
   }
 }
 
-export const getSmsTemplate = async (templateId) => {
+export const getSmsTemplate = async templateId => {
   try {
     const response = await axios.get(`${API_ENDPOINT}/sms-templates/${templateId}`, getAuthHeader())
     return response.data
@@ -223,19 +255,27 @@ export const getSmsTemplate = async (templateId) => {
   }
 }
 
-export const createSmsTemplate = async (templateData) => {
+export const createSmsTemplate = async templateData => {
   try {
-    const response = await axios.post(`${API_ENDPOINT}/sms-templates`, templateData, getAuthHeader())
+    const response = await axios.post(
+      `${API_ENDPOINT}/sms-templates`,
+      templateData,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la création du modèle SMS:", error)
+    console.error('Erreur lors de la création du modèle SMS:', error)
     throw error
   }
 }
 
 export const updateSmsTemplate = async (templateId, templateData) => {
   try {
-    const response = await axios.put(`${API_ENDPOINT}/sms-templates/${templateId}`, templateData, getAuthHeader())
+    const response = await axios.put(
+      `${API_ENDPOINT}/sms-templates/${templateId}`,
+      templateData,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors de la mise à jour du modèle SMS ${templateId}:`, error)
@@ -243,7 +283,7 @@ export const updateSmsTemplate = async (templateId, templateData) => {
   }
 }
 
-export const deleteSmsTemplate = async (templateId) => {
+export const deleteSmsTemplate = async templateId => {
   try {
     await axios.delete(`${API_ENDPOINT}/sms-templates/${templateId}`, getAuthHeader())
     return true
@@ -253,12 +293,16 @@ export const deleteSmsTemplate = async (templateId) => {
   }
 }
 
-export const testSmsTemplate = async (testData) => {
+export const testSmsTemplate = async testData => {
   try {
-    const response = await axios.post(`${API_ENDPOINT}/sms-templates/test`, testData, getAuthHeader())
+    const response = await axios.post(
+      `${API_ENDPOINT}/sms-templates/test`,
+      testData,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
-    console.error("Erreur lors du test du modèle SMS:", error)
+    console.error('Erreur lors du test du modèle SMS:', error)
     throw error
   }
 }

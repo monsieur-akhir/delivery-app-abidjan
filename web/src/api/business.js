@@ -24,7 +24,7 @@ import axios from 'axios'
  * @param {string} period - Période (week, month, year)
  * @returns {Promise<BusinessDashboard>} - Données du tableau de bord
  */
-export const fetchBusinessDashboard = async (period = "week") => {
+export const fetchBusinessDashboard = async (period = 'week') => {
   try {
     const response = await authApi.get(`/business/dashboard?period=${period}`)
     return response.data
@@ -59,7 +59,7 @@ export const getRecentDeliveries = async (limit = 5) => {
  */
 export const fetchBusinessDeliveries = async (params = {}) => {
   try {
-    const response = await authApi.get("/business/deliveries", { params })
+    const response = await authApi.get('/business/deliveries', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -71,7 +71,7 @@ export const fetchBusinessDeliveries = async (params = {}) => {
  * @param {number} deliveryId - ID de la livraison
  * @returns {Promise<Object>} - Détails de la livraison
  */
-export const fetchBusinessDeliveryDetails = async (deliveryId) => {
+export const fetchBusinessDeliveryDetails = async deliveryId => {
   try {
     const response = await authApi.get(`/business/deliveries/${deliveryId}`)
     return response.data
@@ -89,9 +89,9 @@ export const fetchBusinessDeliveryDetails = async (deliveryId) => {
  * @param {number} deliveryData.price - Prix de la livraison
  * @returns {Promise<Delivery>} - Livraison créée
  */
-export const createBusinessDelivery = async (deliveryData) => {
+export const createBusinessDelivery = async deliveryData => {
   try {
-    const response = await authApi.post("/business/deliveries", deliveryData)
+    const response = await authApi.post('/business/deliveries', deliveryData)
     return response.data
   } catch (error) {
     return handleApiError(error)
@@ -118,7 +118,7 @@ export const updateBusinessDelivery = async (deliveryId, deliveryData) => {
  * @param {number} deliveryId - ID de la livraison
  * @returns {Promise<Object>} - Résultat de l'annulation
  */
-export const cancelBusinessDelivery = async (deliveryId) => {
+export const cancelBusinessDelivery = async deliveryId => {
   try {
     const response = await authApi.post(`/business/deliveries/${deliveryId}/cancel`)
     return response.data
@@ -153,9 +153,9 @@ export const acceptBusinessDeliveryBid = async (deliveryId, bidId) => {
  */
 export const exportBusinessDeliveries = async (params = {}) => {
   try {
-    const response = await authApi.get("/business/deliveries/export", {
+    const response = await authApi.get('/business/deliveries/export', {
       params,
-      responseType: "blob",
+      responseType: 'blob',
     })
     return response.data
   } catch (error) {
@@ -173,7 +173,7 @@ export const exportBusinessDeliveries = async (params = {}) => {
  */
 export const fetchBusinessCouriers = async (params = {}) => {
   try {
-    const response = await authApi.get("/business/couriers", { params })
+    const response = await authApi.get('/business/couriers', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -185,7 +185,7 @@ export const fetchBusinessCouriers = async (params = {}) => {
  * @param {number} courierId - ID du coursier
  * @returns {Promise<Object>} - Détails du coursier
  */
-export const fetchBusinessCourierDetails = async (courierId) => {
+export const fetchBusinessCourierDetails = async courierId => {
   try {
     const response = await authApi.get(`/business/couriers/${courierId}`)
     return response.data
@@ -199,9 +199,9 @@ export const fetchBusinessCourierDetails = async (courierId) => {
  * @param {Object} inviteData - Données d'invitation
  * @returns {Promise<Object>} - Résultat de l'invitation
  */
-export const inviteBusinessCourier = async (inviteData) => {
+export const inviteBusinessCourier = async inviteData => {
   try {
-    const response = await authApi.post("/business/couriers/invite", inviteData)
+    const response = await authApi.post('/business/couriers/invite', inviteData)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -216,7 +216,9 @@ export const inviteBusinessCourier = async (inviteData) => {
  */
 export const toggleBusinessCourierFavorite = async (courierId, isFavorite) => {
   try {
-    const response = await authApi.post(`/business/couriers/${courierId}/favorite`, { is_favorite: isFavorite })
+    const response = await authApi.post(`/business/couriers/${courierId}/favorite`, {
+      is_favorite: isFavorite,
+    })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -232,9 +234,9 @@ export const toggleBusinessCourierFavorite = async (courierId, isFavorite) => {
  */
 export const exportBusinessCouriers = async (params = {}) => {
   try {
-    const response = await authApi.get("/business/couriers/export", {
+    const response = await authApi.get('/business/couriers/export', {
       params,
-      responseType: "blob",
+      responseType: 'blob',
     })
     return response.data
   } catch (error) {
@@ -252,7 +254,7 @@ export const exportBusinessCouriers = async (params = {}) => {
  */
 export const fetchBusinessFinances = async (params = {}) => {
   try {
-    const response = await authApi.get("/business/finances", { params })
+    const response = await authApi.get('/business/finances', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -264,9 +266,11 @@ export const fetchBusinessFinances = async (params = {}) => {
  * @param {number} transactionId - ID de la transaction
  * @returns {Promise<Object>} - Résultat de l'opération
  */
-export const markTransactionAsPaid = async (transactionId) => {
+export const markTransactionAsPaid = async transactionId => {
   try {
-    const response = await authApi.post(`/business/finances/transactions/${transactionId}/mark-paid`)
+    const response = await authApi.post(
+      `/business/finances/transactions/${transactionId}/mark-paid`
+    )
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -278,10 +282,10 @@ export const markTransactionAsPaid = async (transactionId) => {
  * @param {number} invoiceId - ID de la facture
  * @returns {Promise<Blob>} - Fichier de facture
  */
-export const downloadInvoice = async (invoiceId) => {
+export const downloadInvoice = async invoiceId => {
   try {
     const response = await authApi.get(`/business/finances/invoices/${invoiceId}/download`, {
-      responseType: "blob",
+      responseType: 'blob',
     })
     return response.data
   } catch (error) {
@@ -300,9 +304,9 @@ export const downloadInvoice = async (invoiceId) => {
  */
 export const exportBusinessFinances = async (params = {}) => {
   try {
-    const response = await authApi.get("/business/finances/export", {
+    const response = await authApi.get('/business/finances/export', {
       params,
-      responseType: "blob",
+      responseType: 'blob',
     })
     return response.data
   } catch (error) {
@@ -319,7 +323,7 @@ export const exportBusinessFinances = async (params = {}) => {
  */
 export const fetchBusinessRatings = async (params = {}) => {
   try {
-    const response = await authApi.get("/business/ratings", { params })
+    const response = await authApi.get('/business/ratings', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -331,9 +335,9 @@ export const fetchBusinessRatings = async (params = {}) => {
  * @param {Object} businessData - Données de l'entreprise
  * @returns {Promise<Object>} - Entreprise mise à jour
  */
-export const updateBusinessProfile = async (businessData) => {
+export const updateBusinessProfile = async businessData => {
   try {
-    const response = await authApi.put("/business/profile", businessData)
+    const response = await authApi.put('/business/profile', businessData)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -345,9 +349,9 @@ export const updateBusinessProfile = async (businessData) => {
  * @param {Object} settings - Paramètres à mettre à jour
  * @returns {Promise<Object>} - Paramètres mis à jour
  */
-export const updateBusinessSettings = async (settings) => {
+export const updateBusinessSettings = async settings => {
   try {
-    const response = await authApi.put("/business/settings", settings)
+    const response = await authApi.put('/business/settings', settings)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -360,7 +364,7 @@ export const updateBusinessSettings = async (settings) => {
  */
 export const fetchBusinessSettings = async () => {
   try {
-    const response = await authApi.get("/business/settings")
+    const response = await authApi.get('/business/settings')
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -375,9 +379,9 @@ export const fetchBusinessSettings = async () => {
  * @param {string} passwordData.confirm_password - Confirmation du nouveau mot de passe
  * @returns {Promise<Object>} - Résultat de l'opération
  */
-export const changeBusinessPassword = async (passwordData) => {
+export const changeBusinessPassword = async passwordData => {
   try {
-    const response = await authApi.post("/business/change-password", passwordData)
+    const response = await authApi.post('/business/change-password', passwordData)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -393,12 +397,12 @@ export const changeBusinessPassword = async (passwordData) => {
 export const uploadBusinessDocument = async (type, file) => {
   try {
     const formData = new FormData()
-    formData.append("file", file)
-    formData.append("type", type)
+    formData.append('file', file)
+    formData.append('type', type)
 
-    const response = await authApi.post("/business/documents", formData, {
+    const response = await authApi.post('/business/documents', formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     })
     return response.data
@@ -412,14 +416,14 @@ export const uploadBusinessDocument = async (type, file) => {
  * @param {File} file - Fichier image du logo
  * @returns {Promise<Object>} - Résultat de l'opération
  */
-export const uploadBusinessLogo = async (file) => {
+export const uploadBusinessLogo = async file => {
   try {
     const formData = new FormData()
-    formData.append("logo", file)
+    formData.append('logo', file)
 
-    const response = await authApi.post("/business/logo", formData, {
+    const response = await authApi.post('/business/logo', formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     })
     return response.data
@@ -441,7 +445,7 @@ export async function fetchBusinesses(params = {}) {
     })
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des entreprises:", error)
+    console.error('Erreur lors de la récupération des entreprises:', error)
     throw error
   }
 }

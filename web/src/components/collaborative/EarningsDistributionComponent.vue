@@ -13,7 +13,7 @@
         <div class="spinner"></div>
         <p>Chargement des données...</p>
       </div>
-      
+
       <div v-else-if="error" class="error-container">
         <div class="error-icon">
           <i class="fas fa-exclamation-triangle"></i>
@@ -23,29 +23,29 @@
           <i class="fas fa-redo"></i> Réessayer
         </button>
       </div>
-      
+
       <template v-else>
         <div class="earnings-summary">
           <div class="summary-card">
             <div class="summary-title">Montant total</div>
             <div class="summary-value">{{ formatCurrency(earnings.totalAmount) }}</div>
           </div>
-          
+
           <div class="summary-card">
             <div class="summary-title">Frais de service</div>
             <div class="summary-value">{{ formatCurrency(earnings.serviceFee) }}</div>
           </div>
-          
+
           <div class="summary-card">
             <div class="summary-title">Montant distribué</div>
             <div class="summary-value">{{ formatCurrency(earnings.distributedAmount) }}</div>
           </div>
         </div>
-        
+
         <div class="earnings-chart">
           <canvas ref="chartCanvas"></canvas>
         </div>
-        
+
         <div class="earnings-table">
           <table>
             <thead>
@@ -92,76 +92,79 @@ import collaborativeApi from '@/api/collaborative'
 
 export default {
   name: 'EarningsDistributionComponent',
-  
+
   props: {
     deliveryId: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
-  
+
   setup(props) {
     const earnings = ref({
       totalAmount: 0,
       serviceFee: 0,
       distributedAmount: 0,
-      collaborators: []
+      collaborators: [],
     })
     const delivery = ref(null)
     const loading = ref(true)
     const error = ref(null)
     const chartCanvas = ref(null)
     let chart = null
-    
+
     const deliveryIdShort = computed(() => {
       return props.deliveryId.substring(0, 8)
     })
-    
+
     const fetchData = async () => {
       try {
         loading.value = true
         error.value = null
-        
+
         // Récupérer les détails de la livraison
         const deliveryData = await collaborativeApi.getCollaborativeDelivery(props.deliveryId)
         delivery.value = deliveryData
-        
+
         // Récupérer la distribution des gains
         const earningsData = await collaborativeApi.getEarningsDistribution(props.deliveryId)
         earnings.value = earningsData
-        
+
         // Initialiser le graphique après avoir récupéré les données
         initChart()
       } catch (err) {
         console.error('Erreur lors du chargement des données de distribution des gains:', err)
-        error.value = 'Impossible de charger les données de distribution des gains. Veuillez réessayer.'
+        error.value =
+          'Impossible de charger les données de distribution des gains. Veuillez réessayer.'
       } finally {
         loading.value = false
       }
     }
-    
+
     const initChart = () => {
       if (chartCanvas.value) {
         // Détruire le graphique existant s'il y en a un
         if (chart) {
           chart.destroy()
         }
-        
+
         // Préparer les données pour le graphique
         const labels = earnings.value.collaborators.map(c => c.name)
         const data = earnings.value.collaborators.map(c => c.amount)
         const backgroundColors = generateColors(earnings.value.collaborators.length)
-        
+
         // Créer le nouveau graphique
         chart = new Chart(chartCanvas.value, {
           type: 'pie',
           data: {
             labels: labels,
-            datasets: [{
-              data: data,
-              backgroundColor: backgroundColors,
-              borderWidth: 1
-            }]
+            datasets: [
+              {
+                data: data,
+                backgroundColor: backgroundColors,
+                borderWidth: 1,
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -171,33 +174,41 @@ export default {
                 position: 'right',
                 labels: {
                   font: {
-                    size: 12
+                    size: 12,
                   },
-                  padding: 20
-                }
+                  padding: 20,
+                },
               },
               tooltip: {
                 callbacks: {
-                  label: function(context) {
-                    const label = context.label || '';
-                    const value = context.raw || 0;
-                    const percentage = ((value / earnings.value.distributedAmount) * 100).toFixed(1);
-                    return `${label}: ${formatCurrency(value)} (${percentage}%)`;
-                  }
-                }
-              }
-            }
-          }
+                  label: function (context) {
+                    const label = context.label || ''
+                    const value = context.raw || 0
+                    const percentage = ((value / earnings.value.distributedAmount) * 100).toFixed(1)
+                    return `${label}: ${formatCurrency(value)} (${percentage}%)`
+                  },
+                },
+              },
+            },
+          },
         })
       }
     }
-    
-    const generateColors = (count) => {
+
+    const generateColors = count => {
       const baseColors = [
-        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-        '#ec4899', '#06b6d4', '#f97316', '#14b8a6', '#6366f1'
+        '#3b82f6',
+        '#10b981',
+        '#f59e0b',
+        '#ef4444',
+        '#8b5cf6',
+        '#ec4899',
+        '#06b6d4',
+        '#f97316',
+        '#14b8a6',
+        '#6366f1',
       ]
-      
+
       // Si nous avons besoin de plus de couleurs que dans notre palette de base
       if (count > baseColors.length) {
         const extraColors = []
@@ -207,18 +218,18 @@ export default {
         }
         return [...baseColors, ...extraColors]
       }
-      
+
       return baseColors.slice(0, count)
     }
-    
-    const formatCurrency = (amount) => {
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'EUR'
+        currency: 'EUR',
       }).format(amount)
     }
-    
-    const formatRole = (role) => {
+
+    const formatRole = role => {
       switch (role) {
         case 'primary':
           return 'Principal'
@@ -230,8 +241,8 @@ export default {
           return role
       }
     }
-    
-    const formatStatus = (status) => {
+
+    const formatStatus = status => {
       switch (status) {
         case 'pending':
           return 'En attente'
@@ -245,8 +256,8 @@ export default {
           return status
       }
     }
-    
-    const getStatusClass = (status) => {
+
+    const getStatusClass = status => {
       switch (status) {
         case 'pending':
           return 'status-pending'
@@ -260,11 +271,11 @@ export default {
           return ''
       }
     }
-    
+
     onMounted(() => {
       fetchData()
     })
-    
+
     return {
       earnings,
       delivery,
@@ -276,9 +287,9 @@ export default {
       formatCurrency,
       formatRole,
       formatStatus,
-      getStatusClass
+      getStatusClass,
     }
-  }
+  },
 }
 </script>
 
@@ -318,7 +329,8 @@ export default {
   overflow-y: auto;
 }
 
-.loading-container, .error-container {
+.loading-container,
+.error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -336,7 +348,9 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-icon {
@@ -410,7 +424,8 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;

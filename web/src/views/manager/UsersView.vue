@@ -39,12 +39,12 @@
         <div class="filter-group">
           <label for="search-filter">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search-filter" 
-              v-model="filters.search" 
-              class="form-control" 
-              placeholder="Nom, email, téléphone..." 
+            <input
+              type="text"
+              id="search-filter"
+              v-model="filters.search"
+              class="form-control"
+              placeholder="Nom, email, téléphone..."
             />
             <button class="search-clear" v-if="filters.search" @click="filters.search = ''">
               <font-awesome-icon icon="times" />
@@ -80,39 +80,39 @@
             <tr>
               <th class="sortable" @click="sortBy('id')">
                 ID
-                <font-awesome-icon 
-                  v-if="sortColumn === 'id'" 
-                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'" 
+                <font-awesome-icon
+                  v-if="sortColumn === 'id'"
+                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
                 />
               </th>
               <th class="sortable" @click="sortBy('name')">
                 Nom
-                <font-awesome-icon 
-                  v-if="sortColumn === 'name'" 
-                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'" 
+                <font-awesome-icon
+                  v-if="sortColumn === 'name'"
+                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
                 />
               </th>
               <th>Email</th>
               <th>Téléphone</th>
               <th class="sortable" @click="sortBy('role')">
                 Rôle
-                <font-awesome-icon 
-                  v-if="sortColumn === 'role'" 
-                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'" 
+                <font-awesome-icon
+                  v-if="sortColumn === 'role'"
+                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
                 />
               </th>
               <th class="sortable" @click="sortBy('status')">
                 Statut
-                <font-awesome-icon 
-                  v-if="sortColumn === 'status'" 
-                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'" 
+                <font-awesome-icon
+                  v-if="sortColumn === 'status'"
+                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
                 />
               </th>
               <th class="sortable" @click="sortBy('created_at')">
                 Inscrit le
-                <font-awesome-icon 
-                  v-if="sortColumn === 'created_at'" 
-                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'" 
+                <font-awesome-icon
+                  v-if="sortColumn === 'created_at'"
+                  :icon="sortDirection === 'asc' ? 'sort-up' : 'sort-down'"
                 />
               </th>
               <th>Actions</th>
@@ -151,26 +151,26 @@
                   <button class="btn-icon" @click="editUser(user)" title="Modifier">
                     <font-awesome-icon icon="edit" />
                   </button>
-                  <button 
-                    v-if="user.status === 'active'" 
-                    class="btn-icon" 
-                    @click="suspendUser(user)" 
+                  <button
+                    v-if="user.status === 'active'"
+                    class="btn-icon"
+                    @click="suspendUser(user)"
                     title="Suspendre"
                   >
                     <font-awesome-icon icon="ban" />
                   </button>
-                  <button 
-                    v-if="user.status === 'suspended'" 
-                    class="btn-icon" 
-                    @click="activateUser(user)" 
+                  <button
+                    v-if="user.status === 'suspended'"
+                    class="btn-icon"
+                    @click="activateUser(user)"
                     title="Activer"
                   >
                     <font-awesome-icon icon="check" />
                   </button>
-                  <button 
-                    v-if="user.status === 'pending_verification'" 
-                    class="btn-icon" 
-                    @click="verifyUser(user)" 
+                  <button
+                    v-if="user.status === 'pending_verification'"
+                    class="btn-icon"
+                    @click="verifyUser(user)"
                     title="Vérifier"
                   >
                     <font-awesome-icon icon="check-circle" />
@@ -185,30 +185,31 @@
       <!-- Pagination -->
       <div class="pagination-container">
         <div class="pagination-info">
-          Affichage de {{ paginationInfo.from }}-{{ paginationInfo.to }} sur {{ paginationInfo.total }} utilisateurs
+          Affichage de {{ paginationInfo.from }}-{{ paginationInfo.to }} sur
+          {{ paginationInfo.total }} utilisateurs
         </div>
         <div class="pagination-controls">
-          <button 
-            class="pagination-button" 
-            :disabled="currentPage === 1" 
+          <button
+            class="pagination-button"
+            :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)"
           >
             <font-awesome-icon icon="chevron-left" />
           </button>
           <div class="pagination-pages">
-            <button 
-              v-for="page in displayedPages" 
-              :key="page" 
-              class="pagination-page" 
+            <button
+              v-for="page in displayedPages"
+              :key="page"
+              class="pagination-page"
               :class="{ active: currentPage === page }"
               @click="changePage(page)"
             >
               {{ page }}
             </button>
           </div>
-          <button 
-            class="pagination-button" 
-            :disabled="currentPage === totalPages" 
+          <button
+            class="pagination-button"
+            :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)"
           >
             <font-awesome-icon icon="chevron-right" />
@@ -238,19 +239,37 @@
           <form @submit.prevent="addUser">
             <div class="form-group">
               <label for="user_name">Nom complet</label>
-              <input type="text" id="user_name" v-model="newUser.name" class="form-control" required />
+              <input
+                type="text"
+                id="user_name"
+                v-model="newUser.name"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="user_email">Email</label>
-              <input type="email" id="user_email" v-model="newUser.email" class="form-control" required />
+              <input
+                type="email"
+                id="user_email"
+                v-model="newUser.email"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="user_phone">Téléphone</label>
-              <input type="tel" id="user_phone" v-model="newUser.phone" class="form-control" required />
+              <input
+                type="tel"
+                id="user_phone"
+                v-model="newUser.phone"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="user_role">Rôle</label>
               <select id="user_role" v-model="newUser.role" class="form-control" required>
@@ -260,32 +279,33 @@
                 <option value="manager">Gestionnaire</option>
               </select>
             </div>
-            
+
             <div class="form-group" v-if="newUser.role === 'business'">
               <label for="business_name">Nom de l'entreprise</label>
-              <input type="text" id="business_name" v-model="newUser.business_name" class="form-control" />
+              <input
+                type="text"
+                id="business_name"
+                v-model="newUser.business_name"
+                class="form-control"
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="user_password">Mot de passe</label>
               <div class="password-input">
-                <input 
-                  :type="showPassword ? 'text' : 'password'" 
-                  id="user_password" 
-                  v-model="newUser.password" 
-                  class="form-control" 
-                  required 
+                <input
+                  :type="showPassword ? 'text' : 'password'"
+                  id="user_password"
+                  v-model="newUser.password"
+                  class="form-control"
+                  required
                 />
-                <button 
-                  type="button" 
-                  class="password-toggle" 
-                  @click="showPassword = !showPassword"
-                >
+                <button type="button" class="password-toggle" @click="showPassword = !showPassword">
                   <font-awesome-icon :icon="showPassword ? 'eye-slash' : 'eye'" />
                 </button>
               </div>
             </div>
-            
+
             <div class="form-group">
               <label for="user_status">Statut</label>
               <select id="user_status" v-model="newUser.status" class="form-control" required>
@@ -294,7 +314,7 @@
                 <option value="inactive">Inactif</option>
               </select>
             </div>
-            
+
             <div class="form-actions">
               <button type="button" class="btn btn-outline" @click="showAddUserModal = false">
                 Annuler
@@ -323,7 +343,11 @@
           <div class="user-details">
             <div class="user-details-header">
               <div class="user-details-avatar">
-                <img v-if="selectedUser.profile_picture" :src="selectedUser.profile_picture" :alt="selectedUser.name" />
+                <img
+                  v-if="selectedUser.profile_picture"
+                  :src="selectedUser.profile_picture"
+                  :alt="selectedUser.name"
+                />
                 <div v-else class="avatar-placeholder">{{ getInitials(selectedUser.name) }}</div>
               </div>
               <div class="user-details-info">
@@ -342,25 +366,25 @@
                   <font-awesome-icon icon="edit" class="mr-1" />
                   Modifier
                 </button>
-                <button 
-                  v-if="selectedUser.status === 'active'" 
-                  class="btn btn-danger" 
+                <button
+                  v-if="selectedUser.status === 'active'"
+                  class="btn btn-danger"
                   @click="suspendUser(selectedUser)"
                 >
                   <font-awesome-icon icon="ban" class="mr-1" />
                   Suspendre
                 </button>
-                <button 
-                  v-if="selectedUser.status === 'suspended'" 
-                  class="btn btn-success" 
+                <button
+                  v-if="selectedUser.status === 'suspended'"
+                  class="btn btn-success"
                   @click="activateUser(selectedUser)"
                 >
                   <font-awesome-icon icon="check" class="mr-1" />
                   Activer
                 </button>
-                <button 
-                  v-if="selectedUser.status === 'pending_verification'" 
-                  class="btn btn-success" 
+                <button
+                  v-if="selectedUser.status === 'pending_verification'"
+                  class="btn btn-success"
                   @click="verifyUser(selectedUser)"
                 >
                   <font-awesome-icon icon="check-circle" class="mr-1" />
@@ -370,10 +394,10 @@
             </div>
 
             <div class="user-details-tabs">
-              <button 
-                v-for="tab in userDetailsTabs" 
-                :key="tab.id" 
-                class="tab-button" 
+              <button
+                v-for="tab in userDetailsTabs"
+                :key="tab.id"
+                class="tab-button"
                 :class="{ active: activeUserDetailsTab === tab.id }"
                 @click="activeUserDetailsTab = tab.id"
               >
@@ -386,7 +410,7 @@
               <!-- Informations personnelles -->
               <div v-if="activeUserDetailsTab === 'personal'" class="user-details-section">
                 <h3>Informations personnelles</h3>
-                
+
                 <div class="details-grid">
                   <div class="details-item">
                     <div class="details-label">ID</div>
@@ -421,10 +445,10 @@
                     <div class="details-value">{{ formatDate(selectedUser.last_login) }}</div>
                   </div>
                 </div>
-                
+
                 <div v-if="selectedUser.role === 'business'" class="business-details">
                   <h4>Informations de l'entreprise</h4>
-                  
+
                   <div class="details-grid">
                     <div class="details-item">
                       <div class="details-label">Nom de l'entreprise</div>
@@ -436,43 +460,55 @@
                     </div>
                     <div class="details-item">
                       <div class="details-label">Type d'entreprise</div>
-                      <div class="details-value">{{ getBusinessTypeLabel(selectedUser.business_type) }}</div>
+                      <div class="details-value">
+                        {{ getBusinessTypeLabel(selectedUser.business_type) }}
+                      </div>
                     </div>
                     <div class="details-item">
                       <div class="details-label">Adresse de l'entreprise</div>
-                      <div class="details-value">{{ selectedUser.business_address || 'Non renseignée' }}</div>
+                      <div class="details-value">
+                        {{ selectedUser.business_address || 'Non renseignée' }}
+                      </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <div v-if="selectedUser.role === 'courier'" class="courier-details">
                   <h4>Informations du coursier</h4>
-                  
+
                   <div class="details-grid">
                     <div class="details-item">
                       <div class="details-label">Type de véhicule</div>
-                      <div class="details-value">{{ getVehicleTypeLabel(selectedUser.vehicle_type) }}</div>
+                      <div class="details-value">
+                        {{ getVehicleTypeLabel(selectedUser.vehicle_type) }}
+                      </div>
                     </div>
                     <div class="details-item">
                       <div class="details-label">Numéro d'immatriculation</div>
-                      <div class="details-value">{{ selectedUser.license_plate || 'Non renseigné' }}</div>
+                      <div class="details-value">
+                        {{ selectedUser.license_plate || 'Non renseigné' }}
+                      </div>
                     </div>
                     <div class="details-item">
                       <div class="details-label">Numéro de permis</div>
-                      <div class="details-value">{{ selectedUser.driving_license || 'Non renseigné' }}</div>
+                      <div class="details-value">
+                        {{ selectedUser.driving_license || 'Non renseigné' }}
+                      </div>
                     </div>
                     <div class="details-item">
                       <div class="details-label">Disponibilité</div>
-                      <div class="details-value">{{ selectedUser.is_available ? 'Disponible' : 'Indisponible' }}</div>
+                      <div class="details-value">
+                        {{ selectedUser.is_available ? 'Disponible' : 'Indisponible' }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Activité -->
               <div v-if="activeUserDetailsTab === 'activity'" class="user-details-section">
                 <h3>Activité</h3>
-                
+
                 <div v-if="userActivity.length === 0" class="empty-state">
                   <font-awesome-icon icon="history" size="2x" />
                   <p>Aucune activité récente</p>
@@ -489,8 +525,8 @@
                       </div>
                       <div class="activity-description">{{ activity.description }}</div>
                       <div class="activity-meta" v-if="activity.meta">
-                        <router-link 
-                          v-if="activity.meta.delivery_id" 
+                        <router-link
+                          v-if="activity.meta.delivery_id"
                           :to="`/manager/deliveries/${activity.meta.delivery_id}`"
                         >
                           Livraison #{{ activity.meta.delivery_id }}
@@ -500,11 +536,11 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Livraisons -->
               <div v-if="activeUserDetailsTab === 'deliveries'" class="user-details-section">
                 <h3>Livraisons</h3>
-                
+
                 <div v-if="userDeliveries.length === 0" class="empty-state">
                   <font-awesome-icon icon="truck" size="2x" />
                   <p>Aucune livraison trouvée</p>
@@ -529,14 +565,21 @@
                         <td>{{ delivery.pickup_address }}</td>
                         <td>{{ delivery.delivery_address }}</td>
                         <td>
-                          <span class="status-badge" :class="getDeliveryStatusClass(delivery.status)">
+                          <span
+                            class="status-badge"
+                            :class="getDeliveryStatusClass(delivery.status)"
+                          >
                             {{ getDeliveryStatusLabel(delivery.status) }}
                           </span>
                         </td>
                         <td>{{ formatPrice(delivery.price) }} FCFA</td>
                         <td>
                           <div class="table-actions">
-                            <router-link :to="`/manager/deliveries/${delivery.id}`" class="btn-icon" title="Voir les détails">
+                            <router-link
+                              :to="`/manager/deliveries/${delivery.id}`"
+                              class="btn-icon"
+                              title="Voir les détails"
+                            >
                               <font-awesome-icon icon="eye" />
                             </router-link>
                           </div>
@@ -546,11 +589,11 @@
                   </table>
                 </div>
               </div>
-              
+
               <!-- Paiements -->
               <div v-if="activeUserDetailsTab === 'payments'" class="user-details-section">
                 <h3>Paiements</h3>
-                
+
                 <div v-if="userPayments.length === 0" class="empty-state">
                   <font-awesome-icon icon="money-bill" size="2x" />
                   <p>Aucun paiement trouvé</p>
@@ -575,7 +618,10 @@
                         <td>{{ formatPrice(payment.amount) }} FCFA</td>
                         <td>
                           <div class="payment-method">
-                            <font-awesome-icon :icon="getPaymentMethodIcon(payment.method)" class="mr-1" />
+                            <font-awesome-icon
+                              :icon="getPaymentMethodIcon(payment.method)"
+                              class="mr-1"
+                            />
                             {{ getPaymentMethodLabel(payment.method) }}
                           </div>
                         </td>
@@ -589,11 +635,11 @@
                   </table>
                 </div>
               </div>
-              
+
               <!-- Vérification KYC -->
               <div v-if="activeUserDetailsTab === 'kyc'" class="user-details-section">
                 <h3>Vérification KYC</h3>
-                
+
                 <div v-if="!selectedUser.kyc" class="empty-state">
                   <font-awesome-icon icon="id-card" size="2x" />
                   <p>Aucun document KYC soumis</p>
@@ -605,261 +651,321 @@
                       {{ getKycStatusLabel(selectedUser.kyc.status) }}
                     </span>
                   </div>
-                  
+
                   <div class="kyc-documents">
                     <div v-if="selectedUser.role === 'courier'" class="kyc-document-section">
                       <h4>Documents du coursier</h4>
-                      
+
                       <div class="document-grid">
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Pièce d'identité</div>
-                            <div class="document-status" :class="selectedUser.kyc.id_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedUser.kyc.id_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedUser.kyc.id_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedUser.kyc.id_document">
-                            <img v-if="isImageDocument(selectedUser.kyc.id_document)" :src="selectedUser.kyc.id_document" alt="Pièce d'identité" />
+                            <img
+                              v-if="isImageDocument(selectedUser.kyc.id_document)"
+                              :src="selectedUser.kyc.id_document"
+                              alt="Pièce d'identité"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedUser.kyc.id_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedUser.kyc.id_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedUser.kyc.id_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedUser.id, 'id')" 
+                              <button
+                                v-if="!selectedUser.kyc.id_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedUser.id, 'id')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedUser.kyc.id_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedUser.id, 'id')" 
+                              <button
+                                v-if="!selectedUser.kyc.id_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedUser.id, 'id')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
-                        
+
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Permis de conduire</div>
-                            <div class="document-status" :class="selectedUser.kyc.license_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedUser.kyc.license_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedUser.kyc.license_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedUser.kyc.license_document">
-                            <img v-if="isImageDocument(selectedUser.kyc.license_document)" :src="selectedUser.kyc.license_document" alt="Permis de conduire" />
+                            <img
+                              v-if="isImageDocument(selectedUser.kyc.license_document)"
+                              :src="selectedUser.kyc.license_document"
+                              alt="Permis de conduire"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedUser.kyc.license_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedUser.kyc.license_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedUser.kyc.license_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedUser.id, 'license')" 
+                              <button
+                                v-if="!selectedUser.kyc.license_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedUser.id, 'license')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedUser.kyc.license_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedUser.id, 'license')" 
+                              <button
+                                v-if="!selectedUser.kyc.license_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedUser.id, 'license')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
-                        
+
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Carte grise</div>
-                            <div class="document-status" :class="selectedUser.kyc.vehicle_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedUser.kyc.vehicle_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedUser.kyc.vehicle_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedUser.kyc.vehicle_document">
-                            <img v-if="isImageDocument(selectedUser.kyc.vehicle_document)" :src="selectedUser.kyc.vehicle_document" alt="Carte grise" />
+                            <img
+                              v-if="isImageDocument(selectedUser.kyc.vehicle_document)"
+                              :src="selectedUser.kyc.vehicle_document"
+                              alt="Carte grise"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedUser.kyc.vehicle_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedUser.kyc.vehicle_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedUser.kyc.vehicle_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedUser.id, 'vehicle')" 
+                              <button
+                                v-if="!selectedUser.kyc.vehicle_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedUser.id, 'vehicle')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedUser.kyc.vehicle_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedUser.id, 'vehicle')" 
+                              <button
+                                v-if="!selectedUser.kyc.vehicle_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedUser.id, 'vehicle')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div v-if="selectedUser.role === 'business'" class="kyc-document-section">
                       <h4>Documents de l'entreprise</h4>
-                      
+
                       <div class="document-grid">
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">SIRET/RCCM</div>
-                            <div class="document-status" :class="selectedUser.kyc.siret_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedUser.kyc.siret_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedUser.kyc.siret_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedUser.kyc.siret_document">
-                            <img v-if="isImageDocument(selectedUser.kyc.siret_document)" :src="selectedUser.kyc.siret_document" alt="SIRET/RCCM" />
+                            <img
+                              v-if="isImageDocument(selectedUser.kyc.siret_document)"
+                              :src="selectedUser.kyc.siret_document"
+                              alt="SIRET/RCCM"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedUser.kyc.siret_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedUser.kyc.siret_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedUser.kyc.siret_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedUser.id, 'siret')" 
+                              <button
+                                v-if="!selectedUser.kyc.siret_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedUser.id, 'siret')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedUser.kyc.siret_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedUser.id, 'siret')" 
+                              <button
+                                v-if="!selectedUser.kyc.siret_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedUser.id, 'siret')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
-                        
+
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Extrait KBIS</div>
-                            <div class="document-status" :class="selectedUser.kyc.kbis_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedUser.kyc.kbis_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedUser.kyc.kbis_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedUser.kyc.kbis_document">
-                            <img v-if="isImageDocument(selectedUser.kyc.kbis_document)" :src="selectedUser.kyc.kbis_document" alt="Extrait KBIS" />
+                            <img
+                              v-if="isImageDocument(selectedUser.kyc.kbis_document)"
+                              :src="selectedUser.kyc.kbis_document"
+                              alt="Extrait KBIS"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedUser.kyc.kbis_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedUser.kyc.kbis_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedUser.kyc.kbis_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedUser.id, 'kbis')" 
+                              <button
+                                v-if="!selectedUser.kyc.kbis_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedUser.id, 'kbis')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedUser.kyc.kbis_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedUser.id, 'kbis')" 
+                              <button
+                                v-if="!selectedUser.kyc.kbis_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedUser.id, 'kbis')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
-                        
+
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Pièce d'identité du gérant</div>
-                            <div class="document-status" :class="selectedUser.kyc.id_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedUser.kyc.id_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedUser.kyc.id_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedUser.kyc.id_document">
-                            <img v-if="isImageDocument(selectedUser.kyc.id_document)" :src="selectedUser.kyc.id_document" alt="Pièce d'identité du gérant" />
+                            <img
+                              v-if="isImageDocument(selectedUser.kyc.id_document)"
+                              :src="selectedUser.kyc.id_document"
+                              alt="Pièce d'identité du gérant"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedUser.kyc.id_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedUser.kyc.id_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedUser.kyc.id_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedUser.id, 'id')" 
+                              <button
+                                v-if="!selectedUser.kyc.id_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedUser.id, 'id')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedUser.kyc.id_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedUser.id, 'id')" 
+                              <button
+                                v-if="!selectedUser.kyc.id_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedUser.id, 'id')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="kyc-actions" v-if="selectedUser.status === 'pending_verification'">
                     <button class="btn btn-success" @click="verifyUser(selectedUser)">
                       <font-awesome-icon icon="check-circle" class="mr-1" />
@@ -892,39 +998,72 @@
           <form @submit.prevent="updateUser">
             <div class="form-group">
               <label for="edit_user_name">Nom complet</label>
-              <input type="text" id="edit_user_name" v-model="editingUser.name" class="form-control" required />
+              <input
+                type="text"
+                id="edit_user_name"
+                v-model="editingUser.name"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="edit_user_email">Email</label>
-              <input type="email" id="edit_user_email" v-model="editingUser.email" class="form-control" required />
+              <input
+                type="email"
+                id="edit_user_email"
+                v-model="editingUser.email"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="edit_user_phone">Téléphone</label>
-              <input type="tel" id="edit_user_phone" v-model="editingUser.phone" class="form-control" required />
+              <input
+                type="tel"
+                id="edit_user_phone"
+                v-model="editingUser.phone"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="edit_user_status">Statut</label>
-              <select id="edit_user_status" v-model="editingUser.status" class="form-control" required>
+              <select
+                id="edit_user_status"
+                v-model="editingUser.status"
+                class="form-control"
+                required
+              >
                 <option value="active">Actif</option>
                 <option value="pending_verification">En attente de vérification</option>
                 <option value="suspended">Suspendu</option>
                 <option value="inactive">Inactif</option>
               </select>
             </div>
-            
+
             <div class="form-group" v-if="editingUser.role === 'business'">
               <label for="edit_business_name">Nom de l'entreprise</label>
-              <input type="text" id="edit_business_name" v-model="editingUser.business_name" class="form-control" />
+              <input
+                type="text"
+                id="edit_business_name"
+                v-model="editingUser.business_name"
+                class="form-control"
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="edit_user_address">Adresse</label>
-              <input type="text" id="edit_user_address" v-model="editingUser.address" class="form-control" />
+              <input
+                type="text"
+                id="edit_user_address"
+                v-model="editingUser.address"
+                class="form-control"
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="edit_user_commune">Commune</label>
               <select id="edit_user_commune" v-model="editingUser.commune" class="form-control">
@@ -934,7 +1073,7 @@
                 </option>
               </select>
             </div>
-            
+
             <div class="form-actions">
               <button type="button" class="btn btn-outline" @click="showEditUserModal = false">
                 Annuler
@@ -954,11 +1093,11 @@
 <script>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  fetchUsers, 
-  addUser, 
-  updateUserStatus, 
-  updateUser as apiUpdateUser, 
+import {
+  fetchUsers,
+  addUser,
+  updateUserStatus,
+  updateUser as apiUpdateUser,
   fetchUserDetails,
   fetchUserActivity,
   fetchUserDeliveries,
@@ -966,7 +1105,7 @@ import {
   verifyUserDocument,
   rejectUserDocument,
   verifyUserKyc,
-  rejectUserKyc
+  rejectUserKyc,
 } from '@/api/manager'
 import { formatDate, formatPrice, getInitials } from '@/utils/formatters'
 import { COMMUNES, PAGE_SIZE_OPTIONS, DEFAULT_PAGE_SIZE } from '@/config'
@@ -975,7 +1114,7 @@ export default {
   name: 'UsersView',
   setup() {
     const router = useRouter()
-    
+
     const loading = ref(true)
     const users = ref([])
     const currentPage = ref(1)
@@ -995,13 +1134,13 @@ export default {
     const userPayments = ref([])
     const activeUserDetailsTab = ref('personal')
     const showPassword = ref(false)
-    
+
     const filters = reactive({
       role: '',
       status: '',
-      search: ''
+      search: '',
     })
-    
+
     const newUser = reactive({
       name: '',
       email: '',
@@ -1009,38 +1148,38 @@ export default {
       role: 'client',
       business_name: '',
       password: '',
-      status: 'active'
+      status: 'active',
     })
-    
+
     const userDetailsTabs = [
       { id: 'personal', label: 'Informations', icon: 'user' },
       { id: 'activity', label: 'Activité', icon: 'history' },
       { id: 'deliveries', label: 'Livraisons', icon: 'truck' },
       { id: 'payments', label: 'Paiements', icon: 'money-bill' },
-      { id: 'kyc', label: 'Vérification KYC', icon: 'id-card' }
+      { id: 'kyc', label: 'Vérification KYC', icon: 'id-card' },
     ]
-    
+
     const paginationInfo = computed(() => {
       const from = users.value.length === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1
       const to = Math.min(from + pageSize.value - 1, totalItems.value)
-      
+
       return {
         from,
         to,
-        total: totalItems.value
+        total: totalItems.value,
       }
     })
-    
+
     const totalItems = computed(() => {
-      return (currentPage.value < totalPages.value) 
-        ? currentPage.value * pageSize.value + 1 
+      return currentPage.value < totalPages.value
+        ? currentPage.value * pageSize.value + 1
         : (totalPages.value - 1) * pageSize.value + users.value.length
     })
-    
+
     const displayedPages = computed(() => {
       const pages = []
       const maxPagesToShow = 5
-      
+
       if (totalPages.value <= maxPagesToShow) {
         // Afficher toutes les pages si leur nombre est inférieur ou égal à maxPagesToShow
         for (let i = 1; i <= totalPages.value; i++) {
@@ -1049,41 +1188,41 @@ export default {
       } else {
         // Toujours afficher la première page
         pages.push(1)
-        
+
         // Calculer les pages à afficher autour de la page courante
         let startPage = Math.max(2, currentPage.value - Math.floor(maxPagesToShow / 2))
         let endPage = Math.min(totalPages.value - 1, startPage + maxPagesToShow - 3)
-        
+
         // Ajuster startPage si endPage est trop petit
         startPage = Math.max(2, endPage - (maxPagesToShow - 3))
-        
+
         // Ajouter des points de suspension si nécessaire
         if (startPage > 2) {
           pages.push('...')
         }
-        
+
         // Ajouter les pages intermédiaires
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
-        
+
         // Ajouter des points de suspension si nécessaire
         if (endPage < totalPages.value - 1) {
           pages.push('...')
         }
-        
+
         // Toujours afficher la dernière page
         pages.push(totalPages.value)
       }
-      
+
       return pages
     })
-    
+
     // Charger les utilisateurs
     const loadUsers = async () => {
       try {
         loading.value = true
-        
+
         // Préparer les paramètres de requête
         const params = {
           page: currentPage.value,
@@ -1092,13 +1231,13 @@ export default {
           order: sortDirection.value,
           role: filters.role || undefined,
           status: filters.status || undefined,
-          search: filters.search || undefined
+          search: filters.search || undefined,
         }
-        
+
         const data = await fetchUsers(params)
         users.value = data.users
         totalPages.value = Math.ceil(data.total / pageSize.value)
-        
+
         // Ajuster la page courante si elle dépasse le nombre total de pages
         if (currentPage.value > totalPages.value && totalPages.value > 0) {
           currentPage.value = totalPages.value
@@ -1110,9 +1249,9 @@ export default {
         loading.value = false
       }
     }
-    
+
     // Trier les utilisateurs
-    const sortBy = (column) => {
+    const sortBy = column => {
       if (sortColumn.value === column) {
         // Inverser la direction de tri
         sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
@@ -1121,53 +1260,53 @@ export default {
         sortColumn.value = column
         sortDirection.value = 'asc'
       }
-      
+
       // Recharger les utilisateurs
       loadUsers()
     }
-    
+
     // Appliquer les filtres
     const applyFilters = () => {
       currentPage.value = 1
       loadUsers()
     }
-    
+
     // Réinitialiser les filtres
     const resetFilters = () => {
       filters.role = ''
       filters.status = ''
       filters.search = ''
-      
+
       currentPage.value = 1
       loadUsers()
     }
-    
+
     // Changer de page
-    const changePage = (page) => {
+    const changePage = page => {
       if (page === '...') return
-      
+
       currentPage.value = page
       loadUsers()
     }
-    
+
     // Changer la taille de page
     const changePageSize = () => {
       currentPage.value = 1
       loadUsers()
     }
-    
+
     // Rafraîchir les données
     const refreshData = () => {
       loadUsers()
     }
-    
+
     // Ajouter un utilisateur
     const addUser = async () => {
       try {
         isAddingUser.value = true
-        
+
         await addUser(newUser)
-        
+
         // Réinitialiser le formulaire
         newUser.name = ''
         newUser.email = ''
@@ -1176,13 +1315,13 @@ export default {
         newUser.business_name = ''
         newUser.password = ''
         newUser.status = 'active'
-        
+
         // Fermer le modal
         showAddUserModal.value = false
-        
+
         // Recharger les utilisateurs
         loadUsers()
-        
+
         // Afficher un message de succès
         alert('Utilisateur ajouté avec succès')
       } catch (error) {
@@ -1192,26 +1331,26 @@ export default {
         isAddingUser.value = false
       }
     }
-    
+
     // Voir les détails d'un utilisateur
-    const viewUserDetails = async (user) => {
+    const viewUserDetails = async user => {
       try {
         // Charger les détails de l'utilisateur
         const details = await fetchUserDetails(user.id)
         selectedUser.value = details
-        
+
         // Charger l'activité de l'utilisateur
         loadUserActivity(user.id)
-        
+
         // Charger les livraisons de l'utilisateur
         loadUserDeliveries(user.id)
-        
+
         // Charger les paiements de l'utilisateur
         loadUserPayments(user.id)
-        
+
         // Afficher le modal
         showUserDetailsModal.value = true
-        
+
         // Réinitialiser l'onglet actif
         activeUserDetailsTab.value = 'personal'
       } catch (error) {
@@ -1219,9 +1358,9 @@ export default {
         alert(`Erreur lors du chargement des détails de l'utilisateur: ${error.message}`)
       }
     }
-    
+
     // Charger l'activité d'un utilisateur
-    const loadUserActivity = async (userId) => {
+    const loadUserActivity = async userId => {
       try {
         const activity = await fetchUserActivity(userId)
         userActivity.value = activity
@@ -1230,9 +1369,9 @@ export default {
         userActivity.value = []
       }
     }
-    
+
     // Charger les livraisons d'un utilisateur
-    const loadUserDeliveries = async (userId) => {
+    const loadUserDeliveries = async userId => {
       try {
         const deliveries = await fetchUserDeliveries(userId)
         userDeliveries.value = deliveries
@@ -1241,9 +1380,9 @@ export default {
         userDeliveries.value = []
       }
     }
-    
+
     // Charger les paiements d'un utilisateur
-    const loadUserPayments = async (userId) => {
+    const loadUserPayments = async userId => {
       try {
         const payments = await fetchUserPayments(userId)
         userPayments.value = payments
@@ -1252,31 +1391,31 @@ export default {
         userPayments.value = []
       }
     }
-    
+
     // Modifier un utilisateur
-    const editUser = (user) => {
+    const editUser = user => {
       editingUser.value = { ...user }
       showEditUserModal.value = true
     }
-    
+
     // Mettre à jour un utilisateur
     const updateUser = async () => {
       try {
         isUpdatingUser.value = true
-        
+
         await apiUpdateUser(editingUser.value.id, editingUser.value)
-        
+
         // Fermer le modal
         showEditUserModal.value = false
-        
+
         // Mettre à jour l'utilisateur sélectionné si nécessaire
         if (selectedUser.value && selectedUser.value.id === editingUser.value.id) {
           selectedUser.value = { ...selectedUser.value, ...editingUser.value }
         }
-        
+
         // Recharger les utilisateurs
         loadUsers()
-        
+
         // Afficher un message de succès
         alert('Utilisateur mis à jour avec succès')
       } catch (error) {
@@ -1286,27 +1425,27 @@ export default {
         isUpdatingUser.value = false
       }
     }
-    
+
     // Suspendre un utilisateur
-    const suspendUser = async (user) => {
+    const suspendUser = async user => {
       if (!confirm(`Êtes-vous sûr de vouloir suspendre l'utilisateur ${user.name} ?`)) {
         return
       }
-      
+
       try {
         await updateUserStatus(user.id, 'suspended')
-        
+
         // Mettre à jour l'utilisateur dans la liste
         const index = users.value.findIndex(u => u.id === user.id)
         if (index !== -1) {
           users.value[index].status = 'suspended'
         }
-        
+
         // Mettre à jour l'utilisateur sélectionné si nécessaire
         if (selectedUser.value && selectedUser.value.id === user.id) {
           selectedUser.value.status = 'suspended'
         }
-        
+
         // Afficher un message de succès
         alert('Utilisateur suspendu avec succès')
       } catch (error) {
@@ -1314,23 +1453,23 @@ export default {
         alert(`Erreur lors de la suspension de l'utilisateur: ${error.message}`)
       }
     }
-    
+
     // Activer un utilisateur
-    const activateUser = async (user) => {
+    const activateUser = async user => {
       try {
         await updateUserStatus(user.id, 'active')
-        
+
         // Mettre à jour l'utilisateur dans la liste
         const index = users.value.findIndex(u => u.id === user.id)
         if (index !== -1) {
           users.value[index].status = 'active'
         }
-        
+
         // Mettre à jour l'utilisateur sélectionné si nécessaire
         if (selectedUser.value && selectedUser.value.id === user.id) {
           selectedUser.value.status = 'active'
         }
-        
+
         // Afficher un message de succès
         alert('Utilisateur activé avec succès')
       } catch (error) {
@@ -1338,18 +1477,18 @@ export default {
         alert(`Erreur lors de l'activation de l'utilisateur: ${error.message}`)
       }
     }
-    
+
     // Vérifier un utilisateur
-    const verifyUser = async (user) => {
+    const verifyUser = async user => {
       try {
         await verifyUserKyc(user.id)
-        
+
         // Mettre à jour l'utilisateur dans la liste
         const index = users.value.findIndex(u => u.id === user.id)
         if (index !== -1) {
           users.value[index].status = 'active'
         }
-        
+
         // Mettre à jour l'utilisateur sélectionné si nécessaire
         if (selectedUser.value && selectedUser.value.id === user.id) {
           selectedUser.value.status = 'active'
@@ -1357,7 +1496,7 @@ export default {
             selectedUser.value.kyc.status = 'verified'
           }
         }
-        
+
         // Afficher un message de succès
         alert('Utilisateur vérifié avec succès')
       } catch (error) {
@@ -1365,22 +1504,24 @@ export default {
         alert(`Erreur lors de la vérification de l'utilisateur: ${error.message}`)
       }
     }
-    
+
     // Rejeter la vérification d'un utilisateur
-    const rejectVerification = async (user) => {
-      if (!confirm(`Êtes-vous sûr de vouloir rejeter la vérification de l'utilisateur ${user.name} ?`)) {
+    const rejectVerification = async user => {
+      if (
+        !confirm(`Êtes-vous sûr de vouloir rejeter la vérification de l'utilisateur ${user.name} ?`)
+      ) {
         return
       }
-      
+
       try {
         await rejectUserKyc(user.id)
-        
+
         // Mettre à jour l'utilisateur dans la liste
         const index = users.value.findIndex(u => u.id === user.id)
         if (index !== -1) {
           users.value[index].status = 'inactive'
         }
-        
+
         // Mettre à jour l'utilisateur sélectionné si nécessaire
         if (selectedUser.value && selectedUser.value.id === user.id) {
           selectedUser.value.status = 'inactive'
@@ -1388,7 +1529,7 @@ export default {
             selectedUser.value.kyc.status = 'rejected'
           }
         }
-        
+
         // Afficher un message de succès
         alert('Vérification rejetée avec succès')
       } catch (error) {
@@ -1396,17 +1537,17 @@ export default {
         alert(`Erreur lors du rejet de la vérification: ${error.message}`)
       }
     }
-    
+
     // Vérifier un document
     const verifyDocument = async (userId, documentType) => {
       try {
         await verifyUserDocument(userId, documentType)
-        
+
         // Mettre à jour l'utilisateur sélectionné si nécessaire
         if (selectedUser.value && selectedUser.value.id === userId && selectedUser.value.kyc) {
           selectedUser.value.kyc[`${documentType}_verified`] = true
         }
-        
+
         // Afficher un message de succès
         alert('Document vérifié avec succès')
       } catch (error) {
@@ -1414,22 +1555,22 @@ export default {
         alert(`Erreur lors de la vérification du document: ${error.message}`)
       }
     }
-    
+
     // Rejeter un document
     const rejectDocument = async (userId, documentType) => {
       if (!confirm('Êtes-vous sûr de vouloir rejeter ce document ?')) {
         return
       }
-      
+
       try {
         await rejectUserDocument(userId, documentType)
-        
+
         // Mettre à jour l'utilisateur sélectionné si nécessaire
         if (selectedUser.value && selectedUser.value.id === userId && selectedUser.value.kyc) {
           selectedUser.value.kyc[`${documentType}_verified`] = false
           selectedUser.value.kyc[`${documentType}_document`] = null
         }
-        
+
         // Afficher un message de succès
         alert('Document rejeté avec succès')
       } catch (error) {
@@ -1437,261 +1578,272 @@ export default {
         alert(`Erreur lors du rejet du document: ${error.message}`)
       }
     }
-    
+
     // Vérifier si un document est une image
-    const isImageDocument = (url) => {
+    const isImageDocument = url => {
       if (!url) return false
-      
+
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
       return imageExtensions.some(ext => url.toLowerCase().endsWith(ext))
     }
-    
+
     // Obtenir la classe CSS pour un rôle
-    const getRoleClass = (role) => {
+    const getRoleClass = role => {
       const roleClasses = {
-        'client': 'role-client',
-        'courier': 'role-courier',
-        'business': 'role-business',
-        'manager': 'role-manager'
+        client: 'role-client',
+        courier: 'role-courier',
+        business: 'role-business',
+        manager: 'role-manager',
       }
-      
+
       return roleClasses[role] || ''
     }
-    
+
     // Obtenir le libellé pour un rôle
-    const getRoleLabel = (role) => {
+    const getRoleLabel = role => {
       const roleLabels = {
-        'client': 'Client',
-        'courier': 'Coursier',
-        'business': 'Entreprise',
-        'manager': 'Gestionnaire'
+        client: 'Client',
+        courier: 'Coursier',
+        business: 'Entreprise',
+        manager: 'Gestionnaire',
       }
-      
+
       return roleLabels[role] || role
     }
-    
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       const statusClasses = {
-        'active': 'status-active',
-        'pending_verification': 'status-pending',
-        'suspended': 'status-suspended',
-        'inactive': 'status-inactive'
+        active: 'status-active',
+        pending_verification: 'status-pending',
+        suspended: 'status-suspended',
+        inactive: 'status-inactive',
       }
-      
+
       return statusClasses[status] || ''
     }
-    
+
     // Obtenir le libellé pour un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       const statusLabels = {
-        'active': 'Actif',
-        'pending_verification': 'En attente de vérification',
-        'suspended': 'Suspendu',
-        'inactive': 'Inactif'
+        active: 'Actif',
+        pending_verification: 'En attente de vérification',
+        suspended: 'Suspendu',
+        inactive: 'Inactif',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     // Obtenir la classe CSS pour un statut de livraison
-    const getDeliveryStatusClass = (status) => {
+    const getDeliveryStatusClass = status => {
       const statusClasses = {
-        'pending': 'status-pending',
-        'accepted': 'status-accepted',
-        'picked_up': 'status-picked-up',
-        'in_transit': 'status-in-transit',
-        'delivered': 'status-delivered',
-        'cancelled': 'status-cancelled',
-        'failed': 'status-failed'
+        pending: 'status-pending',
+        accepted: 'status-accepted',
+        picked_up: 'status-picked-up',
+        in_transit: 'status-in-transit',
+        delivered: 'status-delivered',
+        cancelled: 'status-cancelled',
+        failed: 'status-failed',
       }
-      
+
       return statusClasses[status] || ''
     }
-    
+
     // Obtenir le libellé pour un statut de livraison
-    const getDeliveryStatusLabel = (status) => {
+    const getDeliveryStatusLabel = status => {
       const statusLabels = {
-        'pending': 'En attente',
-        'accepted': 'Acceptée',
-        'picked_up': 'Récupérée',
-        'in_transit': 'En transit',
-        'delivered': 'Livrée',
-        'cancelled': 'Annulée',
-        'failed': 'Échouée'
+        pending: 'En attente',
+        accepted: 'Acceptée',
+        picked_up: 'Récupérée',
+        in_transit: 'En transit',
+        delivered: 'Livrée',
+        cancelled: 'Annulée',
+        failed: 'Échouée',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     // Obtenir l'icône pour une méthode de paiement
-    const getPaymentMethodIcon = (method) => {
+    const getPaymentMethodIcon = method => {
       const methodIcons = {
-        'cash': 'money-bill',
-        'orange_money': 'mobile-alt',
-        'mtn_money': 'mobile-alt',
-        'credit_card': 'credit-card',
-        'bank_transfer': 'university'
+        cash: 'money-bill',
+        orange_money: 'mobile-alt',
+        mtn_money: 'mobile-alt',
+        credit_card: 'credit-card',
+        bank_transfer: 'university',
       }
-      
+
       return methodIcons[method] || 'money-bill'
     }
-    
+
     // Obtenir le libellé pour une méthode de paiement
-    const getPaymentMethodLabel = (method) => {
+    const getPaymentMethodLabel = method => {
       const methodLabels = {
-        'cash': 'Espèces',
-        'orange_money': 'Orange Money',
-        'mtn_money': 'MTN Money',
-        'credit_card': 'Carte bancaire',
-        'bank_transfer': 'Virement bancaire'
+        cash: 'Espèces',
+        orange_money: 'Orange Money',
+        mtn_money: 'MTN Money',
+        credit_card: 'Carte bancaire',
+        bank_transfer: 'Virement bancaire',
       }
-      
+
       return methodLabels[method] || method
     }
-    
+
     // Obtenir la classe CSS pour un statut de paiement
-    const getPaymentStatusClass = (status) => {
+    const getPaymentStatusClass = status => {
       const statusClasses = {
-        'paid': 'status-paid',
-        'pending': 'status-pending',
-        'failed': 'status-failed'
+        paid: 'status-paid',
+        pending: 'status-pending',
+        failed: 'status-failed',
       }
-      
+
       return statusClasses[status] || ''
     }
-    
+
     // Obtenir le libellé pour un statut de paiement
-    const getPaymentStatusLabel = (status) => {
+    const getPaymentStatusLabel = status => {
       const statusLabels = {
-        'paid': 'Payé',
-        'pending': 'En attente',
-        'failed': 'Échoué'
+        paid: 'Payé',
+        pending: 'En attente',
+        failed: 'Échoué',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     // Obtenir la classe CSS pour un statut KYC
-    const getKycStatusClass = (status) => {
+    const getKycStatusClass = status => {
       const statusClasses = {
-        'verified': 'status-active',
-        'pending': 'status-pending',
-        'rejected': 'status-suspended'
+        verified: 'status-active',
+        pending: 'status-pending',
+        rejected: 'status-suspended',
       }
-      
+
       return statusClasses[status] || ''
     }
-    
+
     // Obtenir le libellé pour un statut KYC
-    const getKycStatusLabel = (status) => {
+    const getKycStatusLabel = status => {
       const statusLabels = {
-        'verified': 'Vérifié',
-        'pending': 'En attente',
-        'rejected': 'Rejeté'
+        verified: 'Vérifié',
+        pending: 'En attente',
+        rejected: 'Rejeté',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     // Obtenir le libellé pour un type d'entreprise
-    const getBusinessTypeLabel = (type) => {
+    const getBusinessTypeLabel = type => {
       const typeLabels = {
-        'restaurant': 'Restaurant',
-        'retail': 'Commerce de détail',
-        'grocery': 'Épicerie',
-        'pharmacy': 'Pharmacie',
-        'other': 'Autre'
+        restaurant: 'Restaurant',
+        retail: 'Commerce de détail',
+        grocery: 'Épicerie',
+        pharmacy: 'Pharmacie',
+        other: 'Autre',
       }
-      
+
       return typeLabels[type] || type
     }
-    
+
     // Obtenir le libellé pour un type de véhicule
-    const getVehicleTypeLabel = (type) => {
+    const getVehicleTypeLabel = type => {
       const typeLabels = {
-        'motorcycle': 'Moto',
-        'car': 'Voiture',
-        'bicycle': 'Vélo',
-        'truck': 'Camion',
-        'foot': 'À pied'
+        motorcycle: 'Moto',
+        car: 'Voiture',
+        bicycle: 'Vélo',
+        truck: 'Camion',
+        foot: 'À pied',
       }
-      
+
       return typeLabels[type] || type
     }
-    
+
     // Obtenir l'icône pour un type d'activité
-    const getActivityIcon = (type) => {
+    const getActivityIcon = type => {
       const activityIcons = {
-        'login': 'sign-in-alt',
-        'logout': 'sign-out-alt',
-        'delivery_created': 'plus',
-        'delivery_accepted': 'check',
-        'delivery_picked_up': 'truck-loading',
-        'delivery_in_transit': 'truck',
-        'delivery_delivered': 'check-circle',
-        'delivery_cancelled': 'times-circle',
-        'payment_made': 'money-bill',
-        'payment_received': 'money-bill',
-        'profile_updated': 'user-edit',
-        'document_uploaded': 'file-upload',
-        'verification_approved': 'check-circle',
-        'verification_rejected': 'times-circle',
-        'rating_given': 'star',
-        'rating_received': 'star',
-        'complaint_filed': 'exclamation-circle',
-        'complaint_resolved': 'check-circle'
+        login: 'sign-in-alt',
+        logout: 'sign-out-alt',
+        delivery_created: 'plus',
+        delivery_accepted: 'check',
+        delivery_picked_up: 'truck-loading',
+        delivery_in_transit: 'truck',
+        delivery_delivered: 'check-circle',
+        delivery_cancelled: 'times-circle',
+        payment_made: 'money-bill',
+        payment_received: 'money-bill',
+        profile_updated: 'user-edit',
+        document_uploaded: 'file-upload',
+        verification_approved: 'check-circle',
+        verification_rejected: 'times-circle',
+        rating_given: 'star',
+        rating_received: 'star',
+        complaint_filed: 'exclamation-circle',
+        complaint_resolved: 'check-circle',
       }
-      
+
       return activityIcons[type] || 'history'
     }
-    
+
     // Obtenir la classe CSS pour un type d'activité
-    const getActivityIconClass = (type) => {
+    const getActivityIconClass = type => {
       const activityClasses = {
-        'login': 'activity-login',
-        'logout': 'activity-logout',
-        'delivery_created': 'activity-created',
-        'delivery_accepted': 'activity-accepted',
-        'delivery_picked_up': 'activity-picked-up',
-        'delivery_in_transit': 'activity-in-transit',
-        'delivery_delivered': 'activity-delivered',
-        'delivery_cancelled': 'activity-cancelled',
-        'payment_made': 'activity-payment-made',
-        'payment_received': 'activity-payment-received',
-        'profile_updated': 'activity-profile',
-        'document_uploaded': 'activity-document',
-        'verification_approved': 'activity-approved',
-        'verification_rejected': 'activity-rejected',
-        'rating_given': 'activity-rating',
-        'rating_received': 'activity-rating',
-        'complaint_filed': 'activity-complaint',
-        'complaint_resolved': 'activity-resolved'
+        login: 'activity-login',
+        logout: 'activity-logout',
+        delivery_created: 'activity-created',
+        delivery_accepted: 'activity-accepted',
+        delivery_picked_up: 'activity-picked-up',
+        delivery_in_transit: 'activity-in-transit',
+        delivery_delivered: 'activity-delivered',
+        delivery_cancelled: 'activity-cancelled',
+        payment_made: 'activity-payment-made',
+        payment_received: 'activity-payment-received',
+        profile_updated: 'activity-profile',
+        document_uploaded: 'activity-document',
+        verification_approved: 'activity-approved',
+        verification_rejected: 'activity-rejected',
+        rating_given: 'activity-rating',
+        rating_received: 'activity-rating',
+        complaint_filed: 'activity-complaint',
+        complaint_resolved: 'activity-resolved',
       }
-      
+
       return activityClasses[type] || 'activity-default'
     }
-    
+
     // Surveiller les changements de filtres pour mettre à jour l'URL
-    watch([filters.role, filters.status, filters.search, sortColumn, sortDirection, currentPage, pageSize], () => {
-      const query = {
-        role: filters.role || undefined,
-        status: filters.status || undefined,
-        search: filters.search || undefined,
-        sort: sortColumn.value,
-        order: sortDirection.value,
-        page: currentPage.value,
-        limit: pageSize.value
+    watch(
+      [
+        filters.role,
+        filters.status,
+        filters.search,
+        sortColumn,
+        sortDirection,
+        currentPage,
+        pageSize,
+      ],
+      () => {
+        const query = {
+          role: filters.role || undefined,
+          status: filters.status || undefined,
+          search: filters.search || undefined,
+          sort: sortColumn.value,
+          order: sortDirection.value,
+          page: currentPage.value,
+          limit: pageSize.value,
+        }
+
+        // Mettre à jour l'URL sans recharger la page
+        router.replace({ query })
       }
-      
-      // Mettre à jour l'URL sans recharger la page
-      router.replace({ query })
-    })
-    
+    )
+
     onMounted(() => {
       // Récupérer les paramètres de l'URL
       const query = router.currentRoute.value.query
-      
+
       if (query.role) filters.role = query.role
       if (query.status) filters.status = query.status
       if (query.search) filters.search = query.search
@@ -1699,10 +1851,10 @@ export default {
       if (query.order) sortDirection.value = query.order
       if (query.page) currentPage.value = parseInt(query.page)
       if (query.limit) pageSize.value = parseInt(query.limit)
-      
+
       loadUsers()
     })
-    
+
     return {
       loading,
       users,
@@ -1766,9 +1918,9 @@ export default {
       getActivityIconClass,
       formatDate,
       formatPrice,
-      getInitials
+      getInitials,
     }
-  }
+  },
 }
 </script>
 
@@ -1958,78 +2110,78 @@ export default {
 }
 
 .role-client {
-  background-color: #E3F2FD;
-  color: #1976D2;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .role-courier {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .role-business {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #fff8e1;
+  color: #ffa000;
 }
 
 .role-manager {
-  background-color: #F3E5F5;
-  color: #7B1FA2;
+  background-color: #f3e5f5;
+  color: #7b1fa2;
 }
 
 .status-active {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-pending {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #fff8e1;
+  color: #ffa000;
 }
 
 .status-suspended {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .status-inactive {
-  background-color: #ECEFF1;
-  color: #607D8B;
+  background-color: #eceff1;
+  color: #607d8b;
 }
 
 .status-accepted {
-  background-color: #E3F2FD;
-  color: #1976D2;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .status-picked-up {
-  background-color: #E0F7FA;
-  color: #00ACC1;
+  background-color: #e0f7fa;
+  color: #00acc1;
 }
 
 .status-in-transit {
-  background-color: #E0F2F1;
-  color: #00897B;
+  background-color: #e0f2f1;
+  color: #00897b;
 }
 
 .status-delivered {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-cancelled {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .status-failed {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .status-paid {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .table-actions {
@@ -2410,75 +2562,75 @@ export default {
 }
 
 .activity-login {
-  background-color: #1976D2;
+  background-color: #1976d2;
 }
 
 .activity-logout {
-  background-color: #607D8B;
+  background-color: #607d8b;
 }
 
 .activity-created {
-  background-color: #7B1FA2;
+  background-color: #7b1fa2;
 }
 
 .activity-accepted {
-  background-color: #00ACC1;
+  background-color: #00acc1;
 }
 
 .activity-picked-up {
-  background-color: #00897B;
+  background-color: #00897b;
 }
 
 .activity-in-transit {
-  background-color: #FFA000;
+  background-color: #ffa000;
 }
 
 .activity-delivered {
-  background-color: #388E3C;
+  background-color: #388e3c;
 }
 
 .activity-cancelled {
-  background-color: #D32F2F;
+  background-color: #d32f2f;
 }
 
 .activity-payment-made {
-  background-color: #F44336;
+  background-color: #f44336;
 }
 
 .activity-payment-received {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .activity-profile {
-  background-color: #9C27B0;
+  background-color: #9c27b0;
 }
 
 .activity-document {
-  background-color: #FF5722;
+  background-color: #ff5722;
 }
 
 .activity-approved {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .activity-rejected {
-  background-color: #F44336;
+  background-color: #f44336;
 }
 
 .activity-rating {
-  background-color: #FFC107;
+  background-color: #ffc107;
 }
 
 .activity-complaint {
-  background-color: #F44336;
+  background-color: #f44336;
 }
 
 .activity-resolved {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .activity-default {
-  background-color: #9E9E9E;
+  background-color: #9e9e9e;
 }
 
 .activity-content {
@@ -2590,11 +2742,11 @@ export default {
 }
 
 .document-status.verified {
-  color: #388E3C;
+  color: #388e3c;
 }
 
 .document-status.pending {
-  color: #FFA000;
+  color: #ffa000;
 }
 
 .document-preview {
@@ -2649,12 +2801,12 @@ export default {
 }
 
 .btn-danger {
-  background-color: #F44336;
+  background-color: #f44336;
   color: white;
 }
 
 .btn-success {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 
@@ -2662,35 +2814,35 @@ export default {
   .filters-row {
     flex-direction: column;
   }
-  
+
   .filter-group {
     width: 100%;
   }
-  
+
   .pagination-container {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .pagination-info {
     order: 3;
   }
-  
+
   .pagination-controls {
     order: 1;
   }
-  
+
   .pagination-size {
     order: 2;
     width: 100%;
   }
-  
+
   .user-details-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .user-details-actions {
     width: 100%;
   }
@@ -2702,34 +2854,34 @@ export default {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-actions {
     width: 100%;
   }
-  
+
   .header-actions .btn {
     flex: 1;
   }
-  
+
   .users-table {
     display: block;
     overflow-x: auto;
   }
-  
+
   .user-details-tabs {
     flex-wrap: wrap;
   }
-  
+
   .tab-button {
     flex: 1;
     min-width: 120px;
     padding: 0.75rem 1rem;
   }
-  
+
   .tab-icon {
     margin-right: 0.5rem;
   }
-  
+
   .document-grid {
     grid-template-columns: 1fr;
   }

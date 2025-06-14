@@ -1,86 +1,86 @@
 <template>
   <div class="loan-reminder-form">
     <div class="form-group">
-      <label for="reminder-message" class="form-label">Message de rappel <span class="required">*</span></label>
-      <textarea 
-        id="reminder-message" 
-        v-model="reminderMessage" 
-        class="form-textarea" 
+      <label for="reminder-message" class="form-label"
+        >Message de rappel <span class="required">*</span></label
+      >
+      <textarea
+        id="reminder-message"
+        v-model="reminderMessage"
+        class="form-textarea"
         placeholder="Saisissez votre message de rappel ici..."
         rows="5"
         required
       ></textarea>
-      <div class="form-hint">
-        Laissez vide pour utiliser le message par défaut
-      </div>
+      <div class="form-hint">Laissez vide pour utiliser le message par défaut</div>
     </div>
-    
+
     <div class="form-group">
       <label class="form-label">Message par défaut</label>
       <div class="default-message">
         {{ defaultMessage }}
       </div>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="save"
-      >
-        Envoyer le rappel
-      </button>
+      <button type="button" class="btn btn-primary" @click="save">Envoyer le rappel</button>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 
 export default {
   name: 'LoanReminderForm',
   props: {
     loan: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
-    const reminderMessage = ref('');
-    
+    const reminderMessage = ref('')
+
     const defaultMessage = computed(() => {
-      const dueDate = new Date(props.loan.repayment_deadline);
-      const today = new Date();
-      const diffTime = dueDate - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+      const dueDate = new Date(props.loan.repayment_deadline)
+      const today = new Date()
+      const diffTime = dueDate - today
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
       if (diffDays > 0) {
-        return `Rappel: Votre prêt de ${props.loan.amount} FCFA doit être remboursé dans ${diffDays} jours (échéance le ${dueDate.toLocaleDateString('fr-FR')}).`;
+        return `Rappel: Votre prêt de ${
+          props.loan.amount
+        } FCFA doit être remboursé dans ${diffDays} jours (échéance le ${dueDate.toLocaleDateString(
+          'fr-FR'
+        )}).`
       } else if (diffDays === 0) {
-        return `Rappel important: Votre prêt de ${props.loan.amount} FCFA doit être remboursé aujourd'hui.`;
+        return `Rappel important: Votre prêt de ${props.loan.amount} FCFA doit être remboursé aujourd'hui.`
       } else {
-        return `Rappel urgent: Votre prêt de ${props.loan.amount} FCFA est en retard de remboursement de ${Math.abs(diffDays)} jours.`;
+        return `Rappel urgent: Votre prêt de ${
+          props.loan.amount
+        } FCFA est en retard de remboursement de ${Math.abs(diffDays)} jours.`
       }
-    });
-    
+    })
+
     const save = () => {
-      emit('save', reminderMessage.value || null);
-    };
-    
+      emit('save', reminderMessage.value || null)
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     return {
       reminderMessage,
       defaultMessage,
       save,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

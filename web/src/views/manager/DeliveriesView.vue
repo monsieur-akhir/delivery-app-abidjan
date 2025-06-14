@@ -40,11 +40,11 @@
         <div class="filter-group">
           <label for="search">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search" 
-              v-model="filters.search" 
-              placeholder="ID, client, coursier..." 
+            <input
+              type="text"
+              id="search"
+              v-model="filters.search"
+              placeholder="ID, client, coursier..."
               @input="debounceSearch"
             />
             <i class="fas fa-search"></i>
@@ -66,18 +66,18 @@
         <div class="filter-group">
           <label for="price-range">Prix (FCFA)</label>
           <div class="range-inputs">
-            <input 
-              type="number" 
-              v-model.number="filters.minPrice" 
-              placeholder="Min" 
-              @change="applyFilters" 
+            <input
+              type="number"
+              v-model.number="filters.minPrice"
+              placeholder="Min"
+              @change="applyFilters"
             />
             <span>à</span>
-            <input 
-              type="number" 
-              v-model.number="filters.maxPrice" 
-              placeholder="Max" 
-              @change="applyFilters" 
+            <input
+              type="number"
+              v-model.number="filters.maxPrice"
+              placeholder="Max"
+              @change="applyFilters"
             />
           </div>
         </div>
@@ -116,7 +116,7 @@
           <p>Livraisons totales</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-clock"></i>
@@ -126,7 +126,7 @@
           <p>En attente</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-truck"></i>
@@ -136,7 +136,7 @@
           <p>En cours</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-check-circle"></i>
@@ -146,7 +146,7 @@
           <p>Terminées</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-times-circle"></i>
@@ -156,7 +156,7 @@
           <p>Annulées</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">
           <i class="fas fa-exclamation-triangle"></i>
@@ -217,13 +217,22 @@
             </td>
             <td>
               <div class="actions-cell">
-                <button class="btn-icon" @click="viewDeliveryDetails(delivery.id)" title="Voir les détails">
+                <button
+                  class="btn-icon"
+                  @click="viewDeliveryDetails(delivery.id)"
+                  title="Voir les détails"
+                >
                   <i class="fas fa-eye"></i>
                 </button>
                 <button class="btn-icon" @click="editDelivery(delivery.id)" title="Modifier">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn-icon" v-if="delivery.status === 'disputed'" @click="resolveDispute(delivery.id)" title="Résoudre le litige">
+                <button
+                  class="btn-icon"
+                  v-if="delivery.status === 'disputed'"
+                  @click="resolveDispute(delivery.id)"
+                  title="Résoudre le litige"
+                >
                   <i class="fas fa-gavel"></i>
                 </button>
               </div>
@@ -234,27 +243,23 @@
 
       <!-- Pagination -->
       <div class="pagination">
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === 1" 
-          @click="changePage(currentPage - 1)"
-        >
+        <button class="btn-page" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
           <i class="fas fa-chevron-left"></i>
         </button>
-        
-        <button 
-          v-for="page in displayedPages" 
-          :key="page" 
-          class="btn-page" 
+
+        <button
+          v-for="page in displayedPages"
+          :key="page"
+          class="btn-page"
           :class="{ active: currentPage === page }"
           @click="changePage(page)"
         >
           {{ page }}
         </button>
-        
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === totalPages" 
+
+        <button
+          class="btn-page"
+          :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
           <i class="fas fa-chevron-right"></i>
@@ -298,11 +303,16 @@
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Date de création</span>
-                  <span class="detail-value">{{ formatDateTime(selectedDelivery.created_at) }}</span>
+                  <span class="detail-value">{{
+                    formatDateTime(selectedDelivery.created_at)
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">Statut</span>
-                  <span class="detail-value status-badge" :class="getStatusClass(selectedDelivery.status)">
+                  <span
+                    class="detail-value status-badge"
+                    :class="getStatusClass(selectedDelivery.status)"
+                  >
                     {{ getStatusLabel(selectedDelivery.status) }}
                   </span>
                 </div>
@@ -324,12 +334,19 @@
             <div class="detail-section">
               <h3>Client</h3>
               <div class="user-detail">
-                <div class="user-avatar large">{{ getUserInitials(selectedDelivery.client.name) }}</div>
+                <div class="user-avatar large">
+                  {{ getUserInitials(selectedDelivery.client.name) }}
+                </div>
                 <div class="user-info">
                   <h4>{{ selectedDelivery.client.name }}</h4>
                   <p><i class="fas fa-phone"></i> {{ selectedDelivery.client.phone }}</p>
                   <p><i class="fas fa-envelope"></i> {{ selectedDelivery.client.email }}</p>
-                  <p><i class="fas fa-star"></i> {{ selectedDelivery.client.rating }} ({{ selectedDelivery.client.rating_count }} avis)</p>
+                  <p>
+                    <i class="fas fa-star"></i> {{ selectedDelivery.client.rating }} ({{
+                      selectedDelivery.client.rating_count
+                    }}
+                    avis)
+                  </p>
                 </div>
               </div>
             </div>
@@ -337,13 +354,22 @@
             <div class="detail-section" v-if="selectedDelivery.courier">
               <h3>Coursier</h3>
               <div class="user-detail">
-                <div class="user-avatar large">{{ getUserInitials(selectedDelivery.courier.name) }}</div>
+                <div class="user-avatar large">
+                  {{ getUserInitials(selectedDelivery.courier.name) }}
+                </div>
                 <div class="user-info">
                   <h4>{{ selectedDelivery.courier.name }}</h4>
                   <p><i class="fas fa-phone"></i> {{ selectedDelivery.courier.phone }}</p>
                   <p><i class="fas fa-envelope"></i> {{ selectedDelivery.courier.email }}</p>
-                  <p><i class="fas fa-star"></i> {{ selectedDelivery.courier.rating }} ({{ selectedDelivery.courier.rating_count }} avis)</p>
-                  <p><i class="fas fa-motorcycle"></i> {{ selectedDelivery.courier.vehicle_type }}</p>
+                  <p>
+                    <i class="fas fa-star"></i> {{ selectedDelivery.courier.rating }} ({{
+                      selectedDelivery.courier.rating_count
+                    }}
+                    avis)
+                  </p>
+                  <p>
+                    <i class="fas fa-motorcycle"></i> {{ selectedDelivery.courier.vehicle_type }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -363,12 +389,12 @@
                     </p>
                   </div>
                 </div>
-                
+
                 <div class="address-connector">
                   <div class="connector-line"></div>
                   <div class="connector-distance">{{ selectedDelivery.distance }} km</div>
                 </div>
-                
+
                 <div class="address-item">
                   <div class="address-icon delivery">
                     <i class="fas fa-flag-checkered"></i>
@@ -401,21 +427,28 @@
                 </div>
                 <div class="package-item">
                   <span class="package-label">Fragile</span>
-                  <span class="package-value">{{ selectedDelivery.is_fragile ? 'Oui' : 'Non' }}</span>
+                  <span class="package-value">{{
+                    selectedDelivery.is_fragile ? 'Oui' : 'Non'
+                  }}</span>
                 </div>
                 <div class="package-item">
                   <span class="package-label">Description</span>
-                  <span class="package-value">{{ selectedDelivery.package_description || 'Aucune description' }}</span>
+                  <span class="package-value">{{
+                    selectedDelivery.package_description || 'Aucune description'
+                  }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="detail-section" v-if="selectedDelivery.timeline && selectedDelivery.timeline.length > 0">
+            <div
+              class="detail-section"
+              v-if="selectedDelivery.timeline && selectedDelivery.timeline.length > 0"
+            >
               <h3>Chronologie</h3>
               <div class="timeline">
-                <div 
-                  class="timeline-item" 
-                  v-for="(event, index) in selectedDelivery.timeline" 
+                <div
+                  class="timeline-item"
+                  v-for="(event, index) in selectedDelivery.timeline"
                   :key="index"
                 >
                   <div class="timeline-icon" :class="getTimelineIconClass(event.status)">
@@ -424,7 +457,9 @@
                   <div class="timeline-content">
                     <div class="timeline-time">{{ formatDateTime(event.timestamp) }}</div>
                     <div class="timeline-title">{{ getTimelineTitle(event.status) }}</div>
-                    <div class="timeline-description" v-if="event.description">{{ event.description }}</div>
+                    <div class="timeline-description" v-if="event.description">
+                      {{ event.description }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -435,21 +470,30 @@
               <div class="payment-details">
                 <div class="payment-item">
                   <span class="payment-label">Méthode</span>
-                  <span class="payment-value">{{ getPaymentMethodLabel(selectedDelivery.payment.method) }}</span>
+                  <span class="payment-value">{{
+                    getPaymentMethodLabel(selectedDelivery.payment.method)
+                  }}</span>
                 </div>
                 <div class="payment-item">
                   <span class="payment-label">Statut</span>
-                  <span class="payment-value payment-status" :class="getPaymentStatusClass(selectedDelivery.payment.status)">
+                  <span
+                    class="payment-value payment-status"
+                    :class="getPaymentStatusClass(selectedDelivery.payment.status)"
+                  >
                     {{ getPaymentStatusLabel(selectedDelivery.payment.status) }}
                   </span>
                 </div>
                 <div class="payment-item">
                   <span class="payment-label">Montant</span>
-                  <span class="payment-value">{{ formatCurrency(selectedDelivery.payment.amount) }}</span>
+                  <span class="payment-value">{{
+                    formatCurrency(selectedDelivery.payment.amount)
+                  }}</span>
                 </div>
                 <div class="payment-item">
                   <span class="payment-label">Date</span>
-                  <span class="payment-value">{{ formatDateTime(selectedDelivery.payment.timestamp) }}</span>
+                  <span class="payment-value">{{
+                    formatDateTime(selectedDelivery.payment.timestamp)
+                  }}</span>
                 </div>
                 <div class="payment-item" v-if="selectedDelivery.payment.transaction_id">
                   <span class="payment-label">ID de transaction</span>
@@ -471,17 +515,24 @@
                 </div>
                 <div class="dispute-item">
                   <span class="dispute-label">Statut</span>
-                  <span class="dispute-value dispute-status" :class="getDisputeStatusClass(selectedDelivery.dispute.status)">
+                  <span
+                    class="dispute-value dispute-status"
+                    :class="getDisputeStatusClass(selectedDelivery.dispute.status)"
+                  >
                     {{ getDisputeStatusLabel(selectedDelivery.dispute.status) }}
                   </span>
                 </div>
                 <div class="dispute-item">
                   <span class="dispute-label">Date d'ouverture</span>
-                  <span class="dispute-value">{{ formatDateTime(selectedDelivery.dispute.created_at) }}</span>
+                  <span class="dispute-value">{{
+                    formatDateTime(selectedDelivery.dispute.created_at)
+                  }}</span>
                 </div>
                 <div class="dispute-item" v-if="selectedDelivery.dispute.resolved_at">
                   <span class="dispute-label">Date de résolution</span>
-                  <span class="dispute-value">{{ formatDateTime(selectedDelivery.dispute.resolved_at) }}</span>
+                  <span class="dispute-value">{{
+                    formatDateTime(selectedDelivery.dispute.resolved_at)
+                  }}</span>
                 </div>
                 <div class="dispute-item" v-if="selectedDelivery.dispute.resolution">
                   <span class="dispute-label">Résolution</span>
@@ -493,10 +544,16 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeModal">Fermer</button>
-          <button class="btn btn-primary" @click="editDelivery(selectedDelivery.id)">Modifier</button>
-          <button 
-            class="btn btn-danger" 
-            v-if="selectedDelivery && selectedDelivery.status !== 'cancelled' && selectedDelivery.status !== 'completed'"
+          <button class="btn btn-primary" @click="editDelivery(selectedDelivery.id)">
+            Modifier
+          </button>
+          <button
+            class="btn btn-danger"
+            v-if="
+              selectedDelivery &&
+              selectedDelivery.status !== 'cancelled' &&
+              selectedDelivery.status !== 'completed'
+            "
             @click="cancelDelivery(selectedDelivery.id)"
           >
             Annuler la livraison
@@ -520,12 +577,12 @@
               <label>Raison du litige</label>
               <div class="readonly-field">{{ selectedDelivery.dispute.reason }}</div>
             </div>
-            
+
             <div class="form-group">
               <label>Description du litige</label>
               <div class="readonly-field">{{ selectedDelivery.dispute.description }}</div>
             </div>
-            
+
             <div class="form-group">
               <label for="resolution-decision">Décision</label>
               <select id="resolution-decision" v-model="disputeResolution.decision">
@@ -536,28 +593,28 @@
                 <option value="redeliver">Nouvelle livraison</option>
               </select>
             </div>
-            
+
             <div class="form-group" v-if="disputeResolution.decision === 'partial_refund'">
               <label for="refund-amount">Montant du remboursement (FCFA)</label>
-              <input 
-                type="number" 
-                id="refund-amount" 
-                v-model.number="disputeResolution.refundAmount" 
-                min="0" 
+              <input
+                type="number"
+                id="refund-amount"
+                v-model.number="disputeResolution.refundAmount"
+                min="0"
                 :max="selectedDelivery.price"
               />
             </div>
-            
+
             <div class="form-group">
               <label for="resolution-notes">Notes de résolution</label>
-              <textarea 
-                id="resolution-notes" 
-                v-model="disputeResolution.notes" 
-                rows="4" 
+              <textarea
+                id="resolution-notes"
+                v-model="disputeResolution.notes"
+                rows="4"
                 placeholder="Expliquez votre décision..."
               ></textarea>
             </div>
-            
+
             <div class="form-group">
               <label for="notify-parties">Notifier les parties</label>
               <div class="checkbox-group">
@@ -575,7 +632,9 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeDisputeModal">Annuler</button>
-          <button class="btn btn-primary" @click="submitDisputeResolution">Résoudre le litige</button>
+          <button class="btn btn-primary" @click="submitDisputeResolution">
+            Résoudre le litige
+          </button>
         </div>
       </div>
     </div>
@@ -584,7 +643,12 @@
 
 <script>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { fetchDeliveries, fetchDeliveryDetails, updateDeliveryStatus, resolveDeliveryDispute } from '@/api/manager'
+import {
+  fetchDeliveries,
+  fetchDeliveryDetails,
+  updateDeliveryStatus,
+  resolveDeliveryDispute,
+} from '@/api/manager'
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters'
 
 export default {
@@ -601,19 +665,27 @@ export default {
     const itemsPerPage = ref(10)
     const totalItems = ref(0)
     const districts = ref([
-      'Abobo', 'Adjamé', 'Attécoubé', 'Cocody', 'Koumassi', 
-      'Marcory', 'Plateau', 'Port-Bouët', 'Treichville', 'Yopougon'
+      'Abobo',
+      'Adjamé',
+      'Attécoubé',
+      'Cocody',
+      'Koumassi',
+      'Marcory',
+      'Plateau',
+      'Port-Bouët',
+      'Treichville',
+      'Yopougon',
     ])
-    
+
     const stats = reactive({
       total: 0,
       pending: 0,
       inProgress: 0,
       completed: 0,
       cancelled: 0,
-      disputed: 0
+      disputed: 0,
     })
-    
+
     const filters = reactive({
       status: '',
       startDate: '',
@@ -621,17 +693,17 @@ export default {
       search: '',
       district: '',
       minPrice: null,
-      maxPrice: null
+      maxPrice: null,
     })
-    
+
     const sortBy = ref('created_at_desc')
-    
+
     const disputeResolution = reactive({
       decision: 'client_favor',
       refundAmount: 0,
       notes: '',
       notifyClient: true,
-      notifyCourier: true
+      notifyCourier: true,
     })
 
     // Méthodes
@@ -642,14 +714,14 @@ export default {
           page: currentPage.value,
           limit: itemsPerPage.value,
           sort: sortBy.value,
-          ...filters
+          ...filters,
         }
-        
+
         const response = await fetchDeliveries(params)
         deliveries.value = response.items
         totalItems.value = response.total
         totalPages.value = response.pages
-        
+
         // Mettre à jour les statistiques
         stats.total = response.stats.total
         stats.pending = response.stats.pending
@@ -664,16 +736,16 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const applyFilters = () => {
       currentPage.value = 1
       fetchData()
     }
-    
+
     const resetFilters = () => {
       Object.keys(filters).forEach(key => {
         if (typeof filters[key] === 'string') {
@@ -686,13 +758,13 @@ export default {
       currentPage.value = 1
       fetchData()
     }
-    
-    const changePage = (page) => {
+
+    const changePage = page => {
       currentPage.value = page
       fetchData()
     }
-    
-    const viewDeliveryDetails = async (deliveryId) => {
+
+    const viewDeliveryDetails = async deliveryId => {
       try {
         loading.value = true
         const response = await fetchDeliveryDetails(deliveryId)
@@ -705,19 +777,19 @@ export default {
         loading.value = false
       }
     }
-    
-    const editDelivery = (deliveryId) => {
+
+    const editDelivery = deliveryId => {
       // Rediriger vers la page d'édition de livraison
       // router.push(`/manager/deliveries/${deliveryId}/edit`)
       console.log('Éditer la livraison:', deliveryId)
     }
-    
+
     const closeModal = () => {
       showDeliveryModal.value = false
       selectedDelivery.value = null
     }
-    
-    const cancelDelivery = async (deliveryId) => {
+
+    const cancelDelivery = async deliveryId => {
       try {
         await updateDeliveryStatus(deliveryId, 'cancelled')
         // Mettre à jour la liste des livraisons
@@ -726,93 +798,93 @@ export default {
         closeModal()
         // Afficher une notification de succès
       } catch (error) {
-        console.error('Erreur lors de l\'annulation de la livraison:', error)
+        console.error("Erreur lors de l'annulation de la livraison:", error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
-    const resolveDispute = (deliveryId) => {
+
+    const resolveDispute = deliveryId => {
       // Réinitialiser le formulaire de résolution de litige
       disputeResolution.decision = 'client_favor'
       disputeResolution.refundAmount = 0
       disputeResolution.notes = ''
       disputeResolution.notifyClient = true
       disputeResolution.notifyCourier = true
-      
+
       // Afficher le modal de résolution de litige
       viewDeliveryDetails(deliveryId).then(() => {
         showDisputeModal.value = true
       })
     }
-    
+
     const closeDisputeModal = () => {
       showDisputeModal.value = false
     }
-    
+
     const submitDisputeResolution = async () => {
       try {
         if (!selectedDelivery.value || !selectedDelivery.value.dispute) {
           return
         }
-        
+
         const payload = {
           decision: disputeResolution.decision,
           notes: disputeResolution.notes,
           notify_client: disputeResolution.notifyClient,
-          notify_courier: disputeResolution.notifyCourier
+          notify_courier: disputeResolution.notifyCourier,
         }
-        
+
         if (disputeResolution.decision === 'partial_refund') {
           payload.refund_amount = disputeResolution.refundAmount
         }
-        
+
         await resolveDeliveryDispute(selectedDelivery.value.id, payload)
-        
+
         // Fermer les modals
         closeDisputeModal()
         closeModal()
-        
+
         // Rafraîchir les données
         fetchData()
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la résolution du litige:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
+
     const exportData = () => {
       // Implémenter l'exportation des données (CSV, Excel, etc.)
       console.log('Exporter les données')
     }
-    
+
     // Utilitaires
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       const statusMap = {
         pending: 'status-pending',
         accepted: 'status-accepted',
         in_progress: 'status-in-progress',
         completed: 'status-completed',
         cancelled: 'status-cancelled',
-        disputed: 'status-disputed'
+        disputed: 'status-disputed',
       }
       return statusMap[status] || 'status-unknown'
     }
-    
-    const getStatusLabel = (status) => {
+
+    const getStatusLabel = status => {
       const statusMap = {
         pending: 'En attente',
         accepted: 'Acceptée',
         in_progress: 'En cours',
         completed: 'Terminée',
         cancelled: 'Annulée',
-        disputed: 'Litigieuse'
+        disputed: 'Litigieuse',
       }
       return statusMap[status] || 'Inconnu'
     }
-    
-    const getTimelineIconClass = (status) => {
+
+    const getTimelineIconClass = status => {
       const statusMap = {
         created: 'timeline-icon-created',
         accepted: 'timeline-icon-accepted',
@@ -820,12 +892,12 @@ export default {
         in_transit: 'timeline-icon-in-transit',
         delivered: 'timeline-icon-delivered',
         cancelled: 'timeline-icon-cancelled',
-        disputed: 'timeline-icon-disputed'
+        disputed: 'timeline-icon-disputed',
       }
       return statusMap[status] || 'timeline-icon-default'
     }
-    
-    const getTimelineIcon = (status) => {
+
+    const getTimelineIcon = status => {
       const statusMap = {
         created: 'fas fa-plus-circle',
         accepted: 'fas fa-check-circle',
@@ -833,12 +905,12 @@ export default {
         in_transit: 'fas fa-truck',
         delivered: 'fas fa-flag-checkered',
         cancelled: 'fas fa-times-circle',
-        disputed: 'fas fa-exclamation-triangle'
+        disputed: 'fas fa-exclamation-triangle',
       }
       return statusMap[status] || 'fas fa-circle'
     }
-    
-    const getTimelineTitle = (status) => {
+
+    const getTimelineTitle = status => {
       const statusMap = {
         created: 'Livraison créée',
         accepted: 'Acceptée par le coursier',
@@ -846,64 +918,64 @@ export default {
         in_transit: 'En transit',
         delivered: 'Livré',
         cancelled: 'Annulée',
-        disputed: 'Litige ouvert'
+        disputed: 'Litige ouvert',
       }
       return statusMap[status] || 'Événement'
     }
-    
-    const getPaymentMethodLabel = (method) => {
+
+    const getPaymentMethodLabel = method => {
       const methodMap = {
         cash: 'Espèces',
         card: 'Carte bancaire',
         orange_money: 'Orange Money',
         mtn_money: 'MTN Money',
         moov_money: 'Moov Money',
-        wave: 'Wave'
+        wave: 'Wave',
       }
       return methodMap[method] || 'Inconnu'
     }
-    
-    const getPaymentStatusClass = (status) => {
+
+    const getPaymentStatusClass = status => {
       const statusMap = {
         pending: 'payment-pending',
         completed: 'payment-completed',
         failed: 'payment-failed',
-        refunded: 'payment-refunded'
+        refunded: 'payment-refunded',
       }
       return statusMap[status] || 'payment-unknown'
     }
-    
-    const getPaymentStatusLabel = (status) => {
+
+    const getPaymentStatusLabel = status => {
       const statusMap = {
         pending: 'En attente',
         completed: 'Complété',
         failed: 'Échoué',
-        refunded: 'Remboursé'
+        refunded: 'Remboursé',
       }
       return statusMap[status] || 'Inconnu'
     }
-    
-    const getDisputeStatusClass = (status) => {
+
+    const getDisputeStatusClass = status => {
       const statusMap = {
         open: 'dispute-open',
         in_review: 'dispute-in-review',
         resolved: 'dispute-resolved',
-        closed: 'dispute-closed'
+        closed: 'dispute-closed',
       }
       return statusMap[status] || 'dispute-unknown'
     }
-    
-    const getDisputeStatusLabel = (status) => {
+
+    const getDisputeStatusLabel = status => {
       const statusMap = {
         open: 'Ouvert',
-        in_review: 'En cours d\'examen',
+        in_review: "En cours d'examen",
         resolved: 'Résolu',
-        closed: 'Fermé'
+        closed: 'Fermé',
       }
       return statusMap[status] || 'Inconnu'
     }
-    
-    const getUserInitials = (name) => {
+
+    const getUserInitials = name => {
       if (!name) return '?'
       return name
         .split(' ')
@@ -912,12 +984,12 @@ export default {
         .toUpperCase()
         .substring(0, 2)
     }
-    
+
     // Pagination calculée
     const displayedPages = computed(() => {
       const pages = []
       const maxVisiblePages = 5
-      
+
       if (totalPages.value <= maxVisiblePages) {
         // Afficher toutes les pages si le nombre total est inférieur ou égal au maximum visible
         for (let i = 1; i <= totalPages.value; i++) {
@@ -927,20 +999,20 @@ export default {
         // Calculer les pages à afficher
         let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
         let endPage = startPage + maxVisiblePages - 1
-        
+
         if (endPage > totalPages.value) {
           endPage = totalPages.value
           startPage = Math.max(1, endPage - maxVisiblePages + 1)
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
       }
-      
+
       return pages
     })
-    
+
     // Debounce pour la recherche
     let searchTimeout = null
     const debounceSearch = () => {
@@ -949,17 +1021,17 @@ export default {
         applyFilters()
       }, 500)
     }
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
     })
-    
+
     // Surveiller les changements de page
     watch(currentPage, () => {
       fetchData()
     })
-    
+
     return {
       deliveries,
       selectedDelivery,
@@ -976,7 +1048,7 @@ export default {
       sortBy,
       disputeResolution,
       displayedPages,
-      
+
       fetchData,
       refreshData,
       applyFilters,
@@ -991,7 +1063,7 @@ export default {
       submitDisputeResolution,
       exportData,
       debounceSearch,
-      
+
       getStatusClass,
       getStatusLabel,
       getTimelineIconClass,
@@ -1003,12 +1075,12 @@ export default {
       getDisputeStatusClass,
       getDisputeStatusLabel,
       getUserInitials,
-      
+
       formatCurrency,
       formatDate,
-      formatDateTime
+      formatDateTime,
     }
-  }
+  },
 }
 </script>
 
@@ -1928,24 +2000,24 @@ export default {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filter-group {
     min-width: 100%;
   }
-  
+
   .stats-container {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .data-table {
     display: block;
     overflow-x: auto;
   }
-  
+
   .modal-content {
     width: 95%;
   }
-  
+
   .detail-grid,
   .package-details,
   .payment-details {
@@ -1957,22 +2029,22 @@ export default {
   .stats-container {
     grid-template-columns: 1fr;
   }
-  
+
   .actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .filters-actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .modal-footer {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn {
     width: 100%;
   }

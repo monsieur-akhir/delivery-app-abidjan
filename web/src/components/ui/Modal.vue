@@ -21,24 +21,24 @@ export default {
   props: {
     title: {
       type: String,
-      default: 'Modal'
+      default: 'Modal',
     },
     large: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   emits: ['close'],
   setup(props, { emit }) {
     const close = () => {
-      emit('close');
-    };
-    
+      emit('close')
+    }
+
     return {
-      close
-    };
-  }
-};
+      close,
+    }
+  },
+}
 </script>
 
 <style scoped>

@@ -11,10 +11,10 @@ export class ApiError extends Error {
   }
 }
 
-export const handleApiError = (error) => {
+export const handleApiError = error => {
   if (error.response) {
     const { status, data } = error.response
-    
+
     switch (status) {
       case 400:
         toast.error(data.message || 'Requête invalide')
@@ -35,15 +35,15 @@ export const handleApiError = (error) => {
       default:
         toast.error('Une erreur est survenue')
     }
-    
+
     throw new ApiError(data.message, status, data.code)
   }
-  
+
   if (error.request) {
     toast.error('Impossible de contacter le serveur')
     throw new ApiError('Erreur réseau', 0, 'NETWORK_ERROR')
   }
-  
+
   toast.error('Une erreur inattendue est survenue')
   throw error
-} 
+}

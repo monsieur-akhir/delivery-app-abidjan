@@ -1,4 +1,3 @@
-
 <template>
   <div class="support-management">
     <!-- En-tête avec statistiques -->
@@ -14,7 +13,9 @@
           <div class="stat-label">Aujourd'hui</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">{{ Math.round(dashboard.overview.avg_resolution_time_hours) }}h</div>
+          <div class="stat-number">
+            {{ Math.round(dashboard.overview.avg_resolution_time_hours) }}h
+          </div>
           <div class="stat-label">Temps Moyen</div>
         </div>
         <div class="stat-card">
@@ -26,8 +27,8 @@
 
     <!-- Onglets -->
     <div class="tabs">
-      <button 
-        v-for="tab in tabs" 
+      <button
+        v-for="tab in tabs"
         :key="tab.id"
         :class="['tab-button', { active: activeTab === tab.id }]"
         @click="activeTab = tab.id"
@@ -51,7 +52,7 @@
             <option value="resolved">Résolu</option>
             <option value="closed">Fermé</option>
           </select>
-          
+
           <select v-model="filters.priority" @change="loadTickets">
             <option value="">Toutes priorités</option>
             <option value="critical">Critique</option>
@@ -60,7 +61,7 @@
             <option value="normal">Normale</option>
             <option value="low">Basse</option>
           </select>
-          
+
           <select v-model="filters.category" @change="loadTickets">
             <option value="">Toutes catégories</option>
             <option value="delivery_issue">Problème livraison</option>
@@ -71,7 +72,7 @@
             <option value="general_inquiry">Question générale</option>
             <option value="complaint">Plainte</option>
           </select>
-          
+
           <button @click="toggleAssignedToMe" :class="{ active: filters.assignedToMe }">
             Mes tickets
           </button>
@@ -79,21 +80,25 @@
 
         <!-- Liste des tickets -->
         <div class="tickets-list">
-          <div 
-            v-for="ticket in tickets" 
+          <div
+            v-for="ticket in tickets"
             :key="ticket.id"
             :class="['ticket-item', `priority-${ticket.priority}`]"
             @click="selectTicket(ticket)"
           >
             <div class="ticket-header">
               <span class="ticket-number">#{{ ticket.ticket_number }}</span>
-              <span :class="['status-badge', ticket.status]">{{ getStatusLabel(ticket.status) }}</span>
-              <span :class="['priority-badge', ticket.priority]">{{ getPriorityLabel(ticket.priority) }}</span>
+              <span :class="['status-badge', ticket.status]">{{
+                getStatusLabel(ticket.status)
+              }}</span>
+              <span :class="['priority-badge', ticket.priority]">{{
+                getPriorityLabel(ticket.priority)
+              }}</span>
             </div>
-            
+
             <h3 class="ticket-title">{{ ticket.title }}</h3>
             <p class="ticket-description">{{ ticket.description.substring(0, 100) }}...</p>
-            
+
             <div class="ticket-meta">
               <span class="user">{{ ticket.user.full_name }}</span>
               <span class="date">{{ formatDate(ticket.created_at) }}</span>
@@ -106,8 +111,8 @@
 
         <!-- Pagination -->
         <div class="pagination">
-          <button 
-            v-for="page in totalPages" 
+          <button
+            v-for="page in totalPages"
             :key="page"
             :class="{ active: currentPage === page }"
             @click="changePage(page)"
@@ -129,7 +134,7 @@
               <option value="resolved">Résolu</option>
               <option value="closed">Fermé</option>
             </select>
-            
+
             <select v-model="selectedTicket.assigned_agent_id" @change="assignTicket">
               <option value="">Non assigné</option>
               <option v-for="agent in agents" :key="agent.id" :value="agent.id">
@@ -143,7 +148,7 @@
           <div class="ticket-info">
             <h3>{{ selectedTicket.title }}</h3>
             <p>{{ selectedTicket.description }}</p>
-            
+
             <div class="meta-info">
               <div><strong>Utilisateur:</strong> {{ selectedTicket.user.full_name }}</div>
               <div><strong>Catégorie:</strong> {{ getCategoryLabel(selectedTicket.category) }}</div>
@@ -156,10 +161,13 @@
           <div class="messages-section">
             <h4>Conversation</h4>
             <div class="messages">
-              <div 
-                v-for="message in ticketMessages" 
+              <div
+                v-for="message in ticketMessages"
                 :key="message.id"
-                :class="['message', { internal: message.is_internal, automated: message.is_automated }]"
+                :class="[
+                  'message',
+                  { internal: message.is_internal, automated: message.is_automated },
+                ]"
               >
                 <div class="message-header">
                   <span class="sender">{{ message.sender.full_name }}</span>
@@ -172,19 +180,17 @@
 
             <!-- Répondre -->
             <div class="reply-section">
-              <textarea 
-                v-model="replyMessage" 
+              <textarea
+                v-model="replyMessage"
                 placeholder="Tapez votre réponse..."
                 rows="4"
               ></textarea>
               <div class="reply-actions">
                 <label>
-                  <input type="checkbox" v-model="isInternalMessage">
+                  <input type="checkbox" v-model="isInternalMessage" />
                   Message interne
                 </label>
-                <button @click="sendReply" :disabled="!replyMessage.trim()">
-                  Envoyer
-                </button>
+                <button @click="sendReply" :disabled="!replyMessage.trim()">Envoyer</button>
               </div>
             </div>
           </div>
@@ -195,23 +201,21 @@
       <div v-if="activeTab === 'knowledge-base'" class="knowledge-base">
         <div class="kb-header">
           <h3>Base de Connaissances</h3>
-          <button @click="showCreateArticle = true" class="btn-primary">
-            Nouvel Article
-          </button>
+          <button @click="showCreateArticle = true" class="btn-primary">Nouvel Article</button>
         </div>
 
         <div class="kb-search">
-          <input 
-            type="text" 
-            v-model="searchQuery" 
+          <input
+            type="text"
+            v-model="searchQuery"
             @input="searchArticles"
             placeholder="Rechercher dans la base de connaissances..."
-          >
+          />
         </div>
 
         <div class="articles-list">
-          <div 
-            v-for="article in knowledgeBase" 
+          <div
+            v-for="article in knowledgeBase"
             :key="article.id"
             class="article-item"
             @click="selectArticle(article)"
@@ -233,17 +237,17 @@
             <h4>Tickets par Catégorie</h4>
             <PieChart :data="ticketsByCategoryChart" />
           </div>
-          
+
           <div class="chart-container">
             <h4>Performance des Agents</h4>
             <HorizontalBarChart :data="ticketsByAgentChart" />
           </div>
-          
+
           <div class="chart-container">
             <h4>Évolution des Tickets</h4>
             <LineChart :data="ticketsEvolutionChart" />
           </div>
-          
+
           <div class="chart-container">
             <h4>Temps de Résolution</h4>
             <AreaChart :data="resolutionTimeChart" />
@@ -259,9 +263,9 @@
         <form @submit.prevent="createArticle">
           <div class="form-group">
             <label>Titre</label>
-            <input type="text" v-model="newArticle.title" required>
+            <input type="text" v-model="newArticle.title" required />
           </div>
-          
+
           <div class="form-group">
             <label>Catégorie</label>
             <select v-model="newArticle.category" required>
@@ -271,17 +275,17 @@
               <option value="policy">Politique</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label>Contenu</label>
             <textarea v-model="newArticle.content" rows="10" required></textarea>
           </div>
-          
+
           <div class="form-group">
             <label>Tags (séparés par des virgules)</label>
-            <input type="text" v-model="newArticle.tags">
+            <input type="text" v-model="newArticle.tags" />
           </div>
-          
+
           <div class="form-actions">
             <button type="button" @click="showCreateArticle = false">Annuler</button>
             <button type="submit">Créer</button>
@@ -308,7 +312,7 @@ export default {
     PieChart,
     HorizontalBarChart,
     LineChart,
-    AreaChart
+    AreaChart,
   },
   setup() {
     const activeTab = ref('tickets')
@@ -322,19 +326,19 @@ export default {
         open_tickets: 0,
         tickets_today: 0,
         avg_resolution_time_hours: 0,
-        avg_satisfaction_score: 0
+        avg_satisfaction_score: 0,
       },
       tickets_by_category: [],
-      tickets_by_agent: []
+      tickets_by_agent: [],
     })
-    
+
     const filters = reactive({
       status: '',
       priority: '',
       category: '',
-      assignedToMe: false
+      assignedToMe: false,
     })
-    
+
     const currentPage = ref(1)
     const totalPages = ref(1)
     const searchQuery = ref('')
@@ -342,36 +346,40 @@ export default {
     const isInternalMessage = ref(false)
     const showCreateArticle = ref(false)
     const agents = ref([])
-    
+
     const newArticle = reactive({
       title: '',
       category: '',
       content: '',
-      tags: ''
+      tags: '',
     })
 
     const tabs = computed(() => [
       { id: 'tickets', label: 'Tickets', count: dashboard.value.overview.open_tickets },
       { id: 'ticket-details', label: 'Détails', count: null },
       { id: 'knowledge-base', label: 'Base de Connaissances', count: null },
-      { id: 'analytics', label: 'Analyses', count: null }
+      { id: 'analytics', label: 'Analyses', count: null },
     ])
 
     const ticketsByCategoryChart = computed(() => ({
       labels: dashboard.value.tickets_by_category.map(item => item.category),
-      datasets: [{
-        data: dashboard.value.tickets_by_category.map(item => item.count),
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-      }]
+      datasets: [
+        {
+          data: dashboard.value.tickets_by_category.map(item => item.count),
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+        },
+      ],
     }))
 
     const ticketsByAgentChart = computed(() => ({
       labels: dashboard.value.tickets_by_agent.map(item => item.agent),
-      datasets: [{
-        label: 'Tickets assignés',
-        data: dashboard.value.tickets_by_agent.map(item => item.count),
-        backgroundColor: '#36A2EB'
-      }]
+      datasets: [
+        {
+          label: 'Tickets assignés',
+          data: dashboard.value.tickets_by_agent.map(item => item.count),
+          backgroundColor: '#36A2EB',
+        },
+      ],
     }))
 
     const loadDashboard = async () => {
@@ -388,7 +396,7 @@ export default {
         const params = {
           page: currentPage.value,
           ...filters,
-          assigned_to_me: filters.assignedToMe
+          assigned_to_me: filters.assignedToMe,
         }
         const response = await supportAPI.getTickets(params)
         tickets.value = response.data.tickets
@@ -398,10 +406,10 @@ export default {
       }
     }
 
-    const selectTicket = async (ticket) => {
+    const selectTicket = async ticket => {
       selectedTicket.value = ticket
       activeTab.value = 'ticket-details'
-      
+
       try {
         const response = await supportAPI.getTicketMessages(ticket.id)
         ticketMessages.value = response.data.messages
@@ -413,7 +421,7 @@ export default {
     const updateTicketStatus = async () => {
       try {
         await supportAPI.updateTicket(selectedTicket.value.id, {
-          status: selectedTicket.value.status
+          status: selectedTicket.value.status,
         })
         loadTickets()
       } catch (error) {
@@ -424,11 +432,11 @@ export default {
     const assignTicket = async () => {
       try {
         await supportAPI.updateTicket(selectedTicket.value.id, {
-          assigned_agent_id: selectedTicket.value.assigned_agent_id
+          assigned_agent_id: selectedTicket.value.assigned_agent_id,
         })
         loadTickets()
       } catch (error) {
-        console.error('Erreur lors de l\'assignation:', error)
+        console.error("Erreur lors de l'assignation:", error)
       }
     }
 
@@ -436,17 +444,17 @@ export default {
       try {
         await supportAPI.addMessage(selectedTicket.value.id, {
           message: replyMessage.value,
-          is_internal: isInternalMessage.value
+          is_internal: isInternalMessage.value,
         })
-        
+
         replyMessage.value = ''
         isInternalMessage.value = false
-        
+
         // Recharger les messages
         const response = await supportAPI.getTicketMessages(selectedTicket.value.id)
         ticketMessages.value = response.data.messages
       } catch (error) {
-        console.error('Erreur lors de l\'envoi du message:', error)
+        console.error("Erreur lors de l'envoi du message:", error)
       }
     }
 
@@ -464,56 +472,56 @@ export default {
         await supportAPI.createKnowledgeArticle(newArticle)
         showCreateArticle.value = false
         loadKnowledgeBase()
-        
+
         // Reset form
         Object.keys(newArticle).forEach(key => {
           newArticle[key] = ''
         })
       } catch (error) {
-        console.error('Erreur lors de la création de l\'article:', error)
+        console.error("Erreur lors de la création de l'article:", error)
       }
     }
 
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       const labels = {
-        'open': 'Ouvert',
-        'in_progress': 'En cours',
-        'waiting_customer': 'En attente',
-        'resolved': 'Résolu',
-        'closed': 'Fermé'
+        open: 'Ouvert',
+        in_progress: 'En cours',
+        waiting_customer: 'En attente',
+        resolved: 'Résolu',
+        closed: 'Fermé',
       }
       return labels[status] || status
     }
 
-    const getPriorityLabel = (priority) => {
+    const getPriorityLabel = priority => {
       const labels = {
-        'critical': 'Critique',
-        'urgent': 'Urgent',
-        'high': 'Élevée',
-        'normal': 'Normale',
-        'low': 'Basse'
+        critical: 'Critique',
+        urgent: 'Urgent',
+        high: 'Élevée',
+        normal: 'Normale',
+        low: 'Basse',
       }
       return labels[priority] || priority
     }
 
-    const getCategoryLabel = (category) => {
+    const getCategoryLabel = category => {
       const labels = {
-        'delivery_issue': 'Problème livraison',
-        'payment_issue': 'Problème paiement',
-        'technical_issue': 'Problème technique',
-        'account_issue': 'Problème compte',
-        'refund_request': 'Demande remboursement',
-        'general_inquiry': 'Question générale',
-        'complaint': 'Plainte'
+        delivery_issue: 'Problème livraison',
+        payment_issue: 'Problème paiement',
+        technical_issue: 'Problème technique',
+        account_issue: 'Problème compte',
+        refund_request: 'Demande remboursement',
+        general_inquiry: 'Question générale',
+        complaint: 'Plainte',
       }
       return labels[category] || category
     }
 
-    const formatDate = (date) => {
+    const formatDate = date => {
       return new Date(date).toLocaleDateString('fr-FR')
     }
 
-    const formatDateTime = (date) => {
+    const formatDateTime = date => {
       return new Date(date).toLocaleString('fr-FR')
     }
 
@@ -522,7 +530,7 @@ export default {
       loadTickets()
     }
 
-    const changePage = (page) => {
+    const changePage = page => {
       currentPage.value = page
       loadTickets()
     }
@@ -569,9 +577,9 @@ export default {
       formatDateTime,
       toggleAssignedToMe,
       changePage,
-      searchArticles
+      searchArticles,
     }
-  }
+  },
 }
 </script>
 
@@ -595,7 +603,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
@@ -672,7 +680,7 @@ export default {
 }
 
 .ticket-item:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .ticket-item.priority-critical {
@@ -707,13 +715,31 @@ export default {
   font-weight: bold;
 }
 
-.status-badge.open { background: #dbeafe; color: #1e40af; }
-.status-badge.in_progress { background: #fef3c7; color: #d97706; }
-.status-badge.resolved { background: #d1fae5; color: #065f46; }
+.status-badge.open {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.status-badge.in_progress {
+  background: #fef3c7;
+  color: #d97706;
+}
+.status-badge.resolved {
+  background: #d1fae5;
+  color: #065f46;
+}
 
-.priority-badge.critical { background: #fee2e2; color: #dc2626; }
-.priority-badge.urgent { background: #fed7aa; color: #ea580c; }
-.priority-badge.high { background: #fef3c7; color: #d97706; }
+.priority-badge.critical {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.priority-badge.urgent {
+  background: #fed7aa;
+  color: #ea580c;
+}
+.priority-badge.high {
+  background: #fef3c7;
+  color: #d97706;
+}
 
 .ticket-title {
   font-size: 1.1em;
@@ -859,7 +885,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .create-article-form {

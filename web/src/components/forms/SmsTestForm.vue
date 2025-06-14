@@ -1,12 +1,14 @@
 <template>
   <div class="sms-test-form">
     <div class="form-group">
-      <label for="phone-number" class="form-label">Numéro de téléphone <span class="required">*</span></label>
-      <input 
-        type="text" 
-        id="phone-number" 
-        v-model="formData.phone_number" 
-        class="form-input" 
+      <label for="phone-number" class="form-label"
+        >Numéro de téléphone <span class="required">*</span></label
+      >
+      <input
+        type="text"
+        id="phone-number"
+        v-model="formData.phone_number"
+        class="form-input"
         placeholder="+225XXXXXXXX"
         required
       />
@@ -14,13 +16,13 @@
         Entrez un numéro de téléphone au format international (ex: +225XXXXXXXX)
       </div>
     </div>
-    
+
     <div class="form-group">
       <label for="variables" class="form-label">Variables (JSON)</label>
-      <textarea 
-        id="variables" 
-        v-model="variablesJson" 
-        class="form-textarea" 
+      <textarea
+        id="variables"
+        v-model="variablesJson"
+        class="form-textarea"
         placeholder='{"user_name": "John Doe", "delivery_id": "12345"}'
         rows="4"
       ></textarea>
@@ -31,7 +33,7 @@
         {{ jsonError }}
       </div>
     </div>
-    
+
     <div class="preview-section">
       <h3 class="preview-title">Aperçu du message</h3>
       <div class="sms-preview">
@@ -43,15 +45,10 @@
         {{ contentLength }}/160 caractères
       </div>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" @click="cancel">Annuler</button>
-      <button 
-        type="button" 
-        class="btn btn-primary" 
-        @click="send" 
-        :disabled="!isFormValid"
-      >
+      <button type="button" class="btn btn-primary" @click="send" :disabled="!isFormValid">
         Envoyer le SMS
       </button>
     </div>
@@ -59,15 +56,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue'
 
 export default {
   name: 'SmsTestForm',
   props: {
     template: {
       type: Object,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['send', 'cancel'],
   setup(props, { emit }) {
@@ -75,75 +72,74 @@ export default {
       template_id: null,
       phone_number: '',
       variables: {},
-      message: ''
-    });
-    
-    const variablesJson = ref('{}');
-    const jsonError = ref('');
-    
+      message: '',
+    })
+
+    const variablesJson = ref('{}')
+    const jsonError = ref('')
+
     // Surveiller les changements dans le JSON des variables
-    watch(variablesJson, (newValue) => {
+    watch(variablesJson, newValue => {
       try {
-        formData.value.variables = JSON.parse(newValue);
-        jsonError.value = '';
+        formData.value.variables = JSON.parse(newValue)
+        jsonError.value = ''
       } catch (error) {
-        jsonError.value = 'Format JSON invalide';
+        jsonError.value = 'Format JSON invalide'
       }
-    });
-    
+    })
+
     const previewContent = computed(() => {
-      if (!props.template) return '';
-      
-      let content = props.template.content;
-      
+      if (!props.template) return ''
+
+      let content = props.template.content
+
       try {
-        const variables = JSON.parse(variablesJson.value);
-        
+        const variables = JSON.parse(variablesJson.value)
+
         for (const [key, value] of Object.entries(variables)) {
-          const regex = new RegExp(`{${key}}`, 'g');
-          content = content.replace(regex, value);
+          const regex = new RegExp(`{${key}}`, 'g')
+          content = content.replace(regex, value)
         }
-        
+
         // Remplacer les variables non définies par des placeholders
-        content = content.replace(/{([^}]+)}/g, '[Variable $1]');
-        
-        return content;
+        content = content.replace(/{([^}]+)}/g, '[Variable $1]')
+
+        return content
       } catch (error) {
-        return content;
+        return content
       }
-    });
-    
+    })
+
     const contentLength = computed(() => {
-      return previewContent.value.length;
-    });
-    
+      return previewContent.value.length
+    })
+
     const isFormValid = computed(() => {
-      return formData.value.phone_number.trim() !== '' && 
-             !jsonError.value;
-    });
-    
+      return formData.value.phone_number.trim() !== '' && !jsonError.value
+    })
+
     const initForm = () => {
       if (props.template) {
-        formData.value.template_id = props.template.id;
-        formData.value.message = props.template.content;
+        formData.value.template_id = props.template.id
+        formData.value.message = props.template.content
       }
-    };
-    
+    }
+
     const send = () => {
-      if (!isFormValid.value) return;
-      
-      const testData = { ...formData.value };
-      emit('send', testData);
-    };
-    
+      if (!isFormValid.value) return
+
+      const testData = { ...formData.value }
+      emit('send', testData)
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     onMounted(() => {
-      initForm();
-    });
-    
+      initForm()
+    })
+
     return {
       formData,
       variablesJson,
@@ -152,10 +148,10 @@ export default {
       contentLength,
       isFormValid,
       send,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

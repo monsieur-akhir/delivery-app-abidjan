@@ -31,105 +31,106 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, onUnmounted } from 'vue';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { ref, onMounted, watch, onUnmounted } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 export default {
   name: 'ZoneMap',
   props: {
     zones: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     trafficReports: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     weatherAlerts: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     couriers: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     center: {
       type: Object,
-      default: null
-    }
+      default: null,
+    },
   },
   emits: ['zone-click', 'map-click'],
   setup(props, { emit }) {
-    const mapContainer = ref(null);
-    const map = ref(null);
-    const zonesLayer = ref(null);
-    const trafficLayer = ref(null);
-    const weatherLayer = ref(null);
-    const couriersLayer = ref(null);
-    
+    const mapContainer = ref(null)
+    const map = ref(null)
+    const zonesLayer = ref(null)
+    const trafficLayer = ref(null)
+    const weatherLayer = ref(null)
+    const couriersLayer = ref(null)
+
     const initMap = () => {
       // Coordonnées du centre d'Abidjan
-      const defaultCenter = [5.3600, -4.0085];
-      
+      const defaultCenter = [5.36, -4.0085]
+
       // Initialiser la carte
-      map.value = L.map(mapContainer.value).setView(defaultCenter, 12);
-      
+      map.value = L.map(mapContainer.value).setView(defaultCenter, 12)
+
       // Ajouter le fond de carte OpenStreetMap
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map.value);
-      
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map.value)
+
       // Initialiser les couches
-      zonesLayer.value = L.layerGroup().addTo(map.value);
-      trafficLayer.value = L.layerGroup().addTo(map.value);
-      weatherLayer.value = L.layerGroup().addTo(map.value);
-      couriersLayer.value = L.layerGroup().addTo(map.value);
-      
+      zonesLayer.value = L.layerGroup().addTo(map.value)
+      trafficLayer.value = L.layerGroup().addTo(map.value)
+      weatherLayer.value = L.layerGroup().addTo(map.value)
+      couriersLayer.value = L.layerGroup().addTo(map.value)
+
       // Ajouter l'événement de clic sur la carte
-      map.value.on('click', (e) => {
-        emit('map-click', e);
-      });
-    };
-    
+      map.value.on('click', e => {
+        emit('map-click', e)
+      })
+    }
+
     const renderZones = () => {
       // Vider la couche des zones
-      zonesLayer.value.clearLayers();
-      
+      zonesLayer.value.clearLayers()
+
       // Ajouter chaque zone à la carte
       props.zones.forEach(zone => {
         // Convertir les coordonnées au format Leaflet
-        const coordinates = zone.coordinates.map(coord => [coord.lat, coord.lng]);
-        
+        const coordinates = zone.coordinates.map(coord => [coord.lat, coord.lng])
+
         // Définir le style en fonction du type de zone
-        let fillColor, fillOpacity;
-        
+        let fillColor, fillOpacity
+
         switch (zone.type) {
           case 'traffic':
-            fillColor = '#F44336';
-            fillOpacity = 0.3;
-            break;
+            fillColor = '#F44336'
+            fillOpacity = 0.3
+            break
           case 'delivery':
-            fillColor = '#4CAF50';
-            fillOpacity = 0.3;
-            break;
+            fillColor = '#4CAF50'
+            fillOpacity = 0.3
+            break
           case 'restricted':
-            fillColor = '#FF9800';
-            fillOpacity = 0.3;
-            break;
+            fillColor = '#FF9800'
+            fillOpacity = 0.3
+            break
           default:
-            fillColor = '#2196F3';
-            fillOpacity = 0.3;
+            fillColor = '#2196F3'
+            fillOpacity = 0.3
         }
-        
+
         // Créer le polygone
         const polygon = L.polygon(coordinates, {
           color: fillColor,
           fillColor: fillColor,
           fillOpacity: fillOpacity,
-          weight: 2
-        }).addTo(zonesLayer.value);
-        
+          weight: 2,
+        }).addTo(zonesLayer.value)
+
         // Ajouter un popup avec les informations de la zone
         polygon.bindPopup(`
           <div class="zone-popup">
@@ -138,52 +139,52 @@ export default {
             <p><strong>Commune:</strong> ${zone.commune}</p>
             <p>${zone.description}</p>
           </div>
-        `);
-        
+        `)
+
         // Ajouter l'événement de clic
         polygon.on('click', () => {
-          emit('zone-click', zone);
-        });
-      });
-    };
-    
+          emit('zone-click', zone)
+        })
+      })
+    }
+
     const renderTrafficReports = () => {
       // Vider la couche des rapports de trafic
-      trafficLayer.value.clearLayers();
-      
+      trafficLayer.value.clearLayers()
+
       // Ajouter chaque rapport à la carte
       props.trafficReports.forEach(report => {
         // Définir l'icône en fonction de la sévérité
-        let iconUrl, iconSize;
-        
+        let iconUrl, iconSize
+
         switch (report.severity) {
           case 'high':
-            iconUrl = '/img/traffic-high.png';
-            iconSize = [32, 32];
-            break;
+            iconUrl = '/img/traffic-high.png'
+            iconSize = [32, 32]
+            break
           case 'medium':
-            iconUrl = '/img/traffic-medium.png';
-            iconSize = [28, 28];
-            break;
+            iconUrl = '/img/traffic-medium.png'
+            iconSize = [28, 28]
+            break
           case 'low':
-            iconUrl = '/img/traffic-low.png';
-            iconSize = [24, 24];
-            break;
+            iconUrl = '/img/traffic-low.png'
+            iconSize = [24, 24]
+            break
           default:
-            iconUrl = '/img/traffic-medium.png';
-            iconSize = [28, 28];
+            iconUrl = '/img/traffic-medium.png'
+            iconSize = [28, 28]
         }
-        
+
         // Créer l'icône
         const icon = L.divIcon({
           className: `traffic-icon severity-${report.severity}`,
           html: `<i class="fas fa-exclamation-triangle"></i>`,
-          iconSize: iconSize
-        });
-        
+          iconSize: iconSize,
+        })
+
         // Créer le marqueur
-        const marker = L.marker([report.lat, report.lng], { icon }).addTo(trafficLayer.value);
-        
+        const marker = L.marker([report.lat, report.lng], { icon }).addTo(trafficLayer.value)
+
         // Ajouter un popup avec les informations du rapport
         marker.bindPopup(`
           <div class="traffic-popup">
@@ -193,54 +194,56 @@ export default {
             <p><strong>Description:</strong> ${report.description}</p>
             <p><strong>Date:</strong> ${new Date(report.created_at).toLocaleString()}</p>
           </div>
-        `);
-      });
-    };
-    
+        `)
+      })
+    }
+
     const renderWeatherAlerts = () => {
       // Vider la couche des alertes météo
-      weatherLayer.value.clearLayers();
-      
+      weatherLayer.value.clearLayers()
+
       // Ajouter chaque alerte à la carte
       props.weatherAlerts.forEach(alert => {
         // Obtenir les coordonnées approximatives de la commune
-        const communeCoordinates = getCommuneCoordinates(alert.commune);
-        
-        if (!communeCoordinates) return;
-        
+        const communeCoordinates = getCommuneCoordinates(alert.commune)
+
+        if (!communeCoordinates) return
+
         // Définir l'icône en fonction du type d'alerte
-        let iconClass;
-        
+        let iconClass
+
         switch (alert.alert_type) {
           case 'rain':
-            iconClass = 'fa-cloud-rain';
-            break;
+            iconClass = 'fa-cloud-rain'
+            break
           case 'flood':
-            iconClass = 'fa-water';
-            break;
+            iconClass = 'fa-water'
+            break
           case 'storm':
-            iconClass = 'fa-bolt';
-            break;
+            iconClass = 'fa-bolt'
+            break
           case 'wind':
-            iconClass = 'fa-wind';
-            break;
+            iconClass = 'fa-wind'
+            break
           case 'fog':
-            iconClass = 'fa-smog';
-            break;
+            iconClass = 'fa-smog'
+            break
           default:
-            iconClass = 'fa-cloud';
+            iconClass = 'fa-cloud'
         }
-        
+
         // Créer l'icône
         const icon = L.divIcon({
           className: `weather-icon severity-${alert.severity}`,
           html: `<i class="fas ${iconClass}"></i>`,
-          iconSize: [32, 32]
-        });
-        
+          iconSize: [32, 32],
+        })
+
         // Créer le marqueur
-        const marker = L.marker([communeCoordinates.lat, communeCoordinates.lng], { icon }).addTo(weatherLayer.value);
-        
+        const marker = L.marker([communeCoordinates.lat, communeCoordinates.lng], { icon }).addTo(
+          weatherLayer.value
+        )
+
         // Ajouter un popup avec les informations de l'alerte
         marker.bindPopup(`
           <div class="weather-popup">
@@ -251,97 +254,120 @@ export default {
             <p><strong>Description:</strong> ${alert.description}</p>
             <p><strong>Expire:</strong> ${new Date(alert.expires_at).toLocaleString()}</p>
           </div>
-        `);
-      });
-    };
-    
+        `)
+      })
+    }
+
     const renderCouriers = () => {
       // Vider la couche des coursiers
-      couriersLayer.value.clearLayers();
-      
+      couriersLayer.value.clearLayers()
+
       // Ajouter chaque coursier à la carte
       props.couriers.forEach(courier => {
         // Créer l'icône
         const icon = L.divIcon({
           className: 'courier-icon',
           html: `<i class="fas fa-motorcycle"></i>`,
-          iconSize: [24, 24]
-        });
-        
+          iconSize: [24, 24],
+        })
+
         // Créer le marqueur
-        const marker = L.marker([courier.last_location_lat, courier.last_location_lng], { icon }).addTo(couriersLayer.value);
-        
+        const marker = L.marker([courier.last_location_lat, courier.last_location_lng], {
+          icon,
+        }).addTo(couriersLayer.value)
+
         // Ajouter un popup avec les informations du coursier
         marker.bindPopup(`
           <div class="courier-popup">
             <h3>${courier.full_name}</h3>
             <p><strong>Téléphone:</strong> ${courier.phone}</p>
             <p><strong>Commune:</strong> ${courier.commune}</p>
-            <p><strong>Dernière mise à jour:</strong> ${new Date(courier.last_location_updated).toLocaleString()}</p>
+            <p><strong>Dernière mise à jour:</strong> ${new Date(
+              courier.last_location_updated
+            ).toLocaleString()}</p>
           </div>
-        `);
-      });
-    };
-    
-    const getCommuneCoordinates = (commune) => {
+        `)
+      })
+    }
+
+    const getCommuneCoordinates = commune => {
       // Coordonnées approximatives des communes d'Abidjan
       const communeCoordinates = {
-        'Abobo': { lat: 5.4414, lng: -4.0444 },
-        'Adjamé': { lat: 5.3667, lng: -4.0167 },
-        'Attécoubé': { lat: 5.3333, lng: -4.0333 },
-        'Cocody': { lat: 5.3600, lng: -3.9678 },
-        'Koumassi': { lat: 5.3000, lng: -3.9500 },
-        'Marcory': { lat: 5.3000, lng: -3.9833 },
-        'Plateau': { lat: 5.3167, lng: -4.0167 },
-        'Port-Bouët': { lat: 5.2500, lng: -3.9333 },
-        'Treichville': { lat: 5.2833, lng: -4.0000 },
-        'Yopougon': { lat: 5.3167, lng: -4.0833 }
-      };
-      
-      return communeCoordinates[commune];
-    };
-    
+        Abobo: { lat: 5.4414, lng: -4.0444 },
+        Adjamé: { lat: 5.3667, lng: -4.0167 },
+        Attécoubé: { lat: 5.3333, lng: -4.0333 },
+        Cocody: { lat: 5.36, lng: -3.9678 },
+        Koumassi: { lat: 5.3, lng: -3.95 },
+        Marcory: { lat: 5.3, lng: -3.9833 },
+        Plateau: { lat: 5.3167, lng: -4.0167 },
+        'Port-Bouët': { lat: 5.25, lng: -3.9333 },
+        Treichville: { lat: 5.2833, lng: -4.0 },
+        Yopougon: { lat: 5.3167, lng: -4.0833 },
+      }
+
+      return communeCoordinates[commune]
+    }
+
     onMounted(() => {
-      initMap();
-      renderZones();
-      renderTrafficReports();
-      renderWeatherAlerts();
-      renderCouriers();
-    });
-    
+      initMap()
+      renderZones()
+      renderTrafficReports()
+      renderWeatherAlerts()
+      renderCouriers()
+    })
+
     onUnmounted(() => {
       if (map.value) {
-        map.value.remove();
+        map.value.remove()
       }
-    });
-    
-    watch(() => props.zones, () => {
-      renderZones();
-    }, { deep: true });
-    
-    watch(() => props.trafficReports, () => {
-      renderTrafficReports();
-    }, { deep: true });
-    
-    watch(() => props.weatherAlerts, () => {
-      renderWeatherAlerts();
-    }, { deep: true });
-    
-    watch(() => props.couriers, () => {
-      renderCouriers();
-    }, { deep: true });
-    
-    watch(() => props.center, (newCenter) => {
-      if (newCenter && map.value) {
-        map.value.setView([newCenter.lat, newCenter.lng], 14);
+    })
+
+    watch(
+      () => props.zones,
+      () => {
+        renderZones()
+      },
+      { deep: true }
+    )
+
+    watch(
+      () => props.trafficReports,
+      () => {
+        renderTrafficReports()
+      },
+      { deep: true }
+    )
+
+    watch(
+      () => props.weatherAlerts,
+      () => {
+        renderWeatherAlerts()
+      },
+      { deep: true }
+    )
+
+    watch(
+      () => props.couriers,
+      () => {
+        renderCouriers()
+      },
+      { deep: true }
+    )
+
+    watch(
+      () => props.center,
+      newCenter => {
+        if (newCenter && map.value) {
+          map.value.setView([newCenter.lat, newCenter.lng], 14)
+        }
       }
-    });
-    
+    )
+
     return {
-      mapContainer
-    };
-  }
-};
+      mapContainer,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -382,17 +408,17 @@ export default {
 
 .legend-color.traffic {
   background-color: rgba(244, 67, 54, 0.3);
-  border: 1px solid #F44336;
+  border: 1px solid #f44336;
 }
 
 .legend-color.delivery {
   background-color: rgba(76, 175, 80, 0.3);
-  border: 1px solid #4CAF50;
+  border: 1px solid #4caf50;
 }
 
 .legend-color.restricted {
   background-color: rgba(255, 152, 0, 0.3);
-  border: 1px solid #FF9800;
+  border: 1px solid #ff9800;
 }
 
 .legend-icon {
@@ -406,37 +432,37 @@ export default {
 }
 
 .legend-icon.traffic-report::before {
-  content: "!";
+  content: '!';
   display: flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  background-color: #F44336;
+  background-color: #f44336;
   color: white;
   border-radius: 50%;
 }
 
 .legend-icon.weather-alert::before {
-  content: "☂";
+  content: '☂';
   display: flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
   border-radius: 50%;
 }
 
 .legend-icon.courier::before {
-  content: "🛵";
+  content: '🛵';
   display: flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  background-color: #9C27B0;
+  background-color: #9c27b0;
   color: white;
   border-radius: 50%;
 }
@@ -454,15 +480,15 @@ export default {
 }
 
 .traffic-icon.severity-high {
-  background-color: #F44336;
+  background-color: #f44336;
 }
 
 .traffic-icon.severity-medium {
-  background-color: #FF9800;
+  background-color: #ff9800;
 }
 
 .traffic-icon.severity-low {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .weather-icon {
@@ -475,15 +501,15 @@ export default {
 }
 
 .weather-icon.severity-high {
-  background-color: #F44336;
+  background-color: #f44336;
 }
 
 .weather-icon.severity-medium {
-  background-color: #FF9800;
+  background-color: #ff9800;
 }
 
 .weather-icon.severity-low {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .courier-icon {
@@ -491,7 +517,7 @@ export default {
   align-items: center;
   justify-content: center;
   color: white;
-  background-color: #9C27B0;
+  background-color: #9c27b0;
   border-radius: 50%;
   text-align: center;
 }
@@ -505,13 +531,19 @@ export default {
   margin: 10px 12px;
 }
 
-.zone-popup h3, .traffic-popup h3, .weather-popup h3, .courier-popup h3 {
+.zone-popup h3,
+.traffic-popup h3,
+.weather-popup h3,
+.courier-popup h3 {
   margin: 0 0 8px 0;
   font-size: 16px;
   color: #333;
 }
 
-.zone-popup p, .traffic-popup p, .weather-popup p, .courier-popup p {
+.zone-popup p,
+.traffic-popup p,
+.weather-popup p,
+.courier-popup p {
   margin: 5px 0;
   font-size: 14px;
 }

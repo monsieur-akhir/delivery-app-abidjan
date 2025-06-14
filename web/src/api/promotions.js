@@ -1,4 +1,3 @@
-
 import apiService from './apiService'
 
 export const promotionsAPI = {
@@ -36,7 +35,7 @@ export const promotionsAPI = {
 
   async getAnalytics(period = 'month') {
     return await apiService.get('/promotions/analytics/overview', {
-      params: { period }
+      params: { period },
     })
   },
 
@@ -44,13 +43,13 @@ export const promotionsAPI = {
   async validatePromoCode(code, orderValue = 0) {
     return await apiService.post('/promotions/validate-code', {
       code,
-      order_value: orderValue
+      order_value: orderValue,
     })
   },
 
   async applyPromotion(promotionId, orderId) {
     return await apiService.post(`/promotions/${promotionId}/apply`, {
-      order_id: orderId
+      order_id: orderId,
     })
   },
 
@@ -65,9 +64,9 @@ export const promotionsAPI = {
 
   async generateReferralCode(userId) {
     return await apiService.post('/promotions/referrals/generate-code', {
-      user_id: userId
+      user_id: userId,
     })
-  }
+  },
 }
 
 export default promotionsAPI

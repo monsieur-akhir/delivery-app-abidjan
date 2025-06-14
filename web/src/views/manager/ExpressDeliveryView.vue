@@ -60,11 +60,11 @@
         <div class="filter-group search-group">
           <label for="search">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search" 
-              v-model="filters.search" 
-              placeholder="ID, adresse, client..." 
+            <input
+              type="text"
+              id="search"
+              v-model="filters.search"
+              placeholder="ID, adresse, client..."
               @input="debounceSearch"
             />
             <i class="fas fa-search"></i>
@@ -162,32 +162,32 @@
               <td>{{ formatCurrency(delivery.price) }}</td>
               <td>
                 <div class="table-actions">
-                  <button 
-                    class="btn-icon" 
-                    @click="viewDeliveryDetails(delivery.id)" 
+                  <button
+                    class="btn-icon"
+                    @click="viewDeliveryDetails(delivery.id)"
                     title="Voir les détails"
                   >
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button 
-                    class="btn-icon" 
-                    @click="assignCourier(delivery.id)" 
+                  <button
+                    class="btn-icon"
+                    @click="assignCourier(delivery.id)"
                     title="Assigner un coursier"
                     v-if="delivery.status === 'pending' && !delivery.courier"
                   >
                     <i class="fas fa-user-plus"></i>
                   </button>
-                  <button 
-                    class="btn-icon" 
-                    @click="cancelDelivery(delivery.id)" 
+                  <button
+                    class="btn-icon"
+                    @click="cancelDelivery(delivery.id)"
                     title="Annuler la livraison"
                     v-if="delivery.status === 'pending' || delivery.status === 'accepted'"
                   >
                     <i class="fas fa-times"></i>
                   </button>
-                  <button 
-                    class="btn-icon" 
-                    @click="completeDelivery(delivery.id)" 
+                  <button
+                    class="btn-icon"
+                    @click="completeDelivery(delivery.id)"
                     title="Marquer comme terminée"
                     v-if="delivery.status === 'in_progress'"
                   >
@@ -201,17 +201,17 @@
       </div>
 
       <div class="pagination" v-if="deliveries.length > 0 && totalPages > 1">
-        <button 
-          class="pagination-button" 
-          :disabled="currentPage === 1" 
+        <button
+          class="pagination-button"
+          :disabled="currentPage === 1"
           @click="changePage(currentPage - 1)"
         >
           <i class="fas fa-chevron-left"></i>
         </button>
         <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
-        <button 
-          class="pagination-button" 
-          :disabled="currentPage === totalPages" 
+        <button
+          class="pagination-button"
+          :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
           <i class="fas fa-chevron-right"></i>
@@ -220,7 +220,11 @@
     </div>
 
     <!-- Modal pour les détails de la livraison -->
-    <Modal v-if="showDeliveryModal" @close="showDeliveryModal = false" title="Détails de la livraison express">
+    <Modal
+      v-if="showDeliveryModal"
+      @close="showDeliveryModal = false"
+      title="Détails de la livraison express"
+    >
       <div v-if="selectedDelivery" class="delivery-details">
         <div class="detail-section">
           <h3>Informations générales</h3>
@@ -265,11 +269,15 @@
           <div class="detail-grid">
             <div class="detail-item">
               <span class="detail-label">Nom</span>
-              <span class="detail-value">{{ selectedDelivery.client ? selectedDelivery.client.name : 'N/A' }}</span>
+              <span class="detail-value">{{
+                selectedDelivery.client ? selectedDelivery.client.name : 'N/A'
+              }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Téléphone</span>
-              <span class="detail-value">{{ selectedDelivery.client ? selectedDelivery.client.phone : 'N/A' }}</span>
+              <span class="detail-value">{{
+                selectedDelivery.client ? selectedDelivery.client.phone : 'N/A'
+              }}</span>
             </div>
           </div>
         </div>
@@ -295,8 +303,8 @@
           </div>
           <div v-else class="empty-courier">
             <p>Aucun coursier assigné à cette livraison</p>
-            <button 
-              class="btn btn-primary" 
+            <button
+              class="btn btn-primary"
               @click="assignCourier(selectedDelivery.id)"
               v-if="selectedDelivery.status === 'pending'"
             >
@@ -310,7 +318,9 @@
           <div v-if="selectedDelivery.donation" class="donation-details">
             <div class="donation-amount">
               <span class="donation-label">Montant du don</span>
-              <span class="donation-value">{{ formatCurrency(selectedDelivery.donation.amount) }}</span>
+              <span class="donation-value">{{
+                formatCurrency(selectedDelivery.donation.amount)
+              }}</span>
             </div>
             <div class="donation-organization">
               <span class="donation-label">Organisation</span>
@@ -318,7 +328,10 @@
             </div>
             <div class="donation-status">
               <span class="donation-label">Statut</span>
-              <span class="donation-value" :class="getStatusClass(selectedDelivery.donation.status)">
+              <span
+                class="donation-value"
+                :class="getStatusClass(selectedDelivery.donation.status)"
+              >
                 {{ getStatusLabel(selectedDelivery.donation.status) }}
               </span>
             </div>
@@ -341,27 +354,23 @@
           <label for="courier-select">Sélectionner un coursier</label>
           <select id="courier-select" v-model="selectedCourierId">
             <option value="">Sélectionner un coursier</option>
-            <option 
-              v-for="courier in availableCouriers" 
-              :key="courier.id" 
-              :value="courier.id"
-            >
+            <option v-for="courier in availableCouriers" :key="courier.id" :value="courier.id">
               {{ courier.name }} ({{ courier.phone }}) - Note: {{ courier.rating }}
             </option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="sendNotification" />
             <span>Envoyer une notification au coursier</span>
           </label>
         </div>
-        
+
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="showAssignModal = false">Annuler</button>
-          <button 
-            class="btn btn-primary" 
+          <button
+            class="btn btn-primary"
             @click="confirmAssignCourier"
             :disabled="!selectedCourierId"
           >
@@ -376,18 +385,18 @@
       <div class="cancel-delivery-form">
         <div class="form-group">
           <label for="cancel-reason">Raison de l'annulation</label>
-          <textarea 
-            id="cancel-reason" 
-            v-model="cancelReason" 
-            rows="4" 
+          <textarea
+            id="cancel-reason"
+            v-model="cancelReason"
+            rows="4"
             placeholder="Veuillez indiquer la raison de l'annulation..."
           ></textarea>
         </div>
-        
+
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="showCancelModal = false">Annuler</button>
-          <button 
-            class="btn btn-danger" 
+          <button
+            class="btn btn-danger"
             @click="confirmCancelDelivery"
             :disabled="!cancelReason.trim()"
           >
@@ -398,7 +407,11 @@
     </Modal>
 
     <!-- Modal pour créer une livraison express -->
-    <Modal v-if="showCreateModal" @close="showCreateModal = false" title="Nouvelle livraison express">
+    <Modal
+      v-if="showCreateModal"
+      @close="showCreateModal = false"
+      title="Nouvelle livraison express"
+    >
       <div class="create-delivery-form">
         <div class="form-section">
           <h3>Informations client</h3>
@@ -407,27 +420,23 @@
               <label for="client-select">Client</label>
               <select id="client-select" v-model="newDelivery.clientId">
                 <option value="">Sélectionner un client</option>
-                <option 
-                  v-for="client in availableClients" 
-                  :key="client.id" 
-                  :value="client.id"
-                >
+                <option v-for="client in availableClients" :key="client.id" :value="client.id">
                   {{ client.name }} ({{ client.phone }})
                 </option>
               </select>
             </div>
           </div>
         </div>
-        
+
         <div class="form-section">
           <h3>Adresses</h3>
           <div class="form-row">
             <div class="form-group">
               <label for="pickup-address">Adresse de ramassage</label>
-              <input 
-                type="text" 
-                id="pickup-address" 
-                v-model="newDelivery.pickupAddress" 
+              <input
+                type="text"
+                id="pickup-address"
+                v-model="newDelivery.pickupAddress"
                 placeholder="Adresse complète de ramassage"
               />
             </div>
@@ -435,25 +444,25 @@
           <div class="form-row">
             <div class="form-group">
               <label for="delivery-address">Adresse de livraison</label>
-              <input 
-                type="text" 
-                id="delivery-address" 
-                v-model="newDelivery.deliveryAddress" 
+              <input
+                type="text"
+                id="delivery-address"
+                v-model="newDelivery.deliveryAddress"
                 placeholder="Adresse complète de livraison"
               />
             </div>
           </div>
         </div>
-        
+
         <div class="form-section">
           <h3>Détails de la livraison</h3>
           <div class="form-row">
             <div class="form-group">
               <label for="package-description">Description du colis</label>
-              <textarea 
-                id="package-description" 
-                v-model="newDelivery.packageDescription" 
-                rows="2" 
+              <textarea
+                id="package-description"
+                v-model="newDelivery.packageDescription"
+                rows="2"
                 placeholder="Description du contenu du colis..."
               ></textarea>
             </div>
@@ -461,37 +470,37 @@
           <div class="form-row">
             <div class="form-group">
               <label for="delivery-price">Prix de la livraison (FCFA)</label>
-              <input 
-                type="number" 
-                id="delivery-price" 
-                v-model.number="newDelivery.price" 
+              <input
+                type="number"
+                id="delivery-price"
+                v-model.number="newDelivery.price"
                 min="0"
                 step="100"
               />
             </div>
             <div class="form-group">
               <label for="express-surcharge">Supplément express (FCFA)</label>
-              <input 
-                type="number" 
-                id="express-surcharge" 
-                v-model.number="newDelivery.expressSurcharge" 
+              <input
+                type="number"
+                id="express-surcharge"
+                v-model.number="newDelivery.expressSurcharge"
                 min="0"
                 step="100"
               />
             </div>
           </div>
         </div>
-        
+
         <div class="form-section">
           <h3>Don solidaire</h3>
           <div class="form-row">
             <div class="form-group">
               <label for="donation-percentage">Pourcentage du supplément à donner</label>
               <div class="input-group">
-                <input 
-                  type="number" 
-                  id="donation-percentage" 
-                  v-model.number="newDelivery.donationPercentage" 
+                <input
+                  type="number"
+                  id="donation-percentage"
+                  v-model.number="newDelivery.donationPercentage"
                   min="0"
                   max="100"
                   step="5"
@@ -503,17 +512,13 @@
             </div>
             <div class="form-group">
               <label for="charity-organization">Organisation caritative</label>
-              <select 
-                id="charity-organization" 
+              <select
+                id="charity-organization"
                 v-model="newDelivery.charityOrganization"
                 :disabled="newDelivery.donationPercentage <= 0"
               >
                 <option value="">Sélectionner une organisation</option>
-                <option 
-                  v-for="org in charityOrganizations" 
-                  :key="org.name" 
-                  :value="org.name"
-                >
+                <option v-for="org in charityOrganizations" :key="org.name" :value="org.name">
                   {{ org.name }} ({{ org.category }})
                 </option>
               </select>
@@ -526,14 +531,10 @@
             </div>
           </div>
         </div>
-        
+
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="showCreateModal = false">Annuler</button>
-          <button 
-            class="btn btn-primary" 
-            @click="createDelivery"
-            :disabled="!isValidDelivery"
-          >
+          <button class="btn btn-primary" @click="createDelivery" :disabled="!isValidDelivery">
             Créer la livraison
           </button>
         </div>
@@ -543,10 +544,10 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import Modal from '@/components/ui/Modal.vue';
-import { 
-  getExpressDeliveries, 
+import { ref, computed, onMounted, watch } from 'vue'
+import Modal from '@/components/ui/Modal.vue'
+import {
+  getExpressDeliveries,
   getExpressDelivery,
   createExpressDelivery,
   assignCourierToExpressDelivery,
@@ -554,34 +555,34 @@ import {
   completeExpressDelivery,
   getExpressStats,
   getCharityOrganizations,
-  exportExpressData
-} from '@/api/express';
-import { useToast } from '@/composables/useToast';
+  exportExpressData,
+} from '@/api/express'
+import { useToast } from '@/composables/useToast'
 
 export default {
   name: 'ExpressDeliveryView',
   components: {
-    Modal
+    Modal,
   },
   setup() {
-    const { showToast } = useToast();
-    
+    const { showToast } = useToast()
+
     // État des données
-    const deliveries = ref([]);
-    const loading = ref(true);
+    const deliveries = ref([])
+    const loading = ref(true)
     const stats = ref({
       totalDeliveries: 0,
       totalDonations: 0,
       completedDeliveries: 0,
-      totalRevenue: 0
-    });
-    
+      totalRevenue: 0,
+    })
+
     // État de la pagination
-    const currentPage = ref(1);
-    const totalItems = ref(0);
-    const itemsPerPage = ref(10);
-    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
-    
+    const currentPage = ref(1)
+    const totalItems = ref(0)
+    const itemsPerPage = ref(10)
+    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
+
     // État des filtres
     const filters = ref({
       status: '',
@@ -589,22 +590,22 @@ export default {
       dateRange: 'all',
       startDate: null,
       endDate: null,
-      search: ''
-    });
-    
+      search: '',
+    })
+
     // État des modals
-    const showDeliveryModal = ref(false);
-    const showAssignModal = ref(false);
-    const showCancelModal = ref(false);
-    const showCreateModal = ref(false);
-    
+    const showDeliveryModal = ref(false)
+    const showAssignModal = ref(false)
+    const showCancelModal = ref(false)
+    const showCreateModal = ref(false)
+
     // État des éléments sélectionnés
-    const selectedDelivery = ref(null);
-    const selectedDeliveryId = ref(null);
-    const selectedCourierId = ref('');
-    const sendNotification = ref(true);
-    const cancelReason = ref('');
-    
+    const selectedDelivery = ref(null)
+    const selectedDeliveryId = ref(null)
+    const selectedCourierId = ref('')
+    const sendNotification = ref(true)
+    const cancelReason = ref('')
+
     // État pour la création d'une livraison
     const newDelivery = ref({
       clientId: '',
@@ -614,85 +615,85 @@ export default {
       price: 2000,
       expressSurcharge: 1000,
       donationPercentage: 20,
-      charityOrganization: ''
-    });
-    
+      charityOrganization: '',
+    })
+
     // Validation de la nouvelle livraison
     const isValidDelivery = computed(() => {
-      const delivery = newDelivery.value;
-      
-      if (!delivery.clientId) return false;
-      if (!delivery.pickupAddress.trim()) return false;
-      if (!delivery.deliveryAddress.trim()) return false;
-      if (delivery.price <= 0) return false;
-      if (delivery.expressSurcharge < 0) return false;
-      
-      if (delivery.donationPercentage > 0 && !delivery.charityOrganization) return false;
-      
-      return true;
-    });
-    
+      const delivery = newDelivery.value
+
+      if (!delivery.clientId) return false
+      if (!delivery.pickupAddress.trim()) return false
+      if (!delivery.deliveryAddress.trim()) return false
+      if (delivery.price <= 0) return false
+      if (delivery.expressSurcharge < 0) return false
+
+      if (delivery.donationPercentage > 0 && !delivery.charityOrganization) return false
+
+      return true
+    })
+
     // Liste des coursiers disponibles
     const availableCouriers = ref([
       { id: 1, name: 'Amadou Diallo', phone: '77 123 45 67', rating: 4.8 },
       { id: 2, name: 'Fatou Sow', phone: '76 234 56 78', rating: 4.5 },
       { id: 3, name: 'Moussa Camara', phone: '70 345 67 89', rating: 4.9 },
-      { id: 4, name: 'Aïssatou Bah', phone: '78 456 78 90', rating: 4.7 }
-    ]);
-    
+      { id: 4, name: 'Aïssatou Bah', phone: '78 456 78 90', rating: 4.7 },
+    ])
+
     // Liste des clients disponibles
     const availableClients = ref([
       { id: 1, name: 'Ibrahim Koné', phone: '77 987 65 43' },
       { id: 2, name: 'Mariam Touré', phone: '76 876 54 32' },
       { id: 3, name: 'Seydou Diop', phone: '70 765 43 21' },
-      { id: 4, name: 'Aminata Cissé', phone: '78 654 32 10' }
-    ]);
-    
+      { id: 4, name: 'Aminata Cissé', phone: '78 654 32 10' },
+    ])
+
     // Liste des organisations caritatives
     const charityOrganizations = ref([
       { name: 'Éducation Pour Tous', category: 'Éducation' },
       { name: 'Santé Communautaire', category: 'Santé' },
       { name: 'Planète Verte', category: 'Environnement' },
-      { name: 'Enfants d\'Abord', category: 'Enfance' },
-      { name: 'Solidarité Aînés', category: 'Personnes âgées' }
-    ]);
-    
+      { name: "Enfants d'Abord", category: 'Enfance' },
+      { name: 'Solidarité Aînés', category: 'Personnes âgées' },
+    ])
+
     // Chargement des livraisons
     const loadDeliveries = async () => {
       try {
-        loading.value = true;
-        
+        loading.value = true
+
         // Préparer les dates si nécessaire
-        let startDate = null;
-        let endDate = null;
-        
+        let startDate = null
+        let endDate = null
+
         if (filters.value.dateRange === 'custom') {
-          startDate = filters.value.startDate ? new Date(filters.value.startDate) : null;
-          endDate = filters.value.endDate ? new Date(filters.value.endDate) : null;
+          startDate = filters.value.startDate ? new Date(filters.value.startDate) : null
+          endDate = filters.value.endDate ? new Date(filters.value.endDate) : null
         } else if (filters.value.dateRange === 'today') {
-          startDate = new Date();
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
+          startDate = new Date()
+          startDate.setHours(0, 0, 0, 0)
+          endDate = new Date()
+          endDate.setHours(23, 59, 59, 999)
         } else if (filters.value.dateRange === 'yesterday') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setDate(endDate.getDate() - 1);
-          endDate.setHours(23, 59, 59, 999);
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 1)
+          startDate.setHours(0, 0, 0, 0)
+          endDate = new Date()
+          endDate.setDate(endDate.getDate() - 1)
+          endDate.setHours(23, 59, 59, 999)
         } else if (filters.value.dateRange === 'last_week') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 7);
-          endDate = new Date();
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 7)
+          endDate = new Date()
         } else if (filters.value.dateRange === 'last_month') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 30);
-          endDate = new Date();
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 30)
+          endDate = new Date()
         }
-        
+
         // Appel API
-        const skip = (currentPage.value - 1) * itemsPerPage.value;
+        const skip = (currentPage.value - 1) * itemsPerPage.value
         const response = await getExpressDeliveries(
           filters.value.status,
           filters.value.commune,
@@ -701,199 +702,210 @@ export default {
           endDate,
           skip,
           itemsPerPage.value
-        );
-        
-        deliveries.value = response;
-        totalItems.value = response.length > 0 ? response[0].total_count || 100 : 0;
-        
+        )
+
+        deliveries.value = response
+        totalItems.value = response.length > 0 ? response[0].total_count || 100 : 0
+
         // Mise à jour des statistiques
-        updateStats();
+        updateStats()
       } catch (error) {
-        console.error('Erreur lors du chargement des livraisons:', error);
-        showToast('Erreur lors du chargement des livraisons', 'error');
+        console.error('Erreur lors du chargement des livraisons:', error)
+        showToast('Erreur lors du chargement des livraisons', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Mise à jour des statistiques
     const updateStats = async () => {
       try {
         // Dans un environnement réel, ces données viendraient de l'API
-        const statsData = await getExpressStats();
+        const statsData = await getExpressStats()
         stats.value = {
           totalDeliveries: 67,
           totalDonations: 125000,
           completedDeliveries: 52,
-          totalRevenue: 670000
-        };
+          totalRevenue: 670000,
+        }
       } catch (error) {
-        console.error('Erreur lors du chargement des statistiques:', error);
+        console.error('Erreur lors du chargement des statistiques:', error)
       }
-    };
-    
+    }
+
     // Gestion des changements de page
-    const changePage = (page) => {
-      currentPage.value = page;
-      loadDeliveries();
-    };
-    
+    const changePage = page => {
+      currentPage.value = page
+      loadDeliveries()
+    }
+
     // Gestion du changement de plage de dates
     const handleDateRangeChange = () => {
       if (filters.value.dateRange !== 'custom') {
-        filters.value.startDate = null;
-        filters.value.endDate = null;
+        filters.value.startDate = null
+        filters.value.endDate = null
       }
-      loadDeliveries();
-    };
-    
+      loadDeliveries()
+    }
+
     // Recherche avec debounce
     const debounceSearch = () => {
-      clearTimeout(window.searchTimeout);
+      clearTimeout(window.searchTimeout)
       window.searchTimeout = setTimeout(() => {
-        loadDeliveries();
-      }, 300);
-    };
-    
+        loadDeliveries()
+      }, 300)
+    }
+
     // Formatage de la date
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
+    const formatDate = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
-      });
-    };
-    
+        year: 'numeric',
+      })
+    }
+
     // Formatage de la date et de l'heure
-    const formatDateTime = (dateString) => {
-      const date = new Date(dateString);
+    const formatDateTime = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      });
-    };
-    
+        minute: '2-digit',
+      })
+    }
+
     // Formatage de la devise
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       switch (status) {
-        case 'pending': return 'status-pending';
-        case 'in_progress': return 'status-in-progress';
-        case 'completed': return 'status-completed';
-        case 'cancelled': return 'status-cancelled';
-        default: return '';
+        case 'pending':
+          return 'status-pending'
+        case 'in_progress':
+          return 'status-in-progress'
+        case 'completed':
+          return 'status-completed'
+        case 'cancelled':
+          return 'status-cancelled'
+        default:
+          return ''
       }
-    };
-    
+    }
+
     // Obtenir le libellé pour un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       switch (status) {
-        case 'pending': return 'En attente';
-        case 'in_progress': return 'En cours';
-        case 'completed': return 'Terminée';
-        case 'cancelled': return 'Annulée';
-        case 'accepted': return 'Accepté';
-        default: return status;
+        case 'pending':
+          return 'En attente'
+        case 'in_progress':
+          return 'En cours'
+        case 'completed':
+          return 'Terminée'
+        case 'cancelled':
+          return 'Annulée'
+        case 'accepted':
+          return 'Accepté'
+        default:
+          return status
       }
-    };
-    
+    }
+
     // Voir les détails d'une livraison
-    const viewDeliveryDetails = async (deliveryId) => {
+    const viewDeliveryDetails = async deliveryId => {
       try {
-        loading.value = true;
-        const delivery = await getExpressDelivery(deliveryId);
-        selectedDelivery.value = delivery;
-        showDeliveryModal.value = true;
+        loading.value = true
+        const delivery = await getExpressDelivery(deliveryId)
+        selectedDelivery.value = delivery
+        showDeliveryModal.value = true
       } catch (error) {
-        console.error('Erreur lors du chargement des détails de la livraison:', error);
-        showToast('Erreur lors du chargement des détails de la livraison', 'error');
+        console.error('Erreur lors du chargement des détails de la livraison:', error)
+        showToast('Erreur lors du chargement des détails de la livraison', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Assigner un coursier
-    const assignCourier = (deliveryId) => {
-      selectedDeliveryId.value = deliveryId;
-      selectedCourierId.value = '';
-      sendNotification.value = true;
-      showAssignModal.value = true;
-    };
-    
+    const assignCourier = deliveryId => {
+      selectedDeliveryId.value = deliveryId
+      selectedCourierId.value = ''
+      sendNotification.value = true
+      showAssignModal.value = true
+    }
+
     // Confirmer l'assignation d'un coursier
     const confirmAssignCourier = async () => {
       try {
-        if (!selectedDeliveryId.value || !selectedCourierId.value) return;
-        
+        if (!selectedDeliveryId.value || !selectedCourierId.value) return
+
         await assignCourierToExpressDelivery(
           selectedDeliveryId.value,
           selectedCourierId.value,
           sendNotification.value
-        );
-        
-        showToast('Coursier assigné avec succès', 'success');
-        showAssignModal.value = false;
-        
+        )
+
+        showToast('Coursier assigné avec succès', 'success')
+        showAssignModal.value = false
+
         // Recharger les livraisons
-        loadDeliveries();
+        loadDeliveries()
       } catch (error) {
-        console.error('Erreur lors de l\'assignation du coursier:', error);
-        showToast('Erreur lors de l\'assignation du coursier', 'error');
+        console.error("Erreur lors de l'assignation du coursier:", error)
+        showToast("Erreur lors de l'assignation du coursier", 'error')
       }
-    };
-    
+    }
+
     // Annuler une livraison
-    const cancelDelivery = (deliveryId) => {
-      selectedDeliveryId.value = deliveryId;
-      cancelReason.value = '';
-      showCancelModal.value = true;
-    };
-    
+    const cancelDelivery = deliveryId => {
+      selectedDeliveryId.value = deliveryId
+      cancelReason.value = ''
+      showCancelModal.value = true
+    }
+
     // Confirmer l'annulation d'une livraison
     const confirmCancelDelivery = async () => {
       try {
-        if (!selectedDeliveryId.value || !cancelReason.value.trim()) return;
-        
-        await cancelExpressDelivery(selectedDeliveryId.value, cancelReason.value);
-        
-        showToast('Livraison annulée avec succès', 'success');
-        showCancelModal.value = false;
-        
+        if (!selectedDeliveryId.value || !cancelReason.value.trim()) return
+
+        await cancelExpressDelivery(selectedDeliveryId.value, cancelReason.value)
+
+        showToast('Livraison annulée avec succès', 'success')
+        showCancelModal.value = false
+
         // Recharger les livraisons
-        loadDeliveries();
+        loadDeliveries()
       } catch (error) {
-        console.error('Erreur lors de l\'annulation de la livraison:', error);
-        showToast('Erreur lors de l\'annulation de la livraison', 'error');
+        console.error("Erreur lors de l'annulation de la livraison:", error)
+        showToast("Erreur lors de l'annulation de la livraison", 'error')
       }
-    };
-    
+    }
+
     // Marquer une livraison comme terminée
-    const completeDelivery = async (deliveryId) => {
+    const completeDelivery = async deliveryId => {
       try {
-        await completeExpressDelivery(deliveryId);
-        
-        showToast('Livraison marquée comme terminée avec succès', 'success');
-        
+        await completeExpressDelivery(deliveryId)
+
+        showToast('Livraison marquée comme terminée avec succès', 'success')
+
         // Recharger les livraisons
-        loadDeliveries();
+        loadDeliveries()
       } catch (error) {
-        console.error('Erreur lors du marquage de la livraison comme terminée:', error);
-        showToast('Erreur lors du marquage de la livraison comme terminée', 'error');
+        console.error('Erreur lors du marquage de la livraison comme terminée:', error)
+        showToast('Erreur lors du marquage de la livraison comme terminée', 'error')
       }
-    };
-    
+    }
+
     // Ouvrir le modal de création
     const openCreateModal = () => {
       // Réinitialiser le formulaire
@@ -905,22 +917,22 @@ export default {
         price: 2000,
         expressSurcharge: 1000,
         donationPercentage: 20,
-        charityOrganization: ''
-      };
-      
-      showCreateModal.value = true;
-    };
-    
+        charityOrganization: '',
+      }
+
+      showCreateModal.value = true
+    }
+
     // Calculer le montant du don
     const calculateDonationAmount = () => {
-      return (newDelivery.value.expressSurcharge * newDelivery.value.donationPercentage) / 100;
-    };
-    
+      return (newDelivery.value.expressSurcharge * newDelivery.value.donationPercentage) / 100
+    }
+
     // Créer une livraison
     const createDelivery = async () => {
       try {
-        if (!isValidDelivery.value) return;
-        
+        if (!isValidDelivery.value) return
+
         const deliveryData = {
           client_id: newDelivery.value.clientId,
           pickup_address: newDelivery.value.pickupAddress,
@@ -929,22 +941,22 @@ export default {
           price: newDelivery.value.price,
           express_surcharge: newDelivery.value.expressSurcharge,
           donation_percentage: newDelivery.value.donationPercentage,
-          charity_organization: newDelivery.value.charityOrganization
-        };
-        
-        await createExpressDelivery(deliveryData);
-        
-        showToast('Livraison express créée avec succès', 'success');
-        showCreateModal.value = false;
-        
+          charity_organization: newDelivery.value.charityOrganization,
+        }
+
+        await createExpressDelivery(deliveryData)
+
+        showToast('Livraison express créée avec succès', 'success')
+        showCreateModal.value = false
+
         // Recharger les livraisons
-        loadDeliveries();
+        loadDeliveries()
       } catch (error) {
-        console.error('Erreur lors de la création de la livraison:', error);
-        showToast('Erreur lors de la création de la livraison', 'error');
+        console.error('Erreur lors de la création de la livraison:', error)
+        showToast('Erreur lors de la création de la livraison', 'error')
       }
-    };
-    
+    }
+
     // Exporter les données
     const exportData = async () => {
       try {
@@ -959,27 +971,27 @@ export default {
           courier: delivery.courier ? delivery.courier.name : 'Non assigné',
           donation: delivery.donation ? delivery.donation.amount : 0,
           status: getStatusLabel(delivery.status),
-          price: delivery.price
-        }));
-        
-        await exportExpressData(dataToExport, 'livraisons-express.csv');
-        showToast('Données exportées avec succès', 'success');
+          price: delivery.price,
+        }))
+
+        await exportExpressData(dataToExport, 'livraisons-express.csv')
+        showToast('Données exportées avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de l\'export des données:', error);
-        showToast('Erreur lors de l\'export des données', 'error');
+        console.error("Erreur lors de l'export des données:", error)
+        showToast("Erreur lors de l'export des données", 'error')
       }
-    };
-    
+    }
+
     // Charger les données au montage du composant
     onMounted(() => {
-      loadDeliveries();
-    });
-    
+      loadDeliveries()
+    })
+
     // Surveiller les changements de page
     watch(currentPage, () => {
-      loadDeliveries();
-    });
-    
+      loadDeliveries()
+    })
+
     return {
       deliveries,
       loading,
@@ -1021,10 +1033,10 @@ export default {
       openCreateModal,
       calculateDonationAmount,
       createDelivery,
-      exportData
-    };
-  }
-};
+      exportData,
+    }
+  },
+}
 </script>
 
 <style scoped>

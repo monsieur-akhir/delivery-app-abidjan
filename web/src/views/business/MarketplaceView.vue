@@ -15,12 +15,12 @@
     <!-- Filtres -->
     <div class="filters-container">
       <div class="search-box">
-        <input 
-          type="text" 
-          v-model="filters.search" 
-          placeholder="Rechercher un produit..." 
+        <input
+          type="text"
+          v-model="filters.search"
+          placeholder="Rechercher un produit..."
           @input="applyFilters"
-        >
+        />
         <i class="fas fa-search"></i>
       </div>
       <div class="filter-group">
@@ -70,8 +70,8 @@
     <div v-else class="products-grid">
       <div v-for="product in filteredProducts" :key="product.id" class="product-card">
         <div class="product-image">
-          <img :src="product.image_url || '/images/default-product.png'" :alt="product.name">
-          <span class="availability-badge" :class="{ 'available': product.is_available }">
+          <img :src="product.image_url || '/images/default-product.png'" :alt="product.name" />
+          <span class="availability-badge" :class="{ available: product.is_available }">
             {{ product.is_available ? 'Disponible' : 'Non disponible' }}
           </span>
         </div>
@@ -97,17 +97,17 @@
 
     <!-- Pagination -->
     <div v-if="filteredProducts.length > 0" class="pagination">
-      <button 
-        :disabled="currentPage === 1" 
-        @click="changePage(currentPage - 1)" 
+      <button
+        :disabled="currentPage === 1"
+        @click="changePage(currentPage - 1)"
         class="btn btn-icon"
       >
         <i class="fas fa-chevron-left"></i>
       </button>
       <span>Page {{ currentPage }} sur {{ totalPages }}</span>
-      <button 
-        :disabled="currentPage === totalPages" 
-        @click="changePage(currentPage + 1)" 
+      <button
+        :disabled="currentPage === totalPages"
+        @click="changePage(currentPage + 1)"
         class="btn btn-icon"
       >
         <i class="fas fa-chevron-right"></i>
@@ -127,40 +127,44 @@
           <form @submit.prevent="showEditProductModal ? updateProduct() : createProduct()">
             <div class="form-group">
               <label for="productName">Nom du produit*</label>
-              <input 
-                type="text" 
-                id="productName" 
-                v-model="productForm.name" 
+              <input
+                type="text"
+                id="productName"
+                v-model="productForm.name"
                 required
                 placeholder="Ex: Poulet braisé"
-              >
+              />
             </div>
             <div class="form-group">
               <label for="productCategory">Catégorie*</label>
               <select id="productCategory" v-model="productForm.category" required>
                 <option value="" disabled>Sélectionnez une catégorie</option>
-                <option v-for="category in categories" :key="category.value" :value="category.value">
+                <option
+                  v-for="category in categories"
+                  :key="category.value"
+                  :value="category.value"
+                >
                   {{ category.label }}
                 </option>
               </select>
             </div>
             <div class="form-group">
               <label for="productPrice">Prix (FCFA)*</label>
-              <input 
-                type="number" 
-                id="productPrice" 
-                v-model="productForm.price" 
+              <input
+                type="number"
+                id="productPrice"
+                v-model="productForm.price"
                 required
                 min="0"
                 step="50"
                 placeholder="Ex: 2500"
-              >
+              />
             </div>
             <div class="form-group">
               <label for="productDescription">Description</label>
-              <textarea 
-                id="productDescription" 
-                v-model="productForm.description" 
+              <textarea
+                id="productDescription"
+                v-model="productForm.description"
                 rows="3"
                 placeholder="Décrivez votre produit..."
               ></textarea>
@@ -169,17 +173,12 @@
               <label for="productImage">Image du produit</label>
               <div class="image-upload">
                 <div v-if="productForm.image_preview" class="image-preview">
-                  <img :src="productForm.image_preview" alt="Aperçu de l'image">
+                  <img :src="productForm.image_preview" alt="Aperçu de l'image" />
                   <button type="button" class="btn-remove-image" @click="removeImage">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
-                <input 
-                  type="file" 
-                  id="productImage" 
-                  @change="handleImageUpload" 
-                  accept="image/*"
-                >
+                <input type="file" id="productImage" @change="handleImageUpload" accept="image/*" />
                 <label for="productImage" class="upload-label">
                   <i class="fas fa-cloud-upload-alt"></i>
                   <span>Choisir une image</span>
@@ -188,11 +187,7 @@
               </div>
             </div>
             <div class="form-group checkbox-group">
-              <input 
-                type="checkbox" 
-                id="productAvailability" 
-                v-model="productForm.is_available"
-              >
+              <input type="checkbox" id="productAvailability" v-model="productForm.is_available" />
               <label for="productAvailability">Produit disponible</label>
             </div>
             <div class="form-actions">
@@ -221,17 +216,25 @@
           </button>
         </div>
         <div class="modal-body">
-          <p>Êtes-vous sûr de vouloir supprimer le produit <strong>{{ productToDelete?.name }}</strong> ?</p>
+          <p>
+            Êtes-vous sûr de vouloir supprimer le produit
+            <strong>{{ productToDelete?.name }}</strong> ?
+          </p>
           <p class="warning-text">Cette action est irréversible.</p>
           <div class="form-actions">
-            <button type="button" class="btn btn-outline" @click="showDeleteModal = false">Annuler</button>
-            <button type="button" class="btn btn-danger" @click="deleteProduct" :disabled="isSubmitting">
+            <button type="button" class="btn btn-outline" @click="showDeleteModal = false">
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="deleteProduct"
+              :disabled="isSubmitting"
+            >
               <span v-if="isSubmitting">
                 <i class="fas fa-spinner fa-spin"></i> Suppression...
               </span>
-              <span v-else>
-                <i class="fas fa-trash"></i> Supprimer
-              </span>
+              <span v-else> <i class="fas fa-trash"></i> Supprimer </span>
             </button>
           </div>
         </div>
@@ -241,31 +244,31 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useToast } from '@/composables/useToast';
-import { formatPrice, truncateText } from '@/utils/formatters';
-import { exportToCSV, exportToExcel } from '@/utils/export-utils';
-import { getProducts, createProduct, updateProduct, deleteProduct } from '@/api/market';
-import { uploadImage } from '@/api/storage';
-import { categories } from '@/config';
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useToast } from '@/composables/useToast'
+import { formatPrice, truncateText } from '@/utils/formatters'
+import { exportToCSV, exportToExcel } from '@/utils/export-utils'
+import { getProducts, createProduct, updateProduct, deleteProduct } from '@/api/market'
+import { uploadImage } from '@/api/storage'
+import { categories } from '@/config'
 
 export default {
   name: 'MarketplaceView',
   setup() {
-    const { showToast } = useToast();
-    
+    const { showToast } = useToast()
+
     // État
-    const products = ref([]);
-    const loading = ref(true);
-    const error = ref(null);
-    const currentPage = ref(1);
-    const itemsPerPage = ref(12);
-    const showAddProductModal = ref(false);
-    const showEditProductModal = ref(false);
-    const showDeleteModal = ref(false);
-    const isSubmitting = ref(false);
-    const productToDelete = ref(null);
-    
+    const products = ref([])
+    const loading = ref(true)
+    const error = ref(null)
+    const currentPage = ref(1)
+    const itemsPerPage = ref(12)
+    const showAddProductModal = ref(false)
+    const showEditProductModal = ref(false)
+    const showDeleteModal = ref(false)
+    const isSubmitting = ref(false)
+    const productToDelete = ref(null)
+
     // Formulaire
     const productForm = reactive({
       id: null,
@@ -276,158 +279,159 @@ export default {
       image_file: null,
       image_url: '',
       image_preview: '',
-      is_available: true
-    });
-    
+      is_available: true,
+    })
+
     // Filtres
     const filters = reactive({
       search: '',
       category: '',
       availability: '',
-      sortBy: 'name'
-    });
-    
+      sortBy: 'name',
+    })
+
     // Computed
     const filteredProducts = computed(() => {
-      let result = [...products.value];
-      
+      let result = [...products.value]
+
       // Filtre par recherche
       if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        result = result.filter(product => 
-          product.name.toLowerCase().includes(searchLower) || 
-          (product.description && product.description.toLowerCase().includes(searchLower))
-        );
+        const searchLower = filters.search.toLowerCase()
+        result = result.filter(
+          product =>
+            product.name.toLowerCase().includes(searchLower) ||
+            (product.description && product.description.toLowerCase().includes(searchLower))
+        )
       }
-      
+
       // Filtre par catégorie
       if (filters.category) {
-        result = result.filter(product => product.category === filters.category);
+        result = result.filter(product => product.category === filters.category)
       }
-      
+
       // Filtre par disponibilité
       if (filters.availability !== '') {
-        const isAvailable = filters.availability === 'true';
-        result = result.filter(product => product.is_available === isAvailable);
+        const isAvailable = filters.availability === 'true'
+        result = result.filter(product => product.is_available === isAvailable)
       }
-      
+
       // Tri
-      const sortField = filters.sortBy.startsWith('-') 
-        ? filters.sortBy.substring(1) 
-        : filters.sortBy;
-      const sortDirection = filters.sortBy.startsWith('-') ? -1 : 1;
-      
+      const sortField = filters.sortBy.startsWith('-')
+        ? filters.sortBy.substring(1)
+        : filters.sortBy
+      const sortDirection = filters.sortBy.startsWith('-') ? -1 : 1
+
       result.sort((a, b) => {
-        if (a[sortField] < b[sortField]) return -1 * sortDirection;
-        if (a[sortField] > b[sortField]) return 1 * sortDirection;
-        return 0;
-      });
-      
-      return result;
-    });
-    
+        if (a[sortField] < b[sortField]) return -1 * sortDirection
+        if (a[sortField] > b[sortField]) return 1 * sortDirection
+        return 0
+      })
+
+      return result
+    })
+
     const paginatedProducts = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage.value;
-      const end = start + itemsPerPage.value;
-      return filteredProducts.value.slice(start, end);
-    });
-    
+      const start = (currentPage.value - 1) * itemsPerPage.value
+      const end = start + itemsPerPage.value
+      return filteredProducts.value.slice(start, end)
+    })
+
     const totalPages = computed(() => {
-      return Math.ceil(filteredProducts.value.length / itemsPerPage.value) || 1;
-    });
-    
+      return Math.ceil(filteredProducts.value.length / itemsPerPage.value) || 1
+    })
+
     // Méthodes
     const fetchProducts = async () => {
-      loading.value = true;
-      error.value = null;
-      
+      loading.value = true
+      error.value = null
+
       try {
-        const response = await getProducts();
-        products.value = response.data;
+        const response = await getProducts()
+        products.value = response.data
       } catch (err) {
-        console.error('Erreur lors du chargement des produits:', err);
-        error.value = 'Impossible de charger les produits. Veuillez réessayer.';
+        console.error('Erreur lors du chargement des produits:', err)
+        error.value = 'Impossible de charger les produits. Veuillez réessayer.'
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     const applyFilters = () => {
-      currentPage.value = 1; // Réinitialiser la pagination lors du filtrage
-    };
-    
-    const changePage = (page) => {
-      currentPage.value = page;
-    };
-    
+      currentPage.value = 1 // Réinitialiser la pagination lors du filtrage
+    }
+
+    const changePage = page => {
+      currentPage.value = page
+    }
+
     const resetForm = () => {
-      productForm.id = null;
-      productForm.name = '';
-      productForm.category = '';
-      productForm.price = '';
-      productForm.description = '';
-      productForm.image_file = null;
-      productForm.image_url = '';
-      productForm.image_preview = '';
-      productForm.is_available = true;
-    };
-    
+      productForm.id = null
+      productForm.name = ''
+      productForm.category = ''
+      productForm.price = ''
+      productForm.description = ''
+      productForm.image_file = null
+      productForm.image_url = ''
+      productForm.image_preview = ''
+      productForm.is_available = true
+    }
+
     const closeModals = () => {
-      showAddProductModal.value = false;
-      showEditProductModal.value = false;
-      showDeleteModal.value = false;
-      resetForm();
-    };
-    
-    const handleImageUpload = (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      
+      showAddProductModal.value = false
+      showEditProductModal.value = false
+      showDeleteModal.value = false
+      resetForm()
+    }
+
+    const handleImageUpload = event => {
+      const file = event.target.files[0]
+      if (!file) return
+
       // Vérifier le type de fichier
       if (!file.type.match('image.*')) {
-        showToast('Erreur', 'Veuillez sélectionner une image (JPG, PNG)', 'error');
-        return;
+        showToast('Erreur', 'Veuillez sélectionner une image (JPG, PNG)', 'error')
+        return
       }
-      
+
       // Vérifier la taille du fichier (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        showToast('Erreur', 'L\'image ne doit pas dépasser 2MB', 'error');
-        return;
+        showToast('Erreur', "L'image ne doit pas dépasser 2MB", 'error')
+        return
       }
-      
-      productForm.image_file = file;
-      
+
+      productForm.image_file = file
+
       // Créer un aperçu de l'image
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        productForm.image_preview = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
-    
+      const reader = new FileReader()
+      reader.onload = e => {
+        productForm.image_preview = e.target.result
+      }
+      reader.readAsDataURL(file)
+    }
+
     const removeImage = () => {
-      productForm.image_file = null;
-      productForm.image_preview = '';
-      productForm.image_url = '';
-      
+      productForm.image_file = null
+      productForm.image_preview = ''
+      productForm.image_url = ''
+
       // Réinitialiser l'input file
-      const fileInput = document.getElementById('productImage');
-      if (fileInput) fileInput.value = '';
-    };
-    
+      const fileInput = document.getElementById('productImage')
+      if (fileInput) fileInput.value = ''
+    }
+
     const createProduct = async () => {
-      isSubmitting.value = true;
-      
+      isSubmitting.value = true
+
       try {
         // Télécharger l'image si présente
-        let imageUrl = '';
+        let imageUrl = ''
         if (productForm.image_file) {
-          const formData = new FormData();
-          formData.append('file', productForm.image_file);
-          const uploadResponse = await uploadImage(formData);
-          imageUrl = uploadResponse.data.url;
+          const formData = new FormData()
+          formData.append('file', productForm.image_file)
+          const uploadResponse = await uploadImage(formData)
+          imageUrl = uploadResponse.data.url
         }
-        
+
         // Créer le produit
         const productData = {
           name: productForm.name,
@@ -435,48 +439,48 @@ export default {
           price: parseFloat(productForm.price),
           description: productForm.description,
           image_url: imageUrl,
-          is_available: productForm.is_available
-        };
-        
-        await createProduct(productData);
-        
-        showToast('Succès', 'Produit ajouté avec succès', 'success');
-        closeModals();
-        fetchProducts();
+          is_available: productForm.is_available,
+        }
+
+        await createProduct(productData)
+
+        showToast('Succès', 'Produit ajouté avec succès', 'success')
+        closeModals()
+        fetchProducts()
       } catch (err) {
-        console.error('Erreur lors de la création du produit:', err);
-        showToast('Erreur', 'Impossible d\'ajouter le produit. Veuillez réessayer.', 'error');
+        console.error('Erreur lors de la création du produit:', err)
+        showToast('Erreur', "Impossible d'ajouter le produit. Veuillez réessayer.", 'error')
       } finally {
-        isSubmitting.value = false;
+        isSubmitting.value = false
       }
-    };
-    
-    const editProduct = (product) => {
-      productForm.id = product.id;
-      productForm.name = product.name;
-      productForm.category = product.category;
-      productForm.price = product.price;
-      productForm.description = product.description || '';
-      productForm.image_url = product.image_url || '';
-      productForm.image_preview = product.image_url || '';
-      productForm.is_available = product.is_available;
-      
-      showEditProductModal.value = true;
-    };
-    
+    }
+
+    const editProduct = product => {
+      productForm.id = product.id
+      productForm.name = product.name
+      productForm.category = product.category
+      productForm.price = product.price
+      productForm.description = product.description || ''
+      productForm.image_url = product.image_url || ''
+      productForm.image_preview = product.image_url || ''
+      productForm.is_available = product.is_available
+
+      showEditProductModal.value = true
+    }
+
     const updateProductData = async () => {
-      isSubmitting.value = true;
-      
+      isSubmitting.value = true
+
       try {
         // Télécharger la nouvelle image si présente
-        let imageUrl = productForm.image_url;
+        let imageUrl = productForm.image_url
         if (productForm.image_file) {
-          const formData = new FormData();
-          formData.append('file', productForm.image_file);
-          const uploadResponse = await uploadImage(formData);
-          imageUrl = uploadResponse.data.url;
+          const formData = new FormData()
+          formData.append('file', productForm.image_file)
+          const uploadResponse = await uploadImage(formData)
+          imageUrl = uploadResponse.data.url
         }
-        
+
         // Mettre à jour le produit
         const productData = {
           name: productForm.name,
@@ -484,93 +488,97 @@ export default {
           price: parseFloat(productForm.price),
           description: productForm.description,
           image_url: imageUrl,
-          is_available: productForm.is_available
-        };
-        
-        await updateProduct(productForm.id, productData);
-        
-        showToast('Succès', 'Produit mis à jour avec succès', 'success');
-        closeModals();
-        fetchProducts();
+          is_available: productForm.is_available,
+        }
+
+        await updateProduct(productForm.id, productData)
+
+        showToast('Succès', 'Produit mis à jour avec succès', 'success')
+        closeModals()
+        fetchProducts()
       } catch (err) {
-        console.error('Erreur lors de la mise à jour du produit:', err);
-        showToast('Erreur', 'Impossible de mettre à jour le produit. Veuillez réessayer.', 'error');
+        console.error('Erreur lors de la mise à jour du produit:', err)
+        showToast('Erreur', 'Impossible de mettre à jour le produit. Veuillez réessayer.', 'error')
       } finally {
-        isSubmitting.value = false;
+        isSubmitting.value = false
       }
-    };
-    
-    const toggleAvailability = async (product) => {
+    }
+
+    const toggleAvailability = async product => {
       try {
         await updateProduct(product.id, {
-          is_available: !product.is_available
-        });
-        
+          is_available: !product.is_available,
+        })
+
         // Mettre à jour localement
-        const index = products.value.findIndex(p => p.id === product.id);
+        const index = products.value.findIndex(p => p.id === product.id)
         if (index !== -1) {
-          products.value[index].is_available = !product.is_available;
+          products.value[index].is_available = !product.is_available
         }
-        
+
         showToast(
-          'Succès', 
-          `Produit marqué comme ${!product.is_available ? 'disponible' : 'non disponible'}`, 
+          'Succès',
+          `Produit marqué comme ${!product.is_available ? 'disponible' : 'non disponible'}`,
           'success'
-        );
+        )
       } catch (err) {
-        console.error('Erreur lors de la mise à jour de la disponibilité:', err);
-        showToast('Erreur', 'Impossible de mettre à jour la disponibilité. Veuillez réessayer.', 'error');
+        console.error('Erreur lors de la mise à jour de la disponibilité:', err)
+        showToast(
+          'Erreur',
+          'Impossible de mettre à jour la disponibilité. Veuillez réessayer.',
+          'error'
+        )
       }
-    };
-    
-    const confirmDeleteProduct = (product) => {
-      productToDelete.value = product;
-      showDeleteModal.value = true;
-    };
-    
+    }
+
+    const confirmDeleteProduct = product => {
+      productToDelete.value = product
+      showDeleteModal.value = true
+    }
+
     const deleteProductData = async () => {
-      if (!productToDelete.value) return;
-      
-      isSubmitting.value = true;
-      
+      if (!productToDelete.value) return
+
+      isSubmitting.value = true
+
       try {
-        await deleteProduct(productToDelete.value.id);
-        
-        showToast('Succès', 'Produit supprimé avec succès', 'success');
-        showDeleteModal.value = false;
-        productToDelete.value = null;
-        fetchProducts();
+        await deleteProduct(productToDelete.value.id)
+
+        showToast('Succès', 'Produit supprimé avec succès', 'success')
+        showDeleteModal.value = false
+        productToDelete.value = null
+        fetchProducts()
       } catch (err) {
-        console.error('Erreur lors de la suppression du produit:', err);
-        showToast('Erreur', 'Impossible de supprimer le produit. Veuillez réessayer.', 'error');
+        console.error('Erreur lors de la suppression du produit:', err)
+        showToast('Erreur', 'Impossible de supprimer le produit. Veuillez réessayer.', 'error')
       } finally {
-        isSubmitting.value = false;
+        isSubmitting.value = false
       }
-    };
-    
+    }
+
     const exportProducts = () => {
       const data = filteredProducts.value.map(product => ({
-        'Nom': product.name,
-        'Catégorie': getCategoryLabel(product.category),
+        Nom: product.name,
+        Catégorie: getCategoryLabel(product.category),
         'Prix (FCFA)': product.price,
-        'Description': product.description || '',
-        'Disponible': product.is_available ? 'Oui' : 'Non',
-        'Date de création': new Date(product.created_at).toLocaleDateString()
-      }));
-      
-      exportToCSV(data, 'produits');
-    };
-    
-    const getCategoryLabel = (value) => {
-      const category = categories.find(cat => cat.value === value);
-      return category ? category.label : value;
-    };
-    
+        Description: product.description || '',
+        Disponible: product.is_available ? 'Oui' : 'Non',
+        'Date de création': new Date(product.created_at).toLocaleDateString(),
+      }))
+
+      exportToCSV(data, 'produits')
+    }
+
+    const getCategoryLabel = value => {
+      const category = categories.find(cat => cat.value === value)
+      return category ? category.label : value
+    }
+
     // Cycle de vie
     onMounted(() => {
-      fetchProducts();
-    });
-    
+      fetchProducts()
+    })
+
     return {
       products,
       loading,
@@ -586,7 +594,7 @@ export default {
       productToDelete,
       filters,
       categories,
-      
+
       fetchProducts,
       applyFilters,
       changePage,
@@ -601,12 +609,12 @@ export default {
       deleteProduct: deleteProductData,
       exportProducts,
       getCategoryLabel,
-      
+
       formatPrice,
-      truncateText
-    };
-  }
-};
+      truncateText,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -926,7 +934,7 @@ export default {
   color: #dc3545;
 }
 
-input[type="file"] {
+input[type='file'] {
   display: none;
 }
 
@@ -1018,8 +1026,12 @@ input[type="file"] {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container i {
@@ -1052,15 +1064,15 @@ input[type="file"] {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .actions {
     width: 100%;
   }
-  
+
   .filters-container {
     flex-direction: column;
   }
-  
+
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }

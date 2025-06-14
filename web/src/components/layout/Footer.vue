@@ -21,12 +21,12 @@ export default {
   setup() {
     const currentYear = computed(() => new Date().getFullYear())
     const appVersion = computed(() => APP_VERSION)
-    
+
     return {
       currentYear,
-      appVersion
+      appVersion,
     }
-  }
+  },
 }
 </script>
 

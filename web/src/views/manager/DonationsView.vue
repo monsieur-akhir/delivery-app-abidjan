@@ -54,32 +54,32 @@
     </div>
 
     <div class="tabs">
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'donations' }"
         @click="activeTab = 'donations'"
       >
         <i class="fas fa-hand-holding-heart mr-2"></i>
         Dons
       </button>
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'organizations' }"
         @click="activeTab = 'organizations'"
       >
         <i class="fas fa-building mr-2"></i>
         Organisations
       </button>
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'analytics' }"
         @click="activeTab = 'analytics'"
       >
         <i class="fas fa-chart-pie mr-2"></i>
         Analyses
       </button>
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'settings' }"
         @click="activeTab = 'settings'"
       >
@@ -95,13 +95,13 @@
           <div class="filter-row">
             <div class="filter-group">
               <label for="organization-filter">Organisation</label>
-              <select id="organization-filter" v-model="filters.organization" @change="loadDonations">
+              <select
+                id="organization-filter"
+                v-model="filters.organization"
+                @change="loadDonations"
+              >
                 <option value="">Toutes les organisations</option>
-                <option 
-                  v-for="org in organizations" 
-                  :key="org.id" 
-                  :value="org.id"
-                >
+                <option v-for="org in organizations" :key="org.id" :value="org.id">
                   {{ org.name }}
                 </option>
               </select>
@@ -128,7 +128,12 @@
             </div>
             <div class="filter-group" v-if="filters.dateRange === 'custom'">
               <label for="start-date">Date de début</label>
-              <input type="date" id="start-date" v-model="filters.startDate" @change="loadDonations" />
+              <input
+                type="date"
+                id="start-date"
+                v-model="filters.startDate"
+                @change="loadDonations"
+              />
             </div>
             <div class="filter-group" v-if="filters.dateRange === 'custom'">
               <label for="end-date">Date de fin</label>
@@ -137,11 +142,11 @@
             <div class="filter-group search-group">
               <label for="search">Recherche</label>
               <div class="search-input">
-                <input 
-                  type="text" 
-                  id="search" 
-                  v-model="filters.search" 
-                  placeholder="ID, livraison, organisation..." 
+                <input
+                  type="text"
+                  id="search"
+                  v-model="filters.search"
+                  placeholder="ID, livraison, organisation..."
                   @input="debounceSearch"
                 />
                 <i class="fas fa-search"></i>
@@ -157,9 +162,7 @@
         <div v-else-if="donations.length === 0" class="empty-state">
           <i class="fas fa-hand-holding-heart fa-2x"></i>
           <p>Aucun don trouvé</p>
-          <button class="btn btn-primary" @click="openCreateModal">
-            Créer un don
-          </button>
+          <button class="btn btn-primary" @click="openCreateModal">Créer un don</button>
         </div>
         <div v-else class="donations-table-container">
           <table class="donations-table">
@@ -182,9 +185,9 @@
                 <td>{{ formatCurrency(donation.amount) }}</td>
                 <td>{{ donation.organization.name }}</td>
                 <td>
-                  <a 
-                    v-if="donation.delivery_id" 
-                    href="#" 
+                  <a
+                    v-if="donation.delivery_id"
+                    href="#"
                     @click.prevent="viewDelivery(donation.delivery_id)"
                   >
                     #{{ donation.delivery_id }}
@@ -199,32 +202,32 @@
                 </td>
                 <td>
                   <div class="table-actions">
-                    <button 
-                      class="btn-icon" 
-                      @click="viewDonationDetails(donation.id)" 
+                    <button
+                      class="btn-icon"
+                      @click="viewDonationDetails(donation.id)"
                       title="Voir les détails"
                     >
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button 
-                      class="btn-icon" 
-                      @click="editDonation(donation.id)" 
+                    <button
+                      class="btn-icon"
+                      @click="editDonation(donation.id)"
                       title="Modifier"
                       v-if="donation.status === 'pending'"
                     >
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button 
-                      class="btn-icon" 
-                      @click="completeDonation(donation.id)" 
+                    <button
+                      class="btn-icon"
+                      @click="completeDonation(donation.id)"
                       title="Marquer comme complété"
                       v-if="donation.status === 'pending'"
                     >
                       <i class="fas fa-check"></i>
                     </button>
-                    <button 
-                      class="btn-icon" 
-                      @click="cancelDonation(donation.id)" 
+                    <button
+                      class="btn-icon"
+                      @click="cancelDonation(donation.id)"
                       title="Annuler"
                       v-if="donation.status === 'pending'"
                     >
@@ -238,17 +241,17 @@
         </div>
 
         <div class="pagination" v-if="donations.length > 0 && totalPages > 1">
-          <button 
-            class="pagination-button" 
-            :disabled="currentPage === 1" 
+          <button
+            class="pagination-button"
+            :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)"
           >
             <i class="fas fa-chevron-left"></i>
           </button>
           <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
-          <button 
-            class="pagination-button" 
-            :disabled="currentPage === totalPages" 
+          <button
+            class="pagination-button"
+            :disabled="currentPage === totalPages"
             @click="changePage(currentPage + 1)"
           >
             <i class="fas fa-chevron-right"></i>
@@ -260,10 +263,10 @@
       <div v-if="activeTab === 'organizations'" class="organizations-tab">
         <div class="organizations-header">
           <div class="search-input">
-            <input 
-              type="text" 
-              v-model="organizationSearch" 
-              placeholder="Rechercher une organisation..." 
+            <input
+              type="text"
+              v-model="organizationSearch"
+              placeholder="Rechercher une organisation..."
               @input="debounceOrganizationSearch"
             />
             <i class="fas fa-search"></i>
@@ -286,11 +289,7 @@
           </button>
         </div>
         <div v-else class="organizations-grid">
-          <div 
-            v-for="org in organizations" 
-            :key="org.id" 
-            class="organization-card"
-          >
+          <div v-for="org in organizations" :key="org.id" class="organization-card">
             <div class="organization-header">
               <div class="organization-logo">
                 <img v-if="org.logo" :src="org.logo" :alt="org.name" />
@@ -299,18 +298,10 @@
                 </div>
               </div>
               <div class="organization-actions">
-                <button 
-                  class="btn-icon" 
-                  @click="editOrganization(org.id)" 
-                  title="Modifier"
-                >
+                <button class="btn-icon" @click="editOrganization(org.id)" title="Modifier">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button 
-                  class="btn-icon" 
-                  @click="deleteOrganization(org.id)" 
-                  title="Supprimer"
-                >
+                <button class="btn-icon" @click="deleteOrganization(org.id)" title="Supprimer">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -333,10 +324,7 @@
                   <span class="stat-label">Total</span>
                 </div>
               </div>
-              <button 
-                class="btn btn-sm btn-outline" 
-                @click="viewOrganizationDetails(org.id)"
-              >
+              <button class="btn btn-sm btn-outline" @click="viewOrganizationDetails(org.id)">
                 Voir détails
               </button>
             </div>
@@ -381,9 +369,9 @@
           <div class="analytics-card">
             <h3 class="analytics-title">Top 5 des organisations</h3>
             <div class="top-organizations">
-              <div 
-                v-for="(org, index) in topOrganizations" 
-                :key="org.id" 
+              <div
+                v-for="(org, index) in topOrganizations"
+                :key="org.id"
                 class="top-organization-item"
               >
                 <div class="top-organization-rank">{{ index + 1 }}</div>
@@ -470,10 +458,10 @@
             <div class="form-group">
               <label for="default-percentage">Pourcentage de don par défaut</label>
               <div class="input-group">
-                <input 
-                  type="number" 
-                  id="default-percentage" 
-                  v-model.number="settings.defaultPercentage" 
+                <input
+                  type="number"
+                  id="default-percentage"
+                  v-model.number="settings.defaultPercentage"
                   min="0"
                   max="100"
                   step="5"
@@ -486,19 +474,19 @@
                 Pourcentage du supplément express reversé à des œuvres caritatives par défaut
               </div>
             </div>
-            
+
             <div class="form-group">
               <label for="donation-options">Options de pourcentage de don</label>
               <div class="donation-options">
-                <div 
-                  v-for="(option, index) in settings.donationOptions" 
-                  :key="index" 
+                <div
+                  v-for="(option, index) in settings.donationOptions"
+                  :key="index"
                   class="donation-option"
                 >
                   <div class="input-group">
-                    <input 
-                      type="number" 
-                      v-model.number="settings.donationOptions[index]" 
+                    <input
+                      type="number"
+                      v-model.number="settings.donationOptions[index]"
                       min="0"
                       max="100"
                       step="5"
@@ -507,9 +495,9 @@
                       <span class="input-group-text">%</span>
                     </div>
                   </div>
-                  <button 
-                    v-if="settings.donationOptions.length > 1" 
-                    class="btn-icon" 
+                  <button
+                    v-if="settings.donationOptions.length > 1"
+                    class="btn-icon"
                     @click="removeDonationOption(index)"
                     title="Supprimer"
                   >
@@ -521,39 +509,31 @@
                   Ajouter une option
                 </button>
               </div>
-              <div class="form-hint">
-                Options de pourcentage de don proposées aux clients
-              </div>
+              <div class="form-hint">Options de pourcentage de don proposées aux clients</div>
             </div>
-            
+
             <div class="form-group">
               <label class="toggle-label">
                 <span>Afficher les dons sur les factures</span>
                 <div class="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    v-model="settings.showDonationsOnInvoices"
-                  />
+                  <input type="checkbox" v-model="settings.showDonationsOnInvoices" />
                   <span class="toggle-slider"></span>
                 </div>
               </label>
             </div>
-            
+
             <div class="form-group">
               <label class="toggle-label">
                 <span>Permettre les dons anonymes</span>
                 <div class="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    v-model="settings.allowAnonymousDonations"
-                  />
+                  <input type="checkbox" v-model="settings.allowAnonymousDonations" />
                   <span class="toggle-slider"></span>
                 </div>
               </label>
             </div>
           </div>
         </div>
-        
+
         <div class="settings-card">
           <h3 class="settings-title">Notifications</h3>
           <div class="settings-content">
@@ -561,43 +541,35 @@
               <label class="toggle-label">
                 <span>Notifications par e-mail pour les nouveaux dons</span>
                 <div class="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    v-model="settings.emailNotifications"
-                  />
+                  <input type="checkbox" v-model="settings.emailNotifications" />
                   <span class="toggle-slider"></span>
                 </div>
               </label>
             </div>
-            
+
             <div class="form-group">
               <label for="notification-emails">E-mails de notification</label>
-              <input 
-                type="text" 
-                id="notification-emails" 
-                v-model="settings.notificationEmails" 
+              <input
+                type="text"
+                id="notification-emails"
+                v-model="settings.notificationEmails"
                 placeholder="email1@example.com, email2@example.com"
               />
-              <div class="form-hint">
-                Séparez les adresses e-mail par des virgules
-              </div>
+              <div class="form-hint">Séparez les adresses e-mail par des virgules</div>
             </div>
-            
+
             <div class="form-group">
               <label class="toggle-label">
                 <span>Envoyer des reçus aux donateurs</span>
                 <div class="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    v-model="settings.sendReceipts"
-                  />
+                  <input type="checkbox" v-model="settings.sendReceipts" />
                   <span class="toggle-slider"></span>
                 </div>
               </label>
             </div>
           </div>
         </div>
-        
+
         <div class="settings-card">
           <h3 class="settings-title">Rapports</h3>
           <div class="settings-content">
@@ -605,30 +577,25 @@
               <label class="toggle-label">
                 <span>Générer des rapports mensuels</span>
                 <div class="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    v-model="settings.generateMonthlyReports"
-                  />
+                  <input type="checkbox" v-model="settings.generateMonthlyReports" />
                   <span class="toggle-slider"></span>
                 </div>
               </label>
             </div>
-            
+
             <div class="form-group">
               <label for="report-recipients">Destinataires des rapports</label>
-              <input 
-                type="text" 
-                id="report-recipients" 
-                v-model="settings.reportRecipients" 
+              <input
+                type="text"
+                id="report-recipients"
+                v-model="settings.reportRecipients"
                 placeholder="email1@example.com, email2@example.com"
               />
-              <div class="form-hint">
-                Séparez les adresses e-mail par des virgules
-              </div>
+              <div class="form-hint">Séparez les adresses e-mail par des virgules</div>
             </div>
           </div>
         </div>
-        
+
         <div class="settings-actions">
           <button class="btn btn-secondary" @click="resetSettings">
             <i class="fas fa-undo mr-2"></i>
@@ -673,7 +640,11 @@
           <h3>Organisation</h3>
           <div class="organization-detail">
             <div class="organization-logo">
-              <img v-if="selectedDonation.organization.logo" :src="selectedDonation.organization.logo" :alt="selectedDonation.organization.name" />
+              <img
+                v-if="selectedDonation.organization.logo"
+                :src="selectedDonation.organization.logo"
+                :alt="selectedDonation.organization.name"
+              />
               <div v-else class="logo-placeholder">
                 {{ getInitials(selectedDonation.organization.name) }}
               </div>
@@ -681,7 +652,9 @@
             <div class="organization-info">
               <div class="organization-name">{{ selectedDonation.organization.name }}</div>
               <div class="organization-category">{{ selectedDonation.organization.category }}</div>
-              <div class="organization-description">{{ selectedDonation.organization.description }}</div>
+              <div class="organization-description">
+                {{ selectedDonation.organization.description }}
+              </div>
             </div>
           </div>
         </div>
@@ -704,10 +677,15 @@
               </div>
               <div class="detail-item">
                 <span class="detail-label">Client</span>
-                <span class="detail-value">{{ selectedDonation.delivery.client ? selectedDonation.delivery.client.name : 'N/A' }}</span>
+                <span class="detail-value">{{
+                  selectedDonation.delivery.client ? selectedDonation.delivery.client.name : 'N/A'
+                }}</span>
               </div>
             </div>
-            <button class="btn btn-outline mt-3" @click="viewDelivery(selectedDonation.delivery_id)">
+            <button
+              class="btn btn-outline mt-3"
+              @click="viewDelivery(selectedDonation.delivery_id)"
+            >
               <i class="fas fa-eye mr-2"></i>
               Voir la livraison
             </button>
@@ -731,7 +709,9 @@
             </div>
             <div class="detail-item">
               <span class="detail-label">Type</span>
-              <span class="detail-value">{{ selectedDonation.donor.type === 'individual' ? 'Particulier' : 'Entreprise' }}</span>
+              <span class="detail-value">{{
+                selectedDonation.donor.type === 'individual' ? 'Particulier' : 'Entreprise'
+              }}</span>
             </div>
           </div>
         </div>
@@ -751,16 +731,16 @@
         </div>
 
         <div class="modal-actions">
-          <button 
-            class="btn btn-success" 
+          <button
+            class="btn btn-success"
             @click="completeDonation(selectedDonation.id)"
             v-if="selectedDonation.status === 'pending'"
           >
             <i class="fas fa-check mr-2"></i>
             Marquer comme complété
           </button>
-          <button 
-            class="btn btn-danger" 
+          <button
+            class="btn btn-danger"
             @click="cancelDonation(selectedDonation.id)"
             v-if="selectedDonation.status === 'pending'"
           >
@@ -773,59 +753,53 @@
     </Modal>
 
     <!-- Modal pour créer/modifier un don -->
-    <Modal 
-      v-if="showCreateDonationModal" 
-      @close="showCreateDonationModal = false" 
+    <Modal
+      v-if="showCreateDonationModal"
+      @close="showCreateDonationModal = false"
       :title="editingDonation ? 'Modifier le don' : 'Nouveau don'"
     >
       <div class="donation-form">
         <div class="form-group">
           <label for="donation-amount">Montant (FCFA) <span class="required">*</span></label>
-          <input 
-            type="number" 
-            id="donation-amount" 
-            v-model.number="newDonation.amount" 
+          <input
+            type="number"
+            id="donation-amount"
+            v-model.number="newDonation.amount"
             min="0"
             step="100"
             required
           />
         </div>
-        
+
         <div class="form-group">
           <label for="donation-organization">Organisation <span class="required">*</span></label>
           <select id="donation-organization" v-model="newDonation.organizationId" required>
             <option value="">Sélectionner une organisation</option>
-            <option 
-              v-for="org in organizations" 
-              :key="org.id" 
-              :value="org.id"
-            >
+            <option v-for="org in organizations" :key="org.id" :value="org.id">
               {{ org.name }} ({{ org.category }})
             </option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="donation-delivery">Livraison associée</label>
           <select id="donation-delivery" v-model="newDonation.deliveryId">
             <option value="">Aucune livraison</option>
-            <option 
-              v-for="delivery in expressDeliveries" 
-              :key="delivery.id" 
-              :value="delivery.id"
-            >
+            <option v-for="delivery in expressDeliveries" :key="delivery.id" :value="delivery.id">
               #{{ delivery.id }} - {{ formatDate(delivery.created_at) }}
             </option>
           </select>
         </div>
-        
+
         <div class="form-group">
-          <label for="donation-percentage" v-if="newDonation.deliveryId">Pourcentage du supplément</label>
+          <label for="donation-percentage" v-if="newDonation.deliveryId"
+            >Pourcentage du supplément</label
+          >
           <div class="input-group" v-if="newDonation.deliveryId">
-            <input 
-              type="number" 
-              id="donation-percentage" 
-              v-model.number="newDonation.percentage" 
+            <input
+              type="number"
+              id="donation-percentage"
+              v-model.number="newDonation.percentage"
               min="0"
               max="100"
               step="5"
@@ -835,14 +809,14 @@
             </div>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="newDonation.isAnonymous" />
             <span>Don anonyme</span>
           </label>
         </div>
-        
+
         <div v-if="!newDonation.isAnonymous">
           <div class="form-group">
             <label for="donor-type">Type de donateur</label>
@@ -851,52 +825,38 @@
               <option value="company">Entreprise</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="donor-name">Nom du donateur <span class="required">*</span></label>
-            <input 
-              type="text" 
-              id="donor-name" 
-              v-model="newDonation.donorName" 
+            <input
+              type="text"
+              id="donor-name"
+              v-model="newDonation.donorName"
               :required="!newDonation.isAnonymous"
             />
           </div>
-          
+
           <div class="form-group">
             <label for="donor-email">Email du donateur</label>
-            <input 
-              type="email" 
-              id="donor-email" 
-              v-model="newDonation.donorEmail" 
-            />
+            <input type="email" id="donor-email" v-model="newDonation.donorEmail" />
           </div>
-          
+
           <div class="form-group">
             <label for="donor-phone">Téléphone du donateur</label>
-            <input 
-              type="tel" 
-              id="donor-phone" 
-              v-model="newDonation.donorPhone" 
-            />
+            <input type="tel" id="donor-phone" v-model="newDonation.donorPhone" />
           </div>
         </div>
-        
+
         <div class="form-group">
           <label for="donation-notes">Notes</label>
-          <textarea 
-            id="donation-notes" 
-            v-model="newDonation.notes" 
-            rows="3"
-          ></textarea>
+          <textarea id="donation-notes" v-model="newDonation.notes" rows="3"></textarea>
         </div>
-        
+
         <div class="modal-actions">
-          <button class="btn btn-secondary" @click="showCreateDonationModal = false">Annuler</button>
-          <button 
-            class="btn btn-primary" 
-            @click="saveDonation"
-            :disabled="!isValidDonation"
-          >
+          <button class="btn btn-secondary" @click="showCreateDonationModal = false">
+            Annuler
+          </button>
+          <button class="btn btn-primary" @click="saveDonation" :disabled="!isValidDonation">
             {{ editingDonation ? 'Mettre à jour' : 'Créer' }}
           </button>
         </div>
@@ -904,22 +864,17 @@
     </Modal>
 
     <!-- Modal pour créer/modifier une organisation -->
-    <Modal 
-      v-if="showOrganizationModal" 
-      @close="showOrganizationModal = false" 
+    <Modal
+      v-if="showOrganizationModal"
+      @close="showOrganizationModal = false"
       :title="editingOrganization ? 'Modifier l\'organisation' : 'Nouvelle organisation'"
     >
       <div class="organization-form">
         <div class="form-group">
           <label for="organization-name">Nom <span class="required">*</span></label>
-          <input 
-            type="text" 
-            id="organization-name" 
-            v-model="newOrganization.name" 
-            required
-          />
+          <input type="text" id="organization-name" v-model="newOrganization.name" required />
         </div>
-        
+
         <div class="form-group">
           <label for="organization-category">Catégorie <span class="required">*</span></label>
           <select id="organization-category" v-model="newOrganization.category" required>
@@ -934,63 +889,46 @@
             <option value="Autre">Autre</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="organization-description">Description <span class="required">*</span></label>
-          <textarea 
-            id="organization-description" 
-            v-model="newOrganization.description" 
+          <textarea
+            id="organization-description"
+            v-model="newOrganization.description"
             rows="3"
             required
           ></textarea>
         </div>
-        
+
         <div class="form-group">
           <label for="organization-website">Site web</label>
-          <input 
-            type="url" 
-            id="organization-website" 
-            v-model="newOrganization.website" 
+          <input
+            type="url"
+            id="organization-website"
+            v-model="newOrganization.website"
             placeholder="https://example.com"
           />
         </div>
-        
+
         <div class="form-group">
           <label for="organization-email">Email de contact</label>
-          <input 
-            type="email" 
-            id="organization-email" 
-            v-model="newOrganization.email" 
-          />
+          <input type="email" id="organization-email" v-model="newOrganization.email" />
         </div>
-        
+
         <div class="form-group">
           <label for="organization-phone">Téléphone</label>
-          <input 
-            type="tel" 
-            id="organization-phone" 
-            v-model="newOrganization.phone" 
-          />
+          <input type="tel" id="organization-phone" v-model="newOrganization.phone" />
         </div>
-        
+
         <div class="form-group">
           <label for="organization-address">Adresse</label>
-          <textarea 
-            id="organization-address" 
-            v-model="newOrganization.address" 
-            rows="2"
-          ></textarea>
+          <textarea id="organization-address" v-model="newOrganization.address" rows="2"></textarea>
         </div>
-        
+
         <div class="form-group">
           <label for="organization-logo">Logo</label>
           <div class="file-input">
-            <input 
-              type="file" 
-              id="organization-logo" 
-              @change="handleLogoUpload" 
-              accept="image/*"
-            />
+            <input type="file" id="organization-logo" @change="handleLogoUpload" accept="image/*" />
             <div class="file-preview" v-if="newOrganization.logo">
               <img :src="newOrganization.logo" alt="Logo preview" />
               <button class="btn-icon" @click="removeLogo" title="Supprimer">
@@ -999,11 +937,11 @@
             </div>
           </div>
         </div>
-        
+
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="showOrganizationModal = false">Annuler</button>
-          <button 
-            class="btn btn-primary" 
+          <button
+            class="btn btn-primary"
             @click="saveOrganization"
             :disabled="!isValidOrganization"
           >
@@ -1014,9 +952,9 @@
     </Modal>
 
     <!-- Modal de confirmation pour la suppression -->
-    <Modal 
-      v-if="showDeleteModal" 
-      @close="showDeleteModal = false" 
+    <Modal
+      v-if="showDeleteModal"
+      @close="showDeleteModal = false"
       title="Confirmation de suppression"
     >
       <div class="delete-confirmation">
@@ -1025,7 +963,9 @@
         </div>
         <div class="confirmation-message">
           <p>Êtes-vous sûr de vouloir supprimer cette organisation ?</p>
-          <p class="warning">Cette action est irréversible et supprimera également toutes les données associées.</p>
+          <p class="warning">
+            Cette action est irréversible et supprimera également toutes les données associées.
+          </p>
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="showDeleteModal = false">Annuler</button>
@@ -1040,39 +980,39 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import Chart from 'chart.js/auto';
-import Modal from '@/components/ui/Modal.vue';
-import { useToast } from '@/composables/useToast';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue'
+import Chart from 'chart.js/auto'
+import Modal from '@/components/ui/Modal.vue'
+import { useToast } from '@/composables/useToast'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'DonationsView',
   components: {
-    Modal
+    Modal,
   },
   setup() {
-    const { showToast } = useToast();
-    const router = useRouter();
-    
+    const { showToast } = useToast()
+    const router = useRouter()
+
     // État des onglets
-    const activeTab = ref('donations');
-    
+    const activeTab = ref('donations')
+
     // État des données
-    const donations = ref([]);
-    const organizations = ref([]);
-    const expressDeliveries = ref([]);
-    const loading = ref(true);
-    const loadingOrganizations = ref(true);
-    
+    const donations = ref([])
+    const organizations = ref([])
+    const expressDeliveries = ref([])
+    const loading = ref(true)
+    const loadingOrganizations = ref(true)
+
     // État des statistiques
     const stats = ref({
       totalDonations: 0,
       organizationsCount: 0,
       expressDeliveriesCount: 0,
-      averageDonationPercentage: 0
-    });
-    
+      averageDonationPercentage: 0,
+    })
+
     // État des analyses
     const analytics = ref({
       totalAmount: 0,
@@ -1082,18 +1022,18 @@ export default {
       impactEducation: 0,
       impactHealth: 0,
       impactEnvironment: 0,
-      impactOther: 0
-    });
-    
+      impactOther: 0,
+    })
+
     // Top organisations
-    const topOrganizations = ref([]);
-    
+    const topOrganizations = ref([])
+
     // État de la pagination
-    const currentPage = ref(1);
-    const totalItems = ref(0);
-    const itemsPerPage = ref(10);
-    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
-    
+    const currentPage = ref(1)
+    const totalItems = ref(0)
+    const itemsPerPage = ref(10)
+    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
+
     // État des filtres
     const filters = ref({
       organization: '',
@@ -1101,31 +1041,31 @@ export default {
       dateRange: 'all',
       startDate: null,
       endDate: null,
-      search: ''
-    });
-    
+      search: '',
+    })
+
     // État des filtres d'analyse
     const analyticsFilters = ref({
-      period: 'last_month'
-    });
-    
+      period: 'last_month',
+    })
+
     // État de la recherche d'organisations
-    const organizationSearch = ref('');
-    
+    const organizationSearch = ref('')
+
     // État des modals
-    const showDonationModal = ref(false);
-    const showCreateDonationModal = ref(false);
-    const showOrganizationModal = ref(false);
-    const showDeleteModal = ref(false);
-    
+    const showDonationModal = ref(false)
+    const showCreateDonationModal = ref(false)
+    const showOrganizationModal = ref(false)
+    const showDeleteModal = ref(false)
+
     // État des éléments sélectionnés
-    const selectedDonation = ref(null);
-    const selectedOrganizationId = ref(null);
-    
+    const selectedDonation = ref(null)
+    const selectedOrganizationId = ref(null)
+
     // État d'édition
-    const editingDonation = ref(false);
-    const editingOrganization = ref(false);
-    
+    const editingDonation = ref(false)
+    const editingOrganization = ref(false)
+
     // État pour la création/modification d'un don
     const newDonation = ref({
       amount: 0,
@@ -1137,9 +1077,9 @@ export default {
       donorName: '',
       donorEmail: '',
       donorPhone: '',
-      notes: ''
-    });
-    
+      notes: '',
+    })
+
     // État pour la création/modification d'une organisation
     const newOrganization = ref({
       name: '',
@@ -1149,9 +1089,9 @@ export default {
       email: '',
       phone: '',
       address: '',
-      logo: null
-    });
-    
+      logo: null,
+    })
+
     // État des paramètres
     const settings = ref({
       defaultPercentage: 20,
@@ -1162,80 +1102,80 @@ export default {
       notificationEmails: '',
       sendReceipts: true,
       generateMonthlyReports: true,
-      reportRecipients: ''
-    });
-    
+      reportRecipients: '',
+    })
+
     // Références pour les graphiques
-    const organizationsChart = ref(null);
-    const donationsTimeChart = ref(null);
-    const categoriesChart = ref(null);
+    const organizationsChart = ref(null)
+    const donationsTimeChart = ref(null)
+    const categoriesChart = ref(null)
     let charts = {
       organizations: null,
       donationsTime: null,
-      categories: null
-    };
-    
+      categories: null,
+    }
+
     // Validation du nouveau don
     const isValidDonation = computed(() => {
-      const donation = newDonation.value;
-      
-      if (donation.amount <= 0) return false;
-      if (!donation.organizationId) return false;
-      
-      if (!donation.isAnonymous && !donation.donorName) return false;
-      
-      return true;
-    });
-    
+      const donation = newDonation.value
+
+      if (donation.amount <= 0) return false
+      if (!donation.organizationId) return false
+
+      if (!donation.isAnonymous && !donation.donorName) return false
+
+      return true
+    })
+
     // Validation de la nouvelle organisation
     const isValidOrganization = computed(() => {
-      const organization = newOrganization.value;
-      
-      if (!organization.name.trim()) return false;
-      if (!organization.category) return false;
-      if (!organization.description.trim()) return false;
-      
-      return true;
-    });
-    
+      const organization = newOrganization.value
+
+      if (!organization.name.trim()) return false
+      if (!organization.category) return false
+      if (!organization.description.trim()) return false
+
+      return true
+    })
+
     // Chargement des dons
     const loadDonations = async () => {
       try {
-        loading.value = true;
-        
+        loading.value = true
+
         // Préparer les dates si nécessaire
-        let startDate = null;
-        let endDate = null;
-        
+        let startDate = null
+        let endDate = null
+
         if (filters.value.dateRange === 'custom') {
-          startDate = filters.value.startDate ? new Date(filters.value.startDate) : null;
-          endDate = filters.value.endDate ? new Date(filters.value.endDate) : null;
+          startDate = filters.value.startDate ? new Date(filters.value.startDate) : null
+          endDate = filters.value.endDate ? new Date(filters.value.endDate) : null
         } else if (filters.value.dateRange === 'today') {
-          startDate = new Date();
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
+          startDate = new Date()
+          startDate.setHours(0, 0, 0, 0)
+          endDate = new Date()
+          endDate.setHours(23, 59, 59, 999)
         } else if (filters.value.dateRange === 'yesterday') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setDate(endDate.getDate() - 1);
-          endDate.setHours(23, 59, 59, 999);
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 1)
+          startDate.setHours(0, 0, 0, 0)
+          endDate = new Date()
+          endDate.setDate(endDate.getDate() - 1)
+          endDate.setHours(23, 59, 59, 999)
         } else if (filters.value.dateRange === 'last_week') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 7);
-          endDate = new Date();
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 7)
+          endDate = new Date()
         } else if (filters.value.dateRange === 'last_month') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 30);
-          endDate = new Date();
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 30)
+          endDate = new Date()
         }
-        
+
         // Dans un environnement réel, ces données viendraient de l'API
         // Simuler le chargement des dons
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Données fictives pour la démonstration
         donations.value = [
           {
@@ -1246,18 +1186,18 @@ export default {
               id: 1,
               name: 'Éducation Pour Tous',
               category: 'Éducation',
-              logo: null
+              logo: null,
             },
             delivery_id: 101,
             donor: {
               name: 'Ibrahim Koné',
               email: 'ibrahim.kone@example.com',
               phone: '77 987 65 43',
-              type: 'individual'
+              type: 'individual',
             },
             status: 'completed',
             percentage: 20,
-            notes: 'Don effectué lors d\'une livraison express'
+            notes: "Don effectué lors d'une livraison express",
           },
           {
             id: 2,
@@ -1267,13 +1207,13 @@ export default {
               id: 2,
               name: 'Santé Communautaire',
               category: 'Santé',
-              logo: null
+              logo: null,
             },
             delivery_id: 102,
             donor: null,
             status: 'completed',
             percentage: 30,
-            notes: 'Don anonyme'
+            notes: 'Don anonyme',
           },
           {
             id: 3,
@@ -1283,152 +1223,156 @@ export default {
               id: 3,
               name: 'Planète Verte',
               category: 'Environnement',
-              logo: null
+              logo: null,
             },
             delivery_id: null,
             donor: {
               name: 'Entreprise XYZ',
               email: 'contact@xyz.com',
               phone: '20 123 45 67',
-              type: 'company'
+              type: 'company',
             },
             status: 'pending',
             percentage: null,
-            notes: 'Don direct d\'une entreprise'
-          }
-        ];
-        
-        totalItems.value = 3;
-        
+            notes: "Don direct d'une entreprise",
+          },
+        ]
+
+        totalItems.value = 3
+
         // Mise à jour des statistiques
-        updateStats();
+        updateStats()
       } catch (error) {
-        console.error('Erreur lors du chargement des dons:', error);
-        showToast('Erreur lors du chargement des dons', 'error');
+        console.error('Erreur lors du chargement des dons:', error)
+        showToast('Erreur lors du chargement des dons', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Chargement des organisations
     const loadOrganizations = async () => {
       try {
-        loadingOrganizations.value = true;
-        
+        loadingOrganizations.value = true
+
         // Dans un environnement réel, ces données viendraient de l'API
         // Simuler le chargement des organisations
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Données fictives pour la démonstration
         organizations.value = [
           {
             id: 1,
             name: 'Éducation Pour Tous',
             category: 'Éducation',
-            description: 'Organisation dédiée à l\'accès à l\'éducation pour tous les enfants.',
+            description: "Organisation dédiée à l'accès à l'éducation pour tous les enfants.",
             website: 'https://education-pour-tous.org',
             email: 'contact@education-pour-tous.org',
             phone: '20 123 45 67',
             address: 'Abidjan, Cocody',
             logo: null,
             donations_count: 15,
-            total_amount: 25000
+            total_amount: 25000,
           },
           {
             id: 2,
             name: 'Santé Communautaire',
             category: 'Santé',
-            description: 'Organisation œuvrant pour l\'amélioration de la santé dans les communautés défavorisées.',
+            description:
+              "Organisation œuvrant pour l'amélioration de la santé dans les communautés défavorisées.",
             website: 'https://sante-communautaire.org',
             email: 'contact@sante-communautaire.org',
             phone: '20 234 56 78',
             address: 'Abidjan, Plateau',
             logo: null,
             donations_count: 12,
-            total_amount: 30000
+            total_amount: 30000,
           },
           {
             id: 3,
             name: 'Planète Verte',
             category: 'Environnement',
-            description: 'Organisation dédiée à la protection de l\'environnement et à la sensibilisation écologique.',
+            description:
+              "Organisation dédiée à la protection de l'environnement et à la sensibilisation écologique.",
             website: 'https://planete-verte.org',
             email: 'contact@planete-verte.org',
             phone: '20 345 67 89',
             address: 'Abidjan, Marcory',
             logo: null,
             donations_count: 8,
-            total_amount: 15000
+            total_amount: 15000,
           },
           {
             id: 4,
-            name: 'Enfants d\'Abord',
+            name: "Enfants d'Abord",
             category: 'Enfance',
-            description: 'Organisation dédiée au bien-être et à la protection des enfants vulnérables.',
+            description:
+              'Organisation dédiée au bien-être et à la protection des enfants vulnérables.',
             website: 'https://enfants-dabord.org',
             email: 'contact@enfants-dabord.org',
             phone: '20 456 78 90',
             address: 'Abidjan, Treichville',
             logo: null,
             donations_count: 10,
-            total_amount: 20000
+            total_amount: 20000,
           },
           {
             id: 5,
             name: 'Solidarité Aînés',
             category: 'Personnes âgées',
-            description: 'Organisation dédiée au soutien et à l\'accompagnement des personnes âgées.',
+            description:
+              "Organisation dédiée au soutien et à l'accompagnement des personnes âgées.",
             website: 'https://solidarite-aines.org',
             email: 'contact@solidarite-aines.org',
             phone: '20 567 89 01',
             address: 'Abidjan, Yopougon',
             logo: null,
             donations_count: 6,
-            total_amount: 12000
-          }
-        ];
+            total_amount: 12000,
+          },
+        ]
       } catch (error) {
-        console.error('Erreur lors du chargement des organisations:', error);
-        showToast('Erreur lors du chargement des organisations', 'error');
+        console.error('Erreur lors du chargement des organisations:', error)
+        showToast('Erreur lors du chargement des organisations', 'error')
       } finally {
-        loadingOrganizations.value = false;
+        loadingOrganizations.value = false
       }
-    };
-    
+    }
+
     // Chargement des livraisons express
     const loadExpressDeliveries = async () => {
       try {
         // Dans un environnement réel, ces données viendraient de l'API
         // Simuler le chargement des livraisons express
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Données fictives pour la démonstration
         expressDeliveries.value = [
           {
             id: 101,
-            created_at: new Date(2023, 4, 15)
+            created_at: new Date(2023, 4, 15),
           },
           {
             id: 102,
-            created_at: new Date(2023, 4, 16)
+            created_at: new Date(2023, 4, 16),
           },
           {
             id: 103,
-            created_at: new Date(2023, 4, 17)
-          }
-        ];
+            created_at: new Date(2023, 4, 17),
+          },
+        ]
       } catch (error) {
-        console.error('Erreur lors du chargement des livraisons express:', error);
+        console.error('Erreur lors du chargement des livraisons express:', error)
       }
-    };
-    
+    }
+
     // Chargement des analyses
     const loadAnalytics = async () => {
       try {
         // Dans un environnement réel, ces données viendraient de l'API
         // Simuler le chargement des analyses
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Données fictives pour la démonstration
         analytics.value = {
           totalAmount: 102000,
@@ -1438,9 +1382,9 @@ export default {
           impactEducation: 45000,
           impactHealth: 30000,
           impactEnvironment: 15000,
-          impactOther: 12000
-        };
-        
+          impactOther: 12000,
+        }
+
         // Top organisations
         topOrganizations.value = [
           {
@@ -1448,46 +1392,46 @@ export default {
             name: 'Éducation Pour Tous',
             category: 'Éducation',
             logo: null,
-            total_amount: 45000
+            total_amount: 45000,
           },
           {
             id: 2,
             name: 'Santé Communautaire',
             category: 'Santé',
             logo: null,
-            total_amount: 30000
+            total_amount: 30000,
           },
           {
             id: 3,
             name: 'Planète Verte',
             category: 'Environnement',
             logo: null,
-            total_amount: 15000
+            total_amount: 15000,
           },
           {
             id: 4,
-            name: 'Enfants d\'Abord',
+            name: "Enfants d'Abord",
             category: 'Enfance',
             logo: null,
-            total_amount: 20000
+            total_amount: 20000,
           },
           {
             id: 5,
             name: 'Solidarité Aînés',
             category: 'Personnes âgées',
             logo: null,
-            total_amount: 12000
-          }
-        ];
-        
+            total_amount: 12000,
+          },
+        ]
+
         // Créer les graphiques
-        createCharts();
+        createCharts()
       } catch (error) {
-        console.error('Erreur lors du chargement des analyses:', error);
-        showToast('Erreur lors du chargement des analyses', 'error');
+        console.error('Erreur lors du chargement des analyses:', error)
+        showToast('Erreur lors du chargement des analyses', 'error')
       }
-    };
-    
+    }
+
     // Mise à jour des statistiques
     const updateStats = () => {
       // Dans un environnement réel, ces données viendraient de l'API
@@ -1495,45 +1439,35 @@ export default {
         totalDonations: 102000,
         organizationsCount: 5,
         expressDeliveriesCount: 67,
-        averageDonationPercentage: 25
-      };
-    };
-    
+        averageDonationPercentage: 25,
+      }
+    }
+
     // Création des graphiques
     const createCharts = () => {
       // Graphique des organisations
       if (organizationsChart.value) {
-        const ctx = organizationsChart.value.getContext('2d');
-        
+        const ctx = organizationsChart.value.getContext('2d')
+
         // Détruire le graphique existant s'il y en a un
         if (charts.organizations) {
-          charts.organizations.destroy();
+          charts.organizations.destroy()
         }
-        
+
         // Données pour le graphique
         const data = {
           labels: topOrganizations.value.map(org => org.name),
-          datasets: [{
-            label: 'Montant des dons',
-            data: topOrganizations.value.map(org => org.total_amount),
-            backgroundColor: [
-              '#4e73df',
-              '#1cc88a',
-              '#36b9cc',
-              '#f6c23e',
-              '#e74a3b'
-            ],
-            hoverBackgroundColor: [
-              '#2e59d9',
-              '#17a673',
-              '#2c9faf',
-              '#dda20a',
-              '#be2617'
-            ],
-            borderWidth: 1
-          }]
-        };
-        
+          datasets: [
+            {
+              label: 'Montant des dons',
+              data: topOrganizations.value.map(org => org.total_amount),
+              backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+              hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617'],
+              borderWidth: 1,
+            },
+          ],
+        }
+
         // Options du graphique
         const options = {
           responsive: true,
@@ -1543,68 +1477,85 @@ export default {
               position: 'bottom',
               labels: {
                 usePointStyle: true,
-                padding: 20
-              }
+                padding: 20,
+              },
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  let label = context.label || '';
+                label: function (context) {
+                  let label = context.label || ''
                   if (label) {
-                    label += ': ';
+                    label += ': '
                   }
                   if (context.parsed !== undefined) {
                     label += new Intl.NumberFormat('fr-FR', {
                       style: 'currency',
                       currency: 'XOF',
-                      minimumFractionDigits: 0
-                    }).format(context.parsed);
+                      minimumFractionDigits: 0,
+                    }).format(context.parsed)
                   }
-                  return label;
-                }
-              }
-            }
-          }
-        };
-        
+                  return label
+                },
+              },
+            },
+          },
+        }
+
         // Créer le graphique
         charts.organizations = new Chart(ctx, {
           type: 'pie',
           data: data,
-          options: options
-        });
+          options: options,
+        })
       }
-      
+
       // Graphique de l'évolution des dons
       if (donationsTimeChart.value) {
-        const ctx = donationsTimeChart.value.getContext('2d');
-        
+        const ctx = donationsTimeChart.value.getContext('2d')
+
         // Détruire le graphique existant s'il y en a un
         if (charts.donationsTime) {
-          charts.donationsTime.destroy();
+          charts.donationsTime.destroy()
         }
-        
+
         // Données fictives pour l'évolution des dons
-        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-        const donationsData = [5000, 7000, 10000, 8000, 12000, 15000, 13000, 18000, 20000, 17000, 22000, 25000];
-        
+        const months = [
+          'Jan',
+          'Fév',
+          'Mar',
+          'Avr',
+          'Mai',
+          'Juin',
+          'Juil',
+          'Août',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Déc',
+        ]
+        const donationsData = [
+          5000, 7000, 10000, 8000, 12000, 15000, 13000, 18000, 20000, 17000, 22000, 25000,
+        ]
+
         // Données pour le graphique
         const data = {
           labels: months,
-          datasets: [{
-            label: 'Montant des dons',
-            data: donationsData,
-            backgroundColor: 'rgba(78, 115, 223, 0.2)',
-            borderColor: '#4e73df',
-            borderWidth: 2,
-            pointBackgroundColor: '#4e73df',
-            pointBorderColor: '#fff',
-            pointHoverBackgroundColor: '#fff',
-            pointHoverBorderColor: '#4e73df',
-            tension: 0.3
-          }]
-        };
-        
+          datasets: [
+            {
+              label: 'Montant des dons',
+              data: donationsData,
+              backgroundColor: 'rgba(78, 115, 223, 0.2)',
+              borderColor: '#4e73df',
+              borderWidth: 2,
+              pointBackgroundColor: '#4e73df',
+              pointBorderColor: '#fff',
+              pointHoverBackgroundColor: '#fff',
+              pointHoverBorderColor: '#4e73df',
+              tension: 0.3,
+            },
+          ],
+        }
+
         // Options du graphique
         const options = {
           responsive: true,
@@ -1613,72 +1564,68 @@ export default {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
+                callback: function (value) {
                   return new Intl.NumberFormat('fr-FR', {
                     style: 'currency',
                     currency: 'XOF',
-                    minimumFractionDigits: 0
-                  }).format(value);
-                }
-              }
-            }
+                    minimumFractionDigits: 0,
+                  }).format(value)
+                },
+              },
+            },
           },
           plugins: {
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
+                label: function (context) {
+                  let label = context.dataset.label || ''
                   if (label) {
-                    label += ': ';
+                    label += ': '
                   }
                   if (context.parsed.y !== null) {
                     label += new Intl.NumberFormat('fr-FR', {
                       style: 'currency',
                       currency: 'XOF',
-                      minimumFractionDigits: 0
-                    }).format(context.parsed.y);
+                      minimumFractionDigits: 0,
+                    }).format(context.parsed.y)
                   }
-                  return label;
-                }
-              }
-            }
-          }
-        };
-        
+                  return label
+                },
+              },
+            },
+          },
+        }
+
         // Créer le graphique
         charts.donationsTime = new Chart(ctx, {
           type: 'line',
           data: data,
-          options: options
-        });
+          options: options,
+        })
       }
-      
+
       // Graphique des catégories
       if (categoriesChart.value) {
-        const ctx = categoriesChart.value.getContext('2d');
-        
+        const ctx = categoriesChart.value.getContext('2d')
+
         // Détruire le graphique existant s'il y en a un
         if (charts.categories) {
-          charts.categories.destroy();
+          charts.categories.destroy()
         }
-        
+
         // Données pour le graphique
         const data = {
           labels: ['Éducation', 'Santé', 'Environnement', 'Enfance', 'Personnes âgées'],
-          datasets: [{
-            label: 'Montant des dons par catégorie',
-            data: [45000, 30000, 15000, 20000, 12000],
-            backgroundColor: [
-              '#4e73df',
-              '#1cc88a',
-              '#36b9cc',
-              '#f6c23e',
-              '#e74a3b'
-            ],
-            borderWidth: 1
-          }]
-        };
-        
+          datasets: [
+            {
+              label: 'Montant des dons par catégorie',
+              data: [45000, 30000, 15000, 20000, 12000],
+              backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+              borderWidth: 1,
+            },
+          ],
+        }
+
         // Options du graphique
         const options = {
           responsive: true,
@@ -1687,183 +1634,191 @@ export default {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
+                callback: function (value) {
                   return new Intl.NumberFormat('fr-FR', {
                     style: 'currency',
                     currency: 'XOF',
-                    minimumFractionDigits: 0
-                  }).format(value);
-                }
-              }
-            }
+                    minimumFractionDigits: 0,
+                  }).format(value)
+                },
+              },
+            },
           },
           plugins: {
             legend: {
-              display: false
+              display: false,
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
+                label: function (context) {
+                  let label = context.dataset.label || ''
                   if (label) {
-                    label += ': ';
+                    label += ': '
                   }
                   if (context.parsed.y !== null) {
                     label += new Intl.NumberFormat('fr-FR', {
                       style: 'currency',
                       currency: 'XOF',
-                      minimumFractionDigits: 0
-                    }).format(context.parsed.y);
+                      minimumFractionDigits: 0,
+                    }).format(context.parsed.y)
                   }
-                  return label;
-                }
-              }
-            }
-          }
-        };
-        
+                  return label
+                },
+              },
+            },
+          },
+        }
+
         // Créer le graphique
         charts.categories = new Chart(ctx, {
           type: 'bar',
           data: data,
-          options: options
-        });
+          options: options,
+        })
       }
-    };
-    
+    }
+
     // Gestion des changements de page
-    const changePage = (page) => {
-      currentPage.value = page;
-      loadDonations();
-    };
-    
+    const changePage = page => {
+      currentPage.value = page
+      loadDonations()
+    }
+
     // Gestion du changement de plage de dates
     const handleDateRangeChange = () => {
       if (filters.value.dateRange !== 'custom') {
-        filters.value.startDate = null;
-        filters.value.endDate = null;
+        filters.value.startDate = null
+        filters.value.endDate = null
       }
-      loadDonations();
-    };
-    
+      loadDonations()
+    }
+
     // Recherche avec debounce
     const debounceSearch = () => {
-      clearTimeout(window.searchTimeout);
+      clearTimeout(window.searchTimeout)
       window.searchTimeout = setTimeout(() => {
-        loadDonations();
-      }, 300);
-    };
-    
+        loadDonations()
+      }, 300)
+    }
+
     // Recherche d'organisations avec debounce
     const debounceOrganizationSearch = () => {
-      clearTimeout(window.organizationSearchTimeout);
+      clearTimeout(window.organizationSearchTimeout)
       window.organizationSearchTimeout = setTimeout(() => {
         // Dans un environnement réel, cette fonction appellerait l'API pour rechercher des organisations
-        console.log('Recherche d\'organisations:', organizationSearch.value);
-      }, 300);
-    };
-    
+        console.log("Recherche d'organisations:", organizationSearch.value)
+      }, 300)
+    }
+
     // Formatage de la date
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
+    const formatDate = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
-      });
-    };
-    
+        year: 'numeric',
+      })
+    }
+
     // Formatage de la date et de l'heure
-    const formatDateTime = (dateString) => {
-      const date = new Date(dateString);
+    const formatDateTime = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      });
-    };
-    
+        minute: '2-digit',
+      })
+    }
+
     // Formatage de la devise
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       switch (status) {
-        case 'pending': return 'status-pending';
-        case 'completed': return 'status-completed';
-        case 'cancelled': return 'status-cancelled';
-        default: return '';
+        case 'pending':
+          return 'status-pending'
+        case 'completed':
+          return 'status-completed'
+        case 'cancelled':
+          return 'status-cancelled'
+        default:
+          return ''
       }
-    };
-    
+    }
+
     // Obtenir le libellé pour un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       switch (status) {
-        case 'pending': return 'En attente';
-        case 'completed': return 'Complété';
-        case 'cancelled': return 'Annulé';
-        default: return status;
+        case 'pending':
+          return 'En attente'
+        case 'completed':
+          return 'Complété'
+        case 'cancelled':
+          return 'Annulé'
+        default:
+          return status
       }
-    };
-    
+    }
+
     // Obtenir les initiales d'un nom
-    const getInitials = (name) => {
-      if (!name) return '';
+    const getInitials = name => {
+      if (!name) return ''
       return name
         .split(' ')
         .map(part => part.charAt(0))
         .join('')
-        .toUpperCase();
-    };
-    
+        .toUpperCase()
+    }
+
     // Voir les détails d'un don
-    const viewDonationDetails = async (donationId) => {
+    const viewDonationDetails = async donationId => {
       try {
-        loading.value = true;
-        
+        loading.value = true
+
         // Dans un environnement réel, ces données viendraient de l'API
         // Simuler le chargement des détails du don
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Trouver le don dans la liste
-        const donation = donations.value.find(d => d.id === donationId);
-        
+        const donation = donations.value.find(d => d.id === donationId)
+
         if (donation) {
-          selectedDonation.value = donation;
-          showDonationModal.value = true;
+          selectedDonation.value = donation
+          showDonationModal.value = true
         } else {
-          showToast('Don non trouvé', 'error');
+          showToast('Don non trouvé', 'error')
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des détails du don:', error);
-        showToast('Erreur lors du chargement des détails du don', 'error');
+        console.error('Erreur lors du chargement des détails du don:', error)
+        showToast('Erreur lors du chargement des détails du don', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Voir les détails d'une livraison
-    const viewDelivery = (deliveryId) => {
-      router.push(`/manager/deliveries/${deliveryId}`);
-    };
-    
+    const viewDelivery = deliveryId => {
+      router.push(`/manager/deliveries/${deliveryId}`)
+    }
+
     // Voir les détails d'une organisation
-    const viewOrganizationDetails = (organizationId) => {
+    const viewOrganizationDetails = organizationId => {
       // Dans un environnement réel, cette fonction redirigerait vers la page de détails de l'organisation
-      console.log('Voir les détails de l\'organisation:', organizationId);
-    };
-    
+      console.log("Voir les détails de l'organisation:", organizationId)
+    }
+
     // Ouvrir le modal de création d'un don
     const openCreateModal = () => {
-      editingDonation.value = false;
+      editingDonation.value = false
       newDonation.value = {
         amount: 0,
         organizationId: '',
@@ -1874,25 +1829,25 @@ export default {
         donorName: '',
         donorEmail: '',
         donorPhone: '',
-        notes: ''
-      };
-      showCreateDonationModal.value = true;
-    };
-    
+        notes: '',
+      }
+      showCreateDonationModal.value = true
+    }
+
     // Éditer un don
-    const editDonation = async (donationId) => {
+    const editDonation = async donationId => {
       try {
-        loading.value = true;
-        
+        loading.value = true
+
         // Dans un environnement réel, ces données viendraient de l'API
         // Simuler le chargement des détails du don
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Trouver le don dans la liste
-        const donation = donations.value.find(d => d.id === donationId);
-        
+        const donation = donations.value.find(d => d.id === donationId)
+
         if (donation) {
-          editingDonation.value = true;
+          editingDonation.value = true
           newDonation.value = {
             amount: donation.amount,
             organizationId: donation.organization.id,
@@ -1903,93 +1858,93 @@ export default {
             donorName: donation.donor ? donation.donor.name : '',
             donorEmail: donation.donor ? donation.donor.email : '',
             donorPhone: donation.donor ? donation.donor.phone : '',
-            notes: donation.notes || ''
-          };
-          showCreateDonationModal.value = true;
+            notes: donation.notes || '',
+          }
+          showCreateDonationModal.value = true
         } else {
-          showToast('Don non trouvé', 'error');
+          showToast('Don non trouvé', 'error')
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des détails du don:', error);
-        showToast('Erreur lors du chargement des détails du don', 'error');
+        console.error('Erreur lors du chargement des détails du don:', error)
+        showToast('Erreur lors du chargement des détails du don', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Sauvegarder un don
     const saveDonation = async () => {
       try {
-        if (!isValidDonation.value) return;
-        
+        if (!isValidDonation.value) return
+
         // Dans un environnement réel, cette fonction appellerait l'API pour créer ou mettre à jour un don
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         showToast(
           editingDonation.value ? 'Don mis à jour avec succès' : 'Don créé avec succès',
           'success'
-        );
-        showCreateDonationModal.value = false;
-        
+        )
+        showCreateDonationModal.value = false
+
         // Recharger les dons
-        loadDonations();
+        loadDonations()
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde du don:', error);
-        showToast('Erreur lors de la sauvegarde du don', 'error');
+        console.error('Erreur lors de la sauvegarde du don:', error)
+        showToast('Erreur lors de la sauvegarde du don', 'error')
       }
-    };
-    
+    }
+
     // Marquer un don comme complété
-    const completeDonation = async (donationId) => {
+    const completeDonation = async donationId => {
       try {
         // Dans un environnement réel, cette fonction appellerait l'API pour marquer un don comme complété
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Mettre à jour le don dans la liste
-        const donationIndex = donations.value.findIndex(d => d.id === donationId);
+        const donationIndex = donations.value.findIndex(d => d.id === donationId)
         if (donationIndex !== -1) {
-          donations.value[donationIndex].status = 'completed';
+          donations.value[donationIndex].status = 'completed'
         }
-        
+
         // Fermer le modal si ouvert
         if (showDonationModal.value) {
-          showDonationModal.value = false;
+          showDonationModal.value = false
         }
-        
-        showToast('Don marqué comme complété avec succès', 'success');
+
+        showToast('Don marqué comme complété avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors du marquage du don comme complété:', error);
-        showToast('Erreur lors du marquage du don comme complété', 'error');
+        console.error('Erreur lors du marquage du don comme complété:', error)
+        showToast('Erreur lors du marquage du don comme complété', 'error')
       }
-    };
-    
+    }
+
     // Annuler un don
-    const cancelDonation = async (donationId) => {
+    const cancelDonation = async donationId => {
       try {
         // Dans un environnement réel, cette fonction appellerait l'API pour annuler un don
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Mettre à jour le don dans la liste
-        const donationIndex = donations.value.findIndex(d => d.id === donationId);
+        const donationIndex = donations.value.findIndex(d => d.id === donationId)
         if (donationIndex !== -1) {
-          donations.value[donationIndex].status = 'cancelled';
+          donations.value[donationIndex].status = 'cancelled'
         }
-        
+
         // Fermer le modal si ouvert
         if (showDonationModal.value) {
-          showDonationModal.value = false;
+          showDonationModal.value = false
         }
-        
-        showToast('Don annulé avec succès', 'success');
+
+        showToast('Don annulé avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de l\'annulation du don:', error);
-        showToast('Erreur lors de l\'annulation du don', 'error');
+        console.error("Erreur lors de l'annulation du don:", error)
+        showToast("Erreur lors de l'annulation du don", 'error')
       }
-    };
-    
+    }
+
     // Ouvrir le modal de création d'une organisation
     const openCreateOrganizationModal = () => {
-      editingOrganization.value = false;
+      editingOrganization.value = false
       newOrganization.value = {
         name: '',
         category: '',
@@ -1998,25 +1953,25 @@ export default {
         email: '',
         phone: '',
         address: '',
-        logo: null
-      };
-      showOrganizationModal.value = true;
-    };
-    
+        logo: null,
+      }
+      showOrganizationModal.value = true
+    }
+
     // Éditer une organisation
-    const editOrganization = async (organizationId) => {
+    const editOrganization = async organizationId => {
       try {
-        loadingOrganizations.value = true;
-        
+        loadingOrganizations.value = true
+
         // Dans un environnement réel, ces données viendraient de l'API
         // Simuler le chargement des détails de l'organisation
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Trouver l'organisation dans la liste
-        const organization = organizations.value.find(o => o.id === organizationId);
-        
+        const organization = organizations.value.find(o => o.id === organizationId)
+
         if (organization) {
-          editingOrganization.value = true;
+          editingOrganization.value = true
           newOrganization.value = {
             name: organization.name,
             category: organization.category,
@@ -2025,107 +1980,109 @@ export default {
             email: organization.email || '',
             phone: organization.phone || '',
             address: organization.address || '',
-            logo: organization.logo
-          };
-          showOrganizationModal.value = true;
+            logo: organization.logo,
+          }
+          showOrganizationModal.value = true
         } else {
-          showToast('Organisation non trouvée', 'error');
+          showToast('Organisation non trouvée', 'error')
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des détails de l\'organisation:', error);
-        showToast('Erreur lors du chargement des détails de l\'organisation', 'error');
+        console.error("Erreur lors du chargement des détails de l'organisation:", error)
+        showToast("Erreur lors du chargement des détails de l'organisation", 'error')
       } finally {
-        loadingOrganizations.value = false;
+        loadingOrganizations.value = false
       }
-    };
-    
+    }
+
     // Sauvegarder une organisation
     const saveOrganization = async () => {
       try {
-        if (!isValidOrganization.value) return;
-        
+        if (!isValidOrganization.value) return
+
         // Dans un environnement réel, cette fonction appellerait l'API pour créer ou mettre à jour une organisation
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         showToast(
-          editingOrganization.value ? 'Organisation mise à jour avec succès' : 'Organisation créée avec succès',
+          editingOrganization.value
+            ? 'Organisation mise à jour avec succès'
+            : 'Organisation créée avec succès',
           'success'
-        );
-        showOrganizationModal.value = false;
-        
+        )
+        showOrganizationModal.value = false
+
         // Recharger les organisations
-        loadOrganizations();
+        loadOrganizations()
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde de l\'organisation:', error);
-        showToast('Erreur lors de la sauvegarde de l\'organisation', 'error');
+        console.error("Erreur lors de la sauvegarde de l'organisation:", error)
+        showToast("Erreur lors de la sauvegarde de l'organisation", 'error')
       }
-    };
-    
+    }
+
     // Supprimer une organisation
-    const deleteOrganization = (organizationId) => {
-      selectedOrganizationId.value = organizationId;
-      showDeleteModal.value = true;
-    };
-    
+    const deleteOrganization = organizationId => {
+      selectedOrganizationId.value = organizationId
+      showDeleteModal.value = true
+    }
+
     // Confirmer la suppression d'une organisation
     const confirmDelete = async () => {
       try {
-        if (!selectedOrganizationId.value) return;
-        
+        if (!selectedOrganizationId.value) return
+
         // Dans un environnement réel, cette fonction appellerait l'API pour supprimer une organisation
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // Supprimer l'organisation de la liste
-        organizations.value = organizations.value.filter(o => o.id !== selectedOrganizationId.value);
-        
-        showToast('Organisation supprimée avec succès', 'success');
-        showDeleteModal.value = false;
+        organizations.value = organizations.value.filter(o => o.id !== selectedOrganizationId.value)
+
+        showToast('Organisation supprimée avec succès', 'success')
+        showDeleteModal.value = false
       } catch (error) {
-        console.error('Erreur lors de la suppression de l\'organisation:', error);
-        showToast('Erreur lors de la suppression de l\'organisation', 'error');
+        console.error("Erreur lors de la suppression de l'organisation:", error)
+        showToast("Erreur lors de la suppression de l'organisation", 'error')
       }
-    };
-    
+    }
+
     // Gérer l'upload du logo
-    const handleLogoUpload = (event) => {
-      const file = event.target.files[0];
+    const handleLogoUpload = event => {
+      const file = event.target.files[0]
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          newOrganization.value.logo = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        const reader = new FileReader()
+        reader.onload = e => {
+          newOrganization.value.logo = e.target.result
+        }
+        reader.readAsDataURL(file)
       }
-    };
-    
+    }
+
     // Supprimer le logo
     const removeLogo = () => {
-      newOrganization.value.logo = null;
-    };
-    
+      newOrganization.value.logo = null
+    }
+
     // Ajouter une option de don
     const addDonationOption = () => {
-      settings.value.donationOptions.push(0);
-    };
-    
+      settings.value.donationOptions.push(0)
+    }
+
     // Supprimer une option de don
-    const removeDonationOption = (index) => {
-      settings.value.donationOptions.splice(index, 1);
-    };
-    
+    const removeDonationOption = index => {
+      settings.value.donationOptions.splice(index, 1)
+    }
+
     // Sauvegarder les paramètres
     const saveSettings = async () => {
       try {
         // Dans un environnement réel, cette fonction appellerait l'API pour sauvegarder les paramètres
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        showToast('Paramètres enregistrés avec succès', 'success');
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        showToast('Paramètres enregistrés avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde des paramètres:', error);
-        showToast('Erreur lors de la sauvegarde des paramètres', 'error');
+        console.error('Erreur lors de la sauvegarde des paramètres:', error)
+        showToast('Erreur lors de la sauvegarde des paramètres', 'error')
       }
-    };
-    
+    }
+
     // Réinitialiser les paramètres
     const resetSettings = () => {
       settings.value = {
@@ -2137,63 +2094,63 @@ export default {
         notificationEmails: '',
         sendReceipts: true,
         generateMonthlyReports: true,
-        reportRecipients: ''
-      };
-    };
-    
+        reportRecipients: '',
+      }
+    }
+
     // Exporter les données
     const exportData = async () => {
       try {
         // Dans un environnement réel, cette fonction appellerait l'API pour exporter les données
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        showToast('Données exportées avec succès', 'success');
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        showToast('Données exportées avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de l\'export des données:', error);
-        showToast('Erreur lors de l\'export des données', 'error');
+        console.error("Erreur lors de l'export des données:", error)
+        showToast("Erreur lors de l'export des données", 'error')
       }
-    };
-    
+    }
+
     // Exporter les analyses
     const exportAnalytics = async () => {
       try {
         // Dans un environnement réel, cette fonction appellerait l'API pour exporter les analyses
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        showToast('Analyses exportées avec succès', 'success');
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        showToast('Analyses exportées avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de l\'export des analyses:', error);
-        showToast('Erreur lors de l\'export des analyses', 'error');
+        console.error("Erreur lors de l'export des analyses:", error)
+        showToast("Erreur lors de l'export des analyses", 'error')
       }
-    };
-    
+    }
+
     // Générer un rapport
     const generateReport = async () => {
       try {
         // Dans un environnement réel, cette fonction appellerait l'API pour générer un rapport
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        showToast('Rapport généré avec succès', 'success');
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        showToast('Rapport généré avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de la génération du rapport:', error);
-        showToast('Erreur lors de la génération du rapport', 'error');
+        console.error('Erreur lors de la génération du rapport:', error)
+        showToast('Erreur lors de la génération du rapport', 'error')
       }
-    };
-    
+    }
+
     // Charger les données au montage du composant
     onMounted(() => {
-      loadDonations();
-      loadOrganizations();
-      loadExpressDeliveries();
-    });
-    
+      loadDonations()
+      loadOrganizations()
+      loadExpressDeliveries()
+    })
+
     // Surveiller les changements d'onglet
-    watch(activeTab, (newTab) => {
+    watch(activeTab, newTab => {
       if (newTab === 'analytics') {
-        loadAnalytics();
+        loadAnalytics()
       }
-    });
-    
+    })
+
     return {
       activeTab,
       donations,
@@ -2261,10 +2218,10 @@ export default {
       resetSettings,
       exportData,
       exportAnalytics,
-      generateReport
-    };
-  }
-};
+      generateReport,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -2959,11 +2916,11 @@ export default {
   color: #374151;
 }
 
-.form-group input[type="text"],
-.form-group input[type="email"],
-.form-group input[type="tel"],
-.form-group input[type="number"],
-.form-group input[type="url"],
+.form-group input[type='text'],
+.form-group input[type='email'],
+.form-group input[type='tel'],
+.form-group input[type='number'],
+.form-group input[type='url'],
 .form-group select,
 .form-group textarea {
   width: 100%;
@@ -3037,7 +2994,7 @@ export default {
 
 .toggle-slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 1.25rem;
   width: 1.25rem;
   left: 0.125rem;
@@ -3247,19 +3204,19 @@ input:checked + .toggle-slider:before {
   .summary-content {
     grid-template-columns: 1fr;
   }
-  
+
   .organizations-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .detail-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .organization-detail {
     flex-direction: column;
   }
-  
+
   .organization-logo {
     margin-bottom: 1rem;
   }

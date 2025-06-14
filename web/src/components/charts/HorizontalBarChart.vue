@@ -12,7 +12,7 @@
 
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Bar } from 'vue-chartjs';
+import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,24 +21,24 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 export default {
   name: 'HorizontalBarChart',
   components: {
-    Bar
+    Bar,
   },
   props: {
     chartData: {
       type: Object,
-      required: true
+      required: true,
     },
     options: {
       type: Object,
-      default: () => ({})
-    }
+      default: () => ({}),
+    },
   },
   setup(props) {
     const chart = ref(null)
@@ -52,7 +52,7 @@ export default {
       chart.value = new ChartJS(document.getElementById(props.chartData.chartId), {
         type: 'bar',
         data: props.chartData,
-        options: props.options
+        options: props.options,
       })
     }
 
@@ -70,17 +70,25 @@ export default {
     })
 
     // Surveiller les changements de données
-    watch(() => props.chartData.data, () => {
-      createChart()
-    }, { deep: true })
+    watch(
+      () => props.chartData.data,
+      () => {
+        createChart()
+      },
+      { deep: true }
+    )
 
     // Surveiller les changements d'étiquettes
-    watch(() => props.chartData.labels, () => {
-      createChart()
-    }, { deep: true })
+    watch(
+      () => props.chartData.labels,
+      () => {
+        createChart()
+      },
+      { deep: true }
+    )
 
     return {}
-  }
+  },
 }
 </script>
 

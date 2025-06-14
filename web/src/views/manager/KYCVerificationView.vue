@@ -17,15 +17,30 @@
               <label>Type d'utilisateur</label>
               <div class="radio-group">
                 <label class="radio-label">
-                  <input type="radio" v-model="filters.userType" value="all" @change="applyFilters" />
+                  <input
+                    type="radio"
+                    v-model="filters.userType"
+                    value="all"
+                    @change="applyFilters"
+                  />
                   Tous
                 </label>
                 <label class="radio-label">
-                  <input type="radio" v-model="filters.userType" value="courier" @change="applyFilters" />
+                  <input
+                    type="radio"
+                    v-model="filters.userType"
+                    value="courier"
+                    @change="applyFilters"
+                  />
                   Coursiers
                 </label>
                 <label class="radio-label">
-                  <input type="radio" v-model="filters.userType" value="business" @change="applyFilters" />
+                  <input
+                    type="radio"
+                    v-model="filters.userType"
+                    value="business"
+                    @change="applyFilters"
+                  />
                   Entreprises
                 </label>
               </div>
@@ -38,15 +53,30 @@
                   Tous
                 </label>
                 <label class="radio-label">
-                  <input type="radio" v-model="filters.status" value="pending" @change="applyFilters" />
+                  <input
+                    type="radio"
+                    v-model="filters.status"
+                    value="pending"
+                    @change="applyFilters"
+                  />
                   En attente
                 </label>
                 <label class="radio-label">
-                  <input type="radio" v-model="filters.status" value="verified" @change="applyFilters" />
+                  <input
+                    type="radio"
+                    v-model="filters.status"
+                    value="verified"
+                    @change="applyFilters"
+                  />
                   Vérifiés
                 </label>
                 <label class="radio-label">
-                  <input type="radio" v-model="filters.status" value="rejected" @change="applyFilters" />
+                  <input
+                    type="radio"
+                    v-model="filters.status"
+                    value="rejected"
+                    @change="applyFilters"
+                  />
                   Rejetés
                 </label>
               </div>
@@ -109,22 +139,22 @@
     </div>
 
     <div class="kyc-tabs">
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'pending' }"
         @click="activeTab = 'pending'"
       >
         En attente <span class="badge">{{ pendingKYCRequests.length }}</span>
       </button>
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'verified' }"
         @click="activeTab = 'verified'"
       >
         Vérifiés
       </button>
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'rejected' }"
         @click="activeTab = 'rejected'"
       >
@@ -143,11 +173,20 @@
           <font-awesome-icon icon="check-circle" size="2x" />
           <p>Aucune demande KYC en attente</p>
         </div>
-        <div v-else class="kyc-request-card" v-for="request in pendingKYCRequests" :key="request.id">
+        <div
+          v-else
+          class="kyc-request-card"
+          v-for="request in pendingKYCRequests"
+          :key="request.id"
+        >
           <div class="kyc-request-header">
             <div class="user-info">
               <div class="user-avatar">
-                <img v-if="request.user.profile_picture" :src="request.user.profile_picture" :alt="request.user.name" />
+                <img
+                  v-if="request.user.profile_picture"
+                  :src="request.user.profile_picture"
+                  :alt="request.user.name"
+                />
                 <div v-else class="avatar-placeholder">{{ getInitials(request.user.name) }}</div>
               </div>
               <div class="user-details">
@@ -168,13 +207,13 @@
               Soumis le {{ formatDate(request.submitted_at) }}
             </div>
           </div>
-          
+
           <div class="kyc-documents">
             <h4>Documents à vérifier</h4>
             <div class="documents-grid">
-              <div 
-                class="document-item" 
-                v-for="doc in request.documents" 
+              <div
+                class="document-item"
+                v-for="doc in request.documents"
                 :key="doc.id"
                 @dragstart="startDrag($event, doc)"
                 draggable="true"
@@ -192,7 +231,10 @@
                     <button class="btn-icon" @click="previewDocument(doc)">
                       <font-awesome-icon icon="eye" />
                     </button>
-                    <button class="btn-icon btn-success" @click="verifyDocument(request.id, doc.id)">
+                    <button
+                      class="btn-icon btn-success"
+                      @click="verifyDocument(request.id, doc.id)"
+                    >
                       <font-awesome-icon icon="check" />
                     </button>
                     <button class="btn-icon btn-danger" @click="rejectDocument(request.id, doc.id)">
@@ -203,9 +245,9 @@
               </div>
             </div>
           </div>
-          
+
           <div class="kyc-verification-zones">
-            <div 
+            <div
               class="verification-zone verification-approve"
               @dragover.prevent
               @drop="onDrop($event, 'approve', request.id)"
@@ -215,7 +257,7 @@
               </div>
               <div class="zone-label">Déposez ici pour approuver</div>
             </div>
-            <div 
+            <div
               class="verification-zone verification-reject"
               @dragover.prevent
               @drop="onDrop($event, 'reject', request.id)"
@@ -226,7 +268,7 @@
               <div class="zone-label">Déposez ici pour rejeter</div>
             </div>
           </div>
-          
+
           <div class="kyc-request-actions">
             <button class="btn btn-success" @click="approveAllDocuments(request.id)">
               <font-awesome-icon icon="check-circle" class="mr-1" />
@@ -270,8 +312,14 @@
               <td>
                 <div class="user-info-compact">
                   <div class="user-avatar-small">
-                    <img v-if="request.user.profile_picture" :src="request.user.profile_picture" :alt="request.user.name" />
-                    <div v-else class="avatar-placeholder-small">{{ getInitials(request.user.name) }}</div>
+                    <img
+                      v-if="request.user.profile_picture"
+                      :src="request.user.profile_picture"
+                      :alt="request.user.name"
+                    />
+                    <div v-else class="avatar-placeholder-small">
+                      {{ getInitials(request.user.name) }}
+                    </div>
                   </div>
                   <div class="user-name">{{ request.user.name }}</div>
                 </div>
@@ -328,8 +376,14 @@
               <td>
                 <div class="user-info-compact">
                   <div class="user-avatar-small">
-                    <img v-if="request.user.profile_picture" :src="request.user.profile_picture" :alt="request.user.name" />
-                    <div v-else class="avatar-placeholder-small">{{ getInitials(request.user.name) }}</div>
+                    <img
+                      v-if="request.user.profile_picture"
+                      :src="request.user.profile_picture"
+                      :alt="request.user.name"
+                    />
+                    <div v-else class="avatar-placeholder-small">
+                      {{ getInitials(request.user.name) }}
+                    </div>
                   </div>
                   <div class="user-name">{{ request.user.name }}</div>
                 </div>
@@ -373,15 +427,15 @@
         </div>
         <div class="modal-body">
           <div class="document-preview-container">
-            <img 
-              v-if="selectedDocument && isImageDocument(selectedDocument.url)" 
-              :src="selectedDocument.url" 
-              :alt="selectedDocument.type" 
+            <img
+              v-if="selectedDocument && isImageDocument(selectedDocument.url)"
+              :src="selectedDocument.url"
+              :alt="selectedDocument.type"
               class="document-preview-image"
             />
-            <iframe 
-              v-else-if="selectedDocument && isPdfDocument(selectedDocument.url)" 
-              :src="selectedDocument.url" 
+            <iframe
+              v-else-if="selectedDocument && isPdfDocument(selectedDocument.url)"
+              :src="selectedDocument.url"
               class="document-preview-pdf"
             ></iframe>
             <div v-else class="document-preview-error">
@@ -392,10 +446,10 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="closeDocumentPreview">Fermer</button>
-          <a 
-            v-if="selectedDocument" 
-            :href="selectedDocument.url" 
-            target="_blank" 
+          <a
+            v-if="selectedDocument"
+            :href="selectedDocument.url"
+            target="_blank"
             class="btn btn-primary"
           >
             <font-awesome-icon icon="external-link-alt" class="mr-1" />
@@ -439,19 +493,19 @@
           </div>
           <div class="form-group" v-if="rejectionReason === 'other'">
             <label for="custom-rejection-reason">Précisez la raison</label>
-            <textarea 
-              id="custom-rejection-reason" 
-              v-model="customRejectionReason" 
-              class="form-control" 
+            <textarea
+              id="custom-rejection-reason"
+              v-model="customRejectionReason"
+              class="form-control"
               rows="3"
             ></textarea>
           </div>
           <div class="form-group">
             <label for="rejection-details">Détails supplémentaires (optionnel)</label>
-            <textarea 
-              id="rejection-details" 
-              v-model="rejectionDetails" 
-              class="form-control" 
+            <textarea
+              id="rejection-details"
+              v-model="rejectionDetails"
+              class="form-control"
               rows="3"
               placeholder="Fournissez des détails supplémentaires pour aider l'utilisateur à corriger sa demande..."
             ></textarea>
@@ -485,7 +539,7 @@ export default {
   name: 'KYCVerificationView',
   setup() {
     const router = useRouter()
-    
+
     // État
     const loading = ref(true)
     const activeTab = ref('pending')
@@ -501,27 +555,27 @@ export default {
     const rejectionDetails = ref('')
     const sendRejectionNotification = ref(true)
     const currentDocumentId = ref(null)
-    
+
     const stats = reactive({
       pending: 0,
       verified: 0,
       rejected: 0,
-      averageTime: '2h 15min'
+      averageTime: '2h 15min',
     })
-    
+
     const filters = reactive({
       userType: 'all',
       status: 'all',
-      commune: ''
+      commune: '',
     })
-    
+
     // Méthodes
     const fetchData = async () => {
       loading.value = true
       try {
         // Simuler l'appel API
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Données fictives pour la démonstration
         pendingKYCRequests.value = [
           {
@@ -531,14 +585,18 @@ export default {
               name: 'Amadou Koné',
               role: 'courier',
               profile_picture: null,
-              commune: 'Abobo'
+              commune: 'Abobo',
             },
             submitted_at: new Date(2023, 4, 15),
             documents: [
               { id: 1, type: 'id_card', url: 'https://example.com/id_card.jpg' },
               { id: 2, type: 'driving_license', url: 'https://example.com/driving_license.pdf' },
-              { id: 3, type: 'vehicle_registration', url: 'https://example.com/vehicle_registration.jpg' }
-            ]
+              {
+                id: 3,
+                type: 'vehicle_registration',
+                url: 'https://example.com/vehicle_registration.jpg',
+              },
+            ],
           },
           {
             id: 2,
@@ -547,17 +605,21 @@ export default {
               name: 'Marie Kouassi',
               role: 'business',
               profile_picture: null,
-              commune: 'Cocody'
+              commune: 'Cocody',
             },
             submitted_at: new Date(2023, 4, 16),
             documents: [
-              { id: 4, type: 'business_registration', url: 'https://example.com/business_registration.pdf' },
+              {
+                id: 4,
+                type: 'business_registration',
+                url: 'https://example.com/business_registration.pdf',
+              },
               { id: 5, type: 'tax_certificate', url: 'https://example.com/tax_certificate.jpg' },
-              { id: 6, type: 'owner_id', url: 'https://example.com/owner_id.jpg' }
-            ]
-          }
+              { id: 6, type: 'owner_id', url: 'https://example.com/owner_id.jpg' },
+            ],
+          },
         ]
-        
+
         verifiedKYCRequests.value = [
           {
             id: 3,
@@ -565,17 +627,17 @@ export default {
               id: 103,
               name: 'Ibrahim Diallo',
               role: 'courier',
-              profile_picture: null
+              profile_picture: null,
             },
             verified_at: new Date(2023, 4, 10),
             verified_by: 'Admin Système',
             documents: [
               { id: 7, type: 'id_card', url: 'https://example.com/id_card2.jpg' },
-              { id: 8, type: 'driving_license', url: 'https://example.com/driving_license2.pdf' }
-            ]
-          }
+              { id: 8, type: 'driving_license', url: 'https://example.com/driving_license2.pdf' },
+            ],
+          },
         ]
-        
+
         rejectedKYCRequests.value = [
           {
             id: 4,
@@ -583,18 +645,22 @@ export default {
               id: 104,
               name: 'Sophie Mensah',
               role: 'business',
-              profile_picture: null
+              profile_picture: null,
             },
             rejected_at: new Date(2023, 4, 12),
             rejected_by: 'Admin Système',
             rejection_reason: 'Document illisible',
             documents: [
-              { id: 9, type: 'business_registration', url: 'https://example.com/business_registration2.pdf' },
-              { id: 10, type: 'tax_certificate', url: 'https://example.com/tax_certificate2.jpg' }
-            ]
-          }
+              {
+                id: 9,
+                type: 'business_registration',
+                url: 'https://example.com/business_registration2.pdf',
+              },
+              { id: 10, type: 'tax_certificate', url: 'https://example.com/tax_certificate2.jpg' },
+            ],
+          },
         ]
-        
+
         // Mettre à jour les statistiques
         stats.pending = pendingKYCRequests.value.length
         stats.verified = verifiedKYCRequests.value.length
@@ -605,115 +671,115 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const applyFilters = () => {
       // Implémenter le filtrage des données
       console.log('Filtres appliqués:', filters)
       fetchData()
     }
-    
+
     const resetFilters = () => {
       filters.userType = 'all'
       filters.status = 'all'
       filters.commune = ''
       applyFilters()
     }
-    
-    const isImageDocument = (url) => {
+
+    const isImageDocument = url => {
       if (!url) return false
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
       return imageExtensions.some(ext => url.toLowerCase().endsWith(ext))
     }
-    
-    const isPdfDocument = (url) => {
+
+    const isPdfDocument = url => {
       if (!url) return false
       return url.toLowerCase().endsWith('.pdf')
     }
-    
-    const getDocumentTypeLabel = (type) => {
+
+    const getDocumentTypeLabel = type => {
       const typeLabels = {
-        'id_card': 'Carte d\'identité',
-        'driving_license': 'Permis de conduire',
-        'vehicle_registration': 'Carte grise',
-        'business_registration': 'Registre du commerce',
-        'tax_certificate': 'Attestation fiscale',
-        'owner_id': 'Pièce d\'identité du propriétaire',
-        'insurance': 'Assurance',
-        'profile_photo': 'Photo de profil'
+        id_card: "Carte d'identité",
+        driving_license: 'Permis de conduire',
+        vehicle_registration: 'Carte grise',
+        business_registration: 'Registre du commerce',
+        tax_certificate: 'Attestation fiscale',
+        owner_id: "Pièce d'identité du propriétaire",
+        insurance: 'Assurance',
+        profile_photo: 'Photo de profil',
       }
       return typeLabels[type] || type
     }
-    
-    const getRoleClass = (role) => {
+
+    const getRoleClass = role => {
       const roleClasses = {
-        'client': 'role-client',
-        'courier': 'role-courier',
-        'business': 'role-business',
-        'manager': 'role-manager'
+        client: 'role-client',
+        courier: 'role-courier',
+        business: 'role-business',
+        manager: 'role-manager',
       }
       return roleClasses[role] || ''
     }
-    
-    const getRoleLabel = (role) => {
+
+    const getRoleLabel = role => {
       const roleLabels = {
-        'client': 'Client',
-        'courier': 'Coursier',
-        'business': 'Entreprise',
-        'manager': 'Gestionnaire'
+        client: 'Client',
+        courier: 'Coursier',
+        business: 'Entreprise',
+        manager: 'Gestionnaire',
       }
       return roleLabels[role] || role
     }
-    
-    const previewDocument = (doc) => {
+
+    const previewDocument = doc => {
       selectedDocument.value = doc
       showDocumentPreview.value = true
     }
-    
+
     const closeDocumentPreview = () => {
       showDocumentPreview.value = false
       selectedDocument.value = null
     }
-    
+
     const verifyDocument = (requestId, documentId) => {
       console.log(`Vérification du document ${documentId} pour la demande ${requestId}`)
       // Implémenter la vérification du document
     }
-    
+
     const rejectDocument = (requestId, documentId) => {
       selectedRequestId.value = requestId
       currentDocumentId.value = documentId
       showRejectReasonModal.value = true
     }
-    
+
     const verifyDocumentFromPreview = () => {
       if (selectedDocument.value) {
         verifyDocument(selectedRequestId.value, selectedDocument.value.id)
         closeDocumentPreview()
       }
     }
-    
+
     const rejectDocumentFromPreview = () => {
       if (selectedDocument.value) {
         rejectDocument(selectedRequestId.value, selectedDocument.value.id)
         closeDocumentPreview()
       }
     }
-    
-    const approveAllDocuments = (requestId) => {
+
+    const approveAllDocuments = requestId => {
       console.log(`Approbation de tous les documents pour la demande ${requestId}`)
       // Implémenter l'approbation de tous les documents
     }
-    
-    const showRejectModal = (requestId) => {
+
+    const showRejectModal = requestId => {
       selectedRequestId.value = requestId
       currentDocumentId.value = null
       showRejectReasonModal.value = true
     }
-    
+
     const closeRejectModal = () => {
       showRejectReasonModal.value = false
       rejectionReason.value = 'document_unclear'
@@ -722,58 +788,59 @@ export default {
       selectedRequestId.value = null
       currentDocumentId.value = null
     }
-    
+
     const confirmReject = () => {
-      const reason = rejectionReason.value === 'other' ? customRejectionReason.value : rejectionReason.value
+      const reason =
+        rejectionReason.value === 'other' ? customRejectionReason.value : rejectionReason.value
       console.log(`Rejet de la demande ${selectedRequestId.value} pour la raison: ${reason}`)
       console.log(`Détails: ${rejectionDetails.value}`)
       console.log(`Envoyer notification: ${sendRejectionNotification.value}`)
-      
+
       if (currentDocumentId.value) {
         console.log(`Document spécifique rejeté: ${currentDocumentId.value}`)
       } else {
         console.log('Tous les documents rejetés')
       }
-      
+
       closeRejectModal()
       // Implémenter le rejet de la demande
     }
-    
-    const viewUserDetails = (userId) => {
+
+    const viewUserDetails = userId => {
       router.push(`/manager/users/${userId}`)
     }
-    
-    const viewKYCDetails = (requestId) => {
+
+    const viewKYCDetails = requestId => {
       console.log(`Affichage des détails de la demande KYC ${requestId}`)
       // Implémenter l'affichage des détails de la demande
     }
-    
-    const revokeVerification = (requestId) => {
+
+    const revokeVerification = requestId => {
       console.log(`Révocation de la vérification pour la demande ${requestId}`)
       // Implémenter la révocation de la vérification
     }
-    
-    const reconsiderRequest = (requestId) => {
+
+    const reconsiderRequest = requestId => {
       console.log(`Reconsidération de la demande ${requestId}`)
       // Implémenter la reconsidération de la demande
     }
-    
+
     // Drag and drop
     const startDrag = (event, doc) => {
       event.dataTransfer.setData('document', JSON.stringify(doc))
     }
-    
+
     const onDrop = (event, action, requestId) => {
       const doc = JSON.parse(event.dataTransfer.getData('document'))
       console.log(`Action ${action} pour le document ${doc.id} de la demande ${requestId}`)
-      
+
       if (action === 'approve') {
         verifyDocument(requestId, doc.id)
       } else if (action === 'reject') {
         rejectDocument(requestId, doc.id)
       }
     }
-    
+
     // Propriétés calculées
     const isValidRejectionReason = computed(() => {
       if (rejectionReason.value === 'other') {
@@ -781,12 +848,12 @@ export default {
       }
       return true
     })
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
     })
-    
+
     return {
       loading,
       activeTab,
@@ -806,7 +873,7 @@ export default {
       sendRejectionNotification,
       currentDocumentId,
       isValidRejectionReason,
-      
+
       refreshData,
       applyFilters,
       resetFilters,
@@ -831,11 +898,11 @@ export default {
       reconsiderRequest,
       startDrag,
       onDrop,
-      
+
       formatDate,
-      getInitials
+      getInitials,
     }
-  }
+  },
 }
 </script>
 
@@ -1555,19 +1622,19 @@ export default {
   .kyc-requests-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .kyc-verification-zones {
     grid-template-columns: 1fr;
   }
-  
+
   .documents-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-  
+
   .kyc-request-actions {
     flex-direction: column;
   }
-  
+
   .kyc-request-actions .btn {
     width: 100%;
   }

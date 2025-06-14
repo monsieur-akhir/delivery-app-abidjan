@@ -1,4 +1,3 @@
-
 <template>
   <div class="order-management">
     <div class="header">
@@ -26,7 +25,7 @@
           <div class="stat-label">{{ $t('orders.pending') }}</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon active">
           <i class="fas fa-truck"></i>
@@ -36,7 +35,7 @@
           <div class="stat-label">{{ $t('orders.active') }}</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon completed">
           <i class="fas fa-check-circle"></i>
@@ -46,7 +45,7 @@
           <div class="stat-label">{{ $t('orders.completed') }}</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon revenue">
           <i class="fas fa-money-bill-wave"></i>
@@ -62,13 +61,13 @@
     <div class="filters-section">
       <div class="search-box">
         <i class="fas fa-search"></i>
-        <input 
-          v-model="searchQuery" 
+        <input
+          v-model="searchQuery"
           :placeholder="$t('orders.searchPlaceholder')"
           @input="applyFilters"
         />
       </div>
-      
+
       <div class="filter-group">
         <select v-model="filters.status" @change="applyFilters" class="filter-select">
           <option value="">{{ $t('orders.allStatuses') }}</option>
@@ -79,14 +78,14 @@
           <option value="delivered">{{ $t('orders.delivered') }}</option>
           <option value="cancelled">{{ $t('orders.cancelled') }}</option>
         </select>
-        
+
         <select v-model="filters.commune" @change="applyFilters" class="filter-select">
           <option value="">{{ $t('orders.allCommunes') }}</option>
           <option v-for="commune in communes" :key="commune" :value="commune">
             {{ commune }}
           </option>
         </select>
-        
+
         <select v-model="filters.period" @change="applyFilters" class="filter-select">
           <option value="today">{{ $t('filters.today') }}</option>
           <option value="week">{{ $t('filters.thisWeek') }}</option>
@@ -106,7 +105,7 @@
           <canvas ref="ordersChart"></canvas>
         </div>
       </div>
-      
+
       <div class="chart-card">
         <div class="chart-header">
           <h3>{{ $t('orders.statusDistribution') }}</h3>
@@ -127,26 +126,26 @@
           </button>
         </div>
       </div>
-      
+
       <div v-if="showBulkActions" class="bulk-actions">
         <div class="bulk-controls">
-          <input 
-            type="checkbox" 
-            @change="selectAll" 
+          <input
+            type="checkbox"
+            @change="selectAll"
             :checked="selectedOrders.length === filteredOrders.length"
           />
           <span>{{ selectedOrders.length }} {{ $t('orders.selected') }}</span>
-          
-          <button 
-            @click="bulkAssignCourier" 
+
+          <button
+            @click="bulkAssignCourier"
             :disabled="selectedOrders.length === 0"
             class="btn btn-sm btn-primary"
           >
             {{ $t('orders.assignCourier') }}
           </button>
-          
-          <button 
-            @click="bulkCancel" 
+
+          <button
+            @click="bulkCancel"
             :disabled="selectedOrders.length === 0"
             class="btn btn-sm btn-danger"
           >
@@ -187,16 +186,15 @@
           <tbody>
             <tr v-for="order in paginatedOrders" :key="order.id">
               <td v-if="showBulkActions">
-                <input 
-                  type="checkbox" 
-                  :value="order.id" 
-                  v-model="selectedOrders"
-                />
+                <input type="checkbox" :value="order.id" v-model="selectedOrders" />
               </td>
               <td class="order-id">#{{ order.id }}</td>
               <td>
                 <div class="client-info">
-                  <img :src="order.client.profile_picture || '/default-avatar.png'" class="avatar-sm" />
+                  <img
+                    :src="order.client.profile_picture || '/default-avatar.png'"
+                    class="avatar-sm"
+                  />
                   <div>
                     <div class="client-name">{{ order.client.full_name }}</div>
                     <div class="client-phone">{{ order.client.phone }}</div>
@@ -217,7 +215,10 @@
               </td>
               <td>
                 <div v-if="order.courier" class="courier-info">
-                  <img :src="order.courier.profile_picture || '/default-avatar.png'" class="avatar-sm" />
+                  <img
+                    :src="order.courier.profile_picture || '/default-avatar.png'"
+                    class="avatar-sm"
+                  />
                   <span>{{ order.courier.full_name }}</span>
                 </div>
                 <span v-else class="no-courier">{{ $t('orders.noCourier') }}</span>
@@ -256,34 +257,34 @@
           </tbody>
         </table>
       </div>
-      
+
       <!-- Pagination -->
       <div class="pagination-container">
         <div class="pagination-info">
-          {{ $t('pagination.showing') }} {{ (currentPage - 1) * pageSize + 1 }} 
-          {{ $t('pagination.to') }} {{ Math.min(currentPage * pageSize, filteredOrders.length) }} 
+          {{ $t('pagination.showing') }} {{ (currentPage - 1) * pageSize + 1 }}
+          {{ $t('pagination.to') }} {{ Math.min(currentPage * pageSize, filteredOrders.length) }}
           {{ $t('pagination.of') }} {{ filteredOrders.length }} {{ $t('pagination.entries') }}
         </div>
         <div class="pagination">
-          <button 
-            @click="goToPage(currentPage - 1)" 
+          <button
+            @click="goToPage(currentPage - 1)"
             :disabled="currentPage === 1"
             class="btn btn-sm btn-outline"
           >
             {{ $t('pagination.previous') }}
           </button>
-          
-          <button 
-            v-for="page in visiblePages" 
+
+          <button
+            v-for="page in visiblePages"
             :key="page"
             @click="goToPage(page)"
             :class="['btn', 'btn-sm', page === currentPage ? 'btn-primary' : 'btn-outline']"
           >
             {{ page }}
           </button>
-          
-          <button 
-            @click="goToPage(currentPage + 1)" 
+
+          <button
+            @click="goToPage(currentPage + 1)"
             :disabled="currentPage === totalPages"
             class="btn btn-sm btn-outline"
           >
@@ -294,13 +295,13 @@
     </div>
 
     <!-- Modales -->
-    <OrderDetailsModal 
+    <OrderDetailsModal
       v-if="showOrderDetails"
       :order="selectedOrder"
       @close="showOrderDetails = false"
       @update="handleOrderUpdate"
     />
-    
+
     <CourierAssignmentModal
       v-if="showCourierAssignment"
       :order="selectedOrder"
@@ -325,11 +326,11 @@ export default {
   components: {
     PieChart,
     OrderDetailsModal,
-    CourierAssignmentModal
+    CourierAssignmentModal,
   },
   setup() {
     const { showToast } = useToast()
-    
+
     const loading = ref(false)
     const orders = ref([])
     const filteredOrders = ref([])
@@ -341,88 +342,90 @@ export default {
     const showCourierAssignment = ref(false)
     const selectedOrder = ref(null)
     const ordersChart = ref(null)
-    
+
     // Pagination
     const currentPage = ref(1)
     const pageSize = ref(20)
-    
+
     // Filtres
     const searchQuery = ref('')
     const filters = reactive({
       status: '',
       commune: '',
-      period: 'week'
+      period: 'week',
     })
-    
+
     // Tri
     const sortField = ref('created_at')
     const sortDirection = ref('desc')
-    
+
     let ordersChartInstance = null
-    
+
     // Computed
     const paginatedOrders = computed(() => {
       const start = (currentPage.value - 1) * pageSize.value
       const end = start + pageSize.value
       return filteredOrders.value.slice(start, end)
     })
-    
+
     const totalPages = computed(() => {
       return Math.ceil(filteredOrders.value.length / pageSize.value)
     })
-    
+
     const visiblePages = computed(() => {
       const pages = []
       const start = Math.max(1, currentPage.value - 2)
       const end = Math.min(totalPages.value, currentPage.value + 2)
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i)
       }
       return pages
     })
-    
+
     const statusChartData = computed(() => ({
       labels: ['En attente', 'Acceptée', 'En cours', 'Livrée', 'Annulée'],
-      datasets: [{
-        data: [
-          stats.pending || 0,
-          stats.accepted || 0,
-          stats.in_progress || 0,
-          stats.delivered || 0,
-          stats.cancelled || 0
-        ],
-        backgroundColor: ['#FFC107', '#2196F3', '#FF9800', '#4CAF50', '#F44336']
-      }]
+      datasets: [
+        {
+          data: [
+            stats.pending || 0,
+            stats.accepted || 0,
+            stats.in_progress || 0,
+            stats.delivered || 0,
+            stats.cancelled || 0,
+          ],
+          backgroundColor: ['#FFC107', '#2196F3', '#FF9800', '#4CAF50', '#F44336'],
+        },
+      ],
     }))
-    
+
     const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom'
-        }
-      }
+          position: 'bottom',
+        },
+      },
     }
-    
+
     // Méthodes
     const loadData = async () => {
       try {
         loading.value = true
-        
+
         // Charger les commandes
         const ordersResponse = await deliveriesApi.getDeliveries({
           limit: 1000,
           include_client: true,
-          include_courier: true
+          include_courier: true,
         })
         orders.value = ordersResponse.data || ordersResponse
-        
+
         // Charger les statistiques
         const statsResponse = await managerApi.getDeliveryStats()
         Object.assign(stats, statsResponse.data)
-        
+
         // Extraire les communes
         const communeSet = new Set()
         orders.value.forEach(order => {
@@ -430,51 +433,51 @@ export default {
           if (order.delivery_commune) communeSet.add(order.delivery_commune)
         })
         communes.value = Array.from(communeSet).sort()
-        
+
         applyFilters()
         await nextTick()
         updateOrdersChart()
-        
       } catch (error) {
         showToast(error.message, 'error')
       } finally {
         loading.value = false
       }
     }
-    
+
     const applyFilters = () => {
       let filtered = [...orders.value]
-      
+
       // Recherche textuelle
       if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
-        filtered = filtered.filter(order => 
-          order.id.toString().includes(query) ||
-          order.client?.full_name?.toLowerCase().includes(query) ||
-          order.client?.phone?.includes(query) ||
-          order.pickup_commune?.toLowerCase().includes(query) ||
-          order.delivery_commune?.toLowerCase().includes(query)
+        filtered = filtered.filter(
+          order =>
+            order.id.toString().includes(query) ||
+            order.client?.full_name?.toLowerCase().includes(query) ||
+            order.client?.phone?.includes(query) ||
+            order.pickup_commune?.toLowerCase().includes(query) ||
+            order.delivery_commune?.toLowerCase().includes(query)
         )
       }
-      
+
       // Filtre par statut
       if (filters.status) {
         filtered = filtered.filter(order => order.status === filters.status)
       }
-      
+
       // Filtre par commune
       if (filters.commune) {
-        filtered = filtered.filter(order => 
-          order.pickup_commune === filters.commune || 
-          order.delivery_commune === filters.commune
+        filtered = filtered.filter(
+          order =>
+            order.pickup_commune === filters.commune || order.delivery_commune === filters.commune
         )
       }
-      
+
       // Filtre par période
       if (filters.period !== 'custom') {
         const now = new Date()
         let startDate
-        
+
         switch (filters.period) {
           case 'today':
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -486,17 +489,17 @@ export default {
             startDate = new Date(now.getFullYear(), now.getMonth(), 1)
             break
         }
-        
+
         if (startDate) {
           filtered = filtered.filter(order => new Date(order.created_at) >= startDate)
         }
       }
-      
+
       // Appliquer le tri
       filtered.sort((a, b) => {
         let aVal = a[sortField.value]
         let bVal = b[sortField.value]
-        
+
         if (sortField.value === 'price') {
           aVal = parseFloat(aVal) || 0
           bVal = parseFloat(bVal) || 0
@@ -504,19 +507,19 @@ export default {
           aVal = new Date(aVal)
           bVal = new Date(bVal)
         }
-        
+
         if (sortDirection.value === 'asc') {
           return aVal > bVal ? 1 : -1
         } else {
           return aVal < bVal ? 1 : -1
         }
       })
-      
+
       filteredOrders.value = filtered
       currentPage.value = 1
     }
-    
-    const sortBy = (field) => {
+
+    const sortBy = field => {
       if (sortField.value === field) {
         sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
       } else {
@@ -525,55 +528,55 @@ export default {
       }
       applyFilters()
     }
-    
-    const getSortIcon = (field) => {
+
+    const getSortIcon = field => {
       if (sortField.value !== field) return 'fas fa-sort'
       return sortDirection.value === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'
     }
-    
-    const selectAll = (event) => {
+
+    const selectAll = event => {
       if (event.target.checked) {
         selectedOrders.value = filteredOrders.value.map(order => order.id)
       } else {
         selectedOrders.value = []
       }
     }
-    
-    const viewOrder = (order) => {
+
+    const viewOrder = order => {
       selectedOrder.value = order
       showOrderDetails.value = true
     }
-    
-    const trackOrder = (order) => {
+
+    const trackOrder = order => {
       // Ouvrir une nouvelle fenêtre avec le suivi
       window.open(`/track/${order.id}`, '_blank')
     }
-    
-    const assignCourier = (order) => {
+
+    const assignCourier = order => {
       selectedOrder.value = order
       showCourierAssignment.value = true
     }
-    
-    const cancelOrder = async (order) => {
+
+    const cancelOrder = async order => {
       if (!confirm('Êtes-vous sûr de vouloir annuler cette commande ?')) return
-      
+
       try {
-        await deliveriesApi.cancelDelivery(order.id, 'Annulée par l\'administrateur')
+        await deliveriesApi.cancelDelivery(order.id, "Annulée par l'administrateur")
         showToast('Commande annulée avec succès', 'success')
         await loadData()
       } catch (error) {
         showToast(error.message, 'error')
       }
     }
-    
+
     const bulkAssignCourier = () => {
       // Logique d'assignation en masse
-      showToast('Fonctionnalité d\'assignation en masse à implémenter', 'info')
+      showToast("Fonctionnalité d'assignation en masse à implémenter", 'info')
     }
-    
+
     const bulkCancel = async () => {
       if (!confirm(`Annuler ${selectedOrders.value.length} commandes ?`)) return
-      
+
       try {
         for (const orderId of selectedOrders.value) {
           await deliveriesApi.cancelDelivery(orderId, 'Annulation en masse')
@@ -585,62 +588,64 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
-    const goToPage = (page) => {
+
+    const goToPage = page => {
       if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
       }
     }
-    
+
     const updateOrdersChart = () => {
       if (!ordersChart.value) return
-      
+
       const ctx = ordersChart.value.getContext('2d')
-      
+
       if (ordersChartInstance) {
         ordersChartInstance.destroy()
       }
-      
+
       // Données pour les 7 derniers jours
       const last7Days = []
       const orderCounts = []
-      
+
       for (let i = 6; i >= 0; i--) {
         const date = new Date()
         date.setDate(date.getDate() - i)
         last7Days.push(date.toLocaleDateString('fr-FR', { weekday: 'short' }))
-        
+
         const dayOrders = orders.value.filter(order => {
           const orderDate = new Date(order.created_at)
           return orderDate.toDateString() === date.toDateString()
         })
         orderCounts.push(dayOrders.length)
       }
-      
+
       ordersChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: last7Days,
-          datasets: [{
-            label: 'Commandes',
-            data: orderCounts,
-            borderColor: '#2196F3',
-            backgroundColor: 'rgba(33, 150, 243, 0.1)',
-            tension: 0.3
-          }]
+          datasets: [
+            {
+              label: 'Commandes',
+              data: orderCounts,
+              borderColor: '#2196F3',
+              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+              tension: 0.3,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             y: {
-              beginAtZero: true
-            }
-          }
-        }
+              beginAtZero: true,
+            },
+          },
+        },
       })
     }
-    
+
     const exportOrders = async () => {
       try {
         const response = await managerApi.exportDeliveries()
@@ -655,20 +660,20 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
+
     const refreshData = () => {
       loadData()
     }
-    
-    const handleOrderUpdate = (updatedOrder) => {
+
+    const handleOrderUpdate = updatedOrder => {
       const index = orders.value.findIndex(o => o.id === updatedOrder.id)
       if (index !== -1) {
         orders.value[index] = updatedOrder
         applyFilters()
       }
     }
-    
-    const handleCourierAssignment = async (orderData) => {
+
+    const handleCourierAssignment = async orderData => {
       try {
         await deliveriesApi.assignCourier(orderData)
         showToast('Coursier assigné avec succès', 'success')
@@ -678,29 +683,29 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
-    const formatCurrency = (amount) => {
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'XOF'
+        currency: 'XOF',
       }).format(amount)
     }
-    
-    const formatDate = (dateString) => {
+
+    const formatDate = dateString => {
       return new Date(dateString).toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
-    
+
     // Lifecycle
     onMounted(() => {
       loadData()
     })
-    
+
     return {
       loading,
       orders,
@@ -741,9 +746,9 @@ export default {
       handleOrderUpdate,
       handleCourierAssignment,
       formatCurrency,
-      formatDate
+      formatDate,
     }
-  }
+  },
 }
 </script>
 
@@ -775,7 +780,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 15px;
@@ -792,10 +797,18 @@ export default {
   color: white;
 }
 
-.stat-icon.pending { background: #FFC107; }
-.stat-icon.active { background: #FF9800; }
-.stat-icon.completed { background: #4CAF50; }
-.stat-icon.revenue { background: #2196F3; }
+.stat-icon.pending {
+  background: #ffc107;
+}
+.stat-icon.active {
+  background: #ff9800;
+}
+.stat-icon.completed {
+  background: #4caf50;
+}
+.stat-icon.revenue {
+  background: #2196f3;
+}
 
 .stat-value {
   font-size: 1.8rem;
@@ -812,7 +825,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
   display: flex;
   gap: 20px;
@@ -861,7 +874,7 @@ export default {
 .chart-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -888,7 +901,7 @@ export default {
 .orders-table-section {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -950,7 +963,7 @@ export default {
 
 .order-id {
   font-weight: 600;
-  color: #2196F3;
+  color: #2196f3;
 }
 
 .client-info,
@@ -991,11 +1004,11 @@ export default {
 }
 
 .route-from .fas.fa-circle {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .route-to .fas.fa-circle {
-  color: #F44336;
+  color: #f44336;
 }
 
 .no-courier {
@@ -1012,29 +1025,29 @@ export default {
 }
 
 .status-badge.pending {
-  background: #FFF3E0;
-  color: #FF9800;
+  background: #fff3e0;
+  color: #ff9800;
 }
 
 .status-badge.accepted {
-  background: #E3F2FD;
-  color: #2196F3;
+  background: #e3f2fd;
+  color: #2196f3;
 }
 
 .status-badge.picked_up,
 .status-badge.in_progress {
-  background: #FFF3E0;
-  color: #FF9800;
+  background: #fff3e0;
+  color: #ff9800;
 }
 
 .status-badge.delivered {
-  background: #E8F5E8;
-  color: #4CAF50;
+  background: #e8f5e8;
+  color: #4caf50;
 }
 
 .status-badge.cancelled {
-  background: #FFEBEE;
-  color: #F44336;
+  background: #ffebee;
+  color: #f44336;
 }
 
 .price {
@@ -1059,7 +1072,7 @@ export default {
   background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   min-width: 150px;
 }
@@ -1077,7 +1090,7 @@ export default {
 }
 
 .dropdown-item.text-danger {
-  color: #F44336;
+  color: #f44336;
 }
 
 .pagination-container {
@@ -1115,13 +1128,13 @@ export default {
 }
 
 .btn-primary {
-  background: #2196F3;
-  border-color: #2196F3;
+  background: #2196f3;
+  border-color: #2196f3;
   color: white;
 }
 
 .btn-primary:hover {
-  background: #1976D2;
+  background: #1976d2;
 }
 
 .btn-secondary {
@@ -1135,8 +1148,8 @@ export default {
 }
 
 .btn-danger {
-  background: #F44336;
-  border-color: #F44336;
+  background: #f44336;
+  border-color: #f44336;
   color: white;
 }
 

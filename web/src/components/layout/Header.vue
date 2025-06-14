@@ -21,7 +21,11 @@
       <div class="user-dropdown">
         <button class="user-button" @click="toggleDropdown">
           <div class="user-avatar">
-            <img v-if="currentUser && currentUser.profile_picture" :src="currentUser.profile_picture" :alt="currentUser.name" />
+            <img
+              v-if="currentUser && currentUser.profile_picture"
+              :src="currentUser.profile_picture"
+              :alt="currentUser.name"
+            />
             <div v-else class="avatar-placeholder">{{ getInitials(currentUser?.name) }}</div>
           </div>
           <span class="user-name">{{ currentUser?.name }}</span>
@@ -46,20 +50,20 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
-import NotificationBell from "@/components/layout/NotificationBell.vue"
+import NotificationBell from '@/components/layout/NotificationBell.vue'
 import { formatRelativeTime } from '@/utils/formatters'
 import { USER_ROLES } from '@/config'
 
 export default {
   name: 'Header',
   components: {
-    NotificationBell
+    NotificationBell,
   },
   props: {
     isCollapsed: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   emits: ['toggle-sidebar'],
   setup() {
@@ -67,17 +71,17 @@ export default {
     const route = useRoute()
     const store = useStore()
     const isDropdownOpen = ref(false)
-    
+
     const currentRoute = computed(() => route)
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const isDarkMode = computed(() => store.getters['theme/isDarkMode'])
     const notifications = computed(() => store.getters['notification/notifications'])
     const unreadNotifications = computed(() => store.getters['notification/unreadCount'])
-    
+
     const toggleDropdown = () => {
       isDropdownOpen.value = !isDropdownOpen.value
     }
-    
+
     const logout = async () => {
       try {
         await store.dispatch('auth/logout')
@@ -86,15 +90,15 @@ export default {
         console.error('Logout failed:', error)
       }
     }
-    
+
     const toggleSidebar = () => {
       // Implémenter la logique pour afficher/masquer la barre latérale
       console.log('Toggle sidebar')
     }
-    
-    const getInitials = (name) => {
+
+    const getInitials = name => {
       if (!name) return ''
-      
+
       return name
         .split(' ')
         .map(part => part.charAt(0))
@@ -102,25 +106,25 @@ export default {
         .toUpperCase()
         .substring(0, 2)
     }
-    
-    const handleClickOutside = (event) => {
+
+    const handleClickOutside = event => {
       if (isDropdownOpen.value && !event.target.closest('.user-dropdown')) {
         isDropdownOpen.value = false
       }
     }
-    
+
     onMounted(() => {
       document.addEventListener('click', handleClickOutside)
     })
-    
+
     onUnmounted(() => {
       document.removeEventListener('click', handleClickOutside)
     })
-    
+
     watch(route, () => {
       isDropdownOpen.value = false
     })
-    
+
     return {
       currentRoute,
       currentUser,
@@ -131,9 +135,9 @@ export default {
       toggleDropdown,
       logout,
       toggleSidebar,
-      getInitials
+      getInitials,
     }
-  }
+  },
 }
 </script>
 

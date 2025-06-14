@@ -1,4 +1,4 @@
-import Chart from "chart.js/auto"
+import Chart from 'chart.js/auto'
 
 /**
  * Crée un graphique linéaire
@@ -12,17 +12,17 @@ export const createLineChart = (canvasId, labels, datasets, options = {}) => {
   const canvas = document.getElementById(canvasId)
   if (!canvas) return null
 
-  const ctx = canvas.getContext("2d")
+  const ctx = canvas.getContext('2d')
 
   const defaultOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top",
+        position: 'top',
       },
       tooltip: {
-        mode: "index",
+        mode: 'index',
         intersect: false,
       },
     },
@@ -35,7 +35,7 @@ export const createLineChart = (canvasId, labels, datasets, options = {}) => {
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.05)",
+          color: 'rgba(0, 0, 0, 0.05)',
         },
       },
     },
@@ -44,7 +44,7 @@ export const createLineChart = (canvasId, labels, datasets, options = {}) => {
   const chartOptions = { ...defaultOptions, ...options }
 
   return new Chart(ctx, {
-    type: "line",
+    type: 'line',
     data: {
       labels,
       datasets,
@@ -65,17 +65,17 @@ export const createBarChart = (canvasId, labels, datasets, options = {}) => {
   const canvas = document.getElementById(canvasId)
   if (!canvas) return null
 
-  const ctx = canvas.getContext("2d")
+  const ctx = canvas.getContext('2d')
 
   const defaultOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top",
+        position: 'top',
       },
       tooltip: {
-        mode: "index",
+        mode: 'index',
         intersect: false,
       },
     },
@@ -88,7 +88,7 @@ export const createBarChart = (canvasId, labels, datasets, options = {}) => {
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.05)",
+          color: 'rgba(0, 0, 0, 0.05)',
         },
       },
     },
@@ -97,7 +97,7 @@ export const createBarChart = (canvasId, labels, datasets, options = {}) => {
   const chartOptions = { ...defaultOptions, ...options }
 
   return new Chart(ctx, {
-    type: "bar",
+    type: 'bar',
     data: {
       labels,
       datasets,
@@ -118,18 +118,18 @@ export const createHorizontalBarChart = (canvasId, labels, datasets, options = {
   const canvas = document.getElementById(canvasId)
   if (!canvas) return null
 
-  const ctx = canvas.getContext("2d")
+  const ctx = canvas.getContext('2d')
 
   const defaultOptions = {
-    indexAxis: "y",
+    indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top",
+        position: 'top',
       },
       tooltip: {
-        mode: "index",
+        mode: 'index',
         intersect: false,
       },
     },
@@ -137,7 +137,7 @@ export const createHorizontalBarChart = (canvasId, labels, datasets, options = {
       x: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.05)",
+          color: 'rgba(0, 0, 0, 0.05)',
         },
       },
       y: {
@@ -151,7 +151,7 @@ export const createHorizontalBarChart = (canvasId, labels, datasets, options = {
   const chartOptions = { ...defaultOptions, ...options }
 
   return new Chart(ctx, {
-    type: "bar",
+    type: 'bar',
     data: {
       labels,
       datasets,
@@ -173,19 +173,19 @@ export const createPieChart = (canvasId, labels, data, backgroundColor, options 
   const canvas = document.getElementById(canvasId)
   if (!canvas) return null
 
-  const ctx = canvas.getContext("2d")
+  const ctx = canvas.getContext('2d')
 
   const defaultOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "right",
+        position: 'right',
       },
       tooltip: {
         callbacks: {
-          label: (context) => {
-            const label = context.label || ""
+          label: context => {
+            const label = context.label || ''
             const value = context.raw || 0
             const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0)
             const percentage = Math.round((value / total) * 100)
@@ -199,7 +199,7 @@ export const createPieChart = (canvasId, labels, data, backgroundColor, options 
   const chartOptions = { ...defaultOptions, ...options }
 
   return new Chart(ctx, {
-    type: "pie",
+    type: 'pie',
     data: {
       labels,
       datasets: [
@@ -207,7 +207,7 @@ export const createPieChart = (canvasId, labels, data, backgroundColor, options 
           data,
           backgroundColor,
           borderWidth: 1,
-          borderColor: "#fff",
+          borderColor: '#fff',
         },
       ],
     },
@@ -228,20 +228,20 @@ export const createDoughnutChart = (canvasId, labels, data, backgroundColor, opt
   const canvas = document.getElementById(canvasId)
   if (!canvas) return null
 
-  const ctx = canvas.getContext("2d")
+  const ctx = canvas.getContext('2d')
 
   const defaultOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: "70%",
+    cutout: '70%',
     plugins: {
       legend: {
-        position: "right",
+        position: 'right',
       },
       tooltip: {
         callbacks: {
-          label: (context) => {
-            const label = context.label || ""
+          label: context => {
+            const label = context.label || ''
             const value = context.raw || 0
             const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0)
             const percentage = Math.round((value / total) * 100)
@@ -255,7 +255,7 @@ export const createDoughnutChart = (canvasId, labels, data, backgroundColor, opt
   const chartOptions = { ...defaultOptions, ...options }
 
   return new Chart(ctx, {
-    type: "doughnut",
+    type: 'doughnut',
     data: {
       labels,
       datasets: [
@@ -263,7 +263,7 @@ export const createDoughnutChart = (canvasId, labels, data, backgroundColor, opt
           data,
           backgroundColor,
           borderWidth: 1,
-          borderColor: "#fff",
+          borderColor: '#fff',
         },
       ],
     },
@@ -310,16 +310,16 @@ export const updatePieChartData = (chart, labels, data, backgroundColor) => {
  */
 export function generateChartColors(count) {
   const colors = [
-    "#4CAF50", // Vert
-    "#2196F3", // Bleu
-    "#FF9800", // Orange
-    "#F44336", // Rouge
-    "#9C27B0", // Violet
-    "#00BCD4", // Cyan
-    "#FFEB3B", // Jaune
-    "#795548", // Marron
-    "#607D8B", // Bleu-gris
-    "#E91E63", // Rose
+    '#4CAF50', // Vert
+    '#2196F3', // Bleu
+    '#FF9800', // Orange
+    '#F44336', // Rouge
+    '#9C27B0', // Violet
+    '#00BCD4', // Cyan
+    '#FFEB3B', // Jaune
+    '#795548', // Marron
+    '#607D8B', // Bleu-gris
+    '#E91E63', // Rose
   ]
 
   // Si nous avons besoin de plus de couleurs que celles prédéfinies
@@ -327,10 +327,10 @@ export function generateChartColors(count) {
     for (let i = colors.length; i < count; i++) {
       // Générer une couleur aléatoire
       const randomColor =
-        "#" +
+        '#' +
         Math.floor(Math.random() * 16777215)
           .toString(16)
-          .padStart(6, "0")
+          .padStart(6, '0')
       colors.push(randomColor)
     }
   }
@@ -347,12 +347,12 @@ export function generateChartColors(count) {
  */
 export function formatLineChartData(data, labelKey, valueKey) {
   return {
-    labels: data.map((item) => item[labelKey]),
+    labels: data.map(item => item[labelKey]),
     datasets: [
       {
-        data: data.map((item) => item[valueKey]),
-        backgroundColor: "#4CAF50",
-        borderColor: "#4CAF50",
+        data: data.map(item => item[valueKey]),
+        backgroundColor: '#4CAF50',
+        borderColor: '#4CAF50',
         borderWidth: 2,
         tension: 0.4,
         fill: false,
@@ -369,12 +369,12 @@ export function formatLineChartData(data, labelKey, valueKey) {
  * @returns {Object} Données formatées pour Chart.js
  */
 export function formatPieChartData(data, labelKey, valueKey) {
-  const labels = data.map((item) => item[labelKey])
+  const labels = data.map(item => item[labelKey])
   return {
     labels: labels,
     datasets: [
       {
-        data: data.map((item) => item[valueKey]),
+        data: data.map(item => item[valueKey]),
         backgroundColor: generateChartColors(labels.length),
         borderWidth: 1,
       },
@@ -390,13 +390,13 @@ export function formatPieChartData(data, labelKey, valueKey) {
  * @param {string} color - Couleur des barres (optionnel)
  * @returns {Object} Données formatées pour Chart.js
  */
-export function formatBarChartData(data, labelKey, valueKey, color = "#2196F3") {
+export function formatBarChartData(data, labelKey, valueKey, color = '#2196F3') {
   return {
-    labels: data.map((item) => item[labelKey]),
+    labels: data.map(item => item[labelKey]),
     datasets: [
       {
-        label: "Valeur",
-        data: data.map((item) => item[valueKey]),
+        label: 'Valeur',
+        data: data.map(item => item[valueKey]),
         backgroundColor: color,
         borderColor: color,
         borderWidth: 1,
@@ -409,7 +409,7 @@ export function formatBarChartData(data, labelKey, valueKey, color = "#2196F3") 
  * Détruit un graphique
  * @param {Object} chart - L'instance du graphique à détruire
  */
-export const destroyChart = (chart) => {
+export const destroyChart = chart => {
   if (chart) {
     chart.destroy()
   }

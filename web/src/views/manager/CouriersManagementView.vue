@@ -76,12 +76,12 @@
         <div class="filter-group">
           <label for="search-filter">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search-filter" 
-              v-model="filters.search" 
-              class="form-control" 
-              placeholder="Nom, email, téléphone..." 
+            <input
+              type="text"
+              id="search-filter"
+              v-model="filters.search"
+              class="form-control"
+              placeholder="Nom, email, téléphone..."
               @input="debounceSearch"
             />
             <font-awesome-icon icon="search" />
@@ -131,7 +131,7 @@
           <div class="map-refresh">
             <span>Actualisation: {{ autoRefreshEnabled ? 'Activée' : 'Désactivée' }}</span>
             <label class="toggle-switch">
-              <input type="checkbox" v-model="autoRefreshEnabled">
+              <input type="checkbox" v-model="autoRefreshEnabled" />
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -175,12 +175,21 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="courier in couriers" :key="courier.id" @click="selectCourier(courier)" :class="{ 'selected-row': selectedCourier && selectedCourier.id === courier.id }">
+          <tr
+            v-for="courier in couriers"
+            :key="courier.id"
+            @click="selectCourier(courier)"
+            :class="{ 'selected-row': selectedCourier && selectedCourier.id === courier.id }"
+          >
             <td>#{{ courier.id }}</td>
             <td>
               <div class="courier-name">
                 <div class="courier-avatar">
-                  <img v-if="courier.profile_picture" :src="courier.profile_picture" :alt="courier.name" />
+                  <img
+                    v-if="courier.profile_picture"
+                    :src="courier.profile_picture"
+                    :alt="courier.name"
+                  />
                   <div v-else class="avatar-placeholder">{{ getInitials(courier.name) }}</div>
                 </div>
                 <span>{{ courier.name }}</span>
@@ -196,7 +205,9 @@
               <div class="vehicle-info">
                 <font-awesome-icon :icon="getVehicleIcon(courier.vehicle_type)" class="mr-1" />
                 {{ getVehicleTypeLabel(courier.vehicle_type) }}
-                <div v-if="courier.license_plate" class="license-plate">{{ courier.license_plate }}</div>
+                <div v-if="courier.license_plate" class="license-plate">
+                  {{ courier.license_plate }}
+                </div>
               </div>
             </td>
             <td>
@@ -212,11 +223,11 @@
             <td>
               <div class="rating">
                 <div class="stars">
-                  <font-awesome-icon 
-                    v-for="n in 5" 
-                    :key="n" 
-                    icon="star" 
-                    :class="{ 'filled': n <= Math.round(courier.rating) }"
+                  <font-awesome-icon
+                    v-for="n in 5"
+                    :key="n"
+                    icon="star"
+                    :class="{ filled: n <= Math.round(courier.rating) }"
                   />
                 </div>
                 <span class="rating-value">{{ courier.rating.toFixed(1) }}</span>
@@ -224,38 +235,46 @@
             </td>
             <td>
               <div class="deliveries-info">
-                <div>Total: <strong>{{ courier.total_deliveries }}</strong></div>
-                <div>Mois: <strong>{{ courier.monthly_deliveries }}</strong></div>
+                <div>
+                  Total: <strong>{{ courier.total_deliveries }}</strong>
+                </div>
+                <div>
+                  Mois: <strong>{{ courier.monthly_deliveries }}</strong>
+                </div>
               </div>
             </td>
             <td>
               <div class="actions-cell">
-                <button class="btn-icon" @click.stop="viewCourierDetails(courier.id)" title="Voir les détails">
+                <button
+                  class="btn-icon"
+                  @click.stop="viewCourierDetails(courier.id)"
+                  title="Voir les détails"
+                >
                   <font-awesome-icon icon="eye" />
                 </button>
                 <button class="btn-icon" @click.stop="editCourier(courier.id)" title="Modifier">
                   <font-awesome-icon icon="edit" />
                 </button>
-                <button 
-                  v-if="courier.status === 'active'" 
-                  class="btn-icon" 
-                  @click.stop="suspendCourier(courier.id)" 
+                <button
+                  v-if="courier.status === 'active'"
+                  class="btn-icon"
+                  @click.stop="suspendCourier(courier.id)"
                   title="Suspendre"
                 >
                   <font-awesome-icon icon="ban" />
                 </button>
-                <button 
-                  v-if="courier.status === 'suspended'" 
-                  class="btn-icon" 
-                  @click.stop="activateCourier(courier.id)" 
+                <button
+                  v-if="courier.status === 'suspended'"
+                  class="btn-icon"
+                  @click.stop="activateCourier(courier.id)"
                   title="Activer"
                 >
                   <font-awesome-icon icon="check" />
                 </button>
-                <button 
-                  v-if="courier.status === 'pending_verification'" 
-                  class="btn-icon" 
-                  @click.stop="verifyCourier(courier.id)" 
+                <button
+                  v-if="courier.status === 'pending_verification'"
+                  class="btn-icon"
+                  @click.stop="verifyCourier(courier.id)"
                   title="Vérifier"
                 >
                   <font-awesome-icon icon="check-circle" />
@@ -268,27 +287,23 @@
 
       <!-- Pagination -->
       <div class="pagination">
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === 1" 
-          @click="changePage(currentPage - 1)"
-        >
+        <button class="btn-page" :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
           <font-awesome-icon icon="chevron-left" />
         </button>
-        
-        <button 
-          v-for="page in displayedPages" 
-          :key="page" 
-          class="btn-page" 
+
+        <button
+          v-for="page in displayedPages"
+          :key="page"
+          class="btn-page"
           :class="{ active: currentPage === page }"
           @click="changePage(page)"
         >
           {{ page }}
         </button>
-        
-        <button 
-          class="btn-page" 
-          :disabled="currentPage === totalPages" 
+
+        <button
+          class="btn-page"
+          :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
           <font-awesome-icon icon="chevron-right" />
@@ -325,7 +340,11 @@
           <div class="courier-details">
             <div class="courier-details-header">
               <div class="courier-details-avatar">
-                <img v-if="selectedCourier.profile_picture" :src="selectedCourier.profile_picture" :alt="selectedCourier.name" />
+                <img
+                  v-if="selectedCourier.profile_picture"
+                  :src="selectedCourier.profile_picture"
+                  :alt="selectedCourier.name"
+                />
                 <div v-else class="avatar-placeholder">{{ getInitials(selectedCourier.name) }}</div>
               </div>
               <div class="courier-details-info">
@@ -334,7 +353,10 @@
                   <span class="status-badge" :class="getStatusClass(selectedCourier.status)">
                     {{ getStatusLabel(selectedCourier.status) }}
                   </span>
-                  <span class="availability-badge" :class="getAvailabilityClass(selectedCourier.availability)">
+                  <span
+                    class="availability-badge"
+                    :class="getAvailabilityClass(selectedCourier.availability)"
+                  >
                     {{ getAvailabilityLabel(selectedCourier.availability) }}
                   </span>
                 </div>
@@ -344,25 +366,25 @@
                   <font-awesome-icon icon="edit" class="mr-1" />
                   Modifier
                 </button>
-                <button 
-                  v-if="selectedCourier.status === 'active'" 
-                  class="btn btn-danger" 
+                <button
+                  v-if="selectedCourier.status === 'active'"
+                  class="btn btn-danger"
                   @click="suspendCourier(selectedCourier.id)"
                 >
                   <font-awesome-icon icon="ban" class="mr-1" />
                   Suspendre
                 </button>
-                <button 
-                  v-if="selectedCourier.status === 'suspended'" 
-                  class="btn btn-success" 
+                <button
+                  v-if="selectedCourier.status === 'suspended'"
+                  class="btn btn-success"
                   @click="activateCourier(selectedCourier.id)"
                 >
                   <font-awesome-icon icon="check" class="mr-1" />
                   Activer
                 </button>
-                <button 
-                  v-if="selectedCourier.status === 'pending_verification'" 
-                  class="btn btn-success" 
+                <button
+                  v-if="selectedCourier.status === 'pending_verification'"
+                  class="btn btn-success"
                   @click="verifyCourier(selectedCourier.id)"
                 >
                   <font-awesome-icon icon="check-circle" class="mr-1" />
@@ -372,10 +394,10 @@
             </div>
 
             <div class="courier-details-tabs">
-              <button 
-                v-for="tab in courierDetailsTabs" 
-                :key="tab.id" 
-                class="tab-button" 
+              <button
+                v-for="tab in courierDetailsTabs"
+                :key="tab.id"
+                class="tab-button"
                 :class="{ active: activeCourierDetailsTab === tab.id }"
                 @click="activeCourierDetailsTab = tab.id"
               >
@@ -388,7 +410,7 @@
               <!-- Informations personnelles -->
               <div v-if="activeCourierDetailsTab === 'personal'" class="courier-details-section">
                 <h3>Informations personnelles</h3>
-                
+
                 <div class="details-grid">
                   <div class="details-item">
                     <div class="details-label">ID</div>
@@ -408,11 +430,15 @@
                   </div>
                   <div class="details-item">
                     <div class="details-label">Adresse</div>
-                    <div class="details-value">{{ selectedCourier.address || 'Non renseignée' }}</div>
+                    <div class="details-value">
+                      {{ selectedCourier.address || 'Non renseignée' }}
+                    </div>
                   </div>
                   <div class="details-item">
                     <div class="details-label">Commune</div>
-                    <div class="details-value">{{ selectedCourier.commune || 'Non renseignée' }}</div>
+                    <div class="details-value">
+                      {{ selectedCourier.commune || 'Non renseignée' }}
+                    </div>
                   </div>
                   <div class="details-item">
                     <div class="details-label">Inscrit le</div>
@@ -423,38 +449,47 @@
                     <div class="details-value">{{ formatDate(selectedCourier.last_login) }}</div>
                   </div>
                 </div>
-                
+
                 <div class="courier-vehicle-details">
                   <h4>Informations du véhicule</h4>
-                  
+
                   <div class="details-grid">
                     <div class="details-item">
                       <div class="details-label">Type de véhicule</div>
                       <div class="details-value">
-                        <font-awesome-icon :icon="getVehicleIcon(selectedCourier.vehicle_type)" class="mr-1" />
+                        <font-awesome-icon
+                          :icon="getVehicleIcon(selectedCourier.vehicle_type)"
+                          class="mr-1"
+                        />
                         {{ getVehicleTypeLabel(selectedCourier.vehicle_type) }}
                       </div>
                     </div>
                     <div class="details-item">
                       <div class="details-label">Numéro d'immatriculation</div>
-                      <div class="details-value">{{ selectedCourier.license_plate || 'Non renseigné' }}</div>
+                      <div class="details-value">
+                        {{ selectedCourier.license_plate || 'Non renseigné' }}
+                      </div>
                     </div>
                     <div class="details-item">
                       <div class="details-label">Numéro de permis</div>
-                      <div class="details-value">{{ selectedCourier.driving_license || 'Non renseigné' }}</div>
+                      <div class="details-value">
+                        {{ selectedCourier.driving_license || 'Non renseigné' }}
+                      </div>
                     </div>
                     <div class="details-item">
                       <div class="details-label">Disponibilité</div>
-                      <div class="details-value">{{ getAvailabilityLabel(selectedCourier.availability) }}</div>
+                      <div class="details-value">
+                        {{ getAvailabilityLabel(selectedCourier.availability) }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Performance -->
               <div v-if="activeCourierDetailsTab === 'performance'" class="courier-details-section">
                 <h3>Performance</h3>
-                
+
                 <div class="performance-summary">
                   <div class="performance-card">
                     <div class="performance-value">{{ selectedCourier.total_deliveries }}</div>
@@ -469,11 +504,13 @@
                     <div class="performance-label">Livraisons cette semaine</div>
                   </div>
                   <div class="performance-card">
-                    <div class="performance-value">{{ formatCurrency(selectedCourier.total_earnings) }}</div>
+                    <div class="performance-value">
+                      {{ formatCurrency(selectedCourier.total_earnings) }}
+                    </div>
                     <div class="performance-label">Gains totaux</div>
                   </div>
                 </div>
-                
+
                 <div class="performance-charts">
                   <div class="chart-container">
                     <h4>Livraisons par jour</h4>
@@ -482,7 +519,7 @@
                       <p>Graphique des livraisons par jour</p>
                     </div>
                   </div>
-                  
+
                   <div class="chart-container">
                     <h4>Évaluations</h4>
                     <div class="chart-placeholder">
@@ -491,41 +528,55 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="performance-metrics">
                   <h4>Métriques de performance</h4>
-                  
+
                   <div class="metrics-grid">
                     <div class="metric-item">
                       <div class="metric-label">Taux d'acceptation</div>
-                      <div class="metric-value">{{ (selectedCourier.acceptance_rate * 100).toFixed(1) }}%</div>
+                      <div class="metric-value">
+                        {{ (selectedCourier.acceptance_rate * 100).toFixed(1) }}%
+                      </div>
                       <div class="metric-progress">
-                        <div class="progress-bar" :style="{ width: (selectedCourier.acceptance_rate * 100) + '%' }"></div>
+                        <div
+                          class="progress-bar"
+                          :style="{ width: selectedCourier.acceptance_rate * 100 + '%' }"
+                        ></div>
                       </div>
                     </div>
                     <div class="metric-item">
                       <div class="metric-label">Taux de complétion</div>
-                      <div class="metric-value">{{ (selectedCourier.completion_rate * 100).toFixed(1) }}%</div>
+                      <div class="metric-value">
+                        {{ (selectedCourier.completion_rate * 100).toFixed(1) }}%
+                      </div>
                       <div class="metric-progress">
-                        <div class="progress-bar" :style="{ width: (selectedCourier.completion_rate * 100) + '%' }"></div>
+                        <div
+                          class="progress-bar"
+                          :style="{ width: selectedCourier.completion_rate * 100 + '%' }"
+                        ></div>
                       </div>
                     </div>
                     <div class="metric-item">
                       <div class="metric-label">Temps moyen de livraison</div>
-                      <div class="metric-value">{{ formatMinutes(selectedCourier.average_delivery_time) }}</div>
+                      <div class="metric-value">
+                        {{ formatMinutes(selectedCourier.average_delivery_time) }}
+                      </div>
                     </div>
                     <div class="metric-item">
                       <div class="metric-label">Distance moyenne par livraison</div>
-                      <div class="metric-value">{{ selectedCourier.average_distance.toFixed(1) }} km</div>
+                      <div class="metric-value">
+                        {{ selectedCourier.average_distance.toFixed(1) }} km
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Livraisons -->
               <div v-if="activeCourierDetailsTab === 'deliveries'" class="courier-details-section">
                 <h3>Livraisons récentes</h3>
-                
+
                 <div v-if="courierDeliveries.length === 0" class="empty-state">
                   <font-awesome-icon icon="truck" />
                   <p>Aucune livraison trouvée</p>
@@ -552,7 +603,10 @@
                         <td>{{ delivery.pickup_address }}</td>
                         <td>{{ delivery.delivery_address }}</td>
                         <td>
-                          <span class="status-badge" :class="getDeliveryStatusClass(delivery.status)">
+                          <span
+                            class="status-badge"
+                            :class="getDeliveryStatusClass(delivery.status)"
+                          >
                             {{ getDeliveryStatusLabel(delivery.status) }}
                           </span>
                         </td>
@@ -560,11 +614,11 @@
                         <td>
                           <div class="rating" v-if="delivery.rating">
                             <div class="stars">
-                              <font-awesome-icon 
-                                v-for="n in 5" 
-                                :key="n" 
-                                icon="star" 
-                                :class="{ 'filled': n <= Math.round(delivery.rating) }"
+                              <font-awesome-icon
+                                v-for="n in 5"
+                                :key="n"
+                                icon="star"
+                                :class="{ filled: n <= Math.round(delivery.rating) }"
                               />
                             </div>
                           </div>
@@ -575,11 +629,11 @@
                   </table>
                 </div>
               </div>
-              
+
               <!-- Paiements -->
               <div v-if="activeCourierDetailsTab === 'payments'" class="courier-details-section">
                 <h3>Paiements</h3>
-                
+
                 <div v-if="courierPayments.length === 0" class="empty-state">
                   <font-awesome-icon icon="money-bill" />
                   <p>Aucun paiement trouvé</p>
@@ -604,7 +658,10 @@
                         <td>{{ formatCurrency(payment.amount) }} FCFA</td>
                         <td>
                           <div class="payment-method">
-                            <font-awesome-icon :icon="getPaymentMethodIcon(payment.method)" class="mr-1" />
+                            <font-awesome-icon
+                              :icon="getPaymentMethodIcon(payment.method)"
+                              class="mr-1"
+                            />
                             {{ getPaymentMethodLabel(payment.method) }}
                           </div>
                         </td>
@@ -618,11 +675,11 @@
                   </table>
                 </div>
               </div>
-              
+
               <!-- Vérification KYC -->
               <div v-if="activeCourierDetailsTab === 'kyc'" class="courier-details-section">
                 <h3>Vérification KYC</h3>
-                
+
                 <div v-if="!selectedCourier.kyc" class="empty-state">
                   <font-awesome-icon icon="id-card" />
                   <p>Aucun document KYC soumis</p>
@@ -630,139 +687,172 @@
                 <div v-else class="kyc-details">
                   <div class="kyc-status">
                     <div class="kyc-status-label">Statut de vérification :</div>
-                    <span class="status-badge" :class="getKycStatusClass(selectedCourier.kyc.status)">
+                    <span
+                      class="status-badge"
+                      :class="getKycStatusClass(selectedCourier.kyc.status)"
+                    >
                       {{ getKycStatusLabel(selectedCourier.kyc.status) }}
                     </span>
                   </div>
-                  
+
                   <div class="kyc-documents">
                     <div class="kyc-document-section">
                       <h4>Documents du coursier</h4>
-                      
+
                       <div class="document-grid">
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Pièce d'identité</div>
-                            <div class="document-status" :class="selectedCourier.kyc.id_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedCourier.kyc.id_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedCourier.kyc.id_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedCourier.kyc.id_document">
-                            <img v-if="isImageDocument(selectedCourier.kyc.id_document)" :src="selectedCourier.kyc.id_document" alt="Pièce d'identité" />
+                            <img
+                              v-if="isImageDocument(selectedCourier.kyc.id_document)"
+                              :src="selectedCourier.kyc.id_document"
+                              alt="Pièce d'identité"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedCourier.kyc.id_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedCourier.kyc.id_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedCourier.kyc.id_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedCourier.id, 'id')" 
+                              <button
+                                v-if="!selectedCourier.kyc.id_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedCourier.id, 'id')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedCourier.kyc.id_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedCourier.id, 'id')" 
+                              <button
+                                v-if="!selectedCourier.kyc.id_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedCourier.id, 'id')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
-                        
+
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Permis de conduire</div>
-                            <div class="document-status" :class="selectedCourier.kyc.license_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedCourier.kyc.license_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedCourier.kyc.license_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedCourier.kyc.license_document">
-                            <img v-if="isImageDocument(selectedCourier.kyc.license_document)" :src="selectedCourier.kyc.license_document" alt="Permis de conduire" />
+                            <img
+                              v-if="isImageDocument(selectedCourier.kyc.license_document)"
+                              :src="selectedCourier.kyc.license_document"
+                              alt="Permis de conduire"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedCourier.kyc.license_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedCourier.kyc.license_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedCourier.kyc.license_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedCourier.id, 'license')" 
+                              <button
+                                v-if="!selectedCourier.kyc.license_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedCourier.id, 'license')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedCourier.kyc.license_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedCourier.id, 'license')" 
+                              <button
+                                v-if="!selectedCourier.kyc.license_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedCourier.id, 'license')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
-                        
+
                         <div class="document-item">
                           <div class="document-header">
                             <div class="document-title">Carte grise</div>
-                            <div class="document-status" :class="selectedCourier.kyc.vehicle_verified ? 'verified' : 'pending'">
+                            <div
+                              class="document-status"
+                              :class="selectedCourier.kyc.vehicle_verified ? 'verified' : 'pending'"
+                            >
                               {{ selectedCourier.kyc.vehicle_verified ? 'Vérifié' : 'En attente' }}
                             </div>
                           </div>
                           <div class="document-preview" v-if="selectedCourier.kyc.vehicle_document">
-                            <img v-if="isImageDocument(selectedCourier.kyc.vehicle_document)" :src="selectedCourier.kyc.vehicle_document" alt="Carte grise" />
+                            <img
+                              v-if="isImageDocument(selectedCourier.kyc.vehicle_document)"
+                              :src="selectedCourier.kyc.vehicle_document"
+                              alt="Carte grise"
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" />
                               <span>Document PDF</span>
                             </div>
                             <div class="document-actions">
-                              <a :href="selectedCourier.kyc.vehicle_document" target="_blank" class="btn-icon" title="Voir">
+                              <a
+                                :href="selectedCourier.kyc.vehicle_document"
+                                target="_blank"
+                                class="btn-icon"
+                                title="Voir"
+                              >
                                 <font-awesome-icon icon="eye" />
                               </a>
-                              <button 
-                                v-if="!selectedCourier.kyc.vehicle_verified" 
-                                class="btn-icon" 
-                                @click="verifyDocument(selectedCourier.id, 'vehicle')" 
+                              <button
+                                v-if="!selectedCourier.kyc.vehicle_verified"
+                                class="btn-icon"
+                                @click="verifyDocument(selectedCourier.id, 'vehicle')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
                               </button>
-                              <button 
-                                v-if="!selectedCourier.kyc.vehicle_verified" 
-                                class="btn-icon" 
-                                @click="rejectDocument(selectedCourier.id, 'vehicle')" 
+                              <button
+                                v-if="!selectedCourier.kyc.vehicle_verified"
+                                class="btn-icon"
+                                @click="rejectDocument(selectedCourier.id, 'vehicle')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
                               </button>
                             </div>
                           </div>
-                          <div v-else class="document-empty">
-                            Aucun document soumis
-                          </div>
+                          <div v-else class="document-empty">Aucun document soumis</div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div class="kyc-actions" v-if="selectedCourier.status === 'pending_verification'">
                     <button class="btn btn-success" @click="verifyCourier(selectedCourier.id)">
                       <font-awesome-icon icon="check-circle" class="mr-1" />
@@ -775,36 +865,43 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Localisation -->
               <div v-if="activeCourierDetailsTab === 'location'" class="courier-details-section">
                 <h3>Localisation actuelle</h3>
-                
+
                 <div class="location-details">
                   <div class="location-info">
                     <div class="location-item">
                       <div class="location-label">Dernière mise à jour</div>
-                      <div class="location-value">{{ formatDateTime(selectedCourier.last_location_update) }}</div>
+                      <div class="location-value">
+                        {{ formatDateTime(selectedCourier.last_location_update) }}
+                      </div>
                     </div>
                     <div class="location-item">
                       <div class="location-label">Adresse</div>
-                      <div class="location-value">{{ selectedCourier.current_address || 'Non disponible' }}</div>
+                      <div class="location-value">
+                        {{ selectedCourier.current_address || 'Non disponible' }}
+                      </div>
                     </div>
                     <div class="location-item">
                       <div class="location-label">Commune</div>
-                      <div class="location-value">{{ selectedCourier.current_commune || 'Non disponible' }}</div>
+                      <div class="location-value">
+                        {{ selectedCourier.current_commune || 'Non disponible' }}
+                      </div>
                     </div>
                     <div class="location-item">
                       <div class="location-label">Coordonnées</div>
                       <div class="location-value">
                         <span v-if="selectedCourier.latitude && selectedCourier.longitude">
-                          {{ selectedCourier.latitude.toFixed(6) }}, {{ selectedCourier.longitude.toFixed(6) }}
+                          {{ selectedCourier.latitude.toFixed(6) }},
+                          {{ selectedCourier.longitude.toFixed(6) }}
                         </span>
                         <span v-else>Non disponible</span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div id="courier-detail-map" class="location-map"></div>
                 </div>
               </div>
@@ -834,24 +931,47 @@
           <form @submit.prevent="saveCourier">
             <div class="form-group">
               <label for="courier_name">Nom complet</label>
-              <input type="text" id="courier_name" v-model="courierForm.name" class="form-control" required />
+              <input
+                type="text"
+                id="courier_name"
+                v-model="courierForm.name"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="courier_email">Email</label>
-              <input type="email" id="courier_email" v-model="courierForm.email" class="form-control" required />
+              <input
+                type="email"
+                id="courier_email"
+                v-model="courierForm.email"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="courier_phone">Téléphone</label>
-              <input type="tel" id="courier_phone" v-model="courierForm.phone" class="form-control" required />
+              <input
+                type="tel"
+                id="courier_phone"
+                v-model="courierForm.phone"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="courier_address">Adresse</label>
-              <input type="text" id="courier_address" v-model="courierForm.address" class="form-control" />
+              <input
+                type="text"
+                id="courier_address"
+                v-model="courierForm.address"
+                class="form-control"
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="courier_commune">Commune</label>
               <select id="courier_commune" v-model="courierForm.commune" class="form-control">
@@ -861,10 +981,15 @@
                 </option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label for="courier_vehicle_type">Type de véhicule</label>
-              <select id="courier_vehicle_type" v-model="courierForm.vehicleType" class="form-control" required>
+              <select
+                id="courier_vehicle_type"
+                v-model="courierForm.vehicleType"
+                class="form-control"
+                required
+              >
                 <option value="motorcycle">Moto</option>
                 <option value="car">Voiture</option>
                 <option value="bicycle">Vélo</option>
@@ -872,49 +997,62 @@
                 <option value="truck">Camion</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label for="courier_license_plate">Numéro d'immatriculation</label>
-              <input type="text" id="courier_license_plate" v-model="courierForm.licensePlate" class="form-control" />
+              <input
+                type="text"
+                id="courier_license_plate"
+                v-model="courierForm.licensePlate"
+                class="form-control"
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="courier_driving_license">Numéro de permis</label>
-              <input type="text" id="courier_driving_license" v-model="courierForm.drivingLicense" class="form-control" />
+              <input
+                type="text"
+                id="courier_driving_license"
+                v-model="courierForm.drivingLicense"
+                class="form-control"
+              />
             </div>
-            
+
             <div class="form-group" v-if="!showEditCourierModal">
               <label for="courier_password">Mot de passe</label>
               <div class="password-input">
-                <input 
-                  :type="showPassword ? 'text' : 'password'" 
-                  id="courier_password" 
-                  v-model="courierForm.password" 
-                  class="form-control" 
-                  :required="!showEditCourierModal" 
+                <input
+                  :type="showPassword ? 'text' : 'password'"
+                  id="courier_password"
+                  v-model="courierForm.password"
+                  class="form-control"
+                  :required="!showEditCourierModal"
                 />
-                <button 
-                  type="button" 
-                  class="password-toggle" 
-                  @click="showPassword = !showPassword"
-                >
+                <button type="button" class="password-toggle" @click="showPassword = !showPassword">
                   <font-awesome-icon :icon="showPassword ? 'eye-slash' : 'eye'" />
                 </button>
               </div>
             </div>
-            
+
             <div class="form-group">
               <label for="courier_status">Statut</label>
-              <select id="courier_status" v-model="courierForm.status" class="form-control" required>
+              <select
+                id="courier_status"
+                v-model="courierForm.status"
+                class="form-control"
+                required
+              >
                 <option value="active">Actif</option>
                 <option value="pending_verification">En attente de vérification</option>
                 <option value="suspended">Suspendu</option>
                 <option value="inactive">Inactif</option>
               </select>
             </div>
-            
+
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="closeCourierModal">Annuler</button>
+              <button type="button" class="btn btn-secondary" @click="closeCourierModal">
+                Annuler
+              </button>
               <button type="submit" class="btn btn-primary" :disabled="isSaving">
                 <font-awesome-icon icon="spinner" spin v-if="isSaving" class="mr-1" />
                 {{ showEditCourierModal ? 'Enregistrer' : 'Ajouter' }}
@@ -938,30 +1076,41 @@
           <form @submit.prevent="submitNotification">
             <div class="form-group">
               <label for="notification_title">Titre</label>
-              <input type="text" id="notification_title" v-model="notificationForm.title" class="form-control" required />
+              <input
+                type="text"
+                id="notification_title"
+                v-model="notificationForm.title"
+                class="form-control"
+                required
+              />
             </div>
-            
+
             <div class="form-group">
               <label for="notification_message">Message</label>
-              <textarea 
-                id="notification_message" 
-                v-model="notificationForm.message" 
-                class="form-control" 
-                rows="4" 
+              <textarea
+                id="notification_message"
+                v-model="notificationForm.message"
+                class="form-control"
+                rows="4"
                 required
               ></textarea>
             </div>
-            
+
             <div class="form-group">
               <label for="notification_type">Type</label>
-              <select id="notification_type" v-model="notificationForm.type" class="form-control" required>
+              <select
+                id="notification_type"
+                v-model="notificationForm.type"
+                class="form-control"
+                required
+              >
                 <option value="system">Système</option>
                 <option value="delivery_status">Statut de livraison</option>
                 <option value="new_bid">Nouvelle offre</option>
                 <option value="weather_alert">Alerte météo</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Canaux</label>
               <div class="checkbox-group">
@@ -987,9 +1136,11 @@
                 </label>
               </div>
             </div>
-            
+
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="closeNotificationModal">Annuler</button>
+              <button type="button" class="btn btn-secondary" @click="closeNotificationModal">
+                Annuler
+              </button>
               <button type="submit" class="btn btn-primary" :disabled="isSendingNotification">
                 <font-awesome-icon icon="spinner" spin v-if="isSendingNotification" class="mr-1" />
                 Envoyer
@@ -1013,19 +1164,25 @@
           <p>Veuillez indiquer la raison du rejet de la vérification de ce coursier.</p>
           <div class="form-group">
             <label for="rejection_reason">Raison du rejet</label>
-            <textarea 
-              id="rejection_reason" 
-              v-model="rejectionReason" 
-              class="form-control" 
-              rows="4" 
+            <textarea
+              id="rejection_reason"
+              v-model="rejectionReason"
+              class="form-control"
+              rows="4"
               placeholder="Expliquez pourquoi la vérification est rejetée..."
               required
             ></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showRejectVerificationModal = false">Annuler</button>
-          <button class="btn btn-danger" @click="confirmRejectVerification" :disabled="!rejectionReason.trim()">
+          <button class="btn btn-secondary" @click="showRejectVerificationModal = false">
+            Annuler
+          </button>
+          <button
+            class="btn btn-danger"
+            @click="confirmRejectVerification"
+            :disabled="!rejectionReason.trim()"
+          >
             <font-awesome-icon icon="times-circle" class="mr-1" />
             Rejeter
           </button>
@@ -1038,19 +1195,19 @@
 <script>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  fetchCouriers, 
-  fetchCourierDetails, 
+import {
+  fetchCouriers,
+  fetchCourierDetails,
   fetchCourierDeliveries,
   fetchCourierPayments,
-  addCourier, 
-  updateCourier, 
-  updateCourierStatus, 
+  addCourier,
+  updateCourier,
+  updateCourierStatus,
   verifyCourierDocument,
   rejectCourierDocument,
   verifyCourierKyc,
   rejectCourierKyc,
-  sendCourierNotification
+  sendCourierNotification,
 } from '@/api/manager'
 import { formatCurrency, formatDate, formatDateTime, formatMinutes } from '@/utils/formatters'
 import { COMMUNES } from '@/config'
@@ -1062,7 +1219,7 @@ export default {
   name: 'CouriersManagementView',
   setup() {
     const router = useRouter()
-    
+
     // État
     const couriers = ref([])
     const selectedCourier = ref(null)
@@ -1090,16 +1247,16 @@ export default {
     const communes = COMMUNES
     const courierDeliveries = ref([])
     const courierPayments = ref([])
-    
+
     const filters = reactive({
       status: '',
       availability: '',
       vehicleType: '',
       commune: '',
       rating: '',
-      search: ''
+      search: '',
     })
-    
+
     const courierForm = reactive({
       id: null,
       name: '',
@@ -1111,9 +1268,9 @@ export default {
       licensePlate: '',
       drivingLicense: '',
       password: '',
-      status: 'active'
+      status: 'active',
     })
-    
+
     const notificationForm = reactive({
       title: '',
       message: '',
@@ -1123,19 +1280,19 @@ export default {
         push: false,
         sms: false,
         whatsapp: false,
-        email: false
-      }
+        email: false,
+      },
     })
-    
+
     const courierDetailsTabs = [
       { id: 'personal', label: 'Informations', icon: 'user' },
       { id: 'performance', label: 'Performance', icon: 'chart-line' },
       { id: 'deliveries', label: 'Livraisons', icon: 'truck' },
       { id: 'payments', label: 'Paiements', icon: 'money-bill' },
       { id: 'kyc', label: 'Vérification KYC', icon: 'id-card' },
-      { id: 'location', label: 'Localisation', icon: 'map-marker-alt' }
+      { id: 'location', label: 'Localisation', icon: 'map-marker-alt' },
     ]
-    
+
     const activeCourierDetailsTab = ref('personal')
 
     // Méthodes
@@ -1151,14 +1308,14 @@ export default {
           commune: filters.commune,
           rating: filters.rating,
           search: filters.search,
-          sort: sortBy.value
+          sort: sortBy.value,
         }
-        
+
         const response = await fetchCouriers(params)
         couriers.value = response.items
         totalItems.value = response.total
         totalPages.value = response.pages
-        
+
         // Mettre à jour les marqueurs sur la carte
         updateMapMarkers()
       } catch (error) {
@@ -1168,16 +1325,16 @@ export default {
         loading.value = false
       }
     }
-    
+
     const refreshData = () => {
       fetchData()
     }
-    
+
     const applyFilters = () => {
       currentPage.value = 1
       fetchData()
     }
-    
+
     const resetFilters = () => {
       filters.status = ''
       filters.availability = ''
@@ -1188,33 +1345,34 @@ export default {
       currentPage.value = 1
       fetchData()
     }
-    
-    const changePage = (page) => {
+
+    const changePage = page => {
       currentPage.value = page
       fetchData()
     }
-    
+
     const initMap = () => {
       // Initialiser la carte principale
       if (!courierMap.value) {
-        courierMap.value = L.map('couriers-map').setView([5.3600, -4.0083], 12) // Coordonnées d'Abidjan
-        
+        courierMap.value = L.map('couriers-map').setView([5.36, -4.0083], 12) // Coordonnées d'Abidjan
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(courierMap.value)
       }
     }
-    
+
     const updateMapMarkers = () => {
       if (!courierMap.value) return
-      
+
       // Supprimer les marqueurs existants
       Object.values(courierMarkers.value).forEach(marker => {
         courierMap.value.removeLayer(marker)
       })
-      
+
       courierMarkers.value = {}
-      
+
       // Filtrer les coursiers selon le mode d'affichage
       let filteredCouriers = couriers.value
       if (mapDisplayMode.value === 'available') {
@@ -1222,7 +1380,7 @@ export default {
       } else if (mapDisplayMode.value === 'on_delivery') {
         filteredCouriers = couriers.value.filter(c => c.availability === 'on_delivery')
       }
-      
+
       // Ajouter les nouveaux marqueurs
       filteredCouriers.forEach(courier => {
         if (courier.latitude && courier.longitude) {
@@ -1230,35 +1388,39 @@ export default {
             className: `courier-marker ${getAvailabilityMarkerClass(courier.availability)}`,
             html: `<div class="marker-content">${getInitials(courier.name)}</div>`,
             iconSize: [40, 40],
-            iconAnchor: [20, 40]
+            iconAnchor: [20, 40],
           })
-          
-          const marker = L.marker([courier.latitude, courier.longitude], { icon: markerIcon })
-            .addTo(courierMap.value)
-            .bindPopup(`
+
+          const marker = L.marker([courier.latitude, courier.longitude], {
+            icon: markerIcon,
+          }).addTo(courierMap.value).bindPopup(`
               <div class="marker-popup">
                 <div class="popup-header">${courier.name}</div>
                 <div class="popup-content">
                   <div><strong>Téléphone:</strong> ${courier.phone}</div>
                   <div><strong>Véhicule:</strong> ${getVehicleTypeLabel(courier.vehicle_type)}</div>
-                  <div><strong>Disponibilité:</strong> ${getAvailabilityLabel(courier.availability)}</div>
+                  <div><strong>Disponibilité:</strong> ${getAvailabilityLabel(
+                    courier.availability
+                  )}</div>
                   <div><strong>Note:</strong> ${courier.rating.toFixed(1)} ★</div>
                 </div>
                 <div class="popup-actions">
-                  <button class="popup-btn" onclick="window.viewCourierDetails(${courier.id})">Voir détails</button>
+                  <button class="popup-btn" onclick="window.viewCourierDetails(${
+                    courier.id
+                  })">Voir détails</button>
                 </div>
               </div>
             `)
-          
+
           courierMarkers.value[courier.id] = marker
-          
+
           // Si ce coursier est sélectionné, ouvrir son popup
           if (selectedCourier.value && selectedCourier.value.id === courier.id) {
             marker.openPopup()
           }
         }
       })
-      
+
       // Centrer la carte si nécessaire
       if (filteredCouriers.length > 0 && filteredCouriers.some(c => c.latitude && c.longitude)) {
         const bounds = L.latLngBounds(
@@ -1269,57 +1431,62 @@ export default {
         courierMap.value.fitBounds(bounds, { padding: [50, 50] })
       }
     }
-    
+
     const centerMap = () => {
       if (!courierMap.value) return
-      
+
       const filteredCouriers = couriers.value.filter(c => c.latitude && c.longitude)
-      
+
       if (filteredCouriers.length > 0) {
-        const bounds = L.latLngBounds(
-          filteredCouriers.map(c => [c.latitude, c.longitude])
-        )
+        const bounds = L.latLngBounds(filteredCouriers.map(c => [c.latitude, c.longitude]))
         courierMap.value.fitBounds(bounds, { padding: [50, 50] })
       } else {
         // Centrer sur Abidjan par défaut
-        courierMap.value.setView([5.3600, -4.0083], 12)
+        courierMap.value.setView([5.36, -4.0083], 12)
       }
     }
-    
+
     const initDetailMap = () => {
-      if (!courierDetailMap.value && selectedCourier.value && selectedCourier.value.latitude && selectedCourier.value.longitude) {
+      if (
+        !courierDetailMap.value &&
+        selectedCourier.value &&
+        selectedCourier.value.latitude &&
+        selectedCourier.value.longitude
+      ) {
         // Initialiser la carte de détail
         setTimeout(() => {
           const mapElement = document.getElementById('courier-detail-map')
           if (mapElement) {
             courierDetailMap.value = L.map('courier-detail-map').setView(
-              [selectedCourier.value.latitude, selectedCourier.value.longitude], 
+              [selectedCourier.value.latitude, selectedCourier.value.longitude],
               15
             )
-            
+
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             }).addTo(courierDetailMap.value)
-            
+
             const markerIcon = L.divIcon({
-              className: `courier-marker ${getAvailabilityMarkerClass(selectedCourier.value.availability)}`,
+              className: `courier-marker ${getAvailabilityMarkerClass(
+                selectedCourier.value.availability
+              )}`,
               html: `<div class="marker-content">${getInitials(selectedCourier.value.name)}</div>`,
               iconSize: [40, 40],
-              iconAnchor: [20, 40]
+              iconAnchor: [20, 40],
             })
-            
-            L.marker(
-              [selectedCourier.value.latitude, selectedCourier.value.longitude], 
-              { icon: markerIcon }
-            ).addTo(courierDetailMap.value)
+
+            L.marker([selectedCourier.value.latitude, selectedCourier.value.longitude], {
+              icon: markerIcon,
+            }).addTo(courierDetailMap.value)
           }
         }, 100)
       }
     }
-    
-    const selectCourier = (courier) => {
+
+    const selectCourier = courier => {
       selectedCourier.value = courier
-      
+
       // Mettre en évidence le marqueur sur la carte
       if (courierMap.value && courierMarkers.value[courier.id]) {
         Object.values(courierMarkers.value).forEach(marker => {
@@ -1328,31 +1495,31 @@ export default {
             markerElement.classList.remove('selected')
           }
         })
-        
+
         const markerElement = courierMarkers.value[courier.id].getElement()
         if (markerElement) {
           markerElement.classList.add('selected')
         }
-        
+
         courierMarkers.value[courier.id].openPopup()
       }
     }
-    
-    const viewCourierDetails = async (courierId) => {
+
+    const viewCourierDetails = async courierId => {
       try {
         loading.value = true
         const response = await fetchCourierDetails(courierId)
         selectedCourier.value = response
-        
+
         // Charger les livraisons du coursier
         loadCourierDeliveries(courierId)
-        
+
         // Charger les paiements du coursier
         loadCourierPayments(courierId)
-        
+
         // Afficher le modal
         showCourierDetailsModal.value = true
-        
+
         // Réinitialiser l'onglet actif
         activeCourierDetailsTab.value = 'personal'
       } catch (error) {
@@ -1362,8 +1529,8 @@ export default {
         loading.value = false
       }
     }
-    
-    const loadCourierDeliveries = async (courierId) => {
+
+    const loadCourierDeliveries = async courierId => {
       try {
         const deliveries = await fetchCourierDeliveries(courierId)
         courierDeliveries.value = deliveries
@@ -1372,8 +1539,8 @@ export default {
         courierDeliveries.value = []
       }
     }
-    
-    const loadCourierPayments = async (courierId) => {
+
+    const loadCourierPayments = async courierId => {
       try {
         const payments = await fetchCourierPayments(courierId)
         courierPayments.value = payments
@@ -1382,17 +1549,17 @@ export default {
         courierPayments.value = []
       }
     }
-    
+
     const closeCourierDetailsModal = () => {
       showCourierDetailsModal.value = false
       selectedCourier.value = null
-      
+
       // Détruire la carte de détail
       if (courierDetailMap.value) {
         courierDetailMap.value.remove()
         courierDetailMap.value = null
       }
-      
+
       // Réinitialiser la sélection sur la carte principale
       if (courierMap.value) {
         Object.values(courierMarkers.value).forEach(marker => {
@@ -1403,18 +1570,18 @@ export default {
         })
       }
     }
-    
-    const editCourier = async (courierId) => {
+
+    const editCourier = async courierId => {
       try {
         loading.value = true
-        
+
         // Fermer le modal de détails s'il est ouvert
         if (showCourierDetailsModal.value) {
           closeCourierDetailsModal()
         }
-        
+
         const courier = await fetchCourierDetails(courierId)
-        
+
         // Remplir le formulaire avec les données du coursier
         courierForm.id = courier.id
         courierForm.name = courier.name
@@ -1427,7 +1594,7 @@ export default {
         courierForm.drivingLicense = courier.driving_license || ''
         courierForm.password = ''
         courierForm.status = courier.status
-        
+
         showEditCourierModal.value = true
       } catch (error) {
         console.error('Erreur lors du chargement du coursier:', error)
@@ -1436,13 +1603,13 @@ export default {
         loading.value = false
       }
     }
-    
+
     const closeCourierModal = () => {
       showAddCourierModal.value = false
       showEditCourierModal.value = false
       resetCourierForm()
     }
-    
+
     const resetCourierForm = () => {
       courierForm.id = null
       courierForm.name = ''
@@ -1456,11 +1623,11 @@ export default {
       courierForm.password = ''
       courierForm.status = 'active'
     }
-    
+
     const saveCourier = async () => {
       try {
         isSaving.value = true
-        
+
         const payload = {
           name: courierForm.name,
           email: courierForm.email,
@@ -1470,13 +1637,13 @@ export default {
           vehicle_type: courierForm.vehicleType,
           license_plate: courierForm.licensePlate,
           driving_license: courierForm.drivingLicense,
-          status: courierForm.status
+          status: courierForm.status,
         }
-        
+
         if (courierForm.password) {
           payload.password = courierForm.password
         }
-        
+
         if (showEditCourierModal.value) {
           // Mise à jour d'un coursier existant
           await updateCourier(courierForm.id, payload)
@@ -1484,80 +1651,80 @@ export default {
           // Création d'un nouveau coursier
           await addCourier(payload)
         }
-        
+
         // Fermer le modal
         closeCourierModal()
-        
+
         // Rafraîchir les données
         fetchData()
-        
+
         // Afficher une notification de succès
       } catch (error) {
-        console.error('Erreur lors de l\'enregistrement du coursier:', error)
+        console.error("Erreur lors de l'enregistrement du coursier:", error)
         // Gérer l'erreur (afficher une notification, etc.)
       } finally {
         isSaving.value = false
       }
     }
-    
-    const suspendCourier = async (courierId) => {
+
+    const suspendCourier = async courierId => {
       if (!confirm(`Êtes-vous sûr de vouloir suspendre ce coursier ?`)) {
         return
       }
-      
+
       try {
         await updateCourierStatus(courierId, 'suspended')
-        
+
         // Mettre à jour le coursier dans la liste
         const index = couriers.value.findIndex(c => c.id === courierId)
         if (index !== -1) {
           couriers.value[index].status = 'suspended'
         }
-        
+
         // Mettre à jour le coursier sélectionné si nécessaire
         if (selectedCourier.value && selectedCourier.value.id === courierId) {
           selectedCourier.value.status = 'suspended'
         }
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la suspension du coursier:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
-    const activateCourier = async (courierId) => {
+
+    const activateCourier = async courierId => {
       try {
         await updateCourierStatus(courierId, 'active')
-        
+
         // Mettre à jour le coursier dans la liste
         const index = couriers.value.findIndex(c => c.id === courierId)
         if (index !== -1) {
           couriers.value[index].status = 'active'
         }
-        
+
         // Mettre à jour le coursier sélectionné si nécessaire
         if (selectedCourier.value && selectedCourier.value.id === courierId) {
           selectedCourier.value.status = 'active'
         }
-        
+
         // Afficher une notification de succès
       } catch (error) {
-        console.error('Erreur lors de l\'activation du coursier:', error)
+        console.error("Erreur lors de l'activation du coursier:", error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
-    const verifyCourier = async (courierId) => {
+
+    const verifyCourier = async courierId => {
       try {
         await verifyCourierKyc(courierId)
-        
+
         // Mettre à jour le coursier dans la liste
         const index = couriers.value.findIndex(c => c.id === courierId)
         if (index !== -1) {
           couriers.value[index].status = 'active'
         }
-        
+
         // Mettre à jour le coursier sélectionné si nécessaire
         if (selectedCourier.value && selectedCourier.value.id === courierId) {
           selectedCourier.value.status = 'active'
@@ -1565,85 +1732,93 @@ export default {
             selectedCourier.value.kyc.status = 'verified'
           }
         }
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la vérification du coursier:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
-    const rejectVerification = (courierId) => {
+
+    const rejectVerification = courierId => {
       rejectionReason.value = ''
       showRejectVerificationModal.value = true
     }
-    
+
     const confirmRejectVerification = async () => {
       try {
         if (!selectedCourier.value) return
-        
+
         await rejectCourierKyc(selectedCourier.value.id, rejectionReason.value)
-        
+
         // Mettre à jour le coursier dans la liste
         const index = couriers.value.findIndex(c => c.id === selectedCourier.value.id)
         if (index !== -1) {
           couriers.value[index].status = 'inactive'
         }
-        
+
         // Mettre à jour le coursier sélectionné
         selectedCourier.value.status = 'inactive'
         if (selectedCourier.value.kyc) {
           selectedCourier.value.kyc.status = 'rejected'
         }
-        
+
         // Fermer le modal
         showRejectVerificationModal.value = false
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors du rejet de la vérification:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
+
     const verifyDocument = async (courierId, documentType) => {
       try {
         await verifyCourierDocument(courierId, documentType)
-        
+
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value && selectedCourier.value.id === courierId && selectedCourier.value.kyc) {
+        if (
+          selectedCourier.value &&
+          selectedCourier.value.id === courierId &&
+          selectedCourier.value.kyc
+        ) {
           selectedCourier.value.kyc[`${documentType}_verified`] = true
         }
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors de la vérification du document:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
+
     const rejectDocument = async (courierId, documentType) => {
       if (!confirm('Êtes-vous sûr de vouloir rejeter ce document ?')) {
         return
       }
-      
+
       try {
         await rejectCourierDocument(courierId, documentType)
-        
+
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value && selectedCourier.value.id === courierId && selectedCourier.value.kyc) {
+        if (
+          selectedCourier.value &&
+          selectedCourier.value.id === courierId &&
+          selectedCourier.value.kyc
+        ) {
           selectedCourier.value.kyc[`${documentType}_verified`] = false
           selectedCourier.value.kyc[`${documentType}_document`] = null
         }
-        
+
         // Afficher une notification de succès
       } catch (error) {
         console.error('Erreur lors du rejet du document:', error)
         // Gérer l'erreur (afficher une notification, etc.)
       }
     }
-    
-    const sendNotification = (courierId) => {
+
+    const sendNotification = courierId => {
       // Réinitialiser le formulaire
       notificationForm.title = ''
       notificationForm.message = ''
@@ -1653,49 +1828,49 @@ export default {
         push: false,
         sms: false,
         whatsapp: false,
-        email: false
+        email: false,
       }
-      
+
       showNotificationModal.value = true
     }
-    
+
     const closeNotificationModal = () => {
       showNotificationModal.value = false
     }
-    
+
     const submitNotification = async () => {
       try {
         isSendingNotification.value = true
-        
+
         if (!selectedCourier.value) return
-        
+
         const channels = Object.entries(notificationForm.channels)
           .filter(([_, value]) => value)
           .map(([key]) => key)
-        
+
         await sendCourierNotification(selectedCourier.value.id, {
           title: notificationForm.title,
           message: notificationForm.message,
           type: notificationForm.type,
-          channels
+          channels,
         })
-        
+
         // Fermer le modal
         closeNotificationModal()
-        
+
         // Afficher une notification de succès
       } catch (error) {
-        console.error('Erreur lors de l\'envoi de la notification:', error)
+        console.error("Erreur lors de l'envoi de la notification:", error)
         // Gérer l'erreur (afficher une notification, etc.)
       } finally {
         isSendingNotification.value = false
       }
     }
-    
+
     // Utilitaires
-    const getInitials = (name) => {
+    const getInitials = name => {
       if (!name) return ''
-      
+
       return name
         .split(' ')
         .map(part => part.charAt(0))
@@ -1703,91 +1878,91 @@ export default {
         .toUpperCase()
         .substring(0, 2)
     }
-    
-    const isImageDocument = (url) => {
+
+    const isImageDocument = url => {
       if (!url) return false
-      
+
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
       return imageExtensions.some(ext => url.toLowerCase().endsWith(ext))
     }
-    
-    const getVehicleIcon = (vehicleType) => {
+
+    const getVehicleIcon = vehicleType => {
       const vehicleIcons = {
         motorcycle: 'motorcycle',
         car: 'car',
         bicycle: 'bicycle',
         foot: 'walking',
-        truck: 'truck'
+        truck: 'truck',
       }
-      
+
       return vehicleIcons[vehicleType] || 'question-circle'
     }
-    
-    const getVehicleTypeLabel = (vehicleType) => {
+
+    const getVehicleTypeLabel = vehicleType => {
       const vehicleLabels = {
         motorcycle: 'Moto',
         car: 'Voiture',
         bicycle: 'Vélo',
         foot: 'À pied',
-        truck: 'Camion'
+        truck: 'Camion',
       }
-      
+
       return vehicleLabels[vehicleType] || vehicleType
     }
-    
-    const getStatusClass = (status) => {
+
+    const getStatusClass = status => {
       const statusClasses = {
         active: 'status-active',
         pending_verification: 'status-pending',
         suspended: 'status-suspended',
-        inactive: 'status-inactive'
+        inactive: 'status-inactive',
       }
-      
+
       return statusClasses[status] || 'status-unknown'
     }
-    
-    const getStatusLabel = (status) => {
+
+    const getStatusLabel = status => {
       const statusLabels = {
         active: 'Actif',
         pending_verification: 'En attente de vérification',
         suspended: 'Suspendu',
-        inactive: 'Inactif'
+        inactive: 'Inactif',
       }
-      
+
       return statusLabels[status] || status
     }
-    
-    const getAvailabilityClass = (availability) => {
+
+    const getAvailabilityClass = availability => {
       const availabilityClasses = {
         available: 'availability-available',
         unavailable: 'availability-unavailable',
-        on_delivery: 'availability-on-delivery'
+        on_delivery: 'availability-on-delivery',
       }
-      
+
       return availabilityClasses[availability] || 'availability-unknown'
     }
-    
-    const getAvailabilityMarkerClass = (availability) => {
+
+    const getAvailabilityMarkerClass = availability => {
       const markerClasses = {
         available: 'courier-available',
         unavailable: 'courier-unavailable',
-        on_delivery: 'courier-on-delivery'
+        on_delivery: 'courier-on-delivery',
       }
-      
+
       return markerClasses[availability] || 'courier-unknown'
     }
-    
-    const getAvailabilityLabel = (availability) => {
+
+    const getAvailabilityLabel = availability => {
       const availabilityLabels = {
         available: 'Disponible',
         unavailable: 'Indisponible',
-        on_delivery: 'En livraison'
+        on_delivery: 'En livraison',
       }
-      
+
       return availabilityLabels[availability] || availability
     }
-    
-    const getDeliveryStatusClass = (status) => {
+
+    const getDeliveryStatusClass = status => {
       const statusClasses = {
         pending: 'status-pending',
         accepted: 'status-accepted',
@@ -1795,13 +1970,13 @@ export default {
         in_transit: 'status-in-transit',
         delivered: 'status-delivered',
         cancelled: 'status-cancelled',
-        failed: 'status-failed'
+        failed: 'status-failed',
       }
-      
+
       return statusClasses[status] || 'status-unknown'
     }
-    
-    const getDeliveryStatusLabel = (status) => {
+
+    const getDeliveryStatusLabel = status => {
       const statusLabels = {
         pending: 'En attente',
         accepted: 'Acceptée',
@@ -1809,86 +1984,86 @@ export default {
         in_transit: 'En transit',
         delivered: 'Livrée',
         cancelled: 'Annulée',
-        failed: 'Échouée'
+        failed: 'Échouée',
       }
-      
+
       return statusLabels[status] || status
     }
-    
-    const getPaymentMethodIcon = (method) => {
+
+    const getPaymentMethodIcon = method => {
       const methodIcons = {
         cash: 'money-bill',
         orange_money: 'mobile-alt',
         mtn_money: 'mobile-alt',
         moov_money: 'mobile-alt',
         credit_card: 'credit-card',
-        bank_transfer: 'university'
+        bank_transfer: 'university',
       }
-      
+
       return methodIcons[method] || 'money-bill'
     }
-    
-    const getPaymentMethodLabel = (method) => {
+
+    const getPaymentMethodLabel = method => {
       const methodLabels = {
         cash: 'Espèces',
         orange_money: 'Orange Money',
         mtn_money: 'MTN Money',
         moov_money: 'Moov Money',
         credit_card: 'Carte bancaire',
-        bank_transfer: 'Virement bancaire'
+        bank_transfer: 'Virement bancaire',
       }
-      
+
       return methodLabels[method] || method
     }
-    
-    const getPaymentStatusClass = (status) => {
+
+    const getPaymentStatusClass = status => {
       const statusClasses = {
         completed: 'status-completed',
         pending: 'status-pending',
-        failed: 'status-failed'
+        failed: 'status-failed',
       }
-      
+
       return statusClasses[status] || 'status-unknown'
     }
-    
-    const getPaymentStatusLabel = (status) => {
+
+    const getPaymentStatusLabel = status => {
       const statusLabels = {
         completed: 'Complété',
         pending: 'En attente',
-        failed: 'Échoué'
+        failed: 'Échoué',
       }
-      
+
       return statusLabels[status] || status
     }
-    
-    const getKycStatusClass = (status) => {
+
+    const getKycStatusClass = status => {
       const statusClasses = {
         verified: 'status-active',
         pending: 'status-pending',
-        rejected: 'status-suspended'
+        rejected: 'status-suspended',
       }
-      
+
       return statusClasses[status] || 'status-unknown'
     }
-    
-    const getKycStatusLabel = (status) => {
+
+    const getKycStatusLabel = status => {
       const statusLabels = {
         verified: 'Vérifié',
         pending: 'En attente',
-        rejected: 'Rejeté'
+        rejected: 'Rejeté',
       }
-      
+
       return statusLabels[status] || status
     }
-    
+
     // Computed properties
     const sortBy = ref('name_asc')
-    
+
     // Pagination calculée
     const displayedPages = computed(() => {
       const pages = []
       const maxVisiblePages = 5
-      
+
       if (totalPages.value <= maxVisiblePages) {
         // Afficher toutes les pages si le nombre total est inférieur ou égal au maximum visible
         for (let i = 1; i <= totalPages.value; i++) {
@@ -1898,20 +2073,20 @@ export default {
         // Calculer les pages à afficher
         let startPage = Math.max(1, currentPage.value - Math.floor(maxVisiblePages / 2))
         let endPage = startPage + maxVisiblePages - 1
-        
+
         if (endPage > totalPages.value) {
           endPage = totalPages.value
           startPage = Math.max(1, endPage - maxVisiblePages + 1)
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
           pages.push(i)
         }
       }
-      
+
       return pages
     })
-    
+
     // Debounce pour la recherche
     let searchTimeout = null
     const debounceSearch = () => {
@@ -1920,50 +2095,50 @@ export default {
         applyFilters()
       }, 500)
     }
-    
+
     // Cycle de vie
     onMounted(() => {
       fetchData()
-      
+
       // Initialiser la carte après le rendu du DOM
       setTimeout(() => {
         initMap()
       }, 100)
-      
+
       // Exposer la fonction viewCourierDetails pour les popups Leaflet
       window.viewCourierDetails = viewCourierDetails
     })
-    
+
     onUnmounted(() => {
       // Nettoyer les intervalles et les cartes
       if (refreshInterval.value) {
         clearInterval(refreshInterval.value)
       }
-      
+
       if (courierMap.value) {
         courierMap.value.remove()
       }
-      
+
       if (courierDetailMap.value) {
         courierDetailMap.value.remove()
       }
-      
+
       // Supprimer la fonction globale
       delete window.viewCourierDetails
     })
-    
+
     // Surveiller les changements de page
     watch(currentPage, () => {
       fetchData()
     })
-    
+
     // Surveiller les changements du mode d'affichage de la carte
     watch(mapDisplayMode, () => {
       updateMapMarkers()
     })
-    
+
     // Surveiller l'activation/désactivation de l'actualisation automatique
-    watch(autoRefreshEnabled, (newValue) => {
+    watch(autoRefreshEnabled, newValue => {
       if (newValue) {
         // Activer l'actualisation automatique (toutes les 30 secondes)
         refreshInterval.value = setInterval(() => {
@@ -1977,15 +2152,15 @@ export default {
         }
       }
     })
-    
+
     // Surveiller les changements d'onglet dans les détails du coursier
-    watch(activeCourierDetailsTab, (newValue) => {
+    watch(activeCourierDetailsTab, newValue => {
       if (newValue === 'location') {
         // Initialiser la carte de détail lorsque l'onglet de localisation est sélectionné
         initDetailMap()
       }
     })
-    
+
     return {
       couriers,
       selectedCourier,
@@ -2015,7 +2190,7 @@ export default {
       courierPayments,
       sortBy,
       displayedPages,
-      
+
       fetchData,
       refreshData,
       applyFilters,
@@ -2038,7 +2213,7 @@ export default {
       sendNotification,
       closeNotificationModal,
       submitNotification,
-      
+
       getInitials,
       isImageDocument,
       getVehicleIcon,
@@ -2055,14 +2230,14 @@ export default {
       getPaymentStatusLabel,
       getKycStatusClass,
       getKycStatusLabel,
-      
+
       formatCurrency,
       formatDate,
       formatDateTime,
       formatMinutes,
-      debounceSearch
+      debounceSearch,
     }
-  }
+  },
 }
 </script>
 
@@ -2290,19 +2465,19 @@ export default {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 20px;
 }
 
 .toggle-slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 16px;
   width: 16px;
   left: 2px;
   bottom: 2px;
   background-color: white;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 
@@ -3238,37 +3413,37 @@ input:checked + .toggle-slider:before {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .filter-group {
     min-width: 100%;
   }
-  
+
   .map-actions {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .courier-details-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .courier-details-actions {
     width: 100%;
     flex-direction: row;
     flex-wrap: wrap;
     margin-top: 1rem;
   }
-  
+
   .courier-details-tabs {
     overflow-x: auto;
   }
-  
+
   .tab-button {
     padding: 0.75rem 1rem;
   }
-  
+
   .details-grid,
   .performance-summary,
   .performance-charts,
@@ -3276,7 +3451,7 @@ input:checked + .toggle-slider:before {
   .document-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .data-table {
     display: block;
     overflow-x: auto;
@@ -3289,31 +3464,31 @@ input:checked + .toggle-slider:before {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .actions {
     width: 100%;
   }
-  
+
   .btn {
     flex: 1;
   }
-  
+
   .filters-actions {
     flex-direction: column;
   }
-  
+
   .filters-actions .btn {
     width: 100%;
   }
-  
+
   .modal-footer {
     flex-direction: column;
   }
-  
+
   .modal-footer .btn {
     width: 100%;
   }
-  
+
   .kyc-actions {
     flex-direction: column;
   }

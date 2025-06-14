@@ -1,30 +1,30 @@
-import { defineStore } from "pinia"
-import { ref, computed } from "vue"
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import {
   login as apiLogin,
   register as apiRegister,
   getUserProfile as apiGetUserProfile,
   refreshToken as apiRefreshToken,
   logout as apiLogout,
-} from "@/api/auth"
+} from '@/api/auth'
 
-export const useAuthStore = defineStore("auth", () => {
+export const useAuthStore = defineStore('auth', () => {
   // État
   const user = ref(null)
-  const token = ref(localStorage.getItem("token"))
+  const token = ref(localStorage.getItem('token'))
   const loading = ref(false)
   const error = ref(null)
 
   // Getters
   const isAuthenticated = computed(() => !!token.value)
   const userRole = computed(() => user.value?.role || null)
-  const userName = computed(() => user.value?.full_name || "")
+  const userName = computed(() => user.value?.full_name || '')
   const userInitials = computed(() => {
-    if (!user.value?.full_name) return ""
+    if (!user.value?.full_name) return ''
     return user.value.full_name
-      .split(" ")
-      .map((name) => name[0])
-      .join("")
+      .split(' ')
+      .map(name => name[0])
+      .join('')
       .toUpperCase()
   })
 
@@ -32,17 +32,17 @@ export const useAuthStore = defineStore("auth", () => {
   const login = (userData, userToken) => {
     user.value = userData
     token.value = userToken
-    localStorage.setItem("token", userToken)
+    localStorage.setItem('token', userToken)
   }
 
   const logout = () => {
     apiLogout()
     user.value = null
     token.value = null
-    localStorage.removeItem("token")
+    localStorage.removeItem('token')
   }
 
-  const updateUser = (userData) => {
+  const updateUser = userData => {
     user.value = { ...user.value, ...userData }
   }
 
@@ -64,7 +64,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       return true
     } catch (err) {
-      error.value = err.message || "Erreur de connexion"
+      error.value = err.message || 'Erreur de connexion'
       return false
     } finally {
       loading.value = false
@@ -97,7 +97,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       return userData
     } catch (err) {
-      error.value = err.message || "Erreur de chargement du profil"
+      error.value = err.message || 'Erreur de chargement du profil'
       logout()
       return null
     } finally {
@@ -115,7 +115,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       return true
     } catch (err) {
-      error.value = err.message || "Erreur de rafraîchissement du token"
+      error.value = err.message || 'Erreur de rafraîchissement du token'
       logout()
       return false
     } finally {

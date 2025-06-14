@@ -1,11 +1,11 @@
-import authApi from "./auth"
+import authApi from './auth'
 
 /**
  * Récupérer les données de gains du coursier
  * @param {string} period - Période (week, month, year)
  * @returns {Promise<Object>} - Données de gains
  */
-export const fetchCourierEarnings = async (period = "week") => {
+export const fetchCourierEarnings = async (period = 'week') => {
   try {
     const response = await authApi.get(`/courier/earnings?period=${period}`)
     return response.data
@@ -27,7 +27,7 @@ export const fetchCourierEarnings = async (period = "week") => {
  */
 export const fetchTransactions = async (params = {}) => {
   try {
-    const response = await authApi.get("/courier/transactions", { params })
+    const response = await authApi.get('/courier/transactions', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -40,7 +40,7 @@ export const fetchTransactions = async (params = {}) => {
  */
 export const fetchAvailableRewards = async () => {
   try {
-    const response = await authApi.get("/courier/rewards/available")
+    const response = await authApi.get('/courier/rewards/available')
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -57,7 +57,7 @@ export const fetchAvailableRewards = async () => {
  */
 export const fetchRewardsHistory = async (params = {}) => {
   try {
-    const response = await authApi.get("/courier/rewards/history", { params })
+    const response = await authApi.get('/courier/rewards/history', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -69,7 +69,7 @@ export const fetchRewardsHistory = async (params = {}) => {
  * @param {number} rewardId - ID de la récompense
  * @returns {Promise<Object>} - Récompense échangée
  */
-export const redeemReward = async (rewardId) => {
+export const redeemReward = async rewardId => {
   try {
     const response = await authApi.post(`/courier/rewards/redeem/${rewardId}`)
     return response.data
@@ -88,9 +88,9 @@ export const redeemReward = async (rewardId) => {
  * @param {string} withdrawalData.note - Note
  * @returns {Promise<Object>} - Résultat du retrait
  */
-export const withdrawFunds = async (withdrawalData) => {
+export const withdrawFunds = async withdrawalData => {
   try {
-    const response = await authApi.post("/courier/withdraw", withdrawalData)
+    const response = await authApi.post('/courier/withdraw', withdrawalData)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -102,7 +102,7 @@ export const withdrawFunds = async (withdrawalData) => {
  * @param {string} period - Période (week, month, year)
  * @returns {Promise<Object>} - Statistiques
  */
-export const fetchCourierStats = async (period = "month") => {
+export const fetchCourierStats = async (period = 'month') => {
   try {
     const response = await authApi.get(`/courier/stats?period=${period}`)
     return response.data
@@ -119,9 +119,9 @@ export const fetchCourierStats = async (period = "month") => {
  * @param {number} statusData.longitude - Longitude
  * @returns {Promise<Object>} - Statut mis à jour
  */
-export const updateCourierStatus = async (statusData) => {
+export const updateCourierStatus = async statusData => {
   try {
-    const response = await authApi.post("/courier/status", statusData)
+    const response = await authApi.post('/courier/status', statusData)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -139,7 +139,7 @@ export const updateCourierStatus = async (statusData) => {
  */
 export const fetchAvailableDeliveries = async (params = {}) => {
   try {
-    const response = await authApi.get("/courier/deliveries/available", { params })
+    const response = await authApi.get('/courier/deliveries/available', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -155,9 +155,9 @@ export const fetchAvailableDeliveries = async (params = {}) => {
  * @param {number} bidData.estimated_time - Temps estimé (en minutes)
  * @returns {Promise<Object>} - Enchère créée
  */
-export const createBid = async (bidData) => {
+export const createBid = async bidData => {
   try {
-    const response = await authApi.post("/courier/bids", bidData)
+    const response = await authApi.post('/courier/bids', bidData)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -174,7 +174,7 @@ export const createBid = async (bidData) => {
  */
 export const fetchCourierBids = async (params = {}) => {
   try {
-    const response = await authApi.get("/courier/bids", { params })
+    const response = await authApi.get('/courier/bids', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -187,7 +187,7 @@ export const fetchCourierBids = async (params = {}) => {
  */
 export const fetchActiveDeliveries = async () => {
   try {
-    const response = await authApi.get("/courier/deliveries/active")
+    const response = await authApi.get('/courier/deliveries/active')
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -206,7 +206,7 @@ export const fetchActiveDeliveries = async () => {
  */
 export const fetchDeliveryHistory = async (params = {}) => {
   try {
-    const response = await authApi.get("/courier/deliveries/history", { params })
+    const response = await authApi.get('/courier/deliveries/history', { params })
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -236,9 +236,9 @@ export const updateDeliveryStatus = async (deliveryId, status) => {
  * @param {number} positionData.longitude - Longitude
  * @returns {Promise<Object>} - Résultat
  */
-export const sendCourierPosition = async (positionData) => {
+export const sendCourierPosition = async positionData => {
   try {
-    const response = await authApi.post("/courier/position", positionData)
+    const response = await authApi.post('/courier/position', positionData)
     return response.data
   } catch (error) {
     handleApiError(error)
@@ -250,17 +250,18 @@ export const sendCourierPosition = async (positionData) => {
  * @param {Error} error - Erreur axios
  * @throws {Error} - Erreur formatée
  */
-const handleApiError = (error) => {
+const handleApiError = error => {
   if (error.response) {
     // La requête a été faite et le serveur a répondu avec un code d'état
     // qui n'est pas dans la plage 2xx
-    const errorMessage = error.response.data.detail || error.response.data.message || "Une erreur est survenue"
+    const errorMessage =
+      error.response.data.detail || error.response.data.message || 'Une erreur est survenue'
     throw new Error(errorMessage)
   } else if (error.request) {
     // La requête a été faite mais aucune réponse n'a été reçue
-    throw new Error("Aucune réponse du serveur. Vérifiez votre connexion Internet.")
+    throw new Error('Aucune réponse du serveur. Vérifiez votre connexion Internet.')
   } else {
     // Une erreur s'est produite lors de la configuration de la requête
-    throw new Error(error.message || "Une erreur est survenue")
+    throw new Error(error.message || 'Une erreur est survenue')
   }
 }

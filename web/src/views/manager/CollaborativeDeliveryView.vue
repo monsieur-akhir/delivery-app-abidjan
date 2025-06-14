@@ -48,11 +48,11 @@
         <div class="filter-group search-group">
           <label for="search">Recherche</label>
           <div class="search-input">
-            <input 
-              type="text" 
-              id="search" 
-              v-model="filters.search" 
-              placeholder="ID, adresse, coursier..." 
+            <input
+              type="text"
+              id="search"
+              v-model="filters.search"
+              placeholder="ID, adresse, coursier..."
               @input="debounceSearch"
             />
             <i class="fas fa-search"></i>
@@ -146,23 +146,23 @@
               <td>{{ formatCurrency(delivery.price) }}</td>
               <td>
                 <div class="table-actions">
-                  <button 
-                    class="btn-icon" 
-                    @click="viewDeliveryDetails(delivery.id)" 
+                  <button
+                    class="btn-icon"
+                    @click="viewDeliveryDetails(delivery.id)"
                     title="Voir les détails"
                   >
                     <i class="fas fa-eye"></i>
                   </button>
-                  <button 
-                    class="btn-icon" 
-                    @click="viewParticipants(delivery.id)" 
+                  <button
+                    class="btn-icon"
+                    @click="viewParticipants(delivery.id)"
                     title="Gérer les participants"
                   >
                     <i class="fas fa-users"></i>
                   </button>
-                  <button 
-                    class="btn-icon" 
-                    @click="viewEarnings(delivery.id)" 
+                  <button
+                    class="btn-icon"
+                    @click="viewEarnings(delivery.id)"
                     title="Voir les gains"
                     :disabled="delivery.status !== 'completed'"
                   >
@@ -176,17 +176,17 @@
       </div>
 
       <div class="pagination" v-if="deliveries.length > 0 && totalPages > 1">
-        <button 
-          class="pagination-button" 
-          :disabled="currentPage === 1" 
+        <button
+          class="pagination-button"
+          :disabled="currentPage === 1"
           @click="changePage(currentPage - 1)"
         >
           <i class="fas fa-chevron-left"></i>
         </button>
         <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
-        <button 
-          class="pagination-button" 
-          :disabled="currentPage === totalPages" 
+        <button
+          class="pagination-button"
+          :disabled="currentPage === totalPages"
           @click="changePage(currentPage + 1)"
         >
           <i class="fas fa-chevron-right"></i>
@@ -195,7 +195,11 @@
     </div>
 
     <!-- Modal pour les détails de la livraison -->
-    <Modal v-if="showDeliveryModal" @close="showDeliveryModal = false" title="Détails de la livraison collaborative">
+    <Modal
+      v-if="showDeliveryModal"
+      @close="showDeliveryModal = false"
+      title="Détails de la livraison collaborative"
+    >
       <div v-if="selectedDelivery" class="delivery-details">
         <div class="detail-section">
           <h3>Informations générales</h3>
@@ -240,21 +244,38 @@
           <div class="detail-grid">
             <div class="detail-item">
               <span class="detail-label">Nom</span>
-              <span class="detail-value">{{ selectedDelivery.client ? selectedDelivery.client.name : 'N/A' }}</span>
+              <span class="detail-value">{{
+                selectedDelivery.client ? selectedDelivery.client.name : 'N/A'
+              }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Téléphone</span>
-              <span class="detail-value">{{ selectedDelivery.client ? selectedDelivery.client.phone : 'N/A' }}</span>
+              <span class="detail-value">{{
+                selectedDelivery.client ? selectedDelivery.client.phone : 'N/A'
+              }}</span>
             </div>
           </div>
         </div>
 
         <div class="detail-section">
           <h3>Participants</h3>
-          <div v-if="selectedDelivery.collaborative_couriers && selectedDelivery.collaborative_couriers.length > 0">
-            <div class="participant-card" v-for="courier in selectedDelivery.collaborative_couriers" :key="courier.id">
+          <div
+            v-if="
+              selectedDelivery.collaborative_couriers &&
+              selectedDelivery.collaborative_couriers.length > 0
+            "
+          >
+            <div
+              class="participant-card"
+              v-for="courier in selectedDelivery.collaborative_couriers"
+              :key="courier.id"
+            >
               <div class="participant-avatar">
-                <img v-if="courier.profile_picture" :src="courier.profile_picture" :alt="courier.name" />
+                <img
+                  v-if="courier.profile_picture"
+                  :src="courier.profile_picture"
+                  :alt="courier.name"
+                />
                 <div v-else class="avatar-placeholder">{{ getInitials(courier.name) }}</div>
               </div>
               <div class="participant-info">
@@ -284,7 +305,11 @@
     </Modal>
 
     <!-- Modal pour les participants -->
-    <Modal v-if="showParticipantsModal" @close="showParticipantsModal = false" title="Gestion des participants">
+    <Modal
+      v-if="showParticipantsModal"
+      @close="showParticipantsModal = false"
+      title="Gestion des participants"
+    >
       <div v-if="selectedDelivery" class="participants-management">
         <div class="participants-header">
           <h3>Livraison #{{ selectedDelivery.id }}</h3>
@@ -294,11 +319,24 @@
         </div>
 
         <div class="participants-list">
-          <div v-if="selectedDelivery.collaborative_couriers && selectedDelivery.collaborative_couriers.length > 0">
-            <div class="participant-row" v-for="courier in selectedDelivery.collaborative_couriers" :key="courier.id">
+          <div
+            v-if="
+              selectedDelivery.collaborative_couriers &&
+              selectedDelivery.collaborative_couriers.length > 0
+            "
+          >
+            <div
+              class="participant-row"
+              v-for="courier in selectedDelivery.collaborative_couriers"
+              :key="courier.id"
+            >
               <div class="participant-info">
                 <div class="participant-avatar">
-                  <img v-if="courier.profile_picture" :src="courier.profile_picture" :alt="courier.name" />
+                  <img
+                    v-if="courier.profile_picture"
+                    :src="courier.profile_picture"
+                    :alt="courier.name"
+                  />
                   <div v-else class="avatar-placeholder">{{ getInitials(courier.name) }}</div>
                 </div>
                 <div class="participant-details">
@@ -307,10 +345,13 @@
                 </div>
               </div>
               <div class="participant-status-section">
-                <select 
-                  v-model="courier.status" 
+                <select
+                  v-model="courier.status"
                   @change="updateParticipantStatus(selectedDelivery.id, courier.id, courier.status)"
-                  :disabled="selectedDelivery.status === 'completed' || selectedDelivery.status === 'cancelled'"
+                  :disabled="
+                    selectedDelivery.status === 'completed' ||
+                    selectedDelivery.status === 'cancelled'
+                  "
                 >
                   <option value="pending">En attente</option>
                   <option value="accepted">Accepté</option>
@@ -321,20 +362,26 @@
               <div class="participant-share-section">
                 <div class="share-display">
                   <span class="share-value">{{ courier.share_percentage }}%</span>
-                  <button 
-                    class="btn-icon" 
+                  <button
+                    class="btn-icon"
                     @click="editParticipantShare(courier)"
-                    :disabled="selectedDelivery.status === 'completed' || selectedDelivery.status === 'cancelled'"
+                    :disabled="
+                      selectedDelivery.status === 'completed' ||
+                      selectedDelivery.status === 'cancelled'
+                    "
                   >
                     <i class="fas fa-edit"></i>
                   </button>
                 </div>
               </div>
               <div class="participant-actions">
-                <button 
-                  class="btn-icon" 
+                <button
+                  class="btn-icon"
                   @click="removeParticipant(selectedDelivery.id, courier.id)"
-                  :disabled="selectedDelivery.status === 'completed' || selectedDelivery.status === 'cancelled'"
+                  :disabled="
+                    selectedDelivery.status === 'completed' ||
+                    selectedDelivery.status === 'cancelled'
+                  "
                   title="Retirer le participant"
                 >
                   <i class="fas fa-times"></i>
@@ -347,18 +394,17 @@
           </div>
         </div>
 
-        <div class="add-participant-section" v-if="selectedDelivery.status !== 'completed' && selectedDelivery.status !== 'cancelled'">
+        <div
+          class="add-participant-section"
+          v-if="selectedDelivery.status !== 'completed' && selectedDelivery.status !== 'cancelled'"
+        >
           <h3>Ajouter un participant</h3>
           <div class="add-participant-form">
             <div class="form-group">
               <label for="courier-select">Sélectionner un coursier</label>
               <select id="courier-select" v-model="newParticipant.courierId">
                 <option value="">Sélectionner un coursier</option>
-                <option 
-                  v-for="courier in availableCouriers" 
-                  :key="courier.id" 
-                  :value="courier.id"
-                >
+                <option v-for="courier in availableCouriers" :key="courier.id" :value="courier.id">
                   {{ courier.name }} ({{ courier.phone }})
                 </option>
               </select>
@@ -366,10 +412,10 @@
             <div class="form-group">
               <label for="share-percentage">Pourcentage de partage</label>
               <div class="input-group">
-                <input 
-                  type="number" 
-                  id="share-percentage" 
-                  v-model.number="newParticipant.sharePercentage" 
+                <input
+                  type="number"
+                  id="share-percentage"
+                  v-model.number="newParticipant.sharePercentage"
                   min="0"
                   max="100"
                   step="1"
@@ -379,10 +425,14 @@
                 </div>
               </div>
             </div>
-            <button 
-              class="btn btn-primary" 
+            <button
+              class="btn btn-primary"
               @click="addParticipant"
-              :disabled="!newParticipant.courierId || newParticipant.sharePercentage < 0 || newParticipant.sharePercentage > 100"
+              :disabled="
+                !newParticipant.courierId ||
+                newParticipant.sharePercentage < 0 ||
+                newParticipant.sharePercentage > 100
+              "
             >
               Ajouter
             </button>
@@ -396,13 +446,15 @@
     </Modal>
 
     <!-- Modal pour les gains -->
-    <Modal v-if="showEarningsModal" @close="showEarningsModal = false" title="Répartition des gains">
+    <Modal
+      v-if="showEarningsModal"
+      @close="showEarningsModal = false"
+      title="Répartition des gains"
+    >
       <div v-if="selectedDelivery && earningsData" class="earnings-management">
         <div class="earnings-header">
           <h3>Livraison #{{ selectedDelivery.id }}</h3>
-          <div class="delivery-price">
-            Prix total: {{ formatCurrency(selectedDelivery.price) }}
-          </div>
+          <div class="delivery-price">Prix total: {{ formatCurrency(selectedDelivery.price) }}</div>
         </div>
 
         <div class="earnings-summary">
@@ -449,13 +501,14 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(amount, participantId) in earningsData.participant_earnings" :key="participantId">
+              <tr
+                v-for="(amount, participantId) in earningsData.participant_earnings"
+                :key="participantId"
+              >
                 <td>
                   {{ getParticipantName(participantId) }}
                 </td>
-                <td>
-                  {{ getParticipantPercentage(participantId) }}%
-                </td>
+                <td>{{ getParticipantPercentage(participantId) }}%</td>
                 <td>
                   {{ formatCurrency(amount) }}
                 </td>
@@ -465,8 +518,8 @@
         </div>
 
         <div class="earnings-actions">
-          <button 
-            class="btn btn-primary" 
+          <button
+            class="btn btn-primary"
             @click="distributeEarnings"
             :disabled="earningsDistributed"
           >
@@ -482,8 +535,12 @@
     </Modal>
 
     <!-- Modal pour éditer le pourcentage de partage -->
-    <Modal v-if="showShareModal" @close="showShareModal = false" title="Modifier le pourcentage de partage">
-      <ParticipantShareForm 
+    <Modal
+      v-if="showShareModal"
+      @close="showShareModal = false"
+      title="Modifier le pourcentage de partage"
+    >
+      <ParticipantShareForm
         v-if="selectedParticipant"
         :participant="selectedParticipant"
         :current-share="selectedParticipant.share_percentage"
@@ -496,143 +553,143 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
-import Chart from 'chart.js/auto';
-import Modal from '@/components/ui/Modal.vue';
-import ParticipantShareForm from '@/components/forms/ParticipantShareForm.vue';
-import { 
-  getCollaborativeDeliveries, 
+import { ref, computed, onMounted, watch } from 'vue'
+import Chart from 'chart.js/auto'
+import Modal from '@/components/ui/Modal.vue'
+import ParticipantShareForm from '@/components/forms/ParticipantShareForm.vue'
+import {
+  getCollaborativeDeliveries,
   getCollaborativeDelivery,
   getCollaborativeParticipants,
   updateParticipantStatus,
   updateParticipantShare,
   getCollaborativeEarnings,
   distributeCollaborativeEarnings,
-  exportCollaborativeData
-} from '@/api/collaborative';
-import { useToast } from '@/composables/useToast';
+  exportCollaborativeData,
+} from '@/api/collaborative'
+import { useToast } from '@/composables/useToast'
 
 export default {
   name: 'CollaborativeDeliveryView',
   components: {
     Modal,
-    ParticipantShareForm
+    ParticipantShareForm,
   },
   setup() {
-    const { showToast } = useToast();
-    
+    const { showToast } = useToast()
+
     // État des données
-    const deliveries = ref([]);
-    const loading = ref(true);
+    const deliveries = ref([])
+    const loading = ref(true)
     const stats = ref({
       totalDeliveries: 0,
       totalCouriers: 0,
       completedDeliveries: 0,
-      totalEarnings: 0
-    });
-    
+      totalEarnings: 0,
+    })
+
     // État de la pagination
-    const currentPage = ref(1);
-    const totalItems = ref(0);
-    const itemsPerPage = ref(10);
-    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
-    
+    const currentPage = ref(1)
+    const totalItems = ref(0)
+    const itemsPerPage = ref(10)
+    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value))
+
     // État des filtres
     const filters = ref({
       status: '',
       dateRange: 'all',
       startDate: null,
       endDate: null,
-      search: ''
-    });
-    
+      search: '',
+    })
+
     // État des modals
-    const showDeliveryModal = ref(false);
-    const showParticipantsModal = ref(false);
-    const showEarningsModal = ref(false);
-    const showShareModal = ref(false);
-    
+    const showDeliveryModal = ref(false)
+    const showParticipantsModal = ref(false)
+    const showEarningsModal = ref(false)
+    const showShareModal = ref(false)
+
     // État des éléments sélectionnés
-    const selectedDelivery = ref(null);
-    const selectedParticipant = ref(null);
-    const earningsData = ref(null);
-    const earningsDistributed = ref(false);
-    
+    const selectedDelivery = ref(null)
+    const selectedParticipant = ref(null)
+    const earningsData = ref(null)
+    const earningsDistributed = ref(false)
+
     // État pour l'ajout de participant
     const newParticipant = ref({
       courierId: '',
-      sharePercentage: 20
-    });
-    
+      sharePercentage: 20,
+    })
+
     // Liste des coursiers disponibles
     const availableCouriers = ref([
       { id: 1, name: 'Amadou Diallo', phone: '77 123 45 67' },
       { id: 2, name: 'Fatou Sow', phone: '76 234 56 78' },
       { id: 3, name: 'Moussa Camara', phone: '70 345 67 89' },
-      { id: 4, name: 'Aïssatou Bah', phone: '78 456 78 90' }
-    ]);
-    
+      { id: 4, name: 'Aïssatou Bah', phone: '78 456 78 90' },
+    ])
+
     // Référence pour le graphique
-    const earningsChart = ref(null);
-    let chart = null;
-    
+    const earningsChart = ref(null)
+    let chart = null
+
     // Chargement des livraisons
     const loadDeliveries = async () => {
       try {
-        loading.value = true;
-        
+        loading.value = true
+
         // Préparer les dates si nécessaire
-        let startDate = null;
-        let endDate = null;
-        
+        let startDate = null
+        let endDate = null
+
         if (filters.value.dateRange === 'custom') {
-          startDate = filters.value.startDate ? new Date(filters.value.startDate) : null;
-          endDate = filters.value.endDate ? new Date(filters.value.endDate) : null;
+          startDate = filters.value.startDate ? new Date(filters.value.startDate) : null
+          endDate = filters.value.endDate ? new Date(filters.value.endDate) : null
         } else if (filters.value.dateRange === 'today') {
-          startDate = new Date();
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setHours(23, 59, 59, 999);
+          startDate = new Date()
+          startDate.setHours(0, 0, 0, 0)
+          endDate = new Date()
+          endDate.setHours(23, 59, 59, 999)
         } else if (filters.value.dateRange === 'yesterday') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date();
-          endDate.setDate(endDate.getDate() - 1);
-          endDate.setHours(23, 59, 59, 999);
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 1)
+          startDate.setHours(0, 0, 0, 0)
+          endDate = new Date()
+          endDate.setDate(endDate.getDate() - 1)
+          endDate.setHours(23, 59, 59, 999)
         } else if (filters.value.dateRange === 'last_week') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 7);
-          endDate = new Date();
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 7)
+          endDate = new Date()
         } else if (filters.value.dateRange === 'last_month') {
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 30);
-          endDate = new Date();
+          startDate = new Date()
+          startDate.setDate(startDate.getDate() - 30)
+          endDate = new Date()
         }
-        
+
         // Appel API
-        const skip = (currentPage.value - 1) * itemsPerPage.value;
+        const skip = (currentPage.value - 1) * itemsPerPage.value
         const response = await getCollaborativeDeliveries(
           filters.value.status,
           startDate,
           endDate,
           skip,
           itemsPerPage.value
-        );
-        
-        deliveries.value = response;
-        totalItems.value = response.length > 0 ? response[0].total_count || 100 : 0;
-        
+        )
+
+        deliveries.value = response
+        totalItems.value = response.length > 0 ? response[0].total_count || 100 : 0
+
         // Mise à jour des statistiques
-        updateStats();
+        updateStats()
       } catch (error) {
-        console.error('Erreur lors du chargement des livraisons:', error);
-        showToast('Erreur lors du chargement des livraisons', 'error');
+        console.error('Erreur lors du chargement des livraisons:', error)
+        showToast('Erreur lors du chargement des livraisons', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Mise à jour des statistiques
     const updateStats = () => {
       // Dans un environnement réel, ces données viendraient de l'API
@@ -640,197 +697,205 @@ export default {
         totalDeliveries: 45,
         totalCouriers: 12,
         completedDeliveries: 32,
-        totalEarnings: 450000
-      };
-    };
-    
+        totalEarnings: 450000,
+      }
+    }
+
     // Gestion des changements de page
-    const changePage = (page) => {
-      currentPage.value = page;
-      loadDeliveries();
-    };
-    
+    const changePage = page => {
+      currentPage.value = page
+      loadDeliveries()
+    }
+
     // Gestion du changement de plage de dates
     const handleDateRangeChange = () => {
       if (filters.value.dateRange !== 'custom') {
-        filters.value.startDate = null;
-        filters.value.endDate = null;
+        filters.value.startDate = null
+        filters.value.endDate = null
       }
-      loadDeliveries();
-    };
-    
+      loadDeliveries()
+    }
+
     // Recherche avec debounce
     const debounceSearch = () => {
-      clearTimeout(window.searchTimeout);
+      clearTimeout(window.searchTimeout)
       window.searchTimeout = setTimeout(() => {
-        loadDeliveries();
-      }, 300);
-    };
-    
+        loadDeliveries()
+      }, 300)
+    }
+
     // Formatage de la date
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
+    const formatDate = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
-      });
-    };
-    
+        year: 'numeric',
+      })
+    }
+
     // Formatage de la date et de l'heure
-    const formatDateTime = (dateString) => {
-      const date = new Date(dateString);
+    const formatDateTime = dateString => {
+      const date = new Date(dateString)
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      });
-    };
-    
+        minute: '2-digit',
+      })
+    }
+
     // Formatage de la devise
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        minimumFractionDigits: 0
-      }).format(amount);
-    };
-    
+        minimumFractionDigits: 0,
+      }).format(amount)
+    }
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       switch (status) {
-        case 'pending': return 'status-pending';
-        case 'in_progress': return 'status-in-progress';
-        case 'completed': return 'status-completed';
-        case 'cancelled': return 'status-cancelled';
-        default: return '';
+        case 'pending':
+          return 'status-pending'
+        case 'in_progress':
+          return 'status-in-progress'
+        case 'completed':
+          return 'status-completed'
+        case 'cancelled':
+          return 'status-cancelled'
+        default:
+          return ''
       }
-    };
-    
+    }
+
     // Obtenir le libellé pour un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       switch (status) {
-        case 'pending': return 'En attente';
-        case 'in_progress': return 'En cours';
-        case 'completed': return 'Terminée';
-        case 'cancelled': return 'Annulée';
-        case 'accepted': return 'Accepté';
-        default: return status;
+        case 'pending':
+          return 'En attente'
+        case 'in_progress':
+          return 'En cours'
+        case 'completed':
+          return 'Terminée'
+        case 'cancelled':
+          return 'Annulée'
+        case 'accepted':
+          return 'Accepté'
+        default:
+          return status
       }
-    };
-    
+    }
+
     // Obtenir les initiales d'un nom
-    const getInitials = (name) => {
-      if (!name) return '';
+    const getInitials = name => {
+      if (!name) return ''
       return name
         .split(' ')
         .map(part => part.charAt(0))
         .join('')
-        .toUpperCase();
-    };
-    
+        .toUpperCase()
+    }
+
     // Voir les détails d'une livraison
-    const viewDeliveryDetails = async (deliveryId) => {
+    const viewDeliveryDetails = async deliveryId => {
       try {
-        loading.value = true;
-        const delivery = await getCollaborativeDelivery(deliveryId);
-        selectedDelivery.value = delivery;
-        showDeliveryModal.value = true;
+        loading.value = true
+        const delivery = await getCollaborativeDelivery(deliveryId)
+        selectedDelivery.value = delivery
+        showDeliveryModal.value = true
       } catch (error) {
-        console.error('Erreur lors du chargement des détails de la livraison:', error);
-        showToast('Erreur lors du chargement des détails de la livraison', 'error');
+        console.error('Erreur lors du chargement des détails de la livraison:', error)
+        showToast('Erreur lors du chargement des détails de la livraison', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Voir les participants d'une livraison
-    const viewParticipants = async (deliveryId) => {
+    const viewParticipants = async deliveryId => {
       try {
-        loading.value = true;
-        const delivery = await getCollaborativeDelivery(deliveryId);
-        selectedDelivery.value = delivery;
-        showParticipantsModal.value = true;
+        loading.value = true
+        const delivery = await getCollaborativeDelivery(deliveryId)
+        selectedDelivery.value = delivery
+        showParticipantsModal.value = true
       } catch (error) {
-        console.error('Erreur lors du chargement des participants:', error);
-        showToast('Erreur lors du chargement des participants', 'error');
+        console.error('Erreur lors du chargement des participants:', error)
+        showToast('Erreur lors du chargement des participants', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Voir les gains d'une livraison
-    const viewEarnings = async (deliveryId) => {
+    const viewEarnings = async deliveryId => {
       try {
-        loading.value = true;
-        const delivery = await getCollaborativeDelivery(deliveryId);
-        selectedDelivery.value = delivery;
-        
+        loading.value = true
+        const delivery = await getCollaborativeDelivery(deliveryId)
+        selectedDelivery.value = delivery
+
         // Récupérer les données de gains
-        const earnings = await getCollaborativeEarnings(deliveryId);
-        earningsData.value = earnings;
-        
+        const earnings = await getCollaborativeEarnings(deliveryId)
+        earningsData.value = earnings
+
         // Réinitialiser l'état de distribution
-        earningsDistributed.value = false;
-        
-        showEarningsModal.value = true;
-        
+        earningsDistributed.value = false
+
+        showEarningsModal.value = true
+
         // Créer le graphique après l'affichage du modal
         setTimeout(() => {
-          createEarningsChart();
-        }, 100);
+          createEarningsChart()
+        }, 100)
       } catch (error) {
-        console.error('Erreur lors du chargement des gains:', error);
-        showToast('Erreur lors du chargement des gains', 'error');
+        console.error('Erreur lors du chargement des gains:', error)
+        showToast('Erreur lors du chargement des gains', 'error')
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     // Créer le graphique des gains
     const createEarningsChart = () => {
-      if (!earningsChart.value || !earningsData.value) return;
-      
-      const ctx = earningsChart.value.getContext('2d');
-      
+      if (!earningsChart.value || !earningsData.value) return
+
+      const ctx = earningsChart.value.getContext('2d')
+
       // Détruire le graphique existant s'il y en a un
       if (chart) {
-        chart.destroy();
+        chart.destroy()
       }
-      
+
       // Préparer les données
-      const labels = [];
-      const data = [];
-      const colors = [
-        '#4e73df',
-        '#1cc88a',
-        '#36b9cc',
-        '#f6c23e',
-        '#e74a3b',
-        '#6f42c1'
-      ];
-      
+      const labels = []
+      const data = []
+      const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#6f42c1']
+
       // Remplir les données
-      let i = 0;
-      for (const [participantId, amount] of Object.entries(earningsData.value.participant_earnings)) {
-        labels.push(getParticipantName(participantId));
-        data.push(amount);
-        i++;
+      let i = 0
+      for (const [participantId, amount] of Object.entries(
+        earningsData.value.participant_earnings
+      )) {
+        labels.push(getParticipantName(participantId))
+        data.push(amount)
+        i++
       }
-      
+
       // Créer le graphique
       chart = new Chart(ctx, {
         type: 'pie',
         data: {
           labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: colors,
-            hoverBackgroundColor: colors,
-            hoverBorderColor: "rgba(234, 236, 244, 1)",
-          }]
+          datasets: [
+            {
+              data: data,
+              backgroundColor: colors,
+              hoverBackgroundColor: colors,
+              hoverBorderColor: 'rgba(234, 236, 244, 1)',
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -840,168 +905,174 @@ export default {
               position: 'bottom',
               labels: {
                 usePointStyle: true,
-                padding: 20
-              }
+                padding: 20,
+              },
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  let label = context.label || '';
+                label: function (context) {
+                  let label = context.label || ''
                   if (label) {
-                    label += ': ';
+                    label += ': '
                   }
                   if (context.parsed !== undefined) {
                     label += new Intl.NumberFormat('fr-FR', {
                       style: 'currency',
                       currency: 'XOF',
-                      minimumFractionDigits: 0
-                    }).format(context.parsed);
+                      minimumFractionDigits: 0,
+                    }).format(context.parsed)
                   }
-                  return label;
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-    
+                  return label
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
     // Obtenir le nom d'un participant à partir de son ID
-    const getParticipantName = (participantId) => {
-      if (!selectedDelivery.value || !selectedDelivery.value.collaborative_couriers) return `Coursier #${participantId}`;
-      
-      const participant = selectedDelivery.value.collaborative_couriers.find(c => c.id.toString() === participantId.toString());
-      return participant ? participant.name : `Coursier #${participantId}`;
-    };
-    
+    const getParticipantName = participantId => {
+      if (!selectedDelivery.value || !selectedDelivery.value.collaborative_couriers)
+        return `Coursier #${participantId}`
+
+      const participant = selectedDelivery.value.collaborative_couriers.find(
+        c => c.id.toString() === participantId.toString()
+      )
+      return participant ? participant.name : `Coursier #${participantId}`
+    }
+
     // Obtenir le pourcentage d'un participant à partir de son ID
-    const getParticipantPercentage = (participantId) => {
-      if (!selectedDelivery.value || !selectedDelivery.value.collaborative_couriers) return 0;
-      
-      const participant = selectedDelivery.value.collaborative_couriers.find(c => c.id.toString() === participantId.toString());
-      return participant ? participant.share_percentage : 0;
-    };
-    
+    const getParticipantPercentage = participantId => {
+      if (!selectedDelivery.value || !selectedDelivery.value.collaborative_couriers) return 0
+
+      const participant = selectedDelivery.value.collaborative_couriers.find(
+        c => c.id.toString() === participantId.toString()
+      )
+      return participant ? participant.share_percentage : 0
+    }
+
     // Mettre à jour le statut d'un participant
     const updateParticipantStatus = async (deliveryId, participantId, status) => {
       try {
-        await updateParticipantStatus(deliveryId, participantId, status);
-        showToast('Statut du participant mis à jour avec succès', 'success');
+        await updateParticipantStatus(deliveryId, participantId, status)
+        showToast('Statut du participant mis à jour avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de la mise à jour du statut du participant:', error);
-        showToast('Erreur lors de la mise à jour du statut du participant', 'error');
+        console.error('Erreur lors de la mise à jour du statut du participant:', error)
+        showToast('Erreur lors de la mise à jour du statut du participant', 'error')
       }
-    };
-    
+    }
+
     // Éditer le pourcentage de partage d'un participant
-    const editParticipantShare = (participant) => {
-      selectedParticipant.value = participant;
-      showShareModal.value = true;
-    };
-    
+    const editParticipantShare = participant => {
+      selectedParticipant.value = participant
+      showShareModal.value = true
+    }
+
     // Enregistrer le pourcentage de partage d'un participant
-    const saveParticipantShare = async (data) => {
+    const saveParticipantShare = async data => {
       try {
-        if (!selectedDelivery.value) return;
-        
+        if (!selectedDelivery.value) return
+
         await updateParticipantShare(
           selectedDelivery.value.id,
           data.participantId,
           data.sharePercentage
-        );
-        
+        )
+
         // Mettre à jour les données locales
         if (selectedDelivery.value.collaborative_couriers) {
-          const participant = selectedDelivery.value.collaborative_couriers.find(c => c.id === data.participantId);
+          const participant = selectedDelivery.value.collaborative_couriers.find(
+            c => c.id === data.participantId
+          )
           if (participant) {
-            participant.share_percentage = data.sharePercentage;
+            participant.share_percentage = data.sharePercentage
           }
         }
-        
-        showToast('Pourcentage de partage mis à jour avec succès', 'success');
-        showShareModal.value = false;
+
+        showToast('Pourcentage de partage mis à jour avec succès', 'success')
+        showShareModal.value = false
       } catch (error) {
-        console.error('Erreur lors de la mise à jour du pourcentage de partage:', error);
-        showToast('Erreur lors de la mise à jour du pourcentage de partage', 'error');
+        console.error('Erreur lors de la mise à jour du pourcentage de partage:', error)
+        showToast('Erreur lors de la mise à jour du pourcentage de partage', 'error')
       }
-    };
-    
+    }
+
     // Ajouter un participant
     const addParticipant = async () => {
       try {
-        if (!selectedDelivery.value || !newParticipant.value.courierId) return;
-        
+        if (!selectedDelivery.value || !newParticipant.value.courierId) return
+
         // Dans un environnement réel, cela serait géré par l'API
         // Simuler l'ajout d'un participant
-        const courier = availableCouriers.value.find(c => c.id === newParticipant.value.courierId);
-        
+        const courier = availableCouriers.value.find(c => c.id === newParticipant.value.courierId)
+
         if (courier) {
           // Vérifier si le coursier est déjà un participant
           const isAlreadyParticipant = selectedDelivery.value.collaborative_couriers.some(
             c => c.id === courier.id
-          );
-          
+          )
+
           if (isAlreadyParticipant) {
-            showToast('Ce coursier est déjà un participant à cette livraison', 'error');
-            return;
+            showToast('Ce coursier est déjà un participant à cette livraison', 'error')
+            return
           }
-          
+
           // Ajouter le coursier à la liste des participants
           selectedDelivery.value.collaborative_couriers.push({
             id: courier.id,
             name: courier.name,
             phone: courier.phone,
             status: 'pending',
-            share_percentage: newParticipant.value.sharePercentage
-          });
-          
+            share_percentage: newParticipant.value.sharePercentage,
+          })
+
           // Réinitialiser le formulaire
           newParticipant.value = {
             courierId: '',
-            sharePercentage: 20
-          };
-          
-          showToast('Participant ajouté avec succès', 'success');
+            sharePercentage: 20,
+          }
+
+          showToast('Participant ajouté avec succès', 'success')
         }
       } catch (error) {
-        console.error('Erreur lors de l\'ajout du participant:', error);
-        showToast('Erreur lors de l\'ajout du participant', 'error');
+        console.error("Erreur lors de l'ajout du participant:", error)
+        showToast("Erreur lors de l'ajout du participant", 'error')
       }
-    };
-    
+    }
+
     // Retirer un participant
     const removeParticipant = async (deliveryId, participantId) => {
       try {
         // Dans un environnement réel, cela serait géré par l'API
         // Simuler la suppression d'un participant
         if (selectedDelivery.value && selectedDelivery.value.collaborative_couriers) {
-          selectedDelivery.value.collaborative_couriers = selectedDelivery.value.collaborative_couriers.filter(
-            c => c.id !== participantId
-          );
-          
-          showToast('Participant retiré avec succès', 'success');
+          selectedDelivery.value.collaborative_couriers =
+            selectedDelivery.value.collaborative_couriers.filter(c => c.id !== participantId)
+
+          showToast('Participant retiré avec succès', 'success')
         }
       } catch (error) {
-        console.error('Erreur lors du retrait du participant:', error);
-        showToast('Erreur lors du retrait du participant', 'error');
+        console.error('Erreur lors du retrait du participant:', error)
+        showToast('Erreur lors du retrait du participant', 'error')
       }
-    };
-    
+    }
+
     // Distribuer les gains
     const distributeEarnings = async () => {
       try {
-        if (!selectedDelivery.value) return;
-        
-        await distributeCollaborativeEarnings(selectedDelivery.value.id);
-        earningsDistributed.value = true;
-        
-        showToast('Gains distribués avec succès', 'success');
+        if (!selectedDelivery.value) return
+
+        await distributeCollaborativeEarnings(selectedDelivery.value.id)
+        earningsDistributed.value = true
+
+        showToast('Gains distribués avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de la distribution des gains:', error);
-        showToast('Erreur lors de la distribution des gains', 'error');
+        console.error('Erreur lors de la distribution des gains:', error)
+        showToast('Erreur lors de la distribution des gains', 'error')
       }
-    };
-    
+    }
+
     // Exporter les données
     const exportData = async () => {
       try {
@@ -1014,33 +1085,35 @@ export default {
           delivery_address: delivery.delivery_address,
           status: getStatusLabel(delivery.status),
           price: delivery.price,
-          participants: delivery.collaborative_couriers ? delivery.collaborative_couriers.length : 0
-        }));
-        
-        await exportCollaborativeData(dataToExport, 'livraisons-collaboratives.csv');
-        showToast('Données exportées avec succès', 'success');
+          participants: delivery.collaborative_couriers
+            ? delivery.collaborative_couriers.length
+            : 0,
+        }))
+
+        await exportCollaborativeData(dataToExport, 'livraisons-collaboratives.csv')
+        showToast('Données exportées avec succès', 'success')
       } catch (error) {
-        console.error('Erreur lors de l\'export des données:', error);
-        showToast('Erreur lors de l\'export des données', 'error');
+        console.error("Erreur lors de l'export des données:", error)
+        showToast("Erreur lors de l'export des données", 'error')
       }
-    };
-    
+    }
+
     // Créer une nouvelle livraison
     const openCreateModal = () => {
       // Cette fonctionnalité serait implémentée dans une version future
-      showToast('Fonctionnalité à venir', 'info');
-    };
-    
+      showToast('Fonctionnalité à venir', 'info')
+    }
+
     // Charger les données au montage du composant
     onMounted(() => {
-      loadDeliveries();
-    });
-    
+      loadDeliveries()
+    })
+
     // Surveiller les changements de page
     watch(currentPage, () => {
-      loadDeliveries();
-    });
-    
+      loadDeliveries()
+    })
+
     return {
       deliveries,
       loading,
@@ -1083,10 +1156,10 @@ export default {
       removeParticipant,
       distributeEarnings,
       exportData,
-      openCreateModal
-    };
-  }
-};
+      openCreateModal,
+    }
+  },
+}
 </script>
 
 <style scoped>

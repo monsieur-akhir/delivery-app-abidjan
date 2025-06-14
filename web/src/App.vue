@@ -13,57 +13,57 @@ import { mapState } from 'pinia'
 export default {
   name: 'App',
   computed: {
-    ...mapState(useThemeStore, ['isDarkMode'])
+    ...mapState(useThemeStore, ['isDarkMode']),
   },
   created() {
     const authStore = useAuthStore()
     authStore.initAuth()
-    
+
     // Initialiser le store de WebSocket après l'authentification
     const socketStore = useSocketStore()
     socketStore.initSocket()
-  }
+  },
 }
 </script>
 
 <style>
 :root {
-  --primary-color: #FF6B00;
-  --primary-light: #FFB74D;
-  --primary-dark: #E65100;
-  --secondary-color: #4CAF50;
-  --secondary-light: #81C784;
-  --secondary-dark: #388E3C;
-  --danger-color: #F44336;
-  --warning-color: #FFC107;
-  --info-color: #2196F3;
-  --success-color: #4CAF50;
+  --primary-color: #ff6b00;
+  --primary-light: #ffb74d;
+  --primary-dark: #e65100;
+  --secondary-color: #4caf50;
+  --secondary-light: #81c784;
+  --secondary-dark: #388e3c;
+  --danger-color: #f44336;
+  --warning-color: #ffc107;
+  --info-color: #2196f3;
+  --success-color: #4caf50;
   --text-color: #212121;
   --text-secondary: #757575;
-  --background-color: #FFFFFF;
-  --background-secondary: #F5F5F5;
-  --border-color: #E0E0E0;
-  --card-background: #FFFFFF;
+  --background-color: #ffffff;
+  --background-secondary: #f5f5f5;
+  --border-color: #e0e0e0;
+  --card-background: #ffffff;
   --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 .dark-mode {
-  --primary-color: #FF6B00;
-  --primary-light: #FFB74D;
-  --primary-dark: #E65100;
-  --secondary-color: #4CAF50;
-  --secondary-light: #81C784;
-  --secondary-dark: #388E3C;
-  --danger-color: #F44336;
-  --warning-color: #FFC107;
-  --info-color: #2196F3;
-  --success-color: #4CAF50;
-  --text-color: #FFFFFF;
-  --text-secondary: #B0B0B0;
+  --primary-color: #ff6b00;
+  --primary-light: #ffb74d;
+  --primary-dark: #e65100;
+  --secondary-color: #4caf50;
+  --secondary-light: #81c784;
+  --secondary-dark: #388e3c;
+  --danger-color: #f44336;
+  --warning-color: #ffc107;
+  --info-color: #2196f3;
+  --success-color: #4caf50;
+  --text-color: #ffffff;
+  --text-secondary: #b0b0b0;
   --background-color: #121212;
-  --background-secondary: #1E1E1E;
-  --border-color: #2C2C2C;
-  --card-background: #1E1E1E;
+  --background-secondary: #1e1e1e;
+  --border-color: #2c2c2c;
+  --card-background: #1e1e1e;
   --shadow-color: rgba(0, 0, 0, 0.3);
 }
 
@@ -131,7 +131,7 @@ button {
 }
 
 .btn-primary {
-  color: #FFFFFF;
+  color: #ffffff;
   background-color: var(--primary-color);
   border-color: var(--primary-color);
 }
@@ -142,7 +142,7 @@ button {
 }
 
 .btn-secondary {
-  color: #FFFFFF;
+  color: #ffffff;
   background-color: var(--secondary-color);
   border-color: var(--secondary-color);
 }
@@ -153,14 +153,14 @@ button {
 }
 
 .btn-danger {
-  color: #FFFFFF;
+  color: #ffffff;
   background-color: var(--danger-color);
   border-color: var(--danger-color);
 }
 
 .btn-danger:hover {
-  background-color: #D32F2F;
-  border-color: #D32F2F;
+  background-color: #d32f2f;
+  border-color: #d32f2f;
 }
 
 .btn-outline {
@@ -170,7 +170,7 @@ button {
 }
 
 .btn-outline:hover {
-  color: #FFFFFF;
+  color: #ffffff;
   background-color: var(--primary-color);
   border-color: var(--primary-color);
 }

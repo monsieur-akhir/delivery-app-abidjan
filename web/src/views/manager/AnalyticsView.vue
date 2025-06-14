@@ -1,4 +1,3 @@
-
 <template>
   <div class="analytics-view">
     <div class="header">
@@ -71,7 +70,8 @@
             <div class="kpi-value">{{ kycStats.pending || 0 }}</div>
             <div class="kpi-label">{{ $t('analytics.pendingKyc') }}</div>
             <div class="kpi-growth neutral">
-              {{ Math.round((kycStats.verified / kycStats.total) * 100) }}% {{ $t('analytics.verified') }}
+              {{ Math.round((kycStats.verified / kycStats.total) * 100) }}%
+              {{ $t('analytics.verified') }}
             </div>
           </div>
         </div>
@@ -141,7 +141,11 @@
                 <tr v-for="courier in topCouriers" :key="courier.id">
                   <td>
                     <div class="user-cell">
-                      <img :src="courier.profile_picture || '/default-avatar.png'" :alt="courier.name" class="user-avatar-sm">
+                      <img
+                        :src="courier.profile_picture || '/default-avatar.png'"
+                        :alt="courier.name"
+                        class="user-avatar-sm"
+                      />
                       {{ courier.name }}
                     </div>
                   </td>
@@ -240,213 +244,216 @@ export default {
   name: 'AnalyticsView',
   components: {
     PieChart,
-    HorizontalBarChart
+    HorizontalBarChart,
   },
   setup() {
     const { showToast } = useToast()
-    
+
     const loading = ref(false)
     const selectedPeriod = ref('month')
     const deliveryChart = ref(null)
     const revenueChart = ref(null)
-    
+
     const stats = reactive({})
     const kycStats = reactive({})
     const topCouriers = ref([])
     const recentActivity = ref([])
     const alerts = ref([])
-    
+
     let deliveryChartInstance = null
     let revenueChartInstance = null
-    
+
     // Computed
     const userRoleData = computed(() => ({
       labels: ['Clients', 'Coursiers', 'Entreprises'],
-      datasets: [{
-        data: [
-          stats.usersByRole?.client || 0,
-          stats.usersByRole?.courier || 0,
-          stats.usersByRole?.business || 0
-        ],
-        backgroundColor: ['#2196F3', '#4CAF50', '#FF9800']
-      }]
+      datasets: [
+        {
+          data: [
+            stats.usersByRole?.client || 0,
+            stats.usersByRole?.courier || 0,
+            stats.usersByRole?.business || 0,
+          ],
+          backgroundColor: ['#2196F3', '#4CAF50', '#FF9800'],
+        },
+      ],
     }))
-    
+
     const kycChartData = computed(() => ({
       labels: ['Vérifié', 'En attente', 'Rejeté'],
-      datasets: [{
-        data: [
-          kycStats.verified || 0,
-          kycStats.pending || 0,
-          kycStats.rejected || 0
-        ],
-        backgroundColor: ['#4CAF50', '#FF9800', '#F44336']
-      }]
+      datasets: [
+        {
+          data: [kycStats.verified || 0, kycStats.pending || 0, kycStats.rejected || 0],
+          backgroundColor: ['#4CAF50', '#FF9800', '#F44336'],
+        },
+      ],
     }))
-    
+
     const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom'
-        }
-      }
+          position: 'bottom',
+        },
+      },
     }
-    
+
     const kycChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
-          beginAtZero: true
-        }
-      }
+          beginAtZero: true,
+        },
+      },
     }
-    
+
     // Méthodes
     const loadData = async () => {
       try {
         loading.value = true
-        
+
         // Charger les statistiques avancées
         const statsResponse = await managerApi.getAdvancedStats(selectedPeriod.value)
         Object.assign(stats, statsResponse.data)
-        
+
         // Charger les stats KYC
         const kycResponse = await managerApi.getKycStats()
         Object.assign(kycStats, kycResponse.data)
-        
+
         // Charger les top coursiers
         const couriersResponse = await managerApi.getCouriers({ limit: 5, sort: 'earnings' })
         topCouriers.value = couriersResponse.data
-        
+
         // Charger l'activité récente
         const activityResponse = await managerApi.getRecentActivity()
         recentActivity.value = activityResponse.data
-        
+
         // Mettre à jour les graphiques
         await nextTick()
         updateCharts()
-        
       } catch (error) {
         showToast(error.message, 'error')
       } finally {
         loading.value = false
       }
     }
-    
+
     const updateCharts = () => {
       // Graphique d'évolution des livraisons
       if (deliveryChart.value) {
         const ctx = deliveryChart.value.getContext('2d')
-        
+
         if (deliveryChartInstance) {
           deliveryChartInstance.destroy()
         }
-        
+
         deliveryChartInstance = new Chart(ctx, {
           type: 'line',
           data: {
             labels: stats.deliveryTrend?.labels || [],
-            datasets: [{
-              label: 'Livraisons',
-              data: stats.deliveryTrend?.data || [],
-              borderColor: '#2196F3',
-              backgroundColor: 'rgba(33, 150, 243, 0.1)',
-              tension: 0.3
-            }]
+            datasets: [
+              {
+                label: 'Livraisons',
+                data: stats.deliveryTrend?.data || [],
+                borderColor: '#2196F3',
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                tension: 0.3,
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
               y: {
-                beginAtZero: true
-              }
-            }
-          }
+                beginAtZero: true,
+              },
+            },
+          },
         })
       }
-      
+
       // Graphique des revenus par commune
       if (revenueChart.value) {
         const ctx = revenueChart.value.getContext('2d')
-        
+
         if (revenueChartInstance) {
           revenueChartInstance.destroy()
         }
-        
+
         revenueChartInstance = new Chart(ctx, {
           type: 'bar',
           data: {
             labels: stats.revenueByCommune?.labels || [],
-            datasets: [{
-              label: 'Revenus (XOF)',
-              data: stats.revenueByCommune?.data || [],
-              backgroundColor: '#4CAF50'
-            }]
+            datasets: [
+              {
+                label: 'Revenus (XOF)',
+                data: stats.revenueByCommune?.data || [],
+                backgroundColor: '#4CAF50',
+              },
+            ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
               y: {
-                beginAtZero: true
-              }
-            }
-          }
+                beginAtZero: true,
+              },
+            },
+          },
         })
       }
     }
-    
-    const getGrowthClass = (rate) => {
+
+    const getGrowthClass = rate => {
       if (rate > 0) return 'positive'
       if (rate < 0) return 'negative'
       return 'neutral'
     }
-    
-    const getGrowthIcon = (rate) => {
+
+    const getGrowthIcon = rate => {
       if (rate > 0) return 'fas fa-arrow-up'
       if (rate < 0) return 'fas fa-arrow-down'
       return 'fas fa-minus'
     }
-    
-    const getActivityIcon = (type) => {
+
+    const getActivityIcon = type => {
       const icons = {
         user_registered: 'fas fa-user-plus',
         delivery_completed: 'fas fa-check-circle',
         kyc_submitted: 'fas fa-id-card',
-        payment_processed: 'fas fa-credit-card'
+        payment_processed: 'fas fa-credit-card',
       }
       return icons[type] || 'fas fa-circle'
     }
-    
-    const formatCurrency = (amount) => {
+
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'XOF'
+        currency: 'XOF',
       }).format(amount)
     }
-    
-    const formatTime = (dateString) => {
+
+    const formatTime = dateString => {
       const now = new Date()
       const date = new Date(dateString)
       const diffMs = now - date
       const diffMins = Math.floor(diffMs / 60000)
       const diffHours = Math.floor(diffMins / 60)
       const diffDays = Math.floor(diffHours / 24)
-      
+
       if (diffMins < 60) return `Il y a ${diffMins} min`
       if (diffHours < 24) return `Il y a ${diffHours}h`
       return `Il y a ${diffDays}j`
     }
-    
+
     // Lifecycle
     onMounted(() => {
       loadData()
     })
-    
+
     return {
       loading,
       selectedPeriod,
@@ -466,9 +473,9 @@ export default {
       getGrowthIcon,
       getActivityIcon,
       formatCurrency,
-      formatTime
+      formatTime,
     }
-  }
+  },
 }
 </script>
 
@@ -508,7 +515,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 15px;
@@ -525,10 +532,18 @@ export default {
   color: white;
 }
 
-.kpi-card.users .kpi-icon { background: #2196F3; }
-.kpi-card.deliveries .kpi-icon { background: #4CAF50; }
-.kpi-card.revenue .kpi-icon { background: #FF9800; }
-.kpi-card.kyc .kpi-icon { background: #9C27B0; }
+.kpi-card.users .kpi-icon {
+  background: #2196f3;
+}
+.kpi-card.deliveries .kpi-icon {
+  background: #4caf50;
+}
+.kpi-card.revenue .kpi-icon {
+  background: #ff9800;
+}
+.kpi-card.kyc .kpi-icon {
+  background: #9c27b0;
+}
 
 .kpi-content {
   flex: 1;
@@ -555,9 +570,15 @@ export default {
   gap: 5px;
 }
 
-.kpi-growth.positive { color: #4CAF50; }
-.kpi-growth.negative { color: #F44336; }
-.kpi-growth.neutral { color: #666; }
+.kpi-growth.positive {
+  color: #4caf50;
+}
+.kpi-growth.negative {
+  color: #f44336;
+}
+.kpi-growth.neutral {
+  color: #666;
+}
 
 .charts-grid {
   display: grid;
@@ -569,7 +590,7 @@ export default {
 .chart-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -603,7 +624,7 @@ export default {
 .table-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -657,7 +678,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #FF9800;
+  color: #ff9800;
 }
 
 .activity-list {
@@ -685,7 +706,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2196F3;
+  color: #2196f3;
   font-size: 14px;
 }
 
@@ -725,17 +746,17 @@ export default {
 }
 
 .alert-card.warning {
-  border-left-color: #FF9800;
+  border-left-color: #ff9800;
   background: #fff8e1;
 }
 
 .alert-card.danger {
-  border-left-color: #F44336;
+  border-left-color: #f44336;
   background: #ffebee;
 }
 
 .alert-card.success {
-  border-left-color: #4CAF50;
+  border-left-color: #4caf50;
   background: #e8f5e8;
 }
 
@@ -750,17 +771,17 @@ export default {
 }
 
 .alert-card.warning .alert-icon {
-  background: #FF9800;
+  background: #ff9800;
   color: white;
 }
 
 .alert-card.danger .alert-icon {
-  background: #F44336;
+  background: #f44336;
   color: white;
 }
 
 .alert-card.success .alert-icon {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
 }
 
@@ -795,7 +816,7 @@ export default {
 }
 
 .btn-warning {
-  background: #FF9800;
+  background: #ff9800;
   color: white;
 }
 </style>

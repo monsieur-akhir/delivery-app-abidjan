@@ -1,4 +1,3 @@
-
 <template>
   <div class="vehicle-management">
     <div class="header">
@@ -26,7 +25,7 @@
           <div class="stat-label">{{ $t('vehicles.total') }}</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon active">
           <i class="fas fa-check-circle"></i>
@@ -36,7 +35,7 @@
           <div class="stat-label">{{ $t('vehicles.active') }}</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon maintenance">
           <i class="fas fa-wrench"></i>
@@ -46,7 +45,7 @@
           <div class="stat-label">{{ $t('vehicles.inMaintenance') }}</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon electric">
           <i class="fas fa-leaf"></i>
@@ -62,13 +61,13 @@
     <div class="filters-section">
       <div class="search-box">
         <i class="fas fa-search"></i>
-        <input 
-          v-model="searchQuery" 
+        <input
+          v-model="searchQuery"
           :placeholder="$t('vehicles.searchPlaceholder')"
           @input="applyFilters"
         />
       </div>
-      
+
       <div class="filter-group">
         <select v-model="filters.type" @change="applyFilters" class="filter-select">
           <option value="">{{ $t('vehicles.allTypes') }}</option>
@@ -78,7 +77,7 @@
           <option value="van">{{ $t('vehicles.types.van') }}</option>
           <option value="truck">{{ $t('vehicles.types.truck') }}</option>
         </select>
-        
+
         <select v-model="filters.status" @change="applyFilters" class="filter-select">
           <option value="">{{ $t('vehicles.allStatuses') }}</option>
           <option value="active">{{ $t('vehicles.statuses.active') }}</option>
@@ -86,7 +85,7 @@
           <option value="maintenance">{{ $t('vehicles.statuses.maintenance') }}</option>
           <option value="retired">{{ $t('vehicles.statuses.retired') }}</option>
         </select>
-        
+
         <select v-model="filters.owner" @change="applyFilters" class="filter-select">
           <option value="">{{ $t('vehicles.allOwners') }}</option>
           <option value="company">{{ $t('vehicles.owners.company') }}</option>
@@ -105,7 +104,7 @@
           <canvas ref="utilizationChart"></canvas>
         </div>
       </div>
-      
+
       <div class="chart-card">
         <div class="chart-header">
           <h3>{{ $t('vehicles.typeDistribution') }}</h3>
@@ -122,14 +121,14 @@
         <h3>{{ $t('vehicles.vehicleList') }}</h3>
         <div class="table-actions">
           <div class="view-toggle">
-            <button 
-              @click="viewMode = 'table'" 
+            <button
+              @click="viewMode = 'table'"
               :class="['btn', 'btn-sm', viewMode === 'table' ? 'btn-primary' : 'btn-outline']"
             >
               <i class="fas fa-table"></i>
             </button>
-            <button 
-              @click="viewMode = 'grid'" 
+            <button
+              @click="viewMode = 'grid'"
               :class="['btn', 'btn-sm', viewMode === 'grid' ? 'btn-primary' : 'btn-outline']"
             >
               <i class="fas fa-th"></i>
@@ -173,7 +172,10 @@
               </td>
               <td>
                 <div v-if="vehicle.owner" class="owner-info">
-                  <img :src="vehicle.owner.profile_picture || '/default-avatar.png'" class="avatar-sm" />
+                  <img
+                    :src="vehicle.owner.profile_picture || '/default-avatar.png'"
+                    class="avatar-sm"
+                  />
                   <span>{{ vehicle.owner.full_name }}</span>
                 </div>
                 <span v-else class="no-owner">{{ $t('vehicles.noOwner') }}</span>
@@ -187,8 +189,8 @@
               <td>{{ formatDate(vehicle.last_maintenance) }}</td>
               <td>
                 <div class="utilization-bar">
-                  <div 
-                    class="utilization-fill" 
+                  <div
+                    class="utilization-fill"
                     :style="{ width: `${vehicle.utilization || 0}%` }"
                   ></div>
                   <span class="utilization-text">{{ vehicle.utilization || 0 }}%</span>
@@ -239,11 +241,11 @@
               </span>
             </div>
           </div>
-          
+
           <div class="vehicle-card-content">
             <h4 class="vehicle-card-title">{{ vehicle.brand }} {{ vehicle.model }}</h4>
             <p class="vehicle-card-plate">{{ vehicle.license_plate }}</p>
-            
+
             <div class="vehicle-card-stats">
               <div class="stat">
                 <i class="fas fa-road"></i>
@@ -258,13 +260,16 @@
                 <span>{{ $t('vehicles.electric') }}</span>
               </div>
             </div>
-            
+
             <div v-if="vehicle.owner" class="vehicle-card-owner">
-              <img :src="vehicle.owner.profile_picture || '/default-avatar.png'" class="avatar-xs" />
+              <img
+                :src="vehicle.owner.profile_picture || '/default-avatar.png'"
+                class="avatar-xs"
+              />
               <span>{{ vehicle.owner.full_name }}</span>
             </div>
           </div>
-          
+
           <div class="vehicle-card-actions">
             <button @click="viewVehicle(vehicle)" class="btn btn-sm btn-outline">
               {{ $t('common.view') }}
@@ -275,34 +280,34 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Pagination -->
       <div class="pagination-container">
         <div class="pagination-info">
-          {{ $t('pagination.showing') }} {{ (currentPage - 1) * pageSize + 1 }} 
-          {{ $t('pagination.to') }} {{ Math.min(currentPage * pageSize, filteredVehicles.length) }} 
+          {{ $t('pagination.showing') }} {{ (currentPage - 1) * pageSize + 1 }}
+          {{ $t('pagination.to') }} {{ Math.min(currentPage * pageSize, filteredVehicles.length) }}
           {{ $t('pagination.of') }} {{ filteredVehicles.length }} {{ $t('pagination.entries') }}
         </div>
         <div class="pagination">
-          <button 
-            @click="goToPage(currentPage - 1)" 
+          <button
+            @click="goToPage(currentPage - 1)"
             :disabled="currentPage === 1"
             class="btn btn-sm btn-outline"
           >
             {{ $t('pagination.previous') }}
           </button>
-          
-          <button 
-            v-for="page in visiblePages" 
+
+          <button
+            v-for="page in visiblePages"
             :key="page"
             @click="goToPage(page)"
             :class="['btn', 'btn-sm', page === currentPage ? 'btn-primary' : 'btn-outline']"
           >
             {{ page }}
           </button>
-          
-          <button 
-            @click="goToPage(currentPage + 1)" 
+
+          <button
+            @click="goToPage(currentPage + 1)"
             :disabled="currentPage === totalPages"
             class="btn btn-sm btn-outline"
           >
@@ -313,13 +318,13 @@
     </div>
 
     <!-- Modales -->
-    <VehicleDetailsModal 
+    <VehicleDetailsModal
       v-if="showVehicleDetails"
       :vehicle="selectedVehicle"
       @close="showVehicleDetails = false"
       @update="handleVehicleUpdate"
     />
-    
+
     <VehicleFormModal
       v-if="showAddVehicle || showEditVehicle"
       :vehicle="editingVehicle"
@@ -327,7 +332,7 @@
       @close="closeVehicleForm"
       @save="handleVehicleSave"
     />
-    
+
     <MaintenanceModal
       v-if="showMaintenance"
       :vehicle="selectedVehicle"
@@ -353,11 +358,11 @@ export default {
     PieChart,
     VehicleDetailsModal,
     VehicleFormModal,
-    MaintenanceModal
+    MaintenanceModal,
   },
   setup() {
     const { showToast } = useToast()
-    
+
     const loading = ref(false)
     const vehicles = ref([])
     const filteredVehicles = ref([])
@@ -365,140 +370,142 @@ export default {
     const selectedVehicle = ref(null)
     const editingVehicle = ref(null)
     const utilizationChart = ref(null)
-    
+
     // Interface
     const viewMode = ref('table')
     const showVehicleDetails = ref(false)
     const showAddVehicle = ref(false)
     const showEditVehicle = ref(false)
     const showMaintenance = ref(false)
-    
+
     // Pagination
     const currentPage = ref(1)
     const pageSize = ref(20)
-    
+
     // Filtres
     const searchQuery = ref('')
     const filters = reactive({
       type: '',
       status: '',
-      owner: ''
+      owner: '',
     })
-    
+
     let utilizationChartInstance = null
-    
+
     // Computed
     const paginatedVehicles = computed(() => {
       const start = (currentPage.value - 1) * pageSize.value
       const end = start + pageSize.value
       return filteredVehicles.value.slice(start, end)
     })
-    
+
     const totalPages = computed(() => {
       return Math.ceil(filteredVehicles.value.length / pageSize.value)
     })
-    
+
     const visiblePages = computed(() => {
       const pages = []
       const start = Math.max(1, currentPage.value - 2)
       const end = Math.min(totalPages.value, currentPage.value + 2)
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i)
       }
       return pages
     })
-    
+
     const typeChartData = computed(() => {
       const typeCounts = {}
       vehicles.value.forEach(vehicle => {
         const type = vehicle.vehicle_type
         typeCounts[type] = (typeCounts[type] || 0) + 1
       })
-      
+
       return {
         labels: Object.keys(typeCounts).map(type => type.charAt(0).toUpperCase() + type.slice(1)),
-        datasets: [{
-          data: Object.values(typeCounts),
-          backgroundColor: ['#2196F3', '#4CAF50', '#FF9800', '#F44336', '#9C27B0']
-        }]
+        datasets: [
+          {
+            data: Object.values(typeCounts),
+            backgroundColor: ['#2196F3', '#4CAF50', '#FF9800', '#F44336', '#9C27B0'],
+          },
+        ],
       }
     })
-    
+
     const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom'
-        }
-      }
+          position: 'bottom',
+        },
+      },
     }
-    
+
     // Méthodes
     const loadData = async () => {
       try {
         loading.value = true
-        
+
         // Charger les véhicules
         const vehiclesResponse = await vehiclesApi.getVehicles({ include_owner: true })
         vehicles.value = vehiclesResponse.data || vehiclesResponse
-        
+
         // Calculer les statistiques
         calculateStats()
-        
+
         applyFilters()
         await nextTick()
         updateUtilizationChart()
-        
       } catch (error) {
         showToast(error.message, 'error')
       } finally {
         loading.value = false
       }
     }
-    
+
     const calculateStats = () => {
       const stats = {
         total: vehicles.value.length,
         active: 0,
         maintenance: 0,
-        electric: 0
+        electric: 0,
       }
-      
+
       vehicles.value.forEach(vehicle => {
         if (vehicle.status === 'active') stats.active++
         if (vehicle.status === 'maintenance') stats.maintenance++
         if (vehicle.is_electric) stats.electric++
       })
-      
+
       Object.assign(vehicleStats, stats)
     }
-    
+
     const applyFilters = () => {
       let filtered = [...vehicles.value]
-      
+
       // Recherche textuelle
       if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase()
-        filtered = filtered.filter(vehicle => 
-          vehicle.brand?.toLowerCase().includes(query) ||
-          vehicle.model?.toLowerCase().includes(query) ||
-          vehicle.license_plate?.toLowerCase().includes(query) ||
-          vehicle.owner?.full_name?.toLowerCase().includes(query)
+        filtered = filtered.filter(
+          vehicle =>
+            vehicle.brand?.toLowerCase().includes(query) ||
+            vehicle.model?.toLowerCase().includes(query) ||
+            vehicle.license_plate?.toLowerCase().includes(query) ||
+            vehicle.owner?.full_name?.toLowerCase().includes(query)
         )
       }
-      
+
       // Filtre par type
       if (filters.type) {
         filtered = filtered.filter(vehicle => vehicle.vehicle_type === filters.type)
       }
-      
+
       // Filtre par statut
       if (filters.status) {
         filtered = filtered.filter(vehicle => vehicle.status === filters.status)
       }
-      
+
       // Filtre par propriétaire
       if (filters.owner) {
         if (filters.owner === 'company') {
@@ -507,39 +514,39 @@ export default {
           filtered = filtered.filter(vehicle => vehicle.owner && vehicle.owner.role === 'courier')
         }
       }
-      
+
       filteredVehicles.value = filtered
       currentPage.value = 1
     }
-    
-    const viewVehicle = (vehicle) => {
+
+    const viewVehicle = vehicle => {
       selectedVehicle.value = vehicle
       showVehicleDetails.value = true
     }
-    
-    const editVehicle = (vehicle) => {
+
+    const editVehicle = vehicle => {
       editingVehicle.value = { ...vehicle }
       showEditVehicle.value = true
     }
-    
-    const viewMaintenance = (vehicle) => {
+
+    const viewMaintenance = vehicle => {
       selectedVehicle.value = vehicle
       showMaintenance.value = true
     }
-    
-    const trackVehicle = (vehicle) => {
+
+    const trackVehicle = vehicle => {
       // Ouvrir une nouvelle fenêtre avec le suivi du véhicule
       window.open(`/vehicles/track/${vehicle.id}`, '_blank')
     }
-    
-    const scheduleMaintenace = (vehicle) => {
+
+    const scheduleMaintenace = vehicle => {
       selectedVehicle.value = vehicle
       showMaintenance.value = true
     }
-    
-    const retireVehicle = async (vehicle) => {
+
+    const retireVehicle = async vehicle => {
       if (!confirm('Êtes-vous sûr de vouloir retirer ce véhicule ?')) return
-      
+
       try {
         await vehiclesApi.updateVehicle(vehicle.id, { status: 'retired' })
         showToast('Véhicule retiré avec succès', 'success')
@@ -548,14 +555,14 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
+
     const closeVehicleForm = () => {
       showAddVehicle.value = false
       showEditVehicle.value = false
       editingVehicle.value = null
     }
-    
-    const handleVehicleSave = async (vehicleData) => {
+
+    const handleVehicleSave = async vehicleData => {
       try {
         if (showEditVehicle.value) {
           await vehiclesApi.updateVehicle(editingVehicle.value.id, vehicleData)
@@ -564,15 +571,15 @@ export default {
           await vehiclesApi.createVehicle(vehicleData)
           showToast('Véhicule créé avec succès', 'success')
         }
-        
+
         closeVehicleForm()
         await loadData()
       } catch (error) {
         showToast(error.message, 'error')
       }
     }
-    
-    const handleVehicleUpdate = (updatedVehicle) => {
+
+    const handleVehicleUpdate = updatedVehicle => {
       const index = vehicles.value.findIndex(v => v.id === updatedVehicle.id)
       if (index !== -1) {
         vehicles.value[index] = updatedVehicle
@@ -580,50 +587,52 @@ export default {
         applyFilters()
       }
     }
-    
+
     const handleMaintenanceUpdate = () => {
       loadData()
     }
-    
-    const goToPage = (page) => {
+
+    const goToPage = page => {
       if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
       }
     }
-    
+
     const updateUtilizationChart = () => {
       if (!utilizationChart.value) return
-      
+
       const ctx = utilizationChart.value.getContext('2d')
-      
+
       if (utilizationChartInstance) {
         utilizationChartInstance.destroy()
       }
-      
+
       // Données d'utilisation des 7 derniers jours
       const last7Days = []
       const utilizationData = []
-      
+
       for (let i = 6; i >= 0; i--) {
         const date = new Date()
         date.setDate(date.getDate() - i)
         last7Days.push(date.toLocaleDateString('fr-FR', { weekday: 'short' }))
-        
+
         // Simulation d'utilisation (à remplacer par des vraies données)
         utilizationData.push(Math.floor(Math.random() * 100))
       }
-      
+
       utilizationChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: last7Days,
-          datasets: [{
-            label: 'Utilisation (%)',
-            data: utilizationData,
-            borderColor: '#4CAF50',
-            backgroundColor: 'rgba(76, 175, 80, 0.1)',
-            tension: 0.3
-          }]
+          datasets: [
+            {
+              label: 'Utilisation (%)',
+              data: utilizationData,
+              borderColor: '#4CAF50',
+              backgroundColor: 'rgba(76, 175, 80, 0.1)',
+              tension: 0.3,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -631,13 +640,13 @@ export default {
           scales: {
             y: {
               beginAtZero: true,
-              max: 100
-            }
-          }
-        }
+              max: 100,
+            },
+          },
+        },
       })
     }
-    
+
     const exportVehicles = async () => {
       try {
         const response = await vehiclesApi.exportVehicles()
@@ -652,33 +661,33 @@ export default {
         showToast(error.message, 'error')
       }
     }
-    
-    const getVehicleImage = (type) => {
+
+    const getVehicleImage = type => {
       const images = {
         bicycle: '/assets/vehicles/bicycle.png',
         motorbike: '/assets/vehicles/motorcycle.png',
         car: '/assets/vehicles/car.png',
         van: '/assets/vehicles/van.png',
-        truck: '/assets/vehicles/truck.png'
+        truck: '/assets/vehicles/truck.png',
       }
       return images[type] || '/assets/vehicles/vehicle-placeholder.png'
     }
-    
-    const formatMileage = (mileage) => {
+
+    const formatMileage = mileage => {
       if (!mileage) return 'N/A'
       return `${mileage.toLocaleString()} km`
     }
-    
-    const formatDate = (dateString) => {
+
+    const formatDate = dateString => {
       if (!dateString) return 'N/A'
       return new Date(dateString).toLocaleDateString('fr-FR')
     }
-    
+
     // Lifecycle
     onMounted(() => {
       loadData()
     })
-    
+
     return {
       loading,
       vehicles,
@@ -717,9 +726,9 @@ export default {
       exportVehicles,
       getVehicleImage,
       formatMileage,
-      formatDate
+      formatDate,
     }
-  }
+  },
 }
 </script>
 
@@ -751,7 +760,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 15px;
@@ -768,10 +777,18 @@ export default {
   color: white;
 }
 
-.stat-icon.total { background: #2196F3; }
-.stat-icon.active { background: #4CAF50; }
-.stat-icon.maintenance { background: #FF9800; }
-.stat-icon.electric { background: #8BC34A; }
+.stat-icon.total {
+  background: #2196f3;
+}
+.stat-icon.active {
+  background: #4caf50;
+}
+.stat-icon.maintenance {
+  background: #ff9800;
+}
+.stat-icon.electric {
+  background: #8bc34a;
+}
 
 .stat-value {
   font-size: 1.8rem;
@@ -788,7 +805,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
   display: flex;
   gap: 20px;
@@ -837,7 +854,7 @@ export default {
 .chart-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -864,7 +881,7 @@ export default {
 .vehicles-table-section {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -939,8 +956,8 @@ export default {
   align-items: center;
   gap: 3px;
   padding: 2px 6px;
-  background: #E8F5E8;
-  color: #4CAF50;
+  background: #e8f5e8;
+  color: #4caf50;
   border-radius: 10px;
   font-size: 10px;
 }
@@ -972,23 +989,23 @@ export default {
 }
 
 .status-badge.active {
-  background: #E8F5E8;
-  color: #4CAF50;
+  background: #e8f5e8;
+  color: #4caf50;
 }
 
 .status-badge.inactive {
-  background: #F5F5F5;
+  background: #f5f5f5;
   color: #666;
 }
 
 .status-badge.maintenance {
-  background: #FFF3E0;
-  color: #FF9800;
+  background: #fff3e0;
+  color: #ff9800;
 }
 
 .status-badge.retired {
-  background: #FFEBEE;
-  color: #F44336;
+  background: #ffebee;
+  color: #f44336;
 }
 
 .utilization-bar {
@@ -1002,7 +1019,7 @@ export default {
 
 .utilization-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
   transition: width 0.3s;
 }
 
@@ -1026,7 +1043,7 @@ export default {
 .vehicle-card {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: transform 0.2s;
 }
@@ -1085,7 +1102,7 @@ export default {
 }
 
 .stat.electric {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .vehicle-card-owner {
@@ -1126,7 +1143,7 @@ export default {
   background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   min-width: 150px;
 }
@@ -1144,7 +1161,7 @@ export default {
 }
 
 .dropdown-item.text-danger {
-  color: #F44336;
+  color: #f44336;
 }
 
 .pagination-container {
@@ -1182,13 +1199,13 @@ export default {
 }
 
 .btn-primary {
-  background: #2196F3;
-  border-color: #2196F3;
+  background: #2196f3;
+  border-color: #2196f3;
   color: white;
 }
 
 .btn-primary:hover {
-  background: #1976D2;
+  background: #1976d2;
 }
 
 .btn-secondary {
@@ -1202,8 +1219,8 @@ export default {
 }
 
 .btn-warning {
-  background: #FF9800;
-  border-color: #FF9800;
+  background: #ff9800;
+  border-color: #ff9800;
   color: white;
 }
 

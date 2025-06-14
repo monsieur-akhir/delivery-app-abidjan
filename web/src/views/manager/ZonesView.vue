@@ -1,4 +1,3 @@
-
 <template>
   <div class="zones-management">
     <!-- En-tête -->
@@ -21,7 +20,7 @@
           <div class="stat-label">Total Zones</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon active">
           <i class="fas fa-check-circle"></i>
@@ -31,7 +30,7 @@
           <div class="stat-label">Zones Actives</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon revenue">
           <i class="fas fa-coins"></i>
@@ -41,7 +40,7 @@
           <div class="stat-label">Revenus Total</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon deliveries">
           <i class="fas fa-truck"></i>
@@ -55,8 +54,8 @@
 
     <!-- Onglets -->
     <div class="tabs">
-      <button 
-        v-for="tab in tabs" 
+      <button
+        v-for="tab in tabs"
         :key="tab.id"
         :class="['tab-button', { active: activeTab === tab.id }]"
         @click="activeTab = tab.id"
@@ -80,7 +79,7 @@
                 <option value="custom">Personnalisée</option>
                 <option value="exclusion">Exclusion</option>
               </select>
-              
+
               <select v-model="filters.active" @change="loadZones">
                 <option value="">Toutes</option>
                 <option value="true">Actives</option>
@@ -89,10 +88,13 @@
             </div>
 
             <div class="zone-items">
-              <div 
-                v-for="zone in zones" 
+              <div
+                v-for="zone in zones"
                 :key="zone.id"
-                :class="['zone-item', { selected: selectedZone?.id === zone.id, inactive: !zone.is_active }]"
+                :class="[
+                  'zone-item',
+                  { selected: selectedZone?.id === zone.id, inactive: !zone.is_active },
+                ]"
                 @click="selectZone(zone)"
               >
                 <div class="zone-header">
@@ -101,11 +103,11 @@
                     {{ getZoneTypeLabel(zone.zone_type) }}
                   </span>
                 </div>
-                
+
                 <p v-if="zone.description" class="zone-description">
                   {{ zone.description }}
                 </p>
-                
+
                 <div class="zone-details">
                   <div class="detail">
                     <i class="fas fa-dollar-sign"></i>
@@ -120,13 +122,13 @@
                     <span>{{ zone.max_delivery_time }}min max</span>
                   </div>
                 </div>
-                
+
                 <div class="zone-actions">
                   <button @click.stop="editZone(zone)" class="btn-icon">
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button 
-                    @click.stop="toggleZoneStatus(zone)" 
+                  <button
+                    @click.stop="toggleZoneStatus(zone)"
                     :class="['btn-icon', zone.is_active ? 'danger' : 'success']"
                   >
                     <i :class="zone.is_active ? 'fas fa-pause' : 'fas fa-play'"></i>
@@ -141,7 +143,7 @@
 
           <!-- Carte interactive -->
           <div class="map-container">
-            <ZoneMap 
+            <ZoneMap
               :zones="zones"
               :selected-zone="selectedZone"
               @zone-selected="selectZone"
@@ -155,64 +157,64 @@
       <div v-if="activeTab === 'pricing'" class="pricing-content">
         <div v-if="selectedZone" class="pricing-details">
           <h3>Tarification - {{ selectedZone.name }}</h3>
-          
+
           <!-- Paramètres de base -->
           <div class="pricing-section">
             <h4>Paramètres de Base</h4>
             <div class="pricing-grid">
               <div class="form-group">
                 <label>Prix de base (XOF)</label>
-                <input 
-                  type="number" 
-                  v-model="selectedZone.base_price" 
+                <input
+                  type="number"
+                  v-model="selectedZone.base_price"
                   @change="updateZonePricing"
-                >
+                />
               </div>
-              
+
               <div class="form-group">
                 <label>Prix par km (XOF)</label>
-                <input 
-                  type="number" 
-                  v-model="selectedZone.price_per_km" 
+                <input
+                  type="number"
+                  v-model="selectedZone.price_per_km"
                   @change="updateZonePricing"
-                >
+                />
               </div>
-              
+
               <div class="form-group">
                 <label>Prix minimum (XOF)</label>
-                <input 
-                  type="number" 
-                  v-model="selectedZone.min_delivery_fee" 
+                <input
+                  type="number"
+                  v-model="selectedZone.min_delivery_fee"
                   @change="updateZonePricing"
-                >
+                />
               </div>
-              
+
               <div class="form-group">
                 <label>Prix maximum (XOF)</label>
-                <input 
-                  type="number" 
-                  v-model="selectedZone.max_delivery_fee" 
+                <input
+                  type="number"
+                  v-model="selectedZone.max_delivery_fee"
                   @change="updateZonePricing"
-                >
+                />
               </div>
-              
+
               <div class="form-group">
                 <label>Multiplicateur heure de pointe</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   step="0.1"
-                  v-model="selectedZone.peak_hour_multiplier" 
+                  v-model="selectedZone.peak_hour_multiplier"
                   @change="updateZonePricing"
-                >
+                />
               </div>
-              
+
               <div class="form-group">
                 <label>Temps max livraison (min)</label>
-                <input 
-                  type="number" 
-                  v-model="selectedZone.max_delivery_time" 
+                <input
+                  type="number"
+                  v-model="selectedZone.max_delivery_time"
                   @change="updateZonePricing"
-                >
+                />
               </div>
             </div>
           </div>
@@ -226,28 +228,28 @@
                 Ajouter Règle
               </button>
             </div>
-            
+
             <div class="pricing-rules">
-              <div 
-                v-for="rule in selectedZone.pricing_rules" 
-                :key="rule.id"
-                class="pricing-rule"
-              >
+              <div v-for="rule in selectedZone.pricing_rules" :key="rule.id" class="pricing-rule">
                 <div class="rule-content">
                   <h5>{{ rule.name }}</h5>
                   <p>{{ rule.condition_type }} {{ rule.operator }} {{ rule.condition_value }}</p>
                   <span class="adjustment">
-                    {{ rule.adjustment_type === 'percentage' ? rule.price_adjustment + '%' : formatCurrency(rule.price_adjustment) }}
+                    {{
+                      rule.adjustment_type === 'percentage'
+                        ? rule.price_adjustment + '%'
+                        : formatCurrency(rule.price_adjustment)
+                    }}
                   </span>
                 </div>
-                
+
                 <div class="rule-actions">
                   <label class="toggle">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       :checked="rule.is_active"
                       @change="togglePricingRule(rule)"
-                    >
+                    />
                     <span class="slider"></span>
                   </label>
                   <button @click="deletePricingRule(rule.id)" class="btn-icon danger">
@@ -267,10 +269,10 @@
                 Ajouter Restriction
               </button>
             </div>
-            
+
             <div class="restrictions">
-              <div 
-                v-for="restriction in selectedZone.restrictions" 
+              <div
+                v-for="restriction in selectedZone.restrictions"
                 :key="restriction.id"
                 class="restriction-item"
               >
@@ -279,14 +281,14 @@
                   <p>{{ restriction.description }}</p>
                   <span class="restriction-value">{{ restriction.restriction_value }}</span>
                 </div>
-                
+
                 <div class="restriction-actions">
                   <label class="toggle">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       :checked="restriction.is_active"
                       @change="toggleRestriction(restriction)"
-                    >
+                    />
                     <span class="slider"></span>
                   </label>
                   <button @click="deleteRestriction(restriction.id)" class="btn-icon danger">
@@ -297,7 +299,7 @@
             </div>
           </div>
         </div>
-        
+
         <div v-else class="no-zone-selected">
           <i class="fas fa-map-marker-alt"></i>
           <h3>Sélectionnez une zone</h3>
@@ -312,17 +314,17 @@
             <h4>Revenus par Zone</h4>
             <HorizontalBarChart :data="revenueByZoneChart" />
           </div>
-          
+
           <div class="chart-container">
             <h4>Livraisons par Zone</h4>
             <PieChart :data="deliveriesByZoneChart" />
           </div>
-          
+
           <div class="chart-container">
             <h4>Prix Moyen par Zone</h4>
             <AreaChart :data="avgPriceByZoneChart" />
           </div>
-          
+
           <div class="chart-container">
             <h4>Performance des Zones</h4>
             <LineChart :data="zonePerformanceChart" />
@@ -335,14 +337,14 @@
     <Modal v-if="showCreateModal || editingZone" @close="closeZoneModal">
       <div class="zone-form">
         <h3>{{ editingZone ? 'Modifier' : 'Créer' }} une Zone</h3>
-        
+
         <form @submit.prevent="saveZone">
           <div class="form-grid">
             <div class="form-group">
               <label>Nom de la zone *</label>
-              <input type="text" v-model="zoneForm.name" required>
+              <input type="text" v-model="zoneForm.name" required />
             </div>
-            
+
             <div class="form-group">
               <label>Type de zone *</label>
               <select v-model="zoneForm.zone_type" required>
@@ -352,40 +354,46 @@
                 <option value="exclusion">Zone d'exclusion</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Prix de base (XOF)</label>
-              <input type="number" v-model="zoneForm.base_price" min="0">
+              <input type="number" v-model="zoneForm.base_price" min="0" />
             </div>
-            
+
             <div class="form-group">
               <label>Prix par km (XOF)</label>
-              <input type="number" v-model="zoneForm.price_per_km" min="0">
+              <input type="number" v-model="zoneForm.price_per_km" min="0" />
             </div>
-            
+
             <div class="form-group">
               <label>Temps max livraison (min)</label>
-              <input type="number" v-model="zoneForm.max_delivery_time" min="1">
+              <input type="number" v-model="zoneForm.max_delivery_time" min="1" />
             </div>
-            
+
             <div class="form-group">
               <label>Note minimum coursier</label>
-              <input type="number" step="0.1" min="1" max="5" v-model="zoneForm.min_courier_rating">
+              <input
+                type="number"
+                step="0.1"
+                min="1"
+                max="5"
+                v-model="zoneForm.min_courier_rating"
+              />
             </div>
           </div>
-          
+
           <div class="form-group">
             <label>Description</label>
             <textarea v-model="zoneForm.description" rows="3"></textarea>
           </div>
-          
+
           <div class="form-options">
             <label class="checkbox-label">
-              <input type="checkbox" v-model="zoneForm.requires_special_vehicle">
+              <input type="checkbox" v-model="zoneForm.requires_special_vehicle" />
               Nécessite un véhicule spécialisé
             </label>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" @click="closeZoneModal">Annuler</button>
             <button type="submit" class="btn-primary">
@@ -416,7 +424,7 @@ export default {
     HorizontalBarChart,
     LineChart,
     PieChart,
-    AreaChart
+    AreaChart,
   },
   setup() {
     const activeTab = ref('zones')
@@ -425,19 +433,19 @@ export default {
     const analytics = ref({
       total_zones: 0,
       active_zones: 0,
-      revenue_by_zone: []
+      revenue_by_zone: [],
     })
-    
+
     const showCreateModal = ref(false)
     const editingZone = ref(null)
     const showPricingRuleModal = ref(false)
     const showRestrictionModal = ref(false)
-    
+
     const filters = reactive({
       type: '',
-      active: ''
+      active: '',
     })
-    
+
     const zoneForm = reactive({
       name: '',
       description: '',
@@ -446,13 +454,13 @@ export default {
       price_per_km: null,
       max_delivery_time: null,
       min_courier_rating: null,
-      requires_special_vehicle: false
+      requires_special_vehicle: false,
     })
 
     const tabs = [
       { id: 'zones', label: 'Zones' },
       { id: 'pricing', label: 'Tarification' },
-      { id: 'analytics', label: 'Analyses' }
+      { id: 'analytics', label: 'Analyses' },
     ]
 
     const totalRevenue = computed(() => {
@@ -467,7 +475,7 @@ export default {
       try {
         const response = await zonesAPI.getZones({
           zone_type: filters.type,
-          is_active: filters.active
+          is_active: filters.active,
         })
         zones.value = response.data
       } catch (error) {
@@ -484,7 +492,7 @@ export default {
       }
     }
 
-    const selectZone = (zone) => {
+    const selectZone = zone => {
       selectedZone.value = zone
     }
 
@@ -495,7 +503,7 @@ export default {
         } else {
           await zonesAPI.createZone(zoneForm)
         }
-        
+
         closeZoneModal()
         loadZones()
         loadAnalytics()
@@ -504,7 +512,7 @@ export default {
       }
     }
 
-    const editZone = (zone) => {
+    const editZone = zone => {
       editingZone.value = zone
       Object.keys(zoneForm).forEach(key => {
         if (zone[key] !== undefined) {
@@ -514,7 +522,7 @@ export default {
       showCreateModal.value = true
     }
 
-    const deleteZone = async (id) => {
+    const deleteZone = async id => {
       if (confirm('Êtes-vous sûr de vouloir supprimer cette zone ?')) {
         try {
           await zonesAPI.deleteZone(id)
@@ -528,7 +536,7 @@ export default {
       }
     }
 
-    const toggleZoneStatus = async (zone) => {
+    const toggleZoneStatus = async zone => {
       try {
         await zonesAPI.updateZone(zone.id, { is_active: !zone.is_active })
         loadZones()
@@ -545,20 +553,20 @@ export default {
       })
     }
 
-    const getZoneTypeLabel = (type) => {
+    const getZoneTypeLabel = type => {
       const labels = {
-        'city': 'Ville',
-        'district': 'District',
-        'custom': 'Personnalisée',
-        'exclusion': 'Exclusion'
+        city: 'Ville',
+        district: 'District',
+        custom: 'Personnalisée',
+        exclusion: 'Exclusion',
       }
       return labels[type] || type
     }
 
-    const formatCurrency = (amount) => {
+    const formatCurrency = amount => {
       return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: 'XOF'
+        currency: 'XOF',
       }).format(amount || 0)
     }
 
@@ -587,9 +595,9 @@ export default {
       toggleZoneStatus,
       closeZoneModal,
       getZoneTypeLabel,
-      formatCurrency
+      formatCurrency,
     }
-  }
+  },
 }
 </script>
 
@@ -616,7 +624,7 @@ export default {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
 }
@@ -633,9 +641,18 @@ export default {
   color: #6b7280;
 }
 
-.stat-icon.active { background: #dcfce7; color: #16a34a; }
-.stat-icon.revenue { background: #fef3c7; color: #d97706; }
-.stat-icon.deliveries { background: #dbeafe; color: #2563eb; }
+.stat-icon.active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.stat-icon.revenue {
+  background: #fef3c7;
+  color: #d97706;
+}
+.stat-icon.deliveries {
+  background: #dbeafe;
+  color: #2563eb;
+}
 
 .zones-layout {
   display: grid;
@@ -648,7 +665,7 @@ export default {
   background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .filters {
@@ -709,10 +726,22 @@ export default {
   font-weight: bold;
 }
 
-.zone-type.city { background: #dbeafe; color: #1e40af; }
-.zone-type.district { background: #dcfce7; color: #15803d; }
-.zone-type.custom { background: #f3e8ff; color: #7c3aed; }
-.zone-type.exclusion { background: #fee2e2; color: #dc2626; }
+.zone-type.city {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.zone-type.district {
+  background: #dcfce7;
+  color: #15803d;
+}
+.zone-type.custom {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+.zone-type.exclusion {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 .zone-description {
   color: #6b7280;
@@ -743,7 +772,7 @@ export default {
   background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .pricing-content {
@@ -846,19 +875,19 @@ export default {
   bottom: 0;
   background-color: #ccc;
   border-radius: 24px;
-  transition: .4s;
+  transition: 0.4s;
 }
 
 .slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 18px;
   width: 18px;
   left: 3px;
   bottom: 3px;
   background-color: white;
   border-radius: 50%;
-  transition: .4s;
+  transition: 0.4s;
 }
 
 input:checked + .slider {
@@ -893,7 +922,7 @@ input:checked + .slider:before {
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-icon {
@@ -909,9 +938,17 @@ input:checked + .slider:before {
   color: #6b7280;
 }
 
-.btn-icon:hover { background: #e5e7eb; }
-.btn-icon.success { background: #dcfce7; color: #15803d; }
-.btn-icon.danger { background: #fee2e2; color: #dc2626; }
+.btn-icon:hover {
+  background: #e5e7eb;
+}
+.btn-icon.success {
+  background: #dcfce7;
+  color: #15803d;
+}
+.btn-icon.danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 .btn-primary {
   background: #2563eb;

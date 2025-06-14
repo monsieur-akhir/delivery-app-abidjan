@@ -1,6 +1,6 @@
-import axios from "axios"
-import { getToken } from "./auth"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { getToken } from './auth'
+import { API_URL } from '@/config'
 
 const API_ENDPOINT = `${API_URL}/wallet/community`
 
@@ -20,15 +20,22 @@ export const getCommunityStats = async () => {
     const response = await axios.get(`${API_ENDPOINT}/stats`, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques du portefeuille communautaire:", error)
+    console.error(
+      'Erreur lors de la récupération des statistiques du portefeuille communautaire:',
+      error
+    )
     throw error
   }
 }
 
 // Ajout de fonds au portefeuille communautaire
-export const addCommunityFunds = async (amount, source, description = "") => {
+export const addCommunityFunds = async (amount, source, description = '') => {
   try {
-    const response = await axios.post(`${API_ENDPOINT}/funds`, { amount, source, description }, getAuthHeader())
+    const response = await axios.post(
+      `${API_ENDPOINT}/funds`,
+      { amount, source, description },
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error("Erreur lors de l'ajout de fonds au portefeuille communautaire:", error)
@@ -42,7 +49,7 @@ export const getPendingLoans = async () => {
     const response = await axios.get(`${API_ENDPOINT}/loans/pending`, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des demandes de prêt en attente:", error)
+    console.error('Erreur lors de la récupération des demandes de prêt en attente:', error)
     throw error
   }
 }
@@ -53,7 +60,7 @@ export const getActiveLoans = async () => {
     const response = await axios.get(`${API_ENDPOINT}/loans/active`, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des prêts actifs:", error)
+    console.error('Erreur lors de la récupération des prêts actifs:', error)
     throw error
   }
 }
@@ -77,7 +84,7 @@ export const getLoanHistory = async (status = null, startDate = null, endDate = 
     }
 
     if (params.length > 0) {
-      url += `?${params.join("&")}`
+      url += `?${params.join('&')}`
     }
 
     const response = await axios.get(url, getAuthHeader())
@@ -89,7 +96,7 @@ export const getLoanHistory = async (status = null, startDate = null, endDate = 
 }
 
 // Récupération des détails d'un prêt
-export const getLoanDetails = async (loanId) => {
+export const getLoanDetails = async loanId => {
   try {
     const response = await axios.get(`${API_ENDPOINT}/loans/${loanId}`, getAuthHeader())
     return response.data
@@ -107,7 +114,11 @@ export const approveLoan = async (loanId, repaymentDeadline = null) => {
       data.repayment_deadline = repaymentDeadline.toISOString()
     }
 
-    const response = await axios.put(`${API_ENDPOINT}/loans/${loanId}/approve`, data, getAuthHeader())
+    const response = await axios.put(
+      `${API_ENDPOINT}/loans/${loanId}/approve`,
+      data,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors de l'approbation du prêt ${loanId}:`, error)
@@ -118,7 +129,11 @@ export const approveLoan = async (loanId, repaymentDeadline = null) => {
 // Rejet d'un prêt
 export const rejectLoan = async (loanId, reason) => {
   try {
-    const response = await axios.put(`${API_ENDPOINT}/loans/${loanId}/reject`, { reason }, getAuthHeader())
+    const response = await axios.put(
+      `${API_ENDPOINT}/loans/${loanId}/reject`,
+      { reason },
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors du rejet du prêt ${loanId}:`, error)
@@ -132,7 +147,7 @@ export const extendLoan = async (loanId, extensionDays, reason) => {
     const response = await axios.put(
       `${API_ENDPOINT}/loans/${loanId}/extend`,
       { extension_days: extensionDays, reason },
-      getAuthHeader(),
+      getAuthHeader()
     )
     return response.data
   } catch (error) {
@@ -142,7 +157,7 @@ export const extendLoan = async (loanId, extensionDays, reason) => {
 }
 
 // Marquer un prêt comme remboursé
-export const markLoanAsRepaid = async (loanId) => {
+export const markLoanAsRepaid = async loanId => {
   try {
     const response = await axios.put(`${API_ENDPOINT}/loans/${loanId}/repay`, {}, getAuthHeader())
     return response.data
@@ -155,7 +170,11 @@ export const markLoanAsRepaid = async (loanId) => {
 // Passer un prêt en perte
 export const writeOffLoan = async (loanId, reason) => {
   try {
-    const response = await axios.put(`${API_ENDPOINT}/loans/${loanId}/write-off`, { reason }, getAuthHeader())
+    const response = await axios.put(
+      `${API_ENDPOINT}/loans/${loanId}/write-off`,
+      { reason },
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors du passage en perte du prêt ${loanId}:`, error)
@@ -171,7 +190,11 @@ export const sendLoanReminder = async (loanId, message = null) => {
       data.message = message
     }
 
-    const response = await axios.post(`${API_ENDPOINT}/loans/${loanId}/send-reminder`, data, getAuthHeader())
+    const response = await axios.post(
+      `${API_ENDPOINT}/loans/${loanId}/send-reminder`,
+      data,
+      getAuthHeader()
+    )
     return response.data
   } catch (error) {
     console.error(`Erreur lors de l'envoi d'un rappel pour le prêt ${loanId}:`, error)
@@ -194,47 +217,50 @@ export const getCommunityAnalytics = async (startDate = null, endDate = null) =>
     }
 
     if (params.length > 0) {
-      url += `?${params.join("&")}`
+      url += `?${params.join('&')}`
     }
 
     const response = await axios.get(url, getAuthHeader())
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des analyses du portefeuille communautaire:", error)
+    console.error(
+      'Erreur lors de la récupération des analyses du portefeuille communautaire:',
+      error
+    )
     throw error
   }
 }
 
 // Export des données au format CSV
-export const exportCommunityData = async (data, filename = "community-wallet-data.csv") => {
+export const exportCommunityData = async (data, filename = 'community-wallet-data.csv') => {
   try {
     // Convertir les données en CSV
-    let csv = ""
+    let csv = ''
 
     // Ajouter les en-têtes
     const headers = Object.keys(data[0])
-    csv += headers.join(",") + "\n"
+    csv += headers.join(',') + '\n'
 
     // Ajouter les lignes
-    data.forEach((item) => {
-      const values = headers.map((header) => {
+    data.forEach(item => {
+      const values = headers.map(header => {
         const value = item[header]
         // Échapper les virgules et les guillemets
-        if (typeof value === "string") {
+        if (typeof value === 'string') {
           return `"${value.replace(/"/g, '""')}"`
         }
         return value
       })
-      csv += values.join(",") + "\n"
+      csv += values.join(',') + '\n'
     })
 
     // Créer un blob et un lien de téléchargement
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.setAttribute("href", url)
-    link.setAttribute("download", filename)
-    link.style.visibility = "hidden"
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

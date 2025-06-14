@@ -50,7 +50,9 @@
         </div>
         <div class="delivery-price">
           <div class="info-label">Prix total</div>
-          <div class="info-value price-value">{{ formatPrice(delivery.final_price || delivery.proposed_price) }} FCFA</div>
+          <div class="info-value price-value">
+            {{ formatPrice(delivery.final_price || delivery.proposed_price) }} FCFA
+          </div>
         </div>
       </div>
 
@@ -61,8 +63,14 @@
           <h2>Client</h2>
           <div v-if="delivery.client" class="client-info">
             <div class="user-avatar large">
-              <img v-if="delivery.client.profile_picture" :src="delivery.client.profile_picture" :alt="delivery.client.full_name">
-              <div v-else class="avatar-placeholder">{{ getInitials(delivery.client.full_name) }}</div>
+              <img
+                v-if="delivery.client.profile_picture"
+                :src="delivery.client.profile_picture"
+                :alt="delivery.client.full_name"
+              />
+              <div v-else class="avatar-placeholder">
+                {{ getInitials(delivery.client.full_name) }}
+              </div>
             </div>
             <div class="client-details">
               <h3>{{ delivery.client.full_name }}</h3>
@@ -78,9 +86,21 @@
               </div>
               <div class="client-rating" v-if="delivery.client.rating">
                 <div class="stars">
-                  <font-awesome-icon icon="star" v-for="i in Math.floor(delivery.client.rating)" :key="'star-'+i" />
-                  <font-awesome-icon icon="star-half-alt" v-if="delivery.client.rating % 1 >= 0.5" />
-                  <font-awesome-icon icon="star" class="star-empty" v-for="i in Math.floor(5 - delivery.client.rating)" :key="'empty-'+i" />
+                  <font-awesome-icon
+                    icon="star"
+                    v-for="i in Math.floor(delivery.client.rating)"
+                    :key="'star-' + i"
+                  />
+                  <font-awesome-icon
+                    icon="star-half-alt"
+                    v-if="delivery.client.rating % 1 >= 0.5"
+                  />
+                  <font-awesome-icon
+                    icon="star"
+                    class="star-empty"
+                    v-for="i in Math.floor(5 - delivery.client.rating)"
+                    :key="'empty-' + i"
+                  />
                 </div>
                 <span>{{ delivery.client.rating.toFixed(1) }}/5</span>
               </div>
@@ -97,8 +117,14 @@
           <h2>Coursier</h2>
           <div v-if="delivery.courier" class="courier-info">
             <div class="user-avatar large">
-              <img v-if="delivery.courier.profile_picture" :src="delivery.courier.profile_picture" :alt="delivery.courier.full_name">
-              <div v-else class="avatar-placeholder">{{ getInitials(delivery.courier.full_name) }}</div>
+              <img
+                v-if="delivery.courier.profile_picture"
+                :src="delivery.courier.profile_picture"
+                :alt="delivery.courier.full_name"
+              />
+              <div v-else class="avatar-placeholder">
+                {{ getInitials(delivery.courier.full_name) }}
+              </div>
             </div>
             <div class="courier-details">
               <h3>{{ delivery.courier.full_name }}</h3>
@@ -114,9 +140,21 @@
               </div>
               <div class="courier-rating" v-if="delivery.courier.rating">
                 <div class="stars">
-                  <font-awesome-icon icon="star" v-for="i in Math.floor(delivery.courier.rating)" :key="'star-'+i" />
-                  <font-awesome-icon icon="star-half-alt" v-if="delivery.courier.rating % 1 >= 0.5" />
-                  <font-awesome-icon icon="star" class="star-empty" v-for="i in Math.floor(5 - delivery.courier.rating)" :key="'empty-'+i" />
+                  <font-awesome-icon
+                    icon="star"
+                    v-for="i in Math.floor(delivery.courier.rating)"
+                    :key="'star-' + i"
+                  />
+                  <font-awesome-icon
+                    icon="star-half-alt"
+                    v-if="delivery.courier.rating % 1 >= 0.5"
+                  />
+                  <font-awesome-icon
+                    icon="star"
+                    class="star-empty"
+                    v-for="i in Math.floor(5 - delivery.courier.rating)"
+                    :key="'empty-' + i"
+                  />
                 </div>
                 <span>{{ delivery.courier.rating.toFixed(1) }}/5</span>
               </div>
@@ -196,9 +234,9 @@
         <div class="delivery-info-card">
           <h2>Suivi de la livraison</h2>
           <div class="tracking-timeline">
-            <div 
-              v-for="(event, index) in deliveryTimeline" 
-              :key="index" 
+            <div
+              v-for="(event, index) in deliveryTimeline"
+              :key="index"
               class="timeline-event"
               :class="{ completed: event.completed }"
             >
@@ -209,30 +247,53 @@
                 <div class="event-title">{{ event.title }}</div>
                 <div class="event-time" v-if="event.time">{{ formatDate(event.time) }}</div>
                 <div class="event-time" v-else>En attente</div>
-                <div class="event-description" v-if="event.description">{{ event.description }}</div>
+                <div class="event-description" v-if="event.description">
+                  {{ event.description }}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Offres des coursiers (si en attente) -->
-        <div class="delivery-info-card" v-if="delivery.status === 'pending' && delivery.bids && delivery.bids.length > 0">
+        <div
+          class="delivery-info-card"
+          v-if="delivery.status === 'pending' && delivery.bids && delivery.bids.length > 0"
+        >
           <h2>Offres des coursiers</h2>
           <div class="bids-list">
             <div v-for="bid in delivery.bids" :key="bid.id" class="bid-item">
               <div class="bid-header">
                 <div class="user-info">
                   <div class="user-avatar">
-                    <img v-if="bid.courier.profile_picture" :src="bid.courier.profile_picture" :alt="bid.courier.full_name">
-                    <div v-else class="avatar-placeholder">{{ getInitials(bid.courier.full_name) }}</div>
+                    <img
+                      v-if="bid.courier.profile_picture"
+                      :src="bid.courier.profile_picture"
+                      :alt="bid.courier.full_name"
+                    />
+                    <div v-else class="avatar-placeholder">
+                      {{ getInitials(bid.courier.full_name) }}
+                    </div>
                   </div>
                   <div class="user-details">
                     <div class="user-name">{{ bid.courier.full_name }}</div>
                     <div class="user-rating">
                       <div class="stars small">
-                        <font-awesome-icon icon="star" v-for="i in Math.floor(bid.courier.rating)" :key="'star-'+i" />
-                        <font-awesome-icon icon="star-half-alt" v-if="bid.courier.rating % 1 >= 0.5" />
-                        <font-awesome-icon icon="star" class="star-empty" v-for="i in Math.floor(5 - bid.courier.rating)" :key="'empty-'+i" />
+                        <font-awesome-icon
+                          icon="star"
+                          v-for="i in Math.floor(bid.courier.rating)"
+                          :key="'star-' + i"
+                        />
+                        <font-awesome-icon
+                          icon="star-half-alt"
+                          v-if="bid.courier.rating % 1 >= 0.5"
+                        />
+                        <font-awesome-icon
+                          icon="star"
+                          class="star-empty"
+                          v-for="i in Math.floor(5 - bid.courier.rating)"
+                          :key="'empty-' + i"
+                        />
                       </div>
                       <span>{{ bid.courier.rating.toFixed(1) }}</span>
                     </div>
@@ -269,8 +330,17 @@
           <div class="rating-container">
             <div class="rating-header">
               <div class="rating-stars">
-                <font-awesome-icon icon="star" v-for="i in delivery.rating.score" :key="'star-'+i" />
-                <font-awesome-icon icon="star" class="star-empty" v-for="i in 5 - delivery.rating.score" :key="'empty-'+i" />
+                <font-awesome-icon
+                  icon="star"
+                  v-for="i in delivery.rating.score"
+                  :key="'star-' + i"
+                />
+                <font-awesome-icon
+                  icon="star"
+                  class="star-empty"
+                  v-for="i in 5 - delivery.rating.score"
+                  :key="'empty-' + i"
+                />
               </div>
               <div class="rating-score">{{ delivery.rating.score }}/5</div>
             </div>
@@ -278,7 +348,9 @@
               {{ delivery.rating.comment }}
             </div>
             <div class="rating-meta">
-              <div class="rating-author">Par {{ delivery.rating.author_type === 'client' ? 'le client' : 'le coursier' }}</div>
+              <div class="rating-author">
+                Par {{ delivery.rating.author_type === 'client' ? 'le client' : 'le coursier' }}
+              </div>
               <div class="rating-date">{{ formatDate(delivery.rating.created_at) }}</div>
             </div>
           </div>
@@ -300,11 +372,22 @@
           <form @submit.prevent="updateDelivery">
             <div class="form-group">
               <label for="edit_pickup_address">Adresse de ramassage</label>
-              <input type="text" id="edit_pickup_address" v-model="editDeliveryForm.pickup_address" class="form-control" required />
+              <input
+                type="text"
+                id="edit_pickup_address"
+                v-model="editDeliveryForm.pickup_address"
+                class="form-control"
+                required
+              />
             </div>
             <div class="form-group">
               <label for="edit_pickup_commune">Commune de ramassage</label>
-              <select id="edit_pickup_commune" v-model="editDeliveryForm.pickup_commune" class="form-control" required>
+              <select
+                id="edit_pickup_commune"
+                v-model="editDeliveryForm.pickup_commune"
+                class="form-control"
+                required
+              >
                 <option value="">Sélectionnez une commune</option>
                 <option v-for="commune in communes" :key="commune" :value="commune">
                   {{ commune }}
@@ -313,11 +396,22 @@
             </div>
             <div class="form-group">
               <label for="edit_delivery_address">Adresse de livraison</label>
-              <input type="text" id="edit_delivery_address" v-model="editDeliveryForm.delivery_address" class="form-control" required />
+              <input
+                type="text"
+                id="edit_delivery_address"
+                v-model="editDeliveryForm.delivery_address"
+                class="form-control"
+                required
+              />
             </div>
             <div class="form-group">
               <label for="edit_delivery_commune">Commune de livraison</label>
-              <select id="edit_delivery_commune" v-model="editDeliveryForm.delivery_commune" class="form-control" required>
+              <select
+                id="edit_delivery_commune"
+                v-model="editDeliveryForm.delivery_commune"
+                class="form-control"
+                required
+              >
                 <option value="">Sélectionnez une commune</option>
                 <option v-for="commune in communes" :key="commune" :value="commune">
                   {{ commune }}
@@ -326,11 +420,22 @@
             </div>
             <div class="form-group">
               <label for="edit_package_description">Description du colis</label>
-              <textarea id="edit_package_description" v-model="editDeliveryForm.package_description" class="form-control" rows="3" required></textarea>
+              <textarea
+                id="edit_package_description"
+                v-model="editDeliveryForm.package_description"
+                class="form-control"
+                rows="3"
+                required
+              ></textarea>
             </div>
             <div class="form-group">
               <label for="edit_package_size">Taille du colis</label>
-              <select id="edit_package_size" v-model="editDeliveryForm.package_size" class="form-control" required>
+              <select
+                id="edit_package_size"
+                v-model="editDeliveryForm.package_size"
+                class="form-control"
+                required
+              >
                 <option value="small">Petit (< 5kg)</option>
                 <option value="medium">Moyen (5-10kg)</option>
                 <option value="large">Grand (> 10kg)</option>
@@ -338,11 +443,23 @@
             </div>
             <div class="form-group">
               <label for="edit_proposed_price">Prix proposé (FCFA)</label>
-              <input type="number" id="edit_proposed_price" v-model="editDeliveryForm.proposed_price" class="form-control" min="500" required />
+              <input
+                type="number"
+                id="edit_proposed_price"
+                v-model="editDeliveryForm.proposed_price"
+                class="form-control"
+                min="500"
+                required
+              />
             </div>
             <div class="form-group">
               <label for="edit_notes">Notes supplémentaires</label>
-              <textarea id="edit_notes" v-model="editDeliveryForm.notes" class="form-control" rows="2"></textarea>
+              <textarea
+                id="edit_notes"
+                v-model="editDeliveryForm.notes"
+                class="form-control"
+                rows="2"
+              ></textarea>
             </div>
             <div class="form-actions">
               <button type="button" class="btn btn-outline" @click="showEditModal = false">
@@ -363,7 +480,12 @@
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchBusinessDeliveryDetails, updateBusinessDelivery, cancelBusinessDelivery, acceptBusinessDeliveryBid } from '@/api/business'
+import {
+  fetchBusinessDeliveryDetails,
+  updateBusinessDelivery,
+  cancelBusinessDelivery,
+  acceptBusinessDeliveryBid,
+} from '@/api/business'
 import { printElement } from '@/utils/export-utils'
 import { formatDate, formatPrice, getInitials } from '@/utils/formatters'
 import { DELIVERY_STATUSES, PACKAGE_SIZES, VEHICLE_TYPES, COMMUNES } from '@/config'
@@ -374,14 +496,14 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const deliveryId = route.params.id
-    
+
     const loading = ref(true)
     const isSubmitting = ref(false)
     const delivery = ref(null)
     const showEditModal = ref(false)
     const communes = ref(COMMUNES)
     const printableContent = ref(null)
-    
+
     const editDeliveryForm = reactive({
       pickup_address: '',
       pickup_commune: '',
@@ -390,67 +512,67 @@ export default {
       package_description: '',
       package_size: 'small',
       proposed_price: 1000,
-      notes: ''
+      notes: '',
     })
-    
+
     const canEditDelivery = computed(() => {
       if (!delivery.value) return false
       return ['pending'].includes(delivery.value.status)
     })
-    
+
     const canCancelDelivery = computed(() => {
       if (!delivery.value) return false
       return ['pending', 'accepted'].includes(delivery.value.status)
     })
-    
+
     const deliveryTimeline = computed(() => {
       if (!delivery.value) return []
-      
+
       const timeline = [
         {
           title: 'Livraison créée',
           icon: 'plus-circle',
           time: delivery.value.created_at,
-          completed: true
+          completed: true,
         },
         {
           title: 'Coursier assigné',
           icon: 'user',
           time: delivery.value.courier_assigned_at,
-          completed: !!delivery.value.courier
+          completed: !!delivery.value.courier,
         },
         {
           title: 'Ramassage en cours',
           icon: 'box',
           time: delivery.value.pickup_started_at,
-          completed: !!delivery.value.pickup_started_at
+          completed: !!delivery.value.pickup_started_at,
         },
         {
           title: 'Colis ramassé',
           icon: 'check-circle',
           time: delivery.value.pickup_completed_at,
-          completed: !!delivery.value.pickup_completed_at
+          completed: !!delivery.value.pickup_completed_at,
         },
         {
           title: 'Livraison en cours',
           icon: 'truck',
           time: delivery.value.delivery_started_at,
-          completed: !!delivery.value.delivery_started_at
+          completed: !!delivery.value.delivery_started_at,
         },
         {
           title: 'Colis livré',
           icon: 'flag-checkered',
           time: delivery.value.delivered_at,
-          completed: !!delivery.value.delivered_at
+          completed: !!delivery.value.delivered_at,
         },
         {
           title: 'Livraison terminée',
           icon: 'check-double',
           time: delivery.value.completed_at,
-          completed: !!delivery.value.completed_at
-        }
+          completed: !!delivery.value.completed_at,
+        },
       ]
-      
+
       // Ajouter l'événement d'annulation si la livraison est annulée
       if (delivery.value.status === 'cancelled') {
         timeline.push({
@@ -458,46 +580,45 @@ export default {
           icon: 'times-circle',
           time: delivery.value.cancelled_at,
           description: delivery.value.cancellation_reason,
-          completed: true
+          completed: true,
         })
       }
-      
+
       return timeline
     })
-    
+
     // Charger les détails de la livraison
     const loadDeliveryDetails = async () => {
       try {
         loading.value = true
-        
+
         const data = await fetchBusinessDeliveryDetails(deliveryId)
         delivery.value = data
-        
       } catch (error) {
         console.error('Error loading delivery details:', error)
       } finally {
         loading.value = false
       }
     }
-    
+
     // Rafraîchir les données
     const refreshData = () => {
       loadDeliveryDetails()
     }
-    
+
     // Imprimer les détails de la livraison
     const printDeliveryDetails = () => {
       if (printableContent.value) {
         printElement(printableContent.value)
       } else {
-        alert('Impossible d\'imprimer les détails de la livraison')
+        alert("Impossible d'imprimer les détails de la livraison")
       }
     }
-    
+
     // Ouvrir le modal de modification
     const openEditDeliveryModal = () => {
       if (!delivery.value) return
-      
+
       // Copier les données de la livraison dans le formulaire
       editDeliveryForm.pickup_address = delivery.value.pickup_address
       editDeliveryForm.pickup_commune = delivery.value.pickup_commune
@@ -507,20 +628,20 @@ export default {
       editDeliveryForm.package_size = delivery.value.package_size
       editDeliveryForm.proposed_price = delivery.value.proposed_price
       editDeliveryForm.notes = delivery.value.notes || ''
-      
+
       showEditModal.value = true
     }
-    
+
     // Mettre à jour la livraison
     const updateDelivery = async () => {
       try {
         isSubmitting.value = true
-        
+
         await updateBusinessDelivery(deliveryId, editDeliveryForm)
-        
+
         showEditModal.value = false
         await loadDeliveryDetails()
-        
+
         // Afficher un message de succès
         alert('Livraison mise à jour avec succès')
       } catch (error) {
@@ -530,18 +651,18 @@ export default {
         isSubmitting.value = false
       }
     }
-    
+
     // Annuler la livraison
     const cancelDelivery = async () => {
       if (!confirm('Êtes-vous sûr de vouloir annuler cette livraison ?')) {
         return
       }
-      
+
       try {
         await cancelBusinessDelivery(deliveryId)
-        
+
         await loadDeliveryDetails()
-        
+
         // Afficher un message de succès
         alert('Livraison annulée avec succès')
       } catch (error) {
@@ -549,18 +670,18 @@ export default {
         alert(`Erreur lors de l'annulation de la livraison: ${error.message}`)
       }
     }
-    
+
     // Accepter une offre de coursier
-    const acceptBid = async (bidId) => {
+    const acceptBid = async bidId => {
       if (!confirm('Êtes-vous sûr de vouloir accepter cette offre ?')) {
         return
       }
-      
+
       try {
         await acceptBusinessDeliveryBid(deliveryId, bidId)
-        
+
         await loadDeliveryDetails()
-        
+
         // Afficher un message de succès
         alert('Offre acceptée avec succès')
       } catch (error) {
@@ -568,36 +689,36 @@ export default {
         alert(`Erreur lors de l'acceptation de l'offre: ${error.message}`)
       }
     }
-    
+
     // Obtenir le libellé d'un statut
-    const getStatusLabel = (status) => {
+    const getStatusLabel = status => {
       return DELIVERY_STATUSES[status]?.label || status
     }
-    
+
     // Obtenir la classe CSS pour un statut
-    const getStatusClass = (status) => {
+    const getStatusClass = status => {
       return `status-${status}`
     }
-    
+
     // Obtenir le libellé d'une taille de colis
-    const getPackageSizeLabel = (size) => {
+    const getPackageSizeLabel = size => {
       return PACKAGE_SIZES[size]?.label || size
     }
-    
+
     // Obtenir l'icône pour un type de véhicule
-    const getVehicleIcon = (type) => {
+    const getVehicleIcon = type => {
       return VEHICLE_TYPES[type]?.icon || 'car'
     }
-    
+
     // Obtenir le libellé d'un type de véhicule
-    const getVehicleLabel = (type) => {
+    const getVehicleLabel = type => {
       return VEHICLE_TYPES[type]?.label || type
     }
-    
+
     onMounted(() => {
       loadDeliveryDetails()
     })
-    
+
     return {
       deliveryId,
       loading,
@@ -623,9 +744,9 @@ export default {
       getVehicleLabel,
       formatDate,
       formatPrice,
-      getInitials
+      getInitials,
     }
-  }
+  },
 }
 </script>
 
@@ -720,33 +841,33 @@ export default {
 }
 
 .status-pending {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #fff8e1;
+  color: #ffa000;
 }
 
 .status-accepted {
-  background-color: #E3F2FD;
-  color: #1976D2;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .status-in_progress {
-  background-color: #FFF0E8;
-  color: #FF6B00;
+  background-color: #fff0e8;
+  color: #ff6b00;
 }
 
 .status-delivered {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-completed {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-cancelled {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .delivery-actions {
@@ -878,7 +999,7 @@ export default {
 .stars {
   display: flex;
   margin-right: 0.5rem;
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .stars.small {
@@ -886,11 +1007,11 @@ export default {
 }
 
 .star-filled {
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .star-empty {
-  color: #E0E0E0;
+  color: #e0e0e0;
 }
 
 .courier-vehicle {
@@ -1197,7 +1318,7 @@ export default {
   display: flex;
   margin-right: 1rem;
   font-size: 1.25rem;
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .rating-score {
@@ -1354,8 +1475,8 @@ export default {
 }
 
 .btn-danger:hover {
-  background-color: #D32F2F;
-  border-color: #D32F2F;
+  background-color: #d32f2f;
+  border-color: #d32f2f;
 }
 
 .btn:disabled {
@@ -1373,40 +1494,40 @@ export default {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-actions {
     width: 100%;
   }
-  
+
   .header-actions .btn {
     flex: 1;
   }
-  
+
   .delivery-status-bar {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .delivery-actions {
     width: 100%;
   }
-  
+
   .delivery-actions .btn {
     flex: 1;
   }
-  
+
   .client-info,
   .courier-info {
     flex-direction: column;
     align-items: center;
     text-align: center;
   }
-  
+
   .user-avatar.large {
     margin-right: 0;
     margin-bottom: 1rem;
   }
-  
+
   .contact-item,
   .client-rating,
   .courier-rating,
@@ -1422,15 +1543,15 @@ export default {
   .modal {
     display: none !important;
   }
-  
+
   .delivery-detail-view {
     padding: 0;
   }
-  
+
   .delivery-content {
     gap: 1rem;
   }
-  
+
   .delivery-info-card {
     box-shadow: none;
     border: 1px solid #ddd;

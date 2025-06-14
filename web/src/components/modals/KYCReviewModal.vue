@@ -1,4 +1,3 @@
-
 <template>
   <div class="modal-overlay" @click="$emit('close')">
     <div class="modal kyc-review-modal" @click.stop>
@@ -8,16 +7,23 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <div class="modal-content">
         <!-- Informations utilisateur -->
         <div class="user-info-section">
           <div class="user-header">
-            <img :src="user.profile_picture || '/default-avatar.png'" :alt="user.full_name" class="user-avatar">
+            <img
+              :src="user.profile_picture || '/default-avatar.png'"
+              :alt="user.full_name"
+              class="user-avatar"
+            />
             <div class="user-details">
               <h3>{{ user.full_name }}</h3>
-              <p>{{ user.phone }} • {{ user.email || 'Pas d\'email' }}</p>
-              <p>Rôle: {{ $t(`roles.${user.role}`) }} • Commune: {{ user.commune || 'Non spécifiée' }}</p>
+              <p>{{ user.phone }} • {{ user.email || "Pas d'email" }}</p>
+              <p>
+                Rôle: {{ $t(`roles.${user.role}`) }} • Commune:
+                {{ user.commune || 'Non spécifiée' }}
+              </p>
             </div>
           </div>
         </div>
@@ -25,17 +31,17 @@
         <!-- Documents KYC -->
         <div class="documents-section">
           <h3>{{ $t('kyc.documents') }}</h3>
-          
+
           <div v-if="loading" class="loading">
             <i class="fas fa-spinner fa-spin"></i>
             {{ $t('common.loading') }}
           </div>
-          
+
           <div v-else-if="documents.length === 0" class="no-documents">
             <i class="fas fa-exclamation-triangle"></i>
             {{ $t('kyc.noDocuments') }}
           </div>
-          
+
           <div v-else class="documents-grid">
             <div v-for="document in documents" :key="document.id" class="document-card">
               <div class="document-header">
@@ -44,18 +50,21 @@
                   {{ $t(`kyc.documentStatus.${document.status}`) }}
                 </span>
               </div>
-              
+
               <div class="document-preview">
-                <img :src="document.url" :alt="document.type" @click="openPreview(document)">
+                <img :src="document.url" :alt="document.type" @click="openPreview(document)" />
               </div>
-              
+
               <div class="document-info">
-                <p><strong>{{ $t('kyc.submittedAt') }}:</strong> {{ formatDate(document.submitted_at) }}</p>
+                <p>
+                  <strong>{{ $t('kyc.submittedAt') }}:</strong>
+                  {{ formatDate(document.submitted_at) }}
+                </p>
                 <p v-if="document.notes">
                   <strong>{{ $t('kyc.notes') }}:</strong> {{ document.notes }}
                 </p>
               </div>
-              
+
               <div class="document-actions">
                 <button @click="approveDocument(document)" class="btn btn-success btn-sm">
                   <i class="fas fa-check"></i>
@@ -88,41 +97,29 @@
         <!-- Formulaire de décision -->
         <div class="decision-section">
           <h3>{{ $t('kyc.decision') }}</h3>
-          
+
           <div class="decision-form">
             <div class="form-group">
               <label>{{ $t('kyc.notes') }}</label>
-              <textarea 
-                v-model="reviewNotes" 
+              <textarea
+                v-model="reviewNotes"
                 :placeholder="$t('kyc.notesPlaceholder')"
                 rows="4"
               ></textarea>
             </div>
-            
+
             <div class="decision-actions">
-              <button 
-                @click="approveKyc" 
-                class="btn btn-success"
-                :disabled="processing"
-              >
+              <button @click="approveKyc" class="btn btn-success" :disabled="processing">
                 <i class="fas fa-check"></i>
                 {{ $t('kyc.approveAll') }}
               </button>
-              
-              <button 
-                @click="rejectKyc" 
-                class="btn btn-danger"
-                :disabled="processing"
-              >
+
+              <button @click="rejectKyc" class="btn btn-danger" :disabled="processing">
                 <i class="fas fa-times"></i>
                 {{ $t('kyc.rejectAll') }}
               </button>
-              
-              <button 
-                @click="requestMoreInfo" 
-                class="btn btn-warning"
-                :disabled="processing"
-              >
+
+              <button @click="requestMoreInfo" class="btn btn-warning" :disabled="processing">
                 <i class="fas fa-info-circle"></i>
                 {{ $t('kyc.requestMore') }}
               </button>
@@ -143,7 +140,7 @@
         </button>
       </div>
       <div class="preview-content">
-        <img :src="previewDocument.url" :alt="previewDocument.type">
+        <img :src="previewDocument.url" :alt="previewDocument.type" />
       </div>
     </div>
   </div>
@@ -159,89 +156,88 @@ export default {
   props: {
     user: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['close', 'approve', 'reject'],
   setup(props, { emit }) {
     const { showToast } = useToast()
-    
+
     const loading = ref(false)
     const processing = ref(false)
     const documents = ref([])
     const kycHistory = ref([])
     const reviewNotes = ref('')
     const previewDocument = ref(null)
-    
+
     const loadKycData = async () => {
       try {
         loading.value = true
-        
+
         // Charger les documents KYC
         const documentsResponse = await managerApi.getUserKycDocuments(props.user.id)
         documents.value = documentsResponse.data
-        
+
         // Charger l'historique KYC
         const historyResponse = await managerApi.getKycHistory(props.user.id)
         kycHistory.value = historyResponse.data
-        
       } catch (error) {
         showToast(error.message, 'error')
       } finally {
         loading.value = false
       }
     }
-    
-    const openPreview = (document) => {
+
+    const openPreview = document => {
       previewDocument.value = document
     }
-    
+
     const closePreview = () => {
       previewDocument.value = null
     }
-    
-    const approveDocument = async (document) => {
+
+    const approveDocument = async document => {
       try {
-        await managerApi.updateKycDocument(document.id, { 
+        await managerApi.updateKycDocument(document.id, {
           status: 'approved',
-          notes: reviewNotes.value 
+          notes: reviewNotes.value,
         })
-        
+
         document.status = 'approved'
         showToast('Document approuvé', 'success')
       } catch (error) {
         showToast(error.message, 'error')
       }
     }
-    
-    const rejectDocument = async (document) => {
+
+    const rejectDocument = async document => {
       if (!reviewNotes.value.trim()) {
         showToast('Veuillez ajouter une note pour le rejet', 'warning')
         return
       }
-      
+
       try {
-        await managerApi.updateKycDocument(document.id, { 
+        await managerApi.updateKycDocument(document.id, {
           status: 'rejected',
-          notes: reviewNotes.value 
+          notes: reviewNotes.value,
         })
-        
+
         document.status = 'rejected'
         showToast('Document rejeté', 'success')
       } catch (error) {
         showToast(error.message, 'error')
       }
     }
-    
+
     const approveKyc = async () => {
       try {
         processing.value = true
-        
+
         await managerApi.updateKycStatus(props.user.id, {
           status: 'verified',
-          notes: reviewNotes.value
+          notes: reviewNotes.value,
         })
-        
+
         showToast('KYC approuvé avec succès', 'success')
         emit('approve', props.user.id)
       } catch (error) {
@@ -250,21 +246,21 @@ export default {
         processing.value = false
       }
     }
-    
+
     const rejectKyc = async () => {
       if (!reviewNotes.value.trim()) {
         showToast('Veuillez ajouter une raison pour le rejet', 'warning')
         return
       }
-      
+
       try {
         processing.value = true
-        
+
         await managerApi.updateKycStatus(props.user.id, {
           status: 'rejected',
-          rejection_reason: reviewNotes.value
+          rejection_reason: reviewNotes.value,
         })
-        
+
         showToast('KYC rejeté', 'success')
         emit('reject', props.user.id, reviewNotes.value)
       } catch (error) {
@@ -273,16 +269,16 @@ export default {
         processing.value = false
       }
     }
-    
+
     const requestMoreInfo = async () => {
       try {
         processing.value = true
-        
+
         await managerApi.requestKycInfo(props.user.id, {
-          message: reviewNotes.value
+          message: reviewNotes.value,
         })
-        
-        showToast('Demande d\'informations envoyée', 'success')
+
+        showToast("Demande d'informations envoyée", 'success')
         emit('close')
       } catch (error) {
         showToast(error.message, 'error')
@@ -290,21 +286,21 @@ export default {
         processing.value = false
       }
     }
-    
-    const formatDate = (dateString) => {
+
+    const formatDate = dateString => {
       return new Date(dateString).toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
-    
+
     onMounted(() => {
       loadKycData()
     })
-    
+
     return {
       loading,
       processing,
@@ -319,9 +315,9 @@ export default {
       approveKyc,
       rejectKyc,
       requestMoreInfo,
-      formatDate
+      formatDate,
     }
-  }
+  },
 }
 </script>
 
@@ -422,9 +418,18 @@ export default {
   font-weight: 500;
 }
 
-.status-pending { background: #fff3e0; color: #ff9800; }
-.status-approved { background: #e8f5e8; color: #4caf50; }
-.status-rejected { background: #ffebee; color: #f44336; }
+.status-pending {
+  background: #fff3e0;
+  color: #ff9800;
+}
+.status-approved {
+  background: #e8f5e8;
+  color: #4caf50;
+}
+.status-rejected {
+  background: #ffebee;
+  color: #f44336;
+}
 
 .document-preview {
   padding: 15px;
@@ -487,7 +492,7 @@ export default {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2196F3;
+  background: #2196f3;
 }
 
 .timeline-date {
@@ -555,7 +560,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;

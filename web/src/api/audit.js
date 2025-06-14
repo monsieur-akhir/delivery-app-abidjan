@@ -1,5 +1,5 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { API_URL } from '@/config'
 
 /**
  * Récupérer les logs d'audit

@@ -1,4 +1,3 @@
-
 import apiService from './apiService'
 
 export const analyticsApi = {
@@ -10,7 +9,7 @@ export const analyticsApi = {
 
   async getKPIs(startDate, endDate) {
     const response = await apiService.get('/api/v1/analytics/kpis', {
-      params: { start_date: startDate, end_date: endDate }
+      params: { start_date: startDate, end_date: endDate },
     })
     return response.data
   },
@@ -22,7 +21,9 @@ export const analyticsApi = {
   },
 
   async getDeliveryTrends(period = 'month') {
-    const response = await apiService.get('/api/v1/analytics/deliveries/trends', { params: { period } })
+    const response = await apiService.get('/api/v1/analytics/deliveries/trends', {
+      params: { period },
+    })
     return response.data
   },
 
@@ -70,18 +71,24 @@ export const analyticsApi = {
   },
 
   async getClientBehavior(period = 'month') {
-    const response = await apiService.get('/api/v1/analytics/clients/behavior', { params: { period } })
+    const response = await apiService.get('/api/v1/analytics/clients/behavior', {
+      params: { period },
+    })
     return response.data
   },
 
   async getCourierPerformance(filters = {}) {
-    const response = await apiService.get('/api/v1/analytics/couriers/performance', { params: filters })
+    const response = await apiService.get('/api/v1/analytics/couriers/performance', {
+      params: filters,
+    })
     return response.data
   },
 
   // Analyses prédictives
   async getDemandForecast(period = 'week') {
-    const response = await apiService.get('/api/v1/analytics/forecast/demand', { params: { period } })
+    const response = await apiService.get('/api/v1/analytics/forecast/demand', {
+      params: { period },
+    })
     return response.data
   },
 
@@ -91,7 +98,9 @@ export const analyticsApi = {
   },
 
   async getResourceOptimization(filters = {}) {
-    const response = await apiService.get('/api/v1/analytics/optimization/resources', { params: filters })
+    const response = await apiService.get('/api/v1/analytics/optimization/resources', {
+      params: filters,
+    })
     return response.data
   },
 
@@ -109,7 +118,7 @@ export const analyticsApi = {
   async exportReport(reportId, format = 'excel') {
     const response = await apiService.get(`/api/v1/analytics/reports/${reportId}/export`, {
       params: { format },
-      responseType: 'blob'
+      responseType: 'blob',
     })
     return response.data
   },
@@ -121,12 +130,16 @@ export const analyticsApi = {
   },
 
   async getPeakHours(period = 'week') {
-    const response = await apiService.get('/api/v1/analytics/traffic/peak-hours', { params: { period } })
+    const response = await apiService.get('/api/v1/analytics/traffic/peak-hours', {
+      params: { period },
+    })
     return response.data
   },
 
   async getRouteOptimization(filters = {}) {
-    const response = await apiService.get('/api/v1/analytics/routes/optimization', { params: filters })
+    const response = await apiService.get('/api/v1/analytics/routes/optimization', {
+      params: filters,
+    })
     return response.data
   },
 
@@ -144,7 +157,7 @@ export const analyticsApi = {
   async getComplaintAnalysis(period = 'month') {
     const response = await apiService.get('/api/v1/analytics/complaints', { params: { period } })
     return response.data
-  }
+  },
 }
 
 export default analyticsApi

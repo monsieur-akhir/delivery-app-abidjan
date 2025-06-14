@@ -1,5 +1,5 @@
-import L from "leaflet"
-import "leaflet-draw"
+import L from 'leaflet'
+import 'leaflet-draw'
 
 /**
  * Initialise une carte Leaflet dans l'élément DOM spécifié
@@ -11,8 +11,9 @@ import "leaflet-draw"
 export const initMap = (elementId, center = [5.36, -4.0083], zoom = 12) => {
   const map = L.map(elementId).setView(center, zoom)
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map)
 
   return map
@@ -34,7 +35,7 @@ export const initDrawMap = (
   zoom = 12,
   onDrawCreated = null,
   onDrawEdited = null,
-  onDrawDeleted = null,
+  onDrawDeleted = null
 ) => {
   const map = initMap(elementId, center, zoom)
 
@@ -51,18 +52,18 @@ export const initDrawMap = (
       marker: false,
       rectangle: {
         shapeOptions: {
-          color: "#0056b3",
+          color: '#0056b3',
           weight: 2,
         },
       },
       polygon: {
         allowIntersection: false,
         drawError: {
-          color: "#e1e100",
+          color: '#e1e100',
           message: "<strong>Erreur:</strong> Les polygones ne peuvent pas s'intersecter!",
         },
         shapeOptions: {
-          color: "#0056b3",
+          color: '#0056b3',
           weight: 2,
         },
       },
@@ -79,7 +80,7 @@ export const initDrawMap = (
 
   // Gérer les événements de dessin
   if (onDrawCreated) {
-    map.on(L.Draw.Event.CREATED, (event) => {
+    map.on(L.Draw.Event.CREATED, event => {
       const layer = event.layer
       drawnItems.addLayer(layer)
       onDrawCreated(layer)
@@ -87,14 +88,14 @@ export const initDrawMap = (
   }
 
   if (onDrawEdited) {
-    map.on(L.Draw.Event.EDITED, (event) => {
+    map.on(L.Draw.Event.EDITED, event => {
       const layers = event.layers
       onDrawEdited(layers)
     })
   }
 
   if (onDrawDeleted) {
-    map.on(L.Draw.Event.DELETED, (event) => {
+    map.on(L.Draw.Event.DELETED, event => {
       const layers = event.layers
       onDrawDeleted(layers)
     })
@@ -113,13 +114,13 @@ export const createCourierMarker = (courier, onClick = null) => {
   if (!courier.latitude || !courier.longitude) return null
 
   // Déterminer la classe CSS en fonction de la disponibilité
-  let markerClass = "courier-marker"
-  if (courier.availability === "available") {
-    markerClass += " courier-available"
-  } else if (courier.availability === "on_delivery") {
-    markerClass += " courier-on-delivery"
+  let markerClass = 'courier-marker'
+  if (courier.availability === 'available') {
+    markerClass += ' courier-available'
+  } else if (courier.availability === 'on_delivery') {
+    markerClass += ' courier-on-delivery'
   } else {
-    markerClass += " courier-unavailable"
+    markerClass += ' courier-unavailable'
   }
 
   // Créer l'icône personnalisée
@@ -144,14 +145,16 @@ export const createCourierMarker = (courier, onClick = null) => {
         <div><strong>Note:</strong> ${courier.rating.toFixed(1)} ★</div>
       </div>
       <div class="popup-actions">
-        <button class="popup-btn" onclick="window.viewCourierDetails(${courier.id})">Voir détails</button>
+        <button class="popup-btn" onclick="window.viewCourierDetails(${
+          courier.id
+        })">Voir détails</button>
       </div>
     </div>
   `)
 
   // Ajouter l'événement de clic
   if (onClick) {
-    marker.on("click", () => onClick(courier))
+    marker.on('click', () => onClick(courier))
   }
 
   return marker
@@ -167,15 +170,19 @@ export const createDeliveryMarker = (delivery, onClick = null) => {
   if (!delivery.latitude || !delivery.longitude) return null
 
   // Déterminer la classe CSS en fonction du statut
-  let markerClass = "delivery-marker"
-  if (delivery.status === "pending" || delivery.status === "bidding") {
-    markerClass += " delivery-pending"
-  } else if (delivery.status === "accepted" || delivery.status === "picked_up" || delivery.status === "in_transit") {
-    markerClass += " delivery-in-progress"
-  } else if (delivery.status === "delivered" || delivery.status === "completed") {
-    markerClass += " delivery-completed"
+  let markerClass = 'delivery-marker'
+  if (delivery.status === 'pending' || delivery.status === 'bidding') {
+    markerClass += ' delivery-pending'
+  } else if (
+    delivery.status === 'accepted' ||
+    delivery.status === 'picked_up' ||
+    delivery.status === 'in_transit'
+  ) {
+    markerClass += ' delivery-in-progress'
+  } else if (delivery.status === 'delivered' || delivery.status === 'completed') {
+    markerClass += ' delivery-completed'
   } else {
-    markerClass += " delivery-cancelled"
+    markerClass += ' delivery-cancelled'
   }
 
   // Créer l'icône personnalisée
@@ -200,14 +207,16 @@ export const createDeliveryMarker = (delivery, onClick = null) => {
         <div><strong>Prix:</strong> ${formatCurrency(delivery.price)} FCFA</div>
       </div>
       <div class="popup-actions">
-        <button class="popup-btn" onclick="window.viewDeliveryDetails(${delivery.id})">Voir détails</button>
+        <button class="popup-btn" onclick="window.viewDeliveryDetails(${
+          delivery.id
+        })">Voir détails</button>
       </div>
     </div>
   `)
 
   // Ajouter l'événement de clic
   if (onClick) {
-    marker.on("click", () => onClick(delivery))
+    marker.on('click', () => onClick(delivery))
   }
 
   return marker
@@ -223,7 +232,7 @@ export const createDeliveryMarker = (delivery, onClick = null) => {
  */
 export const createRoute = (map, startPoint, endPoint, options = {}) => {
   const defaultOptions = {
-    color: "#0056b3",
+    color: '#0056b3',
     weight: 5,
     opacity: 0.7,
     dashArray: null,
@@ -250,10 +259,10 @@ export const createRoute = (map, startPoint, endPoint, options = {}) => {
 export const addGeoJsonToMap = (map, geojson, options = {}) => {
   const defaultOptions = {
     style: {
-      color: "#0056b3",
+      color: '#0056b3',
       weight: 2,
       opacity: 0.7,
-      fillColor: "#0056b3",
+      fillColor: '#0056b3',
       fillOpacity: 0.2,
     },
     onEachFeature: null,
@@ -275,7 +284,7 @@ export const addGeoJsonToMap = (map, geojson, options = {}) => {
  * @param {Object} layer - La couche Leaflet
  * @returns {Object} L'objet GeoJSON
  */
-export const layerToGeoJson = (layer) => {
+export const layerToGeoJson = layer => {
   return layer.toGeoJSON()
 }
 
@@ -284,13 +293,13 @@ export const layerToGeoJson = (layer) => {
  * @param {string} name - Le nom complet
  * @returns {string} Les initiales (max 2 caractères)
  */
-export const getInitials = (name) => {
-  if (!name) return ""
+export const getInitials = name => {
+  if (!name) return ''
 
   return name
-    .split(" ")
-    .map((part) => part.charAt(0))
-    .join("")
+    .split(' ')
+    .map(part => part.charAt(0))
+    .join('')
     .toUpperCase()
     .substring(0, 2)
 }
@@ -300,13 +309,13 @@ export const getInitials = (name) => {
  * @param {string} vehicleType - Le type de véhicule
  * @returns {string} Le libellé du type de véhicule
  */
-export const getVehicleTypeLabel = (vehicleType) => {
+export const getVehicleTypeLabel = vehicleType => {
   const vehicleLabels = {
-    motorcycle: "Moto",
-    car: "Voiture",
-    bicycle: "Vélo",
-    foot: "À pied",
-    truck: "Camion",
+    motorcycle: 'Moto',
+    car: 'Voiture',
+    bicycle: 'Vélo',
+    foot: 'À pied',
+    truck: 'Camion',
   }
 
   return vehicleLabels[vehicleType] || vehicleType
@@ -317,11 +326,11 @@ export const getVehicleTypeLabel = (vehicleType) => {
  * @param {string} availability - La disponibilité
  * @returns {string} Le libellé de disponibilité
  */
-export const getAvailabilityLabel = (availability) => {
+export const getAvailabilityLabel = availability => {
   const availabilityLabels = {
-    available: "Disponible",
-    unavailable: "Indisponible",
-    on_delivery: "En livraison",
+    available: 'Disponible',
+    unavailable: 'Indisponible',
+    on_delivery: 'En livraison',
   }
 
   return availabilityLabels[availability] || availability
@@ -332,17 +341,17 @@ export const getAvailabilityLabel = (availability) => {
  * @param {string} status - Le statut de livraison
  * @returns {string} Le libellé du statut de livraison
  */
-export const getDeliveryStatusLabel = (status) => {
+export const getDeliveryStatusLabel = status => {
   const statusLabels = {
-    pending: "En attente",
-    bidding: "Enchères",
-    accepted: "Acceptée",
-    picked_up: "Récupérée",
-    in_transit: "En transit",
-    delivered: "Livrée",
-    completed: "Terminée",
-    cancelled: "Annulée",
-    failed: "Échouée",
+    pending: 'En attente',
+    bidding: 'Enchères',
+    accepted: 'Acceptée',
+    picked_up: 'Récupérée',
+    in_transit: 'En transit',
+    delivered: 'Livrée',
+    completed: 'Terminée',
+    cancelled: 'Annulée',
+    failed: 'Échouée',
   }
 
   return statusLabels[status] || status
@@ -353,6 +362,6 @@ export const getDeliveryStatusLabel = (status) => {
  * @param {number} amount - Le montant à formater
  * @returns {string} Le montant formaté
  */
-export const formatCurrency = (amount) => {
-  return new Intl.NumberFormat("fr-FR").format(amount)
+export const formatCurrency = amount => {
+  return new Intl.NumberFormat('fr-FR').format(amount)
 }

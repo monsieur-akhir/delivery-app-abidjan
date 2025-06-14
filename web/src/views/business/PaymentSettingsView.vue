@@ -3,12 +3,8 @@
     <div class="page-header">
       <h1>Configuration des paiements</h1>
       <button class="btn btn-primary" @click="saveSettings" :disabled="isSaving">
-        <span v-if="isSaving">
-          <i class="fas fa-spinner fa-spin"></i> Enregistrement...
-        </span>
-        <span v-else>
-          <i class="fas fa-save"></i> Enregistrer
-        </span>
+        <span v-if="isSaving"> <i class="fas fa-spinner fa-spin"></i> Enregistrement... </span>
+        <span v-else> <i class="fas fa-save"></i> Enregistrer </span>
       </button>
     </div>
 
@@ -28,19 +24,21 @@
       <div class="settings-card">
         <div class="card-header">
           <h2>Méthodes de paiement acceptées</h2>
-          <p class="help-text">Sélectionnez les méthodes de paiement que vous souhaitez accepter pour vos livraisons.</p>
+          <p class="help-text">
+            Sélectionnez les méthodes de paiement que vous souhaitez accepter pour vos livraisons.
+          </p>
         </div>
         <div class="card-body">
           <div class="payment-methods">
-            <div 
-              v-for="method in paymentMethods" 
-              :key="method.id" 
+            <div
+              v-for="method in paymentMethods"
+              :key="method.id"
               class="payment-method-item"
-              :class="{ 'active': isMethodActive(method.id) }"
+              :class="{ active: isMethodActive(method.id) }"
               @click="togglePaymentMethod(method.id)"
             >
               <div class="payment-method-icon">
-                <img :src="method.icon" :alt="method.name">
+                <img :src="method.icon" :alt="method.name" />
               </div>
               <div class="payment-method-info">
                 <h3>{{ method.name }}</h3>
@@ -48,12 +46,12 @@
               </div>
               <div class="payment-method-toggle">
                 <div class="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    :id="`method-${method.id}`" 
+                  <input
+                    type="checkbox"
+                    :id="`method-${method.id}`"
                     :checked="isMethodActive(method.id)"
                     @change="togglePaymentMethod(method.id)"
-                  >
+                  />
                   <label :for="`method-${method.id}`"></label>
                 </div>
               </div>
@@ -66,41 +64,39 @@
       <div class="settings-card" v-if="isMethodActive('cinetpay')">
         <div class="card-header">
           <h2>Configuration CinetPay</h2>
-          <p class="help-text">Configurez vos identifiants CinetPay pour accepter les paiements mobiles.</p>
+          <p class="help-text">
+            Configurez vos identifiants CinetPay pour accepter les paiements mobiles.
+          </p>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label for="cinetpay-site-id">Site ID</label>
-            <input 
-              type="text" 
-              id="cinetpay-site-id" 
-              v-model="paymentSettings.cinetpay.site_id" 
+            <input
+              type="text"
+              id="cinetpay-site-id"
+              v-model="paymentSettings.cinetpay.site_id"
               placeholder="Votre Site ID CinetPay"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="cinetpay-api-key">Clé API</label>
-            <input 
-              type="text" 
-              id="cinetpay-api-key" 
-              v-model="paymentSettings.cinetpay.api_key" 
+            <input
+              type="text"
+              id="cinetpay-api-key"
+              v-model="paymentSettings.cinetpay.api_key"
               placeholder="Votre clé API CinetPay"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="cinetpay-secret-key">Clé secrète</label>
             <div class="password-input">
-              <input 
-                :type="showSecretKey ? 'text' : 'password'" 
-                id="cinetpay-secret-key" 
-                v-model="paymentSettings.cinetpay.secret_key" 
+              <input
+                :type="showSecretKey ? 'text' : 'password'"
+                id="cinetpay-secret-key"
+                v-model="paymentSettings.cinetpay.secret_key"
                 placeholder="Votre clé secrète CinetPay"
-              >
-              <button 
-                type="button" 
-                class="toggle-password" 
-                @click="showSecretKey = !showSecretKey"
-              >
+              />
+              <button type="button" class="toggle-password" @click="showSecretKey = !showSecretKey">
                 <i :class="showSecretKey ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
               </button>
             </div>
@@ -124,30 +120,32 @@
       <div class="settings-card" v-if="isMethodActive('orange_money')">
         <div class="card-header">
           <h2>Configuration Orange Money</h2>
-          <p class="help-text">Configurez vos identifiants Orange Money pour accepter les paiements mobiles.</p>
+          <p class="help-text">
+            Configurez vos identifiants Orange Money pour accepter les paiements mobiles.
+          </p>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label for="orange-merchant-id">ID Marchand</label>
-            <input 
-              type="text" 
-              id="orange-merchant-id" 
-              v-model="paymentSettings.orange_money.merchant_id" 
+            <input
+              type="text"
+              id="orange-merchant-id"
+              v-model="paymentSettings.orange_money.merchant_id"
               placeholder="Votre ID Marchand Orange Money"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="orange-merchant-key">Clé Marchand</label>
             <div class="password-input">
-              <input 
-                :type="showOrangeMerchantKey ? 'text' : 'password'" 
-                id="orange-merchant-key" 
-                v-model="paymentSettings.orange_money.merchant_key" 
+              <input
+                :type="showOrangeMerchantKey ? 'text' : 'password'"
+                id="orange-merchant-key"
+                v-model="paymentSettings.orange_money.merchant_key"
                 placeholder="Votre clé Marchand Orange Money"
-              >
-              <button 
-                type="button" 
-                class="toggle-password" 
+              />
+              <button
+                type="button"
+                class="toggle-password"
                 @click="showOrangeMerchantKey = !showOrangeMerchantKey"
               >
                 <i :class="showOrangeMerchantKey ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
@@ -156,13 +154,15 @@
           </div>
           <div class="form-group">
             <label for="orange-phone">Numéro de téléphone marchand</label>
-            <input 
-              type="text" 
-              id="orange-phone" 
-              v-model="paymentSettings.orange_money.phone" 
+            <input
+              type="text"
+              id="orange-phone"
+              v-model="paymentSettings.orange_money.phone"
               placeholder="Ex: 07XXXXXXXX"
-            >
-            <p class="input-help">Numéro de téléphone Orange Money associé à votre compte marchand.</p>
+            />
+            <p class="input-help">
+              Numéro de téléphone Orange Money associé à votre compte marchand.
+            </p>
           </div>
           <div class="form-group">
             <label for="orange-mode">Mode</label>
@@ -183,45 +183,45 @@
       <div class="settings-card" v-if="isMethodActive('mtn_money')">
         <div class="card-header">
           <h2>Configuration MTN Mobile Money</h2>
-          <p class="help-text">Configurez vos identifiants MTN Mobile Money pour accepter les paiements mobiles.</p>
+          <p class="help-text">
+            Configurez vos identifiants MTN Mobile Money pour accepter les paiements mobiles.
+          </p>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label for="mtn-api-user">Utilisateur API</label>
-            <input 
-              type="text" 
-              id="mtn-api-user" 
-              v-model="paymentSettings.mtn_money.api_user" 
+            <input
+              type="text"
+              id="mtn-api-user"
+              v-model="paymentSettings.mtn_money.api_user"
               placeholder="Votre utilisateur API MTN"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="mtn-api-key">Clé API</label>
             <div class="password-input">
-              <input 
-                :type="showMtnApiKey ? 'text' : 'password'" 
-                id="mtn-api-key" 
-                v-model="paymentSettings.mtn_money.api_key" 
+              <input
+                :type="showMtnApiKey ? 'text' : 'password'"
+                id="mtn-api-key"
+                v-model="paymentSettings.mtn_money.api_key"
                 placeholder="Votre clé API MTN"
-              >
-              <button 
-                type="button" 
-                class="toggle-password" 
-                @click="showMtnApiKey = !showMtnApiKey"
-              >
+              />
+              <button type="button" class="toggle-password" @click="showMtnApiKey = !showMtnApiKey">
                 <i :class="showMtnApiKey ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
               </button>
             </div>
           </div>
           <div class="form-group">
             <label for="mtn-phone">Numéro de téléphone marchand</label>
-            <input 
-              type="text" 
-              id="mtn-phone" 
-              v-model="paymentSettings.mtn_money.phone" 
+            <input
+              type="text"
+              id="mtn-phone"
+              v-model="paymentSettings.mtn_money.phone"
               placeholder="Ex: 05XXXXXXXX"
-            >
-            <p class="input-help">Numéro de téléphone MTN Mobile Money associé à votre compte marchand.</p>
+            />
+            <p class="input-help">
+              Numéro de téléphone MTN Mobile Money associé à votre compte marchand.
+            </p>
           </div>
           <div class="form-group">
             <label for="mtn-mode">Mode</label>
@@ -242,7 +242,9 @@
       <div class="settings-card">
         <div class="card-header">
           <h2>Paramètres de paiement</h2>
-          <p class="help-text">Configurez les options générales de paiement pour votre entreprise.</p>
+          <p class="help-text">
+            Configurez les options générales de paiement pour votre entreprise.
+          </p>
         </div>
         <div class="card-body">
           <div class="form-group">
@@ -255,29 +257,31 @@
           </div>
           <div class="form-group">
             <label for="payment-delay">Délai de paiement (jours)</label>
-            <input 
-              type="number" 
-              id="payment-delay" 
-              v-model.number="paymentSettings.general.payment_delay" 
+            <input
+              type="number"
+              id="payment-delay"
+              v-model.number="paymentSettings.general.payment_delay"
               min="0"
               max="30"
-            >
-            <p class="input-help">Nombre de jours avant que le paiement ne soit considéré comme en retard.</p>
+            />
+            <p class="input-help">
+              Nombre de jours avant que le paiement ne soit considéré comme en retard.
+            </p>
           </div>
           <div class="form-group checkbox-group">
-            <input 
-              type="checkbox" 
-              id="auto-invoice" 
+            <input
+              type="checkbox"
+              id="auto-invoice"
               v-model="paymentSettings.general.auto_invoice"
-            >
+            />
             <label for="auto-invoice">Générer automatiquement les factures</label>
           </div>
           <div class="form-group checkbox-group">
-            <input 
-              type="checkbox" 
-              id="payment-reminder" 
+            <input
+              type="checkbox"
+              id="payment-reminder"
               v-model="paymentSettings.general.payment_reminder"
-            >
+            />
             <label for="payment-reminder">Envoyer des rappels de paiement</label>
           </div>
         </div>
@@ -292,64 +296,59 @@
         <div class="card-body">
           <div class="form-group">
             <label for="billing-name">Nom de l'entreprise</label>
-            <input 
-              type="text" 
-              id="billing-name" 
-              v-model="paymentSettings.billing.company_name" 
+            <input
+              type="text"
+              id="billing-name"
+              v-model="paymentSettings.billing.company_name"
               placeholder="Nom de votre entreprise"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="billing-address">Adresse</label>
-            <textarea 
-              id="billing-address" 
-              v-model="paymentSettings.billing.address" 
+            <textarea
+              id="billing-address"
+              v-model="paymentSettings.billing.address"
               rows="3"
               placeholder="Adresse complète de votre entreprise"
             ></textarea>
           </div>
           <div class="form-group">
             <label for="billing-phone">Téléphone</label>
-            <input 
-              type="text" 
-              id="billing-phone" 
-              v-model="paymentSettings.billing.phone" 
+            <input
+              type="text"
+              id="billing-phone"
+              v-model="paymentSettings.billing.phone"
               placeholder="Numéro de téléphone"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="billing-email">Email</label>
-            <input 
-              type="email" 
-              id="billing-email" 
-              v-model="paymentSettings.billing.email" 
+            <input
+              type="email"
+              id="billing-email"
+              v-model="paymentSettings.billing.email"
               placeholder="Adresse email"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="billing-tax-id">Numéro d'identification fiscale</label>
-            <input 
-              type="text" 
-              id="billing-tax-id" 
-              v-model="paymentSettings.billing.tax_id" 
+            <input
+              type="text"
+              id="billing-tax-id"
+              v-model="paymentSettings.billing.tax_id"
               placeholder="Numéro d'identification fiscale"
-            >
+            />
           </div>
           <div class="form-group">
             <label for="billing-logo">Logo de l'entreprise</label>
             <div class="logo-upload">
               <div v-if="paymentSettings.billing.logo_url" class="logo-preview">
-                <img :src="paymentSettings.billing.logo_url" alt="Logo de l'entreprise">
+                <img :src="paymentSettings.billing.logo_url" alt="Logo de l'entreprise" />
                 <button type="button" class="btn-remove-logo" @click="removeLogo">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
-              <input 
-                type="file" 
-                id="billing-logo" 
-                @change="handleLogoUpload" 
-                accept="image/*"
-              >
+              <input type="file" id="billing-logo" @change="handleLogoUpload" accept="image/*" />
               <label for="billing-logo" class="upload-label">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <span>Choisir un logo</span>
@@ -364,64 +363,64 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useToast } from '@/composables/useToast';
-import { getPaymentSettings, updatePaymentSettings, testPaymentConnection } from '@/api/payments';
-import { uploadImage } from '@/api/storage';
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useToast } from '@/composables/useToast'
+import { getPaymentSettings, updatePaymentSettings, testPaymentConnection } from '@/api/payments'
+import { uploadImage } from '@/api/storage'
 
 export default {
   name: 'PaymentSettingsView',
   setup() {
-    const { showToast } = useToast();
-    
+    const { showToast } = useToast()
+
     // État
-    const loading = ref(true);
-    const error = ref(null);
-    const isSaving = ref(false);
-    const showSecretKey = ref(false);
-    const showOrangeMerchantKey = ref(false);
-    const showMtnApiKey = ref(false);
-    
+    const loading = ref(true)
+    const error = ref(null)
+    const isSaving = ref(false)
+    const showSecretKey = ref(false)
+    const showOrangeMerchantKey = ref(false)
+    const showMtnApiKey = ref(false)
+
     // Méthodes de paiement disponibles
     const paymentMethods = [
       {
         id: 'cash',
         name: 'Paiement en espèces',
         description: 'Le client paie en espèces à la livraison',
-        icon: '/images/payment/cash.png'
+        icon: '/images/payment/cash.png',
       },
       {
         id: 'cinetpay',
         name: 'CinetPay',
         description: 'Intégration avec CinetPay pour les paiements mobiles et cartes',
-        icon: '/images/payment/cinetpay.png'
+        icon: '/images/payment/cinetpay.png',
       },
       {
         id: 'orange_money',
         name: 'Orange Money',
         description: 'Paiements via Orange Money',
-        icon: '/images/payment/orange-money.png'
+        icon: '/images/payment/orange-money.png',
       },
       {
         id: 'mtn_money',
         name: 'MTN Mobile Money',
         description: 'Paiements via MTN Mobile Money',
-        icon: '/images/payment/mtn-money.png'
+        icon: '/images/payment/mtn-money.png',
       },
       {
         id: 'moov_money',
         name: 'Moov Money',
         description: 'Paiements via Moov Money',
-        icon: '/images/payment/moov-money.png'
+        icon: '/images/payment/moov-money.png',
       },
       {
         id: 'bank_transfer',
         name: 'Virement bancaire',
         description: 'Paiement par virement bancaire',
-        icon: '/images/payment/bank-transfer.png'
-      }
-    ];
-    
+        icon: '/images/payment/bank-transfer.png',
+      },
+    ]
+
     // Paramètres de paiement
     const paymentSettings = reactive({
       active_methods: ['cash'],
@@ -429,25 +428,25 @@ export default {
         site_id: '',
         api_key: '',
         secret_key: '',
-        mode: 'test'
+        mode: 'test',
       },
       orange_money: {
         merchant_id: '',
         merchant_key: '',
         phone: '',
-        mode: 'test'
+        mode: 'test',
       },
       mtn_money: {
         api_user: '',
         api_key: '',
         phone: '',
-        mode: 'test'
+        mode: 'test',
       },
       general: {
         currency: 'XOF',
         payment_delay: 7,
         auto_invoice: true,
-        payment_reminder: true
+        payment_reminder: true,
       },
       billing: {
         company_name: '',
@@ -455,162 +454,188 @@ export default {
         phone: '',
         email: '',
         tax_id: '',
-        logo_url: ''
-      }
-    });
-    
+        logo_url: '',
+      },
+    })
+
     // Méthodes
     const fetchPaymentSettings = async () => {
-      loading.value = true;
-      error.value = null;
-      
+      loading.value = true
+      error.value = null
+
       try {
-        const response = await getPaymentSettings();
-        
+        const response = await getPaymentSettings()
+
         // Mettre à jour les paramètres avec les données reçues
         if (response.data.active_methods) {
-          paymentSettings.active_methods = response.data.active_methods;
+          paymentSettings.active_methods = response.data.active_methods
         }
-        
+
         if (response.data.cinetpay) {
-          Object.assign(paymentSettings.cinetpay, response.data.cinetpay);
+          Object.assign(paymentSettings.cinetpay, response.data.cinetpay)
         }
-        
+
         if (response.data.orange_money) {
-          Object.assign(paymentSettings.orange_money, response.data.orange_money);
+          Object.assign(paymentSettings.orange_money, response.data.orange_money)
         }
-        
+
         if (response.data.mtn_money) {
-          Object.assign(paymentSettings.mtn_money, response.data.mtn_money);
+          Object.assign(paymentSettings.mtn_money, response.data.mtn_money)
         }
-        
+
         if (response.data.general) {
-          Object.assign(paymentSettings.general, response.data.general);
+          Object.assign(paymentSettings.general, response.data.general)
         }
-        
+
         if (response.data.billing) {
-          Object.assign(paymentSettings.billing, response.data.billing);
+          Object.assign(paymentSettings.billing, response.data.billing)
         }
       } catch (err) {
-        console.error('Erreur lors du chargement des paramètres de paiement:', err);
-        error.value = 'Impossible de charger les paramètres de paiement. Veuillez réessayer.';
+        console.error('Erreur lors du chargement des paramètres de paiement:', err)
+        error.value = 'Impossible de charger les paramètres de paiement. Veuillez réessayer.'
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
-    
+    }
+
     const saveSettings = async () => {
-      isSaving.value = true;
-      
+      isSaving.value = true
+
       try {
-        await updatePaymentSettings(paymentSettings);
-        showToast('Succès', 'Les paramètres de paiement ont été enregistrés avec succès', 'success');
+        await updatePaymentSettings(paymentSettings)
+        showToast('Succès', 'Les paramètres de paiement ont été enregistrés avec succès', 'success')
       } catch (err) {
-        console.error('Erreur lors de l\'enregistrement des paramètres de paiement:', err);
-        showToast('Erreur', 'Impossible d\'enregistrer les paramètres de paiement. Veuillez réessayer.', 'error');
+        console.error("Erreur lors de l'enregistrement des paramètres de paiement:", err)
+        showToast(
+          'Erreur',
+          "Impossible d'enregistrer les paramètres de paiement. Veuillez réessayer.",
+          'error'
+        )
       } finally {
-        isSaving.value = false;
+        isSaving.value = false
       }
-    };
-    
-    const isMethodActive = (methodId) => {
-      return paymentSettings.active_methods.includes(methodId);
-    };
-    
-    const togglePaymentMethod = (methodId) => {
+    }
+
+    const isMethodActive = methodId => {
+      return paymentSettings.active_methods.includes(methodId)
+    }
+
+    const togglePaymentMethod = methodId => {
       if (isMethodActive(methodId)) {
         // Retirer la méthode
-        paymentSettings.active_methods = paymentSettings.active_methods.filter(id => id !== methodId);
+        paymentSettings.active_methods = paymentSettings.active_methods.filter(
+          id => id !== methodId
+        )
       } else {
         // Ajouter la méthode
-        paymentSettings.active_methods.push(methodId);
+        paymentSettings.active_methods.push(methodId)
       }
-    };
-    
+    }
+
     const testCinetPayConnection = async () => {
       try {
-        const response = await testPaymentConnection('cinetpay', paymentSettings.cinetpay);
-        
+        const response = await testPaymentConnection('cinetpay', paymentSettings.cinetpay)
+
         if (response.data.success) {
-          showToast('Succès', 'Connexion à CinetPay établie avec succès', 'success');
+          showToast('Succès', 'Connexion à CinetPay établie avec succès', 'success')
         } else {
-          showToast('Erreur', `Échec de la connexion à CinetPay: ${response.data.message}`, 'error');
+          showToast('Erreur', `Échec de la connexion à CinetPay: ${response.data.message}`, 'error')
         }
       } catch (err) {
-        console.error('Erreur lors du test de connexion CinetPay:', err);
-        showToast('Erreur', 'Impossible de tester la connexion à CinetPay. Veuillez vérifier vos identifiants.', 'error');
+        console.error('Erreur lors du test de connexion CinetPay:', err)
+        showToast(
+          'Erreur',
+          'Impossible de tester la connexion à CinetPay. Veuillez vérifier vos identifiants.',
+          'error'
+        )
       }
-    };
-    
+    }
+
     const testOrangeMoneyConnection = async () => {
       try {
-        const response = await testPaymentConnection('orange_money', paymentSettings.orange_money);
-        
+        const response = await testPaymentConnection('orange_money', paymentSettings.orange_money)
+
         if (response.data.success) {
-          showToast('Succès', 'Connexion à Orange Money établie avec succès', 'success');
+          showToast('Succès', 'Connexion à Orange Money établie avec succès', 'success')
         } else {
-          showToast('Erreur', `Échec de la connexion à Orange Money: ${response.data.message}`, 'error');
+          showToast(
+            'Erreur',
+            `Échec de la connexion à Orange Money: ${response.data.message}`,
+            'error'
+          )
         }
       } catch (err) {
-        console.error('Erreur lors du test de connexion Orange Money:', err);
-        showToast('Erreur', 'Impossible de tester la connexion à Orange Money. Veuillez vérifier vos identifiants.', 'error');
+        console.error('Erreur lors du test de connexion Orange Money:', err)
+        showToast(
+          'Erreur',
+          'Impossible de tester la connexion à Orange Money. Veuillez vérifier vos identifiants.',
+          'error'
+        )
       }
-    };
-    
+    }
+
     const testMtnMoneyConnection = async () => {
       try {
-        const response = await testPaymentConnection('mtn_money', paymentSettings.mtn_money);
-        
+        const response = await testPaymentConnection('mtn_money', paymentSettings.mtn_money)
+
         if (response.data.success) {
-          showToast('Succès', 'Connexion à MTN Mobile Money établie avec succès', 'success');
+          showToast('Succès', 'Connexion à MTN Mobile Money établie avec succès', 'success')
         } else {
-          showToast('Erreur', `Échec de la connexion à MTN Mobile Money: ${response.data.message}`, 'error');
+          showToast(
+            'Erreur',
+            `Échec de la connexion à MTN Mobile Money: ${response.data.message}`,
+            'error'
+          )
         }
       } catch (err) {
-        console.error('Erreur lors du test de connexion MTN Mobile Money:', err);
-        showToast('Erreur', 'Impossible de tester la connexion à MTN Mobile Money. Veuillez vérifier vos identifiants.', 'error');
+        console.error('Erreur lors du test de connexion MTN Mobile Money:', err)
+        showToast(
+          'Erreur',
+          'Impossible de tester la connexion à MTN Mobile Money. Veuillez vérifier vos identifiants.',
+          'error'
+        )
       }
-    };
-    
-    const handleLogoUpload = async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      
+    }
+
+    const handleLogoUpload = async event => {
+      const file = event.target.files[0]
+      if (!file) return
+
       // Vérifier le type de fichier
       if (!file.type.match('image.*')) {
-        showToast('Erreur', 'Veuillez sélectionner une image (JPG, PNG)', 'error');
-        return;
+        showToast('Erreur', 'Veuillez sélectionner une image (JPG, PNG)', 'error')
+        return
       }
-      
+
       // Vérifier la taille du fichier (max 1MB)
       if (file.size > 1 * 1024 * 1024) {
-        showToast('Erreur', 'L\'image ne doit pas dépasser 1MB', 'error');
-        return;
+        showToast('Erreur', "L'image ne doit pas dépasser 1MB", 'error')
+        return
       }
-      
+
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        const response = await uploadImage(formData);
-        paymentSettings.billing.logo_url = response.data.url;
-        
-        showToast('Succès', 'Logo téléchargé avec succès', 'success');
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await uploadImage(formData)
+        paymentSettings.billing.logo_url = response.data.url
+
+        showToast('Succès', 'Logo téléchargé avec succès', 'success')
       } catch (err) {
-        console.error('Erreur lors du téléchargement du logo:', err);
-        showToast('Erreur', 'Impossible de télécharger le logo. Veuillez réessayer.', 'error');
+        console.error('Erreur lors du téléchargement du logo:', err)
+        showToast('Erreur', 'Impossible de télécharger le logo. Veuillez réessayer.', 'error')
       }
-    };
-    
+    }
+
     const removeLogo = () => {
-      paymentSettings.billing.logo_url = '';
-    };
-    
+      paymentSettings.billing.logo_url = ''
+    }
+
     // Cycle de vie
     onMounted(() => {
-      fetchPaymentSettings();
-    });
-    
+      fetchPaymentSettings()
+    })
+
     return {
       loading,
       error,
@@ -620,7 +645,7 @@ export default {
       showMtnApiKey,
       paymentMethods,
       paymentSettings,
-      
+
       fetchPaymentSettings,
       saveSettings,
       isMethodActive,
@@ -629,10 +654,10 @@ export default {
       testOrangeMoneyConnection,
       testMtnMoneyConnection,
       handleLogoUpload,
-      removeLogo
-    };
-  }
-};
+      removeLogo,
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -765,19 +790,19 @@ export default {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 34px;
 }
 
 .toggle-switch label:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 16px;
   width: 16px;
   left: 4px;
   bottom: 4px;
   background-color: white;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 
@@ -886,7 +911,7 @@ export default {
   color: #dc3545;
 }
 
-input[type="file"] {
+input[type='file'] {
   display: none;
 }
 
@@ -965,8 +990,12 @@ input[type="file"] {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container i {
@@ -981,21 +1010,21 @@ input[type="file"] {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .page-header button {
     width: 100%;
   }
-  
+
   .payment-method-item {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .payment-method-icon {
     margin-right: 0;
     margin-bottom: 0.5rem;
   }
-  
+
   .payment-method-toggle {
     margin-left: 0;
     margin-top: 0.5rem;

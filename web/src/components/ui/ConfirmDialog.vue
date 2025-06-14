@@ -22,29 +22,29 @@ export default {
   props: {
     title: {
       type: String,
-      default: 'Confirmation'
+      default: 'Confirmation',
     },
     message: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   emits: ['confirm', 'cancel'],
   setup(props, { emit }) {
     const confirm = () => {
-      emit('confirm');
-    };
-    
+      emit('confirm')
+    }
+
     const cancel = () => {
-      emit('cancel');
-    };
-    
+      emit('cancel')
+    }
+
     return {
       confirm,
-      cancel
-    };
-  }
-};
+      cancel,
+    }
+  },
+}
 </script>
 
 <style scoped>

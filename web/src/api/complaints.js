@@ -1,5 +1,5 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { API_URL } from '@/config'
 
 /**
  * Récupérer la liste des plaintes
@@ -15,7 +15,7 @@ export const getComplaints = (params = {}) => {
  * @param {Number} id - ID de la plainte
  * @returns {Promise} - Promesse avec les détails de la plainte
  */
-export const getComplaintDetails = (id) => {
+export const getComplaintDetails = id => {
   return axios.get(`${API_URL}/complaints/${id}`)
 }
 
@@ -24,7 +24,7 @@ export const getComplaintDetails = (id) => {
  * @param {Object} data - Données de la plainte
  * @returns {Promise} - Promesse avec la plainte créée
  */
-export const createComplaint = (data) => {
+export const createComplaint = data => {
   return axios.post(`${API_URL}/complaints`, data)
 }
 
@@ -33,7 +33,7 @@ export const createComplaint = (data) => {
  * @param {Number} id - ID de la plainte
  * @returns {Promise} - Promesse avec le résultat de l'annulation
  */
-export const cancelComplaint = (id) => {
+export const cancelComplaint = id => {
   return axios.put(`${API_URL}/complaints/${id}/cancel`)
 }
 

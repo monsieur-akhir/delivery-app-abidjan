@@ -7,7 +7,11 @@
           <font-awesome-icon icon="check-double" class="mr-1" />
           Tout marquer comme lu
         </button>
-        <button class="btn btn-outline" @click="clearAllNotifications" :disabled="loading || notifications.length === 0">
+        <button
+          class="btn btn-outline"
+          @click="clearAllNotifications"
+          :disabled="loading || notifications.length === 0"
+        >
           <font-awesome-icon icon="trash" class="mr-1" />
           Effacer tout
         </button>
@@ -31,17 +35,17 @@
           <div class="filter-group">
             <label>Filtrer par type:</label>
             <div class="filter-options">
-              <button 
-                class="filter-btn" 
+              <button
+                class="filter-btn"
                 :class="{ active: selectedType === null }"
                 @click="filterByType(null)"
               >
                 Tous
               </button>
-              <button 
-                v-for="type in notificationTypes" 
+              <button
+                v-for="type in notificationTypes"
                 :key="type.value"
-                class="filter-btn" 
+                class="filter-btn"
                 :class="{ active: selectedType === type.value }"
                 @click="filterByType(type.value)"
               >
@@ -50,26 +54,26 @@
               </button>
             </div>
           </div>
-          
+
           <div class="filter-group">
             <label>Statut:</label>
             <div class="filter-options">
-              <button 
-                class="filter-btn" 
+              <button
+                class="filter-btn"
                 :class="{ active: readFilter === 'all' }"
                 @click="filterByRead('all')"
               >
                 Tous
               </button>
-              <button 
-                class="filter-btn" 
+              <button
+                class="filter-btn"
                 :class="{ active: readFilter === 'unread' }"
                 @click="filterByRead('unread')"
               >
                 Non lus
               </button>
-              <button 
-                class="filter-btn" 
+              <button
+                class="filter-btn"
                 :class="{ active: readFilter === 'read' }"
                 @click="filterByRead('read')"
               >
@@ -80,11 +84,11 @@
         </div>
 
         <div class="notifications-list">
-          <div 
-            v-for="notification in filteredNotifications" 
+          <div
+            v-for="notification in filteredNotifications"
             :key="notification.id"
             class="notification-item"
-            :class="{ 'unread': !notification.read }"
+            :class="{ unread: !notification.read }"
             @click="markAsRead(notification.id)"
           >
             <div class="notification-icon" :class="getNotificationTypeClass(notification.type)">
@@ -93,50 +97,51 @@
             <div class="notification-content">
               <div class="notification-header">
                 <h3 class="notification-title">{{ notification.title }}</h3>
-                <span class="notification-time">{{ formatRelativeTime(notification.created_at) }}</span>
+                <span class="notification-time">{{
+                  formatRelativeTime(notification.created_at)
+                }}</span>
               </div>
               <p class="notification-message">{{ notification.message }}</p>
-              
+
               <div v-if="notification.data" class="notification-data">
                 <template v-if="notification.type === 'delivery_status'">
-                  <router-link 
+                  <router-link
                     :to="`/${userRole}/deliveries/${notification.data.delivery_id}`"
                     class="notification-link"
                   >
                     Voir la livraison
                   </router-link>
                 </template>
-                
+
                 <template v-else-if="notification.type === 'new_bid'">
-                  <router-link 
+                  <router-link
                     :to="`/${userRole}/deliveries/${notification.data.delivery_id}`"
                     class="notification-link"
                   >
                     Voir les enchères
                   </router-link>
                 </template>
-                
+
                 <template v-else-if="notification.type === 'rating_received'">
                   <div class="rating-preview">
                     <div class="stars">
-                      <font-awesome-icon 
-                        v-for="i in 5" 
+                      <font-awesome-icon
+                        v-for="i in 5"
                         :key="i"
-                        icon="star" 
-                        :class="i <= notification.data.score ? 'star-filled' : 'star-empty'" 
+                        icon="star"
+                        :class="i <= notification.data.score ? 'star-filled' : 'star-empty'"
                       />
                     </div>
                     <span>{{ notification.data.score }}/5</span>
                   </div>
                 </template>
-                
+
                 <template v-else-if="notification.type === 'payment'">
                   <div class="payment-preview">
-                    <span class="payment-amount">{{ formatPrice(notification.data.amount) }} FCFA</span>
-                    <router-link 
-                      :to="`/${userRole}/finances`"
-                      class="notification-link"
+                    <span class="payment-amount"
+                      >{{ formatPrice(notification.data.amount) }} FCFA</span
                     >
+                    <router-link :to="`/${userRole}/finances`" class="notification-link">
                       Voir les détails
                     </router-link>
                   </div>
@@ -167,7 +172,12 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
-import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification as apiDeleteNotification } from '@/api/notifications'
+import {
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification as apiDeleteNotification,
+} from '@/api/notifications'
 import { formatRelativeTime, formatPrice } from '@/utils/formatters'
 
 export default {
@@ -176,7 +186,7 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const notificationStore = useNotificationStore()
-    
+
     const notifications = ref([])
     const loading = ref(true)
     const loadingMore = ref(false)
@@ -185,67 +195,67 @@ export default {
     const hasMoreNotifications = ref(false)
     const selectedType = ref(null)
     const readFilter = ref('all')
-    
+
     // WebSocket pour les notifications en temps réel
     let notificationSocket = null
-    
+
     const userRole = computed(() => {
       return authStore.user ? authStore.user.role : 'client'
     })
-    
+
     const notificationTypes = [
       { value: 'delivery_status', label: 'Livraisons', icon: 'truck' },
       { value: 'new_bid', label: 'Enchères', icon: 'gavel' },
       { value: 'rating_received', label: 'Évaluations', icon: 'star' },
       { value: 'payment', label: 'Paiements', icon: 'money-bill' },
-      { value: 'system', label: 'Système', icon: 'cog' }
+      { value: 'system', label: 'Système', icon: 'cog' },
     ]
-    
+
     const hasUnread = computed(() => {
       return notifications.value.some(notification => !notification.read)
     })
-    
+
     const filteredNotifications = computed(() => {
       let filtered = [...notifications.value]
-      
+
       // Filtrer par type
       if (selectedType.value) {
         filtered = filtered.filter(notification => notification.type === selectedType.value)
       }
-      
+
       // Filtrer par statut de lecture
       if (readFilter.value === 'read') {
         filtered = filtered.filter(notification => notification.read)
       } else if (readFilter.value === 'unread') {
         filtered = filtered.filter(notification => !notification.read)
       }
-      
+
       return filtered
     })
-    
+
     // Charger les notifications
     const loadNotifications = async (reset = true) => {
       try {
         loading.value = true
-        
+
         if (reset) {
           page.value = 1
           notifications.value = []
         }
-        
+
         const response = await fetchNotifications({
           page: page.value,
-          limit: limit.value
+          limit: limit.value,
         })
-        
+
         if (reset) {
           notifications.value = response.data
         } else {
           notifications.value = [...notifications.value, ...response.data]
         }
-        
+
         hasMoreNotifications.value = response.data.length === limit.value
-        
+
         // Mettre à jour le compteur de notifications non lues dans le store
         const unreadCount = notifications.value.filter(n => !n.read).length
         notificationStore.setUnreadCount(unreadCount)
@@ -256,30 +266,30 @@ export default {
         loadingMore.value = false
       }
     }
-    
+
     // Charger plus de notifications
     const loadMoreNotifications = async () => {
       if (loadingMore.value || !hasMoreNotifications.value) return
-      
+
       loadingMore.value = true
       page.value++
       await loadNotifications(false)
     }
-    
+
     // Marquer une notification comme lue
-    const markAsRead = async (id) => {
+    const markAsRead = async id => {
       try {
         const notification = notifications.value.find(n => n.id === id)
         if (notification && !notification.read) {
           await markNotificationAsRead(id)
-          
+
           // Mettre à jour localement
           notification.read = true
-          
+
           // Mettre à jour le compteur de notifications non lues dans le store
           const unreadCount = notifications.value.filter(n => !n.read).length
           notificationStore.setUnreadCount(unreadCount)
-          
+
           // Rediriger vers la page appropriée en fonction du type de notification
           handleNotificationClick(notification)
         } else {
@@ -290,37 +300,37 @@ export default {
         console.error('Error marking notification as read:', error)
       }
     }
-    
+
     // Marquer toutes les notifications comme lues
     const markAllAsRead = async () => {
       if (!hasUnread.value) return
-      
+
       try {
         await markAllNotificationsAsRead()
-        
+
         // Mettre à jour localement
         notifications.value.forEach(notification => {
           notification.read = true
         })
-        
+
         // Mettre à jour le compteur de notifications non lues dans le store
         notificationStore.setUnreadCount(0)
       } catch (error) {
         console.error('Error marking all notifications as read:', error)
       }
     }
-    
+
     // Supprimer une notification
-    const deleteNotification = async (id) => {
+    const deleteNotification = async id => {
       try {
         await apiDeleteNotification(id)
-        
+
         // Mettre à jour localement
         const index = notifications.value.findIndex(n => n.id === id)
         if (index !== -1) {
           const wasUnread = !notifications.value[index].read
           notifications.value.splice(index, 1)
-          
+
           // Mettre à jour le compteur de notifications non lues dans le store si nécessaire
           if (wasUnread) {
             const unreadCount = notifications.value.filter(n => !n.read).length
@@ -331,18 +341,18 @@ export default {
         console.error('Error deleting notification:', error)
       }
     }
-    
+
     // Effacer toutes les notifications
     const clearAllNotifications = async () => {
       if (notifications.value.length === 0) return
-      
+
       if (confirm('Êtes-vous sûr de vouloir supprimer toutes vos notifications ?')) {
         try {
           await apiDeleteNotification('all')
-          
+
           // Mettre à jour localement
           notifications.value = []
-          
+
           // Mettre à jour le compteur de notifications non lues dans le store
           notificationStore.setUnreadCount(0)
         } catch (error) {
@@ -350,19 +360,19 @@ export default {
         }
       }
     }
-    
+
     // Filtrer par type de notification
-    const filterByType = (type) => {
+    const filterByType = type => {
       selectedType.value = type
     }
-    
+
     // Filtrer par statut de lecture
-    const filterByRead = (status) => {
+    const filterByRead = status => {
       readFilter.value = status
     }
-    
+
     // Obtenir l'icône pour un type de notification
-    const getNotificationIcon = (type) => {
+    const getNotificationIcon = type => {
       switch (type) {
         case 'delivery_status':
           return 'truck'
@@ -384,9 +394,9 @@ export default {
           return 'bell'
       }
     }
-    
+
     // Obtenir la classe CSS pour un type de notification
-    const getNotificationTypeClass = (type) => {
+    const getNotificationTypeClass = type => {
       switch (type) {
         case 'delivery_status':
           return 'delivery'
@@ -407,11 +417,11 @@ export default {
           return 'default'
       }
     }
-    
+
     // Gérer le clic sur une notification
-    const handleNotificationClick = (notification) => {
+    const handleNotificationClick = notification => {
       if (!notification.data) return
-      
+
       switch (notification.type) {
         case 'delivery_status':
           router.push(`/${userRole.value}/deliveries/${notification.data.delivery_id}`)
@@ -433,29 +443,29 @@ export default {
           break
       }
     }
-    
+
     // Initialiser la connexion WebSocket pour les notifications en temps réel
     const initWebSocket = () => {
       const token = authStore.token
       if (!token) return
-      
+
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const wsUrl = `${wsProtocol}//${window.location.host}/api/ws/notifications?token=${token}`
-      
+
       notificationSocket = new WebSocket(wsUrl)
-      
+
       notificationSocket.onopen = () => {
         console.log('WebSocket connection established for notifications')
       }
-      
-      notificationSocket.onmessage = (event) => {
+
+      notificationSocket.onmessage = event => {
         try {
           const data = JSON.parse(event.data)
-          
+
           if (data.type === 'notification') {
             // Ajouter la nouvelle notification au début de la liste
             notifications.value.unshift(data.notification)
-            
+
             // Mettre à jour le compteur de notifications non lues dans le store
             const unreadCount = notifications.value.filter(n => !n.read).length
             notificationStore.setUnreadCount(unreadCount)
@@ -464,16 +474,16 @@ export default {
           console.error('Error parsing WebSocket message:', error)
         }
       }
-      
-      notificationSocket.onerror = (error) => {
+
+      notificationSocket.onerror = error => {
         console.error('WebSocket error:', error)
       }
-      
+
       notificationSocket.onclose = () => {
         console.log('WebSocket connection closed for notifications')
       }
     }
-    
+
     // Fermer la connexion WebSocket
     const closeWebSocket = () => {
       if (notificationSocket) {
@@ -481,16 +491,16 @@ export default {
         notificationSocket = null
       }
     }
-    
+
     onMounted(() => {
       loadNotifications()
       initWebSocket()
     })
-    
+
     onUnmounted(() => {
       closeWebSocket()
     })
-    
+
     return {
       notifications,
       loading,
@@ -513,9 +523,9 @@ export default {
       getNotificationIcon,
       getNotificationTypeClass,
       formatRelativeTime,
-      formatPrice
+      formatPrice,
     }
-  }
+  },
 }
 </script>
 
@@ -686,35 +696,35 @@ export default {
 }
 
 .notification-icon.delivery {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .notification-icon.bid {
-  background-color: #2196F3;
+  background-color: #2196f3;
 }
 
 .notification-icon.rating {
-  background-color: #FFC107;
+  background-color: #ffc107;
 }
 
 .notification-icon.reward {
-  background-color: #9C27B0;
+  background-color: #9c27b0;
 }
 
 .notification-icon.payment {
-  background-color: #FF9800;
+  background-color: #ff9800;
 }
 
 .notification-icon.system {
-  background-color: #607D8B;
+  background-color: #607d8b;
 }
 
 .notification-icon.weather {
-  background-color: #00BCD4;
+  background-color: #00bcd4;
 }
 
 .notification-icon.default {
-  background-color: #9E9E9E;
+  background-color: #9e9e9e;
 }
 
 .notification-content {
@@ -777,11 +787,11 @@ export default {
 }
 
 .star-filled {
-  color: #FFC107;
+  color: #ffc107;
 }
 
 .star-empty {
-  color: #E0E0E0;
+  color: #e0e0e0;
 }
 
 .payment-preview {
@@ -792,7 +802,7 @@ export default {
 
 .payment-amount {
   font-weight: 600;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .notification-actions {
@@ -829,23 +839,23 @@ export default {
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .header-actions {
     width: 100%;
   }
-  
+
   .header-actions .btn {
     flex: 1;
   }
-  
+
   .notifications-filters {
     flex-direction: column;
   }
-  
+
   .notification-header {
     flex-direction: column;
   }
-  
+
   .notification-time {
     margin-left: 0;
     margin-top: 0.25rem;
