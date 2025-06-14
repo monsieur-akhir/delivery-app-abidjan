@@ -1,0 +1,101 @@
+~/workspace/mobile$ npx tsc
+screens/client/MerchantDetailsScreen.tsx:689:4 - error TS1160: Unterminated template literal.
+
+689   }
+       
+
+
+Found 1 error in screens/client/MerchantDetailsScreen.tsx:689
+
+~/workspace/mobile$ npx tsc
+screens/client/EnhancedTrackDeliveryScreen.tsx:141:9 - error TS2353: Object literal may only specify known properties, and 'position' does not exist in type 'SetStateAction<VTCDeliveryStatus>'.
+
+141         position: deliveryData.pickup_lat && deliveryData.pickup_lng ? { latitude: deliveryData.pickup_lat, longitude: deliveryData.pickup_lng } : null,
+            ~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:32:3 - error TS1117: An object literal cannot have multiple properties with the same name.
+
+32   cover_image: '',
+     ~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:35:3 - error TS1117: An object literal cannot have multiple properties with the same name.
+
+35   cover_image: '',
+     ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:66:9 - error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+66         year: formData.year ? parseInt(formData.year) : undefined,
+           ~~~~
+
+  types/models.ts:692:3
+    692   year: number
+          ~~~~
+    The expected type comes from property 'year' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:67:9 - error TS2322: Type 'VehicleType | undefined' is not assignable to type 'import("/home/runner/workspace/mobile/types/models").VehicleType | undefined'.
+  Type '"pickup"' is not assignable to type 'VehicleType | undefined'.
+
+67         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType | undefined,
+           ~~~~~~~~~~~~
+
+  types/models.ts:688:3
+    688   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:72:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+72       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:36:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+36         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:39:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+39         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:42:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+42         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:45:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+45         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierWalletScreen.tsx:33:5 - error TS2339: Property 'user' does not exist on type 'UseUserReturn'.
+
+33     user
+       ~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:52 - error TS2353: Object literal may only specify known properties, and 'label' does not exist in type 'VTCDeliveryStatus'.
+
+218               deliveryStatus={{ status: "transit", label: "En transit" }}
+                                                       ~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    The expected type comes from property 'deliveryStatus' which is declared here on type 'IntrinsicAttributes & VTCStyleMapProps'
+
+
+Found 12 errors in 7 files.
+
+Errors  Files
+     1  screens/client/EnhancedTrackDeliveryScreen.tsx:141
+     1  screens/client/MarketplaceScreen.tsx:32
+     1  screens/client/MerchantDetailsScreen.tsx:35
+     3  screens/courier/AddVehicleScreen.tsx:66
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:36
+     1  screens/courier/CourierWalletScreen.tsx:33
+     1  screens/courier/DeliveryDetailsScreen.tsx:218

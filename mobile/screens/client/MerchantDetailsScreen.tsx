@@ -247,24 +247,6 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
     )
   }
 
-  if (loading && !refreshing) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("merchant.loading")}</Text>
-          <View style={{ width: 48 }} />
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("merchant.loadingDetails")}</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
   if (!merchant) {
     return (
       <SafeAreaView style={styles.container}>
@@ -668,22 +650,3 @@ const styles = StyleSheet.create({
 })
 
 export default MerchantDetailsScreen
-```
-
-if (loading && !refreshing) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <IconButton icon="arrow-left" size={24} iconColor="#212121" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("merchant.loading")}</Text>
-          <View style={{ width: 48 }} />
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("merchant.loadingDetails")}</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
