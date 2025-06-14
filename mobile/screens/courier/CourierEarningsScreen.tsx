@@ -62,9 +62,14 @@ const CourierEarningsScreen: React.FC<CourierEarningsScreenProps> = ({ navigatio
     try {
       setLoading(true)
       const data = await getCourierEarnings(selectedPeriod)
-      setEarningsSummary(data.summary)
-      setEarningsHistory(data.history)
-      setTransactions(data.transactions)
+      setEarningsSummary({
+        total: data.total_earnings,
+        weekly: data.weekly_earnings,
+        monthly: data.monthly_earnings,
+        pending: data.pending_earnings
+      })
+      setEarningsHistory(data.earnings_history || [])
+      setTransactions([])
     } catch (error) {
       console.error("Error loading earnings data:", error)
     } finally {

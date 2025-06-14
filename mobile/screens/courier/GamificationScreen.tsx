@@ -38,13 +38,11 @@ const GamificationScreen: React.FC = () => {
 
       const enhancedStats: CourierStats = {
         ...statsData,
-        average_rating: statsData.average_rating || 0,
-        total_deliveries: statsData.total_deliveries || 0,
-        total_earnings: statsData.total_earnings || 0,
-        totalDistance: statsData.totalDistance || 0,
-        total_points: statsData.total_points || 0,
-        badges: statsData.badges || [],
-        deliveriesCompleted: statsData.total_deliveries || 0,
+        total_earnings: 0,
+        totalDistance: 0,
+        rating: statsData.average_rating || 0,
+        badges: [],
+        completed_deliveries: statsData.completed_deliveries || 0,
         daily_deliveries: statsData.daily_deliveries || 0,
         daily_rating: statsData.daily_rating || 0,
         nextLevelExperience: levelThresholds[statsData.level + 1] || 0
@@ -172,12 +170,12 @@ const GamificationScreen: React.FC = () => {
               <View style={styles.statsGrid}>
                 <View style={styles.statItem}>
                   <Feather name="package" size={24} color="#FF6B00" />
-                  <Text style={styles.statValue}>{stats.total_deliveries}</Text>
+                  <Text style={styles.statValue}>{stats.completed_deliveries}</Text>
                   <Text style={styles.statLabel}>Livraisons</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Feather name="star" size={24} color="#FFD700" />
-                  <Text style={styles.statValue}>{stats.average_rating?.toFixed(1) || "N/A"}</Text>
+                  <Text style={styles.statValue}>{stats.rating?.toFixed(1) || "N/A"}</Text>
                   <Text style={styles.statLabel}>Note moyenne</Text>
                 </View>
                 <View style={styles.statItem}>
@@ -250,7 +248,7 @@ const GamificationScreen: React.FC = () => {
                   <Avatar.Image
                     size={40}
                     source={
-                      entry.profile_picture 
+                      entry.profile_picture
                         ? { uri: entry.profile_picture }
                         : require("../../assets/images/default-avatar.png")
                     }

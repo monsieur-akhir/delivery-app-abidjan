@@ -414,14 +414,10 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       // This would need to be implemented in UserService
       // For now, we'll create a mock structure
       const earnings: CourierEarningsData = {
-        summary: {
-          total_earnings: 0,
-          available_balance: 0,
-          pending_balance: 0,
-          total_deliveries: 0,
-          total_distance: 0,
-          average_rating: 0,
-        },
+        total_earnings: 0,
+        weekly_earnings: 0,
+        monthly_earnings: 0,
+        pending_earnings: 0,
         history: [],
         transactions: [],
       };
