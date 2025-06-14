@@ -38,7 +38,7 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
 
   const loadDelivery = async () => {
     try {
-      const data = await DeliveryService.getDeliveryById(deliveryId)
+      const data = await DeliveryService.getDeliveryById(deliveryId.toString())
       setDelivery(data)
     } catch (error) {
       console.error('Erreur lors du chargement:', error)
@@ -214,7 +214,7 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
           <Text style={styles.cardTitle}>Aperçu du trajet</Text>
           <View style={styles.mapContainer}>
             <VTCStyleMap
-              showDriverLocation={true}
+              showUserLocation={true}
               showRoute={true}
               initialRegion={{
                 latitude: delivery.pickup_lat,

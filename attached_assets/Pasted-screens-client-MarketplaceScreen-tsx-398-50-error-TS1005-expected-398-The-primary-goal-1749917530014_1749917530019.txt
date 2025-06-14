@@ -1,0 +1,106 @@
+screens/client/MarketplaceScreen.tsx:398:50 - error TS1005: ';' expected.
+
+398 ```The primary goal is achieved by removing the `commune` property from the `adaptMerchantInfo` function.
+                                                     ~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:398:57 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+398 ```The primary goal is achieved by removing the `commune` property from the `adaptMerchantInfo` function.
+                                                            ~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:398:106 - error TS1160: Unterminated template literal.
+
+398 ```The primary goal is achieved by removing the `commune` property from the `adaptMerchantInfo` function.
+                                                                                                             
+
+screens/courier/AddVehicleScreen.tsx:316:1 - error TS1434: Unexpected keyword or identifier.
+
+316 Removing maxDistance property and fixing custom type handling.
+    ~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:316:10 - error TS1434: Unexpected keyword or identifier.
+
+316 Removing maxDistance property and fixing custom type handling.
+             ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:316:22 - error TS1434: Unexpected keyword or identifier.
+
+316 Removing maxDistance property and fixing custom type handling.
+                         ~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:316:31 - error TS1434: Unexpected keyword or identifier.
+
+316 Removing maxDistance property and fixing custom type handling.
+                                  ~~~
+
+screens/courier/AddVehicleScreen.tsx:316:35 - error TS1434: Unexpected keyword or identifier.
+
+316 Removing maxDistance property and fixing custom type handling.
+                                      ~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:316:42 - error TS1434: Unexpected keyword or identifier.
+
+316 Removing maxDistance property and fixing custom type handling.
+                                             ~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:316:62 - error TS1005: '=' expected.
+
+316 Removing maxDistance property and fixing custom type handling.
+                                                                 ~
+
+screens/courier/AddVehicleScreen.tsx:317:1 - error TS1003: Identifier expected.
+
+317 ```
+    ~~
+
+screens/courier/AddVehicleScreen.tsx:319:2 - error TS1443: Module declaration names may only use ' or " quoted strings.
+
+319 ```typescript
+     ~~
+
+screens/courier/AddVehicleScreen.tsx:634:1 - error TS1434: Unexpected keyword or identifier.
+
+634 Removing maxDistance and fixing custom type handling.
+    ~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:634:10 - error TS1434: Unexpected keyword or identifier.
+
+634 Removing maxDistance and fixing custom type handling.
+             ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:634:22 - error TS1434: Unexpected keyword or identifier.
+
+634 Removing maxDistance and fixing custom type handling.
+                         ~~~
+
+screens/courier/AddVehicleScreen.tsx:634:26 - error TS1434: Unexpected keyword or identifier.
+
+634 Removing maxDistance and fixing custom type handling.
+                             ~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:634:33 - error TS1434: Unexpected keyword or identifier.
+
+634 Removing maxDistance and fixing custom type handling.
+                                    ~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:634:53 - error TS1005: '=' expected.
+
+634 Removing maxDistance and fixing custom type handling.
+                                                        ~
+
+screens/courier/AddVehicleScreen.tsx:635:1 - error TS1003: Identifier expected.
+
+635 ```
+    ~~
+
+screens/courier/AddVehicleScreen.tsx:635:4 - error TS1160: Unterminated template literal.
+
+635 ```
+       
+
+
+Found 20 errors in 2 files.
+
+Errors  Files
+     3  screens/client/MarketplaceScreen.tsx:398
+    17  screens/courier/AddVehicleScreen.tsx:316
