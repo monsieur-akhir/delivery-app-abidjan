@@ -12,7 +12,7 @@ export type {
   VehicleType,
   VehicleCreateRequest,
   VehicleUpdateRequest,
-  
+
   CourierProfile,
   CourierStats,
   Merchant,
