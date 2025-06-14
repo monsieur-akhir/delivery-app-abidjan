@@ -198,11 +198,13 @@ export type NotificationType = 'delivery' | 'payment' | 'system' | 'promotion' |
 
 export interface PendingOperation {
   id: string
-  timestamp: string
-  type: 'payment' | 'create_delivery' | 'submit_rating' | 'bid' | 'tracking' | 'update_profile' | 'support_request' | 'profile_image' | 'profile_update' | 'support_ticket' | 'ticket_reply' | 'collaborative_delivery' | 'register' | 'delivery'
+  type: 'delivery' | 'bid' | 'tracking' | 'rating'
   data: any
+  timestamp: string
   retries: number
 }
+
+export type PendingOperationCreate = Omit<PendingOperation, 'id' | 'timestamp'>
 
 export interface NetworkContextType {
   isConnected: boolean
@@ -269,20 +271,22 @@ export interface WeatherData {
 export interface Merchant {
   id: number
   name: string
-  description?: string
-  address: string
-  phone: string
+  business_name?: string
+  phone?: string
   email?: string
-  category?: string
-  categories?: string[]
+  address: string
+  commune?: string
+  latitude?: number
+  longitude?: number
+  delivery_time?: number | string
   rating?: number
-  review_count?: number
-  delivery_time?: number
-  cover_image?: string
-  opening_hours?: string
-  is_active: boolean
+  category?: string
+  logo?: string
+  description?: string
+  working_hours?: string
+  is_verified?: boolean
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 export interface Vehicle {
@@ -1164,3 +1168,11 @@ export interface LoginRequest {
   phone?: string;
   password: string;
 }
+
+export interface VTCDeliveryStatus {
+  status: 'searching' | 'assigned' | 'pickup' | 'transit' | 'delivered' | 'cancelled'
+  eta?: string
+  progress: number
+}
+
+export type VTCDeliveryStatusType = 'searching' | 'assigned' | 'pickup' | 'transit' | 'delivered' | 'cancelled'

@@ -230,6 +230,8 @@ const CreateDeliveryScreen: React.FC = () => {
       package_description: packageDescription,
       special_instructions: specialInstructions,
       proposed_price: parseFloat(proposedPrice),
+      recipient_name: recipientName,
+      recipient_phone: recipientPhone,
       weather_conditions: weatherData?.current?.condition || 'clear'
     }
 

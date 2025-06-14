@@ -68,7 +68,7 @@ const ActiveOrderTrackingScreen: React.FC = () => {
       const [deliveryData, timelineData] = await Promise.all([
         DeliveryService.getDeliveryById(deliveryId.toString()),
         // Timeline sera récupérée séparément si le service existe
-        Promise.resolve([])
+        Promise.resolve({ timeline: [] })
       ])
 
       setDelivery(deliveryData)
@@ -330,13 +330,21 @@ const ActiveOrderTrackingScreen: React.FC = () => {
           <Card style={styles.mapCard}>
             <VTCStyleMap
               // Props supportées par VTCStyleMap
-              initialRegion={{
-                latitude: delivery.pickup_lat || 5.3599517,
-                longitude: delivery.pickup_lng || -4.0082563,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-              }}
-              courierLocation={courierLocation}
+              pickupLocation={delivery.pickup_lat && delivery.pickup_lng ? {
+                latitude: delivery.pickup_lat,
+                longitude: delivery.pickup_lng
+              } : undefined}
+              deliveryLocation={delivery.delivery_lat && delivery.delivery_lng ? {
+                latitude: delivery.delivery_lat,
+                longitude: delivery.delivery_lng
+              } : undefined}
+              courier={courierLocation ? {
+                id: '1',
+                name: 'Coursier',
+                rating: 4.5,
+                location: courierLocation,
+                vehicle: { type: 'motorcycle', model: 'Moto', plate: 'ABC123' }
+              } : undefined}
             />
           </Card>
         )}

@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../contexts/AuthContext'
-import { DeliveryService } from '../../services/DeliveryService'
+import DeliveryService from '../../services/DeliveryService'
 import { useNavigation } from '@react-navigation/native'
 
 interface AvailableDelivery {

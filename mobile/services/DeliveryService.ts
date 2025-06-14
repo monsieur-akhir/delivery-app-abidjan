@@ -450,4 +450,66 @@ export {
   
 }
 
+static async getActiveDeliveries(): Promise<Delivery[]> {
+    try {
+      const response = await api.get('/deliveries/active')
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des livraisons actives:', error)
+      throw error
+    }
+  }
+
+  static async getClientDeliveryHistory(): Promise<Delivery[]> {
+    try {
+      const response = await api.get('/deliveries/client/history')
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique client:', error)
+      throw error
+    }
+  }
+
+  static async getCourierDeliveryHistory(): Promise<Delivery[]> {
+    try {
+      const response = await api.get('/deliveries/courier/history')
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique coursier:', error)
+      throw error
+    }
+  }
+
+  static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+    try {
+      await api.post(`/deliveries/${deliveryId}/bids`, bidData)
+    } catch (error) {
+      console.error('Erreur lors de la soumission de l\'offre:', error)
+      throw error
+    }
+  }
+
+  static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+    try {
+      await api.post(`/deliveries/${deliveryId}/confirm`, {
+        rating,
+        comment
+      })
+    } catch (error) {
+      console.error('Erreur lors de la confirmation de livraison:', error)
+      throw error
+    }
+  }
+
+  static async getVehicleRecommendation(data: any): Promise<any> {
+    try {
+      const response = await api.post('/transport/recommend-vehicle', data)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la recommandation de véhicule:', error)
+      return null
+    }
+  }
+}
+
 export default DeliveryService

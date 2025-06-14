@@ -1,0 +1,292 @@
+services/DeliveryService.ts:453:1 - error TS1128: Declaration or statement expected.
+
+453 static async getActiveDeliveries(): Promise<Delivery[]> {
+    ~~~~~~
+
+services/DeliveryService.ts:453:8 - error TS1434: Unexpected keyword or identifier.
+
+453 static async getActiveDeliveries(): Promise<Delivery[]> {
+           ~~~~~
+
+services/DeliveryService.ts:453:35 - error TS1005: ';' expected.
+
+453 static async getActiveDeliveries(): Promise<Delivery[]> {
+                                      ~
+
+services/DeliveryService.ts:453:54 - error TS1011: An element access expression should take an argument.
+
+453 static async getActiveDeliveries(): Promise<Delivery[]> {
+                                                         
+
+services/DeliveryService.ts:454:9 - error TS1005: ':' expected.
+
+454     try {
+            ~
+
+services/DeliveryService.ts:455:13 - error TS1005: ':' expected.
+
+455       const response = await api.get('/deliveries/active')
+                ~~~~~~~~
+
+services/DeliveryService.ts:456:7 - error TS1005: ',' expected.
+
+456       return response.data
+          ~~~~~~
+
+services/DeliveryService.ts:456:14 - error TS1005: ':' expected.
+
+456       return response.data
+                 ~~~~~~~~
+
+services/DeliveryService.ts:457:7 - error TS1005: ',' expected.
+
+457     } catch (error) {
+          ~~~~~
+
+services/DeliveryService.ts:463:3 - error TS1128: Declaration or statement expected.
+
+463   static async getClientDeliveryHistory(): Promise<Delivery[]> {
+      ~~~~~~
+
+services/DeliveryService.ts:463:10 - error TS1434: Unexpected keyword or identifier.
+
+463   static async getClientDeliveryHistory(): Promise<Delivery[]> {
+             ~~~~~
+
+services/DeliveryService.ts:463:42 - error TS1005: ';' expected.
+
+463   static async getClientDeliveryHistory(): Promise<Delivery[]> {
+                                             ~
+
+services/DeliveryService.ts:463:61 - error TS1011: An element access expression should take an argument.
+
+463   static async getClientDeliveryHistory(): Promise<Delivery[]> {
+                                                                
+
+services/DeliveryService.ts:464:9 - error TS1005: ':' expected.
+
+464     try {
+            ~
+
+services/DeliveryService.ts:465:13 - error TS1005: ':' expected.
+
+465       const response = await api.get('/deliveries/client/history')
+                ~~~~~~~~
+
+services/DeliveryService.ts:466:7 - error TS1005: ',' expected.
+
+466       return response.data
+          ~~~~~~
+
+services/DeliveryService.ts:466:14 - error TS1005: ':' expected.
+
+466       return response.data
+                 ~~~~~~~~
+
+services/DeliveryService.ts:467:7 - error TS1005: ',' expected.
+
+467     } catch (error) {
+          ~~~~~
+
+services/DeliveryService.ts:473:3 - error TS1128: Declaration or statement expected.
+
+473   static async getCourierDeliveryHistory(): Promise<Delivery[]> {
+      ~~~~~~
+
+services/DeliveryService.ts:473:10 - error TS1434: Unexpected keyword or identifier.
+
+473   static async getCourierDeliveryHistory(): Promise<Delivery[]> {
+             ~~~~~
+
+services/DeliveryService.ts:473:43 - error TS1005: ';' expected.
+
+473   static async getCourierDeliveryHistory(): Promise<Delivery[]> {
+                                              ~
+
+services/DeliveryService.ts:473:62 - error TS1011: An element access expression should take an argument.
+
+473   static async getCourierDeliveryHistory(): Promise<Delivery[]> {
+                                                                 
+
+services/DeliveryService.ts:474:9 - error TS1005: ':' expected.
+
+474     try {
+            ~
+
+services/DeliveryService.ts:475:13 - error TS1005: ':' expected.
+
+475       const response = await api.get('/deliveries/courier/history')
+                ~~~~~~~~
+
+services/DeliveryService.ts:476:7 - error TS1005: ',' expected.
+
+476       return response.data
+          ~~~~~~
+
+services/DeliveryService.ts:476:14 - error TS1005: ':' expected.
+
+476       return response.data
+                 ~~~~~~~~
+
+services/DeliveryService.ts:477:7 - error TS1005: ',' expected.
+
+477     } catch (error) {
+          ~~~~~
+
+services/DeliveryService.ts:483:3 - error TS1128: Declaration or statement expected.
+
+483   static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+      ~~~~~~
+
+services/DeliveryService.ts:483:10 - error TS1434: Unexpected keyword or identifier.
+
+483   static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+             ~~~~~
+
+services/DeliveryService.ts:483:35 - error TS1005: ',' expected.
+
+483   static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+                                      ~
+
+services/DeliveryService.ts:483:52 - error TS1005: ',' expected.
+
+483   static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+                                                       ~
+
+services/DeliveryService.ts:483:58 - error TS1005: ';' expected.
+
+483   static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+                                                             ~
+
+services/DeliveryService.ts:483:72 - error TS1109: Expression expected.
+
+483   static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+                                                                           ~
+
+services/DeliveryService.ts:484:9 - error TS1005: ':' expected.
+
+484     try {
+            ~
+
+services/DeliveryService.ts:485:13 - error TS1005: ',' expected.
+
+485       await api.post(`/deliveries/${deliveryId}/bids`, bidData)
+                ~~~
+
+services/DeliveryService.ts:485:16 - error TS1005: ',' expected.
+
+485       await api.post(`/deliveries/${deliveryId}/bids`, bidData)
+                   ~
+
+services/DeliveryService.ts:486:7 - error TS1005: ',' expected.
+
+486     } catch (error) {
+          ~~~~~
+
+services/DeliveryService.ts:492:3 - error TS1128: Declaration or statement expected.
+
+492   static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+      ~~~~~~
+
+services/DeliveryService.ts:492:10 - error TS1434: Unexpected keyword or identifier.
+
+492   static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+             ~~~~~
+
+services/DeliveryService.ts:492:48 - error TS1005: ',' expected.
+
+492   static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+                                                   ~
+
+services/DeliveryService.ts:492:64 - error TS1005: ',' expected.
+
+492   static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+                                                                   ~
+
+services/DeliveryService.ts:492:82 - error TS1109: Expression expected.
+
+492   static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+                                                                                     ~
+
+services/DeliveryService.ts:492:91 - error TS1005: ';' expected.
+
+492   static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+                                                                                              ~
+
+services/DeliveryService.ts:492:105 - error TS1109: Expression expected.
+
+492   static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+                                                                                                            ~
+
+services/DeliveryService.ts:493:9 - error TS1005: ':' expected.
+
+493     try {
+            ~
+
+services/DeliveryService.ts:494:13 - error TS1005: ',' expected.
+
+494       await api.post(`/deliveries/${deliveryId}/confirm`, {
+                ~~~
+
+services/DeliveryService.ts:494:16 - error TS1005: ',' expected.
+
+494       await api.post(`/deliveries/${deliveryId}/confirm`, {
+                   ~
+
+services/DeliveryService.ts:498:7 - error TS1005: ',' expected.
+
+498     } catch (error) {
+          ~~~~~
+
+services/DeliveryService.ts:504:3 - error TS1128: Declaration or statement expected.
+
+504   static async getVehicleRecommendation(data: any): Promise<any> {
+      ~~~~~~
+
+services/DeliveryService.ts:504:10 - error TS1434: Unexpected keyword or identifier.
+
+504   static async getVehicleRecommendation(data: any): Promise<any> {
+             ~~~~~
+
+services/DeliveryService.ts:504:45 - error TS1005: ',' expected.
+
+504   static async getVehicleRecommendation(data: any): Promise<any> {
+                                                ~
+
+services/DeliveryService.ts:504:51 - error TS1005: ';' expected.
+
+504   static async getVehicleRecommendation(data: any): Promise<any> {
+                                                      ~
+
+services/DeliveryService.ts:505:9 - error TS1005: ':' expected.
+
+505     try {
+            ~
+
+services/DeliveryService.ts:506:13 - error TS1005: ':' expected.
+
+506       const response = await api.post('/transport/recommend-vehicle', data)
+                ~~~~~~~~
+
+services/DeliveryService.ts:507:7 - error TS1005: ',' expected.
+
+507       return response.data
+          ~~~~~~
+
+services/DeliveryService.ts:507:14 - error TS1005: ':' expected.
+
+507       return response.data
+                 ~~~~~~~~
+
+services/DeliveryService.ts:508:7 - error TS1005: ',' expected.
+
+508     } catch (error) {
+          ~~~~~
+
+services/DeliveryService.ts:513:1 - error TS1128: Declaration or statement expected.
+
+513 }
+    ~
+
+
+Found 58 errors in the same file, starting at: services/DeliveryService.ts:453
