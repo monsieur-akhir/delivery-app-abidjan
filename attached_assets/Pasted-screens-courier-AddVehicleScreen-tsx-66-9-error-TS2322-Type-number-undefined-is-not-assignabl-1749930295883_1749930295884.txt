@@ -1,0 +1,48 @@
+screens/courier/AddVehicleScreen.tsx:66:9 - error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+66         year: formData.year ? parseInt(formData.year) : undefined,
+           ~~~~
+
+  types/models.ts:692:3
+    692   year: number
+          ~~~~
+    The expected type comes from property 'year' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:67:9 - error TS2322: Type 'VehicleType | undefined' is not assignable to type 'import("/home/runner/workspace/mobile/types/models").VehicleType | undefined'.
+  Type '"pickup"' is not assignable to type 'VehicleType | undefined'.
+
+67         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType | undefined,
+           ~~~~~~~~~~~~
+
+  types/models.ts:688:3
+    688   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:72:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+72       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:36:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+36         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:39:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+39         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:42:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+42         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:45:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+45         data = result || []
