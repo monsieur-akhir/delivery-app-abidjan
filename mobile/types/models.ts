@@ -572,6 +572,18 @@ export interface VehicleCreateRequest {
   customType?: string
 }
 
+export interface VehicleUpdateRequest {
+  type?: VehicleType
+  make?: string
+  model?: string
+  year?: number
+  license_plate?: string
+  color?: string
+  capacity?: number
+  maxDistance?: number
+  customType?: string
+}
+
 export interface CourierVehicleCreateRequest extends VehicleCreateRequest {
   courier_id: string
 }
@@ -611,7 +623,7 @@ export interface WeatherAlert {
 }
 
 // CollaborativeDelivery Types
-export interface CollaborativeDelivery extends Delivery {
+export interface CollaborativeDelivery extends Omit<Delivery, 'status'> {
   max_participants: number
   contribution_amount: number
   description: string
@@ -635,7 +647,7 @@ export interface CollaborativeDelivery extends Delivery {
   deliveryPrice: number
   id: number
   title: string
-  status: string
+  status: DeliveryStatus
   pickupCommune: string
   deliveryCommune: string
   proposedPrice?: number

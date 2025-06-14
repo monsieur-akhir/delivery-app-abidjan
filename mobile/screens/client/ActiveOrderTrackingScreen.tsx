@@ -348,8 +348,8 @@ const ActiveOrderTrackingScreen: React.FC = () => {
             <VTCStyleMap
               pickupLocation={pickupLocation}
               deliveryLocation={deliveryLocation}
-              courier={courier}
-              deliveryStatus={delivery?.status || 'pending'}
+              courier={courier as any}
+              deliveryStatus={delivery?.status as any || 'pending'}
             />
           </Card>
         )}

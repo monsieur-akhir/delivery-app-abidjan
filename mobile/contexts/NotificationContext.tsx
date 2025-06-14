@@ -54,14 +54,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       // Ajouter la notification à la liste
       const newNotification: Notification = {
-        
         id: notification.request.identifier,
         title: notification.request.content.title || '',
         message: notification.request.content.body || '',
         type: notification.request.content.data?.type || 'default',
         data: notification.request.content.data,
         created_at: new Date().toISOString(),
+        date: new Date().toISOString(),
         read: false,
+        is_read: false,
       }
 
       addNotification(newNotification)
