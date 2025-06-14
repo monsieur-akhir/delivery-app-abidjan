@@ -357,7 +357,7 @@ export default {
       loadRecentActivity()
       loadRoleSpecificData()
     })
-    
+
     const updateUserStatus = () => {
       const updatedUser = { ...props.user, status: 'verified' }
       emit('edit', updatedUser)
@@ -376,7 +376,7 @@ export default {
       toggleUserStatus,
       formatDate,
       formatCurrency,
-      updateUserStatus
+      updateUserStatus,
     }
   },
 }
