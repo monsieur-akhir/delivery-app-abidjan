@@ -324,141 +324,217 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  header: {
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  headerContent: {
+  header: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    paddingTop: 50,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#212121',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#757575',
+  },
+  statusCard: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statusHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  profileSection: {
+  statusTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#212121',
+  },
+  statusToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
-  profileInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  welcomeText: {
+  toggleText: {
+    marginRight: 8,
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#757575',
   },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  statusText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginTop: 4,
-  },
-  content: {
-    flex: 1,
+  statusContent: {
     padding: 16,
   },
-  statsCard: {
-    marginBottom: 16,
+  statusDescription: {
+    fontSize: 14,
+    color: '#757575',
+    lineHeight: 20,
+  },
+  statsContainer: {
+    margin: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    backgroundColor: '#FFFFFF',
+    width: '48%',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FF6B00',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#757575',
+    textTransform: 'uppercase',
+  },
+  quickActions: {
+    margin: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#212121',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#757575',
-    marginTop: 4,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  deliveryCard: {
+  actionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     marginBottom: 12,
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  actionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  actionText: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  actionSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  actionArrow: {
+    opacity: 0.5,
+  },
+  recentDeliveries: {
+    margin: 16,
+  },
+  deliveryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  deliveryContent: {
+    padding: 16,
   },
   deliveryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  deliveryId: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#212121',
   },
   deliveryPrice: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#4CAF50',
   },
-  activeDeliveryPrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FF6B00',
-  },
-  deliveryDistance: {
-    fontSize: 14,
-    color: '#757575',
-  },
-  statusChip: {
-    backgroundColor: '#E3F2FD',
-  },
-  addressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  deliveryRoute: {
     marginBottom: 8,
   },
-  addressText: {
-    fontSize: 14,
-    color: '#212121',
-    marginLeft: 8,
-    flex: 1,
-  },
-  clientPhone: {
+  routeText: {
     fontSize: 14,
     color: '#757575',
-    marginBottom: 12,
+    marginBottom: 2,
   },
-  acceptButton: {
-    backgroundColor: '#4CAF50',
+  deliveryFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  trackButton: {
-    backgroundColor: '#FF6B00',
-  },
-  emptyCard: {
-    padding: 20,
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#757575',
+  deliveryTime: {
+    fontSize: 12,
+    color: '#9E9E9E',
   },
   fab: {
     position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#FF6B00',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#757575',
+    textAlign: 'center',
+    marginTop: 16,
   },
 })
 
-export default CourierHomeScreen
-```
-
-```
-The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
-</replit_final_file>
+export default HomeScreen
