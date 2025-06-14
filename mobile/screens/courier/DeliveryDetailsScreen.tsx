@@ -215,7 +215,7 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
           <View style={styles.mapContainer}>
             <VTCStyleMap
               showUserLocation={true}
-              showRoute={true}
+              
               initialRegion={{
                 latitude: delivery.pickup_lat,
                 longitude: delivery.pickup_lng,

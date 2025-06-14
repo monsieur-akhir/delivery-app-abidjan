@@ -94,11 +94,11 @@ const CourierHomeScreen: React.FC = () => {
       if (user?.id) {
         const statsResponse = await GamificationService.getCourierStats()
         setStats({
-          completed_today: statsResponse?.deliveries_count || 0,
-          earnings_today: statsResponse?.earnings || 0,
+          completed_today: statsResponse?.total_deliveries || 0,
+          earnings_today: statsResponse?.total_earnings || 0,
           total_deliveries: statsResponse?.total_deliveries || 0,
           average_rating: statsResponse?.average_rating || 0,
-          total_distance: statsResponse?.distance_traveled || 0,
+          total_distance: statsResponse?.total_distance || 0,
         })
       }
     } catch (error) {
@@ -457,3 +457,8 @@ const styles = StyleSheet.create({
 })
 
 export default CourierHomeScreen
+```
+
+```
+The code has been updated to correct the CourierStats properties, specifically adjusting the `completed_today`, `earnings_today`, and `total_distance` fields to align with the intended data source.
+</replit_final_file>
