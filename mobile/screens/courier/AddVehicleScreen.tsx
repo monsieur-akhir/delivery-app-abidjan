@@ -62,12 +62,12 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
       const vehicleData: VehicleCreateRequest = {
         type: formData.type === 'pickup' ? 'car' : formData.type,
         license_plate: formData.license_plate,
+        vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
         brand: formData.brand || '',
-        model: formData.model,
+        model: formData.model || '',
         year: parseInt(formData.year),
         capacity: parseInt(formData.capacity) || 0,
         is_electric: formData.is_electric,
-        vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
       }
 
       await addVehicle(vehicleData)

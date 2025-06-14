@@ -418,7 +418,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
         weekly_earnings: 0,
         monthly_earnings: 0,
         pending_earnings: 0,
-        history: [],
+        // history: [], // Propriété supprimée car non définie dans le type
         transactions: [],
       };
       setState(prev => ({
