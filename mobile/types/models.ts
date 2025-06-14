@@ -346,21 +346,10 @@ export interface CourierStats {
   cancelled_deliveries: number
   average_rating: number
   total_earnings: number
+  total_distance: number
   total_distance?: number
   daily_deliveries?: number
   totalDistance?: number
-  badges?: string[]
-  total_points?: number
-  daily_rating?: number
-  completion_rate?: number
-  average_delivery_time?: number
-  completed_today?: number
-  earnings_today?: number
-  current_earnings?: number
-  level: number
-  nextLevelExperience?: number
-  daily_earnings?: number
-  distance_covered?: number
 }
 
 export interface SupportTicket {
@@ -1299,3 +1288,4 @@ export interface EarningsSummary {
   pending_balance: number
   total_deliveries: number
   total_distance: number
+}

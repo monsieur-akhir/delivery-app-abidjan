@@ -1,0 +1,309 @@
+~/workspace$ cd mobile && npx tsc
+components/EnhancedMap.tsx:12:15 - error TS2305: Module '"../types/models"' has no exported member 'Coordinates'.
+
+12 import type { Coordinates } from "../types/models"
+                 ~~~~~~~~~~~
+
+hooks/useUser.ts:13:3 - error TS2305: Module '"../types/models"' has no exported member 'CourierEarningsData'.
+
+13   CourierEarningsData,
+     ~~~~~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:14:3 - error TS2305: Module '"../types/models"' has no exported member 'WalletTransaction'.
+
+14   WalletTransaction,
+     ~~~~~~~~~~~~~~~~~
+
+hooks/useUser.ts:15:3 - error TS2305: Module '"../types/models"' has no exported member 'PayoutRequest'.
+
+15   PayoutRequest,
+     ~~~~~~~~~~~~~
+
+hooks/useVehicle.ts:71:26 - error TS2339: Property 'is_active' does not exist on type 'CourierVehicle'.
+
+71         is_available: cv.is_active,
+                            ~~~~~~~~~
+
+hooks/useVehicle.ts:72:27 - error TS2339: Property 'brand' does not exist on type 'Vehicle'.
+
+72         brand: cv.vehicle.brand,
+                             ~~~~~
+
+hooks/useVehicle.ts:73:27 - error TS2339: Property 'model' does not exist on type 'Vehicle'.
+
+73         model: cv.vehicle.model,
+                             ~~~~~
+
+hooks/useVehicle.ts:74:26 - error TS2339: Property 'year' does not exist on type 'Vehicle'.
+
+74         year: cv.vehicle.year,
+                            ~~~~
+
+hooks/useVehicle.ts:75:27 - error TS2339: Property 'color' does not exist on type 'Vehicle'.
+
+75         color: cv.vehicle.color,
+                             ~~~~~
+
+hooks/useVehicle.ts:76:30 - error TS2339: Property 'capacity' does not exist on type 'Vehicle'.
+
+76         capacity: cv.vehicle.capacity,
+                                ~~~~~~~~
+
+hooks/useVehicle.ts:77:28 - error TS2339: Property 'status' does not exist on type 'Vehicle'.
+
+77         status: cv.vehicle.status,
+                              ~~~~~~
+
+hooks/useVehicle.ts:78:24 - error TS2339: Property 'created_at' does not exist on type 'CourierVehicle'.
+
+78         created_at: cv.created_at,
+                          ~~~~~~~~~~
+
+hooks/useVehicle.ts:79:24 - error TS2339: Property 'updated_at' does not exist on type 'CourierVehicle'.
+
+79         updated_at: cv.updated_at
+                          ~~~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:7:41 - error TS2724: '"../../types/models"' has no exported member named 'VTCDeliveryStatusType'. Did you mean 'DeliveryStatus'?
+
+7 import type { Delivery, DeliveryStatus, VTCDeliveryStatusType } from "../../types/models"
+                                          ~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:27:3 - error TS2353: Object literal may only specify known properties, and 'opening_hours' does not exist in type 'Merchant'.
+
+27   opening_hours: merchantInfo.opening_hours || '',
+     ~~~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:30:3 - error TS2353: Object literal may only specify known properties, and 'opening_hours' does not exist in type 'Merchant'.
+
+30   opening_hours: merchantInfo.opening_hours || '',
+     ~~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:19:34 - error TS2305: Module '"../../types/models"' has no exported member 'Coordinates'.
+
+19 import type { Delivery, Courier, Coordinates, DeliveryStatus } from "../../types/models"
+                                    ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:63:9 - error TS2353: Object literal may only specify known properties, and 'vehicle_type' does not exist in type 'VehicleCreateRequest'.
+
+63         vehicle_type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : formData.type,
+           ~~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:72:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Type 'VehicleCreateRequest' is missing the following properties from type 'VehicleCreateRequest': brand, vehicle_type
+
+72       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:116:20 - error TS2339: Property 'badges' does not exist on type 'CourierStats'.
+
+116             {stats.badges?.map((badge: any) => (
+                       ~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type 'string' is not assignable to type 'VTCDeliveryStatus'.
+
+218               deliveryStatus="in_progress"
+                  ~~~~~~~~~~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    The expected type comes from property 'deliveryStatus' which is declared here on type 'IntrinsicAttributes & VTCStyleMapProps'
+
+screens/courier/GamificationScreen.tsx:9:15 - error TS2305: Module '"../../types/models"' has no exported member 'Achievement'.
+
+9 import type { Achievement, Leaderboard, CourierStats } from "../../types/models"
+                ~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:9:28 - error TS2305: Module '"../../types/models"' has no exported member 'Leaderboard'.
+
+9 import type { Achievement, Leaderboard, CourierStats } from "../../types/models"
+                             ~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:43:35 - error TS2339: Property 'total_earnings' does not exist on type 'CourierStats'.
+
+43         total_earnings: statsData.total_earnings || 0,
+                                     ~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:44:34 - error TS2339: Property 'totalDistance' does not exist on type 'CourierStats'.
+
+44         totalDistance: statsData.totalDistance || 0,
+                                    ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:45:9 - error TS2353: Object literal may only specify known properties, and 'total_points' does not exist in type 'CourierStats'.
+
+45         total_points: statsData.total_points || 0,
+           ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:46:27 - error TS2339: Property 'badges' does not exist on type 'CourierStats'.
+
+46         badges: statsData.badges || [],
+                             ~~~~~~
+
+screens/courier/GamificationScreen.tsx:113:47 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+113   const currentLevel = getCurrentLevel(stats?.total_points || 0)
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:114:50 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+114   const progress = getProgressToNextLevel(stats?.total_points || 0)
+                                                     ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:142:59 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+142                   <Text style={styles.totalPoints}>{stats.total_points || 0} points</Text>
+                                                              ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:158:70 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+158                     ? ` ${levelThresholds[currentLevel + 1] - (stats.total_points || 0)} points restants`
+                                                                         ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:185:57 - error TS2339: Property 'completion_rate' does not exist on type 'CourierStats'.
+
+185                   <Text style={styles.statValue}>{stats.completion_rate?.toFixed(0) || 0}%</Text>
+                                                            ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:190:57 - error TS2339: Property 'average_delivery_time' does not exist on type 'CourierStats'.
+
+190                   <Text style={styles.statValue}>{stats.average_delivery_time || "N/A"}</Text>
+                                                            ~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:308:47 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+308                     progress={Math.min((stats.daily_rating || 0) / 4.5, 1)}
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:313:43 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+313                     Note actuelle: {stats.daily_rating?.toFixed(1) || "N/A"}
+                                              ~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:98:42 - error TS2339: Property 'total_earnings' does not exist on type 'CourierStats'.
+
+98           earnings_today: statsResponse?.total_earnings || 0,
+                                            ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:101:42 - error TS2339: Property 'totalDistance' does not exist on type 'CourierStats'.
+
+101           total_distance: statsResponse?.totalDistance || 0,
+                                             ~~~~~~~~~~~~~
+
+screens/courier/VehicleManagementScreen.tsx:22:21 - error TS2339: Property 'isLoading' does not exist on type 'UseVehicleReturn'.
+
+22   const { vehicles, isLoading, error, deleteVehicle } = useVehicle()
+                       ~~~~~~~~~
+
+screens/courier/VehicleManagementScreen.tsx:22:32 - error TS2339: Property 'error' does not exist on type 'UseVehicleReturn'.
+
+22   const { vehicles, isLoading, error, deleteVehicle } = useVehicle()
+                                  ~~~~~
+
+services/RouteOptimizationService.ts:3:15 - error TS2305: Module '"../types/models"' has no exported member 'Coordinates'.
+
+3 import type { Coordinates } from "../types/models"
+                ~~~~~~~~~~~
+
+services/UserService.ts:641:81 - error TS2694: Namespace '"/home/runner/workspace/mobile/types/models"' has no exported member 'CourierEarningsData'.
+
+641   async getCourierEarnings(period = 'month'): Promise<import('../types/models').CourierEarningsData> {
+                                                                                    ~~~~~~~~~~~~~~~~~~~
+
+services/UserService.ts:654:88 - error TS2694: Namespace '"/home/runner/workspace/mobile/types/models"' has no exported member 'WalletTransaction'.
+
+654   async getWalletTransactions(page = 1, limit = 20): Promise<import('../types/models').WalletTransaction[]> {
+                                                                                           ~~~~~~~~~~~~~~~~~
+
+services/UserService.ts:682:58 - error TS2694: Namespace '"/home/runner/workspace/mobile/types/models"' has no exported member 'PayoutRequest'.
+
+682   async requestPayout(request: import('../types/models').PayoutRequest): Promise<void> {
+                                                             ~~~~~~~~~~~~~
+
+types/index.ts:24:3 - error TS2305: Module '"./models"' has no exported member 'Transaction'.
+
+24   Transaction,
+     ~~~~~~~~~~~
+
+types/index.ts:27:3 - error TS2305: Module '"./models"' has no exported member 'WalletTransaction'.
+
+27   WalletTransaction,
+     ~~~~~~~~~~~~~~~~~
+
+types/models.ts:349:3 - error TS2300: Duplicate identifier 'total_distance'.
+
+349   total_distance: number
+      ~~~~~~~~~~~~~~
+
+types/models.ts:349:3 - error TS2687: All declarations of 'total_distance' must have identical modifiers.
+
+349   total_distance: number
+      ~~~~~~~~~~~~~~
+
+types/models.ts:350:3 - error TS2300: Duplicate identifier 'total_distance'.
+
+350   total_distance?: number
+      ~~~~~~~~~~~~~~
+
+types/models.ts:350:3 - error TS2687: All declarations of 'total_distance' must have identical modifiers.
+
+350   total_distance?: number
+      ~~~~~~~~~~~~~~
+
+types/models.ts:350:3 - error TS2717: Subsequent property declarations must have the same type.  Property 'total_distance' must be of type 'number', but here has type 'number | undefined'.
+
+350   total_distance?: number
+      ~~~~~~~~~~~~~~
+
+  types/models.ts:349:3
+    349   total_distance: number
+          ~~~~~~~~~~~~~~
+    'total_distance' was also declared here.
+
+types/models.ts:997:21 - error TS2304: Cannot find name 'Coordinates'.
+
+997   current_location: Coordinates;
+                        ~~~~~~~~~~~
+
+
+Found 55 errors in 18 files.
+
+Errors  Files
+     1  components/EnhancedMap.tsx:12
+     3  hooks/useUser.ts:13
+     9  hooks/useVehicle.ts:71
+     1  screens/client/EnhancedTrackDeliveryScreen.tsx:7
+     1  screens/client/MarketplaceScreen.tsx:27
+     1  screens/client/MerchantDetailsScreen.tsx:30
+     1  screens/client/TrackDeliveryScreen.tsx:19
+     2  screens/courier/AddVehicleScreen.tsx:63
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     1  screens/courier/CourierProfileScreen.tsx:116
+     1  screens/courier/DeliveryDetailsScreen.tsx:218
+    14  screens/courier/GamificationScreen.tsx:9
+     2  screens/courier/HomeScreen.tsx:98
+     2  screens/courier/VehicleManagementScreen.tsx:22
+     1  services/RouteOptimizationService.ts:3
+     3  services/UserService.ts:641
+     2  types/index.ts:24
+     6  types/models.ts:349
