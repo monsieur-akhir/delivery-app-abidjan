@@ -1,0 +1,491 @@
+hooks/useDelivery.ts:499:77 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/hooks/useDelivery").VehicleRecommendationData' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/types/models").VehicleRecommendationData'.
+  Type 'VehicleRecommendationData' is missing the following properties from type 'VehicleRecommendationData': pickup_lat, pickup_lng, delivery_lat, delivery_lng, package_type
+
+499       const recommendation = await DeliveryService.getVehicleRecommendation(data)
+                                                                                ~~~~
+
+hooks/useDelivery.ts:711:5 - error TS2322: Type '(data: VehicleRecommendationData) => Promise<VehicleRecommendation | null>' is not assignable to type '(data: VehicleRecommendationData) => Promise<VehicleRecommendation>'.
+  Type 'Promise<VehicleRecommendation | null>' is not assignable to type 'Promise<VehicleRecommendation>'.
+    Type 'VehicleRecommendation | null' is not assignable to type 'VehicleRecommendation'.
+      Type 'null' is not assignable to type 'VehicleRecommendation'.
+
+711     getVehicleRecommendation,
+        ~~~~~~~~~~~~~~~~~~~~~~~~
+
+  hooks/useDelivery.ts:167:3
+    167   getVehicleRecommendation: (data: VehicleRecommendationData) => Promise<VehicleRecommendation>
+          ~~~~~~~~~~~~~~~~~~~~~~~~
+    The expected type comes from property 'getVehicleRecommendation' which is declared here on type 'UseDeliveryReturn'
+
+screens/NotificationsScreen.tsx:56:5 - error TS2304: Cannot find name 'markAsRead'.
+
+56     markAsRead(notification.id)
+       ~~~~~~~~~~
+
+screens/NotificationsScreen.tsx:59:46 - error TS2322: Type 'number | undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | number'.
+
+59       navigation.navigate("TrackDelivery", { deliveryId: notification.data.delivery_id })
+                                                ~~~~~~~~~~
+
+  types/navigation.ts:30:20
+    30   TrackDelivery: { deliveryId: string | number };
+                          ~~~~~~~~~~
+    The expected type comes from property 'deliveryId' which is declared here on type '{ deliveryId: string | number; }'
+
+screens/NotificationsScreen.tsx:59:58 - error TS18048: 'notification.data' is possibly 'undefined'.
+
+59       navigation.navigate("TrackDelivery", { deliveryId: notification.data.delivery_id })
+                                                            ~~~~~~~~~~~~~~~~~
+
+screens/NotificationsScreen.tsx:61:53 - error TS2322: Type 'number | undefined' is not assignable to type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | number'.
+
+61       navigation.navigate("CourierTrackDelivery", { deliveryId: notification.data.delivery_id })
+                                                       ~~~~~~~~~~
+
+  types/navigation.ts:62:27
+    62   CourierTrackDelivery: { deliveryId: string | number };
+                                 ~~~~~~~~~~
+    The expected type comes from property 'deliveryId' which is declared here on type '{ deliveryId: string | number; }'
+
+screens/NotificationsScreen.tsx:61:65 - error TS18048: 'notification.data' is possibly 'undefined'.
+
+61       navigation.navigate("CourierTrackDelivery", { deliveryId: notification.data.delivery_id })
+                                                                   ~~~~~~~~~~~~~~~~~
+
+screens/NotificationsScreen.tsx:63:27 - error TS2345: Argument of type '["Wallet", {}]' is not assignable to parameter of type '[screen: "Wallet"] | [screen: "Wallet", params: undefined]'.
+  Type '["Wallet", {}]' is not assignable to type '[screen: "Wallet", params: undefined]'.
+    Type at position 1 in source is not compatible with type at position 1 in target.
+      Type '{}' is not assignable to type 'undefined'.
+
+63       navigation.navigate("Wallet", {})
+                             ~~~~~~~~~~~~
+
+screens/NotificationsScreen.tsx:65:45 - error TS2322: Type 'number | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+65       navigation.navigate("RateDelivery", { deliveryId: notification.data.delivery_id })
+                                               ~~~~~~~~~~
+
+  types/navigation.ts:46:19
+    46   RateDelivery: { deliveryId: string };
+                         ~~~~~~~~~~
+    The expected type comes from property 'deliveryId' which is declared here on type '{ deliveryId: string; }'
+
+screens/NotificationsScreen.tsx:65:57 - error TS18048: 'notification.data' is possibly 'undefined'.
+
+65       navigation.navigate("RateDelivery", { deliveryId: notification.data.delivery_id })
+                                                           ~~~~~~~~~~~~~~~~~
+
+screens/NotificationsScreen.tsx:126:99 - error TS2339: Property 'type' does not exist on type 'NotificationData'.
+
+126         <View style={[styles.notificationIcon, { backgroundColor: getNotificationColor(item.data?.type as string) }]}>
+                                                                                                      ~~~~
+
+screens/NotificationsScreen.tsx:127:61 - error TS2339: Property 'type' does not exist on type 'NotificationData'.
+
+127           <FeatherIcon name={getNotificationIcon(item.data?.type)} size={20} color="#000000" style={styles.iconStyle} />
+                                                                ~~~~
+
+screens/client/CreateDeliveryScreen.tsx:155:9 - error TS2554: Expected 2 arguments, but got 3.
+
+155         {
+            ~
+156           pickup_lat: pickupLocation.latitude,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+... 
+165           weatherConditions: weather?.condition
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+166         }
+    ~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:164:21 - error TS2448: Block-scoped variable 'distance' used before its declaration.
+
+164           distance: distance,
+                        ~~~~~~~~
+
+  screens/client/CreateDeliveryScreen.tsx:152:13
+    152       const distance = calculateDistance(
+                    ~~~~~~~~
+    'distance' is declared here.
+
+screens/client/CreateDeliveryScreen.tsx:164:21 - error TS2454: Variable 'distance' is used before being assigned.
+
+164           distance: distance,
+                        ~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:256:7 - error TS2353: Object literal may only specify known properties, and 'pickup_commune' does not exist in type 'DeliveryCreateRequest'.
+
+256       pickup_commune: extractCommune(pickupAddress),
+          ~~~~~~~~~~~~~~
+
+screens/client/CreateDeliveryScreen.tsx:283:43 - error TS2345: Argument of type 'DeliveryCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/hooks/useDelivery").DeliveryCreateRequest'.
+  Type 'DeliveryCreateRequest' is missing the following properties from type 'DeliveryCreateRequest': pickup_commune, delivery_commune
+
+283       const result = await createDelivery(deliveryData)
+                                              ~~~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:140:11 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+140       if (deliveries && Array.isArray(deliveries)) {
+              ~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:140:11 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+140       if (deliveries && Array.isArray(deliveries)) {
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/HomeScreen.tsx:141:35 - error TS2339: Property 'filter' does not exist on type 'never'.
+
+141         const active = deliveries.filter(d => d.status === 'in_progress' || d.status === 'picked_up')
+                                      ~~~~~~
+
+screens/client/HomeScreen.tsx:141:42 - error TS7006: Parameter 'd' implicitly has an 'any' type.
+
+141         const active = deliveries.filter(d => d.status === 'in_progress' || d.status === 'picked_up')
+                                             ~
+
+screens/client/HomeScreen.tsx:142:35 - error TS2339: Property 'filter' does not exist on type 'never'.
+
+142         const recent = deliveries.filter(d => d.status === 'completed' || d.status === 'cancelled')
+                                      ~~~~~~
+
+screens/client/HomeScreen.tsx:142:42 - error TS7006: Parameter 'd' implicitly has an 'any' type.
+
+142         const recent = deliveries.filter(d => d.status === 'completed' || d.status === 'cancelled')
+                                             ~
+
+screens/client/MarketplaceScreen.tsx:20:3 - error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Merchant'.
+
+20   description: merchantInfo.description || '',
+     ~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:93:80 - error TS2339: Property 'description' does not exist on type 'Merchant'.
+
+93         (merchant) => merchant.name.toLowerCase().includes(query) || (merchant.description && merchant.description.toLowerCase().includes(query)),
+                                                                                  ~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:93:104 - error TS2339: Property 'description' does not exist on type 'Merchant'.
+
+93         (merchant) => merchant.name.toLowerCase().includes(query) || (merchant.description && merchant.description.toLowerCase().includes(query)),
+                                                                                                          ~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:99:57 - error TS2339: Property 'categories' does not exist on type 'Merchant'.
+
+99       filtered = filtered.filter((merchant) => merchant.categories && merchant.categories.includes(selectedCategory))
+                                                           ~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:99:80 - error TS2339: Property 'categories' does not exist on type 'Merchant'.
+
+99       filtered = filtered.filter((merchant) => merchant.categories && merchant.categories.includes(selectedCategory))
+                                                                                  ~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:147:29 - error TS2339: Property 'cover_image' does not exist on type 'Merchant'.
+
+147         source={{ uri: item.cover_image || "https://via.placeholder.com/300x150?text=Boutique" }}
+                                ~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:161:17 - error TS2339: Property 'description' does not exist on type 'Merchant'.
+
+161           {item.description}
+                    ~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:24:3 - error TS2353: Object literal may only specify known properties, and 'description' does not exist in type 'Merchant'.
+
+24   description: merchantInfo.description || '',
+     ~~~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:312:35 - error TS2339: Property 'image_url' does not exist on type 'Merchant'.
+
+312           source={{ uri: merchant.image_url || "https://via.placeholder.com/500x200?text=Boutique" }}
+                                      ~~~~~~~~~
+
+screens/client/OrdersScreen.tsx:204:17 - error TS2322: Type 'Element' is not assignable to type '((string | number | boolean | Value | AnimatedInterpolation<string | number> | WithAnimatedObject<ReactElement<any, string | JSXElementConstructor<any>>> | WithAnimatedObject<...> | WithAnimatedObject<...> | null) & (string | number)) | undefined'.
+  Type 'ReactElement<any, any>' is not assignable to type 'WithAnimatedObject<ReactPortal> & number'.
+    Property 'children' is missing in type 'ReactElement<any, any>' but required in type 'WithAnimatedObject<ReactPortal>'.
+
+204                 <Animated.Text style={{ color: 'white', fontSize: 12 }}>●</Animated.Text>
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  node_modules/@types/react/index.d.ts:192:9
+    192         children: ReactNode;
+                ~~~~~~~~
+    'children' is declared here.
+  node_modules/react-native/Libraries/Text/Text.d.ts:110:3
+    110   children?: React.ReactNode;
+          ~~~~~~~~
+    The expected type comes from property 'children' which is declared here on type 'IntrinsicAttributes & AnimatedProps<TextProps & RefAttributes<Text>> & { visible?: boolean | undefined; ... 4 more ...; theme?: ThemeProp | undefined; }'
+
+screens/client/TrackDeliveryScreen.tsx:29:5 - error TS2353: Object literal may only specify known properties, and 'instructions' does not exist in type 'MapRoute'.
+
+29     instructions: []
+       ~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:105:66 - error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+
+105             onPress: () => navigation.navigate("RateDelivery", { deliveryId }),
+                                                                     ~~~~~~~~~~
+
+  types/navigation.ts:46:19
+    46   RateDelivery: { deliveryId: string };
+                         ~~~~~~~~~~
+    The expected type comes from property 'deliveryId' which is declared here on type '{ deliveryId: string; }'
+
+screens/client/TrackDeliveryScreen.tsx:154:53 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+154       const deliveryData = await getDeliveryDetails(Number(deliveryId))
+                                                        ~~~~~~~~~~~~~~~~~~
+
+screens/client/TrackDeliveryScreen.tsx:356:11 - error TS2322: Type '{ style: { position: "absolute"; left: 0; right: 0; top: 0; bottom: 0; }; initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; deliveries: Delivery[]; route: MapRoute | undefined; showsTraffic: boolean; }' is not assignable to type 'IntrinsicAttributes & CustomMapViewProps'.
+  Property 'showsTraffic' does not exist on type 'IntrinsicAttributes & CustomMapViewProps'.
+
+356           showsTraffic={true}
+              ~~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:53:9 - error TS2353: Object literal may only specify known properties, and 'maxDistance' does not exist in type 'VehicleCreateRequest'.
+
+53         maxDistance: formData.maxDistance ? parseFloat(formData.maxDistance) : undefined,
+           ~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:55:21 - error TS2367: This comparison appears to be unintentional because the types '"motorcycle"' and '"custom"' have no overlap.
+
+55         customType: formData.type === 'custom' ? formData.customType : undefined,
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:102:12 - error TS2367: This comparison appears to be unintentional because the types '"motorcycle"' and '"custom"' have no overlap.
+
+102           {formData.type === VehicleType.CUSTOM && (
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/BidScreen.tsx:122:45 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+122       const data = await getDeliveryDetails(Number(deliveryId))
+                                                ~~~~~~~~~~~~~~~~~~
+
+screens/courier/BidScreen.tsx:284:63 - error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+284               <Text style={styles.deliveryPrice}>{formatPrice(delivery.final_price)} FCFA</Text>
+                                                                  ~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:66:37 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+66           <StarRating rating={stats.averageRating} size={20} />
+                                       ~~~~~~~~~~~~~
+
+  types/models.ts:339:3
+    339   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/CourierProfileScreen.tsx:67:50 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+67           <Text style={styles.ratingText}>{stats.averageRating.toFixed(1)}</Text>
+                                                    ~~~~~~~~~~~~~
+
+  types/models.ts:339:3
+    339   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/CourierProfileScreen.tsx:116:14 - error TS18048: 'stats.badges' is possibly 'undefined'.
+
+116             {stats.badges.map((badge: any) => (
+                 ~~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:54:30 - error TS2339: Property 'user_id' does not exist on type 'CourierProfile'.
+
+54         user_id: profileData.user_id || user?.id || 0,
+                                ~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:58:52 - error TS2304: Cannot find name 'VehicleType'.
+
+58         vehicle_type: (profileData.vehicle_type as VehicleType) || 'motorcycle',
+                                                      ~~~~~~~~~~~
+
+screens/courier/CourierStatusScreen.tsx:60:35 - error TS2339: Property 'is_available' does not exist on type 'CourierProfile'.
+
+60         is_available: profileData.is_available ?? true,
+                                     ~~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:41:58 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+41       const data = await DeliveryService.getDeliveryById(deliveryId)
+                                                            ~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:217:15 - error TS2322: Type '{ showDriverLocation: boolean; showRoute: boolean; initialRegion: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number; }; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'showDriverLocation' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'. Did you mean 'showUserLocation'?
+
+217               showDriverLocation={true}
+                  ~~~~~~~~~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:26:5 - error TS2339: Property 'refreshDeliveries' does not exist on type 'UseDeliveryReturn'.
+
+26     refreshDeliveries,
+       ~~~~~~~~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:27:5 - error TS2339: Property 'acceptDelivery' does not exist on type 'UseDeliveryReturn'.
+
+27     acceptDelivery: acceptDeliveryFn,
+       ~~~~~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:28:5 - error TS2339: Property 'startDelivery' does not exist on type 'UseDeliveryReturn'.
+
+28     startDelivery: startDeliveryFn
+       ~~~~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:39:13 - error TS2552: Cannot find name 'getExpressDeliveries'. Did you mean 'loadExpressDeliveries'?
+
+39       await getExpressDeliveries({ status: filter })
+               ~~~~~~~~~~~~~~~~~~~~
+
+  screens/courier/ExpressDeliveriesScreen.tsx:37:9
+    37   const loadExpressDeliveries = useCallback(async () => {
+               ~~~~~~~~~~~~~~~~~~~~~
+    'loadExpressDeliveries' is declared here.
+
+screens/courier/ExpressDeliveriesScreen.tsx:43:15 - error TS2552: Cannot find name 'getExpressDeliveries'. Did you mean 'loadExpressDeliveries'?
+
+43   }, [filter, getExpressDeliveries])
+                 ~~~~~~~~~~~~~~~~~~~~
+
+  screens/courier/ExpressDeliveriesScreen.tsx:37:9
+    37   const loadExpressDeliveries = useCallback(async () => {
+               ~~~~~~~~~~~~~~~~~~~~~
+    'loadExpressDeliveries' is declared here.
+
+screens/courier/GamificationScreen.tsx:43:9 - error TS2353: Object literal may only specify known properties, and 'totalEarnings' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+43         totalEarnings: 0,
+           ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:55:22 - error TS2345: Argument of type 'Leaderboard[]' is not assignable to parameter of type 'SetStateAction<Leaderboard[]>'.
+  Type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard[]' is not assignable to type 'import("/home/runner/workspace/mobile/types/models").Leaderboard[]'.
+    Property 'deliveriescount' is missing in type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard' but required in type 'import("/home/runner/workspace/mobile/types/models").Leaderboard'.
+
+55       setLeaderboard(leaderboardData)
+                        ~~~~~~~~~~~~~~~
+
+  types/models.ts:1344:3
+    1344   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/GamificationScreen.tsx:176:57 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+176                   <Text style={styles.statValue}>{stats.averageRating?.toFixed(1) || "N/A"}</Text>
+                                                            ~~~~~~~~~~~~~
+
+  types/models.ts:339:3
+    339   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/GamificationScreen.tsx:263:30 - error TS2551: Property 'deliveries_count' does not exist on type 'Leaderboard'. Did you mean 'deliveriescount'?
+
+263                       {entry.deliveries_count} livraisons • {entry.points} pts
+                                 ~~~~~~~~~~~~~~~~
+
+  types/models.ts:1344:3
+    1344   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/HomeScreen.tsx:23:10 - error TS2614: Module '"../../components/WeatherInfo"' has no exported member 'WeatherInfo'. Did you mean to use 'import WeatherInfo from "../../components/WeatherInfo"' instead?
+
+23 import { WeatherInfo } from '../../components/WeatherInfo'
+            ~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:72:50 - error TS2339: Property 'getAvailableDeliveries' does not exist on type 'GamificationService'.
+
+72       const response = await GamificationService.getAvailableDeliveries()
+                                                    ~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:73:51 - error TS7006: Parameter 'delivery' implicitly has an 'any' type.
+
+73       setAvailableDeliveries((response || []).map(delivery => ({
+                                                     ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:80:56 - error TS2339: Property 'getCourierActiveDeliveries' does not exist on type 'GamificationService'.
+
+80       const activeResponse = await GamificationService.getCourierActiveDeliveries()
+                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:81:54 - error TS7006: Parameter 'delivery' implicitly has an 'any' type.
+
+81       setActiveDeliveries((activeResponse || []).map(delivery => ({
+                                                        ~~~~~~~~
+
+screens/courier/HomeScreen.tsx:88:73 - error TS2554: Expected 0 arguments, but got 1.
+
+88         const statsResponse = await GamificationService.getCourierStats(user.id.toString())
+                                                                           ~~~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:90:43 - error TS2339: Property 'completed_today' does not exist on type 'CourierStats'.
+
+90           completed_today: statsResponse?.completed_today || 0,
+                                             ~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:91:42 - error TS2339: Property 'earnings_today' does not exist on type 'CourierStats'.
+
+91           earnings_today: statsResponse?.earnings_today || 0,
+                                            ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:94:42 - error TS2339: Property 'total_distance' does not exist on type 'CourierStats'.
+
+94           total_distance: statsResponse?.total_distance || 0,
+                                            ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:140:44 - error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+
+140         onPress={() => navigation.navigate('CourierTrackDelivery' as never, { deliveryId: item.id } as never)}
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:168:48 - error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+
+168             onPress={() => navigation.navigate('CourierTrackDelivery' as never, { deliveryId: item.id } as never)}
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Found 74 errors in 17 files.
+
+Errors  Files
+     2  hooks/useDelivery.ts:499
+    10  screens/NotificationsScreen.tsx:56
+     5  screens/client/CreateDeliveryScreen.tsx:155
+     6  screens/client/HomeScreen.tsx:140
+     7  screens/client/MarketplaceScreen.tsx:20
+     2  screens/client/MerchantDetailsScreen.tsx:24
+     1  screens/client/OrdersScreen.tsx:204
+     4  screens/client/TrackDeliveryScreen.tsx:29
+     3  screens/courier/AddVehicleScreen.tsx:53
+     2  screens/courier/BidScreen.tsx:122
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     3  screens/courier/CourierProfileScreen.tsx:66
+     3  screens/courier/CourierStatusScreen.tsx:54
+     2  screens/courier/DeliveryDetailsScreen.tsx:41
+     5  screens/courier/ExpressDeliveriesScreen.tsx:26
+     4  screens/courier/GamificationScreen.tsx:43
+    11  screens/courier/HomeScreen.tsx:23
