@@ -318,7 +318,7 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
               <Text style={styles.merchantName}>{merchant.name}</Text>
               <View style={styles.ratingContainer}>
                 <IconButton icon="star" size={16} iconColor="#FFC107" style={styles.ratingIcon} />
-                <Text style={styles.ratingText}>{merchant.rating.toFixed(1)}</Text>
+                <Text style={styles.ratingText}>{merchant.rating?.toFixed(1) || '0.0'}</Text>
                 <Text style={styles.ratingCount}>({merchant.review_count})</Text>
               </View>
             </View>

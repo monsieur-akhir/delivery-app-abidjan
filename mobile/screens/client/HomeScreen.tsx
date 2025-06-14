@@ -136,12 +136,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [active, recent] = await Promise.all([
-        getActiveDeliveries(),
-        getClientDeliveryHistory({ limit: 5 })
-      ])
-      setActiveDeliveries(active)
-      setRecentDeliveries(recent)
+      const deliveries = await getClientDeliveryHistory({ limit: 5 })
+      if (deliveries) {
+        const active = deliveries.filter(d => d.status === 'in_progress' || d.status === 'picked_up')
+        const recent = deliveries.filter(d => d.status === 'completed' || d.status === 'cancelled')
+        setActiveDeliveries(active)
+        setRecentDeliveries(recent)
+      }
     } catch (error) {
       console.error('Error loading data:', error)
       Alert.alert('Erreur', 'Impossible de charger les données')

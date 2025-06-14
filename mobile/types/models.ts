@@ -187,11 +187,15 @@ export interface Notification {
 }
 
 export interface NotificationData {
-  delivery_id?: string
-  courier_id?: string
-  user_id?: string
-  type?: string
+  delivery_id?: number
+  courier_id?: number
+  user_id?: number
+  message?: string
   action?: string
+  url?: string
+  amount?: number
+  status?: string
+  transaction_id?: string
 }
 
 export type NotificationType = 'delivery' | 'payment' | 'system' | 'promotion' | 'delivery_update' | 'message'
@@ -271,19 +275,17 @@ export interface WeatherData {
 export interface Merchant {
   id: number
   name: string
-  description?: string
+  business_name?: string
+  business_type?: string
   address: string
-  phone?: string
+  phone: string
   email?: string
-  category?: string
-  categories?: string[]
   rating?: number
-  review_count?: number
-  cover_image?: string
-  opening_hours?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  total_orders?: number
+  is_active?: boolean
+  delivery_time?: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Vehicle {

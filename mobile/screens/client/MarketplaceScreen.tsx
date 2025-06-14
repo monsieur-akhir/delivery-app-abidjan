@@ -17,7 +17,6 @@ import type { Merchant } from "../../types/models"
 const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   id: parseInt(merchantInfo.id),
   name: merchantInfo.name,
-  name: merchantInfo.name,
   description: merchantInfo.description || '',
   address: merchantInfo.address,
   commune: merchantInfo.commune,
