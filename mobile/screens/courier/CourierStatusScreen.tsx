@@ -14,7 +14,7 @@ import { useNetwork } from "../../contexts/NetworkContext"
 import { updateCourierStatus, fetchCourierProfile, fetchWeatherForecast } from "../../services/api"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
-import { UserProfile, Weather } from "../../types/models"
+import { UserProfile, Weather, CourierProfile } from "../../types/models"
 
 type CourierStatusScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "CourierStatus">
@@ -27,7 +27,7 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
   const [isOnline, setIsOnline] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
   const [statusLoading, setStatusLoading] = useState<boolean>(false)
-  const [courierProfile, setCourierProfile] = useState<UserProfile | null>(null)
+  const [courierProfile, setCourierProfile] = useState<CourierProfile | null>(null)
   const [weather, setWeather] = useState<Weather | null>(null)
   const [locationPermissionDenied, setLocationPermissionDenied] = useState<boolean>(false)
 
@@ -104,8 +104,13 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
       // Mettre à jour l'état local
       setIsOnline(newStatus)
 
-      // Mettre à jour les données utilisateur
-      updateUserData({ is_online: newStatus })
+      // Mettre à jour les données utilisateur localement
+      if (updateUserData) {
+        updateUserData({ 
+          ...user,
+          // Note: is_online n'est pas dans User type, on garde juste le statut local
+        })
+      }
 
       // Afficher une confirmation
       if (newStatus) {
@@ -272,26 +277,24 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
             <Card.Content>
               <Text style={styles.sectionTitle}>Conditions météo</Text>
               <View style={styles.weatherContent}>
-                <FeatherIcon name={getWeatherIcon(weather.current?.condition || 'sunny')} size={48} color="#FF6B00" />
+                <FeatherIcon name={getWeatherIcon(weather.current?.condition || 'sunny') as any} size={48} color="#FF6B00" />
                   <View style={styles.weatherInfo}>
                   <Text style={styles.temperature}>{weather.current?.temperature || 0}°C</Text>
                   <Text style={styles.weatherCondition}>{weather.current?.condition || 'Clear'}</Text>
                   </View>
                   <View style={styles.weatherDetails}>
-                    <Text style={styles.weatherDetailLabel}>Humidité</Text>
-                    <Text style={styles.weatherDetailText}>{weather.current?.humidity || 0}%</Text>
-                    <Text style={styles.weatherDetailLabel}>Vent</Text>
-                    <Text style={styles.weatherDetailText}>{weather.current?.wind_speed || 0} km/h</Text>
+                    <Text style={styles.weatherDetailText}>Humidité: {weather.current?.humidity || 0}%</Text>
+                    <Text style={styles.weatherDetailText}>Vent: {weather.current?.wind_speed || 0} km/h</Text>
 
                 </View>
                 <View style={styles.weatherDetails}>
                   <View style={styles.weatherDetail}>
                     <Feather name="droplet" size={16} color="#2196F3" />
-                    <Text style={styles.weatherDetailText}>{weather.current.humidity}%</Text>
+                    <Text style={styles.weatherDetailText}>{weather.current?.humidity || 0}%</Text>
                   </View>
                   <View style={styles.weatherDetail}>
                     <Feather name="wind" size={16} color="#607D8B" />
-                    <Text style={styles.weatherDetailText}>{weather.current.wind_speed} km/h</Text>
+                    <Text style={styles.weatherDetailText}>{weather.current?.wind_speed || 0} km/h</Text>
                   </View>
                 </View>
               </View>

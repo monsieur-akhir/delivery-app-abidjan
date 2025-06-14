@@ -35,7 +35,25 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
   const { t } = useTranslation()
   const navigation = useNavigation()
   const { user } = useAuth()
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
+  const { notifications, unreadCount } = useNotifications()
+  
+  // Fonction locale pour marquer comme lu
+  const markAsRead = async (notificationId: number) => {
+    try {
+      await NotificationService.markAsRead(notificationId.toString())
+    } catch (error) {
+      console.error('Erreur lors du marquage:', error)
+    }
+  }
+  
+  // Fonction locale pour marquer toutes comme lues
+  const markAllAsRead = async () => {
+    try {
+      await NotificationService.markAllAsRead()
+    } catch (error) {
+      console.error('Erreur lors du marquage global:', error)
+    }
+  }
 
   // États
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([])
@@ -109,25 +127,33 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
   }, [activeFilter, showUnreadOnly, filterNotifications])
 
   // Obtenir la couleur du type de notification
-  const getNotificationColor = (type: NotificationType) => {
+  const getNotificationColor = (type: string) => {
     switch (type) {
       case 'delivery_update': return '#2196F3'
       case 'payment': return '#4CAF50'
       case 'promotion': return '#FF9800'
       case 'system': return '#9C27B0'
       case 'message': return '#00BCD4'
+      case 'warning': return '#FF9800'
+      case 'info': return '#2196F3'
+      case 'success': return '#4CAF50'
+      case 'error': return '#F44336'
       default: return '#757575'
     }
   }
 
   // Obtenir l'icône du type de notification
-  const getNotificationIcon = (type: NotificationType) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'delivery_update': return 'truck-delivery'
       case 'payment': return 'credit-card'
       case 'promotion': return 'tag'
       case 'system': return 'cog'
       case 'message': return 'message-text'
+      case 'warning': return 'alert-triangle'
+      case 'info': return 'info'
+      case 'success': return 'check-circle'
+      case 'error': return 'x-circle'
       default: return 'bell'
     }
   }
@@ -215,7 +241,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
 
     return (
       <Swipeable
-        renderRightActions={() => renderRightActions(item.id)}
+        renderRightActions={() => renderRightActions(typeof item.id === 'number' ? item.id : parseInt(item.id))}
         rightThreshold={40}
       >
         <Animated.View
