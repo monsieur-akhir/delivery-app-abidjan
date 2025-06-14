@@ -1324,8 +1324,7 @@ export interface UserProfileExtended {
   role?: string;
   status?: "online" | "offline";
   profile_image?: string;
-  The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
-```created_at: string;
+  created_at: string;
   updated_at: string;
   address?: string;
   city?: string;
