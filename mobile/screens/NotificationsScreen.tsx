@@ -53,20 +53,16 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
   }
 
   const handleNotificationPress = (notification: Notification) => {
-    if (!notification.data) return
+    markAsRead(notification.id)
 
-    const deliveryId = String(notification.data.delivery_id || '')
-
-    if (notification.data.type === "delivery_assigned" || notification.data.type === "delivery_status") {
-      navigation.navigate("DeliveryDetails", { deliveryId })
-    } else if (notification.data.type === "bid_accepted") {
-      navigation.navigate("DeliveryDetails", { deliveryId })
-    } else if (notification.data.type === "payment") {
-      navigation.navigate("Payment", { deliveryId, amount: 0 })
-    } else if (notification.data.type === "delivery_completed") {
-      navigation.navigate("RateDelivery", {
-        deliveryId,
-      })
+    if (notification.type === "delivery_assigned" || notification.type === "delivery_status") {
+      navigation.navigate("TrackDelivery", { deliveryId: notification.data.delivery_id })
+    } else if (notification.type === "bid_accepted") {
+      navigation.navigate("CourierTrackDelivery", { deliveryId: notification.data.delivery_id })
+    } else if (notification.type === "payment") {
+      navigation.navigate("Wallet", {})
+    } else if (notification.type === "delivery_completed") {
+      navigation.navigate("RateDelivery", { deliveryId: notification.data.delivery_id })
     }
   }
 

@@ -207,7 +207,7 @@ const TransactionHistoryScreen: React.FC<TransactionHistoryScreenProps> = ({ nav
 
       {/* Search Bar */}
       <Surface style={styles.searchContainer}>
-        <SearchBar
+        <Searchbar
           placeholder="Rechercher une transaction..."
           onChangeText={setSearchQuery}
           value={searchQuery}

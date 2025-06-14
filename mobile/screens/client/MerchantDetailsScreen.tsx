@@ -30,7 +30,7 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   review_count: 0,
   is_open: merchantInfo.is_open,
   opening_hours: merchantInfo.opening_hours || '',
-  phone: merchantInfo.phone,
+  phone: merchantInfo.phone || '',
   lat: merchantInfo.lat || 0,
   lng: merchantInfo.lng || 0,
   logo: '',
@@ -38,7 +38,7 @@ const adaptMerchantInfo = (merchantInfo: MerchantInfo): Merchant => ({
   cover_image: '',
   created_at: '',
   updated_at: '',
-  delivery_time: '30'
+  delivery_time: 30
 })
 
 const adaptProduct = (apiProduct: APIProduct): Product => ({
@@ -309,7 +309,7 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />}
       >
         <Image
-          source={{ uri: merchant.cover_image || "https://via.placeholder.com/500x200?text=Boutique" }}
+          source={{ uri: merchant.image_url || "https://via.placeholder.com/500x200?text=Boutique" }}
           style={styles.coverImage}
         />
         <View style={styles.merchantInfoContainer}>
@@ -319,7 +319,7 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
               <View style={styles.ratingContainer}>
                 <IconButton icon="star" size={16} iconColor="#FFC107" style={styles.ratingIcon} />
                 <Text style={styles.ratingText}>{merchant.rating?.toFixed(1) || '0.0'}</Text>
-                <Text style={styles.ratingCount}>({merchant.review_count})</Text>
+                <Text style={styles.ratingCount}>(0)</Text>
               </View>
             </View>
             <View style={styles.merchantMeta}>
@@ -334,13 +334,13 @@ const MerchantDetailsScreen: React.FC<MerchantDetailsScreenProps> = ({ route, na
               )}
             </View>
           </View>
-          <Text style={styles.merchantDescription}>{merchant.description}</Text>
+          <Text style={styles.merchantDescription}>Boutique partenaire</Text>
           <View style={styles.merchantDetails}>
             <View style={styles.detailItem}>
               <IconButton icon="clock-outline" size={20} iconColor="#FF6B00" style={styles.detailIcon} />
               <View>
                 <Text style={styles.detailLabel}>{t("merchant.openingHours")}</Text>
-                <Text style={styles.detailValue}>{merchant.opening_hours}</Text>
+                <Text style={styles.detailValue}>08h00 - 18h00</Text>
               </View>
             </View>
             <View style={styles.detailItem}>

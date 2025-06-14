@@ -136,8 +136,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const loadData = async () => {
     try {
       setLoading(true)
-      const deliveries = await getClientDeliveryHistory({ limit: 5 })
-      if (deliveries) {
+      const deliveries = await getClientDeliveryHistory({})
+      if (deliveries && Array.isArray(deliveries)) {
         const active = deliveries.filter(d => d.status === 'in_progress' || d.status === 'picked_up')
         const recent = deliveries.filter(d => d.status === 'completed' || d.status === 'cancelled')
         setActiveDeliveries(active)
@@ -256,7 +256,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       activeOpacity={0.8}
     >
       <Surface style={[styles.serviceIcon, { backgroundColor: service.color }]}>
-        <Feather name={service.icon} size={24} color="#FFFFFF" />
+        <Feather name={service.icon as any} size={24} color="#FFFFFF" />
       </Surface>
       <View style={styles.serviceInfo}>
         <Text style={styles.serviceTitle}>{service.title}</Text>
