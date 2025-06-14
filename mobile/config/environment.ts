@@ -1,3 +1,18 @@
+// Déclaration des types pour process.env dans un environnement Expo
+declare const process: {
+  env: {
+    NODE_ENV?: string;
+    EXPO_PUBLIC_API_URL?: string;
+    EXPO_PUBLIC_WS_URL?: string;
+    EXPO_PUBLIC_GOOGLE_MAPS_API_KEY?: string;
+    EXPO_PUBLIC_WEATHER_API_KEY?: string;
+    EXPO_PUBLIC_CINETPAY_API_KEY?: string;
+    EXPO_PUBLIC_CINETPAY_SITE_ID?: string;
+    EXPO_PUBLIC_OPENAI_API_KEY?: string;
+    EXPO_PUBLIC_SENTRY_DSN?: string;
+  };
+};
+
 export const environment = {
   development: {
     API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000',
@@ -34,6 +49,8 @@ export const environment = {
 const ENV = process.env.NODE_ENV || 'development'
 export const config = environment[ENV as keyof typeof environment] || environment.development
 
+export const API_URL = config.API_URL
+export const WS_URL = config.WS_URL
 export const getApiUrl = () => config.API_URL
 export const getWsUrl = () => config.WS_URL
 export const getGoogleMapsApiKey = () => config.GOOGLE_MAPS_API_KEY
