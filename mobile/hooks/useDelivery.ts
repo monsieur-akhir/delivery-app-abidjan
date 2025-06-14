@@ -1,180 +1,234 @@
+
 import { useState, useCallback } from 'react'
+import DeliveryService from '../services/DeliveryService'
 import type {
   Delivery,
-  DeliveryCreateRequest,
-  DeliveryFilters,
-  DeliveryEstimate,
+  DeliveryStatus,
   Bid,
-  BidCreateRequest,
   TrackingPoint,
+  DeliveryEstimate,
   ExpressDelivery,
   CollaborativeDelivery,
-  Coordinates,
-  Promotion,
-  Zone,
-  DeliveryStatus
-} from '../types/models'
-import DeliveryService from '../services/DeliveryService'
-import { useAuth } from '../contexts/AuthContext'
+  Notification
+} from '../types'
+
+// Types pour les filtres et requêtes
+export interface DeliveryFilters {
+  status?: DeliveryStatus
+  date_from?: string
+  date_to?: string
+  commune?: string
+}
+
+export interface DeliverySearchParams {
+  commune?: string
+  max_distance?: number
+  min_price?: number
+  max_price?: number
+  vehicle_type?: string
+}
+
+export interface AvailableDelivery extends Delivery {
+  distance?: number
+  score?: number
+  eta_minutes?: number
+}
+
+export interface DeliveryCreateRequest {
+  pickup_address: string
+  pickup_commune: string
+  pickup_lat?: number
+  pickup_lng?: number
+  pickup_contact_name?: string
+  pickup_contact_phone?: string
+  delivery_address: string
+  delivery_commune: string
+  delivery_lat?: number
+  delivery_lng?: number
+  delivery_contact_name?: string
+  delivery_contact_phone?: string
+  package_description?: string
+  package_size?: string
+  package_weight?: number
+  is_fragile?: boolean
+  proposed_price: number
+  delivery_type?: string
+}
+
+export interface DeliveryUpdateRequest {
+  pickup_address?: string
+  pickup_commune?: string
+  delivery_address?: string
+  delivery_commune?: string
+  package_description?: string
+  proposed_price?: number
+}
+
+export interface BidCreateRequest {
+  delivery_id: number
+  proposed_price: number
+  estimated_duration?: number
+  message?: string
+}
+
+export interface TrackingPointRequest {
+  delivery_id: number
+  lat: number
+  lng: number
+  accuracy?: number
+  speed?: number
+  heading?: number
+}
+
+export interface PriceEstimateData {
+  pickup_address: string
+  delivery_address: string
+  package_weight?: number
+  vehicle_type?: string
+  delivery_type?: string
+}
+
+export interface VehicleRecommendationData {
+  package_weight: number
+  package_size: string
+  is_fragile: boolean
+  distance: number
+}
+
+export interface VehicleRecommendation {
+  recommended_type: string
+  reasoning: string
+  alternatives: string[]
+}
+
+export interface ExpressDeliveryRequest extends DeliveryCreateRequest {
+  is_priority: boolean
+  guaranteed_delivery_time?: string
+}
+
+export interface CollaborativeDeliveryRequest extends DeliveryCreateRequest {
+  max_participants: number
+  contribution_amount: number
+  description: string
+}
+
+// Interface unifiée pour le retour du hook
+export interface UseDeliveryReturn {
+  // État
+  deliveries: Delivery[]
+  currentDelivery: Delivery | null
+  bids: Bid[]
+  tracking: TrackingPoint[]
+  estimate: DeliveryEstimate | null
+  isLoading: boolean
+  error: string | null
+
+  // Actions de base
+  createDelivery: (data: DeliveryCreateRequest) => Promise<Delivery>
+  updateDelivery: (id: string, data: DeliveryUpdateRequest) => Promise<Delivery>
+  cancelDelivery: (id: string, reason?: string) => Promise<void>
+  
+  // Gestion des enchères
+  submitBid: (data: BidCreateRequest) => Promise<Bid>
+  acceptBid: (deliveryId: string, bidId: number) => Promise<void>
+  declineBid: (deliveryId: string, bidId: number, reason?: string) => Promise<void>
+  
+  // Suivi
+  addTrackingPoint: (data: TrackingPointRequest) => Promise<TrackingPoint>
+  updateCourierLocation: (deliveryId: string, lat: number, lng: number) => Promise<void>
+  updateDeliveryStatus: (id: string, status: DeliveryStatus) => Promise<void>
+  
+  // Récupération de données
+  getDeliveries: (filters?: DeliveryFilters) => Promise<void>
+  getAvailableDeliveries: (params?: DeliverySearchParams) => Promise<void>
+  getCourierActiveDeliveries: () => Promise<void>
+  getClientDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
+  getCourierDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
+  getDeliveryDetails: (id: string) => Promise<Delivery>
+  
+  // Estimations
+  getPriceEstimate: (data: PriceEstimateData) => Promise<number>
+  getVehicleRecommendation: (data: VehicleRecommendationData) => Promise<VehicleRecommendation>
+  
+  // Livraisons express
+  createExpressDelivery: (data: ExpressDeliveryRequest) => Promise<Delivery>
+  getExpressDeliveries: (filters?: DeliveryFilters) => Promise<void>
+  assignCourierToExpress: (deliveryId: string, courierId: string) => Promise<void>
+  completeExpressDelivery: (deliveryId: string) => Promise<void>
+  
+  // Livraisons collaboratives
+  createCollaborativeDelivery: (data: CollaborativeDeliveryRequest) => Promise<Delivery>
+  getCollaborativeDeliveries: (filters?: DeliveryFilters) => Promise<void>
+  joinCollaborativeDelivery: (id: string, message?: string) => Promise<void>
+  leaveCollaborativeDelivery: (id: string) => Promise<void>
+  
+  // Méthodes supplémentaires
+  placeBid: (deliveryId: number, bidData: any) => Promise<void>
+  clientConfirmDelivery: (deliveryId: number, rating: number, comment?: string) => Promise<void>
+}
 
 interface DeliveryState {
   deliveries: Delivery[]
   currentDelivery: Delivery | null
   bids: Bid[]
-  tracking: TrackingPoint[] | null
+  tracking: TrackingPoint[]
   estimate: DeliveryEstimate | null
   isLoading: boolean
   error: string | null
 }
 
-export interface UseDeliveryReturn {
-  deliveries: Delivery[]
-  loading: boolean
-  error: string | null
-  createDelivery: (data: any) => Promise<Delivery>
-  getPriceEstimate: (data: any) => Promise<void>
-  estimate: any
-  acceptDelivery: (deliveryId: string) => Promise<void>
-  startDelivery: (deliveryId: string) => Promise<void>
-  updateDeliveryStatus: (deliveryId: string, status: string) => Promise<void>
-  getDeliveryDetails: (deliveryId: number) => Promise<Delivery | null>
-  getActiveDeliveries: () => Promise<Delivery[]>
-  getClientDeliveryHistory: () => Promise<Delivery[]>
-  getCourierDeliveryHistory: () => Promise<Delivery[]>
-  placeBid: (deliveryId: number, bidData: any) => Promise<void>
-}
-
-interface UseDeliveryReturn {
-  // State
-  deliveries: Delivery[]
-  currentDelivery: Delivery | null
-  bids: Bid[]
-  tracking: TrackingPoint[] | null
-  estimate: DeliveryEstimate | null
-  isLoading: boolean
-  error: string | null
-
-  // Actions
-  createDelivery: (data: DeliveryCreateRequest) => Promise<Delivery>
-  getUserDeliveries: (filters?: DeliveryFilters) => Promise<void>
-  getDeliveryById: (id: string) => Promise<void>
-  updateDelivery: (id: string, data: Partial<DeliveryCreateRequest>) => Promise<void>
-  cancelDelivery: (id: string, reason?: string) => Promise<void>
-  getDeliveryBids: (deliveryId: string) => Promise<void>
-  createBid: (bidData: BidCreateRequest) => Promise<void>
-  acceptBid: (deliveryId: string, bidId: number) => Promise<void>
-  rejectBid: (deliveryId: string, bidId: number, reason?: string) => Promise<void>
-  getDeliveryTracking: (id: string) => Promise<void>
-  getCourierLocation: (deliveryId: string) => Promise<Coordinates>
-  updateDeliveryStatus: (id: string, status: DeliveryStatus) => Promise<void>
-  getExpressDelivery: (id: string) => Promise<ExpressDelivery>
-  getExpressDeliveries: (filters?: DeliveryFilters) => Promise<ExpressDelivery[]>
-  assignCourierToExpress: (deliveryId: string, courierId: string) => Promise<void>
-  completeExpressDelivery: (deliveryId: string) => Promise<void>
-  getCollaborativeDelivery: (id: string) => Promise<CollaborativeDelivery>
-  getCollaborativeDeliveries: (filters?: DeliveryFilters) => Promise<CollaborativeDelivery[]>
-  joinCollaborativeDelivery: (id: string, message?: string) => Promise<void>
-  leaveCollaborativeDelivery: (id: string) => Promise<void>
-  getAvailableDeliveries: (params?: { commune?: string }) => Promise<Delivery[]>
-  getPriceEstimate: (data: Omit<DeliveryCreateRequest, 'weather_conditions'>) => Promise<void>
-  getDeliveryZones: (lat: number, lng: number) => Promise<Zone[]>
-  calculateZonePricing: (zoneId: string, distance: number, packageType: string) => Promise<number>
-  acceptDelivery: (deliveryId: string) => Promise<void>
-  startDelivery: (deliveryId: string) => Promise<void>
-  getClientDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
-  clearError: () => void
-  refreshDelivery: (id: string) => Promise<void>
+const initialState: DeliveryState = {
+  deliveries: [],
+  currentDelivery: null,
+  bids: [],
+  tracking: [],
+  estimate: null,
+  isLoading: false,
+  error: null
 }
 
 export const useDelivery = (): UseDeliveryReturn => {
-  const { user } = useAuth()
-  const [state, setState] = useState<DeliveryState>({
-    deliveries: [],
-    currentDelivery: null,
-    bids: [],
-    tracking: null,
-    estimate: null,
-    isLoading: false,
-    error: null
-  })
+  const [state, setState] = useState<DeliveryState>(initialState)
 
-  const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }))
-  }, [])
-
+  // Actions de base
   const createDelivery = useCallback(async (data: DeliveryCreateRequest): Promise<Delivery> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const deliveryData = {
-        ...data,
-        package_description: data.package_description || ''
-      }
-      const deliveryDataWithDefaults = {
-        ...deliveryData,
-        recipient_name: deliveryData.recipient_name || 'Non spécifié',
-        recipient_phone: deliveryData.recipient_phone || 'Non spécifié'
-      }
-      const delivery = await DeliveryService.createDelivery(deliveryDataWithDefaults)
+      const delivery = await DeliveryService.createDelivery(data)
       setState(prev => ({ 
         ...prev, 
-        deliveries: [delivery, ...prev.deliveries],
-        currentDelivery: delivery,
+        deliveries: [...prev.deliveries, delivery], 
         isLoading: false 
       }))
       return delivery
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la création'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la création',
+        isLoading: false 
+      }))
       throw error
     }
   }, [])
 
-  const getUserDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
+  const updateDelivery = useCallback(async (id: string, data: DeliveryUpdateRequest): Promise<Delivery> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const deliveries = await DeliveryService.getUserDeliveries(
-        (filters as any)?.skip || 0,
-        (filters as any)?.limit || 20
-      )
+      const delivery = await DeliveryService.updateDelivery(id, data)
+      setState(prev => ({
+        ...prev,
+        deliveries: prev.deliveries.map(d => d.id === id ? delivery : d),
+        currentDelivery: prev.currentDelivery?.id === id ? delivery : prev.currentDelivery,
+        isLoading: false
+      }))
+      return delivery
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
-        deliveries,
+        error: error instanceof Error ? error.message : 'Erreur lors de la mise à jour',
         isLoading: false 
       }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
-    }
-  }, [])
-
-  const getDeliveryById = useCallback(async (id: string): Promise<void> => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const delivery = await DeliveryService.getDeliveryById(id)
-      setState(prev => ({ 
-        ...prev, 
-        currentDelivery: delivery,
-        isLoading: false 
-      }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
-    }
-  }, [])
-
-  const updateDelivery = useCallback(async (id: string, data: Partial<DeliveryCreateRequest>): Promise<void> => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const updatedDelivery = await DeliveryService.updateDelivery(id, data)
-      setState(prev => ({ 
-        ...prev, 
-        currentDelivery: updatedDelivery,
-        deliveries: prev.deliveries.map(d => d.id.toString() === id ? updatedDelivery : d),
-        isLoading: false 
-      }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      throw error
     }
   }, [])
 
@@ -182,50 +236,41 @@ export const useDelivery = (): UseDeliveryReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.cancelDelivery(id, reason)
-      setState(prev => ({ 
-        ...prev, 
-        deliveries: prev.deliveries.map(d => 
-          d.id.toString() === id ? { ...d, status: 'cancelled' } : d
-        ),
-        isLoading: false 
-      }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'annulation'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
-    }
-  }, [])
-
-  const getDeliveryBids = useCallback(async (deliveryId: string): Promise<void> => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const response = await DeliveryService.getDeliveryBids(deliveryId)
       setState(prev => ({
         ...prev,
-        bids: response as Bid[],
+        deliveries: prev.deliveries.map(d => 
+          d.id === id ? { ...d, status: 'cancelled' as DeliveryStatus } : d
+        ),
         isLoading: false
       }))
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement des enchères'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de l\'annulation',
+        isLoading: false 
+      }))
+      throw error
     }
   }, [])
 
-  const createBid = useCallback(async (bidData: BidCreateRequest): Promise<void> => {
+  // Gestion des enchères
+  const submitBid = useCallback(async (data: BidCreateRequest): Promise<Bid> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const bidDataFixed = {
-        ...bidData,
-        delivery_id: String(bidData.delivery_id)
-      }
-      const bid = await DeliveryService.createBid(bidDataFixed)
+      const bid = await DeliveryService.createBid(data)
       setState(prev => ({ 
         ...prev, 
-        bids: [...prev.bids, bid],
+        bids: [...prev.bids, bid], 
         isLoading: false 
       }))
+      return bid
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la création de l\'enchère'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la soumission',
+        isLoading: false 
+      }))
+      throw error
     }
   }, [])
 
@@ -233,56 +278,56 @@ export const useDelivery = (): UseDeliveryReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.acceptBid(deliveryId, bidId)
+      setState(prev => ({ ...prev, isLoading: false }))
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
-        bids: prev.bids.map(b => 
-          b.id === bidId ? { ...b, status: 'accepted' } : b
-        ),
+        error: error instanceof Error ? error.message : 'Erreur lors de l\'acceptation',
         isLoading: false 
       }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'acceptation'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      throw error
     }
   }, [])
 
-  const rejectBid = useCallback(async (deliveryId: string, bidId: number, reason?: string): Promise<void> => {
+  const declineBid = useCallback(async (deliveryId: string, bidId: number, reason?: string): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      // Note: rejectBid method needs to be implemented in DeliveryService
-      console.log('Rejecting bid:', deliveryId, bidId, reason)
-      setState(prev => ({
-        ...prev,
-        bids: prev.bids.map(b =>
-          b.id === Number(bidId) ? { ...b, status: 'rejected' } : b
-        ),
-        isLoading: false
+      await DeliveryService.declineBid(deliveryId, bidId, reason)
+      setState(prev => ({ ...prev, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors du refus',
+        isLoading: false 
       }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors du rejet'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      throw error
     }
   }, [])
 
-  const getDeliveryTracking = useCallback(async (id: string): Promise<void> => {
+  // Suivi
+  const addTrackingPoint = useCallback(async (data: TrackingPointRequest): Promise<TrackingPoint> => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const tracking = await DeliveryService.getDeliveryDetails(id)
-      setState(prev => ({ ...prev, tracking, isLoading: false }))
+      const tracking = await DeliveryService.addTrackingPoint(data)
+      setState(prev => ({ ...prev, tracking: [...prev.tracking, tracking], isLoading: false }))
+      return tracking
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement du suivi'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de l\'ajout du point',
+        isLoading: false 
+      }))
+      throw error
     }
   }, [])
 
-  const getCourierLocation = useCallback(async (deliveryId: string): Promise<Coordinates> => {
+  const updateCourierLocation = useCallback(async (deliveryId: string, lat: number, lng: number): Promise<void> => {
     try {
-      const location = await DeliveryService.getCourierLocation(deliveryId)
-      return {
-        latitude: location.lat,
-        longitude: location.lng
-      }
+      await DeliveryService.updateCourierLocation(deliveryId, lat, lng)
     } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la mise à jour de position'
+      }))
       throw error
     }
   }, [])
@@ -290,47 +335,180 @@ export const useDelivery = (): UseDeliveryReturn => {
   const updateDeliveryStatus = useCallback(async (id: string, status: DeliveryStatus): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const updatedDelivery = await DeliveryService.updateDeliveryStatus(id, status)
-      setState(prev => ({ 
-        ...prev, 
-        currentDelivery: updatedDelivery,
-        deliveries: prev.deliveries.map(d => d.id.toString() === id ? updatedDelivery : d),
-        isLoading: false 
+      const delivery = await DeliveryService.updateDeliveryStatus(id, status)
+      setState(prev => ({
+        ...prev,
+        deliveries: prev.deliveries.map(d => d.id === id ? delivery : d),
+        currentDelivery: prev.currentDelivery?.id === id ? delivery : prev.currentDelivery,
+        isLoading: false
       }))
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du statut'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
-    }
-  }, [])
-
-  const getExpressDelivery = useCallback(async (id: string): Promise<ExpressDelivery> => {
-    try {
-      const delivery = await DeliveryService.getDeliveryById(id)
-      return {
-        ...delivery,
-        express_priority: 'standard',
-        estimated_pickup_time: new Date().toISOString(),
-        guaranteed_delivery_time: new Date().toISOString(),
-        express_fee: 0,
-        auto_assignment: false
-      }
-    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la mise à jour du statut',
+        isLoading: false 
+      }))
       throw error
     }
   }, [])
 
-  const getExpressDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<ExpressDelivery[]> => {
+  // Récupération de données
+  const getDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
     try {
-      const deliveries = await DeliveryService.getExpressDeliveries(filters)
-      return deliveries.map(delivery => ({
-        ...delivery,
-        express_priority: 'standard' as const,
-        estimated_pickup_time: new Date().toISOString(),
-        guaranteed_delivery_time: new Date().toISOString(),
-        express_fee: 0,
-        auto_assignment: false
-      }))
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getUserDeliveries(undefined, filters)
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
     } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getAvailableDeliveries = useCallback(async (params?: DeliverySearchParams): Promise<void> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getAvailableDeliveries(params)
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getCourierActiveDeliveries = useCallback(async (): Promise<void> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getCourierActiveDeliveries()
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getClientDeliveryHistory = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getClientDeliveryHistory(filters)
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getCourierDeliveryHistory = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getCourierDeliveryHistory(filters)
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getDeliveryDetails = useCallback(async (id: string): Promise<Delivery> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const delivery = await DeliveryService.getDeliveryById(id)
+      setState(prev => ({ ...prev, currentDelivery: delivery, isLoading: false }))
+      return delivery
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  // Estimations
+  const getPriceEstimate = useCallback(async (data: PriceEstimateData): Promise<number> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const price = await DeliveryService.getPriceEstimate(data)
+      setState(prev => ({ ...prev, isLoading: false }))
+      return price
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de l\'estimation',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getVehicleRecommendation = useCallback(async (data: VehicleRecommendationData): Promise<VehicleRecommendation> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const recommendation = await DeliveryService.getVehicleRecommendation(data)
+      setState(prev => ({ ...prev, isLoading: false }))
+      return recommendation
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la recommandation',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  // Livraisons express
+  const createExpressDelivery = useCallback(async (data: ExpressDeliveryRequest): Promise<Delivery> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const delivery = await DeliveryService.createExpressDelivery(data)
+      setState(prev => ({ 
+        ...prev, 
+        deliveries: [...prev.deliveries, delivery], 
+        isLoading: false 
+      }))
+      return delivery
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la création express',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getExpressDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getExpressDeliveries(filters)
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération express',
+        isLoading: false 
+      }))
       throw error
     }
   }, [])
@@ -339,296 +517,180 @@ export const useDelivery = (): UseDeliveryReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.assignCourierToExpress(deliveryId, Number(courierId))
+      setState(prev => ({ ...prev, isLoading: false }))
     } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de l\'assignation',
+        isLoading: false 
+      }))
       throw error
     }
   }, [])
 
   const completeExpressDelivery = useCallback(async (deliveryId: string): Promise<void> => {
     try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.completeExpressDelivery(deliveryId)
+      setState(prev => ({ ...prev, isLoading: false }))
     } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const getCollaborativeDelivery = useCallback(async (id: string): Promise<CollaborativeDelivery> => {
-    try {
-      const delivery = await DeliveryService.getDeliveryById(id)
-      return {
-        id: delivery.id,
-        title: `Livraison ${delivery.id}`,
-        description: delivery.package_description || '',
-        status: delivery.status,
-        pickupAddress: delivery.pickup_address,
-        deliveryAddress: delivery.delivery_address,
-        estimatedDistance: `${delivery.distance} km`,
-        estimatedDuration: `${delivery.estimated_duration} min`,
-        packageDescription: delivery.package_description || '',
-        packageWeight: '',
-        packageSize: '',
-        isFragile: false,
-        createdBy: delivery.client?.id?.toString() || delivery.id.toString(),
-        deliveryId: delivery.id,
-        deliveryStatus: delivery.status,
-        deliveryType: 'collaborative',
-        createdAt: delivery.created_at,
-        updatedAt: delivery.updated_at,
-        deliveryPrice: delivery.proposed_price,
-        pickupCommune: '',
-        deliveryCommune: '',
-        collaborators: [],
-        clientName: delivery.client?.full_name || ''
-      }
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const getCollaborativeDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<CollaborativeDelivery[]> => {
-    try {
-      const deliveries = await DeliveryService.getCollaborativeDeliveries(filters)
-      return deliveries.map(delivery => ({
-        id: delivery.id,
-        title: `Livraison ${delivery.id}`,
-        description: delivery.package_description || '',
-        status: delivery.status,
-        pickupAddress: delivery.pickup_address,
-        deliveryAddress: delivery.delivery_address,
-        estimatedDistance: `${delivery.distance} km`,
-        estimatedDuration: `${delivery.estimated_duration} min`,
-        packageDescription: delivery.package_description || '',
-        packageWeight: '',
-        packageSize: '',
-        isFragile: false,
-        createdBy: delivery.client?.id?.toString() || delivery.id.toString(),
-        deliveryId: delivery.id,
-        deliveryStatus: delivery.status,
-        deliveryType: 'collaborative',
-        createdAt: delivery.created_at,
-        updatedAt: delivery.updated_at,
-        deliveryPrice: delivery.proposed_price,
-        pickupCommune: '',
-        deliveryCommune: '',
-        collaborators: [],
-        clientName: delivery.client?.full_name || ''
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la finalisation',
+        isLoading: false 
       }))
+      throw error
+    }
+  }, [])
+
+  // Livraisons collaboratives
+  const createCollaborativeDelivery = useCallback(async (data: CollaborativeDeliveryRequest): Promise<Delivery> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const delivery = await DeliveryService.createCollaborativeDelivery(data)
+      setState(prev => ({ 
+        ...prev, 
+        deliveries: [...prev.deliveries, delivery], 
+        isLoading: false 
+      }))
+      return delivery
     } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la création collaborative',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getCollaborativeDeliveries = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getCollaborativeDeliveries(filters)
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération collaborative',
+        isLoading: false 
+      }))
       throw error
     }
   }, [])
 
   const joinCollaborativeDelivery = useCallback(async (id: string, message?: string): Promise<void> => {
     try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.joinCollaborativeDelivery(id, message)
+      setState(prev => ({ ...prev, isLoading: false }))
     } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la participation',
+        isLoading: false 
+      }))
       throw error
     }
   }, [])
 
   const leaveCollaborativeDelivery = useCallback(async (id: string): Promise<void> => {
     try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
       await DeliveryService.leaveCollaborativeDelivery(id)
+      setState(prev => ({ ...prev, isLoading: false }))
     } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const getAvailableDeliveries = useCallback(async (searchParams?: any): Promise<any[]> => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      return await DeliveryService.getAvailableDeliveries(searchParams)
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const getPriceEstimate = useCallback(async (data: any): Promise<void> => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const estimateData = {
-        ...data,
-        distance: data.distance || 0
-      }
-
-      const estimateResult = await DeliveryService.getPriceEstimate(estimateData)
-      const estimate: DeliveryEstimate = {
-        estimated_price: estimateResult,
-        estimated_duration: 30,
-        estimated_distance: 5,
-        pricing_breakdown: {
-          base_price: estimateResult * 0.6,
-          distance_fee: estimateResult * 0.2,
-          time_fee: estimateResult * 0.1,
-          size_fee: estimateResult * 0.05,
-          urgency_fee: estimateResult * 0.05,
-          total: estimateResult
-        },
-        vehicle_recommendations: []
-      }
-      setState(prev => ({ ...prev, estimate, isLoading: false }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'estimation'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
-    }
-  }, [])
-
-  const getDeliveryZones = useCallback(async (lat: number, lng: number): Promise<Zone[]> => {
-    try {
-      return []
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const calculateZonePricing = useCallback(async (zoneId: string, distance: number, packageType: string): Promise<number> => {
-    try {
-      const basePrice = 1000
-      const distanceMultiplier = distance * 100
-      const typeMultiplier = packageType === 'fragile' ? 1.5 : 1
-      return basePrice + distanceMultiplier * typeMultiplier
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const acceptDelivery = useCallback(async (deliveryId: string): Promise<void> => {
-    try {
-      await DeliveryService.updateDeliveryStatus(deliveryId, 'accepted')
       setState(prev => ({ 
         ...prev, 
-        deliveries: prev.deliveries.map(d => 
-          d.id.toString() === deliveryId ? { ...d, status: 'accepted' } : d
-        )
-      }))
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const startDelivery = useCallback(async (deliveryId: string): Promise<void> => {
-    try {
-      await DeliveryService.updateDeliveryStatus(deliveryId, 'in_progress')
-      setState(prev => ({ 
-        ...prev, 
-        deliveries: prev.deliveries.map(d => 
-          d.id.toString() === deliveryId ? { ...d, status: 'in_progress' } : d
-        )
-      }))
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
-  const getClientDeliveryHistory = useCallback(async (filters?: DeliveryFilters): Promise<void> => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const deliveries = await DeliveryService.getUserDeliveries(
-        (filters as any)?.skip || 0,
-        (filters as any)?.limit || 20
-      )
-      setState(prev => ({ 
-        ...prev, 
-        deliveries,
+        error: error instanceof Error ? error.message : 'Erreur lors de l\'abandon',
         isLoading: false 
       }))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement de l\'historique'
-      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }))
+      throw error
     }
   }, [])
 
-  const refreshDelivery = useCallback(async (id: string): Promise<void> => {
+  // Méthodes supplémentaires
+  const placeBid = useCallback(async (deliveryId: number, bidData: any): Promise<void> => {
     try {
-      const delivery = await DeliveryService.getDeliveryById(id)
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      await DeliveryService.placeBid(deliveryId, bidData)
+      setState(prev => ({ ...prev, isLoading: false }))
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
-        currentDelivery: delivery,
-        deliveries: prev.deliveries.map(d => d.id.toString() === id ? delivery : d)
+        error: error instanceof Error ? error.message : 'Erreur lors de l\'enchère',
+        isLoading: false 
       }))
-    } catch (error) {
       throw error
     }
   }, [])
 
-  const [deliveries, setDeliveries] = useState<Delivery[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const updateDeliveryStatus = async (deliveryId: string, status: string) => {
+  const clientConfirmDelivery = useCallback(async (deliveryId: number, rating: number, comment?: string): Promise<void> => {
     try {
-      await DeliveryService.updateDeliveryStatus(Number(deliveryId), status)
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      await DeliveryService.clientConfirmDelivery(deliveryId, rating, comment)
+      setState(prev => ({ ...prev, isLoading: false }))
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut:', error)
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la confirmation',
+        isLoading: false 
+      }))
       throw error
     }
-  }
-
-  const getDeliveryDetails = async (deliveryId: number): Promise<Delivery | null> => {
-    try {
-      setLoading(true)
-      const delivery = await DeliveryService.getDeliveryById(deliveryId.toString())
-      return delivery
-    } catch (error) {
-      setError('Erreur lors de la récupération des détails')
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const getActiveDeliveries = async (): Promise<Delivery[]> => {
-    try {
-      return await DeliveryService.getActiveDeliveries()
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons actives:', error)
-      return []
-    }
-  }
-
-  const getClientDeliveryHistory2 = async (): Promise<Delivery[]> => {
-    try {
-      return await DeliveryService.getClientDeliveryHistory()
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique client:', error)
-      return []
-    }
-  }
-
-  const getCourierDeliveryHistory = async (): Promise<Delivery[]> => {
-    try {
-      return await DeliveryService.getCourierDeliveryHistory()
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique coursier:', error)
-      return []
-    }
-  }
-
-  const placeBid = async (deliveryId: number, bidData: any): Promise<void> => {
-    try {
-      await DeliveryService.placeBid(deliveryId, bidData)
-    } catch (error) {
-      console.error('Erreur lors de la soumission de l\'offre:', error)
-      throw error
-    }
-  }
+  }, [])
 
   return {
-    deliveries,
-    loading,
-    error,
+    // État
+    deliveries: state.deliveries,
+    currentDelivery: state.currentDelivery,
+    bids: state.bids,
+    tracking: state.tracking,
+    estimate: state.estimate,
+    isLoading: state.isLoading,
+    error: state.error,
+
+    // Actions de base
     createDelivery,
-    getPriceEstimate,
-    estimate,
-    acceptDelivery,
-    startDelivery,
+    updateDelivery,
+    cancelDelivery,
+
+    // Gestion des enchères
+    submitBid,
+    acceptBid,
+    declineBid,
+
+    // Suivi
+    addTrackingPoint,
+    updateCourierLocation,
     updateDeliveryStatus,
-    getDeliveryDetails,
-    getActiveDeliveries,
-    getClientDeliveryHistory: getClientDeliveryHistory2,
+
+    // Récupération de données
+    getDeliveries,
+    getAvailableDeliveries,
+    getCourierActiveDeliveries,
+    getClientDeliveryHistory,
     getCourierDeliveryHistory,
-    placeBid
+    getDeliveryDetails,
+
+    // Estimations
+    getPriceEstimate,
+    getVehicleRecommendation,
+
+    // Livraisons express
+    createExpressDelivery,
+    getExpressDeliveries,
+    assignCourierToExpress,
+    completeExpressDelivery,
+
+    // Livraisons collaboratives
+    createCollaborativeDelivery,
+    getCollaborativeDeliveries,
+    joinCollaborativeDelivery,
+    leaveCollaborativeDelivery,
+
+    // Méthodes supplémentaires
+    placeBid,
+    clientConfirmDelivery
   }
 }
-
-export default useDelivery
