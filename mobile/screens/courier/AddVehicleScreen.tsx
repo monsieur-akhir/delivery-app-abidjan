@@ -63,7 +63,7 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
         type: formData.type === 'pickup' ? 'car' : formData.type,
         license_plate: formData.license_plate,
         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
-        brand: formData.brand || '',
+        brand: formData.brand || 'Unknown',
         model: formData.model || '',
         year: parseInt(formData.year),
         capacity: parseInt(formData.capacity) || 0,

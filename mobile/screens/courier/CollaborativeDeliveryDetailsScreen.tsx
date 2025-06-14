@@ -295,7 +295,7 @@ const CollaborativeDeliveryDetailsScreen: React.FC = () => {
               <MaterialIcons name="straighten" size={16} color="#7f8c8d" />
               <Text style={styles.packageItemText}>{delivery.packageSize || "Standard"}</Text>
             </View>
-            {delivery.isFragile && (
+            {delivery.is_fragile && (
               <View style={styles.packageItem}>
                 <MaterialIcons name="warning" size={16} color="#f39c12" />
                 <Text style={styles.packageItemText}>Fragile</Text>

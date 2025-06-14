@@ -359,8 +359,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       const success = await NotificationService.updateNotificationSettings(settings);
 
       return success;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update notification settings';
+    } catch (error) {      const errorMessage = error instanceof Error ? error.message : 'Failed to update notification settings';
       setState(prev => ({ ...prev, error: errorMessage }));
       throw error;
     }
@@ -413,13 +412,16 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       // This would need to be implemented in UserService
       // For now, we'll create a mock structure
+      const user = state.profile;
       const earnings: CourierEarningsData = {
-        total_earnings: 0,
-        weekly_earnings: 0,
-        monthly_earnings: 0,
-        pending_earnings: 0,
-        // history: [], // Propriété supprimée car non définie dans le type
-        
+        daily_earnings: 0,
+        weekly_earnings: user?.weekly_earnings || 0,
+        monthly_earnings: user?.monthly_earnings || 0,
+        total_earnings: user?.total_earnings || 0,
+        pending_earnings: user?.wallet_balance || 0,
+        completed_deliveries: user?.completed_deliveries || 0,
+        average_rating: 0,
+        earnings_history: []
       };
       setState(prev => ({
         ...prev,
