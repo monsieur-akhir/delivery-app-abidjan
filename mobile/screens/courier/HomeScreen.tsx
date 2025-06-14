@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../contexts/AuthContext'
 import DeliveryService from '../../services/DeliveryService'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation } from '../../navigation/CourierNavigator'
 
 interface AvailableDelivery {
   id: number
@@ -33,15 +33,9 @@ interface AvailableDelivery {
   client_rating?: number
 }
 
-interface ActiveDelivery {
-  id: number
-  pickup_address: string
-  delivery_address: string
-  final_price: number
-  status: string
+// Définir le type ActiveDelivery au début du fichier
+interface ActiveDelivery extends Delivery {
   client_name: string
-  client_phone: string
-  estimated_duration: number
 }
 
 interface CourierStats {

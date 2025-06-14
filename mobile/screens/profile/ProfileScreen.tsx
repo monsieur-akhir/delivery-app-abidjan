@@ -51,7 +51,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         business_address: profileData.business_address,
         profile_picture: profileData.profile_picture,
         full_name: profileData.full_name,
-        created_at: profileData.created_at,
+        
       }
       setProfile(userProfile)
       setEditedProfile(userProfile)

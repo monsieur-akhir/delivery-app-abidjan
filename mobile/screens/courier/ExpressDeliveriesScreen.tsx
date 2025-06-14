@@ -18,18 +18,22 @@ const ExpressDeliveriesScreen: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { colors } = useTheme()
-  
+
   const {
     deliveries,
-    loading,
+    isLoading,
     error,
-    getExpressDeliveries,
-    acceptDelivery,
-    startDelivery
+    refreshDeliveries,
+    acceptDelivery: acceptDeliveryFn,
+    startDelivery: startDeliveryFn
   } = useDelivery()
+
+  const loading = isLoading
+  const acceptDelivery = acceptDeliveryFn || (() => Promise.resolve())
+  const startDelivery = startDeliveryFn || (() => Promise.resolve())
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<'pending' | 'accepted' | 'in_progress'>('pending')
-  
+
   const loadExpressDeliveries = useCallback(async () => {
     try {
       await getExpressDeliveries({ status: filter })
@@ -70,7 +74,7 @@ const ExpressDeliveriesScreen: React.FC = () => {
     const createdAt = new Date(delivery.created_at)
     const now = new Date()
     const timeDiff = (now.getTime() - createdAt.getTime()) / (1000 * 60) // minutes
-    
+
     if (timeDiff < 15) return { level: 'high', color: '#f44336', text: 'Très urgent' }
     if (timeDiff < 30) return { level: 'medium', color: '#FF9800', text: 'Urgent' }
     return { level: 'low', color: '#4CAF50', text: 'Normal' }
@@ -80,7 +84,7 @@ const ExpressDeliveriesScreen: React.FC = () => {
     const urgency = getUrgencyLevel(delivery)
     const priceScore = (delivery.proposed_price || 0) / 1000
     const distanceScore = Math.max(0, 10 - (delivery.estimated_distance || 0))
-    
+
     return urgency.level === 'high' ? priceScore + distanceScore + 5 :
            urgency.level === 'medium' ? priceScore + distanceScore + 2 :
            priceScore + distanceScore
@@ -128,9 +132,9 @@ const ExpressDeliveriesScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-            
+
             <View style={styles.addressLine} />
-            
+
             <View style={styles.addressRow}>
               <Ionicons name="location" size={12} color="#4CAF50" />
               <View style={styles.addressText}>
@@ -152,7 +156,7 @@ const ExpressDeliveriesScreen: React.FC = () => {
                 {formatDate(item.created_at)}
               </Text>
             </View>
-            
+
             {item.estimated_distance && (
               <View style={styles.detailItem}>
                 <Ionicons name="map" size={16} color={colors.text} />
@@ -198,7 +202,7 @@ const ExpressDeliveriesScreen: React.FC = () => {
                 </Button>
               </>
             )}
-            
+
             {canStart && (
               <>                <Button
                   mode="outlined"
@@ -216,7 +220,7 @@ const ExpressDeliveriesScreen: React.FC = () => {
                 </Button>
               </>
             )}
-            
+
             {filter === 'in_progress' && (
               <Button
                 mode="contained"
