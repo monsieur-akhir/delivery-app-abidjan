@@ -1,89 +1,30 @@
 import api from './api'
 import type {
   Delivery,
-  Bid,
   DeliveryStatus,
-  VehicleType
-} from '../types/models'
-import type {
+  Bid,
   TrackingPoint,
-  DeliverySearchParams,
   AvailableDelivery,
+  DeliveryFilters,
+  DeliverySearchParams,
+  DeliveryCreateRequest,
+  DeliveryUpdateRequest,
+  BidCreateRequest,
   TrackingPointRequest,
-  VehicleCreateRequest,
   PriceEstimateData,
   VehicleRecommendationData,
-  VehicleRecommendation
-} from '../types/models'
+  VehicleRecommendation,
+  ExpressDeliveryRequest,
+  CollaborativeDeliveryRequest
+} from '../types'
 
-export interface DeliveryUpdateRequest {
-  pickup_address?: string
-  delivery_address?: string
-  package_type?: string
-  package_description?: string
-  special_instructions?: string
-  proposed_price?: number
-}
-
-export interface DeliveryFilters {
-  status?: DeliveryStatus
-  date_from?: string
-  date_to?: string
-  commune?: string
-}
-
-export interface ExpressDeliveryRequest extends DeliveryCreateRequest {
-  is_express: boolean
-  priority_level: 'high' | 'urgent'
-}
-
-export interface CollaborativeDeliveryRequest extends DeliveryCreateRequest {
-  is_collaborative: boolean
-  max_participants: number
-  role_requirements: string[]
-}
-
-export interface DeliveryUpdateRequest {
-  status?: DeliveryStatus
-  notes?: string
-  location?: {
-    lat: number
-    lng: number
-  }
-}
-
-export interface DeliveryCreateRequest {
-  pickup_lat: number
-  pickup_lng: number
-  delivery_lat: number
-  delivery_lng: number
-  pickup_address: string
-  delivery_address: string
-  package_description: string
-  recipient_name: string
-  recipient_phone: string
-  proposed_price: number
-  package_size?: string
-  is_fragile?: boolean
-  is_urgent?: boolean
-  special_instructions?: string
-}
-
-export interface PriceEstimateRequest {
-  pickup_lat: number
-  pickup_lng: number
-  delivery_lat: number
-  delivery_lng: number
-  package_size?: string
-  is_urgent?: boolean
-  distance?: number
-  duration?: number
-}
-
-export interface BidCreateRequest {
-  delivery_id: string
-  proposed_price: number
-  message?: string
+interface VehicleType {
+  bicycle: 'bicycle'
+  motorcycle: 'motorcycle'
+  scooter: 'scooter'
+  car: 'car'
+  van: 'van'
+  truck: 'truck'
 }
 
 class DeliveryService {
@@ -175,9 +116,9 @@ class DeliveryService {
     return this.createBid(bidData)
   }
 
-  static async getDeliveryDetails(id: string): Promise<TrackingPoint[]> {
+  static async getDeliveryDetails(id: string): Promise<Delivery> {
     try {
-      const response = await api.get(`/deliveries/${id}/tracking`)
+      const response = await api.get(`/deliveries/${id}`)
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération des détails:', error)
@@ -296,7 +237,7 @@ class DeliveryService {
     }
   }
 
-  // Méthodes pour les livraisons express (nouvelles)
+  // Méthodes pour les livraisons express
   static async createExpressDelivery(data: ExpressDeliveryRequest): Promise<Delivery> {
     try {
       const response = await api.post('/deliveries/express', data)
@@ -339,7 +280,7 @@ class DeliveryService {
     }
   }
 
-  // Méthodes pour les livraisons collaboratives (nouvelles)
+  // Méthodes pour les livraisons collaboratives
   static async createCollaborativeDelivery(data: CollaborativeDeliveryRequest): Promise<Delivery> {
     try {
       const response = await api.post('/deliveries/collaborative', data)
@@ -382,7 +323,7 @@ class DeliveryService {
     }
   }
 
-  // Méthodes pour l'historique (nouvelles)
+  // Méthodes pour l'historique
   static async getClientDeliveryHistory(filters?: DeliveryFilters): Promise<Delivery[]> {
     try {
       const params = new URLSearchParams()
@@ -409,6 +350,38 @@ class DeliveryService {
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique coursier:', error)
+      throw error
+    }
+  }
+
+  // Méthodes ajoutées pour corriger les erreurs
+  static async getActiveDeliveries(): Promise<Delivery[]> {
+    try {
+      const response = await api.get('/deliveries/active')
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des livraisons actives:', error)
+      throw error
+    }
+  }
+
+  static async placeBid(deliveryId: number, bidData: any): Promise<void> {
+    try {
+      await api.post(`/deliveries/${deliveryId}/bids`, bidData)
+    } catch (error) {
+      console.error('Erreur lors de la soumission de l\'enchère:', error)
+      throw error
+    }
+  }
+
+  static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+    try {
+      await api.post(`/deliveries/${deliveryId}/confirm`, {
+        rating,
+        comment
+      })
+    } catch (error) {
+      console.error('Erreur lors de la confirmation de livraison:', error)
       throw error
     }
   }
@@ -441,73 +414,6 @@ class DeliveryService {
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'itinéraire:', error)
       throw error
-    }
-  }
-}
-
-// Export des types et de la classe
-export {
-  
-}
-
-static async getActiveDeliveries(): Promise<Delivery[]> {
-    try {
-      const response = await api.get('/deliveries/active')
-      return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons actives:', error)
-      throw error
-    }
-  }
-
-  static async getClientDeliveryHistory(): Promise<Delivery[]> {
-    try {
-      const response = await api.get('/deliveries/client/history')
-      return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique client:', error)
-      throw error
-    }
-  }
-
-  static async getCourierDeliveryHistory(): Promise<Delivery[]> {
-    try {
-      const response = await api.get('/deliveries/courier/history')
-      return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique coursier:', error)
-      throw error
-    }
-  }
-
-  static async placeBid(deliveryId: number, bidData: any): Promise<void> {
-    try {
-      await api.post(`/deliveries/${deliveryId}/bids`, bidData)
-    } catch (error) {
-      console.error('Erreur lors de la soumission de l\'offre:', error)
-      throw error
-    }
-  }
-
-  static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
-    try {
-      await api.post(`/deliveries/${deliveryId}/confirm`, {
-        rating,
-        comment
-      })
-    } catch (error) {
-      console.error('Erreur lors de la confirmation de livraison:', error)
-      throw error
-    }
-  }
-
-  static async getVehicleRecommendation(data: any): Promise<any> {
-    try {
-      const response = await api.post('/transport/recommend-vehicle', data)
-      return response.data
-    } catch (error) {
-      console.error('Erreur lors de la recommandation de véhicule:', error)
-      return null
     }
   }
 }
