@@ -107,8 +107,8 @@ export const useDelivery = (): UseDeliveryReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       const deliveries = await DeliveryService.getUserDeliveries(
-        filters?.skip || 0,
-        (typeof filters === 'object' && filters && filters !== null && 'limit' in filters ? (filters as any).limit : undefined) || 20
+        (filters as any)?.skip || 0,
+        (filters as any)?.limit || 20
       )
       setState(prev => ({ 
         ...prev, 
@@ -494,8 +494,8 @@ export const useDelivery = (): UseDeliveryReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       const deliveries = await DeliveryService.getUserDeliveries(
-        filters?.skip || 0,
-        (typeof filters === 'object' && filters && filters !== null && 'limit' in filters ? (filters as any).limit : undefined) || 20
+        (filters as any)?.skip || 0,
+        (filters as any)?.limit || 20
       )
       setState(prev => ({ 
         ...prev, 

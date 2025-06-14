@@ -335,10 +335,10 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
         email_enabled: serviceSettings.email_notifications || false,
         sms_enabled: serviceSettings.sms_notifications || false,
         delivery_updates: true,
-        bid_notifications: true,
-        promotional_offers: serviceSettings.promotion_alerts || false,
+        payment_updates: true,
+        promotional_offers: serviceSettings.promotional_offers || false,
         security_alerts: true,
-        in_app_notifications: true
+        maintenance_alerts: true,
       };
 
       return notificationSettings;
@@ -449,7 +449,6 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
           humidity: 65,
           wind_speed: 10,
         },
-        
         last_updated: new Date().toISOString(),
         feelslike: 30,
         is_day: 1,
