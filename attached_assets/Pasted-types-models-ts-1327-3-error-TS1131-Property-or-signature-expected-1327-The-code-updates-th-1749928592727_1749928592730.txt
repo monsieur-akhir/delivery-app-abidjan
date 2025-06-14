@@ -1,0 +1,57 @@
+types/models.ts:1327:3 - error TS1131: Property or signature expected.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+       ~~~
+
+types/models.ts:1327:7 - error TS1434: Unexpected keyword or identifier.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+           ~~~~
+
+types/models.ts:1327:12 - error TS1434: Unexpected keyword or identifier.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+                ~~~~~~~
+
+types/models.ts:1327:20 - error TS1434: Unexpected keyword or identifier.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+                        ~~~
+
+types/models.ts:1327:24 - error TS1434: Unexpected keyword or identifier.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+                            ~~~~~~~~~~~~~~~~~~~
+
+types/models.ts:1327:58 - error TS1005: '{' expected.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+                                                              ~~~~
+
+types/models.ts:1327:78 - error TS1005: ';' expected.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+                                                                                  ~~~
+
+types/models.ts:1327:82 - error TS1005: '(' expected.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+                                                                                      ~~~~~~~~~~~~~~~
+
+types/models.ts:1327:137 - error TS1005: ';' expected.
+
+1327   The code updates the UserProfileExtended interface and adds new interfaces for BusinessProfile, KYCVerification, DeliveryFilters, and EarningsSummary.
+                                                                                                                                             ~~~~~~~~~~~~~~~
+
+types/models.ts:1328:1 - error TS1003: Identifier expected.
+
+1328 ```created_at: string;
+     ~~
+
+types/models.ts:1400:2 - error TS1160: Unterminated template literal.
+
+1400 }
+      
+
+
+Found 11 errors in the same file, starting at: types/models.ts:1327
