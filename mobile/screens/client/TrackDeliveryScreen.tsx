@@ -67,9 +67,9 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
   // Define update handlers using useCallback before using them in useEffect
   const updateEta = useCallback(async (): Promise<void> => {
     if (!isConnected || !delivery) return
-    
+
     try {
-      const etaData = await getETA(deliveryId)
+      const etaData = await getETA(deliveryId.toString())
       setEta(etaData.eta_minutes)
     } catch (error) {
       console.error("Error updating ETA:", error)
@@ -79,7 +79,7 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
   const handleLocationUpdate = useCallback((data: Record<string, unknown>): void => {
     const latitude = data.latitude as number;
     const longitude = data.longitude as number;
-    
+
     setCourierLocation({
       latitude,
       longitude,
@@ -112,11 +112,11 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
   const loadRouteAndEta = useCallback(async (deliveryData: Delivery): Promise<void> => {
     try {
       // Charger l'itinéraire
-      const routeData = await fetchDeliveryRoute(deliveryId)
+      const routeData = await fetchDeliveryRoute(deliveryId.toString())
+      const etaData = await getETA(deliveryId.toString())
       setDeliveryRoute(routeData)
 
       // Charger l'ETA
-      const etaData = await getETA(deliveryId)
       setEta(etaData.eta_minutes)
 
       // Centrer la carte sur l'itinéraire
@@ -172,7 +172,7 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
       setLoading(false)
     }
   }, [deliveryId, getDeliveryDetails, loadRouteAndEta, t])
-  
+
   useEffect(() => {
     loadDeliveryDetails()
 

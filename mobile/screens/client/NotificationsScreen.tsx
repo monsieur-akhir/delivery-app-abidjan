@@ -170,7 +170,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
   // Supprimer une notification
   const handleDeleteNotification = useCallback(async (notificationId: number) => {
     try {
-      await NotificationService.deleteNotification(notificationId)
+      await NotificationService.deleteNotification(notificationId.toString())
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (error) {
       console.error('Erreur lors de la suppression:', error)

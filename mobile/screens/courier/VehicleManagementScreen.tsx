@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/ban-types */
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -122,53 +122,38 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
     const insuranceStatus = item.insurance_expiry ? getInsuranceStatus(item.insurance_expiry) : null
 
     return (
-      <Card style={[styles.vehicleCard, item.is_active && styles.activeVehicleCard]}>
+      <Card style={[styles.vehicleCard]}>
         <Card.Content>
           <View style={styles.vehicleHeader}>
             <View style={styles.vehicleInfo}>
-              <Text style={styles.vehicleIcon}>{getVehicleIcon(item.type)}</Text>
-              <View style={styles.vehicleDetails}>
-                <View style={styles.vehicleTitleRow}>
-                  <Text style={styles.vehicleType}>{item.type}</Text>
-                  {item.is_active && <Chip style={styles.activeChip} textStyle={styles.activeChipText}>Principal</Chip>}
-                </View>
-                <Text style={styles.vehiclePlate}>{item.license_plate}</Text>
-                {item.brand && item.model && (
-                  <Text style={styles.vehicleModel}>{item.brand} {item.model}</Text>
-                )}
-                <Text style={styles.vehicleDate}>Ajouté le {formatDate(item.created_at)}</Text>
+              <Text style={styles.vehicleType}>{item.type}</Text>
+              <View style={styles.vehicleHeaderRight}>
+                <Chip style={styles.activeChip} textStyle={styles.activeChipText}>Principal</Chip>
               </View>
+              <Text style={styles.vehicleModel}>{item.type} Vehicle</Text>
+              <Text style={styles.vehiclePlate}>{item.license_plate}</Text>
             </View>
+          </View>
 
-            <View style={styles.vehicleActions}>
-              {!item.is_active && (
-                <TouchableOpacity
-                  style={styles.setActiveButton}
-                  onPress={() => handleSetActive(item.id)}
-                >
-                  <Feather name="star" size={16} color="#FF6B00" />
-                </TouchableOpacity>
+          <View style={styles.vehicleActions}>
+            <Button
+              style={styles.editButton}
+              onPress={() => navigation.navigate("AddVehicleScreen", { vehicleId: item.id })}
+            >
+              <Feather name="edit-2" size={16} color="#2196F3" />
+            </Button>
+
+            <Button
+              style={styles.deleteButton}
+              onPress={() => handleDeleteVehicle(item.id)}
+              disabled={deletingId === item.id.toString()}
+            >
+              {deletingId === item.id.toString() ? (
+                <ActivityIndicator size="small" color="#F44336" />
+              ) : (
+                <Feather name="trash-2" size={16} color="#F44336" />
               )}
-
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => navigation.navigate("AddVehicleScreen", { vehicleId: item.id })}
-              >
-                <Feather name="edit-2" size={16} color="#2196F3" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteVehicle(item.id)}
-                disabled={deletingId === item.id.toString()}
-              >
-                {deletingId === item.id.toString() ? (
-                  <ActivityIndicator size="small" color="#F44336" />
-                ) : (
-                  <Feather name="trash-2" size={16} color="#F44336" />
-                )}
-              </TouchableOpacity>
-            </View>
+            </Button>
           </View>
 
           {insuranceStatus && (

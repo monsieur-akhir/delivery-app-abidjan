@@ -51,8 +51,7 @@ interface DeliveryCreateRequest {
 import type { 
   RootStackParamList, 
   VehicleType, 
-  Weather,
-  WeatherData
+  Weather
 } from '../../types'
 
 interface RouteParams {

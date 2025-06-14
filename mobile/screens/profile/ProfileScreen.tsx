@@ -68,7 +68,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           address: user.commune || "",
           email: user.email || "",
           role: user.role,
-          language_preference: user.language_preference || 'fr',
+          // language_preference managed separately
           vehicle_type: user.role === 'courier' ? 'motorcycle' : undefined,
           license_plate: "",
           business_name: "",
@@ -83,7 +83,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           address: user.commune || "",
           email: user.email || "",
           role: user.role,
-          language_preference: user.language_preference || 'fr',
+          // language_preference managed separately
           vehicle_type: user.role === 'courier' ? 'motorcycle' : undefined,
           license_plate: "",
           business_name: "",
@@ -211,7 +211,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           address: updatedUser.commune || "",
           email: updatedUser.email || "",
           role: updatedUser.role,
-          language_preference: updatedUser.language_preference || 'fr',
+          // language_preference managed separately
           vehicle_type: updatedUser.role === 'courier' ? 'motorcycle' : undefined,
           license_plate: "",
           business_name: "",
