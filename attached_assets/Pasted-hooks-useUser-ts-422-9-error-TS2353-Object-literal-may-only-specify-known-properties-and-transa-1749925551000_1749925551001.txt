@@ -1,0 +1,145 @@
+hooks/useUser.ts:422:9 - error TS2353: Object literal may only specify known properties, and 'transactions' does not exist in type 'CourierEarningsData'.
+
+422         transactions: [],
+            ~~~~~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:110:9 - error TS2322: Type '"delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit"' is not assignable to type '"pending" | "delivered" | "cancelled" | "searching" | "assigned" | "transit"'.
+  Type '"pickup"' is not assignable to type '"pending" | "delivered" | "cancelled" | "searching" | "assigned" | "transit"'.
+
+110         status: (statusMapping[deliveryData.status] || 'searching') as "delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit",
+            ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:111:18 - error TS2304: Cannot find name 'getStatusMessage'.
+
+111         message: getStatusMessage(deliveryData.status),
+                     ~~~~~~~~~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:112:27 - error TS2339: Property 'estimated_arrival_time' does not exist on type 'Delivery'.
+
+112         eta: deliveryData.estimated_arrival_time,
+                              ~~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:113:19 - error TS2304: Cannot find name 'getProgressPercentage'.
+
+113         progress: getProgressPercentage(deliveryData.status)
+                      ~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:29:26 - error TS2339: Property 'latitude' does not exist on type 'MerchantInfo'.
+
+29   latitude: merchantInfo.latitude || 0,
+                            ~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:30:27 - error TS2339: Property 'longitude' does not exist on type 'MerchantInfo'.
+
+30   longitude: merchantInfo.longitude || 0,
+                             ~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:31:3 - error TS2353: Object literal may only specify known properties, and 'logo' does not exist in type 'Merchant'.
+
+31   logo: '',
+     ~~~~
+
+screens/client/MerchantDetailsScreen.tsx:32:26 - error TS2339: Property 'latitude' does not exist on type 'MerchantInfo'.
+
+32   latitude: merchantInfo.latitude || 0,
+                            ~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:33:27 - error TS2339: Property 'longitude' does not exist on type 'MerchantInfo'.
+
+33   longitude: merchantInfo.longitude || 0,
+                             ~~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:34:3 - error TS2353: Object literal may only specify known properties, and 'logo' does not exist in type 'Merchant'.
+
+34   logo: '',
+     ~~~~
+
+screens/courier/AddVehicleScreen.tsx:65:9 - error TS2322: Type 'VehicleType' is not assignable to type 'VehicleType | undefined'.
+  Type '"pickup"' is not assignable to type 'VehicleType | undefined'.
+
+65         vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType,
+           ~~~~~~~~~~~~
+
+  types/models.ts:686:3
+    686   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:73:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+73       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:36:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+36         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:39:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+39         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:42:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+42         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:45:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+45         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:67:33 - error TS2339: Property 'available_balance' does not exist on type 'CourierEarningsData'.
+
+67         available_balance: data.available_balance,
+                                   ~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:68:31 - error TS2339: Property 'pending_balance' does not exist on type 'CourierEarningsData'.
+
+68         pending_balance: data.pending_balance,
+                                 ~~~~~~~~~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:69:32 - error TS2339: Property 'total_deliveries' does not exist on type 'CourierEarningsData'.
+
+69         total_deliveries: data.total_deliveries,
+                                  ~~~~~~~~~~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:70:30 - error TS2339: Property 'total_distance' does not exist on type 'CourierEarningsData'.
+
+70         total_distance: data.total_distance || 0,
+                                ~~~~~~~~~~~~~~
+
+screens/courier/CourierProfileScreen.tsx:88:78 - error TS2551: Property 'total_distance' does not exist on type 'CourierStats'. Did you mean 'totalDistance'?
+
+88               <Text style={styles.statValue}>{((stats.totalDistance || stats.total_distance || 0) / 1000).toFixed(1)} km</Text>
+                                                                                ~~~~~~~~~~~~~~
+
+  types/models.ts:385:3
+    385   totalDistance?: number
+          ~~~~~~~~~~~~~
+    'totalDistance' is declared here.
+
+screens/courier/CourierWalletScreen.tsx:33:5 - error TS2339: Property 'user' does not exist on type 'UseUserReturn'.
+
+33     user
+       ~~~~
+
+screens/courier/CourierWalletScreen.tsx:101:27 - error TS2345: Argument of type 'PayoutRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/types/models").PayoutRequest'.
+  Type 'PayoutRequest' is missing the following properties from type 'PayoutRequest': payment_method, account_details
+
+101       await requestPayout(payoutRequestData)
+                              ~~~~~~~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type 'string' is not assignable to type 'VTCDeliveryStatus'.
+
+218               deliveryStatus="en_route"
+                  ~~~~~~~~~~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    The expected type comes from property 'deliveryStatus' which is declared here on type 'IntrinsicAttributes & VTCStyleMapProps'
