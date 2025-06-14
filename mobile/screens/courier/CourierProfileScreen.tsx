@@ -115,14 +115,14 @@ const CourierProfileScreen: React.FC = () => {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesScroll}>
             {/* Badges will be implemented later */}
             {false && (
-              <View key={badge.id} style={styles.badgeItem}>
+              <View style={styles.badgeItem}>
                 <View style={styles.badgeIconContainer}>
-                  <FeatherIcon name={badge.icon as any} size={24} color="#FFFFFF" />
+                  <FeatherIcon name="award" size={24} color="#FFFFFF" />
                 </View>
-                <Text style={styles.badgeName}>{badge.name}</Text>
-                <Text style={styles.badgePoints}>+{badge.points} pts</Text>
+                <Text style={styles.badgeName}>Badge</Text>
+                <Text style={styles.badgePoints}>+0 pts</Text>
               </View>
-            ))}
+            )}
           </ScrollView>
         </Card.Content>
       </Card>
