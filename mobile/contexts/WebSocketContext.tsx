@@ -37,10 +37,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [key: string]: (data: any) => void
   }>({})
 
+  const getWsUrl = () => {
+    return `${WS_URL}/${user?.id}?token=${token}`
+  }
+
   const connectWebSocket = useCallback(() => {
     if (!token || !user) return
 
-    const ws = new WebSocket(`${WS_URL}/${user.id}?token=${token}`)
+    const ws = new WebSocket(getWsUrl())
 
     ws.onopen = () => {
       console.log("WebSocket connected")
