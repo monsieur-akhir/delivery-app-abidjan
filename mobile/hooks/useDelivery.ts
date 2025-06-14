@@ -49,7 +49,7 @@ interface UseDeliveryReturn {
   rejectBid: (deliveryId: string, bidId: number, reason?: string) => Promise<void>
   getDeliveryTracking: (id: string) => Promise<void>
   getCourierLocation: (deliveryId: string) => Promise<Coordinates>
-  updateDeliveryStatus: (id: string, status: string) => Promise<void>
+  updateDeliveryStatus: (id: string, status: DeliveryStatus) => Promise<void>
   getExpressDelivery: (id: string) => Promise<ExpressDelivery>
   getExpressDeliveries: (filters?: DeliveryFilters) => Promise<ExpressDelivery[]>
   assignCourierToExpress: (deliveryId: string, courierId: string) => Promise<void>
@@ -88,7 +88,11 @@ export const useDelivery = (): UseDeliveryReturn => {
   const createDelivery = useCallback(async (data: DeliveryCreateRequest): Promise<Delivery> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const delivery = await DeliveryService.createDelivery(data)
+      const deliveryData = {
+        ...data,
+        package_description: data.package_description || ''
+      }
+      const delivery = await DeliveryService.createDelivery(deliveryData)
       setState(prev => ({ 
         ...prev, 
         deliveries: [delivery, ...prev.deliveries],
@@ -187,7 +191,11 @@ export const useDelivery = (): UseDeliveryReturn => {
   const createBid = useCallback(async (bidData: BidCreateRequest): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const bid = await DeliveryService.createBid(bidData)
+      const bidDataFixed = {
+        ...bidData,
+        delivery_id: String(bidData.delivery_id)
+      }
+      const bid = await DeliveryService.createBid(bidDataFixed)
       setState(prev => ({ 
         ...prev, 
         bids: [...prev.bids, bid],
@@ -308,7 +316,7 @@ export const useDelivery = (): UseDeliveryReturn => {
   const assignCourierToExpress = useCallback(async (deliveryId: string, courierId: string): Promise<void> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      await DeliveryService.assignCourierToExpress(deliveryId, courierId)
+      await DeliveryService.assignCourierToExpress(deliveryId, Number(courierId))
     } catch (error) {
       throw error
     }
