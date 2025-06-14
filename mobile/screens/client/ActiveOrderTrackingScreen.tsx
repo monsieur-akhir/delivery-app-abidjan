@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   View,
@@ -47,16 +46,16 @@ const ActiveOrderTrackingScreen: React.FC = () => {
   const route = useRoute()
   const { user } = useAuth()
   const { subscribe, unsubscribe } = useWebSocket()
-  
+
   const { deliveryId } = route.params as { deliveryId: string }
-  
+
   const [delivery, setDelivery] = useState<Delivery | null>(null)
   const [timeline, setTimeline] = useState<TimelineItem[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [courierLocation, setCourierLocation] = useState<{latitude: number, longitude: number} | null>(null)
   const [estimatedArrival, setEstimatedArrival] = useState<string | null>(null)
-  
+
   // Animation
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
@@ -70,10 +69,10 @@ const ActiveOrderTrackingScreen: React.FC = () => {
         DeliveryService.getDeliveryById(Number(deliveryId)),
         DeliveryService.getDeliveryStatusTimeline(Number(deliveryId))
       ])
-      
+
       setDelivery(deliveryData)
       setTimeline(timelineData.timeline)
-      
+
       // Animation d'entrée
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -87,7 +86,7 @@ const ActiveOrderTrackingScreen: React.FC = () => {
           useNativeDriver: true,
         }),
       ]).start()
-      
+
     } catch (error) {
       console.error('Erreur lors du chargement:', error)
       Alert.alert('Erreur', 'Impossible de charger les détails de la livraison')
@@ -127,10 +126,10 @@ const ActiveOrderTrackingScreen: React.FC = () => {
       // S'abonner aux mises à jour
       const locationChannel = `courier.${delivery.courier_id}.location`
       const statusChannel = `delivery.${deliveryId}.status`
-      
+
       subscribe(locationChannel, handleLocationUpdate)
       subscribe(statusChannel, handleStatusUpdate)
-      
+
       return () => {
         unsubscribe(locationChannel)
         unsubscribe(statusChannel)
@@ -166,11 +165,11 @@ const ActiveOrderTrackingScreen: React.FC = () => {
       Alert.alert('Erreur', 'Numéro de téléphone non disponible')
       return
     }
-    
+
     const phoneNumber = delivery.courier.phone.startsWith('+') 
       ? delivery.courier.phone 
       : `+225${delivery.courier.phone}`
-    
+
     Linking.openURL(`tel:${phoneNumber}`)
   }, [delivery?.courier?.phone])
 
@@ -179,16 +178,16 @@ const ActiveOrderTrackingScreen: React.FC = () => {
       Alert.alert('Erreur', 'Numéro de téléphone non disponible')
       return
     }
-    
+
     const phoneNumber = delivery.courier.phone.startsWith('+') 
       ? delivery.courier.phone 
       : `+225${delivery.courier.phone}`
-    
+
     const message = `Bonjour, concernant ma livraison #${deliveryId}`
     const url = Platform.OS === 'ios' 
       ? `sms:${phoneNumber}&body=${encodeURIComponent(message)}`
       : `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
-    
+
     Linking.openURL(url)
   }, [delivery?.courier?.phone, deliveryId])
 
@@ -329,22 +328,8 @@ const ActiveOrderTrackingScreen: React.FC = () => {
         {(delivery.pickup_lat && delivery.pickup_lng && delivery.delivery_lat && delivery.delivery_lng) && (
           <Card style={styles.mapCard}>
             <VTCStyleMap
-              style={styles.map}
-              pickupPoint={{
-                latitude: delivery.pickup_lat,
-                longitude: delivery.pickup_lng,
-                title: 'Point de collecte',
-                description: delivery.pickup_address
-              }}
-              deliveryPoint={{
-                latitude: delivery.delivery_lat,
-                longitude: delivery.delivery_lng,
-                title: 'Point de livraison',
-                description: delivery.delivery_address
-              }}
+              deliveries={[delivery]}
               courierLocation={courierLocation}
-              showRoute={true}
-              showTraffic={true}
             />
           </Card>
         )}
@@ -386,7 +371,7 @@ const ActiveOrderTrackingScreen: React.FC = () => {
         <Card style={styles.detailsCard}>
           <Card.Content>
             <Text style={styles.detailsTitle}>Détails de la livraison</Text>
-            
+
             <View style={styles.addressContainer}>
               <View style={styles.addressItem}>
                 <MaterialCommunityIcons name="map-marker" size={24} color="#4CAF50" />
@@ -395,7 +380,7 @@ const ActiveOrderTrackingScreen: React.FC = () => {
                   <Text style={styles.addressText}>{delivery.pickup_address}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.addressItem}>
                 <MaterialCommunityIcons name="map-marker-check" size={24} color="#F44336" />
                 <View style={styles.addressInfo}>

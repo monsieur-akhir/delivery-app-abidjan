@@ -41,7 +41,7 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
   const [recording, setRecording] = useState<Audio.Recording | null>(null)
   const [transcribing, setTranscribing] = useState<boolean>(false)
   const [recordingDuration, setRecordingDuration] = useState<number>(0)
-  const [durationTimer, setDurationTimer] = useState<NodeJS.Timeout | number | null>(null)
+  const [durationTimer, setDurationTimer] = useState<any>(null)
   const [permissionGranted, setPermissionGranted] = useState<boolean>(false)
   const [ratingAspects, setRatingAspects] = useState({
     punctuality: 5,

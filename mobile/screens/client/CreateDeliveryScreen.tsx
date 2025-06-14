@@ -25,11 +25,32 @@ import { useDelivery } from '../../hooks/useDelivery'
 import { useUser } from '../../hooks/useUser'
 import DeliveryService from '../../services/DeliveryService'
 import { formatPrice } from '../../utils/formatters'
+import type {
+  User,
+  Delivery,
+  Address,
+  WeatherData
+} from '../../types'
+
+interface DeliveryCreateRequest {
+  pickup_address: string
+  delivery_address: string
+  pickup_lat: number
+  pickup_lng: number
+  delivery_lat: number
+  delivery_lng: number
+  package_type: string
+  package_description?: string
+  proposed_price: number
+  recipient_name: string
+  recipient_phone?: string
+  special_instructions?: string
+  distance?: number
+  estimated_duration?: number
+}
 import type { 
   RootStackParamList, 
-  Address, 
   VehicleType, 
-  DeliveryCreateRequest,
   Weather,
   WeatherData
 } from '../../types'
