@@ -1,19 +1,22 @@
-
 import * as Notifications from 'expo-notifications'
 import Constants from 'expo-constants'
 import { Platform } from 'react-native'
 import api from './api'
 import type { Notification, NotificationType } from '../types/models'
 
-interface NotificationSettings {
+export interface NotificationSettings {
   delivery_updates: boolean
-  payment_alerts: boolean
+  delivery_notifications: boolean
+  bid_notifications: boolean
+  payment_notifications: boolean
+  push_notifications: boolean
+  email_notifications: boolean
+  sms_notifications: boolean
   promotional_offers: boolean
-  system_messages: boolean
-  sound_enabled: boolean
-  vibration_enabled: boolean
-  quiet_hours_start?: string
-  quiet_hours_end?: string
+  security_alerts: boolean
+  whatsapp_enabled?: boolean
+  sound_enabled?: boolean
+  vibration_enabled?: boolean
 }
 
 class NotificationService {
@@ -30,7 +33,7 @@ class NotificationService {
 
       // Demander les permissions
       await this.requestPermissions()
-      
+
       // Obtenir le token push
       const token = await this.getPushToken()
       if (token) {
@@ -142,9 +145,15 @@ class NotificationService {
       console.error('Erreur lors de la récupération des paramètres:', error)
       return {
         delivery_updates: true,
-        payment_alerts: true,
+        delivery_notifications: true,
+        bid_notifications: true,
+        payment_notifications: true,
+        push_notifications: true,
+        email_notifications: true,
+        sms_notifications: true,
         promotional_offers: true,
-        system_messages: true,
+        security_alerts: true,
+        whatsapp_enabled: false,
         sound_enabled: true,
         vibration_enabled: true,
       }
