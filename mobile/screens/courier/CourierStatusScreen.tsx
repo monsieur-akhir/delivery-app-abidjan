@@ -49,8 +49,21 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
 
       // Charger le profil du coursier
       const profileData = await fetchCourierProfile()
-      setCourierProfile(profileData)
-      setIsOnline(profileData.is_online)
+      // Assurer que profileData a tous les champs requis
+      const completeProfile: CourierProfile = {
+        user_id: profileData.user_id || 0,
+        full_name: profileData.full_name || '',
+        phone: profileData.phone || '',
+        email: profileData.email || '',
+        vehicle_type: profileData.vehicle_type || 'motorcycle',
+        license_plate: profileData.license_plate || '',
+        is_available: profileData.is_available ?? true,
+        rating: profileData.rating || 0,
+        total_deliveries: profileData.total_deliveries || 0,
+        ...profileData
+      }
+      setCourierProfile(completeProfile)
+      setIsOnline(completeProfile.is_online)
 
       // Obtenir la position actuelle
       const location = await Location.getCurrentPositionAsync({

@@ -49,7 +49,7 @@ const GamificationScreen: React.FC = () => {
         badges: [],
         deliveriesCompleted: statsData.total_deliveries || 0,
         daily_deliveries: 0,
-        daily_rating: statsData.average_rating || 0
+        daily_rating: 0
       })
       setAchievements(achievementsData)
       setLeaderboard(leaderboardData)

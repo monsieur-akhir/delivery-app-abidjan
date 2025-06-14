@@ -13,7 +13,7 @@ export interface AuthContextType {
 export interface LoginCredentials {
   email?: string;
   phoneNumber?: string;
-  password?: string;
+  password: string;
   otp?: string;
 }
 
@@ -340,6 +340,13 @@ export interface CourierStats {
   daily_deliveries?: number
   totalDistance?: number
   badges?: string[]
+  total_points?: number
+  daily_rating?: number
+  completion_rate?: number
+  average_delivery_time?: number
+  completed_today?: number
+  earnings_today?: number
+  current_earnings?: number
 }
 
 export interface SupportTicket {
@@ -504,10 +511,14 @@ export interface Weather {
   vis_miles?: number
 }
 
-export interface AvailableDelivery {
+export interface AvailableDelivery extends Delivery {
   distance: number
   score?: number
   eta_minutes?: number
+  estimated_price: number
+  commune: string
+  bids_count: number
+  urgency_level: 'normal' | 'urgent' | 'express'
 }
 
 export interface DeliverySearchParams {
