@@ -524,6 +524,19 @@ const CreateDeliveryScreen: React.FC = () => {
   )
 }
 
+const getVehicleTypeName = (type: VehicleType): string => {
+    const names = {
+      bicycle: 'Vélo',
+      motorcycle: 'Moto',
+      scooter: 'Scooter',
+      car: 'Voiture',
+      van: 'Camionnette',
+      truck: 'Camion',
+      custom: 'Personnalisé',
+    }
+    return names[type] || 'Véhicule'
+  }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
