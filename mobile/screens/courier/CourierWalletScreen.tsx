@@ -90,14 +90,15 @@ const CourierWalletScreen: React.FC = () => {
       return
     }    try {
       setWithdrawing(true)
-      const payoutRequestData: PayoutRequest = {
-        id: 0,
-        user_id: user?.id || 0,
-        amount,
-        method: paymentMethod,
-        status: 'pending',
-        requested_at: new Date().toISOString(),
+      const payoutRequestData = {
+        amount: parseFloat(withdrawAmount),
+        payment_method: paymentMethod,
+        account_details: {
+          account_number: accountNumber,
+          account_name: accountName,
+        }
       }
+
       await requestPayout(payoutRequestData)
       setShowWithdrawModal(false)
       setWithdrawAmount("")

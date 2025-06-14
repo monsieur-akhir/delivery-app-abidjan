@@ -407,21 +407,23 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
     }
   }, []);
   // Récupération des gains du coursier
-  const getCourierEarnings = useCallback(async (_period = 'month'): Promise<CourierEarningsData> => {
+  const getCourierEarnings = useCallback(async (period = 'month'): Promise<CourierEarningsData> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      // This would need to be implemented in UserService
-      // For now, we'll create a mock structure
-      const user = state.profile;
+
       const earnings: CourierEarningsData = {
         daily_earnings: 0,
-        weekly_earnings: user?.weekly_earnings || 0,
-        monthly_earnings: user?.monthly_earnings || 0,
-        total_earnings: user?.total_earnings || 0,
-        pending_earnings: user?.wallet_balance || 0,
-        completed_deliveries: user?.completed_deliveries || 0,
+        weekly_earnings: 0,
+        monthly_earnings: 0,
+        total_earnings: 0,
+        pending_earnings: 0,
+        completed_deliveries: 0,
         average_rating: 0,
-        earnings_history: []
+        earnings_history: [],
+        period_earnings: 0,
+        delivery_count: 0,
+        average_per_delivery: 0,
+        period: period,
       };
       setState(prev => ({
         ...prev,

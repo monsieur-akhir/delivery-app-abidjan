@@ -139,7 +139,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
         ...deliveryStatus,
         status: (statusMapping[deliveryData.status] || 'searching') as "delivered" | "cancelled" | "pending" | "searching" | "assigned" | "transit",
         position: deliveryData.pickup_lat && deliveryData.pickup_lng ? { latitude: deliveryData.pickup_lat, longitude: deliveryData.pickup_lng } : null,
-        eta: deliveryData.estimated_duration ? `${deliveryData.estimated_duration} min` : null,
+        eta: deliveryData.estimated_duration ? `${deliveryData.estimated_duration} min` : undefined,
         progress: getProgressPercentage(deliveryData.status)
       })      // Note: Route fetching would be implemented with a real API endpoint
       // For now, we'll set a mock route if both locations are available
