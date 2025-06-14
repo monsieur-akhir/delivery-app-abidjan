@@ -100,7 +100,11 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
     try {
       setLoading(true)
       const ticketsData = await fetchSupportTickets()
-      setTickets(ticketsData)
+      setTickets(ticketsData.map((ticket: any) => ({
+        ...ticket,
+        updated_at: ticket.updated_at || ticket.created_at,
+        messages: ticket.messages || []
+      })))
 
       const faqsData = await fetchFAQs()
       setFaqs(faqsData)

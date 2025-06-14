@@ -39,6 +39,12 @@ export * from './theme'
 
 // Process env types
 declare global {
+  var process: {
+    env: {
+      EXPO_PUBLIC_API_URL: string;
+      [key: string]: string | undefined;
+    };
+  };
   namespace NodeJS {
     interface ProcessEnv {
       EXPO_PUBLIC_API_URL: string;

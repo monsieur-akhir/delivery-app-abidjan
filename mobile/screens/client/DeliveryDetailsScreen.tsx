@@ -338,7 +338,7 @@ const DeliveryDetailsScreen: React.FC = () => {
             {bids.length > 3 && (
               <TouchableOpacity
                 style={styles.viewAllBids}
-                onPress={() => navigation.navigate('BidsScreen', { deliveryId })}
+                onPress={() => navigation.navigate('Settings')} // BidsScreen n'existe pas dans navigation
               >
                 <Text style={styles.viewAllBidsText}>
                   Voir toutes les enchères ({bids.length})
@@ -365,7 +365,7 @@ const DeliveryDetailsScreen: React.FC = () => {
           {delivery.status === 'delivered' && (
             <Button
               mode="contained"
-              onPress={() => navigation.navigate('RateDelivery', { deliveryId })}
+              onPress={() => navigation.navigate('RateDelivery', { deliveryId: deliveryId.toString() })}
               style={styles.rateButton}
             >
               Noter la livraison

@@ -196,7 +196,7 @@ const AddFundsScreen: React.FC<AddFundsScreenProps> = ({ navigation }) => {
                   onPress={() => setSelectedMethod(method.id)}
                 >
                   <View style={styles.paymentMethodLeft}>
-                    <Feather name={method.icon} size={24} color="#FF6B00" />
+                    <Feather name={method.icon as any} size={24} color="#FF6B00" />
                     <View style={styles.paymentMethodInfo}>
                       <Text style={styles.paymentMethodName}>{method.name}</Text>
                       <Text style={styles.paymentMethodFee}>

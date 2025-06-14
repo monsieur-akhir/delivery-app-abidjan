@@ -163,7 +163,7 @@ const ComplaintsScreen: React.FC<ComplaintsScreenProps> = ({ navigation }) => {
                   onPress={() => setType(complaintType.key)}
                 >
                   <Feather 
-                    name={complaintType.icon} 
+                    name={complaintType.icon as any} 
                     size={24} 
                     color={type === complaintType.key ? '#FFFFFF' : '#FF6B00'} 
                   />
@@ -274,7 +274,7 @@ const ComplaintsScreen: React.FC<ComplaintsScreenProps> = ({ navigation }) => {
               <View style={styles.complaintFooter}>
                 <View style={styles.complaintType}>
                   <Feather 
-                    name={complaintTypes.find(t => t.key === complaint.type)?.icon || 'help-circle'} 
+                    name={(complaintTypes.find(t => t.key === complaint.type)?.icon || 'help-circle') as any} 
                     size={16} 
                     color="#757575" 
                   />

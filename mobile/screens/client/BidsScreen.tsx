@@ -54,8 +54,18 @@ const BidsScreen = ({ route, navigation }: BidsScreenProps) => {
 
   const loadBids = async () => {
     try {
-      const response = await DeliveryService.getDeliveryBids(deliveryId)
-      setBids(response)
+      const response = await DeliveryService.getDeliveryBids(deliveryId.toString())
+      setBids(response.map((bid: any) => ({
+        ...bid,
+        courier: bid.courier || {
+          id: 0,
+          full_name: 'Coursier inconnu',
+          phone: '',
+          profile_image: undefined,
+          average_rating: 0,
+          total_deliveries: 0
+        }
+      })))
     } catch (error) {
       console.error('Erreur lors du chargement des enchères:', error)
       Alert.alert('Erreur', 'Impossible de charger les enchères')
@@ -81,7 +91,7 @@ const BidsScreen = ({ route, navigation }: BidsScreenProps) => {
           onPress: async () => {
             setAcceptingBid(bidId)
             try {
-              await DeliveryService.acceptBid(deliveryId, bidId)
+              await DeliveryService.acceptBid(deliveryId.toString(), bidId)
               Alert.alert('Succès', 'Enchère acceptée! Le coursier a été assigné.', [
                 {
                   text: 'OK',

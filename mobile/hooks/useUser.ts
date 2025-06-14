@@ -444,6 +444,10 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       // This would need to be implemented in a WeatherService
       // For now, we'll create a mock structure
       const weather: Weather = {
+        temperature: 28,
+        condition: 'sunny',
+        humidity: 65,
+        wind_speed: 10,
         location: 'Abidjan',
         current: {
           temperature: 28,
@@ -452,7 +456,6 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
           wind_speed: 10,
         },
         feels_like: 30,
-        // is_day: 1, // Removed as it's not part of Weather interface
         wind_mph: 6,
         wind_kph: 10,
         wind_degree: 180,
