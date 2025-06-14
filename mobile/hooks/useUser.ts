@@ -332,9 +332,9 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       // Convert service format to models format
       const notificationSettings: NotificationSettings = {
         delivery_updates: serviceSettings.delivery_updates || false,
-        delivery_notifications: serviceSettings.delivery_notifications || false,
-        bid_notifications: serviceSettings.bid_notifications || false,
-        payment_notifications: serviceSettings.payment_notifications || false,
+        delivery_notifications: serviceSettings.delivery_updates || false, // Use delivery_updates as fallback
+        bid_notifications: serviceSettings.promotional_offers || false, // Use promotional_offers as fallback
+        payment_notifications: serviceSettings.security_alerts || false, // Use security_alerts as fallback
         promotional_offers: serviceSettings.promotional_offers || false,
         security_alerts: serviceSettings.security_alerts || false,
         push_notifications: serviceSettings.push_notifications || false,
