@@ -26,6 +26,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     markAllNotificationsAsRead,
     deleteNotification,
     clearAllNotifications,
+    markAsRead,
   } = useNotification()
 
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
@@ -47,13 +48,16 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
       },
       {
         text: t("common.confirm"),
-        onPress": clearAllNotifications,
+        onPress: clearAllNotifications,
       },
     ])
   }
 
   const handleNotificationPress = (notification: Notification) => {
-    // Mark as read functionality would be implemented here
+    // Mark notification as read
+    if (markAsRead) {
+      markAsRead(notification.id)
+    }
 
     if (notification.type === 'delivery_assigned' && notification.data?.delivery_id) {
       navigation.navigate("TrackDelivery", { deliveryId: notification.data.delivery_id.toString() })
@@ -74,7 +78,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
       },
       {
         text: t("common.confirm"),
-        onPress": () => deleteNotification(id),
+        onPress: () => deleteNotification(id),
       },
     ])
   }
