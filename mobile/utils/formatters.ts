@@ -89,3 +89,45 @@ export const truncateText = (text: string, maxLength: number): string => {
   if (!text || text.length <= maxLength) return text
   return text.substring(0, maxLength - 3) + '...'
 }
+
+export const formatCurrency = (amount: number, currency: string = 'FCFA'): string => {
+  return `${formatPrice(amount)} ${currency}`
+}
+
+export const formatDistance = (distance: number): string => {
+  if (distance < 1000) {
+    return `${Math.round(distance)} m`
+  }
+  return `${(distance / 1000).toFixed(1)} km`
+}
+
+export const formatDate2 = (date: string | Date): string => {
+  return new Intl.DateTimeFormat('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(new Date(date))
+}
+
+export const formatTime2 = (date: string | Date): string => {
+  return new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(date))
+}
+
+export const formatRelativeTime = (date: string | Date): string => {
+  const now = new Date()
+  const then = new Date(date)
+  const diffInMs = now.getTime() - then.getTime()
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  const diffInDays = Math.floor(diffInHours / 24)
+
+  if (diffInMinutes < 1) return 'À l\'instant'
+  if (diffInMinutes < 60) return `Il y a ${diffInMinutes} min`
+  if (diffInHours < 24) return `Il y a ${diffInHours}h`
+  if (diffInDays < 7) return `Il y a ${diffInDays}j`
+
+  return formatDate2(date)
+}

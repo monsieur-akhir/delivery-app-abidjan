@@ -418,7 +418,7 @@ export interface DeliveryCreateRequest {
   package_description?: string
   proposed_price: number
   recipient_name: string
-  recipient_phone: string
+  recipient_phone?: string
   special_instructions?: string
   distance?: number
   estimated_duration?: number
@@ -888,14 +888,14 @@ export interface KYCStatus {
 // UserType and NotificationSettings Types
 export interface NotificationSettings {
   delivery_updates: boolean
+  delivery_notifications: boolean
   bid_notifications: boolean
+  payment_notifications: boolean
   promotional_offers: boolean
   security_alerts: boolean
   push_notifications: boolean
   email_notifications: boolean
   sms_notifications: boolean
-  delivery_notifications: boolean
-  payment_notifications: boolean
   whatsapp_enabled?: boolean
 }
 

@@ -1,8 +1,8 @@
+
 import type React from "react"
 import { View, StyleSheet } from "react-native"
 import { Text, Button } from "react-native-paper"
 import { Feather } from "@expo/vector-icons"
-import type { Icon } from "@expo/vector-icons/build/createIconSet"
 
 export interface EmptyStateProps {
   title: string
@@ -15,12 +15,12 @@ export interface EmptyStateProps {
 const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, actionText, onAction, image }) => {
   return (
     <View style={styles.container}>
-      <Feather name={icon} size={64} color="#CCCCCC" />
+      <Feather name="inbox" size={64} color="#CCCCCC" />
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
-      {onButtonPress && (
-        <Button mode="contained" onPress={onButtonPress} style={styles.button}>
-          {buttonText || "Réessayer"}
+      <Text style={styles.message}>{subtitle}</Text>
+      {onAction && actionText && (
+        <Button mode="contained" onPress={onAction} style={styles.button}>
+          {actionText}
         </Button>
       )}
     </View>
