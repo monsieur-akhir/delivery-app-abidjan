@@ -200,7 +200,7 @@ export interface PendingOperation {
   data: any
 }
 
-export interface PendingOperationCreate = Omit<PendingOperation, 'id' | 'timestamp'>
+export type PendingOperationCreate = Omit<PendingOperation, 'id' | 'timestamp'>
 
 export interface NetworkContextType {
   isConnected: boolean
