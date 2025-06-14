@@ -51,8 +51,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import NotificationBell from '@/components/layout/NotificationBell.vue'
-import { formatRelativeTime } from '@/utils/formatters'
-import { USER_ROLES } from '@/config'
+
 
 export default {
   name: 'AppHeader',

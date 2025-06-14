@@ -980,9 +980,6 @@ const getKycStats = () => {
   return apiClient.get('/manager/stats/kyc')
 }
 
-const getRevenueStats = (period = 'month') => {
-  return apiClient.get('/manager/stats/revenue', { params: { period } })
-}
 
 const getPerformanceMetrics = () => {
   return apiClient.get('/manager/stats/performance')
