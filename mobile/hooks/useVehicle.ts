@@ -80,7 +80,33 @@ export const useVehicle = (): UseVehicleReturn => {
     }
   }
 
-return {
+  const updateVehicle = async (vehicleId: number, data: Partial<Vehicle>) => {
+    try {
+      setLoading(true)
+      await VehicleService.updateVehicle(vehicleId, data)
+      await refreshVehicles()
+    } catch (error) {
+      console.error('Error updating vehicle:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteVehicle = async (vehicleId: number) => {
+    try {
+      setLoading(true)
+      await VehicleService.deleteVehicle(vehicleId)
+      await refreshVehicles()
+    } catch (error) {
+      console.error('Error deleting vehicle:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return {
     vehicles,
     selectedVehicle,
     loading,
@@ -90,3 +116,4 @@ return {
     deleteVehicle,
     setSelectedVehicle,
   }
+}
