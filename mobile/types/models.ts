@@ -291,6 +291,9 @@ export interface Merchant {
   category?: string
   cover_image?: string
   image_url?: string
+  latitude: number
+  longitude: number
+  is_open: boolean
 }
 
 export interface Vehicle {
@@ -354,6 +357,10 @@ export interface CourierStats {
   completed_today?: number
   earnings_today?: number
   current_earnings?: number
+  level: number
+  nextLevelExperience?: number
+  daily_earnings?: number
+  distance_covered?: number
 }
 
 export interface SupportTicket {
@@ -1292,161 +1299,3 @@ export interface EarningsSummary {
   pending_balance: number
   total_deliveries: number
   total_distance: number
-  average_rating: number
-}
-
-export interface EarningsHistory {
-  date: string
-  amount: number
-  deliveries: number
-}
-
-export interface Transaction {
-  id: string
-  type: "earning" | "withdrawal" | "bonus" | "fee"
-  amount: number
-  status: "completed" | "pending" | "failed"
-  delivery_id?: string
-  description: string
-  created_at: string
-}
-
-export interface CourierEarningsData {
-  summary: EarningsSummary
-  history: EarningsHistory[]
-  transactions: Transaction[]
-}
-
-export interface WalletTransaction extends Transaction {
-  reference?: string
-  payment_method?: string
-  fees?: number
-}
-
-export interface PayoutRequest {
-  amount: number
-  payment_method: string
-  account_details?: Record<string, any>
-}
-
-export interface Achievement {
-  id: number
-  title: string
-  description: string
-  type: string
-  points: number
-  unlocked_at?: string
-  progress?: number
-  required_value?: number
-}
-
-export interface Leaderboard {
-  courier_id: number
-  name: string
-  profile_picture?: string
-  points: number
-  deliveriescount: number
-  rank: number
-}
-
-export interface Challenge {
-  id: number
-  title: string
-  description: string
-  type: string
-  target_value: number
-  current_progress: number
-  reward_points: number
-  expires_at: string
-  is_completed: boolean
-}
-
-export interface Promotion {
-  id: string
-  name: string
-  description?: string
-  promotion_type: 'discount_percentage' | 'discount_fixed' | 'free_delivery' | 'cashback'
-  discount_value: number
-  max_discount?: number
-  min_order_value?: number
-  start_date: string
-  end_date: string
-  is_active: boolean
-  max_uses_per_user?: number
-  current_uses: number
-  max_uses_total?: number
-  target_zones?: number[]
-  target_user_types?: string[]
-  is_auto_apply: boolean
-}
-
-export interface Zone {
-  id: string
-  name: string
-  description?: string
-  zone_type: 'city' | 'district' | 'special'
-  coordinates?: number[][]
-  center_lat: number
-  center_lng: number
-  radius?: number
-  base_price: number
-  price_per_km: number
-  max_delivery_time?: number
-  min_courier_rating?: number
-  requires_special_vehicle: boolean
-  peak_hour_multiplier: number
-  is_active: boolean
-}
-
-export interface PromotionUsage {
-  id: string
-  promotion_id: string
-  user_id: string
-  delivery_id: string
-  discount_applied: number
-  cashback_earned: number
-  created_at: string
-}
-
-export interface Coordinates {
-  latitude: number
-  longitude: number
-}
-
-export interface RegisterRequest {
-  full_name: string;
-  email?: string;
-  phone: string;
-  user_password: string;
-  role: UserRole;
-  commune?: string;
-  language_preference?: string;
-  vehicle_type?: VehicleType;
-  license_plate?: string;
-}
-
-export interface LoginRequest {
-  email?: string;
-  phone?: string;
-  password: string;
-}
-
-export interface VTCDeliveryStatus {
-  status: 'searching' | 'assigned' | 'pickup' | 'transit' | 'delivered' | 'cancelled'
-  eta?: string
-  progress: number
-}
-
-export type VTCDeliveryStatusType = 'searching' | 'assigned' | 'pickup' | 'transit' | 'delivered' | 'cancelled'
-
-export interface LatLng {
-  latitude: number;
-  longitude: number;
-}
-
-export interface MapRoute {
-  coordinates: LatLng[]
-  distance: number
-  duration: number
-  instructions?: string[]
-}
