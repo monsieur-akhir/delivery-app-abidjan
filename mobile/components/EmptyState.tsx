@@ -1,5 +1,5 @@
 
-import type React from "react"
+import React from "react"
 import { View, StyleSheet } from "react-native"
 import { Text, Button } from "react-native-paper"
 import { Feather } from "@expo/vector-icons"
@@ -10,17 +10,35 @@ export interface EmptyStateProps {
   actionText?: string
   onAction?: () => void
   image?: any
+  icon?: keyof typeof Feather.glyphMap
+  message?: string
+  buttonText?: string
+  onButtonPress?: () => void
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, actionText, onAction, image }) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ 
+  title, 
+  subtitle, 
+  actionText, 
+  onAction, 
+  image, 
+  icon = "inbox",
+  message,
+  buttonText,
+  onButtonPress
+}) => {
+  const displayMessage = message || subtitle
+  const displayButtonText = buttonText || actionText
+  const displayOnPress = onButtonPress || onAction
+
   return (
     <View style={styles.container}>
-      <Feather name="inbox" size={64} color="#CCCCCC" />
+      <Feather name={icon} size={64} color="#CCCCCC" />
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{subtitle}</Text>
-      {onAction && actionText && (
-        <Button mode="contained" onPress={onAction} style={styles.button}>
-          {actionText}
+      <Text style={styles.message}>{displayMessage}</Text>
+      {displayOnPress && displayButtonText && (
+        <Button mode="contained" onPress={displayOnPress} style={styles.button}>
+          {displayButtonText || "Réessayer"}
         </Button>
       )}
     </View>

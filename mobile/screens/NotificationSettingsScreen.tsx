@@ -23,6 +23,8 @@ const NotificationSettingsScreen = () => {
     promotional_offers: false,
     security_alerts: true,
     whatsapp_enabled: false,
+    sound_enabled: false,
+    vibration_enabled: false,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -194,7 +196,7 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingDescription}>{t("settings.soundEnabledDescription")}</Text>
             </View>
             <Switch
-              value={false}
+              value={settings.sound_enabled || false}
               onValueChange={() => handleToggle("sound_enabled")}
               color="#FF6B00"
             />
@@ -208,7 +210,7 @@ const NotificationSettingsScreen = () => {
               <Text style={styles.settingDescription}>{t("settings.vibrationEnabledDescription")}</Text>
             </View>
             <Switch
-              value={false}
+              value={settings.vibration_enabled || false}
               onValueChange={() => handleToggle("vibration_enabled")}
               color="#FF6B00"
             />
