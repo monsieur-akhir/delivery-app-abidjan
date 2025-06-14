@@ -2,10 +2,7 @@
   <div class="default-layout">
     <AppHeader />
     <div class="content">
-      <Sidebar 
-        :is-collapsed="isSidebarCollapsed" 
-        @toggle-sidebar="toggleSidebar" 
-      />
+      <Sidebar :is-collapsed="isSidebarCollapsed" @toggle-sidebar="toggleSidebar" />
       <main class="main-content">
         <router-view />
       </main>
@@ -48,9 +45,9 @@ export default {
 
     return {
       isSidebarCollapsed,
-      toggleSidebar
+      toggleSidebar,
     }
-  }
+  },
 }
 </script>
 

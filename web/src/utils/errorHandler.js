@@ -1,4 +1,3 @@
-
 /**
  * Gestionnaire d'erreurs global pour l'application
  */
@@ -11,7 +10,7 @@ const ERROR_TYPES = {
   VALIDATION: 'validation',
   NETWORK: 'network',
   VUE: 'vue',
-  UNKNOWN: 'unknown'
+  UNKNOWN: 'unknown',
 }
 
 // Configuration des niveaux de sévérité
@@ -19,31 +18,31 @@ const SEVERITY_LEVELS = {
   LOW: 'low',
   MEDIUM: 'medium',
   HIGH: 'high',
-  CRITICAL: 'critical'
+  CRITICAL: 'critical',
 }
 
 // Configuration des messages d'erreur
 const ERROR_MESSAGES = {
   NETWORK: {
-    OFFLINE: "Vous êtes hors ligne. Vérifiez votre connexion internet.",
-    TIMEOUT: "La requête a expiré. Veuillez réessayer.",
-    SERVER_ERROR: "Une erreur est survenue sur le serveur. Veuillez réessayer plus tard."
+    OFFLINE: 'Vous êtes hors ligne. Vérifiez votre connexion internet.',
+    TIMEOUT: 'La requête a expiré. Veuillez réessayer.',
+    SERVER_ERROR: 'Une erreur est survenue sur le serveur. Veuillez réessayer plus tard.',
   },
   AUTH: {
-    EXPIRED: "Votre session a expiré. Veuillez vous reconnecter.",
-    INVALID: "Identifiants invalides.",
+    EXPIRED: 'Votre session a expiré. Veuillez vous reconnecter.',
+    INVALID: 'Identifiants invalides.',
     UNAUTHORIZED: "Vous n'êtes pas autorisé à effectuer cette action.",
-    PERMISSION_DENIED: "Vous n'avez pas les permissions nécessaires pour effectuer cette action."
+    PERMISSION_DENIED: "Vous n'avez pas les permissions nécessaires pour effectuer cette action.",
   },
   VALIDATION: {
-    INVALID_INPUT: "Les données saisies sont invalides.",
-    REQUIRED_FIELD: "Ce champ est obligatoire."
+    INVALID_INPUT: 'Les données saisies sont invalides.',
+    REQUIRED_FIELD: 'Ce champ est obligatoire.',
   },
   API: {
     PERMISSION_ERROR: "Erreur de permission. Veuillez vérifier vos droits d'accès.",
-    SERVER_ERROR: "Une erreur est survenue sur le serveur. Veuillez réessayer plus tard.",
-    NETWORK_ERROR: "Erreur de connexion au serveur. Veuillez vérifier votre connexion internet."
-  }
+    SERVER_ERROR: 'Une erreur est survenue sur le serveur. Veuillez réessayer plus tard.',
+    NETWORK_ERROR: 'Erreur de connexion au serveur. Veuillez vérifier votre connexion internet.',
+  },
 }
 
 // Configuration du stockage local
@@ -63,7 +62,7 @@ const TERMINAL_COLORS = {
     blue: '\x1b[34m',
     magenta: '\x1b[35m',
     cyan: '\x1b[36m',
-    white: '\x1b[37m'
+    white: '\x1b[37m',
   },
   bg: {
     black: '\x1b[40m',
@@ -73,8 +72,8 @@ const TERMINAL_COLORS = {
     blue: '\x1b[44m',
     magenta: '\x1b[45m',
     cyan: '\x1b[46m',
-    white: '\x1b[47m'
-  }
+    white: '\x1b[47m',
+  },
 }
 
 /**
@@ -93,7 +92,7 @@ function formatError(error, type, severity) {
     timestamp: new Date().toISOString(),
     url: window.location.href,
     userAgent: navigator.userAgent,
-    userId: getCurrentUserId() || 'anonymous'
+    userId: getCurrentUserId() || 'anonymous',
   }
 }
 
@@ -138,18 +137,18 @@ function storeError(errorData) {
   try {
     // Vérifier si localStorage est disponible
     if (typeof localStorage === 'undefined') {
-      console.warn('localStorage n\'est pas disponible')
+      console.warn("localStorage n'est pas disponible")
       return
     }
 
     const errors = getStoredErrors()
     errors.unshift(errorData)
-    
+
     // Limiter le nombre d'erreurs stockées
     if (errors.length > MAX_STORED_ERRORS) {
       errors.pop()
     }
-    
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(errors))
   } catch (e) {
     console.error('Erreur lors du stockage local:', e)
@@ -184,7 +183,7 @@ function logToTerminal(errorData) {
       [SEVERITY_LEVELS.CRITICAL]: `${bg.red}${fg.white}`,
       [SEVERITY_LEVELS.HIGH]: `${fg.red}`,
       [SEVERITY_LEVELS.MEDIUM]: `${fg.yellow}`,
-      [SEVERITY_LEVELS.LOW]: `${fg.blue}`
+      [SEVERITY_LEVELS.LOW]: `${fg.blue}`,
     }
 
     const typeColors = {
@@ -194,23 +193,25 @@ function logToTerminal(errorData) {
       [ERROR_TYPES.VALIDATION]: `${fg.blue}`,
       [ERROR_TYPES.NETWORK]: `${fg.cyan}`,
       [ERROR_TYPES.VUE]: `${fg.green}`,
-      [ERROR_TYPES.UNKNOWN]: `${fg.white}`
+      [ERROR_TYPES.UNKNOWN]: `${fg.white}`,
     }
 
     const severityColor = severityColors[errorData.severity] || fg.white
     const typeColor = typeColors[errorData.type] || fg.white
 
     console.log('\n' + '='.repeat(80))
-    console.log(`${bright}${severityColor}[${errorData.severity.toUpperCase()}]${reset} ${typeColor}[${errorData.type.toUpperCase()}]${reset}`)
+    console.log(
+      `${bright}${severityColor}[${errorData.severity.toUpperCase()}]${reset} ${typeColor}[${errorData.type.toUpperCase()}]${reset}`
+    )
     console.log(`${bright}Message:${reset} ${errorData.message}`)
     console.log(`${bright}Timestamp:${reset} ${errorData.timestamp}`)
     console.log(`${bright}URL:${reset} ${errorData.url}`)
-    
+
     if (errorData.stack) {
       console.log(`${bright}Stack:${reset}`)
       console.log(errorData.stack)
     }
-    
+
     console.log('='.repeat(80) + '\n')
   }
 }
@@ -231,14 +232,14 @@ async function sendErrorToServer(errorData) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(errorData)
+      body: JSON.stringify(errorData),
     })
 
     if (!response.ok) {
-      console.warn('Erreur lors de l\'envoi au serveur de logging:', response.statusText)
+      console.warn("Erreur lors de l'envoi au serveur de logging:", response.statusText)
     }
   } catch (e) {
-    console.warn('Impossible d\'envoyer l\'erreur au serveur:', e.message)
+    console.warn("Impossible d'envoyer l'erreur au serveur:", e.message)
   }
 }
 
@@ -257,7 +258,7 @@ function showNotification(error, severity) {
         title: 'Erreur',
         message: error.message,
         type: severity === SEVERITY_LEVELS.CRITICAL ? 'error' : 'warning',
-        duration: severity === SEVERITY_LEVELS.LOW ? 3000 : 5000
+        duration: severity === SEVERITY_LEVELS.LOW ? 3000 : 5000,
       })
       return
     }
@@ -266,9 +267,9 @@ function showNotification(error, severity) {
   // Fallback vers une notification browser native
   if (severity === SEVERITY_LEVELS.CRITICAL || severity === SEVERITY_LEVELS.HIGH) {
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Erreur de l\'application', {
+      new Notification("Erreur de l'application", {
         body: error.message,
-        icon: '/favicon.ico'
+        icon: '/favicon.ico',
       })
     } else {
       // Fallback vers une alerte simple
@@ -304,21 +305,21 @@ export function handleError(error, type = ERROR_TYPES.UNKNOWN, severity = SEVERI
   }
 
   const errorData = formatError(error, type, severity)
-  
+
   // Vérifier si l'erreur est redondante
   if (isRedundantError(errorData)) {
     return
   }
-  
+
   // Stocker l'erreur localement
   storeError(errorData)
-  
+
   // Log dans le terminal en mode développement
   logToTerminal(errorData)
-  
+
   // Envoyer au serveur de logging
   sendErrorToServer(errorData)
-  
+
   // Afficher une notification à l'utilisateur
   showNotification(error, severity)
 }
@@ -328,26 +329,30 @@ export function handleError(error, type = ERROR_TYPES.UNKNOWN, severity = SEVERI
  */
 export function initErrorHandler(app) {
   // Gestionnaire d'erreurs non capturées
-  window.onerror = function(message, source, lineno, colno, error) {
+  window.onerror = function (message, source, lineno, colno, error) {
     handleError(error || new Error(message), ERROR_TYPES.RUNTIME, SEVERITY_LEVELS.HIGH)
     return false
   }
 
   // Gestionnaire de rejets de promesses non capturés
-  window.onunhandledrejection = function(event) {
+  window.onunhandledrejection = function (event) {
     handleError(event.reason, ERROR_TYPES.RUNTIME, SEVERITY_LEVELS.HIGH)
   }
 
   // Gestionnaire d'erreurs de chargement de ressources
-  window.addEventListener('error', function(event) {
-    if (event.target instanceof HTMLElement) {
-      handleError(
-        new Error(`Erreur de chargement de ressource: ${event.target.tagName}`),
-        ERROR_TYPES.RUNTIME,
-        SEVERITY_LEVELS.MEDIUM
-      )
-    }
-  }, true)
+  window.addEventListener(
+    'error',
+    function (event) {
+      if (event.target instanceof HTMLElement) {
+        handleError(
+          new Error(`Erreur de chargement de ressource: ${event.target.tagName}`),
+          ERROR_TYPES.RUNTIME,
+          SEVERITY_LEVELS.MEDIUM
+        )
+      }
+    },
+    true
+  )
 
   // Gestionnaire d'erreurs réseau
   window.addEventListener('offline', () => {
@@ -360,21 +365,19 @@ export function initErrorHandler(app) {
 
   // Gestionnaire d'erreurs Vue
   if (app) {
-    app.config.errorHandler = (error) => {
+    app.config.errorHandler = error => {
       handleError(error, ERROR_TYPES.VUE, SEVERITY_LEVELS.HIGH)
     }
   }
 
   if (import.meta.env.DEV) {
-    console.log(`${TERMINAL_COLORS.fg.green}${TERMINAL_COLORS.bright}Gestionnaire d'erreurs global initialisé en mode développement${TERMINAL_COLORS.reset}`)
+    console.log(
+      `${TERMINAL_COLORS.fg.green}${TERMINAL_COLORS.bright}Gestionnaire d'erreurs global initialisé en mode développement${TERMINAL_COLORS.reset}`
+    )
   } else {
-    console.log('Gestionnaire d\'erreurs global initialisé')
+    console.log("Gestionnaire d'erreurs global initialisé")
   }
 }
 
 // Exporter les constantes et fonctions pour une utilisation externe
-export { 
-  ERROR_TYPES, 
-  SEVERITY_LEVELS, 
-  getStoredErrors 
-}
+export { ERROR_TYPES, SEVERITY_LEVELS, getStoredErrors }
