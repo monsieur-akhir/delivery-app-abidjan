@@ -58,7 +58,7 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
         email: profileData.email || user?.email || '',
         vehicle_type: (profileData.vehicle_type as VehicleType) || 'motorcycle',
         license_plate: profileData.license_plate || '',
-        is_available: profileData.is_available ?? true,
+        is_available: profileData.is_online ?? true,
         rating: profileData.rating || 0,
         total_deliveries: profileData.total_deliveries || 0,
       }
