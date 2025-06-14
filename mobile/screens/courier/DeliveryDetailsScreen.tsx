@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     color: '#666',
     width: 100,
   },
-  packageValue: {```
+  packageValue: {
     fontSize: 14,
     color: '#333',
     flex: 1,

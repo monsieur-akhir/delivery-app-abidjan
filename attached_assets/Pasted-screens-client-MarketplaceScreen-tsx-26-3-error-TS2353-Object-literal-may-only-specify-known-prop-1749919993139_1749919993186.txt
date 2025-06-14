@@ -1,0 +1,111 @@
+screens/client/MarketplaceScreen.tsx:26:3 - error TS2353: Object literal may only specify known properties, and 'is_open' does not exist in type 'Merchant'.
+
+26   is_open: merchantInfo.is_open,
+     ~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:28:3 - error TS1117: An object literal cannot have multiple properties with the same name.
+
+28   category: merchantInfo.category,
+     ~~~~~~~~
+
+screens/client/MerchantDetailsScreen.tsx:30:3 - error TS2353: Object literal may only specify known properties, and 'review_count' does not exist in type 'Merchant'.
+
+30   review_count: 0,
+     ~~~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:40:11 - error TS2339: Property 'addVehicle' does not exist on type 'UseVehicleReturn'.
+
+40   const { addVehicle, loading } = useVehicle()
+             ~~~~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:40:23 - error TS2339: Property 'loading' does not exist on type 'UseVehicleReturn'.
+
+40   const { addVehicle, loading } = useVehicle()
+                         ~~~~~~~
+
+screens/courier/AddVehicleScreen.tsx:63:9 - error TS2322: Type 'string' is not assignable to type 'VehicleType'.
+
+63         type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : formData.type,
+           ~~~~
+
+  types/models.ts:588:3
+    588   type: VehicleType
+          ~~~~
+    The expected type comes from property 'type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:72:13 - error TS2304: Cannot find name 'addCourierVehicle'.
+
+72       await addCourierVehicle(vehicleData)
+               ~~~~~~~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:216:14 - error TS2741: Property 'deliveryStatus' is missing in type '{ showUserLocation: true; }' but required in type 'VTCStyleMapProps'.
+
+216             <VTCStyleMap
+                 ~~~~~~~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    'deliveryStatus' is declared here.
+
+screens/courier/GamificationScreen.tsx:46:9 - error TS2353: Object literal may only specify known properties, and 'experience' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+46         experience: statsData.total_points || 0,
+           ~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:1:1 - error TS2349: This expression is not callable.
+  Type 'String' has no call signatures.
+
+1 ` tags. I will ensure that no parts are skipped, the indentation and structure are preserved, and no forbidden words are used.
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2 
+  
+3 ```
+  ~
+
+screens/courier/HomeScreen.tsx:4:2 - error TS2304: Cannot find name 'replit_final_file'.
+
+4 <replit_final_file>
+   ~~~~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:102:42 - error TS2339: Property 'daily_earnings' does not exist on type 'CourierStats'.
+
+102           earnings_today: statsResponse?.daily_earnings || 0,
+                                             ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:105:42 - error TS2339: Property 'distance_covered' does not exist on type 'CourierStats'.
+
+105           total_distance: statsResponse?.distance_covered || 0,
+                                             ~~~~~~~~~~~~~~~~
+
+
+Found 17 errors in 7 files.
+
+Errors  Files
+     1  screens/client/MarketplaceScreen.tsx:26
+     2  screens/client/MerchantDetailsScreen.tsx:28
+     4  screens/courier/AddVehicleScreen.tsx:40
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     1  screens/courier/DeliveryDetailsScreen.tsx:216
+     1  screens/courier/GamificationScreen.tsx:46
+     4  screens/courier/HomeScreen.tsx:1
