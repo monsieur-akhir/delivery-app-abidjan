@@ -18,9 +18,9 @@ export interface LoginCredentials {
 
 export interface User {
   id: number
-  full_name: string
   phone: string
   email?: string
+  full_name: string
   role: UserRole
   is_active: boolean
   profile_picture?: string
@@ -34,6 +34,22 @@ export interface User {
   verification_status?: 'pending' | 'verified' | 'rejected'
   last_active?: string
   token?: string
+  // Additional properties
+  avatar?: string
+  first_name?: string
+  username?: string
+  name?: string
+  profile_image?: string
+  nationality?: string
+  city?: string
+  country?: string
+  vehicle_type?: string
+  license_plate?: string
+  business_name?: string
+  business_address?: string
+  wallet_balance?: number
+  monthly_earnings?: number
+  completed_deliveries?: number
 }
 
 export type UserRole = 'client' | 'courier' | 'business' | 'admin'
@@ -88,6 +104,7 @@ export interface Delivery {
   is_fragile?: boolean
   rating?: any
   actual_price?: number
+  courier_id?: number
 }
 
 export type DeliveryStatus = 'pending' | 'bidding' | 'accepted' | 'confirmed' | 'picked_up' | 'in_progress' | 'in_transit' | 'near_destination' | 'delivered' | 'completed' | 'cancelled'
@@ -127,6 +144,9 @@ export interface Bid {
   created_at: string
   updated_at: string
   courier?: Courier
+  amount: number
+  estimated_time: number
+  estimated_duration?: number
 }
 
 export type BidStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled'
@@ -244,14 +264,14 @@ export interface Vehicle {
   id: number
   user_id: number
   type: VehicleType
-  brand: string
-  model: string
-  year: number
   license_plate: string
-  color: string
-  is_active: boolean
+  is_available: boolean
+  rating?: number
+  rating_count?: number
+  total_deliveries?: number
   created_at: string
   updated_at: string
+  insurance_expiry?: string
 }
 
 export interface UserProfile {
@@ -296,6 +316,12 @@ export interface CourierStats {
   daily_rating?: number
   completion_rate?: number
   average_delivery_time?: string
+  total_earnings?: number
+  level?: number
+  experience?: number
+  nextLevelExperience?: number
+  badges?: any[]
+  totalEarnings?: number
 }
 
 export interface SupportTicket {
@@ -376,18 +402,29 @@ export interface DeliveryCreateRequest {
   pickup_lng: number
   delivery_lat: number
   delivery_lng: number
-  package_type: string
-  package_description?: string
-  special_instructions?: string
   proposed_price: number
+  package_description?: string
+  package_type?: string
+  package_weight?: number
+  package_dimensions?: string
+  special_instructions?: string
+  urgency_level?: 'low' | 'medium' | 'high'
+  fragile?: boolean
+  requires_id?: boolean
+  payment_method?: string
+  scheduled_pickup?: string
+  distance?: number
+  estimated_duration?: number
   weather_conditions?: string
+  recipient_name?: string
+  recipient_phone?: string
 }
 
 export interface BidCreateRequest {
-  delivery_id: number
+  delivery_id: number | string
   proposed_price: number
+  estimated_duration?: number
   message?: string
-  estimated_pickup_time: string
 }
 
 export interface TrackingPointRequest {
@@ -400,14 +437,13 @@ export interface TrackingPointRequest {
 
 export interface VehicleCreateRequest {
   type: VehicleType
-  brand: string
-  model: string
-  year: number
+  make?: string
+  model?: string
+  year?: number
   license_plate: string
-  color: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  color?: string
+  capacity?: number
+  maxDistance?: number
 }
 
 export interface CourierVehicleCreateRequest extends VehicleCreateRequest {
