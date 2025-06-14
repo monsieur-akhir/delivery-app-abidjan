@@ -1,5 +1,5 @@
-import axios from "axios"
-import { API_URL } from "@/config"
+import axios from 'axios'
+import { API_URL } from '@/config'
 import authApi from './auth'
 import { handleApiError } from '../services/errorHandler'
 
@@ -7,14 +7,14 @@ import { handleApiError } from '../services/errorHandler'
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   withCredentials: true,
 })
 
 // Intercepteur pour ajouter le token d'authentification
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("auth_token")
+apiClient.interceptors.request.use(config => {
+  const token = localStorage.getItem('auth_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -23,35 +23,35 @@ apiClient.interceptors.request.use((config) => {
 
 // Gestion des erreurs
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     // Gérer les erreurs d'authentification
     if (error.response && error.response.status === 401) {
       // Rediriger vers la page de connexion ou rafraîchir le token
-      localStorage.removeItem("auth_token")
-      localStorage.removeItem("user_role")
-      localStorage.removeItem("user_data")
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user_role')
+      localStorage.removeItem('user_data')
 
       // Rediriger vers la page de connexion
-      window.location.href = "/login?session_expired=true"
+      window.location.href = '/login?session_expired=true'
     }
     return Promise.reject(error)
-  },
+  }
 )
 
 // API pour les zones de livraison
 export const fetchZones = async (params = {}) => {
-  const response = await apiClient.get("/zones", { params })
+  const response = await apiClient.get('/zones', { params })
   return response.data
 }
 
-export const fetchZoneDetails = async (zoneId) => {
+export const fetchZoneDetails = async zoneId => {
   const response = await apiClient.get(`/zones/${zoneId}`)
   return response.data
 }
 
-export const createZone = async (zoneData) => {
-  const response = await apiClient.post("/zones", zoneData)
+export const createZone = async zoneData => {
+  const response = await apiClient.post('/zones', zoneData)
   return response.data
 }
 
@@ -60,28 +60,28 @@ export const updateZone = async (zoneId, zoneData) => {
   return response.data
 }
 
-export const deleteZone = async (zoneId) => {
+export const deleteZone = async zoneId => {
   const response = await apiClient.delete(`/zones/${zoneId}`)
   return response.data
 }
 
-export const activateZone = async (zoneId) => {
+export const activateZone = async zoneId => {
   const response = await apiClient.post(`/zones/${zoneId}/activate`)
   return response.data
 }
 
-export const deactivateZone = async (zoneId) => {
+export const deactivateZone = async zoneId => {
   const response = await apiClient.post(`/zones/${zoneId}/deactivate`)
   return response.data
 }
 
 // API pour les coursiers
 export const fetchCouriers = async (params = {}) => {
-  const response = await apiClient.get("/couriers", { params })
+  const response = await apiClient.get('/couriers', { params })
   return response.data
 }
 
-export const fetchCourierDetails = async (courierId) => {
+export const fetchCourierDetails = async courierId => {
   const response = await apiClient.get(`/couriers/${courierId}`)
   return response.data
 }
@@ -96,8 +96,8 @@ export const fetchCourierPayments = async (courierId, params = {}) => {
   return response.data
 }
 
-export const addCourier = async (courierData) => {
-  const response = await apiClient.post("/couriers", courierData)
+export const addCourier = async courierData => {
+  const response = await apiClient.post('/couriers', courierData)
   return response.data
 }
 
@@ -112,16 +112,20 @@ export const updateCourierStatus = async (courierId, status) => {
 }
 
 export const verifyCourierDocument = async (courierId, documentType) => {
-  const response = await apiClient.post(`/couriers/${courierId}/verify-document`, { document_type: documentType })
+  const response = await apiClient.post(`/couriers/${courierId}/verify-document`, {
+    document_type: documentType,
+  })
   return response.data
 }
 
 export const rejectCourierDocument = async (courierId, documentType) => {
-  const response = await apiClient.post(`/couriers/${courierId}/reject-document`, { document_type: documentType })
+  const response = await apiClient.post(`/couriers/${courierId}/reject-document`, {
+    document_type: documentType,
+  })
   return response.data
 }
 
-export const verifyCourierKyc = async (courierId) => {
+export const verifyCourierKyc = async courierId => {
   const response = await apiClient.post(`/couriers/${courierId}/verify-kyc`)
   return response.data
 }
@@ -132,28 +136,31 @@ export const rejectCourierKyc = async (courierId, reason) => {
 }
 
 export const sendCourierNotification = async (courierId, notificationData) => {
-  const response = await apiClient.post(`/couriers/${courierId}/send-notification`, notificationData)
+  const response = await apiClient.post(
+    `/couriers/${courierId}/send-notification`,
+    notificationData
+  )
   return response.data
 }
 
 // API pour les notifications
 export const fetchNotifications = async (params = {}) => {
-  const response = await apiClient.get("/notifications", { params })
+  const response = await apiClient.get('/notifications', { params })
   return response.data
 }
 
-export const fetchNotificationDetails = async (notificationId) => {
+export const fetchNotificationDetails = async notificationId => {
   const response = await apiClient.get(`/notifications/${notificationId}`)
   return response.data
 }
 
 export const fetchNotificationStats = async () => {
-  const response = await apiClient.get("/notifications/stats")
+  const response = await apiClient.get('/notifications/stats')
   return response.data
 }
 
-export const createNotification = async (notificationData) => {
-  const response = await apiClient.post("/notifications", notificationData)
+export const createNotification = async notificationData => {
+  const response = await apiClient.post('/notifications', notificationData)
   return response.data
 }
 
@@ -162,65 +169,65 @@ export const updateNotification = async (notificationId, notificationData) => {
   return response.data
 }
 
-export const deleteNotification = async (notificationId) => {
+export const deleteNotification = async notificationId => {
   const response = await apiClient.delete(`/notifications/${notificationId}`)
   return response.data
 }
 
-export const sendNotificationNow = async (notificationId) => {
+export const sendNotificationNow = async notificationId => {
   const response = await apiClient.post(`/notifications/${notificationId}/send`)
   return response.data
 }
 
-export const cancelScheduledNotification = async (notificationId) => {
+export const cancelScheduledNotification = async notificationId => {
   const response = await apiClient.post(`/notifications/${notificationId}/cancel`)
   return response.data
 }
 
-export const resendNotificationToRecipients = async (notificationId) => {
+export const resendNotificationToRecipients = async notificationId => {
   const response = await apiClient.post(`/notifications/${notificationId}/resend`)
   return response.data
 }
 
 // API pour les analyses
 export const fetchAnalytics = async (params = {}) => {
-  const response = await apiClient.get("/analytics", { params })
+  const response = await apiClient.get('/analytics', { params })
   return response.data
 }
 
 export const fetchCourierPerformance = async (params = {}) => {
-  const response = await apiClient.get("/analytics/courier-performance", { params })
+  const response = await apiClient.get('/analytics/courier-performance', { params })
   return response.data
 }
 
 export const fetchTimeAnalytics = async (params = {}) => {
-  const response = await apiClient.get("/analytics/time", { params })
+  const response = await apiClient.get('/analytics/time', { params })
   return response.data
 }
 
 export const fetchRevenueAnalytics = async (params = {}) => {
-  const response = await apiClient.get("/analytics/revenue", { params })
+  const response = await apiClient.get('/analytics/revenue', { params })
   return response.data
 }
 
 export const fetchUserAnalytics = async (params = {}) => {
-  const response = await apiClient.get("/analytics/users", { params })
+  const response = await apiClient.get('/analytics/users', { params })
   return response.data
 }
 
 export const exportAnalyticsData = async (params = {}) => {
-  const response = await apiClient.post("/analytics/export", params, {
-    responseType: "blob",
+  const response = await apiClient.post('/analytics/export', params, {
+    responseType: 'blob',
   })
 
   // Créer un lien de téléchargement pour le fichier
   const url = window.URL.createObjectURL(new Blob([response.data]))
-  const link = document.createElement("a")
+  const link = document.createElement('a')
   link.href = url
 
   // Déterminer le nom du fichier et l'extension
-  const contentDisposition = response.headers["content-disposition"]
-  let filename = "export"
+  const contentDisposition = response.headers['content-disposition']
+  let filename = 'export'
 
   if (contentDisposition) {
     const filenameMatch = contentDisposition.match(/filename="(.+)"/)
@@ -229,10 +236,10 @@ export const exportAnalyticsData = async (params = {}) => {
     }
   } else {
     // Utiliser le nom fourni dans les paramètres ou un nom par défaut avec l'extension appropriée
-    filename = `${params.filename || "analytics-export"}.${params.format}`
+    filename = `${params.filename || 'analytics-export'}.${params.format}`
   }
 
-  link.setAttribute("download", filename)
+  link.setAttribute('download', filename)
   document.body.appendChild(link)
   link.click()
   link.remove()
@@ -250,25 +257,25 @@ export const getAnalyticsData = async (params = {}) => {
     const queryParams = new URLSearchParams()
 
     if (params.dateRange) {
-      queryParams.append("dateRange", params.dateRange)
+      queryParams.append('dateRange', params.dateRange)
     }
 
     if (params.startDate) {
-      queryParams.append("startDate", params.startDate)
+      queryParams.append('startDate', params.startDate)
     }
 
     if (params.endDate) {
-      queryParams.append("endDate", params.endDate)
+      queryParams.append('endDate', params.endDate)
     }
 
     if (params.commune) {
-      queryParams.append("commune", params.commune)
+      queryParams.append('commune', params.commune)
     }
 
     const response = await apiClient.get(`/manager/stats/chart?${queryParams.toString()}`)
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des données analytiques:", error)
+    console.error('Erreur lors de la récupération des données analytiques:', error)
     throw error
   }
 }
@@ -283,57 +290,57 @@ export const getCourierPerformance = async (params = {}) => {
     const queryParams = new URLSearchParams()
 
     if (params.dateRange) {
-      queryParams.append("dateRange", params.dateRange)
+      queryParams.append('dateRange', params.dateRange)
     }
 
     if (params.startDate) {
-      queryParams.append("startDate", params.startDate)
+      queryParams.append('startDate', params.startDate)
     }
 
     if (params.endDate) {
-      queryParams.append("endDate", params.endDate)
+      queryParams.append('endDate', params.endDate)
     }
 
     if (params.commune) {
-      queryParams.append("commune", params.commune)
+      queryParams.append('commune', params.commune)
     }
 
     const response = await apiClient.get(`/manager/couriers/performance?${queryParams.toString()}`)
     return response.data
   } catch (error) {
-    console.error("Erreur lors de la récupération des performances des coursiers:", error)
+    console.error('Erreur lors de la récupération des performances des coursiers:', error)
     throw error
   }
 }
 
 // API pour les utilisateurs
 export const fetchUsers = async (params = {}) => {
-  const response = await apiClient.get("/api/users", { params })
+  const response = await apiClient.get('/api/users', { params })
   return response.data
 }
 
-export const fetchUserDetails = async (userId) => {
+export const fetchUserDetails = async userId => {
   const response = await apiClient.get(`/api/users/${userId}`)
   return response.data
 }
 
-export const fetchUserActivity = async (userId) => {
+export const fetchUserActivity = async userId => {
   const response = await apiClient.get(`/api/users/${userId}/activity`)
   return response.data
 }
 
-export const fetchUserDeliveries = async (userId) => {
+export const fetchUserDeliveries = async userId => {
   const response = await apiClient.get(`/api/users/${userId}/deliveries`)
   return response.data
 }
 
-export const fetchUserPayments = async (userId) => {
+export const fetchUserPayments = async userId => {
   const response = await apiClient.get(`/api/users/${userId}/payments`)
   return response.data
 }
 
-export const addUser = async (userData) => {
-  const response = await apiClient.post("/api/users", userData)
+export const addUser = async userData => {
+  const response = await apiClient.post('/api/users', userData)
   return response.data
 }
 
@@ -342,7 +349,7 @@ export const updateUser = async (userId, userData) => {
   return response.data
 }
 
-export const deleteUser = async (userId) => {
+export const deleteUser = async userId => {
   const response = await apiClient.delete(`/api/users/${userId}`)
   return response.data
 }
@@ -353,16 +360,20 @@ export const updateUserStatus = async (userId, status) => {
 }
 
 export const verifyUserDocument = async (userId, documentType) => {
-  const response = await apiClient.post(`/api/users/${userId}/verify-document`, { document_type: documentType })
+  const response = await apiClient.post(`/api/users/${userId}/verify-document`, {
+    document_type: documentType,
+  })
   return response.data
 }
 
 export const rejectUserDocument = async (userId, documentType) => {
-  const response = await apiClient.post(`/api/users/${userId}/reject-document`, { document_type: documentType })
+  const response = await apiClient.post(`/api/users/${userId}/reject-document`, {
+    document_type: documentType,
+  })
   return response.data
 }
 
-export const verifyUserKyc = async (userId) => {
+export const verifyUserKyc = async userId => {
   const response = await apiClient.post(`/api/users/${userId}/verify-kyc`)
   return response.data
 }
@@ -374,17 +385,17 @@ export const rejectUserKyc = async (userId, reason) => {
 
 // API pour les entreprises
 export const fetchBusinesses = async (params = {}) => {
-  const response = await apiClient.get("/businesses", { params })
+  const response = await apiClient.get('/businesses', { params })
   return response.data
 }
 
-export const fetchBusinessDetails = async (businessId) => {
+export const fetchBusinessDetails = async businessId => {
   const response = await apiClient.get(`/businesses/${businessId}`)
   return response.data
 }
 
-export const createBusiness = async (businessData) => {
-  const response = await apiClient.post("/businesses", businessData)
+export const createBusiness = async businessData => {
+  const response = await apiClient.post('/businesses', businessData)
   return response.data
 }
 
@@ -393,7 +404,7 @@ export const updateBusiness = async (businessId, businessData) => {
   return response.data
 }
 
-export const deleteBusiness = async (businessId) => {
+export const deleteBusiness = async businessId => {
   const response = await apiClient.delete(`/businesses/${businessId}`)
   return response.data
 }
@@ -405,11 +416,11 @@ export const updateBusinessStatus = async (businessId, status) => {
 
 // API pour les livraisons
 export const fetchDeliveries = async (params = {}) => {
-  const response = await apiClient.get("/deliveries", { params })
+  const response = await apiClient.get('/deliveries', { params })
   return response.data
 }
 
-export const fetchDeliveryDetails = async (deliveryId) => {
+export const fetchDeliveryDetails = async deliveryId => {
   const response = await apiClient.get(`/deliveries/${deliveryId}`)
   return response.data
 }
@@ -426,59 +437,64 @@ export const resolveDeliveryDispute = async (deliveryId, resolutionData) => {
 
 // API pour les finances
 export const fetchFinancialReports = async (params = {}) => {
-  const response = await apiClient.get("/finances/reports", { params })
+  const response = await apiClient.get('/finances/reports', { params })
   return response.data
 }
 
-export const createTransaction = async (transactionData) => {
-  const response = await apiClient.post("/finances/transactions", transactionData)
+export const createTransaction = async transactionData => {
+  const response = await apiClient.post('/finances/transactions', transactionData)
   return response.data
 }
 
-export const approveTransaction = async (transactionId) => {
+export const approveTransaction = async transactionId => {
   const response = await apiClient.post(`/finances/transactions/${transactionId}/approve`)
   return response.data
 }
 
 export const rejectTransaction = async (transactionId, reason) => {
-  const response = await apiClient.post(`/finances/transactions/${transactionId}/reject`, { reason })
+  const response = await apiClient.post(`/finances/transactions/${transactionId}/reject`, {
+    reason,
+  })
   return response.data
 }
 
 export const resolveTransactionDispute = async (transactionId, resolutionData) => {
-  const response = await apiClient.post(`/finances/transactions/${transactionId}/resolve-dispute`, resolutionData)
+  const response = await apiClient.post(
+    `/finances/transactions/${transactionId}/resolve-dispute`,
+    resolutionData
+  )
   return response.data
 }
 
 // API pour les rapports
 export const fetchReports = async (params = {}) => {
-  const response = await apiClient.get("/reports", { params })
+  const response = await apiClient.get('/reports', { params })
   return response.data
 }
 
-export const fetchReportDetails = async (reportId) => {
+export const fetchReportDetails = async reportId => {
   const response = await apiClient.get(`/reports/${reportId}`)
   return response.data
 }
 
-export const generateReport = async (reportData) => {
-  const response = await apiClient.post("/reports/generate", reportData)
+export const generateReport = async reportData => {
+  const response = await apiClient.post('/reports/generate', reportData)
   return response.data
 }
 
-export const downloadReport = async (reportId, format = "pdf") => {
+export const downloadReport = async (reportId, format = 'pdf') => {
   const response = await apiClient.get(`/reports/${reportId}/download`, {
     params: { format },
-    responseType: "blob",
+    responseType: 'blob',
   })
 
   // Créer un lien de téléchargement pour le fichier
   const url = window.URL.createObjectURL(new Blob([response.data]))
-  const link = document.createElement("a")
+  const link = document.createElement('a')
   link.href = url
 
   // Déterminer le nom du fichier
-  const contentDisposition = response.headers["content-disposition"]
+  const contentDisposition = response.headers['content-disposition']
   let filename = `report-${reportId}.${format}`
 
   if (contentDisposition) {
@@ -488,10 +504,10 @@ export const downloadReport = async (reportId, format = "pdf") => {
     }
   } else {
     // Utiliser le nom fourni dans les paramètres ou un nom par défaut avec l'extension appropriée
-    filename = `${reportData.filename || "report-export"}.${reportData.format}`
+    filename = `${reportData.filename || 'report-export'}.${reportData.format}`
   }
 
-  link.setAttribute("download", filename)
+  link.setAttribute('download', filename)
   document.body.appendChild(link)
   link.click()
   link.remove()
@@ -501,17 +517,17 @@ export const downloadReport = async (reportId, format = "pdf") => {
 
 // API pour les promotions
 export const fetchPromotions = async (params = {}) => {
-  const response = await apiClient.get("/promotions", { params })
+  const response = await apiClient.get('/promotions', { params })
   return response.data
 }
 
-export const fetchPromotionDetails = async (promotionId) => {
+export const fetchPromotionDetails = async promotionId => {
   const response = await apiClient.get(`/promotions/${promotionId}`)
   return response.data
 }
 
-export const createPromotion = async (promotionData) => {
-  const response = await apiClient.post("/promotions", promotionData)
+export const createPromotion = async promotionData => {
+  const response = await apiClient.post('/promotions', promotionData)
   return response.data
 }
 
@@ -520,35 +536,35 @@ export const updatePromotion = async (promotionId, promotionData) => {
   return response.data
 }
 
-export const deletePromotion = async (promotionId) => {
+export const deletePromotion = async promotionId => {
   const response = await apiClient.delete(`/promotions/${promotionId}`)
   return response.data
 }
 
-export const activatePromotion = async (promotionId) => {
+export const activatePromotion = async promotionId => {
   const response = await apiClient.post(`/promotions/${promotionId}/activate`)
   return response.data
 }
 
-export const deactivatePromotion = async (promotionId) => {
+export const deactivatePromotion = async promotionId => {
   const response = await apiClient.post(`/promotions/${promotionId}/deactivate`)
   return response.data
 }
 
 // API pour les paramètres
 export const fetchSystemSettingsManager = async () => {
-  const response = await apiClient.get("/manager/settings")
+  const response = await apiClient.get('/manager/settings')
   return response.data
 }
 
-export const updateSystemSettingsManager = async (settingsData) => {
-  const response = await apiClient.put("/manager/settings", settingsData)
+export const updateSystemSettingsManager = async settingsData => {
+  const response = await apiClient.put('/manager/settings', settingsData)
   return response.data
 }
 
 // API pour le tableau de bord
 export const fetchDashboardData = async () => {
-  const response = await apiClient.get("/dashboard")
+  const response = await apiClient.get('/dashboard')
   return response.data
 }
 
@@ -559,10 +575,10 @@ export const fetchDashboardData = async () => {
  */
 export const getGlobalStats = async (params = {}) => {
   try {
-    const response = await apiClient.get("/manager/stats", { params })
+    const response = await apiClient.get('/manager/stats', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching global stats:", error)
+    console.error('Error fetching global stats:', error)
     throw error
   }
 }
@@ -587,10 +603,10 @@ export const getChartData = async (chartType, startDate, endDate, commune) => {
       params.commune = commune
     }
 
-    const response = await apiClient.get("/manager/stats/chart", { params })
+    const response = await apiClient.get('/manager/stats/chart', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching chart data:", error)
+    console.error('Error fetching chart data:', error)
     throw error
   }
 }
@@ -607,10 +623,10 @@ export const getRevenueStats = async (startDate, endDate) => {
     if (startDate) params.start_date = startDate
     if (endDate) params.end_date = endDate
 
-    const response = await apiClient.get("/manager/finances/revenues", { params })
+    const response = await apiClient.get('/manager/finances/revenues', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching revenue stats:", error)
+    console.error('Error fetching revenue stats:', error)
     throw error
   }
 }
@@ -627,10 +643,10 @@ export const getExpenseStats = async (startDate, endDate) => {
     if (startDate) params.start_date = startDate
     if (endDate) params.end_date = endDate
 
-    const response = await apiClient.get("/manager/finances/expenses", { params })
+    const response = await apiClient.get('/manager/finances/expenses', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching expense stats:", error)
+    console.error('Error fetching expense stats:', error)
     throw error
   }
 }
@@ -643,10 +659,10 @@ export const getExpenseStats = async (startDate, endDate) => {
  * @param {string} format - Report format (csv, pdf, excel)
  * @returns {Promise<Blob>} Report file
  */
-export const generateFinancialReport = async (reportType, startDate, endDate, format = "csv") => {
+export const generateFinancialReport = async (reportType, startDate, endDate, format = 'csv') => {
   try {
     const response = await apiClient.post(
-      "/manager/finances/reports",
+      '/manager/finances/reports',
       {
         report_type: reportType,
         start_date: startDate,
@@ -654,13 +670,13 @@ export const generateFinancialReport = async (reportType, startDate, endDate, fo
         format,
       },
       {
-        responseType: "blob",
-      },
+        responseType: 'blob',
+      }
     )
 
     return response.data
   } catch (error) {
-    console.error("Error generating financial report:", error)
+    console.error('Error generating financial report:', error)
     throw error
   }
 }
@@ -671,10 +687,10 @@ export const generateFinancialReport = async (reportType, startDate, endDate, fo
  */
 export const getActiveCouriers = async () => {
   try {
-    const response = await apiClient.get("/manager/couriers/active")
+    const response = await apiClient.get('/manager/couriers/active')
     return response.data
   } catch (error) {
-    console.error("Error fetching active couriers:", error)
+    console.error('Error fetching active couriers:', error)
     throw error
   }
 }
@@ -686,10 +702,10 @@ export const getActiveCouriers = async () => {
  */
 export const getTrafficReports = async (params = {}) => {
   try {
-    const response = await apiClient.get("/manager/traffic/reports", { params })
+    const response = await apiClient.get('/manager/traffic/reports', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching traffic reports:", error)
+    console.error('Error fetching traffic reports:', error)
     throw error
   }
 }
@@ -699,12 +715,12 @@ export const getTrafficReports = async (params = {}) => {
  * @param {number} reportId - ID du rapport
  * @returns {Promise<Object>} - Résultat de la suppression
  */
-export const deleteTrafficReport = async (reportId) => {
+export const deleteTrafficReport = async reportId => {
   try {
     const response = await apiClient.delete(`/manager/traffic/reports/${reportId}`)
     return response.data
   } catch (error) {
-    console.error("Error deleting traffic report:", error)
+    console.error('Error deleting traffic report:', error)
     throw error
   }
 }
@@ -716,10 +732,10 @@ export const deleteTrafficReport = async (reportId) => {
  */
 export const getWeatherAlerts = async (params = {}) => {
   try {
-    const response = await apiClient.get("/manager/weather/alerts", { params })
+    const response = await apiClient.get('/manager/weather/alerts', { params })
     return response.data
   } catch (error) {
-    console.error("Error fetching weather alerts:", error)
+    console.error('Error fetching weather alerts:', error)
     throw error
   }
 }
@@ -729,12 +745,12 @@ export const getWeatherAlerts = async (params = {}) => {
  * @param {Object} alertData - Données de l'alerte
  * @returns {Promise<Object>} - Alerte créée
  */
-export const addWeatherAlert = async (alertData) => {
+export const addWeatherAlert = async alertData => {
   try {
-    const response = await apiClient.post("/manager/weather/alerts", alertData)
+    const response = await apiClient.post('/manager/weather/alerts', alertData)
     return response.data
   } catch (error) {
-    console.error("Error adding weather alert:", error)
+    console.error('Error adding weather alert:', error)
     throw error
   }
 }
@@ -744,12 +760,12 @@ export const addWeatherAlert = async (alertData) => {
  * @param {number} alertId - ID de l'alerte
  * @returns {Promise<Object>} - Résultat de la suppression
  */
-export const deleteWeatherAlert = async (alertId) => {
+export const deleteWeatherAlert = async alertId => {
   try {
     const response = await apiClient.delete(`/manager/weather/alerts/${alertId}`)
     return response.data
   } catch (error) {
-    console.error("Error deleting weather alert:", error)
+    console.error('Error deleting weather alert:', error)
     throw error
   }
 }
@@ -777,7 +793,7 @@ export const deleteWeatherAlert = async (alertId) => {
  * @param {string} period - Période (week, month, year)
  * @returns {Promise<ManagerDashboard>} - Données du tableau de bord
  */
-export const fetchManagerDashboard = async (period = "week") => {
+export const fetchManagerDashboard = async (period = 'week') => {
   try {
     const response = await authApi.get(`/manager/dashboard?period=${period}`)
     return response.data
@@ -819,7 +835,7 @@ export const fetchTransactions = async (params = {}) => {
  * @param {number} transactionId - ID de la transaction
  * @returns {Promise<Transaction>} - Détails de la transaction
  */
-export const fetchTransactionDetails = async (transactionId) => {
+export const fetchTransactionDetails = async transactionId => {
   try {
     const response = await authApi.get(`/manager/transactions/${transactionId}`)
     return response.data
@@ -848,7 +864,7 @@ export const processTransaction = async (transactionId, data) => {
  * @param {number} reportId - ID du rapport à supprimer
  * @returns {Promise<Object>} - Résultat de la suppression
  */
-export const deleteReport = async (reportId) => {
+export const deleteReport = async reportId => {
   try {
     const response = await authApi.delete(`/manager/reports/${reportId}`)
     return response.data
@@ -893,7 +909,7 @@ const getUsers = (filters = {}) => {
   return apiClient.get('/manager/users', { params: filters })
 }
 
-const createUser = (userData) => {
+const createUser = userData => {
   return apiClient.post('/manager/users', userData)
 }
 
@@ -901,19 +917,19 @@ const updateManagerUser = (userId, userData) => {
   return apiClient.put(`/manager/users/${userId}`, userData)
 }
 
-const getUserStats = (userId) => {
+const getUserStats = userId => {
   return apiClient.get(`/manager/users/${userId}/stats`)
 }
 
-const getUserActivity = (userId) => {
+const getUserActivity = userId => {
   return apiClient.get(`/manager/users/${userId}/activity`)
 }
 
-const getCourierProfile = (userId) => {
+const getCourierProfile = userId => {
   return apiClient.get(`/manager/users/${userId}/courier-profile`)
 }
 
-const getBusinessProfile = (userId) => {
+const getBusinessProfile = userId => {
   return apiClient.get(`/manager/users/${userId}/business-profile`)
 }
 
@@ -922,11 +938,11 @@ const exportUsers = () => {
 }
 
 // APIs pour la gestion KYC
-const getUserKycDocuments = (userId) => {
+const getUserKycDocuments = userId => {
   return apiClient.get(`/manager/users/${userId}/kyc/documents`)
 }
 
-const getKycHistory = (userId) => {
+const getKycHistory = userId => {
   return apiClient.get(`/manager/users/${userId}/kyc/history`)
 }
 
@@ -943,7 +959,7 @@ const requestKycInfo = (userId, requestData) => {
 }
 
 // APIs pour les permissions et rôles
-const getUserPermissions = (userId) => {
+const getUserPermissions = userId => {
   return apiClient.get(`/manager/users/${userId}/permissions`)
 }
 
@@ -955,7 +971,7 @@ const getRoles = () => {
   return apiClient.get('/manager/roles')
 }
 
-const createRole = (roleData) => {
+const createRole = roleData => {
   return apiClient.post('/manager/roles', roleData)
 }
 
@@ -963,7 +979,7 @@ const updateRole = (roleId, roleData) => {
   return apiClient.put(`/manager/roles/${roleId}`, roleData)
 }
 
-const deleteRole = (roleId) => {
+const deleteRole = roleId => {
   return apiClient.delete(`/manager/roles/${roleId}`)
 }
 
@@ -979,7 +995,6 @@ const getUserGrowthStats = () => {
 const getKycStats = () => {
   return apiClient.get('/manager/stats/kyc')
 }
-
 
 const getPerformanceMetrics = () => {
   return apiClient.get('/manager/stats/performance')
@@ -1029,5 +1044,5 @@ export const managerService = {
   getUserGrowthStats,
   getKycStats,
   getRevenueStats,
-  getPerformanceMetrics
+  getPerformanceMetrics,
 }
