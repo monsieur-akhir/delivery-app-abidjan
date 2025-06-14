@@ -27,6 +27,23 @@ interface DeliveryState {
   error: string | null
 }
 
+export interface UseDeliveryReturn {
+  deliveries: Delivery[]
+  loading: boolean
+  error: string | null
+  createDelivery: (data: any) => Promise<Delivery>
+  getPriceEstimate: (data: any) => Promise<void>
+  estimate: any
+  acceptDelivery: (deliveryId: string) => Promise<void>
+  startDelivery: (deliveryId: string) => Promise<void>
+  updateDeliveryStatus: (deliveryId: string, status: string) => Promise<void>
+  getDeliveryDetails: (deliveryId: number) => Promise<Delivery | null>
+  getActiveDeliveries: () => Promise<Delivery[]>
+  getClientDeliveryHistory: () => Promise<Delivery[]>
+  getCourierDeliveryHistory: () => Promise<Delivery[]>
+  placeBid: (deliveryId: number, bidData: any) => Promise<void>
+}
+
 interface UseDeliveryReturn {
   // State
   deliveries: Delivery[]
@@ -534,37 +551,83 @@ export const useDelivery = (): UseDeliveryReturn => {
     }
   }, [])
 
+  const [deliveries, setDeliveries] = useState<Delivery[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const updateDeliveryStatus = async (deliveryId: string, status: string) => {
+    try {
+      await DeliveryService.updateDeliveryStatus(Number(deliveryId), status)
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error)
+      throw error
+    }
+  }
+
+  const getDeliveryDetails = async (deliveryId: number): Promise<Delivery | null> => {
+    try {
+      setLoading(true)
+      const delivery = await DeliveryService.getDeliveryById(deliveryId.toString())
+      return delivery
+    } catch (error) {
+      setError('Erreur lors de la récupération des détails')
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getActiveDeliveries = async (): Promise<Delivery[]> => {
+    try {
+      return await DeliveryService.getActiveDeliveries()
+    } catch (error) {
+      console.error('Erreur lors de la récupération des livraisons actives:', error)
+      return []
+    }
+  }
+
+  const getClientDeliveryHistory2 = async (): Promise<Delivery[]> => {
+    try {
+      return await DeliveryService.getClientDeliveryHistory()
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique client:', error)
+      return []
+    }
+  }
+
+  const getCourierDeliveryHistory = async (): Promise<Delivery[]> => {
+    try {
+      return await DeliveryService.getCourierDeliveryHistory()
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique coursier:', error)
+      return []
+    }
+  }
+
+  const placeBid = async (deliveryId: number, bidData: any): Promise<void> => {
+    try {
+      await DeliveryService.placeBid(deliveryId, bidData)
+    } catch (error) {
+      console.error('Erreur lors de la soumission de l\'offre:', error)
+      throw error
+    }
+  }
+
   return {
-    ...state,
+    deliveries,
+    loading,
+    error,
     createDelivery,
-    getUserDeliveries,
-    getDeliveryById,
-    updateDelivery,
-    cancelDelivery,
-    getDeliveryBids,
-    createBid,
-    acceptBid,
-    rejectBid,
-    getDeliveryTracking,
-    getCourierLocation,
-    updateDeliveryStatus,
-    getExpressDelivery,
-    getExpressDeliveries,
-    assignCourierToExpress,
-    completeExpressDelivery,
-    getCollaborativeDelivery,
-    getCollaborativeDeliveries,
-    joinCollaborativeDelivery,
-    leaveCollaborativeDelivery,
-    getAvailableDeliveries,
     getPriceEstimate,
-    getDeliveryZones,
-    calculateZonePricing,
+    estimate,
     acceptDelivery,
     startDelivery,
-    getClientDeliveryHistory,
-    clearError,
-    refreshDelivery
+    updateDeliveryStatus,
+    getDeliveryDetails,
+    getActiveDeliveries,
+    getClientDeliveryHistory: getClientDeliveryHistory2,
+    getCourierDeliveryHistory,
+    placeBid
   }
 }
 

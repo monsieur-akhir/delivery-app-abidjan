@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import { Feather } from '@expo/vector-icons'
@@ -12,6 +11,7 @@ export interface StarRatingProps {
   disabled?: boolean
   readonly?: boolean
   editable?: boolean
+  style?: any
 }
 
 const StarRating: React.FC<StarRatingProps> = ({
@@ -23,6 +23,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   disabled = false,
   readonly = false,
   editable = false,
+  style,
 }) => {
   const finalSize = size || starSize
   const handleStarPress = (selectedRating: number) => {
@@ -66,7 +67,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       {Array.from({ length: maxRating }, (_, index) => renderStar(index))}
     </View>
   )

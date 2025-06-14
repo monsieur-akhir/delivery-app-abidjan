@@ -4,7 +4,7 @@ import { Text, Card, Button, Avatar, Divider, ActivityIndicator, IconButton } fr
 import { SafeAreaView } from "react-native-safe-area-context"
 import { MaterialIcons } from '@expo/vector-icons'
 
-import type { Delivery, DeliveryStatus } from "../../types/models"
+import type { Delivery, DeliveryStatus, VTCDeliveryStatusType } from "../../types/models"
 import { VTCStyleMap, VTCCoordinates, VTCCourier, VTCRoute, VTCDeliveryStatus } from "../../components/VTCStyleMap"
 import useDelivery from "../../hooks/useDelivery"
 import { useNetwork } from "../../contexts/NetworkContext"
@@ -105,7 +105,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
       }
 
       setDeliveryStatus({
-        status: statusMapping[deliveryData.status] || 'searching',
+        status: (statusMapping[deliveryData.status] || 'searching') as VTCDeliveryStatusType,
         eta: undefined,
         progress: getProgressFromStatus(deliveryData.status)
       })      // Note: Route fetching would be implemented with a real API endpoint
@@ -296,7 +296,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
                   </View>
                     <View style={styles.infoItem}>
                     <Text style={styles.infoLabel}>{t('trackDelivery.price')}</Text>
-                    <Text style={styles.infoValue}>{formatPrice(delivery.proposed_price || delivery.final_price)}</Text>
+                    <Text style={styles.infoValue}>{formatPrice(delivery.proposed_price || delivery.final_price || 0)}</Text>
                   </View>
 
                   <View style={styles.infoItem}>
