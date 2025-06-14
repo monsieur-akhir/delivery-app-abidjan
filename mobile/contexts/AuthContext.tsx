@@ -167,3 +167,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   )
 }
+```
+
+```
+Je vais remplacer la ligne spécifiée pour utiliser getApiUrl().
+```
