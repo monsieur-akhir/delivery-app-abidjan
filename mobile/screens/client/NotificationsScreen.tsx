@@ -163,7 +163,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     if (!notification.is_read) {
-      await markAsRead(notification.id)
+      await markAsRead(typeof notification.id === 'string' ? parseInt(notification.id) : notification.id)
     }
 
     // Navigation basée sur le type de notification

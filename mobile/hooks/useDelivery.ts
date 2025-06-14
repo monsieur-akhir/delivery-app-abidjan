@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react'
 import DeliveryService from '../services/DeliveryService'
 import type {
@@ -127,17 +126,17 @@ export interface UseDeliveryReturn {
   createDelivery: (data: DeliveryCreateRequest) => Promise<Delivery>
   updateDelivery: (id: string, data: DeliveryUpdateRequest) => Promise<Delivery>
   cancelDelivery: (id: string, reason?: string) => Promise<void>
-  
+
   // Gestion des enchères
   submitBid: (data: BidCreateRequest) => Promise<Bid>
   acceptBid: (deliveryId: string, bidId: number) => Promise<void>
   declineBid: (deliveryId: string, bidId: number, reason?: string) => Promise<void>
-  
+
   // Suivi
   addTrackingPoint: (data: TrackingPointRequest) => Promise<TrackingPoint>
   updateCourierLocation: (deliveryId: string, lat: number, lng: number) => Promise<void>
   updateDeliveryStatus: (id: string, status: DeliveryStatus) => Promise<void>
-  
+
   // Récupération de données
   getDeliveries: (filters?: DeliveryFilters) => Promise<void>
   getAvailableDeliveries: (params?: DeliverySearchParams) => Promise<void>
@@ -145,23 +144,23 @@ export interface UseDeliveryReturn {
   getClientDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
   getCourierDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
   getDeliveryDetails: (id: string) => Promise<Delivery>
-  
+
   // Estimations
   getPriceEstimate: (data: PriceEstimateData) => Promise<number>
   getVehicleRecommendation: (data: VehicleRecommendationData) => Promise<VehicleRecommendation>
-  
+
   // Livraisons express
   createExpressDelivery: (data: ExpressDeliveryRequest) => Promise<Delivery>
   getExpressDeliveries: (filters?: DeliveryFilters) => Promise<void>
   assignCourierToExpress: (deliveryId: string, courierId: string) => Promise<void>
   completeExpressDelivery: (deliveryId: string) => Promise<void>
-  
+
   // Livraisons collaboratives
   createCollaborativeDelivery: (data: CollaborativeDeliveryRequest) => Promise<Delivery>
   getCollaborativeDeliveries: (filters?: DeliveryFilters) => Promise<void>
   joinCollaborativeDelivery: (id: string, message?: string) => Promise<void>
   leaveCollaborativeDelivery: (id: string) => Promise<void>
-  
+
   // Méthodes supplémentaires
   placeBid: (deliveryId: number, bidData: any) => Promise<void>
   clientConfirmDelivery: (deliveryId: number, rating: number, comment?: string) => Promise<void>
@@ -217,8 +216,8 @@ export const useDelivery = (): UseDeliveryReturn => {
       const delivery = await DeliveryService.updateDelivery(id, data)
       setState(prev => ({
         ...prev,
-        deliveries: prev.deliveries.map(d => d.id === id ? delivery : d),
-        currentDelivery: prev.currentDelivery?.id === id ? delivery : prev.currentDelivery,
+        deliveries: prev.deliveries.map(d => d.id.toString() === id ? delivery : d),
+        currentDelivery: prev.currentDelivery?.id.toString() === id ? delivery : prev.currentDelivery,
         isLoading: false
       }))
       return delivery
@@ -239,7 +238,7 @@ export const useDelivery = (): UseDeliveryReturn => {
       setState(prev => ({
         ...prev,
         deliveries: prev.deliveries.map(d => 
-          d.id === id ? { ...d, status: 'cancelled' as DeliveryStatus } : d
+          d.id.toString() === id ? { ...d, status: 'cancelled' as DeliveryStatus } : d
         ),
         isLoading: false
       }))
@@ -308,7 +307,7 @@ export const useDelivery = (): UseDeliveryReturn => {
   const addTrackingPoint = useCallback(async (data: TrackingPointRequest): Promise<TrackingPoint> => {
     try {
       const tracking = await DeliveryService.addTrackingPoint(data)
-      setState(prev => ({ ...prev, tracking: [...prev.tracking, tracking], isLoading: false }))
+      setState(prev => ({ ...prev, tracking: [tracking], isLoading: false }))
       return tracking
     } catch (error) {
       setState(prev => ({ 
@@ -338,8 +337,8 @@ export const useDelivery = (): UseDeliveryReturn => {
       const delivery = await DeliveryService.updateDeliveryStatus(id, status)
       setState(prev => ({
         ...prev,
-        deliveries: prev.deliveries.map(d => d.id === id ? delivery : d),
-        currentDelivery: prev.currentDelivery?.id === id ? delivery : prev.currentDelivery,
+        deliveries: prev.deliveries.map(d => d.id.toString() === id ? delivery : d),
+        currentDelivery: prev.currentDelivery?.id.toString() === id ? delivery : prev.currentDelivery,
         isLoading: false
       }))
     } catch (error) {

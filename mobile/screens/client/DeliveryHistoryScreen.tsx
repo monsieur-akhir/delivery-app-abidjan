@@ -237,7 +237,7 @@ const DeliveryHistoryScreen = ({ navigation }: DeliveryHistoryScreenProps) => {
                   <Chip
                     key={option.value}
                     selected={dateFilter === option.value}
-                    onPress={() => setDateFilter(option.value)}
+                    onPress={() => setDateFilter(option.value as "today" | "week" | "month" | "all")}
                     style={styles.filterChip}
                   >
                     {option.label}

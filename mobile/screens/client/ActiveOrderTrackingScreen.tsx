@@ -232,7 +232,6 @@ const ActiveOrderTrackingScreen: React.FC = () => {
     }
   }
 
-  // Rendu du contenu principal
   const renderContent = () => {
     if (loading) {
       return (
@@ -253,6 +252,24 @@ const ActiveOrderTrackingScreen: React.FC = () => {
         </View>
       )
     }
+
+    const pickupLocation = delivery.pickup_lat && delivery.pickup_lng ? {
+      latitude: delivery.pickup_lat,
+      longitude: delivery.pickup_lng
+    } : undefined;
+
+    const deliveryLocation = delivery.delivery_lat && delivery.delivery_lng ? {
+      latitude: delivery.delivery_lat,
+      longitude: delivery.delivery_lng
+    } : undefined;
+
+    const courier = courierLocation ? {
+      id: '1',
+      name: 'Coursier',
+      rating: 4.5,
+      location: courierLocation,
+      vehicle: { type: 'motorcycle', model: 'Moto', plate: 'ABC123' }
+    } : undefined;
 
     return (
       <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
@@ -329,22 +346,10 @@ const ActiveOrderTrackingScreen: React.FC = () => {
         {(delivery.pickup_lat && delivery.pickup_lng && delivery.delivery_lat && delivery.delivery_lng) && (
           <Card style={styles.mapCard}>
             <VTCStyleMap
-              // Props supportées par VTCStyleMap
-              pickupLocation={delivery.pickup_lat && delivery.pickup_lng ? {
-                latitude: delivery.pickup_lat,
-                longitude: delivery.pickup_lng
-              } : undefined}
-              deliveryLocation={delivery.delivery_lat && delivery.delivery_lng ? {
-                latitude: delivery.delivery_lat,
-                longitude: delivery.delivery_lng
-              } : undefined}
-              courier={courierLocation ? {
-                id: '1',
-                name: 'Coursier',
-                rating: 4.5,
-                location: courierLocation,
-                vehicle: { type: 'motorcycle', model: 'Moto', plate: 'ABC123' }
-              } : undefined}
+              pickupLocation={pickupLocation}
+              deliveryLocation={deliveryLocation}
+              courier={courier}
+              deliveryStatus={delivery?.status || 'pending'}
             />
           </Card>
         )}
