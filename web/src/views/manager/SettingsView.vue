@@ -16,8 +16,8 @@
 
     <!-- Navigation des onglets -->
     <div class="settings-tabs">
-      <button 
-        v-for="tab in tabs" 
+      <button
+        v-for="tab in tabs"
         :key="tab.id"
         @click="activeTab = tab.id"
         :class="['tab-button', { active: activeTab === tab.id }]"
@@ -61,39 +61,45 @@
             <h3>{{ $t('settings.general.features') }}</h3>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_real_time_tracking" 
-                type="checkbox" 
+              <input
+                v-model="settings.enable_real_time_tracking"
+                type="checkbox"
                 id="real-time-tracking"
               />
-              <label for="real-time-tracking">{{ $t('settings.general.enableRealTimeTracking') }}</label>
+              <label for="real-time-tracking">{{
+                $t('settings.general.enableRealTimeTracking')
+              }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_sms_notifications" 
-                type="checkbox" 
+              <input
+                v-model="settings.enable_sms_notifications"
+                type="checkbox"
                 id="sms-notifications"
               />
-              <label for="sms-notifications">{{ $t('settings.general.enableSmsNotifications') }}</label>
+              <label for="sms-notifications">{{
+                $t('settings.general.enableSmsNotifications')
+              }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_auto_assignment" 
-                type="checkbox" 
+              <input
+                v-model="settings.enable_auto_assignment"
+                type="checkbox"
                 id="auto-assignment"
               />
               <label for="auto-assignment">{{ $t('settings.general.enableAutoAssignment') }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_express_delivery" 
-                type="checkbox" 
+              <input
+                v-model="settings.enable_express_delivery"
+                type="checkbox"
                 id="express-delivery"
               />
-              <label for="express-delivery">{{ $t('settings.general.enableExpressDelivery') }}</label>
+              <label for="express-delivery">{{
+                $t('settings.general.enableExpressDelivery')
+              }}</label>
             </div>
           </div>
         </div>
@@ -110,7 +116,12 @@
             <div class="setting-item">
               <label>{{ $t('settings.delivery.basePricePerKm') }}</label>
               <div class="input-group">
-                <input v-model="settings.base_price_per_km" type="number" step="0.01" class="form-input" />
+                <input
+                  v-model="settings.base_price_per_km"
+                  type="number"
+                  step="0.01"
+                  class="form-input"
+                />
                 <span class="input-suffix">XOF/km</span>
               </div>
             </div>
@@ -134,7 +145,13 @@
             <div class="setting-item">
               <label>{{ $t('settings.delivery.platformCommission') }}</label>
               <div class="input-group">
-                <input v-model="settings.platform_commission" type="number" step="0.01" max="100" class="form-input" />
+                <input
+                  v-model="settings.platform_commission"
+                  type="number"
+                  step="0.01"
+                  max="100"
+                  class="form-input"
+                />
                 <span class="input-suffix">%</span>
               </div>
             </div>
@@ -179,38 +196,22 @@
             <h3>{{ $t('settings.payment.methods') }}</h3>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_cash_payment" 
-                type="checkbox" 
-                id="cash-payment"
-              />
+              <input v-model="settings.enable_cash_payment" type="checkbox" id="cash-payment" />
               <label for="cash-payment">{{ $t('settings.payment.enableCash') }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_mobile_money" 
-                type="checkbox" 
-                id="mobile-money"
-              />
+              <input v-model="settings.enable_mobile_money" type="checkbox" id="mobile-money" />
               <label for="mobile-money">{{ $t('settings.payment.enableMobileMoney') }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_card_payment" 
-                type="checkbox" 
-                id="card-payment"
-              />
+              <input v-model="settings.enable_card_payment" type="checkbox" id="card-payment" />
               <label for="card-payment">{{ $t('settings.payment.enableCard') }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_wallet_payment" 
-                type="checkbox" 
-                id="wallet-payment"
-              />
+              <input v-model="settings.enable_wallet_payment" type="checkbox" id="wallet-payment" />
               <label for="wallet-payment">{{ $t('settings.payment.enableWallet') }}</label>
             </div>
           </div>
@@ -270,11 +271,7 @@
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.smtp_use_tls" 
-                type="checkbox" 
-                id="smtp-tls"
-              />
+              <input v-model="settings.smtp_use_tls" type="checkbox" id="smtp-tls" />
               <label for="smtp-tls">{{ $t('settings.notification.smtpUseTls') }}</label>
             </div>
           </div>
@@ -318,27 +315,31 @@
             <h3>{{ $t('settings.security.authentication') }}</h3>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.require_phone_verification" 
-                type="checkbox" 
+              <input
+                v-model="settings.require_phone_verification"
+                type="checkbox"
                 id="phone-verification"
               />
-              <label for="phone-verification">{{ $t('settings.security.requirePhoneVerification') }}</label>
+              <label for="phone-verification">{{
+                $t('settings.security.requirePhoneVerification')
+              }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.require_email_verification" 
-                type="checkbox" 
+              <input
+                v-model="settings.require_email_verification"
+                type="checkbox"
                 id="email-verification"
               />
-              <label for="email-verification">{{ $t('settings.security.requireEmailVerification') }}</label>
+              <label for="email-verification">{{
+                $t('settings.security.requireEmailVerification')
+              }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_two_factor_auth" 
-                type="checkbox" 
+              <input
+                v-model="settings.enable_two_factor_auth"
+                type="checkbox"
                 id="two-factor-auth"
               />
               <label for="two-factor-auth">{{ $t('settings.security.enableTwoFactorAuth') }}</label>
@@ -357,20 +358,12 @@
             <h3>{{ $t('settings.security.kyc') }}</h3>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.require_courier_kyc" 
-                type="checkbox" 
-                id="courier-kyc"
-              />
+              <input v-model="settings.require_courier_kyc" type="checkbox" id="courier-kyc" />
               <label for="courier-kyc">{{ $t('settings.security.requireCourierKyc') }}</label>
             </div>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.require_business_kyc" 
-                type="checkbox" 
-                id="business-kyc"
-              />
+              <input v-model="settings.require_business_kyc" type="checkbox" id="business-kyc" />
               <label for="business-kyc">{{ $t('settings.security.requireBusinessKyc') }}</label>
             </div>
 
@@ -427,12 +420,14 @@
             <h3>{{ $t('settings.advanced.maintenance') }}</h3>
 
             <div class="setting-item checkbox">
-              <input 
-                v-model="settings.enable_maintenance_mode" 
-                type="checkbox" 
+              <input
+                v-model="settings.enable_maintenance_mode"
+                type="checkbox"
                 id="maintenance-mode"
               />
-              <label for="maintenance-mode">{{ $t('settings.advanced.enableMaintenanceMode') }}</label>
+              <label for="maintenance-mode">{{
+                $t('settings.advanced.enableMaintenanceMode')
+              }}</label>
             </div>
 
             <div class="setting-item">
@@ -509,7 +504,7 @@ export default {
       { id: 'payment', label: 'settings.payment.title', icon: 'fas fa-credit-card' },
       { id: 'notification', label: 'settings.notification.title', icon: 'fas fa-bell' },
       { id: 'security', label: 'settings.security.title', icon: 'fas fa-shield-alt' },
-      { id: 'advanced', label: 'settings.advanced.title', icon: 'fas fa-tools' }
+      { id: 'advanced', label: 'settings.advanced.title', icon: 'fas fa-tools' },
     ]
 
     // Méthodes
@@ -556,13 +551,13 @@ export default {
       }
     }
 
-    const formatDate = (dateString) => {
+    const formatDate = dateString => {
       return new Date(dateString).toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
     }
 
@@ -581,9 +576,9 @@ export default {
       loadSettings,
       saveSettings,
       resetSettings,
-      formatDate
+      formatDate,
     }
-  }
+  },
 }
 </script>
 
@@ -608,7 +603,7 @@ export default {
   display: flex;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
   overflow-x: auto;
 }
@@ -631,15 +626,15 @@ export default {
 }
 
 .tab-button.active {
-  color: #2196F3;
+  color: #2196f3;
   background: #e3f2fd;
-  border-bottom: 2px solid #2196F3;
+  border-bottom: 2px solid #2196f3;
 }
 
 .settings-content {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 30px;
   margin-bottom: 30px;
 }
@@ -724,7 +719,7 @@ export default {
   gap: 10px;
 }
 
-.setting-item.checkbox input[type="checkbox"] {
+.setting-item.checkbox input[type='checkbox'] {
   width: auto;
   margin: 0;
 }
@@ -737,7 +732,7 @@ export default {
 .settings-history {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 30px;
 }
 
@@ -800,7 +795,7 @@ export default {
 
 .changed-field {
   background: #e3f2fd;
-  color: #2196F3;
+  color: #2196f3;
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
@@ -831,13 +826,13 @@ export default {
 }
 
 .btn-primary {
-  background: #2196F3;
-  border-color: #2196F3;
+  background: #2196f3;
+  border-color: #2196f3;
   color: white;
 }
 
 .btn-primary:hover {
-  background: #1976D2;
+  background: #1976d2;
 }
 
 .btn-outline {

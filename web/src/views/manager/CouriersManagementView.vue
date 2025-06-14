@@ -2116,44 +2116,48 @@ export default {
 
     const handleDocumentAction = async (documentType, action) => {
       try {
-        if (!selectedCourier.value) return;
+        if (!selectedCourier.value) return
 
         if (action === 'verify') {
-          await verifyCourierDocument(selectedCourier.value.id, documentType);
-          selectedCourier.value.kyc[`${documentType}_verified`] = true;
+          await verifyCourierDocument(selectedCourier.value.id, documentType)
+          selectedCourier.value.kyc[`${documentType}_verified`] = true
         } else if (action === 'reject') {
-          await rejectCourierDocument(selectedCourier.value.id, documentType);
-          selectedCourier.value.kyc[`${documentType}_verified`] = false;
-          selectedCourier.value.kyc[`${documentType}_document`] = null;
+          await rejectCourierDocument(selectedCourier.value.id, documentType)
+          selectedCourier.value.kyc[`${documentType}_verified`] = false
+          selectedCourier.value.kyc[`${documentType}_document`] = null
         }
 
-        showToast(`Document ${action === 'verify' ? 'vérifié' : 'rejeté'} avec succès`, { type: 'success' });
+        showToast(`Document ${action === 'verify' ? 'vérifié' : 'rejeté'} avec succès`, {
+          type: 'success',
+        })
       } catch (error) {
-        console.error(`Erreur lors de l'action sur le document:`, error);
-        showToast(`Erreur lors de l'action sur le document`, { type: 'error' });
+        console.error(`Erreur lors de l'action sur le document:`, error)
+        showToast(`Erreur lors de l'action sur le document`, { type: 'error' })
       }
-    };
+    }
 
     const handleKycAction = async (action, reason = null) => {
       try {
-        if (!selectedCourier.value) return;
+        if (!selectedCourier.value) return
 
         if (action === 'verify') {
-          await verifyCourierKyc(selectedCourier.value.id);
-          selectedCourier.value.status = 'active';
-          selectedCourier.value.kyc.status = 'verified';
+          await verifyCourierKyc(selectedCourier.value.id)
+          selectedCourier.value.status = 'active'
+          selectedCourier.value.kyc.status = 'verified'
         } else if (action === 'reject') {
-          await rejectCourierKyc(selectedCourier.value.id, reason);
-          selectedCourier.value.status = 'inactive';
-          selectedCourier.value.kyc.status = 'rejected';
+          await rejectCourierKyc(selectedCourier.value.id, reason)
+          selectedCourier.value.status = 'inactive'
+          selectedCourier.value.kyc.status = 'rejected'
         }
 
-        showToast(`Vérification ${action === 'verify' ? 'approuvée' : 'rejetée'} avec succès`, { type: 'success' });
+        showToast(`Vérification ${action === 'verify' ? 'approuvée' : 'rejetée'} avec succès`, {
+          type: 'success',
+        })
       } catch (error) {
-        console.error(`Erreur lors de l'action sur le KYC:`, error);
-        showToast(`Erreur lors de l'action sur le KYC`, { type: 'error' });
+        console.error(`Erreur lors de l'action sur le KYC:`, error)
+        showToast(`Erreur lors de l'action sur le KYC`, { type: 'error' })
       }
-    };
+    }
 
     // Computed properties
     const sortBy = ref('name_asc')

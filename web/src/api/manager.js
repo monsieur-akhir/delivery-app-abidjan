@@ -912,8 +912,6 @@ const createUser = userData => {
   return apiClient.post('/manager/users', userData)
 }
 
-
-
 const getUserStats = userId => {
   return apiClient.get(`/manager/users/${userId}/stats`)
 }
