@@ -47,7 +47,9 @@ export type {
   VehicleRecommendationData,
   VehicleRecommendation,
   ExpressDeliveryRequest,
-  CollaborativeDeliveryRequest
+  CollaborativeDeliveryRequest,
+  Address,
+  Weather
 } from './models'
 export * from './navigation'
 export * from './theme'
