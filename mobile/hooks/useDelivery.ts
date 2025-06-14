@@ -495,7 +495,19 @@ export const useDelivery = (): UseDeliveryReturn => {
   const getVehicleRecommendation = useCallback(async (data: VehicleRecommendationData): Promise<VehicleRecommendation> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
-      const recommendation = await DeliveryService.getVehicleRecommendation(data)
+      const vehicleData: VehicleRecommendationData = {
+        pickup_lat: data.pickup_lat,
+        pickup_lng: data.pickup_lng,
+        delivery_lat: data.delivery_lat,
+        delivery_lng: data.delivery_lng,
+        package_type: data.package_type,
+        package_weight: data.package_weight,
+        package_size: data.package_size,
+        is_fragile: data.is_fragile,
+        distance: data.distance,
+        weatherConditions: data.weatherConditions
+      }
+      const recommendation = await DeliveryService.getVehicleRecommendation(vehicleData)
       setState(prev => ({ ...prev, isLoading: false }))
       return recommendation
     } catch (error) {

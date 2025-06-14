@@ -48,7 +48,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
 
     try {
       setLoading(true)
-      const deliveryData = await getDeliveryDetails(Number(deliveryId))
+      const deliveryData = await getDeliveryDetails(deliveryId.toString())
       if (!deliveryData) {
         setError(t('trackDelivery.errorLoadingDelivery'))
         setLoading(false)

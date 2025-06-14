@@ -272,7 +272,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
             {/* Icône */}
             <View style={[styles.iconContainer, { backgroundColor: notificationColor + '20' }]}>
               <MaterialCommunityIcons 
-                name={notificationIcon} 
+                name={notificationIcon as any} 
                 size={24} 
                 color={notificationColor} 
               />
