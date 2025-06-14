@@ -29,8 +29,7 @@ const CourierWalletScreen: React.FC = () => {
     error,
     getUserProfile,
     getWalletTransactions,
-    requestPayout,
-    user
+    requestPayout
   } = useUser()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
