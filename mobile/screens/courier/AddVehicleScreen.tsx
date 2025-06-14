@@ -61,10 +61,10 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
       // Préparation des données pour l'API
       const vehicleData: VehicleCreateRequest = {
         license_plate: formData.license_plate || '',
-        brand: formData.brand || 'Unknown',
+        brand: formData.brand || '',
         model: formData.model || 'Unknown',
-        year: formData.year ? parseInt(formData.year) : undefined,
-        vehicle_type: (formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : (formData.type === 'pickup' ? 'car' : formData.type)) as VehicleType | undefined,
+        year: formData.year ? parseInt(formData.year) : 2024,
+        vehicle_type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : formData.type,
         capacity: formData.capacity ? parseFloat(formData.capacity) : undefined,
         is_electric: formData.is_electric,
       }
