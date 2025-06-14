@@ -45,7 +45,13 @@ export interface VTCRoute {
   estimatedPrice?: number
 }
 
-export type VTCDeliveryStatus = 'pending' | 'en_route' | 'delivered' | 'cancelled'
+// Type corrigé pour VTCDeliveryStatus
+export interface VTCDeliveryStatus {
+  status: 'pending' | 'searching' | 'assigned' | 'transit' | 'delivered' | 'cancelled'
+  message?: string
+  eta?: string
+  progress?: number
+}
 
 export interface VTCStyleMapProps {
   pickupLocation?: VTCCoordinates
@@ -68,69 +74,6 @@ export interface VTCStyleMapProps {
   showETA?: boolean
   showProgress?: boolean
   style?: object
-}
-
-// Styles de carte modernes (comme Uber)
-const mapStyles = {
-  light: [
-    {
-      featureType: 'all',
-      elementType: 'geometry',
-      stylers: [{ color: '#f5f5f5' }]
-    },
-    {
-      featureType: 'road',
-      elementType: 'geometry',
-      stylers: [{ color: '#ffffff' }]
-    },
-    {
-      featureType: 'road.arterial',
-      elementType: 'labels.text.fill',
-      stylers: [{ color: '#757575' }]
-    },
-    {
-      featureType: 'road.highway',
-      elementType: 'geometry',
-      stylers: [{ color: '#dadada' }]
-    },
-    {
-      featureType: 'water',
-      elementType: 'geometry',
-      stylers: [{ color: '#c9c9c9' }]
-    },
-    {
-      featureType: 'poi',
-      elementType: 'all',
-      stylers: [{ visibility: 'off' }]
-    },
-    {
-      featureType: 'transit',
-      elementType: 'all',
-      stylers: [{ visibility: 'off' }]
-    }
-  ],
-  dark: [
-    {
-      featureType: 'all',
-      elementType: 'geometry',
-      stylers: [{ color: '#212121' }]
-    },
-    {
-      featureType: 'road',
-      elementType: 'geometry',
-      stylers: [{ color: '#2c2c2c' }]
-    },
-    {
-      featureType: 'water',
-      elementType: 'geometry',
-      stylers: [{ color: '#17263c' }]
-    },
-    {
-      featureType: 'poi',
-      elementType: 'all',
-      stylers: [{ visibility: 'off' }]
-    }
-  ]
 }
 
 export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
@@ -173,13 +116,14 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
     longitudeDelta: 0.01,
   })
 
-  // Animation du marqueur de recherche
+  // Animations d'état de livraison
   useEffect(() => {
     if (deliveryStatus.status === 'searching') {
+      // Animation de pulsation pour la recherche
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnimation, {
-            toValue: 1.5,
+            toValue: 1.3,
             duration: 1000,
             useNativeDriver: true,
           }),
@@ -190,408 +134,259 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
           }),
         ])
       ).start()
+    } else {
+      pulseAnimation.setValue(1)
     }
   }, [deliveryStatus.status, pulseAnimation])
 
-  // Animation d'entrée de la carte
-  useEffect(() => {
-    if (isMapReady) {
-      Animated.parallel([
-        Animated.timing(fadeAnimation, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnimation, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]).start()
+  // Fonctions utilitaires pour les statuts
+  const getStatusGradient = (status: string) => {
+    switch (status) {
+      case 'searching':
+        return ['#FF6B6B', '#FF8E53']
+      case 'assigned':
+        return ['#4ECDC4', '#44A08D']
+      case 'transit':
+        return ['#45B7D1', '#96C93D']
+      case 'delivered':
+        return ['#96C93D', '#02AAB0']
+      case 'cancelled':
+        return ['#FF6B6B', '#C44569']
+      default:
+        return ['#BDC3C7', '#95A5A6']
     }
-  }, [isMapReady, fadeAnimation, slideAnimation])
+  }
 
-  // Animation du coursier
-  useEffect(() => {
-    if (courier?.location && courierAnimatedLocation) {
-      const now = Date.now()
-      if (now - lastCourierUpdate > 2000) {
-        courierAnimatedLocation.timing({
-          latitude: courier.location.latitude,
-          longitude: courier.location.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-          duration: 2000,
-          useNativeDriver: false,
-          toValue: 0
-        }).start()
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'searching':
+        return 'search'
+      case 'assigned':
+        return 'person-pin'
+      case 'transit':
+        return 'directions-car'
+      case 'delivered':
+        return 'check-circle'
+      case 'cancelled':
+        return 'cancel'
+      default:
+        return 'help'
+    }
+  }
 
-        if (followCourier && isMapReady && mapRef.current) {
-          mapRef.current.animateToRegion({
-            latitude: courier.location.latitude,
-            longitude: courier.location.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }, 2000)
-        }
-        setLastCourierUpdate(now)
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'searching':
+        return 'Recherche en cours...'
+      case 'assigned':
+        return 'Coursier assigné'
+      case 'transit':
+        return 'En transit'
+      case 'delivered':
+        return 'Livré'
+      case 'cancelled':
+        return 'Annulé'
+      default:
+        return 'En attente'
+    }
+  }
+
+  // Fonction pour obtenir la région initiale
+  const getInitialRegion = useCallback(() => {
+    if (pickupLocation && deliveryLocation) {
+      const minLat = Math.min(pickupLocation.latitude, deliveryLocation.latitude)
+      const maxLat = Math.max(pickupLocation.latitude, deliveryLocation.latitude)
+      const minLng = Math.min(pickupLocation.longitude, deliveryLocation.longitude)
+      const maxLng = Math.max(pickupLocation.longitude, deliveryLocation.longitude)
+
+      const centerLat = (minLat + maxLat) / 2
+      const centerLng = (minLng + maxLng) / 2
+      const deltaLat = (maxLat - minLat) * 1.5
+      const deltaLng = (maxLng - minLng) * 1.5
+
+      return {
+        latitude: centerLat,
+        longitude: centerLng,
+        latitudeDelta: Math.max(deltaLat, 0.01),
+        longitudeDelta: Math.max(deltaLng, 0.01),
       }
-    } else if (courier?.location) {
-      setCourierAnimatedLocation(new AnimatedRegion({
-        latitude: courier.location.latitude,
-        longitude: courier.location.longitude,
+    } else if (pickupLocation) {
+      return {
+        latitude: pickupLocation.latitude,
+        longitude: pickupLocation.longitude,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
-      }))
-    }
-  }, [courier?.location, courierAnimatedLocation, followCourier, isMapReady, lastCourierUpdate])
-
-  // Calcul de la région initiale
-  const getInitialRegion = useCallback(() => {
-    const locations = [
-      pickupLocation,
-      deliveryLocation,
-      courier?.location,
-      userLocation
-    ].filter(Boolean) as VTCCoordinates[]
-
-    if (locations.length === 0) {
+      }
+    } else {
       return mapRegion
     }
+  }, [pickupLocation, deliveryLocation, mapRegion])
 
-    if (locations.length === 1) {
-      return {
-        latitude: locations[0].latitude,
-        longitude: locations[0].longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }
+  // Mise à jour de la région de la carte
+  useEffect(() => {
+    if (isMapReady) {
+      const region = getInitialRegion()
+      mapRef.current?.animateToRegion(region, 1000)
     }
+  }, [isMapReady, getInitialRegion])
 
-    // Calcul de la région englobante
-    const minLat = Math.min(...locations.map(l => l.latitude))
-    const maxLat = Math.max(...locations.map(l => l.latitude))
-    const minLng = Math.min(...locations.map(l => l.longitude))
-    const maxLng = Math.max(...locations.map(l => l.longitude))
+  // Animation d'apparition des éléments UI
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnimation, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnimation, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [fadeAnimation, slideAnimation])
 
-    const centerLat = (minLat + maxLat) / 2
-    const centerLng = (minLng + maxLng) / 2
-    const deltaLat = Math.max((maxLat - minLat) * 1.5, 0.01)
-    const deltaLng = Math.max((maxLng - minLng) * 1.5, 0.01)
-
-    return {
-      latitude: centerLat,
-      longitude: centerLng,
-      latitudeDelta: deltaLat,
-      longitudeDelta: deltaLng,
-    }
-  }, [pickupLocation, deliveryLocation, courier?.location, userLocation, mapRegion])
-
-  const onMapReadyHandler = useCallback(() => {
-    setIsMapReady(true)
-    onMapReady?.()
-
-    setTimeout(() => {
-      if (mapRef.current) {
-        const region = getInitialRegion()
-        mapRef.current.animateToRegion(region, 1000)
-      }
-    }, 500)
-  }, [onMapReady, getInitialRegion])
-
-  // Rendu des marqueurs VTC modernes
-  const renderPickupMarker = () => {
-    if (!pickupLocation) return null
-
-    return (
-      <Marker
-        coordinate={pickupLocation}
-        onPress={onPickupPress}
-        anchor={{ x: 0.5, y: 1 }}
+  return (
+    <View style={[styles.container, style]}>
+      {/* Carte principale */}
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={getInitialRegion()}
+        showsUserLocation={showUserLocation}
+        showsMyLocationButton={false}
+        showsTraffic={showTraffic}
+        onMapReady={() => {
+          setIsMapReady(true)
+          onMapReady?.()
+        }}
+        mapType="standard"
+        customMapStyle={theme === 'dark' ? darkMapStyle : undefined}
       >
-        <Animated.View style={[
-          styles.modernMarker,
-          { transform: [{ scale: deliveryStatus.status === 'searching' ? pulseAnimation : 1 }] }
-        ]}>
-          <LinearGradient
-            colors={['#4CAF50', '#388E3C']}
-            style={styles.markerContainer}
+        {/* Marqueur de ramassage */}
+        {pickupLocation && (
+          <Marker
+            coordinate={pickupLocation}
+            onPress={onPickupPress}
+            anchor={{ x: 0.5, y: 1 }}
           >
-            <MaterialIcons name="location-on" size={20} color="#FFFFFF" />
-          </LinearGradient>
-          <View style={styles.markerArrow} />
-        </Animated.View>
-      </Marker>
-    )
-  }
+            <Animated.View
+              style={[
+                styles.markerContainer,
+                { transform: [{ scale: deliveryStatus.status === 'searching' ? pulseAnimation : 1 }] }
+              ]}
+            >
+              <LinearGradient
+                colors={['#4ECDC4', '#44A08D']}
+                style={styles.pickupMarker}
+              >
+                <MaterialIcons name="location-on" size={20} color="white" />
+              </LinearGradient>
+            </Animated.View>
+          </Marker>
+        )}
 
-  const renderDeliveryMarker = () => {
-    if (!deliveryLocation) return null
-
-    return (
-      <Marker
-        coordinate={deliveryLocation}
-        onPress={onDeliveryPress}
-        anchor={{ x: 0.5, y: 1 }}
-      >
-        <View style={styles.modernMarker}>
-          <LinearGradient
-            colors={['#f44336', '#d32f2f']}
-            style={styles.markerContainer}
+        {/* Marqueur de livraison */}
+        {deliveryLocation && (
+          <Marker
+            coordinate={deliveryLocation}
+            onPress={onDeliveryPress}
+            anchor={{ x: 0.5, y: 1 }}
           >
-            <MaterialIcons name="flag" size={20} color="#FFFFFF" />
-          </LinearGradient>
-          <View style={[styles.markerArrow, { borderTopColor: '#f44336' }]} />
-        </View>
-      </Marker>
-    )
-  }
+            <View style={styles.markerContainer}>
+              <LinearGradient
+                colors={['#FF6B6B', '#FF8E53']}
+                style={styles.deliveryMarker}
+              >
+                <MaterialIcons name="flag" size={20} color="white" />
+              </LinearGradient>
+            </View>
+          </Marker>
+        )}
 
-  const renderUserLocationMarker = () => {
-    if (!showUserLocation || !userLocation) return null
+        {/* Marqueur du coursier */}
+        {courier && (
+          <Marker
+            coordinate={courier.location}
+            onPress={onCourierPress}
+            anchor={{ x: 0.5, y: 0.5 }}
+            rotation={courier.heading || 0}
+          >
+            <View style={styles.courierMarker}>
+              <MaterialIcons 
+                name={courier.vehicle.type === 'car' ? 'directions-car' : 'motorcycle'} 
+                size={24} 
+                color="#2196F3" 
+              />
+            </View>
+          </Marker>
+        )}
 
-    return (
-      <Marker
-        coordinate={userLocation}
-        onPress={onUserLocationPress}
-        anchor={{ x: 0.5, y: 0.5 }}
-      >
-        <Animated.View style={styles.userLocationMarker}>
-          <View style={styles.userLocationDot} />
-          <Animated.View 
-            style={[
-              styles.userLocationPulse,
-              { transform: [{ scale: pulseAnimation }] }
-            ]} 
+        {/* Tracé de la route */}
+        {route && route.coordinates.length > 0 && (
+          <Polyline
+            coordinates={route.coordinates}
+            strokeWidth={4}
+            strokeColor="#2196F3"
+            lineDashPattern={[5, 5]}
+            onPress={onRoutePress}
           />
-        </Animated.View>
-      </Marker>
-    )
-  }
+        )}
+      </MapView>
 
-  const renderCourierMarker = () => {
-    if (!courier) return null
-
-    const vehicleIcon = getVehicleIcon(courier.vehicle.type)
-
-    return (
-      <Marker
-        coordinate={courier.location}
-        onPress={onCourierPress}
-        anchor={{ x: 0.5, y: 0.5 }}
-        rotation={courier.heading || 0}
-        flat={true}
+      {/* Interface utilisateur superposée */}
+      <Animated.View 
+        style={[
+          styles.statusContainer,
+          { opacity: fadeAnimation, transform: [{ translateY: slideAnimation }] }
+        ]}
       >
-        <View style={styles.courierMarkerContainer}>
-          {courier.isOnline && (
-            <View style={styles.onlineIndicator}>
-              <View style={styles.onlineBadge} />
-            </View>
-          )}
-          <LinearGradient
-            colors={[getVehicleColor(courier.vehicle.type), getVehicleColorDark(courier.vehicle.type)]}
-            style={styles.courierMarker}
-          >
-            <MaterialCommunityIcons name={vehicleIcon} size={18} color="#FFFFFF" />
-          </LinearGradient>
-          {courier.speed && courier.speed > 0 && (
-            <View style={styles.speedIndicator}>
-              <Text style={styles.speedText}>{Math.round(courier.speed)}km/h</Text>
-            </View>
-          )}
-        </View>
-      </Marker>
-    )
-  }
-
-  const renderRoute = () => {
-    if (!route || route.coordinates.length < 2) return null
-
-    const routeColor = getRouteColor(route.traffic)
-
-    return (
-      <Polyline
-        coordinates={route.coordinates}
-        strokeWidth={6}
-        strokeColor={routeColor}
-        lineDashPattern={[1, 0]}
-        onPress={onRoutePress}
-        lineCap="round"
-        lineJoin="round"
-      />
-    )
-  }
-
-  const renderStatusCard = () => {
-    if (!showProgress) return null
-
-    return (
-      <Animated.View style={[
-        styles.statusContainer,
-        {
-          opacity: fadeAnimation,
-          transform: [{ translateY: slideAnimation }]
-        }
-      ]}>
         <Surface style={styles.statusCard} elevation={4}>
           <LinearGradient
             colors={getStatusGradient(deliveryStatus.status)}
             style={styles.statusGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
           >
             <View style={styles.statusContent}>
-              <View style={styles.statusIcon}>
-                <MaterialIcons 
-                  name={getStatusIcon(deliveryStatus.status)} 
-                  size={20} 
-                  color="#FFFFFF" 
-                />
-              </View>
-              <View style={styles.statusText}>
-                <Text style={styles.statusTitle}>
+              <MaterialIcons 
+                name={getStatusIcon(deliveryStatus.status)} 
+                size={24} 
+                color="white" 
+              />
+              <View style={styles.statusTextContainer}>
+                <Text style={styles.statusText}>
                   {getStatusText(deliveryStatus.status)}
                 </Text>
                 {deliveryStatus.message && (
-                  <Text style={styles.statusMessage}>
+                  <Text style={styles.statusSubText}>
                     {deliveryStatus.message}
                   </Text>
                 )}
                 {showETA && deliveryStatus.eta && (
-                  <Text style={styles.statusETA}>
+                  <Text style={styles.etaText}>
                     Arrivée prévue: {deliveryStatus.eta}
                   </Text>
                 )}
               </View>
             </View>
-            <View style={styles.progressContainer}>
-              <View style={styles.progressTrack}>
-                <Animated.View 
-                  style={[
-                    styles.progressFill,
-                    { 
-                      width: `${deliveryStatus.progress}%`,
-                    }
-                  ]} 
-                />
-              </View>
-            </View>
           </LinearGradient>
+
+          {/* Barre de progression */}
+          {showProgress && deliveryStatus.progress !== undefined && (
+            <View style={styles.progressContainer}>
+              <View 
+                style={[
+                  styles.progressBar,
+                  { 
+                    width: `${deliveryStatus.progress}%`,
+                    backgroundColor: getStatusGradient(deliveryStatus.status)[0]
+                  }
+                ]} 
+              />
+            </View>
+          )}
         </Surface>
       </Animated.View>
-    )
-  }
-
-  // Utilitaires
-  const getVehicleIcon = (type: string) => {
-    const icons = {
-      car: 'car' as const,
-      motorcycle: 'motorbike' as const,
-      bicycle: 'bicycle' as const,
-      truck: 'truck' as const,
-      van: 'van-utility' as const
-    }
-    return icons[type as keyof typeof icons] || 'car'
-  }
-
-  const getVehicleColor = (type: string) => {
-    const colors = {
-      car: '#2196F3',
-      motorcycle: '#FF6B00',
-      bicycle: '#4CAF50',
-      truck: '#9C27B0',
-      van: '#FF5722'
-    }
-    return colors[type as keyof typeof colors] || '#2196F3'
-  }
-
-  const getVehicleColorDark = (type: string) => {
-    const colors = {
-      car: '#1976D2',
-      motorcycle: '#E65100',
-      bicycle: '#388E3C',
-      truck: '#7B1FA2',
-      van: '#D84315'
-    }
-    return colors[type as keyof typeof colors] || '#1976D2'
-  }
-
-  const getRouteColor = (traffic?: string) => {
-    const colors = {
-      light: '#4CAF50',
-      moderate: '#FF9800',
-      heavy: '#F44336'
-    }
-    return colors[traffic as keyof typeof colors] || '#2196F3'
-  }
-
-  const getStatusGradient = (status: string): [string, string] => {
-    const gradients = {
-      searching: ['#FF6B00', '#FF8F00'] as [string, string],
-      assigned: ['#2196F3', '#1976D2'] as [string, string],
-      pickup: ['#9C27B0', '#7B1FA2'] as [string, string],
-      transit: ['#4CAF50', '#388E3C'] as [string, string],
-      delivered: ['#4CAF50', '#2E7D32'] as [string, string],
-      cancelled: ['#F44336', '#D32F2F'] as [string, string]
-    }
-    return gradients[status as keyof typeof gradients] || gradients.searching
-  }
-
-  const getStatusIcon = (status: string) => {
-    const icons = {
-      searching: 'search' as const,
-      assigned: 'person' as const,
-      pickup: 'local-shipping' as const,
-      transit: 'navigation' as const,
-      delivered: 'check-circle' as const,
-      cancelled: 'cancel' as const
-    }
-    return icons[status as keyof typeof icons] || ('info' as const)
-  }
-
-  const getStatusText = (status: string) => {
-    const texts = {
-      searching: 'Recherche en cours...',
-      assigned: 'Coursier assigné',
-      pickup: 'Récupération',
-      transit: 'En livraison',
-      delivered: 'Livré',
-      cancelled: 'Annulé'
-    }
-    return texts[status as keyof typeof texts] || 'En cours'
-  }
-
-  return (
-    <View style={[styles.container, style]}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        customMapStyle={mapStyles[theme === 'auto' ? 'light' : theme]}
-        initialRegion={getInitialRegion()}
-        onMapReady={onMapReadyHandler}
-        showsUserLocation={false}
-        showsMyLocationButton={false}
-        showsTraffic={showTraffic}
-        showsBuildings={true}
-        showsIndoors={false}
-        rotateEnabled={true}
-        pitchEnabled={true}
-        scrollEnabled={true}
-        zoomEnabled={true}
-        onRegionChangeComplete={setMapRegion}
-        toolbarEnabled={false}
-        loadingEnabled={true}
-        mapPadding={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      >
-        {renderPickupMarker()}
-        {renderDeliveryMarker()}
-        {renderUserLocationMarker()}
-        {renderCourierMarker()}
-        {renderRoute()}
-      </MapView>
-
-      {renderStatusCard()}
 
       {/* Contrôles de la carte */}
       <View style={styles.mapControls}>
@@ -627,176 +422,117 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
   )
 }
 
-// Styles modernes style VTC
+// Style de carte sombre
+const darkMapStyle = [
+  {
+    elementType: 'geometry',
+    stylers: [{ color: '#242f3e' }],
+  },
+  {
+    elementType: 'labels.text.stroke',
+    stylers: [{ color: '#242f3e' }],
+  },
+  {
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#746855' }],
+  },
+]
+
+// Styles modernes
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
+    backgroundColor: '#F5F5F5',
   },
   map: {
     flex: 1,
   },
 
-  // Marqueurs modernes
-  modernMarker: {
-    alignItems: 'center',
-  },
+  // Marqueurs
   markerContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+  },
+  pickupMarker: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: 'white',
   },
-  markerArrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#4CAF50',
-    marginTop: -1,
-  },
-
-  // Marqueur utilisateur
-  userLocationMarker: {
-    width: 20,
-    height: 20,
+  deliveryMarker: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  userLocationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#2196F3',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  userLocationPulse: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(33, 150, 243, 0.3)',
-  },
-
-  // Marqueur coursier
-  courierMarkerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
   },
   courierMarker: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderWidth: 3,
+    borderColor: '#2196F3',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
-  onlineIndicator: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    zIndex: 1,
-  },
-  onlineBadge: {
-    backgroundColor: '#4CAF50',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-  },
-  speedIndicator: {
-    position: 'absolute',
-    bottom: -18,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 8,
-  },
-  speedText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: 'bold',
-  },
 
-  // Carte de statut
+  // Interface utilisateur superposée
   statusContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 40,
+    top: 50,
     left: 16,
     right: 16,
-    zIndex: 10,
   },
   statusCard: {
     borderRadius: 16,
     overflow: 'hidden',
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
   },
   statusGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    padding: 16,
   },
   statusContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
   },
-  statusIcon: {
-    marginRight: 12,
-  },
-  statusText: {
+  statusTextContainer: {
+    marginLeft: 12,
     flex: 1,
   },
-  statusTitle: {
+  statusText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 2,
+    fontWeight: '600',
+    color: 'white',
   },
-  statusMessage: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.9)',
-    marginBottom: 2,
+  statusSubText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 2,
   },
-  statusETA: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.8)',
+  etaText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 4,
   },
+
+  // Barre de progression
   progressContainer: {
-    marginTop: 8,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
-  progressTrack: {
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 1.5,
-    overflow: 'hidden',
-  },
-  progressFill: {
+  progressBar: {
     height: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 1.5,
+    borderRadius: 2,
   },
 
   // Contrôles de carte

@@ -35,7 +35,8 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
   const [deliveryRoute, setDeliveryRoute] = useState<VTCRoute | null>(null)
   const [deliveryStatus, setDeliveryStatus] = useState<VTCDeliveryStatus>({
     status: 'searching',
-    eta: undefined,
+    message: 'Recherche du meilleur coursier...',
+    eta: '',
     progress: 0
   })
   const [loading, setLoading] = useState<boolean>(true)
@@ -105,9 +106,11 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
       }
 
       setDeliveryStatus({
+        ...deliveryStatus,
         status: (statusMapping[deliveryData.status] || 'searching') as "delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit",
-        eta: undefined,
-        progress: getProgressFromStatus(deliveryData.status)
+        message: getStatusMessage(deliveryData.status),
+        eta: deliveryData.estimated_arrival_time,
+        progress: getProgressPercentage(deliveryData.status)
       })      // Note: Route fetching would be implemented with a real API endpoint
       // For now, we'll set a mock route if both locations are available
       if (pickupLocation && deliveryLocation) {
