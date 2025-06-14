@@ -1,15 +1,16 @@
 // Configuration des environnements
 
 // Déclaration de la variable __DEV__
-const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV === "development"
+declare const __DEV__: boolean | undefined;
+const isDev: boolean = typeof __DEV__ !== 'undefined' ? __DEV__ : false
 
 // URL de base de l'API
-export const API_URL = __DEV__
+export const API_URL = isDev
   ? "http://localhost:8000" // URL de développement local
   : "https://api.livraison-abidjan.com" // URL de production
 
 // URL pour WebSocket
-export const WS_URL = __DEV__
+export const WS_URL = isDev
   ? "ws://localhost:8001/ws" // WebSocket URL for development
   : "wss://api.livraison-abidjan.com/ws" // WebSocket URL for production
 
@@ -18,8 +19,8 @@ export const GOOGLE_MAPS_API_KEY = "AIzaSyBVwFk8UNhKmn2yQ7KLrJzQ5YKlJZMZvHg" // 
 export const WEATHER_API_KEY = "0123456789abcdef0123456789abcdef" // Remplacez par votre vraie clé
 
 // Configuration Sentry
-export const SENTRY_DSN = __DEV__ ? "" : "YOUR_SENTRY_DSN"
-export const ENVIRONMENT = __DEV__ ? "development" : "production"
+export const SENTRY_DSN = isDev ? "" : "YOUR_SENTRY_DSN"
+export const ENVIRONMENT = isDev ? "development" : "production"
 
 // Configuration des timeouts
 export const API_TIMEOUT = 30000 // 30 secondes
