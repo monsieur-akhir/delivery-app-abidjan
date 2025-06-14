@@ -29,7 +29,8 @@ const CourierWalletScreen: React.FC = () => {
     error,
     getUserProfile,
     getWalletTransactions,
-    requestPayout
+    requestPayout,
+    user
   } = useUser()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -37,6 +38,19 @@ const CourierWalletScreen: React.FC = () => {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState("")
   const [withdrawing, setWithdrawing] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('bank_transfer')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountName, setAccountName] = useState(userProfile?.name || '')
+
+  interface PayoutRequest {
+        id: number;
+        user_id: number;
+        amount: number;
+        method: string;
+        status: string;
+        requested_at: string;
+  }
+
   const loadWalletData = useCallback(async () => {
     try {
       await getUserProfile()
@@ -76,14 +90,15 @@ const CourierWalletScreen: React.FC = () => {
       return
     }    try {
       setWithdrawing(true)
-      await requestPayout({
+      const payoutRequestData: PayoutRequest = {
+        id: 0,
+        user_id: user?.id || 0,
         amount,
-        payment_method: 'bank_transfer',
-        account_details: {
-          account_number: '',
-          account_name: userProfile?.name || ''
-        }
-      })
+        method: paymentMethod,
+        status: 'pending',
+        requested_at: new Date().toISOString(),
+      }
+      await requestPayout(payoutRequestData)
       setShowWithdrawModal(false)
       setWithdrawAmount("")
       await loadWalletData()
@@ -207,7 +222,7 @@ const CourierWalletScreen: React.FC = () => {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               {t("wallet.recentTransactions")}
             </Text>
-            
+
             {transactions.length === 0 ? (
               <EmptyState
                 icon="credit-card"
@@ -277,7 +292,7 @@ const CourierWalletScreen: React.FC = () => {
           <Text style={[styles.modalTitle, { color: colors.text }]}>
             {t("wallet.withdrawFunds")}
           </Text>
-          
+
           <Text style={[styles.modalBalance, { color: colors.text }]}>
             {t("wallet.availableBalance")}: {formatCurrency(userProfile?.wallet_balance || 0)} FCFA
           </Text>

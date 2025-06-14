@@ -28,6 +28,7 @@ const CollaborativeDeliveriesScreen: React.FC = () => {
   const fetchDeliveries = useCallback(async () => {
     try {
       setError(null)
+      setLoading(true)
       let data: CollaborativeDelivery[] = []
 
       if (activeTab === "active") {

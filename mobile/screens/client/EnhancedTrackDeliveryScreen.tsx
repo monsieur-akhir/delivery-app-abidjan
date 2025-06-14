@@ -105,7 +105,7 @@ const EnhancedTrackDeliveryScreen: React.FC<EnhancedTrackDeliveryScreenProps> = 
       }
 
       setDeliveryStatus({
-        status: (statusMapping[deliveryData.status] || 'searching') as VTCDeliveryStatusType,
+        status: (statusMapping[deliveryData.status] || 'searching') as "delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit",
         eta: undefined,
         progress: getProgressFromStatus(deliveryData.status)
       })      // Note: Route fetching would be implemented with a real API endpoint

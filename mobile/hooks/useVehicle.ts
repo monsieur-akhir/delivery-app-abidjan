@@ -72,11 +72,11 @@ export const useVehicle = (): UseVehicleReturn => {
         type: cv.vehicle.type,
         license_plate: cv.vehicle.license_plate,
         is_available: cv.vehicle.is_available || false,
-        brand: cv.vehicle.make || '',
+        brand: cv.vehicle.brand || '',
         model: cv.vehicle.model || '',
         year: cv.vehicle.year || new Date().getFullYear(),
         color: cv.vehicle.color || '',
-        capacity: cv.vehicle.load_capacity || 0,
+        capacity: cv.vehicle.capacity || 0,
         status: cv.vehicle.status,
         created_at: cv.vehicle.created_at,
         updated_at: cv.vehicle.updated_at
@@ -106,7 +106,12 @@ export const useVehicle = (): UseVehicleReturn => {
   const updateVehicle = async (vehicleId: number, data: Partial<Vehicle>) => {
     try {
       setLoading(true)
-      await VehicleService.updateVehicle(vehicleId, data)
+      // Convert Vehicle data to VehicleUpdateRequest format
+      const updateData: any = { ...data }
+      if (data.status && typeof data.status === 'string') {
+        updateData.status = data.status as any
+      }
+      await VehicleService.updateVehicle(vehicleId, updateData)
       await refreshVehicles()
     } catch (error) {
       console.error('Error updating vehicle:', error)
