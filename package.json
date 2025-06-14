@@ -49,6 +49,7 @@
     "@react-navigation/native-stack": "^7.3.14",
     "@react-navigation/stack": "^7.3.3",
     "@types/lodash": "^4.17.17",
+    "@types/node": "^24.0.1",
     "expo-haptics": "^14.1.4",
     "expo-linear-gradient": "^14.1.5",
     "expo-speech": "^13.1.7"
