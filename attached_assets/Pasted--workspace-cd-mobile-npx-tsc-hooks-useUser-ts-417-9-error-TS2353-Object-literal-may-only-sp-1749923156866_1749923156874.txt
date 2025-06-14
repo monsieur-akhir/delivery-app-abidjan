@@ -1,0 +1,237 @@
+~/workspace$ cd mobile && npx tsc
+hooks/useUser.ts:417:9 - error TS2353: Object literal may only specify known properties, and 'summary' does not exist in type 'CourierEarningsData'.
+
+417         summary: {
+            ~~~~~~~
+
+hooks/useVehicle.ts:75:27 - error TS2339: Property 'make' does not exist on type 'Vehicle'.
+
+75         brand: cv.vehicle.make || '',
+                             ~~~~
+
+hooks/useVehicle.ts:79:30 - error TS2339: Property 'load_capacity' does not exist on type 'Vehicle'.
+
+79         capacity: cv.vehicle.load_capacity || 0,
+                                ~~~~~~~~~~~~~
+
+hooks/useVehicle.ts:109:53 - error TS2345: Argument of type 'Partial<Vehicle>' is not assignable to parameter of type 'VehicleUpdateRequest'.
+  Types of property 'status' are incompatible.
+    Type 'string | undefined' is not assignable to type 'VehicleStatus | undefined'.
+      Type 'string' is not assignable to type 'VehicleStatus | undefined'.
+
+109       await VehicleService.updateVehicle(vehicleId, data)
+                                                        ~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:108:9 - error TS2322: Type 'VTCDeliveryStatusType' is not assignable to type '"delivered" | "cancelled" | "pickup" | "searching" | "assigned" | "transit"'.
+
+108         status: (statusMapping[deliveryData.status] || 'searching') as VTCDeliveryStatusType,
+            ~~~~~~
+
+screens/client/EnhancedTrackDeliveryScreen.tsx:108:17 - error TS2352: Conversion of type 'string' to type 'VTCDeliveryStatusType' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+
+108         status: (statusMapping[deliveryData.status] || 'searching') as VTCDeliveryStatusType,
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+screens/client/MarketplaceScreen.tsx:29:3 - error TS2353: Object literal may only specify known properties, and 'lat' does not exist in type 'Merchant'.
+
+29   lat: merchantInfo.lat || 0,
+     ~~~
+
+screens/client/MerchantDetailsScreen.tsx:32:3 - error TS2353: Object literal may only specify known properties, and 'lat' does not exist in type 'Merchant'.
+
+32   lat: merchantInfo.lat || 0,
+     ~~~
+
+screens/courier/AddVehicleScreen.tsx:63:9 - error TS2322: Type 'string' is not assignable to type 'VehicleType | undefined'.
+
+63         vehicle_type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType : formData.type,
+           ~~~~~~~~~~~~
+
+  types/models.ts:703:3
+    703   vehicle_type?: VehicleType
+          ~~~~~~~~~~~~
+    The expected type comes from property 'vehicle_type' which is declared here on type 'VehicleCreateRequest'
+
+screens/courier/AddVehicleScreen.tsx:72:24 - error TS2345: Argument of type 'import("/home/runner/workspace/mobile/types/models").VehicleCreateRequest' is not assignable to parameter of type 'import("/home/runner/workspace/mobile/services/VehicleService").VehicleCreateRequest'.
+  Types of property 'brand' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+72       await addVehicle(vehicleData)
+                          ~~~~~~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:35:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+35         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:38:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+38         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:41:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+41         data = result || []
+                  ~~~~~~
+
+screens/courier/CollaborativeDeliveriesScreen.tsx:44:16 - error TS1345: An expression of type 'void' cannot be tested for truthiness.
+
+44         data = result || []
+                  ~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:65:31 - error TS2339: Property 'summary' does not exist on type 'CourierEarningsData'.
+
+65       setEarningsSummary(data.summary)
+                                 ~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:66:31 - error TS2339: Property 'history' does not exist on type 'CourierEarningsData'.
+
+66       setEarningsHistory(data.history)
+                                 ~~~~~~~
+
+screens/courier/CourierEarningsScreen.tsx:67:28 - error TS2339: Property 'transactions' does not exist on type 'CourierEarningsData'.
+
+67       setTransactions(data.transactions)
+                              ~~~~~~~~~~~~
+
+screens/courier/CourierWalletScreen.tsx:45:13 - error TS2322: Type '{ id: number; type: "withdrawal" | "bonus" | "penalty" | "earning"; amount: number; description: string; date: string; status: "pending" | "completed" | "failed"; }[]' is not assignable to type 'Transaction[]'.
+  Type '{ id: number; type: "earning" | "withdrawal" | "bonus" | "penalty"; amount: number; description: string; date: string; status: "completed" | "pending" | "failed"; }' is not assignable to type 'Transaction'.
+    Types of property 'id' are incompatible.
+      Type 'number' is not assignable to type 'string'.
+
+45       const convertedTransactions: Transaction[] = transactionData.map((wt) => ({
+               ~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/CourierWalletScreen.tsx:79:27 - error TS2345: Argument of type '{ amount: number; payment_method: string; account_details: { account_number: string; account_name: string; }; }' is not assignable to parameter of type 'PayoutRequest'.
+  Type '{ amount: number; payment_method: string; account_details: { account_number: string; account_name: string; }; }' is missing the following properties from type 'PayoutRequest': id, user_id, method, status, requested_at
+
+ 79       await requestPayout({
+                              ~
+ 80         amount,
+    ~~~~~~~~~~~~~~~
+... 
+ 85         }
+    ~~~~~~~~~
+ 86       })
+    ~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:218:15 - error TS2322: Type 'string' is not assignable to type 'VTCDeliveryStatus'.
+
+218               deliveryStatus="in_progress"
+                  ~~~~~~~~~~~~~~
+
+  components/VTCStyleMap.tsx:61:3
+    61   deliveryStatus: VTCDeliveryStatus
+         ~~~~~~~~~~~~~~
+    The expected type comes from property 'deliveryStatus' which is declared here on type 'IntrinsicAttributes & VTCStyleMapProps'
+
+screens/courier/GamificationScreen.tsx:43:35 - error TS2339: Property 'total_earnings' does not exist on type 'CourierStats'.
+
+43         total_earnings: statsData.total_earnings || 0,
+                                     ~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:44:34 - error TS2339: Property 'totalDistance' does not exist on type 'CourierStats'.
+
+44         totalDistance: statsData.totalDistance || 0,
+                                    ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:46:27 - error TS2339: Property 'badges' does not exist on type 'CourierStats'.
+
+46         badges: statsData.badges || [],
+                             ~~~~~~
+
+screens/courier/GamificationScreen.tsx:47:9 - error TS2353: Object literal may only specify known properties, and 'deliveriesCompleted' does not exist in type 'CourierStats'.
+
+47         deliveriesCompleted: statsData.total_deliveries || 0,
+           ~~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:53:23 - error TS2345: Argument of type 'Achievement[]' is not assignable to parameter of type 'SetStateAction<Achievement[]>'.
+  Type 'import("/home/runner/workspace/mobile/services/GamificationService").Achievement[]' is not assignable to type 'import("/home/runner/workspace/mobile/types/models").Achievement[]'.
+    Property 'name' is missing in type 'import("/home/runner/workspace/mobile/services/GamificationService").Achievement' but required in type 'import("/home/runner/workspace/mobile/types/models").Achievement'.
+
+53       setAchievements(achievementsData)
+                         ~~~~~~~~~~~~~~~~
+
+  types/models.ts:421:3
+    421   name: string
+          ~~~~
+    'name' is declared here.
+
+screens/courier/GamificationScreen.tsx:59:22 - error TS2345: Argument of type '{ deliveriescount: number; courier_id: number; name: string; profile_picture?: string | undefined; points: number; deliveries_count: number; rank: number; }[]' is not assignable to parameter of type 'SetStateAction<Leaderboard[]>'.
+  Type '{ deliveriescount: number; courier_id: number; name: string; profile_picture?: string | undefined; points: number; deliveries_count: number; rank: number; }[]' is not assignable to type 'Leaderboard[]'.
+    Type '{ deliveriescount: number; courier_id: number; name: string; profile_picture?: string | undefined; points: number; deliveries_count: number; rank: number; }' is missing the following properties from type 'Leaderboard': id, position, total_points
+
+59       setLeaderboard(adaptedLeaderboard)
+                        ~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:207:60 - error TS2339: Property 'type' does not exist on type 'Achievement'.
+
+207                       name={getAchievementIcon(achievement.type)}
+                                                               ~~~~
+
+screens/courier/GamificationScreen.tsx:213:72 - error TS2339: Property 'title' does not exist on type 'Achievement'.
+
+213                     <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                                                                           ~~~~~
+
+screens/courier/GamificationScreen.tsx:253:29 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+253                       entry.profile_picture
+                                ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:254:40 - error TS2339: Property 'profile_picture' does not exist on type 'Leaderboard'.
+
+254                         ? { uri: entry.profile_picture }
+                                           ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:264:71 - error TS2339: Property 'name' does not exist on type 'Leaderboard'.
+
+264                       {entry.courier_id === user?.id ? "Vous" : entry.name}
+                                                                          ~~~~
+
+screens/courier/GamificationScreen.tsx:267:30 - error TS2339: Property 'deliveriescount' does not exist on type 'Leaderboard'.
+
+267                       {entry.deliveriescount} livraisons • {entry.points} pts
+                                 ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:267:67 - error TS2339: Property 'points' does not exist on type 'Leaderboard'.
+
+267                       {entry.deliveriescount} livraisons • {entry.points} pts
+                                                                      ~~~~~~
+
+screens/courier/HomeScreen.tsx:98:42 - error TS2339: Property 'total_earnings' does not exist on type 'CourierStats'.
+
+98           earnings_today: statsResponse?.total_earnings || 0,
+                                            ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:101:42 - error TS2339: Property 'totalDistance' does not exist on type 'CourierStats'.
+
+101           total_distance: statsResponse?.totalDistance || 0,
+                                             ~~~~~~~~~~~~~
+
+types/models.ts:369:18 - error TS2430: Interface 'WalletTransaction' incorrectly extends interface 'Transaction'.
+  Types of property 'type' are incompatible.
+    Type '"withdrawal" | "deposit" | "credit" | "debit"' is not assignable to type 'TransactionType'.
+      Type '"credit"' is not assignable to type 'TransactionType'.
+
+369 export interface WalletTransaction {
+                     ~~~~~~~~~~~~~~~~~
+
+
+Found 36 errors in 13 files.
+
+Errors  Files
+     1  hooks/useUser.ts:417
+     3  hooks/useVehicle.ts:75
+     2  screens/client/EnhancedTrackDeliveryScreen.tsx:108
+     1  screens/client/MarketplaceScreen.tsx:29
+     1  screens/client/MerchantDetailsScreen.tsx:32
+     2  screens/courier/AddVehicleScreen.tsx:63
+     4  screens/courier/CollaborativeDeliveriesScreen.tsx:35
+     3  screens/courier/CourierEarningsScreen.tsx:65
+     2  screens/courier/CourierWalletScreen.tsx:45
+     1  screens/courier/DeliveryDetailsScreen.tsx:218
+    13  screens/courier/GamificationScreen.tsx:43
+     2  screens/courier/HomeScreen.tsx:98
+     1  types/models.ts:369
