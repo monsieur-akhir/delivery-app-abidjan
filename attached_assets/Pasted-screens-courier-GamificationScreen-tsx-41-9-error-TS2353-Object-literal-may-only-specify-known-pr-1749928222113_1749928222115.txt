@@ -1,0 +1,110 @@
+screens/courier/GamificationScreen.tsx:41:9 - error TS2353: Object literal may only specify known properties, and 'completion_rate' does not exist in type 'CourierStats'.
+
+41         completion_rate: (statsData as any).completion_rate || 100,
+           ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:43:38 - error TS2339: Property 'distance_traveled' does not exist on type 'CourierStats'.
+
+43         distance_traveled: statsData.distance_traveled || 0,
+                                        ~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:44:35 - error TS2339: Property 'total_earnings' does not exist on type 'CourierStats'.
+
+44         total_earnings: statsData.total_earnings || 0,
+                                     ~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:137:47 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+137   const currentLevel = getCurrentLevel(stats?.total_points || 0)
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:138:50 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+138   const progress = getProgressToNextLevel(stats?.total_points || 0)
+                                                     ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:166:60 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+166                   <Text style={styles.totalPoints}>{stats?.total_points || 0} points</Text>
+                                                               ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:182:71 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+182                     ? ` ${levelThresholds[currentLevel + 1] - (stats?.total_points || 0)} points restants`
+                                                                          ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:231:60 - error TS2339: Property 'type' does not exist on type 'Achievement'.
+
+231                       name={getAchievementIcon(achievement.type || 'award')}
+                                                               ~~~~
+
+services/GamificationService.ts:32:3 - error TS2300: Duplicate identifier 'name'.
+
+32   name: string
+     ~~~~
+
+services/GamificationService.ts:32:3 - error TS2687: All declarations of 'name' must have identical modifiers.
+
+32   name: string
+     ~~~~
+
+services/GamificationService.ts:33:3 - error TS2300: Duplicate identifier 'profile_picture'.
+
+33   profile_picture?: string
+     ~~~~~~~~~~~~~~~
+
+services/GamificationService.ts:35:3 - error TS2300: Duplicate identifier 'deliveries_count'.
+
+35   deliveries_count: number
+     ~~~~~~~~~~~~~~~~
+
+services/GamificationService.ts:35:3 - error TS2687: All declarations of 'deliveries_count' must have identical modifiers.
+
+35   deliveries_count: number
+     ~~~~~~~~~~~~~~~~
+
+services/GamificationService.ts:37:3 - error TS2300: Duplicate identifier 'profile_picture'.
+
+37   profile_picture?: string
+     ~~~~~~~~~~~~~~~
+
+services/GamificationService.ts:38:3 - error TS2300: Duplicate identifier 'name'.
+
+38   name?: string
+     ~~~~
+
+services/GamificationService.ts:38:3 - error TS2687: All declarations of 'name' must have identical modifiers.
+
+38   name?: string
+     ~~~~
+
+services/GamificationService.ts:38:3 - error TS2717: Subsequent property declarations must have the same type.  Property 'name' must be of type 'string', but here has type 'string | undefined'.
+
+38   name?: string
+     ~~~~
+
+  services/GamificationService.ts:32:3
+    32   name: string
+         ~~~~
+    'name' was also declared here.
+
+services/GamificationService.ts:39:3 - error TS2300: Duplicate identifier 'deliveries_count'.
+
+39   deliveries_count?: number
+     ~~~~~~~~~~~~~~~~
+
+services/GamificationService.ts:39:3 - error TS2687: All declarations of 'deliveries_count' must have identical modifiers.
+
+39   deliveries_count?: number
+     ~~~~~~~~~~~~~~~~
+
+services/GamificationService.ts:39:3 - error TS2717: Subsequent property declarations must have the same type.  Property 'deliveries_count' must be of type 'number', but here has type 'number | undefined'.
+
+39   deliveries_count?: number
+     ~~~~~~~~~~~~~~~~
+
+  services/GamificationService.ts:35:3
+    35   deliveries_count: number
+         ~~~~~~~~~~~~~~~~
+    'deliveries_count' was also declared here.
+
