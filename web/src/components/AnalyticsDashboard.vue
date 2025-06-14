@@ -991,7 +991,7 @@ export default {
 @keyframes spinner {
   to {
     transform: rotate(360deg);
-  }
+    }
 }
 
 .stats-cards {

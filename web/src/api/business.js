@@ -439,14 +439,10 @@ export const uploadBusinessLogo = async file => {
  */
 export async function fetchBusinesses(params = {}) {
   try {
-    const response = await axios.get(`${BASE_URL}/businesses`, {
-      params,
-      headers: getAuthHeaders(),
-    })
+    const response = await authApi.get('/businesses', { params })
     return response.data
   } catch (error) {
-    console.error('Erreur lors de la récupération des entreprises:', error)
-    throw error
+    return handleApiError(error)
   }
 }
 

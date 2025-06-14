@@ -1,6 +1,6 @@
 <template>
   <div class="default-layout">
-    <Header />
+    <AppHeader />
     <div class="content">
       <Sidebar 
         :is-collapsed="isSidebarCollapsed" 
@@ -10,41 +10,42 @@
         <router-view />
       </main>
     </div>
-    <Footer />
+    <AppFooter />
   </div>
 </template>
 
 <script>
 import { ref } from 'vue'
-import Header from "@/components/layout/Header.vue"
-import Sidebar from "@/components/layout/Sidebar.vue"
-import Footer from "@/components/layout/Footer.vue"
+import AppHeader from '@/components/layout/Header.vue'
+import Sidebar from '@/components/layout/Sidebar.vue'
+import AppFooter from '@/components/layout/Footer.vue'
 
 export default {
+  name: 'DefaultLayout',
   components: {
-    Header,
+    AppHeader,
     Sidebar,
-    Footer,
+    AppFooter,
   },
   setup() {
     const isSidebarCollapsed = ref(false)
-    
+
     // Vérifier si l'écran est petit au chargement
     if (window.innerWidth < 768) {
       isSidebarCollapsed.value = true
     }
-    
+
     // Écouter les changements de taille d'écran
     window.addEventListener('resize', () => {
       if (window.innerWidth < 768) {
         isSidebarCollapsed.value = true
       }
     })
-    
+
     const toggleSidebar = () => {
       isSidebarCollapsed.value = !isSidebarCollapsed.value
     }
-    
+
     return {
       isSidebarCollapsed,
       toggleSidebar
@@ -77,3 +78,5 @@ export default {
     flex-direction: column;
   }
 }
+</style>
+```

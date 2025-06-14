@@ -419,42 +419,6 @@ export default {
       if (fileInput) fileInput.value = ''
     }
 
-    const createProduct = async () => {
-      isSubmitting.value = true
-
-      try {
-        // Télécharger l'image si présente
-        let imageUrl = ''
-        if (productForm.image_file) {
-          const formData = new FormData()
-          formData.append('file', productForm.image_file)
-          const uploadResponse = await uploadImage(formData)
-          imageUrl = uploadResponse.data.url
-        }
-
-        // Créer le produit
-        const productData = {
-          name: productForm.name,
-          category: productForm.category,
-          price: parseFloat(productForm.price),
-          description: productForm.description,
-          image_url: imageUrl,
-          is_available: productForm.is_available,
-        }
-
-        await createProduct(productData)
-
-        showToast('Succès', 'Produit ajouté avec succès', 'success')
-        closeModals()
-        fetchProducts()
-      } catch (err) {
-        console.error('Erreur lors de la création du produit:', err)
-        showToast('Erreur', "Impossible d'ajouter le produit. Veuillez réessayer.", 'error')
-      } finally {
-        isSubmitting.value = false
-      }
-    }
-
     const editProduct = product => {
       productForm.id = product.id
       productForm.name = product.name
@@ -601,7 +565,6 @@ export default {
       closeModals,
       handleImageUpload,
       removeImage,
-      createProduct,
       editProduct,
       updateProduct: updateProductData,
       toggleAvailability,

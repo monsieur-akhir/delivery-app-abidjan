@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { google } from 'google-maps'
 
 export default {

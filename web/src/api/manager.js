@@ -897,7 +897,7 @@ const createUser = (userData) => {
   return apiClient.post('/manager/users', userData)
 }
 
-const updateUser = (userId, userData) => {
+const updateManagerUser = (userId, userData) => {
   return apiClient.put(`/manager/users/${userId}`, userData)
 }
 

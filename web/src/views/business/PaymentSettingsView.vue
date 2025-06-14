@@ -363,7 +363,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { getPaymentSettings, updatePaymentSettings, testPaymentConnection } from '@/api/payments'
 import { uploadImage } from '@/api/storage'

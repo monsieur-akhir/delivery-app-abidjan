@@ -17,7 +17,7 @@ import { computed } from 'vue'
 import { APP_VERSION } from '@/config'
 
 export default {
-  name: 'Footer',
+  name: 'AppFooter',
   setup() {
     const currentYear = computed(() => new Date().getFullYear())
     const appVersion = computed(() => APP_VERSION)
