@@ -52,7 +52,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import NotificationBell from '@/components/layout/NotificationBell.vue'
 
-
 export default {
   name: 'AppHeader',
   components: {

@@ -118,7 +118,7 @@ export default {
         chartInstance.data = {
           ...props.data,
           labels: chartData.labels,
-          datasets: chartData.datasets.map((dataset) => ({
+          datasets: chartData.datasets.map(dataset => ({
             ...dataset,
             fill: true,
             backgroundColor: dataset.backgroundColor || `rgba(54, 162, 235, 0.2)`,

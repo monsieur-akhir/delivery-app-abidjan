@@ -1,0 +1,79 @@
+/home/runner/workspace/web/src/api/manager.js
+   507:19  error  'reportData' is not defined                             no-undef
+   507:61  error  'reportData' is not defined                             no-undef
+   898:16  error  'getAuthHeaders' is not defined                         no-undef
+   916:7   error  'updateManagerUser' is assigned a value but never used  no-unused-vars
+  1046:3   error  Duplicate key 'getRevenueStats'                         no-dupe-keys
+
+/home/runner/workspace/web/src/components/AnalyticsDashboard.vue
+  827:46  error  'index' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/components/charts/AreaChart.vue
+   85:53  error  'index' is defined but never used  no-unused-vars
+  120:19  error  'chartData' is not defined         no-undef
+  121:21  error  'chartData' is not defined         no-undef
+
+/home/runner/workspace/web/src/components/collaborative/CollaboratorsListComponent.vue
+  450:33  error  'collaborator' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/components/modals/KYCReviewModal.vue
+  150:15  error  'reactive' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/components/modals/UserDetailsModal.vue
+  328:9  error  Unexpected mutation of "user" prop  vue/no-mutating-props
+
+/home/runner/workspace/web/src/views/ProfileView.vue
+  245:23  error  'e' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/business/BusinessCouriersManagementView.vue
+  397:37  error  'courier' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/business/DeliveryDetailView.vue
+  439:47  error  Parsing error: invalid-first-character-of-tag-name  vue/no-parsing-error
+  497:11  error  'router' is assigned a value but never used         no-unused-vars
+
+/home/runner/workspace/web/src/views/business/MarketplaceView.vue
+  250:23  error  'exportToExcel' is defined but never used               no-unused-vars
+  251:23  error  'createProduct' is defined but never used               no-unused-vars
+  333:11  error  'paginatedProducts' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/courier/EarningsView.vue
+  360:3  error  'fetchTransactions' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/AuditLogsView.vue
+  171:11  error  'router' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/CollaborativeDeliveriesView.vue
+  300:7  error  Unexpected side effect in computed function  vue/no-side-effects-in-computed-properties
+
+/home/runner/workspace/web/src/views/manager/CollaborativeDeliveryView.vue
+  881:9  error  'i' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/CouriersManagementView.vue
+  1221:11  error  'router' is assigned a value but never used           no-unused-vars
+  1226:11  error  'courierToDelete' is assigned a value but never used  no-unused-vars
+  1743:32  error  'courierId' is defined but never used                 no-unused-vars
+  1821:30  error  'courierId' is defined but never used                 no-unused-vars
+  1848:21  error  '_' is defined but never used                         no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/ExpressDeliveryView.vue
+  557:3   error  'getCharityOrganizations' is defined but never used  no-unused-vars
+  724:15  error  'statsData' is assigned a value but never used       no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/ReportsView.vue
+  682:15  error  'reportDetails' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/SettingsView.vue
+  850:10  warning  Parsing error: Unexpected character "EOF"  prettier/prettier
+
+/home/runner/workspace/web/src/views/manager/TrafficView.vue
+  118:11  error  'router' is assigned a value but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/UsersView.vue
+  1098:3  error  'addUser' is defined but never used  no-unused-vars
+
+/home/runner/workspace/web/src/views/manager/ZonesView.vue
+  441:11  error  'showPricingRuleModal' is assigned a value but never used  no-unused-vars
+  442:11  error  'showRestrictionModal' is assigned a value but never used  no-unused-vars
+
+✖ 36 problems (35 errors, 1 warning)

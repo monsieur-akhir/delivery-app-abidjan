@@ -29,11 +29,7 @@
     </div>
 
     <div v-else class="collaborators-grid">
-      <div
-            v-for="(collaborator, index) in collaborators"
-            :key="index"
-            class="collaborator-card"
-          >
+      <div v-for="(collaborator, index) in collaborators" :key="index" class="collaborator-card">
         <div class="collaborator-header">
           <div class="avatar-section">
             <img
