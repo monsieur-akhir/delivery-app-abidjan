@@ -679,7 +679,7 @@ export default {
         loading.value = true
 
         // Récupérer les détails du rapport pour obtenir les paramètres originaux
-        const reportDetails = await fetchReportDetails(reportId)
+        await fetchReportDetails(reportId)
 
         // Régénérer le rapport avec les mêmes paramètres
         await generateReportApi({

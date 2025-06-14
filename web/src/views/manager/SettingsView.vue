@@ -1,7 +1,3 @@
-` tags, ensuring indentation and structure are preserved. I will avoid any forbidden words or placeholders.
-
-```
-<replit_final_file>
 <template>
   <div class="settings-view">
     <div class="header">
@@ -590,6 +586,7 @@ export default {
   }
 }
 </script>
+</template>
 
 <style scoped>
 .settings-view {

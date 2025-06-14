@@ -892,7 +892,7 @@
                     </div>
                     <div class="location-item">
                       <div class="location-label">Coordonnées</div>
-                      <div class="location-value">
+<div class="location-value">
                         <span v-if="selectedCourier.latitude && selectedCourier.longitude">
                           {{ selectedCourier.latitude.toFixed(6) }},
                           {{ selectedCourier.longitude.toFixed(6) }}
@@ -1194,7 +1194,9 @@
 
 <script>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useStore } from 'vuex'
+import { useToast } from 'vue-toastification'
 import {
   fetchCouriers,
   fetchCourierDetails,
@@ -1218,12 +1220,13 @@ import 'leaflet-draw/dist/leaflet.draw.css'
 export default {
   name: 'CouriersManagementView',
   setup() {
-    const router = useRouter()
+    const route = useRoute()
+    const store = useStore()
+    const { showToast } = useToast()
 
     // État
     const couriers = ref([])
     const selectedCourier = ref(null)
-    const courierToDelete = ref(null)
     const showAddCourierModal = ref(false)
     const showEditCourierModal = ref(false)
     const showCourierDetailsModal = ref(false)
@@ -1687,9 +1690,10 @@ export default {
         }
 
         // Afficher une notification de succès
+        showToast('Coursier suspendu avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors de la suspension du coursier:', error)
-        // Gérer l'erreur (afficher une notification, etc.)
+        showToast('Erreur lors de la suspension du coursier', { type: 'error' })
       }
     }
 
@@ -1709,9 +1713,10 @@ export default {
         }
 
         // Afficher une notification de succès
+        showToast('Coursier activé avec succès', { type: 'success' })
       } catch (error) {
         console.error("Erreur lors de l'activation du coursier:", error)
-        // Gérer l'erreur (afficher une notification, etc.)
+        showToast("Erreur lors de l'activation du coursier", { type: 'error' })
       }
     }
 
@@ -1734,9 +1739,10 @@ export default {
         }
 
         // Afficher une notification de succès
+        showToast('Coursier vérifié avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors de la vérification du coursier:', error)
-        // Gérer l'erreur (afficher une notification, etc.)
+        showToast('Erreur lors de la vérification du coursier', { type: 'error' })
       }
     }
 
@@ -1767,9 +1773,10 @@ export default {
         showRejectVerificationModal.value = false
 
         // Afficher une notification de succès
+        showToast('Vérification rejetée avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors du rejet de la vérification:', error)
-        // Gérer l'erreur (afficher une notification, etc.)
+        showToast('Erreur lors du rejet de la vérification', { type: 'error' })
       }
     }
 
@@ -1787,9 +1794,10 @@ export default {
         }
 
         // Afficher une notification de succès
+        showToast('Document vérifié avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors de la vérification du document:', error)
-        // Gérer l'erreur (afficher une notification, etc.)
+        showToast('Erreur lors de la vérification du document', { type: 'error' })
       }
     }
 
@@ -1812,9 +1820,10 @@ export default {
         }
 
         // Afficher une notification de succès
+        showToast('Document rejeté avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors du rejet du document:', error)
-        // Gérer l'erreur (afficher une notification, etc.)
+        showToast('Erreur lors du rejet du document', { type: 'error' })
       }
     }
 
@@ -1859,13 +1868,62 @@ export default {
         closeNotificationModal()
 
         // Afficher une notification de succès
+        showToast('Notification envoyée avec succès', { type: 'success' })
       } catch (error) {
         console.error("Erreur lors de l'envoi de la notification:", error)
-        // Gérer l'erreur (afficher une notification, etc.)
+        showToast("Erreur lors de l'envoi de la notification", { type: 'error' })
       } finally {
         isSendingNotification.value = false
       }
     }
+
+    const blockCourier = async (reason) => {
+      try {
+        if (!selectedCourier.value) return
+
+        await store.dispatch('blockCourier', {
+          courierId: selectedCourier.value.id,
+          reason: reason,
+        })
+
+        showToast('Coursier bloqué avec succès', { type: 'success' })
+      } catch (error) {
+        console.error('Erreur lors du blocage du coursier:', error)
+        showToast('Erreur lors du blocage du coursier', { type: 'error' })
+      }
+    }
+
+    const unblockCourier = async () => {
+      try {
+        if (!selectedCourier.value) return
+
+        await store.dispatch('unblockCourier', {
+          courierId: selectedCourier.value.id,
+        })
+
+        showToast('Coursier débloqué avec succès', { type: 'success' })
+      } catch (error) {
+        console.error('Erreur lors du déblocage du coursier:', error)
+        showToast('Erreur lors du déblocage du coursier', { type: 'error' })
+      }
+    }
+
+    const onCourierBlocked = (courier) => {
+      showToast(`Coursier ${courier.name} a été bloqué`, { type: 'info' })
+    }
+
+    store.subscribeAction({
+      after: (action, state, error, response) => {
+        if (action.type === 'auth/login') {
+          if (response?.payload?.success) {
+            this.$router.push('/')
+          }
+        }
+      },
+      onError: (error, response) => {
+        showToast(response?.payload?.message, { type: 'error' })
+      },
+    })
 
     // Utilitaires
     const getInitials = name => {
@@ -2213,6 +2271,8 @@ export default {
       sendNotification,
       closeNotificationModal,
       submitNotification,
+      blockCourier,
+      unblockCourier,
 
       getInitials,
       isImageDocument,
@@ -2236,6 +2296,7 @@ export default {
       formatDateTime,
       formatMinutes,
       debounceSearch,
+      onCourierBlocked,
     }
   },
 }

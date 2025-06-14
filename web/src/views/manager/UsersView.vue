@@ -878,7 +878,7 @@
                               v-if="isImageDocument(selectedUser.kyc.kbis_document)"
                               :src="selectedUser.kyc.kbis_document"
                               alt="Extrait KBIS"
-                            />
+                              />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
@@ -1300,37 +1300,7 @@ export default {
       loadUsers()
     }
 
-    // Ajouter un utilisateur
-    const addUser = async () => {
-      try {
-        isAddingUser.value = true
-
-        await addUser(newUser)
-
-        // Réinitialiser le formulaire
-        newUser.name = ''
-        newUser.email = ''
-        newUser.phone = ''
-        newUser.role = 'client'
-        newUser.business_name = ''
-        newUser.password = ''
-        newUser.status = 'active'
-
-        // Fermer le modal
-        showAddUserModal.value = false
-
-        // Recharger les utilisateurs
-        loadUsers()
-
-        // Afficher un message de succès
-        alert('Utilisateur ajouté avec succès')
-      } catch (error) {
-        console.error('Error adding user:', error)
-        alert(`Erreur lors de l'ajout de l'utilisateur: ${error.message}`)
-      } finally {
-        isAddingUser.value = false
-      }
-    }
+    
 
     // Voir les détails d'un utilisateur
     const viewUserDetails = async user => {
@@ -1889,7 +1859,7 @@ export default {
       changePage,
       changePageSize,
       refreshData,
-      addUser,
+      
       viewUserDetails,
       editUser,
       updateUser,

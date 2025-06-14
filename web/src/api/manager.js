@@ -483,36 +483,37 @@ export const generateReport = async reportData => {
 }
 
 export const downloadReport = async (reportId, format = 'pdf') => {
-  const response = await apiClient.get(`/reports/${reportId}/download`, {
-    params: { format },
-    responseType: 'blob',
-  })
+  try {
+    const response = await apiClient.get(`/reports/${reportId}/download`, {
+      params: { format },
+      responseType: 'blob',
+    })
 
-  // Créer un lien de téléchargement pour le fichier
-  const url = window.URL.createObjectURL(new Blob([response.data]))
-  const link = document.createElement('a')
-  link.href = url
+    // Créer un lien de téléchargement pour le fichier
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
 
-  // Déterminer le nom du fichier
-  const contentDisposition = response.headers['content-disposition']
-  let filename = `report-${reportId}.${format}`
+    // Déterminer le nom du fichier
+    const contentDisposition = response.headers['content-disposition']
+    let filename = `report-${reportId}.${format}`
 
-  if (contentDisposition) {
-    const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-    if (filenameMatch && filenameMatch.length === 2) {
-      filename = filenameMatch[1]
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+      if (filenameMatch && filenameMatch.length === 2) {
+        filename = filenameMatch[1]
+      }
     }
-  } else {
-    // Utiliser le nom fourni dans les paramètres ou un nom par défaut avec l'extension appropriée
-    filename = `${reportData.filename || 'report-export'}.${reportData.format}`
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    return true
+  } catch (error) {
+    console.error('Erreur lors du téléchargement du rapport:', error)
+    throw error
   }
-
-  link.setAttribute('download', filename)
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-
-  return true
 }
 
 // API pour les promotions

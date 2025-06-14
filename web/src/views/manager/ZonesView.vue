@@ -438,8 +438,7 @@ export default {
 
     const showCreateModal = ref(false)
     const editingZone = ref(null)
-    const showPricingRuleModal = ref(false)
-    const showRestrictionModal = ref(false)
+    
 
     const filters = reactive({
       type: '',
