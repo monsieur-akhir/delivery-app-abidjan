@@ -288,7 +288,10 @@ export default {
             !delivery.id.toLowerCase().includes(searchLower) &&
             !delivery.pickupCommune.toLowerCase().includes(searchLower) &&
             !delivery.deliveryCommune.toLowerCase().includes(searchLower) &&
-            !(delivery.primaryCourierName && delivery.primaryCourierName.toLowerCase().includes(searchLower))
+            !(
+              delivery.primaryCourierName &&
+              delivery.primaryCourierName.toLowerCase().includes(searchLower)
+            )
           ) {
             return false
           }

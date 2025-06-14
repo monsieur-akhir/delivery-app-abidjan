@@ -438,7 +438,6 @@ export default {
 
     const showCreateModal = ref(false)
     const editingZone = ref(null)
-    
 
     const filters = reactive({
       type: '',

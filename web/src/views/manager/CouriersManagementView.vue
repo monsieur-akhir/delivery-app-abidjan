@@ -892,7 +892,7 @@
                     </div>
                     <div class="location-item">
                       <div class="location-label">Coordonnées</div>
-<div class="location-value">
+                      <div class="location-value">
                         <span v-if="selectedCourier.latitude && selectedCourier.longitude">
                           {{ selectedCourier.latitude.toFixed(6) }},
                           {{ selectedCourier.longitude.toFixed(6) }}
@@ -1877,7 +1877,7 @@ export default {
       }
     }
 
-    const blockCourier = async (reason) => {
+    const blockCourier = async reason => {
       try {
         if (!selectedCourier.value) return
 
@@ -1908,7 +1908,7 @@ export default {
       }
     }
 
-    const onCourierBlocked = (courier) => {
+    const onCourierBlocked = courier => {
       showToast(`Coursier ${courier.name} a été bloqué`, { type: 'info' })
     }
 

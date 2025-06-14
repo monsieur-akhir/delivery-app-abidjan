@@ -878,7 +878,7 @@
                               v-if="isImageDocument(selectedUser.kyc.kbis_document)"
                               :src="selectedUser.kyc.kbis_document"
                               alt="Extrait KBIS"
-                              />
+                            />
                             <div v-else class="pdf-preview">
                               <font-awesome-icon icon="file-pdf" size="2x" />
                               <span>Document PDF</span>
@@ -1299,8 +1299,6 @@ export default {
     const refreshData = () => {
       loadUsers()
     }
-
-    
 
     // Voir les détails d'un utilisateur
     const viewUserDetails = async user => {
@@ -1859,7 +1857,7 @@ export default {
       changePage,
       changePageSize,
       refreshData,
-      
+
       viewUserDetails,
       editUser,
       updateUser,
