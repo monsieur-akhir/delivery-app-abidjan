@@ -351,25 +351,9 @@ const TrackDeliveryScreen: React.FC<TrackDeliveryScreenProps> = ({ route, naviga
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}
-          pickupPoint={delivery.pickup_lat && delivery.pickup_lng ? {
-            latitude: delivery.pickup_lat,
-            longitude: delivery.pickup_lng,
-            title: t("trackDelivery.pickupPoint"),
-            description: delivery.pickup_address
-          } : undefined}
-          deliveryPoint={delivery.delivery_lat && delivery.delivery_lng ? {
-            latitude: delivery.delivery_lat,
-            longitude: delivery.delivery_lng,
-            title: t("trackDelivery.deliveryPoint"),
-            description: delivery.delivery_address
-          } : undefined}
-          courierLocation={courierLocation ? {
-            latitude: courierLocation.latitude,
-            longitude: courierLocation.longitude
-          } : undefined}
+          deliveries={[delivery]}
           route={deliveryRoute || undefined}
           showsTraffic={true}
-          showsUserLocation={false}
         />
 
         {/* Indicateur d'ETA */}

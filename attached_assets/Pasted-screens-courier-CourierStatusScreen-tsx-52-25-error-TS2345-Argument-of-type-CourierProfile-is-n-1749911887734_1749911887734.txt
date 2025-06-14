@@ -1,0 +1,158 @@
+screens/courier/CourierStatusScreen.tsx:52:25 - error TS2345: Argument of type 'CourierProfile' is not assignable to parameter of type 'SetStateAction<CourierProfile | null>'.
+  Type 'CourierProfile' is missing the following properties from type 'CourierProfile': user_id, is_available
+
+52       setCourierProfile(profileData)
+                           ~~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:41:58 - error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+
+41       const data = await DeliveryService.getDeliveryById(deliveryId)
+                                                            ~~~~~~~~~~
+
+screens/courier/DeliveryDetailsScreen.tsx:217:15 - error TS2322: Type '{ deliveries: Delivery[]; }' is not assignable to type 'IntrinsicAttributes & VTCStyleMapProps'.
+  Property 'deliveries' does not exist on type 'IntrinsicAttributes & VTCStyleMapProps'.
+
+217               deliveries={[delivery]}
+                  ~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:24:5 - error TS2339: Property 'loading' does not exist on type 'UseDeliveryReturn'.
+
+24     loading,
+       ~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:27:5 - error TS2339: Property 'acceptDelivery' does not exist on type 'UseDeliveryReturn'.
+
+27     acceptDelivery,
+       ~~~~~~~~~~~~~~
+
+screens/courier/ExpressDeliveriesScreen.tsx:28:5 - error TS2339: Property 'startDelivery' does not exist on type 'UseDeliveryReturn'.
+
+28     startDelivery
+       ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:43:9 - error TS2353: Object literal may only specify known properties, and 'totalEarnings' does not exist in type 'CourierStats | ((prevState: CourierStats | null) => CourierStats | null)'.
+
+43         totalEarnings: 0,
+           ~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:55:22 - error TS2345: Argument of type 'Leaderboard[]' is not assignable to parameter of type 'SetStateAction<Leaderboard[]>'.
+  Type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard[]' is not assignable to type 'import("/home/runner/workspace/mobile/types/models").Leaderboard[]'.
+    Property 'deliveriescount' is missing in type 'import("/home/runner/workspace/mobile/services/GamificationService").Leaderboard' but required in type 'import("/home/runner/workspace/mobile/types/models").Leaderboard'.
+
+55       setLeaderboard(leaderboardData)
+                        ~~~~~~~~~~~~~~~
+
+  types/models.ts:1331:3
+    1331   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/GamificationScreen.tsx:109:47 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+109   const currentLevel = getCurrentLevel(stats?.total_points || 0)
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:110:50 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+110   const progress = getProgressToNextLevel(stats?.total_points || 0)
+                                                     ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:138:59 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+138                   <Text style={styles.totalPoints}>{stats.total_points || 0} points</Text>
+                                                              ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:154:70 - error TS2339: Property 'total_points' does not exist on type 'CourierStats'.
+
+154                     ? ` ${levelThresholds[currentLevel + 1] - (stats.total_points || 0)} points restants`
+                                                                         ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:176:57 - error TS2551: Property 'averageRating' does not exist on type 'CourierStats'. Did you mean 'average_rating'?
+
+176                   <Text style={styles.statValue}>{stats.averageRating?.toFixed(1) || "N/A"}</Text>
+                                                            ~~~~~~~~~~~~~
+
+  types/models.ts:337:3
+    337   average_rating: number
+          ~~~~~~~~~~~~~~
+    'average_rating' is declared here.
+
+screens/courier/GamificationScreen.tsx:181:57 - error TS2339: Property 'completion_rate' does not exist on type 'CourierStats'.
+
+181                   <Text style={styles.statValue}>{stats.completion_rate?.toFixed(0) || 0}%</Text>
+                                                            ~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:186:57 - error TS2339: Property 'average_delivery_time' does not exist on type 'CourierStats'.
+
+186                   <Text style={styles.statValue}>{stats.average_delivery_time || "N/A"}</Text>
+                                                            ~~~~~~~~~~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:263:30 - error TS2551: Property 'deliveries_count' does not exist on type 'Leaderboard'. Did you mean 'deliveriescount'?
+
+263                       {entry.deliveries_count} livraisons • {entry.points} pts
+                                 ~~~~~~~~~~~~~~~~
+
+  types/models.ts:1331:3
+    1331   deliveriescount: number
+           ~~~~~~~~~~~~~~~
+    'deliveriescount' is declared here.
+
+screens/courier/GamificationScreen.tsx:304:47 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+304                     progress={Math.min((stats.daily_rating || 0) / 4.5, 1)}
+                                                  ~~~~~~~~~~~~
+
+screens/courier/GamificationScreen.tsx:309:43 - error TS2339: Property 'daily_rating' does not exist on type 'CourierStats'.
+
+309                     Note actuelle: {stats.daily_rating?.toFixed(1) || "N/A"}
+                                              ~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:96:30 - error TS2345: Argument of type 'AvailableDelivery[]' is not assignable to parameter of type 'SetStateAction<AvailableDelivery[]>'.
+  Type 'import("/home/runner/workspace/mobile/types/models").AvailableDelivery[]' is not assignable to type 'AvailableDelivery[]'.
+    Type 'AvailableDelivery' is missing the following properties from type 'AvailableDelivery': estimated_price, commune, bids_count, urgency_level
+
+96       setAvailableDeliveries(response || [])
+                                ~~~~~~~~~~~~~~
+
+screens/courier/HomeScreen.tsx:105:27 - error TS2345: Argument of type 'Delivery[]' is not assignable to parameter of type 'SetStateAction<ActiveDelivery[]>'.
+  Type 'Delivery[]' is not assignable to type 'ActiveDelivery[]'.
+    Property 'client_name' is missing in type 'Delivery' but required in type 'ActiveDelivery'.
+
+105       setActiveDeliveries(response || [])
+                              ~~~~~~~~~~~~~~
+
+  screens/courier/HomeScreen.tsx:42:3
+    42   client_name: string
+         ~~~~~~~~~~~
+    'client_name' is declared here.
+
+screens/courier/HomeScreen.tsx:123:16 - error TS2345: Argument of type 'CourierStats' is not assignable to parameter of type 'SetStateAction<CourierStats>'.
+  Type 'CourierStats' is missing the following properties from type 'CourierStats': completed_today, earnings_today, current_earnings
+
+123       setStats(response || stats)
+                   ~~~~~~~~~~~~~~~~~
+
+screens/profile/ProfileScreen.tsx:54:9 - error TS2353: Object literal may only specify known properties, and 'created_at' does not exist in type 'UserProfile'.
+
+54         created_at: profileData.created_at,
+           ~~~~~~~~~~
+
+types/models.ts:16:3 - error TS2687: All declarations of 'password' must have identical modifiers.
+
+16   password?: string;
+     ~~~~~~~~
+
+types/models.ts:948:3 - error TS2687: All declarations of 'password' must have identical modifiers.
+
+948   password: string;
+      ~~~~~~~~
+
+types/models.ts:948:3 - error TS2717: Subsequent property declarations must have the same type.  Property 'password' must be of type 'string | undefined', but here has type 'string'.
+
+948   password: string;
+      ~~~~~~~~
+
+  types/models.ts:16:3
+    16   password?: string;
+         ~~~~~~~~
+    'password' was also declared here.

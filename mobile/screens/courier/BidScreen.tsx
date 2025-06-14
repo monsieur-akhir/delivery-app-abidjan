@@ -212,6 +212,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
         // Sauvegarder l'enchère pour synchronisation ultérieure
         addPendingUpload({
           type: "bid",
+          retries: 0,
           data: {
             delivery_id: Number(deliveryId),
             proposed_price: amount,
@@ -226,8 +227,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
         )
       } else {
         // Soumettre l'enchère immédiatement
-        await placeBid({
-          delivery_id: Number(deliveryId),
+        await placeBid(Number(deliveryId), {
           proposed_price: amount,
           estimated_duration: estimatedTime || undefined
         })

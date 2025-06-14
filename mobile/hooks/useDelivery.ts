@@ -111,6 +111,22 @@ export interface CollaborativeDeliveryRequest extends DeliveryCreateRequest {
   description: string
 }
 
+// Interface pour ActiveDelivery
+export interface ActiveDelivery extends Delivery {
+  client_name: string
+}
+
+// Interface pour AvailableDelivery étendue
+export interface AvailableDeliveryExtended extends Omit<Delivery, 'distance'> {
+  distance: number
+  score?: number
+  eta_minutes?: number
+  estimated_price?: number
+  commune?: string
+  bids_count?: number
+  urgency_level?: string
+}
+
 // Interface unifiée pour le retour du hook
 export interface UseDeliveryReturn {
   // État
@@ -140,6 +156,7 @@ export interface UseDeliveryReturn {
   // Récupération de données
   getDeliveries: (filters?: DeliveryFilters) => Promise<void>
   getAvailableDeliveries: (params?: DeliverySearchParams) => Promise<void>
+  getActiveDeliveries: () => Promise<void>
   getCourierActiveDeliveries: () => Promise<void>
   getClientDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
   getCourierDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
@@ -371,6 +388,21 @@ export const useDelivery = (): UseDeliveryReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       const deliveries = await DeliveryService.getAvailableDeliveries(params)
+      setState(prev => ({ ...prev, deliveries, isLoading: false }))
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération',
+        isLoading: false 
+      }))
+      throw error
+    }
+  }, [])
+
+  const getActiveDeliveries = useCallback(async (): Promise<void> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }))
+      const deliveries = await DeliveryService.getCourierActiveDeliveries()
       setState(prev => ({ ...prev, deliveries, isLoading: false }))
     } catch (error) {
       setState(prev => ({ 
@@ -667,6 +699,7 @@ export const useDelivery = (): UseDeliveryReturn => {
     // Récupération de données
     getDeliveries,
     getAvailableDeliveries,
+    getActiveDeliveries,
     getCourierActiveDeliveries,
     getClientDeliveryHistory,
     getCourierDeliveryHistory,

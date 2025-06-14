@@ -378,10 +378,16 @@ export interface PriceEstimateData {
 }
 
 export interface VehicleRecommendationData {
-  package_weight: number
-  package_size: string
-  is_fragile: boolean
-  distance: number
+  pickup_lat: number;
+  pickup_lng: number;
+  delivery_lat: number;
+  delivery_lng: number;
+  package_type: string;
+  package_weight: number;
+  package_size: string;
+  is_fragile: boolean;
+  distance: number;
+  weatherConditions?: string;
 }
 
 export interface VehicleRecommendation {
@@ -1097,10 +1103,15 @@ export interface PriceEstimateData {
 }
 
 export interface VehicleRecommendationData {
-  package_weight: number
-  package_size: string
-  is_fragile: boolean
-  distance: number
+  pickup_lat: number;
+  pickup_lng: number;
+  delivery_lat: number;
+  delivery_lng: number;
+  package_type: string;
+  package_weight: number;
+  package_size: string;
+  is_fragile: boolean;
+  distance: number;
 }
 
 export interface ExpressDeliveryRequest extends DeliveryCreateRequest {
