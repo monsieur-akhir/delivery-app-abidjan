@@ -1,0 +1,141 @@
+~/workspace$ cd mobile/
+~/workspace/mobile$ npx tsc
+components/FeatherIcon.tsx:88:3 - error TS2322: Type '"bag"' is not assignable to type '"link" | "search" | "image" | "text" | "alert" | "checkbox" | "menu" | "radio" | "timer" | "body" | "code" | "map" | "time" | "ellipse" | "filter" | "stop" | "close" | "book" | "pause" | ... 3661 more ... | "md-woman-sharp"'.
+
+88   'shopping-bag': 'bag',
+     ~~~~~~~~~~~~~~
+
+  components/FeatherIcon.tsx:12:18
+    12 const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    The expected type comes from this index signature.
+
+config/environment.ts:3:14 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+3     API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000',
+               ~~~~~~~
+
+config/environment.ts:4:13 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+4     WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'ws://localhost:8000/ws',
+              ~~~~~~~
+
+config/environment.ts:5:26 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+5     GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+                           ~~~~~~~
+
+config/environment.ts:6:22 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+6     WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
+                       ~~~~~~~
+
+config/environment.ts:7:23 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+7     CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
+                        ~~~~~~~
+
+config/environment.ts:8:23 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+8     CINETPAY_SITE_ID: process.env.EXPO_PUBLIC_CINETPAY_SITE_ID || '',
+                        ~~~~~~~
+
+config/environment.ts:9:21 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+9     OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+                      ~~~~~~~
+
+config/environment.ts:13:14 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+13     API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://api-staging.livraison-abidjan.com',
+                ~~~~~~~
+
+config/environment.ts:14:13 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+14     WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'wss://api-staging.livraison-abidjan.com/ws',
+               ~~~~~~~
+
+config/environment.ts:15:26 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+15     GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+                            ~~~~~~~
+
+config/environment.ts:16:22 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+16     WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
+                        ~~~~~~~
+
+config/environment.ts:17:23 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+17     CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
+                         ~~~~~~~
+
+config/environment.ts:18:23 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+18     CINETPAY_SITE_ID: process.env.EXPO_PUBLIC_CINETPAY_SITE_ID || '',
+                         ~~~~~~~
+
+config/environment.ts:19:21 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+19     OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+                       ~~~~~~~
+
+config/environment.ts:20:17 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+20     SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
+                   ~~~~~~~
+
+config/environment.ts:23:14 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+23     API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://api.livraison-abidjan.com',
+                ~~~~~~~
+
+config/environment.ts:24:13 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+24     WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'wss://api.livraison-abidjan.com/ws',
+               ~~~~~~~
+
+config/environment.ts:25:26 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+25     GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+                            ~~~~~~~
+
+config/environment.ts:26:22 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+26     WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
+                        ~~~~~~~
+
+config/environment.ts:27:23 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+27     CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
+                         ~~~~~~~
+
+config/environment.ts:28:23 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+28     CINETPAY_SITE_ID: process.env.EXPO_PUBLIC_CINETPAY_SITE_ID || '',
+                         ~~~~~~~
+
+config/environment.ts:29:21 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+29     OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+                       ~~~~~~~
+
+config/environment.ts:30:17 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+30     SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
+                   ~~~~~~~
+
+config/environment.ts:34:13 - error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+
+34 const ENV = process.env.NODE_ENV || 'development'
+               ~~~~~~~
+
+contexts/AuthContext.tsx:8:10 - error TS2305: Module '"../config/environment"' has no exported member 'API_URL'.
+
+8 import { API_URL } from "../config/environment"
+           ~~~~~~~
+
+contexts/WebSocketContext.tsx:5:10 - error TS2305: Module '"../config/environment"' has no exported member 'WS_URL'.
+
+5 import { WS_URL } from "../config/environment"
+           ~~~~~~
