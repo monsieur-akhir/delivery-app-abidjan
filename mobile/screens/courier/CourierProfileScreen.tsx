@@ -85,7 +85,7 @@ const CourierProfileScreen: React.FC = () => {
             </View>
             <View style={styles.statItem}>
               <FeatherIcon name="map-pin" size={24} color="#FF6B00" />
-              <Text style={styles.statValue}>{((stats.total_distance || 0) / 1000).toFixed(1)} km</Text>
+              <Text style={styles.statValue}>{((stats.totalDistance || stats.total_distance || 0) / 1000).toFixed(1)} km</Text>
               <Text style={styles.statLabel}>{t("profile.distance")}</Text>
             </View>
           </View>

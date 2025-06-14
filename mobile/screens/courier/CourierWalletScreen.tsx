@@ -57,9 +57,9 @@ const CourierWalletScreen: React.FC = () => {
       const transactionData = await getWalletTransactions()
       // Convert WalletTransaction to Transaction format
       const convertedTransactions: Transaction[] = transactionData.map((wt) => ({
-        id: wt.id,
-        type: wt.type as 'earning' | 'withdrawal' | 'bonus' | 'penalty',
+        id: wt.id.toString(),
         amount: wt.amount,
+        type: wt.type as 'earning' | 'withdrawal' | 'bonus' | 'penalty',
         description: wt.description,
         date: wt.created_at,
         status: wt.status as 'completed' | 'pending' | 'failed'
