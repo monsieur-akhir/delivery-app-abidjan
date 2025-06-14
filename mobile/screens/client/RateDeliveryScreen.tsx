@@ -56,7 +56,7 @@ const RateDeliveryScreen: React.FC = () => {
     const loadDelivery = async () => {
       try {
         setLoading(true)
-        const deliveryData = await DeliveryService.getDeliveryById(Number(deliveryId))
+        const deliveryData = await DeliveryService.getDeliveryById(deliveryId)
         setDelivery(deliveryData)
       } catch (error) {
         console.error('Erreur lors du chargement:', error)

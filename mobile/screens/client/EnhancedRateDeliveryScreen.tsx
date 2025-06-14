@@ -228,10 +228,8 @@ const EnhancedRateDeliveryScreen: React.FC<EnhancedRateDeliveryScreenProps> = ({
       } else {
         // Stocker l'évaluation pour synchronisation ultérieure
         addPendingUpload({
-          id: Date.now().toString(),
           type: "rating",
           data: ratingData,
-          timestamp: new Date().toISOString(),
           retries: 0
         })
 

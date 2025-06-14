@@ -50,7 +50,7 @@ const SmartMatchingScreen = ({ route, navigation }: SmartMatchingScreenProps) =>
 
   const loadSuggestedCouriers = async () => {
     try {
-      const response = await DeliveryService.getSuggestedCouriers(deliveryId)
+      const response = await DeliveryService.getSuggestedCouriers(deliveryId.toString())
       setSuggestedCouriers(response.suggested_couriers || [])
     } catch (error) {
       console.error('Erreur lors du chargement des coursiers suggérés:', error)
@@ -71,7 +71,7 @@ const SmartMatchingScreen = ({ route, navigation }: SmartMatchingScreenProps) =>
           onPress: async () => {
             setAssigning(true)
             try {
-              await DeliveryService.autoAssignDelivery(deliveryId)
+              await DeliveryService.autoAssignDelivery(deliveryId.toString())
               Alert.alert('Succès', 'Coursier assigné automatiquement!', [
                 {
                   text: 'OK',
@@ -92,7 +92,7 @@ const SmartMatchingScreen = ({ route, navigation }: SmartMatchingScreenProps) =>
   const handleManualAssign = async (courierId: number) => {
     setSelectedCourier(courierId)
     try {
-      await DeliveryService.assignCourier({ delivery_id: deliveryId, courier_id: courierId })
+      await DeliveryService.assignCourier({ delivery_id: deliveryId.toString(), courier_id: courierId.toString() })
       Alert.alert('Succès', 'Coursier assigné!', [
         {
           text: 'OK',
