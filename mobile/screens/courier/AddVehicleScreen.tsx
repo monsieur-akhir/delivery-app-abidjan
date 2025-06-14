@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useVehicle } from '../../hooks'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../types/navigation'
-import type { VehicleCreateRequest } from '../../types/models'
+import type { VehicleCreateRequest } from '../../services/VehicleService'
 
 // Définition des constantes pour les types de véhicules
 const VEHICLE_TYPES = {
@@ -60,15 +60,15 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
 
       // Préparation des données pour l'API
       const vehicleData: VehicleCreateRequest = {
-        license_plate: formData.license_plate || '',
-        brand: formData.brand || 'Unknown',
-        model: formData.model || '',
+        brand: formData.brand || 'Unknown Brand',
+        model: formData.model || 'Unknown Model',
         year: formData.year ? parseInt(formData.year) : new Date().getFullYear(),
+        license_plate: formData.license_plate || '',
         vehicle_type: formData.type === VEHICLE_TYPES.CUSTOM ? 
           (formData.customType as any) : 
           (formData.type as any),
-        capacity: formData.capacity ? parseFloat(formData.capacity) : undefined,
         is_electric: formData.is_electric,
+        max_load_weight: formData.capacity ? parseFloat(formData.capacity) : undefined,
       }
 
       await addVehicle(vehicleData)
