@@ -83,7 +83,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     ])
   }
 
-  const getNotificationIcon = (type?: string): FeatherIconName => {
+  const getNotificationIcon = (type?: string): string => {
     switch (type) {
       case "delivery_assigned":
         return "package"
@@ -128,7 +128,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ navigation })
     >
       <View style={styles.notificationContent}>
         <View style={[styles.notificationIcon, { backgroundColor: getNotificationColor(item.data?.type as string) }]}>
-          <FeatherIcon name={getNotificationIcon(String(item.data?.type) as FeatherIconName)} size={20} color="#000000" style={styles.iconStyle} />
+          <FeatherIcon name={getNotificationIcon(item.data?.type)} size={20} color="#000000" style={styles.iconStyle} />
         </View>
         <View style={styles.notificationTextContainer}>
           <Text style={[styles.notificationTitle, { color: colors.text }]}>{item.title}</Text>

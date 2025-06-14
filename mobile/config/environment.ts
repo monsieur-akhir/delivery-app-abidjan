@@ -1,29 +1,47 @@
-// Configuration des environnements
+export const environment = {
+  development: {
+    API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000',
+    WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'ws://localhost:8000/ws',
+    GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
+    CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
+    CINETPAY_SITE_ID: process.env.EXPO_PUBLIC_CINETPAY_SITE_ID || '',
+    OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+    SENTRY_DSN: '',
+  },
+  staging: {
+    API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://api-staging.livraison-abidjan.com',
+    WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'wss://api-staging.livraison-abidjan.com/ws',
+    GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
+    CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
+    CINETPAY_SITE_ID: process.env.EXPO_PUBLIC_CINETPAY_SITE_ID || '',
+    OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+    SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
+  },
+  production: {
+    API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://api.livraison-abidjan.com',
+    WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'wss://api.livraison-abidjan.com/ws',
+    GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
+    CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
+    CINETPAY_SITE_ID: process.env.EXPO_PUBLIC_CINETPAY_SITE_ID || '',
+    OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+    SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
+  }
+}
 
-// Déclaration de la variable __DEV__
-declare const __DEV__: boolean | undefined;
-const isDev: boolean = typeof __DEV__ !== 'undefined' ? __DEV__ : false
+const ENV = process.env.NODE_ENV || 'development'
+export const config = environment[ENV as keyof typeof environment] || environment.development
 
-// URL de base de l'API
-export const API_URL = isDev
-  ? "http://localhost:8000" // URL de développement local
-  : "https://api.livraison-abidjan.com" // URL de production
-
-// URL pour WebSocket
-export const WS_URL = isDev
-  ? "ws://localhost:8001/ws" // WebSocket URL for development
-  : "wss://api.livraison-abidjan.com/ws" // WebSocket URL for production
-
-// Clés d'API
-export const GOOGLE_MAPS_API_KEY = "AIzaSyBVwFk8UNhKmn2yQ7KLrJzQ5YKlJZMZvHg" // Remplacez par votre vraie clé
-export const WEATHER_API_KEY = "0123456789abcdef0123456789abcdef" // Remplacez par votre vraie clé
-
-// Configuration Sentry
-export const SENTRY_DSN = isDev ? "" : "YOUR_SENTRY_DSN"
-export const ENVIRONMENT = isDev ? "development" : "production"
-
-// Configuration des timeouts
-export const API_TIMEOUT = 30000 // 30 secondes
+export const getApiUrl = () => config.API_URL
+export const getWsUrl = () => config.WS_URL
+export const getGoogleMapsApiKey = () => config.GOOGLE_MAPS_API_KEY
+export const getWeatherApiKey = () => config.WEATHER_API_KEY
+export const getCinetPayApiKey = () => config.CINETPAY_API_KEY
+export const getCinetPaySiteId = () => config.CINETPAY_SITE_ID
+export const getOpenAiApiKey = () => config.OPENAI_API_KEY
+export const getSentryDsn = () => config.SENTRY_DSN
 
 // Configuration des notifications
 export const NOTIFICATION_CHANNEL_ID = "livraison-abidjan-notifications"

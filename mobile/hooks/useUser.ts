@@ -331,14 +331,14 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
 
       // Convert service format to models format
       const notificationSettings: NotificationSettings = {
-        push_enabled: serviceSettings.push_notifications || false,
-        email_enabled: serviceSettings.email_notifications || false,
-        sms_enabled: serviceSettings.sms_notifications || false,
+        push_notifications: serviceSettings.push_notifications || false,
+        email_notifications: serviceSettings.email_notifications || false,
+        sms_notifications: serviceSettings.sms_notifications || false,
         delivery_updates: true,
-        payment_updates: true,
+        bid_notifications: true,
         promotional_offers: serviceSettings.promotional_offers || false,
         security_alerts: true,
-        maintenance_alerts: true,
+        in_app_notifications: true,
       };
 
       return notificationSettings;
@@ -449,7 +449,6 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
           humidity: 65,
           wind_speed: 10,
         },
-        last_updated: new Date().toISOString(),
         feelslike: 30,
         is_day: 1,
         wind_mph: 6,

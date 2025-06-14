@@ -65,7 +65,7 @@ export const formatDistance = (meters: number): string => {
 export const formatDurationSeconds = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
-  
+
   if (hours > 0) {
     return `${hours} h ${minutes} min`
   }
@@ -84,4 +84,29 @@ export const formatTime = (timeString: string): string => {
     minute: '2-digit',
     hour12: false
   })
+}
+
+export const formatCurrency = (amount: number, currency: string = 'FCFA'): string => {
+  return `${amount.toLocaleString('fr-FR')} ${currency}`
+}
+
+export const formatDate = (date: string | Date): string => {
+  const d = new Date(date)
+  return d.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+}
+
+export const formatTime = (date: string | Date): string => {
+  const d = new Date(date)
+  return d.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+export const formatPrice = (price: number): string => {
+  return price.toLocaleString('fr-FR')
 }

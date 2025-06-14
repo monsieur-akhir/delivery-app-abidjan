@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -130,7 +129,7 @@ function CourierTabs() {
 }
 
 export default function AppNavigator() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return null; // Or a loading screen
@@ -160,14 +159,14 @@ export default function AppNavigator() {
           ) : (
             <Stack.Screen name="ClientMain" component={ClientTabs} />
           )}
-          
+
           {/* Shared Screens */}
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="CreateDelivery" component={CreateDeliveryScreen} />
           <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
-          
+
           {/* Courier Specific Screens */}
           <Stack.Screen name="BidScreen" component={BidScreen} />
           <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />
