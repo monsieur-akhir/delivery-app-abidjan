@@ -94,7 +94,8 @@ export const useDelivery = (): UseDeliveryReturn => {
       }
       const deliveryDataWithDefaults = {
         ...deliveryData,
-        recipient_name: deliveryData.recipient_name || 'Non spécifié'
+        recipient_name: deliveryData.recipient_name || 'Non spécifié',
+        recipient_phone: deliveryData.recipient_phone || 'Non spécifié'
       }
       const delivery = await DeliveryService.createDelivery(deliveryDataWithDefaults)
       setState(prev => ({ 

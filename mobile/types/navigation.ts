@@ -27,7 +27,7 @@ export type RootStackParamList = {
   // Shared Screens
   Settings: undefined;
   CreateDelivery: { serviceType?: string; searchQuery?: string } | undefined;
-  TrackDelivery: { deliveryId: string };
+  TrackDelivery: { deliveryId: string | number };
   Payment: { deliveryId?: string; amount?: number } | undefined;
   PaymentMethods: undefined;
 
@@ -42,7 +42,7 @@ export type RootStackParamList = {
   AddFunds: undefined;
   Marketplace: undefined;
   MerchantDetails: { merchantId: string };
-  DeliveryDetails: { deliveryId: string };
+  DeliveryDetails: { deliveryId: string | number };
   RateDelivery: { deliveryId: string };
   EnhancedRateDelivery: { deliveryId: string };
   ComplaintsScreen: undefined;
@@ -59,7 +59,7 @@ export type RootStackParamList = {
   CollaborativeDeliveries: undefined;
   AvailableDeliveries: undefined;
   BidScreen: { deliveryId: string };
-  CourierTrackDelivery: { deliveryId: string };
+  CourierTrackDelivery: { deliveryId: string | number };
   Gamification: undefined;
   CommunityWallet: undefined;
   GamificationScreen: undefined;

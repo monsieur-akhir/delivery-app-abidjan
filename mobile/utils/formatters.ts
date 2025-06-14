@@ -1,112 +1,91 @@
 export const formatDate = (dateString: string, format?: string): string => {
-  const date = new Date(dateString)
+  if (!dateString) return ''
 
-  if (format === 'short') {
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return dateString
+
+    if (format === 'short') {
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
+
     return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     })
+  } catch {
+    return dateString
   }
-
-  return date.toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
 }
 
 export const formatPrice = (price: number): string => {
-  return price.toLocaleString('fr-FR')
+  if (typeof price !== 'number' || isNaN(price)) return '0'
+  return new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(price)
 }
 
-export const formatRelativeTime = (dateString: string): string => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (diffInSeconds < 60) {
-    return 'À l\'instant'
-  } else if (diffInSeconds < 3600) {
-    const minutes = Math.floor(diffInSeconds / 60)
-    return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`
-  } else if (diffInSeconds < 86400) {
-    const hours = Math.floor(diffInSeconds / 3600)
-    return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`
-  } else {
-    const days = Math.floor(diffInSeconds / 86400)
-    return `Il y a ${days} jour${days > 1 ? 's' : ''}`
+export const formatDistance = (distanceInMeters: number): string => {
+  if (distanceInMeters < 1000) {
+    return `${Math.round(distanceInMeters)}m`
   }
+  return `${(distanceInMeters / 1000).toFixed(1)}km`
 }
 
-export const formatDuration = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}min`
+export const formatDuration = (durationInMinutes: number): string => {
+  if (durationInMinutes < 60) {
+    return `${Math.round(durationInMinutes)}min`
   }
-  return `${minutes}min`
+  const hours = Math.floor(durationInMinutes / 60)
+  const minutes = Math.round(durationInMinutes % 60)
+  return minutes > 0 ? `${hours}h${minutes}min` : `${hours}h`
 }
 
-export const formatDistance = (meters: number): string => {
-  if (meters < 1000) {
-    return `${Math.round(meters)}m`
+export const formatPhoneNumber = (phone: string): string => {
+  if (!phone) return ''
+
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, '')
+
+  // Format based on length
+  if (digits.length === 8) {
+    // Ivorian local number: XX XX XX XX
+    return digits.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4')
+  } else if (digits.length === 10 && digits.startsWith('0')) {
+    // Ivorian number with leading 0: 0X XX XX XX XX
+    return digits.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5')
+  } else if (digits.length >= 10) {
+    // International format
+    return `+${digits}`
   }
-  return `${(meters / 1000).toFixed(1)}km`
+
+  return phone
 }
 
-/**
- * Format a duration in seconds to a string (HH:MM:SS)
- * @param seconds The duration in seconds
- * @returns The formatted duration
- */
-export const formatDurationSeconds = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-
-  if (hours > 0) {
-    return `${hours} h ${minutes} min`
-  }
-  return `${minutes} min`
-}
-
-/**
- * Format a time string to a readable time format (HH:MM)
- * @param timeString The time string to format
- * @returns The formatted time
- */
 export const formatTime = (timeString: string): string => {
-  const date = new Date(timeString)
-  return date.toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  })
+  if (!timeString) return ''
+
+  try {
+    const date = new Date(timeString)
+    if (isNaN(date.getTime())) return timeString
+
+    return date.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch {
+    return timeString
+  }
 }
 
-export const formatCurrency = (amount: number, currency: string = 'FCFA'): string => {
-  return `${amount.toLocaleString('fr-FR')} ${currency}`
-}
-
-export const formatDate = (date: string | Date): string => {
-  const d = new Date(date)
-  return d.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
-}
-
-export const formatTime = (date: string | Date): string => {
-  const d = new Date(date)
-  return d.toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-export const formatPrice = (price: number): string => {
-  return price.toLocaleString('fr-FR')
+export const truncateText = (text: string, maxLength: number): string => {
+  if (!text || text.length <= maxLength) return text
+  return text.substring(0, maxLength - 3) + '...'
 }

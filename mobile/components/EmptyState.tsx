@@ -5,14 +5,14 @@ import { Feather } from "@expo/vector-icons"
 import type { Icon } from "@expo/vector-icons/build/createIconSet"
 
 export interface EmptyStateProps {
-  icon: React.ComponentProps<typeof Feather>["name"]
   title: string
-  message: string
-  buttonText?: string
-  onButtonPress?: () => void
+  subtitle: string
+  actionText?: string
+  onAction?: () => void
+  image?: any
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message, buttonText, onButtonPress }) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, actionText, onAction, image }) => {
   return (
     <View style={styles.container}>
       <Feather name={icon} size={64} color="#CCCCCC" />

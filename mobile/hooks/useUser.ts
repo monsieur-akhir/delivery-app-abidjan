@@ -335,10 +335,12 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
         bid_notifications: serviceSettings.bid_notifications || false,
         payment_notifications: serviceSettings.payment_notifications || false,
         delivery_updates: true,
-        bid_notifications: true,
         promotional_offers: serviceSettings.promotional_offers || false,
         security_alerts: true,
-        delivery_notifications: true,
+        push_notifications: serviceSettings.push_notifications || false,
+        email_notifications: serviceSettings.email_notifications || false,
+        sms_notifications: serviceSettings.sms_notifications || false,
+        whatsapp_enabled: serviceSettings.whatsapp_enabled || false,
       };
 
       return notificationSettings;
