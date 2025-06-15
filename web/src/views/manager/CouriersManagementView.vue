@@ -1220,7 +1220,6 @@ import 'leaflet-draw/dist/leaflet.draw.css'
 export default {
   name: 'CouriersManagementView',
   setup() {
-    const route = useRoute()
     const store = useStore()
     const { showToast } = useToast()
 
@@ -1765,6 +1764,12 @@ export default {
           selectedCourier.value.kyc[`${documentType}_verified`] = true
         }
 
+        // Mettre à jour aussi dans la liste des coursiers
+        const courierIndex = couriers.value.findIndex(c => c.id === courierId)
+        if (courierIndex !== -1 && couriers.value[courierIndex].kyc) {
+          couriers.value[courierIndex].kyc[`${documentType}_verified`] = true
+        }
+
         // Afficher une notification de succès
         showToast('Document vérifié avec succès', { type: 'success' })
       } catch (error) {
@@ -1789,6 +1794,13 @@ export default {
         ) {
           selectedCourier.value.kyc[`${documentType}_verified`] = false
           selectedCourier.value.kyc[`${documentType}_document`] = null
+        }
+
+        // Mettre à jour aussi dans la liste des coursiers
+        const courierIndex = couriers.value.findIndex(c => c.id === courierId)
+        if (courierIndex !== -1 && couriers.value[courierIndex].kyc) {
+          couriers.value[courierIndex].kyc[`${documentType}_verified`] = false
+          couriers.value[courierIndex].kyc[`${documentType}_document`] = null
         }
 
         // Afficher une notification de succès
@@ -1880,8 +1892,8 @@ export default {
       }
     }
 
-    const onCourierBlocked = courier => {
-      showToast(`Coursier ${courier.name} a été bloqué`, { type: 'info' })
+    const onCourierBlocked = () => {
+      showToast('Coursier bloqué avec succès', { type: 'info' })
     }
 
     store.subscribeAction({
