@@ -1,19 +1,15 @@
-import Constants from 'expo-constants';
+const config = {
+  API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api',
+  WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'ws://localhost:8000/ws',
+  DEBUG: __DEV__,
+  VERSION: '1.0.0',
+}
 
-// Configuration des variables d'environnement pour Expo SDK 48
-export const config = {
-  API_URL: Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000',
-  WS_URL: Constants.expoConfig?.extra?.wsUrl || process.env.EXPO_PUBLIC_WS_URL || 'ws://localhost:8000',
-  GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-  WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
-  CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
-  CINETPAY_SITE_ID: process.env.EXPO_PUBLIC_CINETPAY_SITE_ID || '',
-  OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
-  SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
-  ENVIRONMENT: Constants.expoConfig?.extra?.environment || process.env.NODE_ENV || 'development',
-};
+export const API_URL = config.API_URL
+export const WS_URL = config.WS_URL
+export const getApiUrl = () => config.API_URL
+export const getWsUrl = () => config.WS_URL
 
-// Types pour TypeScript
 export interface Environment {
   API_URL: string;
   WS_URL: string;
@@ -26,7 +22,6 @@ export interface Environment {
   ENVIRONMENT: string;
 }
 
-// Validation des variables requises
 const validateConfig = () => {
   const requiredVars = ['API_URL', 'WS_URL'];
   const missing = requiredVars.filter(key => !config[key as keyof typeof config]);
@@ -36,7 +31,7 @@ const validateConfig = () => {
   }
 };
 
-// Exécuter la validation
 validateConfig();
 
-export default config;
+export { config }
+export default config

@@ -1,5 +1,5 @@
 import axios from "axios"
-import { API_URL } from "../config/environment"
+import { getApiUrl } from "../config/environment"
 import type { Coordinates } from "../types/models"
 
 interface TrafficHotspot {
@@ -20,7 +20,7 @@ class RouteOptimizationService {
    */
   static async getTrafficHotspots(): Promise<TrafficHotspot[]> {
     try {
-      const response = await axios.get(`${API_URL}/api/traffic/hotspots`)
+      const response = await axios.get(`${getApiUrl()}/api/traffic/hotspots`)
       return response.data
     } catch (error) {
       console.error("Error fetching traffic hotspots:", error)
@@ -37,7 +37,7 @@ class RouteOptimizationService {
     waypoints?: Coordinates[],
   ): Promise<RouteResponse> {
     try {
-      const response = await axios.post(`${API_URL}/api/routes/optimize`, {
+      const response = await axios.post(`${getApiUrl()}/api/routes/optimize`, {
         origin,
         destination,
         waypoints: waypoints || [],
@@ -58,7 +58,7 @@ class RouteOptimizationService {
     scheduledTime?: Date,
   ): Promise<{ duration: number; trafficDelay: number }> {
     try {
-      const response = await axios.post(`${API_URL}/api/routes/estimate-time`, {
+      const response = await axios.post(`${getApiUrl()}/api/routes/estimate-time`, {
         origin,
         destination,
         scheduledTime: scheduledTime ? scheduledTime.toISOString() : new Date().toISOString(),
@@ -78,7 +78,7 @@ class RouteOptimizationService {
     destination: Coordinates,
   ): Promise<{ suggestedTime: string; estimatedDuration: number }> {
     try {
-      const response = await axios.post(`${API_URL}/api/routes/suggest-time`, {
+      const response = await axios.post(`${getApiUrl()}/api/routes/suggest-time`, {
         origin,
         destination,
       })
@@ -97,7 +97,7 @@ class RouteOptimizationService {
     deliveryPoints: Array<{ id: string; coordinates: Coordinates }>,
   ): Promise<{ order: string[]; route: Coordinates[]; totalDistance: number; totalDuration: number }> {
     try {
-      const response = await axios.post(`${API_URL}/api/routes/optimize-order`, {
+      const response = await axios.post(`${getApiUrl()}/api/routes/optimize-order`, {
         startPoint,
         deliveryPoints,
       })

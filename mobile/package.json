@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "expo start --tunnel",
+    "start": "EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0 expo start --port 8081 --tunnel",
     "start-local": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",

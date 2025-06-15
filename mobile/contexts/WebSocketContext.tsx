@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
-import { WS_URL } from "../config/environment"
+import { getWsUrl } from "../config/environment"
 import { useAuth } from "./AuthContext"
 
 export interface WebSocketMessage {
@@ -37,14 +37,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [key: string]: (data: any) => void
   }>({})
 
-  const getWsUrl = () => {
-    return `${WS_URL}/${user?.id}?token=${token}`
-  }
-
   const connectWebSocket = useCallback(() => {
     if (!token || !user) return
 
-    const ws = new WebSocket(getWsUrl())
+    const ws = new WebSocket(getWsUrl(user?.id, token))
 
     ws.onopen = () => {
       console.log("WebSocket connected")

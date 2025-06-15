@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { API_URL } from "../config/environment"
+import { getApiUrl } from "../config/environment"
 import type { Delivery, User, DeliveryStatus, Weather, VehicleType, CargoCategory } from "../types/models"
 
 // API Response Interfaces
@@ -508,7 +508,7 @@ export interface VehicleRecommendationData {
 
 // Créer une instance axios avec la configuration de base
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: getApiUrl(),
   headers: {
     "Content-Type": "application/json",
   },
@@ -550,7 +550,7 @@ api.interceptors.response.use(
           return Promise.reject(error)
         }
 
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
+        const response = await axios.post(`${getApiUrl()}/auth/refresh`, {
           refresh_token: refreshToken,
         })
 
@@ -591,14 +591,14 @@ export const loginWithOTP = async (phone: string, otp: string): Promise<{ token:
         'Content-Type': 'application/json'
       }
     })
-    
+
     if (response.data.success && response.data.token) {
       // Token directement disponible dans la réponse
       const access_token = response.data.token;
-      
+
       // Set authorization header for future requests
       api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
+
       return {
         token: access_token,
         user: response.data.user
@@ -626,13 +626,13 @@ export const login = async (phone: string, password: string): Promise<{ token: s
         'Content-Type': 'application/json'
       }
     })
-    
+
     const access_token = response.data.access_token;
-    
+
     // Get user profile with the token
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
     const userResponse = await api.get("/api/users/me");
-    
+
     return {
       token: access_token,
       user: userResponse.data
@@ -1265,7 +1265,7 @@ export const getActivePromotions = async (): Promise<any[]> => {
 export const getApplicablePromotions = async (orderValue: number, zoneId?: number): Promise<any[]> => {
   const params = { order_value: orderValue }
   if (zoneId) (params as any).zone_id = zoneId
-  
+
   const response = await api.get("/api/v1/promotions/applicable", { params })
   return response.data
 }

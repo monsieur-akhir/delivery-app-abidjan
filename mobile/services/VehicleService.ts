@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { API_URL } from '../config/environment'
+import { getApiUrl } from '../config/environment'
 import type { 
   Vehicle, 
   VehicleDocument, 
@@ -80,7 +80,7 @@ class VehicleService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: `${API_URL}/api`,
+      baseURL: `${getApiUrl()}`,
       headers: {
         'Content-Type': 'application/json',
       },

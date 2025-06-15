@@ -49,9 +49,9 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Load fonts
+        // Load fonts - using system fonts for now
         await Font.loadAsync({
-          'Roboto': require('./node_modules/react-native-vector-icons/Fonts/Roboto.ttf'),
+          // Using system fonts to avoid file path issues
         });
       } catch (e) {
         console.warn('Error loading fonts:', e);

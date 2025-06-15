@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { login, register, verifyOTP } from "../services/api"
 import axios from "axios"
-import { getApiUrl } from "../config/environment"
+import { API_URL } from "../config/environment"
 import type { User } from "../types/models"
 import type { RegisterUserData } from "../services/api"
 
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const refreshToken = await AsyncStorage.getItem("refreshToken")
       if (!refreshToken) return null
 
-      const response = await axios.post(`${getApiUrl()}/auth/refresh`, {
+      const response = await axios.post(`${API_URL}/auth/refresh`, {
         refresh_token: refreshToken,
       })
       const { access_token, refresh_token } = response.data
