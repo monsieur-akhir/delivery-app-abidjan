@@ -1,0 +1,261 @@
+/workspace/web$ npm run dev
+
+> delivery-app-web@1.0.0 dev
+> vite
+
+
+
+
+  VITE v4.5.14  ready in 374 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://172.31.128.41:5173/
+  ➜  press h to show help
+Error:   Failed to scan for dependencies from entries:
+  /home/runner/workspace/web/index.html
+/home/runner/workspace/web/stats.html
+
+  ✘ [ERROR] Multiple exports with the same name "fetchSystemSettings"
+
+    src/api/settings.js:157:2:
+      157 │   fetchSystemSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~
+
+  The name "fetchSystemSettings" was originally exported here:
+
+    src/api/settings.js:23:13:
+      23 │ export const fetchSystemSettings = async () => {
+         ╵              ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateSystemSettings"
+
+    src/api/settings.js:158:2:
+      158 │   updateSystemSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateSystemSettings" was originally exported here:
+
+    src/api/settings.js:28:13:
+      28 │ export const updateSystemSettings = async (settingsData) => {
+         ╵              ~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getLanguageSettings"
+
+    src/api/settings.js:159:2:
+      159 │   getLanguageSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~
+
+  The name "getLanguageSettings" was originally exported here:
+
+    src/api/settings.js:34:13:
+      34 │ export const getLanguageSettings = async () => {
+         ╵              ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateLanguageSettings"
+
+    src/api/settings.js:160:2:
+      160 │   updateLanguageSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateLanguageSettings" was originally exported here:
+
+    src/api/settings.js:44:13:
+      44 │ export const updateLanguageSettings = async (languageData) => {
+         ╵              ~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getNotificationSettings"
+
+    src/api/settings.js:161:2:
+      161 │   getNotificationSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~~~
+
+  The name "getNotificationSettings" was originally exported here:
+
+    src/api/settings.js:55:13:
+      55 │ export const getNotificationSettings = async () => {
+         ╵              ~~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateNotificationSettings"
+
+    src/api/settings.js:162:2:
+      162 │   updateNotificationSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateNotificationSettings" was originally exported here:
+
+    src/api/settings.js:60:13:
+      60 │ export const updateNotificationSettings = async (notificationData)...
+         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getPaymentSettings"
+
+    src/api/settings.js:163:2:
+      163 │   getPaymentSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~
+
+  The name "getPaymentSettings" was originally exported here:
+
+    src/api/settings.js:66:13:
+      66 │ export const getPaymentSettings = async () => {
+         ╵              ~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updatePaymentSettings"
+
+    src/api/settings.js:164:2:
+      164 │   updatePaymentSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+  The name "updatePaymentSettings" was originally exported here:
+
+    src/api/settings.js:71:13:
+      71 │ export const updatePaymentSettings = async (paymentData) => {
+         ╵              ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getSecuritySettings"
+
+    src/api/settings.js:165:2:
+      165 │   getSecuritySettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~
+
+  The name "getSecuritySettings" was originally exported here:
+
+    src/api/settings.js:77:13:
+      77 │ export const getSecuritySettings = async () => {
+         ╵              ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateSecuritySettings"
+
+    src/api/settings.js:166:2:
+      166 │   updateSecuritySettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateSecuritySettings" was originally exported here:
+
+    src/api/settings.js:82:13:
+      82 │ export const updateSecuritySettings = async (securityData) => {
+         ╵              ~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getBusinessSettings"
+
+    src/api/settings.js:167:2:
+      167 │   getBusinessSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~
+
+  The name "getBusinessSettings" was originally exported here:
+
+    src/api/settings.js:88:13:
+      88 │ export const getBusinessSettings = async () => {
+         ╵              ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateBusinessSettings"
+
+    src/api/settings.js:168:2:
+      168 │   updateBusinessSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateBusinessSettings" was originally exported here:
+
+    src/api/settings.js:93:13:
+      93 │ export const updateBusinessSettings = async (businessData) => {
+         ╵              ~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getCourierSettings"
+
+    src/api/settings.js:169:2:
+      169 │   getCourierSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~
+
+  The name "getCourierSettings" was originally exported here:
+
+    src/api/settings.js:99:13:
+      99 │ export const getCourierSettings = async () => {
+         ╵              ~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateCourierSettings"
+
+    src/api/settings.js:170:2:
+      170 │   updateCourierSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateCourierSettings" was originally exported here:
+
+    src/api/settings.js:104:13:
+      104 │ export const updateCourierSettings = async (courierData) => {
+          ╵              ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getGeneralSettings"
+
+    src/api/settings.js:171:2:
+      171 │   getGeneralSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~
+
+  The name "getGeneralSettings" was originally exported here:
+
+    src/api/settings.js:110:13:
+      110 │ export const getGeneralSettings = async () => {
+          ╵              ~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateGeneralSettings"
+
+    src/api/settings.js:172:2:
+      172 │   updateGeneralSettings,
+          ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateGeneralSettings" was originally exported here:
+
+    src/api/settings.js:115:13:
+      115 │ export const updateGeneralSettings = async (generalData) => {
+          ╵              ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getApiSettings"
+
+    src/api/settings.js:173:2:
+      173 │   getApiSettings,
+          ╵   ~~~~~~~~~~~~~~
+
+  The name "getApiSettings" was originally exported here:
+
+    src/api/settings.js:121:13:
+      121 │ export const getApiSettings = async () => {
+          ╵              ~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateApiSettings"
+
+    src/api/settings.js:174:2:
+      174 │   updateApiSettings
+          ╵   ~~~~~~~~~~~~~~~~~
+
+  The name "updateApiSettings" was originally exported here:
+
+    src/api/settings.js:126:13:
+      126 │ export const updateApiSettings = async (apiData) => {
+          ╵              ~~~~~~~~~~~~~~~~~
+
+
+    at failureErrorWithLog (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1649:15)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1058:25
+    at runOnEndCallbacks (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1484:45)
+    at buildResponseToResult (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1056:7)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1068:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1067:54)
+    at handleRequest (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:729:19)
+    at handleIncomingPacket (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:755:7)
+    at Socket.readFromStdout (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:679:7)
