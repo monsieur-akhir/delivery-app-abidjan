@@ -67,8 +67,7 @@
       </button>
     </div>
 
-    <div v-else class="products-grid">
-      <div v-for="product in filteredProducts" :key="product.id" class="product-card">
+    <div v-else v-for="product in paginatedProducts" :key="product.id" class="product-card">
         <div class="product-image">
           <img :src="product.image_url || '/images/default-product.png'" :alt="product.name" />
           <span class="availability-badge" :class="{ available: product.is_available }">
@@ -93,7 +92,6 @@
           </button>
         </div>
       </div>
-    </div>
 
     <!-- Pagination -->
     <div v-if="filteredProducts.length > 0" class="pagination">
@@ -1036,7 +1034,7 @@ input[type='file'] {
     flex-direction: column;
   }
 
-  .products-grid {
+.products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 }

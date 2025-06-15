@@ -893,8 +893,7 @@
                     <div class="location-item">
                       <div class="location-label">Coordonnées</div>
                       <div class="location-value">
-                        ```text
-                         <span v-if="selectedCourier.latitude && selectedCourier.longitude">
+                        <span v-if="selectedCourier.latitude && selectedCourier.longitude">
                           {{ selectedCourier.latitude.toFixed(6) }},
                           {{ selectedCourier.longitude.toFixed(6) }}
                         </span>
