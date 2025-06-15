@@ -2108,8 +2108,6 @@ export default {
       }
     }
 
-    
-
     // Computed properties
     const sortBy = ref('name_asc')
 
