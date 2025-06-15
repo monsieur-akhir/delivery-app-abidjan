@@ -1,0 +1,43 @@
+
+
+
+  VITE v4.5.14  ready in 540 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://172.31.128.41:5173/
+  ➜  press h to show help
+Error:   Failed to scan for dependencies from entries:
+  /home/runner/workspace/web/index.html
+/home/runner/workspace/web/stats.html
+
+  ✘ [ERROR] No matching export in "src/api/settings.js" for import "getLanguageSettings"
+
+    script:/home/runner/workspace/web/src/views/business/LanguageSettingsView.vue?id=0:4:9:
+      4 │ import { getLanguageSettings, updateLanguageSettings } from '@/api/...
+        ╵          ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] No matching export in "src/api/settings.js" for import "updateLanguageSettings"
+
+    script:/home/runner/workspace/web/src/views/business/LanguageSettingsView.vue?id=0:4:30:
+      4 │ ...getLanguageSettings, updateLanguageSettings } from '@/api/settings'
+        ╵                         ~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] No matching export in "src/api/manager.js" for import "default"
+
+    script:/home/runner/workspace/web/src/views/manager/AnalyticsView.vue?id=0:4:7:
+      4 │ import managerApi from '@/api/manager'
+        ╵        ~~~~~~~~~~
+
+
+    at failureErrorWithLog (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1649:15)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1058:25
+    at runOnEndCallbacks (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1484:45)
+    at buildResponseToResult (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1056:7)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1068:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1067:54)
+    at handleRequest (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:729:19)
+    at handleIncomingPacket (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:755:7)
+    at Socket.readFromStdout (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:679:7)
