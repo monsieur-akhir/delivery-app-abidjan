@@ -67,35 +67,54 @@
       </button>
     </div>
 
-    <div v-else v-for="product in filteredProducts" :key="product.id" class="product-card">
-      <div class="product-image">
-        <img :src="product.image_url || '/images/default-product.png'" :alt="product.name" />
-        <span class="availability-badge" :class="{ available: product.is_available }">
-          {{ product.is_available ? 'Disponible' : 'Non disponible' }}
-        </span>
+    <div v-else class="products-grid">
+      <div v-for="product in filteredProducts" :key="product.id" class="product-card">
+        <div class="product-image">
+          <img :src="product.image_url || '/images/default-product.png'" :alt="product.name" />
+          <span class="availability-badge" :class="{ available: product.is_available }">
+            {{ product.is_available ? 'Disponible' : 'Non disponible' }}
+          </span>
+        </div>
+        <div class="product-details">
+          <h3>{{ product.name }}</h3>
+          <p class="product-category">{{ getCategoryLabel(product.category) }}</p>
+          <p class="product-price">{{ formatPrice(product.price) }} FCFA</p>
+          <p class="product-description">{{ truncateText(product.description, 100) }}</p>
+        </div>
+        <div class="product-actions">
+          <button class="btn btn-icon" @click="editProduct(product)">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-icon" @click="toggleAvailability(product)">
+            <i :class="product.is_available ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+          <button class="btn btn-icon btn-danger" @click="confirmDeleteProduct(product)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
       </div>
-      <div class="product-details">
-        <h3>{{ product.name }}</h3>
-        <p class="product-category">{{ getCategoryLabel(product.category) }}</p>
-        <p class="product-price">{{ formatPrice(product.price) }} FCFA</p>
-        <p class="product-description">{{ truncateText(product.description, 100) }}</p>
-      </div>
-      <div class="product-actions">
-        <button class="btn btn-icon" @click="editProduct(product)">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn btn-icon" @click="toggleAvailability(product)">
-          <i :class="product.is_available ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-        </button>
-        <button class="btn btn-icon btn-danger" @click="confirmDeleteProduct(product)">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
     </div>
 
     <!-- Pagination -->
-    <div v-if="paginatedProducts.length > 0" class="pagination"></div>
+    <div v-if="filteredProducts.length > 0" class="pagination">
+      <button
+        :disabled="currentPage === 1"
+        @click="changePage(currentPage - 1)"
+        class="btn btn-outline"
+      >
+        <i class="fas fa-chevron-left"></i>
+        Précédent
+      </button>
+      <span>Page {{ currentPage }} sur {{ totalPages }}</span>
+      <button
+        :disabled="currentPage === totalPages"
+        @click="changePage(currentPage + 1)"
+        class="btn btn-outline"
+      >
+        <i class="fas fa-chevron-right"></i>
+        Suivant
+      </button>
+    </div>
 
     <!-- Modal d'ajout/modification de produit -->
     <div v-if="showAddProductModal || showEditProductModal" class="modal-overlay">
@@ -313,11 +332,7 @@ export default {
       return result
     })
 
-    const paginatedProducts = computed(() => {
-      const start = (currentPage.value - 1) * itemsPerPage.value
-      const end = start + itemsPerPage.value
-      return filteredProducts.value.slice(start, end)
-    })
+    
 
     const totalPages = computed(() => {
       return Math.ceil(filteredProducts.value.length / itemsPerPage.value) || 1
