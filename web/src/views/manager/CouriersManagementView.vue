@@ -1769,6 +1769,9 @@ export default {
           couriers.value[courierIndex].kyc[`${documentType}_verified`] = true
         }
 
+        // Rafraîchir les données pour s'assurer de la cohérence
+        await fetchData()
+
         // Afficher une notification de succès
         showToast('Document vérifié avec succès', { type: 'success' })
       } catch (error) {
@@ -1801,6 +1804,9 @@ export default {
           couriers.value[courierIndex].kyc[`${documentType}_verified`] = false
           couriers.value[courierIndex].kyc[`${documentType}_document`] = null
         }
+
+        // Rafraîchir les données pour s'assurer de la cohérence
+        await fetchData()
 
         // Afficher une notification de succès
         showToast('Document rejeté avec succès', { type: 'success' })
