@@ -2108,17 +2108,7 @@ export default {
       }
     }
 
-    // Approuver la vérification KYC
-    const verifyCourier = async id => {
-      try {
-        await verifyCourierKyc(id)
-        showToast('Vérification KYC approuvée', 'success')
-        loadCourierDetails(id)
-      } catch (error) {
-        console.error('Erreur lors de la vérification KYC:', error)
-        showToast('Erreur lors de la vérification KYC', { type: 'error' })
-      }
-    }
+    
 
     // Computed properties
     const sortBy = ref('name_asc')

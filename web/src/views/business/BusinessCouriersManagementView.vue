@@ -394,7 +394,7 @@ export default {
       }
     }
 
-    const reactivateCourier = async courier => {
+    const reactivateCourier = async () => {
       try {
         // API call to reactivate courier
         showToast('Coursier réactivé avec succès', 'success')
