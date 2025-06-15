@@ -1750,21 +1750,19 @@ export default {
       }
     }
 
-    const verifyDocument = async (courierId, documentType) => {
+    const verifyDocument = async (documentType) => {
       try {
-        await verifyCourierDocument(courierId, documentType)
+        if (!selectedCourier.value) return
+
+        await verifyCourierDocument(selectedCourier.value.id, documentType)
 
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (
-          selectedCourier.value &&
-          selectedCourier.value.id === courierId &&
-          selectedCourier.value.kyc
-        ) {
+        if (selectedCourier.value.kyc) {
           selectedCourier.value.kyc[`${documentType}_verified`] = true
         }
 
         // Mettre à jour aussi dans la liste des coursiers
-        const courierIndex = couriers.value.findIndex(c => c.id === courierId)
+        const courierIndex = couriers.value.findIndex(c => c.id === selectedCourier.value.id)
         if (courierIndex !== -1 && couriers.value[courierIndex].kyc) {
           couriers.value[courierIndex].kyc[`${documentType}_verified`] = true
         }
@@ -1780,26 +1778,24 @@ export default {
       }
     }
 
-    const rejectDocument = async (courierId, documentType) => {
+    const rejectDocument = async (documentType) => {
       if (!confirm('Êtes-vous sûr de vouloir rejeter ce document ?')) {
         return
       }
 
       try {
-        await rejectCourierDocument(courierId, documentType)
+        if (!selectedCourier.value) return
+
+        await rejectCourierDocument(selectedCourier.value.id, documentType)
 
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (
-          selectedCourier.value &&
-          selectedCourier.value.id === courierId &&
-          selectedCourier.value.kyc
-        ) {
+        if (selectedCourier.value.kyc) {
           selectedCourier.value.kyc[`${documentType}_verified`] = false
           selectedCourier.value.kyc[`${documentType}_document`] = null
         }
 
         // Mettre à jour aussi dans la liste des coursiers
-        const courierIndex = couriers.value.findIndex(c => c.id === courierId)
+        const courierIndex = couriers.value.findIndex(c => c.id === selectedCourier.value.id)
         if (courierIndex !== -1 && couriers.value[courierIndex].kyc) {
           couriers.value[courierIndex].kyc[`${documentType}_verified`] = false
           couriers.value[courierIndex].kyc[`${documentType}_document`] = null
@@ -2105,20 +2101,11 @@ export default {
 
     const handleDocumentAction = async (documentType, action) => {
       try {
-        if (!selectedCourier.value) return
-
         if (action === 'verify') {
-          await verifyCourierDocument(selectedCourier.value.id, documentType)
-          selectedCourier.value.kyc[`${documentType}_verified`] = true
+          await verifyDocument(documentType)
         } else if (action === 'reject') {
-          await rejectCourierDocument(selectedCourier.value.id, documentType, rejectionReason.value)
-          selectedCourier.value.kyc[`${documentType}_verified`] = false
-          selectedCourier.value.kyc[`${documentType}_document`] = null
+          await rejectDocument(documentType)
         }
-
-        showToast(`Document ${action === 'verify' ? 'vérifié' : 'rejeté'} avec succès`, {
-          type: 'success',
-        })
       } catch (error) {
         console.error(`Erreur lors de l'action sur le document:`, error)
         showToast(`Erreur lors de l'action sur le document`, { type: 'error' })
