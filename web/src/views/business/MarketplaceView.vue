@@ -332,8 +332,6 @@ export default {
       return result
     })
 
-    
-
     const totalPages = computed(() => {
       return Math.ceil(filteredProducts.value.length / itemsPerPage.value) || 1
     })
