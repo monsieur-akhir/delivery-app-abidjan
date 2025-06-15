@@ -405,17 +405,6 @@ export default {
       }
     }
 
-    const reactivateCourier = async courier => {
-      try {
-        // API call to reactivate courier
-        showToast('Coursier réactivé avec succès', 'success')
-        loadCouriers(currentPage.value)
-      } catch (error) {
-        console.error('Erreur lors de la réactivation:', error)
-        showToast('Erreur lors de la réactivation', 'error')
-      }
-    }
-
     const inviteCourier = async () => {
       try {
         inviting.value = true

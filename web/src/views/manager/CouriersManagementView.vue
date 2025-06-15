@@ -1861,8 +1861,7 @@ export default {
         showToast('Coursier bloqué avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors du blocage du coursier:', error)
-        ```text
-showToast('Erreur lors du blocage du coursier', { type: 'error' })
+        showToast('Erreur lors du blocage du coursier', { type: 'error' })
       }
     }
 
