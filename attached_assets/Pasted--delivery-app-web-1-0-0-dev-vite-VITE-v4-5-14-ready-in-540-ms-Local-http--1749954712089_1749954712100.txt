@@ -1,0 +1,738 @@
+
+> delivery-app-web@1.0.0 dev
+> vite
+
+
+  VITE v4.5.14  ready in 540 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://172.31.128.41:5173/
+  ➜  press h to show help
+Error:   Failed to scan for dependencies from entries:
+  /home/runner/workspace/web/index.html
+/home/runner/workspace/web/stats.html
+
+  ✘ [ERROR] No matching export in "src/api/settings.js" for import "getLanguageSettings"
+
+    script:/home/runner/workspace/web/src/views/business/LanguageSettingsView.vue?id=0:4:9:
+      4 │ import { getLanguageSettings, updateLanguageSettings } from '@/api/...
+        ╵          ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] No matching export in "src/api/settings.js" for import "updateLanguageSettings"
+
+    script:/home/runner/workspace/web/src/views/business/LanguageSettingsView.vue?id=0:4:30:
+      4 │ ...getLanguageSettings, updateLanguageSettings } from '@/api/settings'
+        ╵                         ~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] No matching export in "src/api/manager.js" for import "default"
+
+    script:/home/runner/workspace/web/src/views/manager/AnalyticsView.vue?id=0:4:7:
+      4 │ import managerApi from '@/api/manager'
+        ╵        ~~~~~~~~~~
+
+
+    at failureErrorWithLog (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1649:15)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1058:25
+    at runOnEndCallbacks (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1484:45)
+    at buildResponseToResult (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1056:7)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1068:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1067:54)
+    at handleRequest (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:729:19)
+    at handleIncomingPacket (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:755:7)
+    at Socket.readFromStdout (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:679:7)
+2:24:09 AM [vite] vite.config.js changed, restarting server...
+2:24:09 AM [vite] server restarted.
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://172.31.128.41:5173/
+Error:   Failed to scan for dependencies from entries:
+  /home/runner/workspace/web/index.html
+/home/runner/workspace/web/stats.html
+
+  ✘ [ERROR] Multiple exports with the same name "getAnalyticsData"
+
+    src/api/manager.js:1156:2:
+      1156 │   getAnalyticsData,
+           ╵   ~~~~~~~~~~~~~~~~
+
+  The name "getAnalyticsData" was originally exported here:
+
+    src/api/manager.js:255:13:
+      255 │ export const getAnalyticsData = async (params = {}) => {
+          ╵              ~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "getCourierPerformance"
+
+    src/api/manager.js:1157:2:
+      1157 │   getCourierPerformance,
+           ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+  The name "getCourierPerformance" was originally exported here:
+
+    src/api/manager.js:288:13:
+      288 │ export const getCourierPerformance = async (params = {}) => {
+          ╵              ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "getBusinessAnalytics" is not declared in this file
+
+    src/api/manager.js:1158:2:
+      1158 │   getBusinessAnalytics,
+           ╵   ~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "exportAnalyticsReport" is not declared in this file
+
+    src/api/manager.js:1159:2:
+      1159 │   exportAnalyticsReport,
+           ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchUsers"
+
+    src/api/manager.js:1162:2:
+      1162 │   fetchUsers,
+           ╵   ~~~~~~~~~~
+
+  The name "fetchUsers" was originally exported here:
+
+    src/api/manager.js:317:13:
+      317 │ export const fetchUsers = async (params = {}) => {
+          ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] "fetchUser" is not declared in this file
+
+    src/api/manager.js:1163:2:
+      1163 │   fetchUser,
+           ╵   ~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateUser"
+
+    src/api/manager.js:1165:2:
+      1165 │   updateUser,
+           ╵   ~~~~~~~~~~
+
+  The name "updateUser" was originally exported here:
+
+    src/api/manager.js:347:13:
+      347 │ export const updateUser = async (userId, userData) => {
+          ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "deleteUser"
+
+    src/api/manager.js:1166:2:
+      1166 │   deleteUser,
+           ╵   ~~~~~~~~~~
+
+  The name "deleteUser" was originally exported here:
+
+    src/api/manager.js:352:13:
+      352 │ export const deleteUser = async userId => {
+          ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateUserStatus"
+
+    src/api/manager.js:1167:2:
+      1167 │   updateUserStatus,
+           ╵   ~~~~~~~~~~~~~~~~
+
+  The name "updateUserStatus" was originally exported here:
+
+    src/api/manager.js:357:13:
+      357 │ export const updateUserStatus = async (userId, status) => {
+          ╵              ~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "bulkUpdateUsers" is not declared in this file
+
+    src/api/manager.js:1168:2:
+      1168 │   bulkUpdateUsers,
+           ╵   ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchCouriers"
+
+    src/api/manager.js:1171:2:
+      1171 │   fetchCouriers,
+           ╵   ~~~~~~~~~~~~~
+
+  The name "fetchCouriers" was originally exported here:
+
+    src/api/manager.js:79:13:
+      79 │ export const fetchCouriers = async (params = {}) => {
+         ╵              ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchCourierDetails"
+
+    src/api/manager.js:1172:2:
+      1172 │   fetchCourierDetails,
+           ╵   ~~~~~~~~~~~~~~~~~~~
+
+  The name "fetchCourierDetails" was originally exported here:
+
+    src/api/manager.js:84:13:
+      84 │ export const fetchCourierDetails = async courierId => {
+         ╵              ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchCourierDeliveries"
+
+    src/api/manager.js:1173:2:
+      1173 │   fetchCourierDeliveries,
+           ╵   ~~~~~~~~~~~~~~~~~~~~~~
+
+  The name "fetchCourierDeliveries" was originally exported here:
+
+    src/api/manager.js:89:13:
+      89 │ export const fetchCourierDeliveries = async (courierId, params = {...
+         ╵              ~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchCourierPayments"
+
+    src/api/manager.js:1174:2:
+      1174 │   fetchCourierPayments,
+           ╵   ~~~~~~~~~~~~~~~~~~~~
+
+  The name "fetchCourierPayments" was originally exported here:
+
+    src/api/manager.js:94:13:
+      94 │ export const fetchCourierPayments = async (courierId, params = {})...
+         ╵              ~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "addCourier"
+
+    src/api/manager.js:1175:2:
+      1175 │   addCourier,
+           ╵   ~~~~~~~~~~
+
+  The name "addCourier" was originally exported here:
+
+    src/api/manager.js:99:13:
+      99 │ export const addCourier = async courierData => {
+         ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateCourier"
+
+    src/api/manager.js:1176:2:
+      1176 │   updateCourier,
+           ╵   ~~~~~~~~~~~~~
+
+  The name "updateCourier" was originally exported here:
+
+    src/api/manager.js:104:13:
+      104 │ export const updateCourier = async (courierId, courierData) => {
+          ╵              ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateCourierStatus"
+
+    src/api/manager.js:1177:2:
+      1177 │   updateCourierStatus,
+           ╵   ~~~~~~~~~~~~~~~~~~~
+
+  The name "updateCourierStatus" was originally exported here:
+
+    src/api/manager.js:109:13:
+      109 │ export const updateCourierStatus = async (courierId, status) => {
+          ╵              ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "verifyCourierKyc"
+
+    src/api/manager.js:1178:2:
+      1178 │   verifyCourierKyc,
+           ╵   ~~~~~~~~~~~~~~~~
+
+  The name "verifyCourierKyc" was originally exported here:
+
+    src/api/manager.js:128:13:
+      128 │ export const verifyCourierKyc = async courierId => {
+          ╵              ~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "rejectCourierKyc"
+
+    src/api/manager.js:1179:2:
+      1179 │   rejectCourierKyc,
+           ╵   ~~~~~~~~~~~~~~~~
+
+  The name "rejectCourierKyc" was originally exported here:
+
+    src/api/manager.js:133:13:
+      133 │ export const rejectCourierKyc = async (courierId, reason) => {
+          ╵              ~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "verifyCourierDocument"
+
+    src/api/manager.js:1180:2:
+      1180 │   verifyCourierDocument,
+           ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+  The name "verifyCourierDocument" was originally exported here:
+
+    src/api/manager.js:114:13:
+      114 │ export const verifyCourierDocument = async (courierId, documentTy...
+          ╵              ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "rejectCourierDocument"
+
+    src/api/manager.js:1181:2:
+      1181 │   rejectCourierDocument,
+           ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+  The name "rejectCourierDocument" was originally exported here:
+
+    src/api/manager.js:121:13:
+      121 │ export const rejectCourierDocument = async (courierId, documentTy...
+          ╵              ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "sendCourierNotification"
+
+    src/api/manager.js:1182:2:
+      1182 │   sendCourierNotification,
+           ╵   ~~~~~~~~~~~~~~~~~~~~~~~
+
+  The name "sendCourierNotification" was originally exported here:
+
+    src/api/manager.js:138:13:
+      138 │ export const sendCourierNotification = async (courierId, notifica...
+          ╵              ~~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchDeliveries"
+
+    src/api/manager.js:1185:2:
+      1185 │   fetchDeliveries,
+           ╵   ~~~~~~~~~~~~~~~
+
+  The name "fetchDeliveries" was originally exported here:
+
+    src/api/manager.js:418:13:
+      418 │ export const fetchDeliveries = async (params = {}) => {
+          ╵              ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "fetchDelivery" is not declared in this file
+
+    src/api/manager.js:1186:2:
+      1186 │   fetchDelivery,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateDeliveryStatus"
+
+    src/api/manager.js:1187:2:
+      1187 │   updateDeliveryStatus,
+           ╵   ~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateDeliveryStatus" was originally exported here:
+
+    src/api/manager.js:428:13:
+      428 │ export const updateDeliveryStatus = async (deliveryId, status) => {
+          ╵              ~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "cancelDelivery" is not declared in this file
+
+    src/api/manager.js:1188:2:
+      1188 │   cancelDelivery,
+           ╵   ~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "assignCourier" is not declared in this file
+
+    src/api/manager.js:1189:2:
+      1189 │   assignCourier,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchBusinesses"
+
+    src/api/manager.js:1192:2:
+      1192 │   fetchBusinesses,
+           ╵   ~~~~~~~~~~~~~~~
+
+  The name "fetchBusinesses" was originally exported here:
+
+    src/api/manager.js:387:13:
+      387 │ export const fetchBusinesses = async (params = {}) => {
+          ╵              ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "fetchBusiness" is not declared in this file
+
+    src/api/manager.js:1193:2:
+      1193 │   fetchBusiness,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateBusiness"
+
+    src/api/manager.js:1194:2:
+      1194 │   updateBusiness,
+           ╵   ~~~~~~~~~~~~~~
+
+  The name "updateBusiness" was originally exported here:
+
+    src/api/manager.js:402:13:
+      402 │ export const updateBusiness = async (businessId, businessData) => {
+          ╵              ~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateBusinessStatus"
+
+    src/api/manager.js:1195:2:
+      1195 │   updateBusinessStatus,
+           ╵   ~~~~~~~~~~~~~~~~~~~~
+
+  The name "updateBusinessStatus" was originally exported here:
+
+    src/api/manager.js:412:13:
+      412 │ export const updateBusinessStatus = async (businessId, status) => {
+          ╵              ~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "getFinancialSummary" is not declared in this file
+
+    src/api/manager.js:1198:2:
+      1198 │   getFinancialSummary,
+           ╵   ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "getTransactions" is not declared in this file
+
+    src/api/manager.js:1199:2:
+      1199 │   getTransactions,
+           ╵   ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "getPayouts" is not declared in this file
+
+    src/api/manager.js:1200:2:
+      1200 │   getPayouts,
+           ╵   ~~~~~~~~~~
+
+
+✘ [ERROR] "processPayout" is not declared in this file
+
+    src/api/manager.js:1201:2:
+      1201 │   processPayout,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "generateReport"
+
+    src/api/manager.js:1204:2:
+      1204 │   generateReport,
+           ╵   ~~~~~~~~~~~~~~
+
+  The name "generateReport" was originally exported here:
+
+    src/api/manager.js:480:13:
+      480 │ export const generateReport = async reportData => {
+          ╵              ~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "exportReport" is not declared in this file
+
+    src/api/manager.js:1205:2:
+      1205 │   exportReport,
+           ╵   ~~~~~~~~~~~~
+
+
+✘ [ERROR] "getManagerSettings" is not declared in this file
+
+    src/api/manager.js:1208:2:
+      1208 │   getManagerSettings,
+           ╵   ~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "updateManagerSettings" is not declared in this file
+
+    src/api/manager.js:1209:2:
+      1209 │   updateManagerSettings,
+           ╵   ~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "sendNotification" is not declared in this file
+
+    src/api/manager.js:1212:2:
+      1212 │   sendNotification,
+           ╵   ~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "sendBulkNotification" is not declared in this file
+
+    src/api/manager.js:1213:2:
+      1213 │   sendBulkNotification,
+           ╵   ~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "fetchKycDocuments" is not declared in this file
+
+    src/api/manager.js:1216:2:
+      1216 │   fetchKycDocuments,
+           ╵   ~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "verifyKycDocument" is not declared in this file
+
+    src/api/manager.js:1217:2:
+      1217 │   verifyKycDocument,
+           ╵   ~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "rejectKycDocument" is not declared in this file
+
+    src/api/manager.js:1218:2:
+      1218 │   rejectKycDocument,
+           ╵   ~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "fetchTickets" is not declared in this file
+
+    src/api/manager.js:1221:2:
+      1221 │   fetchTickets,
+           ╵   ~~~~~~~~~~~~
+
+
+✘ [ERROR] "updateTicketStatus" is not declared in this file
+
+    src/api/manager.js:1222:2:
+      1222 │   updateTicketStatus,
+           ╵   ~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "assignTicket" is not declared in this file
+
+    src/api/manager.js:1223:2:
+      1223 │   assignTicket,
+           ╵   ~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchZones"
+
+    src/api/manager.js:1226:2:
+      1226 │   fetchZones,
+           ╵   ~~~~~~~~~~
+
+  The name "fetchZones" was originally exported here:
+
+    src/api/manager.js:43:13:
+      43 │ export const fetchZones = async (params = {}) => {
+         ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "createZone"
+
+    src/api/manager.js:1227:2:
+      1227 │   createZone,
+           ╵   ~~~~~~~~~~
+
+  The name "createZone" was originally exported here:
+
+    src/api/manager.js:53:13:
+      53 │ export const createZone = async zoneData => {
+         ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updateZone"
+
+    src/api/manager.js:1228:2:
+      1228 │   updateZone,
+           ╵   ~~~~~~~~~~
+
+  The name "updateZone" was originally exported here:
+
+    src/api/manager.js:58:13:
+      58 │ export const updateZone = async (zoneId, zoneData) => {
+         ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "deleteZone"
+
+    src/api/manager.js:1229:2:
+      1229 │   deleteZone,
+           ╵   ~~~~~~~~~~
+
+  The name "deleteZone" was originally exported here:
+
+    src/api/manager.js:63:13:
+      63 │ export const deleteZone = async zoneId => {
+         ╵              ~~~~~~~~~~
+
+
+✘ [ERROR] "fetchVehicles" is not declared in this file
+
+    src/api/manager.js:1232:2:
+      1232 │   fetchVehicles,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] "verifyVehicle" is not declared in this file
+
+    src/api/manager.js:1233:2:
+      1233 │   verifyVehicle,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] "rejectVehicle" is not declared in this file
+
+    src/api/manager.js:1234:2:
+      1234 │   rejectVehicle,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchPromotions"
+
+    src/api/manager.js:1237:2:
+      1237 │   fetchPromotions,
+           ╵   ~~~~~~~~~~~~~~~
+
+  The name "fetchPromotions" was originally exported here:
+
+    src/api/manager.js:520:13:
+      520 │ export const fetchPromotions = async (params = {}) => {
+          ╵              ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "createPromotion"
+
+    src/api/manager.js:1238:2:
+      1238 │   createPromotion,
+           ╵   ~~~~~~~~~~~~~~~
+
+  The name "createPromotion" was originally exported here:
+
+    src/api/manager.js:530:13:
+      530 │ export const createPromotion = async promotionData => {
+          ╵              ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "updatePromotion"
+
+    src/api/manager.js:1239:2:
+      1239 │   updatePromotion,
+           ╵   ~~~~~~~~~~~~~~~
+
+  The name "updatePromotion" was originally exported here:
+
+    src/api/manager.js:535:13:
+      535 │ export const updatePromotion = async (promotionId, promotionData)...
+          ╵              ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "deletePromotion"
+
+    src/api/manager.js:1240:2:
+      1240 │   deletePromotion,
+           ╵   ~~~~~~~~~~~~~~~
+
+  The name "deletePromotion" was originally exported here:
+
+    src/api/manager.js:540:13:
+      540 │ export const deletePromotion = async promotionId => {
+          ╵              ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "fetchPolicies" is not declared in this file
+
+    src/api/manager.js:1243:2:
+      1243 │   fetchPolicies,
+           ╵   ~~~~~~~~~~~~~
+
+
+✘ [ERROR] "createPolicy" is not declared in this file
+
+    src/api/manager.js:1244:2:
+      1244 │   createPolicy,
+           ╵   ~~~~~~~~~~~~
+
+
+✘ [ERROR] "updatePolicy" is not declared in this file
+
+    src/api/manager.js:1245:2:
+      1245 │   updatePolicy,
+           ╵   ~~~~~~~~~~~~
+
+
+✘ [ERROR] "deletePolicy" is not declared in this file
+
+    src/api/manager.js:1246:2:
+      1246 │   deletePolicy,
+           ╵   ~~~~~~~~~~~~
+
+
+✘ [ERROR] Multiple exports with the same name "fetchAuditLogs"
+
+    src/api/manager.js:1249:2:
+      1249 │   fetchAuditLogs,
+           ╵   ~~~~~~~~~~~~~~
+
+  The name "fetchAuditLogs" was originally exported here:
+
+    src/api/manager.js:882:13:
+      882 │ export const fetchAuditLogs = async (params = {}) => {
+          ╵              ~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "exportAuditLogs" is not declared in this file
+
+    src/api/manager.js:1250:2:
+      1250 │   exportAuditLogs,
+           ╵   ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "getSystemHealth" is not declared in this file
+
+    src/api/manager.js:1253:2:
+      1253 │   getSystemHealth,
+           ╵   ~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "getSystemMetrics" is not declared in this file
+
+    src/api/manager.js:1254:2:
+      1254 │   getSystemMetrics,
+           ╵   ~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "subscribeToUpdates" is not declared in this file
+
+    src/api/manager.js:1257:2:
+      1257 │   subscribeToUpdates,
+           ╵   ~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] "unsubscribeFromUpdates" is not declared in this file
+
+    src/api/manager.js:1258:2:
+      1258 │   unsubscribeFromUpdates
+           ╵   ~~~~~~~~~~~~~~~~~~~~~~
+
+
+    at failureErrorWithLog (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1649:15)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1058:25
+    at runOnEndCallbacks (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1484:45)
+    at buildResponseToResult (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1056:7)
+    at /home/runner/workspace/web/node_modules/esbuild/lib/main.js:1068:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:1067:54)
+    at handleRequest (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:729:19)
+    at handleIncomingPacket (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:755:7)
+    at Socket.readFromStdout (/home/runner/workspace/web/node_modules/esbuild/lib/main.js:679:7)
