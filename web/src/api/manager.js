@@ -195,7 +195,7 @@ export const fetchAnalytics = async (params = {}) => {
   return response.data
 }
 
-export const fetchCourierPerformance = async (params = {}) => {
+export const fetchCourierPerformanceAnalytics = async (params = {}) => {
   const response = await apiClient.get('/analytics/courier-performance', { params })
   return response.data
 }
@@ -247,11 +247,7 @@ export const exportAnalyticsData = async (params = {}) => {
   return true
 }
 
-/**
- * Récupère les données analytiques pour le tableau de bord
- * @param {Object} params - Paramètres de filtrage (dateRange, startDate, endDate, commune)
- * @returns {Promise<Object>} Données analytiques
- */
+// API pour les analyses manager
 export const getAnalyticsData = async (params = {}) => {
   try {
     const queryParams = new URLSearchParams()
@@ -280,11 +276,6 @@ export const getAnalyticsData = async (params = {}) => {
   }
 }
 
-/**
- * Récupère les performances des coursiers
- * @param {Object} params - Paramètres de filtrage (dateRange, startDate, endDate, commune)
- * @returns {Promise<Object>} Données de performance des coursiers
- */
 export const getCourierPerformance = async (params = {}) => {
   try {
     const queryParams = new URLSearchParams()
@@ -313,14 +304,81 @@ export const getCourierPerformance = async (params = {}) => {
   }
 }
 
+export const getBusinessAnalytics = async (params = {}) => {
+  try {
+    const response = await apiClient.get('/manager/analytics/business', { params })
+    return response.data
+  } catch (error) {
+    console.error('Erreur lors de la récupération des analytics business:', error)
+    throw error
+  }
+}
+
+export const exportAnalyticsReport = async (params = {}) => {
+  try {
+    const response = await apiClient.post('/manager/analytics/export', params, {
+      responseType: 'blob',
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+
+    const contentDisposition = response.headers['content-disposition']
+    let filename = 'analytics-export.csv'
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+      if (filenameMatch && filenameMatch.length === 2) {
+        filename = filenameMatch[1]
+      }
+    }
+
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    return true
+  } catch (error) {
+    console.error('Erreur lors de l\'export du rapport analytics:', error)
+    throw error
+  }
+}
+
 // API pour les utilisateurs
 export const fetchUsers = async (params = {}) => {
   const response = await apiClient.get('/api/users', { params })
   return response.data
 }
 
-export const fetchUserDetails = async userId => {
+export const fetchUser = async userId => {
   const response = await apiClient.get(`/api/users/${userId}`)
+  return response.data
+}
+
+export const createUser = async userData => {
+  const response = await apiClient.post('/api/users', userData)
+  return response.data
+}
+
+export const updateUser = async (userId, userData) => {
+  const response = await apiClient.put(`/api/users/${userId}`, userData)
+  return response.data
+}
+
+export const deleteUser = async userId => {
+  const response = await apiClient.delete(`/api/users/${userId}`)
+  return response.data
+}
+
+export const updateUserStatus = async (userId, status) => {
+  const response = await apiClient.patch(`/api/users/${userId}/status`, { status })
+  return response.data
+}
+
+export const bulkUpdateUsers = async usersData => {
+  const response = await apiClient.put('/api/users/bulk', usersData)
   return response.data
 }
 
@@ -341,21 +399,6 @@ export const fetchUserPayments = async userId => {
 
 export const addUser = async userData => {
   const response = await apiClient.post('/api/users', userData)
-  return response.data
-}
-
-export const updateUser = async (userId, userData) => {
-  const response = await apiClient.put(`/api/users/${userId}`, userData)
-  return response.data
-}
-
-export const deleteUser = async userId => {
-  const response = await apiClient.delete(`/api/users/${userId}`)
-  return response.data
-}
-
-export const updateUserStatus = async (userId, status) => {
-  const response = await apiClient.patch(`/api/users/${userId}/status`, { status })
   return response.data
 }
 
@@ -389,23 +432,13 @@ export const fetchBusinesses = async (params = {}) => {
   return response.data
 }
 
-export const fetchBusinessDetails = async businessId => {
+export const fetchBusiness = async businessId => {
   const response = await apiClient.get(`/businesses/${businessId}`)
-  return response.data
-}
-
-export const createBusiness = async businessData => {
-  const response = await apiClient.post('/businesses', businessData)
   return response.data
 }
 
 export const updateBusiness = async (businessId, businessData) => {
   const response = await apiClient.put(`/businesses/${businessId}`, businessData)
-  return response.data
-}
-
-export const deleteBusiness = async businessId => {
-  const response = await apiClient.delete(`/businesses/${businessId}`)
   return response.data
 }
 
@@ -420,13 +453,23 @@ export const fetchDeliveries = async (params = {}) => {
   return response.data
 }
 
-export const fetchDeliveryDetails = async deliveryId => {
+export const fetchDelivery = async deliveryId => {
   const response = await apiClient.get(`/deliveries/${deliveryId}`)
   return response.data
 }
 
 export const updateDeliveryStatus = async (deliveryId, status) => {
   const response = await apiClient.patch(`/deliveries/${deliveryId}/status`, { status })
+  return response.data
+}
+
+export const cancelDelivery = async deliveryId => {
+  const response = await apiClient.post(`/deliveries/${deliveryId}/cancel`)
+  return response.data
+}
+
+export const assignCourier = async (deliveryId, courierId) => {
+  const response = await apiClient.post(`/deliveries/${deliveryId}/assign`, { courier_id: courierId })
   return response.data
 }
 
@@ -463,6 +506,26 @@ export const resolveTransactionDispute = async (transactionId, resolutionData) =
     `/finances/transactions/${transactionId}/resolve-dispute`,
     resolutionData
   )
+  return response.data
+}
+
+export const getFinancialSummary = async (params = {}) => {
+  const response = await apiClient.get('/finances/summary', { params })
+  return response.data
+}
+
+export const getTransactions = async (params = {}) => {
+  const response = await apiClient.get('/finances/transactions', { params })
+  return response.data
+}
+
+export const getPayouts = async (params = {}) => {
+  const response = await apiClient.get('/finances/payouts', { params })
+  return response.data
+}
+
+export const processPayout = async payoutData => {
+  const response = await apiClient.post('/finances/payouts', payoutData)
   return response.data
 }
 
@@ -516,14 +579,42 @@ export const downloadReport = async (reportId, format = 'pdf') => {
   }
 }
 
+export const exportReport = async (reportId, format = 'pdf') => {
+  try {
+    const response = await apiClient.get(`/reports/${reportId}/export`, {
+      params: { format },
+      responseType: 'blob',
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+
+    const contentDisposition = response.headers['content-disposition']
+    let filename = `report-${reportId}.${format}`
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+      if (filenameMatch && filenameMatch.length === 2) {
+        filename = filenameMatch[1]
+      }
+    }
+
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    return true
+  } catch (error) {
+    console.error('Erreur lors de l\'export du rapport:', error)
+    throw error
+  }
+}
+
 // API pour les promotions
 export const fetchPromotions = async (params = {}) => {
   const response = await apiClient.get('/promotions', { params })
-  return response.data
-}
-
-export const fetchPromotionDetails = async promotionId => {
-  const response = await apiClient.get(`/promotions/${promotionId}`)
   return response.data
 }
 
@@ -559,6 +650,16 @@ export const fetchSystemSettingsManager = async () => {
 }
 
 export const updateSystemSettingsManager = async settingsData => {
+  const response = await apiClient.put('/manager/settings', settingsData)
+  return response.data
+}
+
+export const getManagerSettings = async () => {
+  const response = await apiClient.get('/manager/settings')
+  return response.data
+}
+
+export const updateManagerSettings = async settingsData => {
   const response = await apiClient.put('/manager/settings', settingsData)
   return response.data
 }
@@ -908,7 +1009,7 @@ const getUsers = (filters = {}) => {
   return apiClient.get('/manager/users', { params: filters })
 }
 
-const createUser = userData => {
+const createUserManager = userData => {
   return apiClient.post('/manager/users', userData)
 }
 
@@ -995,6 +1096,28 @@ const getPerformanceMetrics = () => {
   return apiClient.get('/manager/stats/performance')
 }
 
+// API pour la santé du système
+export const getSystemHealth = async () => {
+  const response = await apiClient.get('/system/health')
+  return response.data
+}
+
+export const getSystemMetrics = async () => {
+  const response = await apiClient.get('/system/metrics')
+  return response.data
+}
+
+// API pour les mises à jour en temps réel
+export const subscribeToUpdates = (callback) => {
+  // Implementation WebSocket ou SSE
+  console.log('Subscribe to updates:', callback)
+}
+
+export const unsubscribeFromUpdates = () => {
+  // Implementation WebSocket ou SSE
+  console.log('Unsubscribe from updates')
+}
+
 export const managerService = {
   getGlobalStats,
   getAnalyticsData,
@@ -1011,7 +1134,7 @@ export const managerService = {
   generateFinancialReport,
   // Nouvelles APIs utilisateurs
   getUsers,
-  createUser,
+  createUserManager,
   updateUser,
   getUserStats,
   getUserActivity,
@@ -1041,7 +1164,7 @@ export const managerService = {
   getPerformanceMetrics,
 }
 
-// Export par défaut pour compatibilité
+// Export par défaut
 const managerApi = {
   // Analytics
   getAnalyticsData,
@@ -1146,114 +1269,7 @@ const managerApi = {
 
   // Real-time updates
   subscribeToUpdates,
-  unsubscribeFromUpdates
+  unsubscribeFromUpdates,
 }
 
 export default managerApi
-
-export {
-  // Analytics
-  getAnalyticsData,
-  getCourierPerformance,
-  getBusinessAnalytics,
-  exportAnalyticsReport,
-
-  // Users Management
-  fetchUsers,
-  fetchUser,
-  createUser,
-  updateUser,
-  deleteUser,
-  updateUserStatus,
-  bulkUpdateUsers,
-
-  // Couriers Management
-  fetchCouriers,
-  fetchCourierDetails,
-  fetchCourierDeliveries,
-  fetchCourierPayments,
-  addCourier,
-  updateCourier,
-  updateCourierStatus,
-  verifyCourierKyc,
-  rejectCourierKyc,
-  verifyCourierDocument,
-  rejectCourierDocument,
-  sendCourierNotification,
-
-  // Deliveries Management
-  fetchDeliveries,
-  fetchDelivery,
-  updateDeliveryStatus,
-  cancelDelivery,
-  assignCourier,
-
-  // Businesses Management
-  fetchBusinesses,
-  fetchBusiness,
-  updateBusiness,
-  updateBusinessStatus,
-
-  // Financial Management
-  getFinancialSummary,
-  getTransactions,
-  getPayouts,
-  processPayout,
-
-  // Reports
-  generateReport,
-  exportReport,
-
-  // Settings
-  getManagerSettings,
-  updateManagerSettings,
-
-  // Notifications
-  sendNotification,
-  sendBulkNotification,
-
-  // KYC Management
-  fetchKycDocuments,
-  verifyKycDocument,
-  rejectKycDocument,
-
-  // Support Management
-  fetchTickets,
-  updateTicketStatus,
-  assignTicket,
-
-  // Zone Management
-  fetchZones,
-  createZone,
-  updateZone,
-  deleteZone,
-
-  // Vehicle Management
-  fetchVehicles,
-  verifyVehicle,
-  rejectVehicle,
-
-  // Promotion Management
-  fetchPromotions,
-  createPromotion,
-  updatePromotion,
-  deletePromotion,
-
-  // Policy Management
-  fetchPolicies,
-  createPolicy,
-  updatePolicy,
-  deletePolicy,
-
-  // Audit Logs
-  fetchAuditLogs,
-  exportAuditLogs,
-
-  // System Health
-  getSystemHealth,
-  getSystemMetrics,
-
-  // Real-time updates
-  subscribeToUpdates,
-  unsubscribeFromUpdates
-}
