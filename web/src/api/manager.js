@@ -792,11 +792,6 @@ export const unsubscribeFromUpdates = () => {
   console.log('Unsubscribe from updates')
 }
 
-/**
- * Get global statistics for the dashboard
- * @param {Object} params - Query parameters
- * @returns {Promise<Object>} Global statistics
- */
 export const getGlobalStats = async (params = {}) => {
   try {
     const response = await apiClient.get('/manager/stats', { params })
@@ -807,14 +802,6 @@ export const getGlobalStats = async (params = {}) => {
   }
 }
 
-/**
- * Get chart data for the analytics dashboard
- * @param {string} chartType - Type of chart data to retrieve
- * @param {string} startDate - Start date in ISO format
- * @param {string} endDate - End date in ISO format
- * @param {string} commune - Optional commune filter
- * @returns {Promise<Object>} Chart data
- */
 export const getChartData = async (chartType, startDate, endDate, commune) => {
   try {
     const params = {
@@ -835,12 +822,6 @@ export const getChartData = async (chartType, startDate, endDate, commune) => {
   }
 }
 
-/**
- * Get revenue statistics
- * @param {string} startDate - Start date in ISO format
- * @param {string} endDate - End date in ISO format
- * @returns {Promise<Object>} Revenue statistics
- */
 export const getRevenueStats = async (startDate, endDate) => {
   try {
     const params = {}
@@ -855,12 +836,6 @@ export const getRevenueStats = async (startDate, endDate) => {
   }
 }
 
-/**
- * Get expense statistics
- * @param {string} startDate - Start date in ISO format
- * @param {string} endDate - End date in ISO format
- * @returns {Promise<Object>} Expense statistics
- */
 export const getExpenseStats = async (startDate, endDate) => {
   try {
     const params = {}
@@ -875,14 +850,6 @@ export const getExpenseStats = async (startDate, endDate) => {
   }
 }
 
-/**
- * Generate a financial report
- * @param {string} reportType - Type of report to generate
- * @param {string} startDate - Start date in ISO format
- * @param {string} endDate - End date in ISO format
- * @param {string} format - Report format (csv, pdf, excel)
- * @returns {Promise<Blob>} Report file
- */
 export const generateFinancialReport = async (reportType, startDate, endDate, format = 'csv') => {
   try {
     const response = await apiClient.post(
@@ -905,10 +872,6 @@ export const generateFinancialReport = async (reportType, startDate, endDate, fo
   }
 }
 
-/**
- * Récupérer les coursiers actifs
- * @returns {Promise<Array>} - Liste des coursiers actifs
- */
 export const getActiveCouriers = async () => {
   try {
     const response = await apiClient.get('/manager/couriers/active')
@@ -919,11 +882,6 @@ export const getActiveCouriers = async () => {
   }
 }
 
-/**
- * Récupérer les rapports de trafic
- * @param {Object} params - Paramètres de filtrage
- * @returns {Promise<Array>} - Liste des rapports de trafic
- */
 export const getTrafficReports = async (params = {}) => {
   try {
     const response = await apiClient.get('/manager/traffic/reports', { params })
@@ -934,11 +892,6 @@ export const getTrafficReports = async (params = {}) => {
   }
 }
 
-/**
- * Supprimer un rapport de trafic
- * @param {number} reportId - ID du rapport
- * @returns {Promise<Object>} - Résultat de la suppression
- */
 export const deleteTrafficReport = async reportId => {
   try {
     const response = await apiClient.delete(`/manager/traffic/reports/${reportId}`)
@@ -949,11 +902,6 @@ export const deleteTrafficReport = async reportId => {
   }
 }
 
-/**
- * Récupérer les alertes météo
- * @param {Object} params - Paramètres de filtrage
- * @returns {Promise<Array>} - Liste des alertes météo
- */
 export const getWeatherAlerts = async (params = {}) => {
   try {
     const response = await apiClient.get('/manager/weather/alerts', { params })
@@ -964,11 +912,6 @@ export const getWeatherAlerts = async (params = {}) => {
   }
 }
 
-/**
- * Ajouter une alerte météo
- * @param {Object} alertData - Données de l'alerte
- * @returns {Promise<Object>} - Alerte créée
- */
 export const addWeatherAlert = async alertData => {
   try {
     const response = await apiClient.post('/manager/weather/alerts', alertData)
@@ -979,11 +922,6 @@ export const addWeatherAlert = async alertData => {
   }
 }
 
-/**
- * Supprimer une alerte météo
- * @param {number} alertId - ID de l'alerte
- * @returns {Promise<Object>} - Résultat de la suppression
- */
 export const deleteWeatherAlert = async alertId => {
   try {
     const response = await apiClient.delete(`/manager/weather/alerts/${alertId}`)
@@ -994,11 +932,6 @@ export const deleteWeatherAlert = async alertId => {
   }
 }
 
-/**
- * Récupérer les données du tableau de bord pour un manager
- * @param {string} period - Période (week, month, year)
- * @returns {Promise<ManagerDashboard>} - Données du tableau de bord
- */
 export const fetchManagerDashboard = async (period = 'week') => {
   try {
     const response = await authApi.get(`/manager/dashboard?period=${period}`)
@@ -1008,11 +941,6 @@ export const fetchManagerDashboard = async (period = 'week') => {
   }
 }
 
-/**
- * Récupérer les données financières
- * @param {Object} params - Paramètres de filtrage
- * @returns {Promise<Object>} - Données financières
- */
 export const fetchFinances = async (params = {}) => {
   try {
     const response = await authApi.get('/manager/finances', { params })
@@ -1022,11 +950,6 @@ export const fetchFinances = async (params = {}) => {
   }
 }
 
-/**
- * Récupérer la liste des transactions
- * @param {Object} params - Paramètres de filtrage
- * @returns {Promise<Array<Transaction>>} - Liste des transactions
- */
 export const fetchTransactions = async (params = {}) => {
   try {
     const response = await authApi.get('/manager/transactions', { params })
@@ -1036,11 +959,6 @@ export const fetchTransactions = async (params = {}) => {
   }
 }
 
-/**
- * Récupérer les détails d'une transaction
- * @param {number} transactionId - ID de la transaction
- * @returns {Promise<Transaction>} - Détails de la transaction
- */
 export const fetchTransactionDetails = async transactionId => {
   try {
     const response = await authApi.get(`/manager/transactions/${transactionId}`)
@@ -1050,12 +968,6 @@ export const fetchTransactionDetails = async transactionId => {
   }
 }
 
-/**
- * Traiter une transaction
- * @param {number} transactionId - ID de la transaction
- * @param {Object} data - Données de traitement
- * @returns {Promise<Transaction>} - Transaction mise à jour
- */
 export const processTransaction = async (transactionId, data) => {
   try {
     const response = await authApi.post(`/manager/transactions/${transactionId}/process`, data)
@@ -1065,11 +977,6 @@ export const processTransaction = async (transactionId, data) => {
   }
 }
 
-/**
- * Supprimer un rapport
- * @param {number} reportId - ID du rapport à supprimer
- * @returns {Promise<Object>} - Résultat de la suppression
- */
 export const deleteReport = async reportId => {
   try {
     const response = await authApi.delete(`/manager/reports/${reportId}`)
@@ -1079,11 +986,6 @@ export const deleteReport = async reportId => {
   }
 }
 
-/**
- * Récupérer les logs d'audit
- * @param {Object} params - Paramètres de filtrage (optionnel)
- * @returns {Promise<Array>} - Liste des logs d'audit
- */
 export const fetchAuditLogs = async (params = {}) => {
   try {
     const response = await authApi.get('/manager/audit-logs', { params })
@@ -1093,11 +995,6 @@ export const fetchAuditLogs = async (params = {}) => {
   }
 }
 
-/**
- * Ajoute une nouvelle zone
- * @param {Object} zoneData - Données de la zone à ajouter
- * @returns {Promise<Object>} Zone créée
- */
 export async function addZone(zoneData) {
   try {
     const response = await apiClient.post('/manager/zones', zoneData)
