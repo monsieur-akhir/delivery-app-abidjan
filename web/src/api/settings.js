@@ -151,3 +151,25 @@ const settingsApi = {
 }
 
 export default settingsApi
+
+// Export des principales fonctions pour l'importation nommée
+export { 
+  fetchSystemSettings,
+  updateSystemSettings,
+  getLanguageSettings,
+  updateLanguageSettings,
+  getNotificationSettings,
+  updateNotificationSettings,
+  getPaymentSettings,
+  updatePaymentSettings,
+  getSecuritySettings,
+  updateSecuritySettings,
+  getBusinessSettings,
+  updateBusinessSettings,
+  getCourierSettings,
+  updateCourierSettings,
+  getGeneralSettings,
+  updateGeneralSettings,
+  getApiSettings,
+  updateApiSettings
+}

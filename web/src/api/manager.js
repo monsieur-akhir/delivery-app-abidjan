@@ -1081,6 +1081,7 @@ const managerApi = {
   createZone,
   updateZone,
   deleteZone,
+  addZone,
 
   // Vehicle Management
   fetchVehicles,
@@ -1110,6 +1111,25 @@ const managerApi = {
   // Real-time updates
   subscribeToUpdates,
   unsubscribeFromUpdates,
+
+  // Additional Manager Functions
+  fetchManagerDashboard,
+  fetchFinances,
+  fetchTransactions,
+  fetchTransactionDetails,
+  processTransaction,
+  deleteReport,
+  getGlobalStats,
+  getChartData,
+  getRevenueStats,
+  getExpenseStats,
+  generateFinancialReport,
+  getActiveCouriers,
+  getTrafficReports,
+  deleteTrafficReport,
+  getWeatherAlerts,
+  addWeatherAlert,
+  deleteWeatherAlert,
 }
 
 export default managerApi
