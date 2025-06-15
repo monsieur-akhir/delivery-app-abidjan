@@ -9,7 +9,7 @@
       "DOM",
       "ESNext"
     ],
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
