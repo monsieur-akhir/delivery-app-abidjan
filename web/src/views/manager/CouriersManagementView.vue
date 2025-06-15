@@ -1750,7 +1750,7 @@ export default {
       }
     }
 
-    const verifyDocument = async (documentType) => {
+    const verifyDocument = async documentType => {
       try {
         if (!selectedCourier.value) return
 
@@ -1778,7 +1778,7 @@ export default {
       }
     }
 
-    const rejectDocument = async (documentType) => {
+    const rejectDocument = async documentType => {
       if (!confirm('Êtes-vous sûr de vouloir rejeter ce document ?')) {
         return
       }
