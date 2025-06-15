@@ -1040,3 +1040,220 @@ export const managerService = {
   getKycStats,
   getPerformanceMetrics,
 }
+
+// Export par défaut pour compatibilité
+const managerApi = {
+  // Analytics
+  getAnalyticsData,
+  getCourierPerformance,
+  getBusinessAnalytics,
+  exportAnalyticsReport,
+
+  // Users Management
+  fetchUsers,
+  fetchUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  updateUserStatus,
+  bulkUpdateUsers,
+
+  // Couriers Management
+  fetchCouriers,
+  fetchCourierDetails,
+  fetchCourierDeliveries,
+  fetchCourierPayments,
+  addCourier,
+  updateCourier,
+  updateCourierStatus,
+  verifyCourierKyc,
+  rejectCourierKyc,
+  verifyCourierDocument,
+  rejectCourierDocument,
+  sendCourierNotification,
+
+  // Deliveries Management
+  fetchDeliveries,
+  fetchDelivery,
+  updateDeliveryStatus,
+  cancelDelivery,
+  assignCourier,
+
+  // Businesses Management
+  fetchBusinesses,
+  fetchBusiness,
+  updateBusiness,
+  updateBusinessStatus,
+
+  // Financial Management
+  getFinancialSummary,
+  getTransactions,
+  getPayouts,
+  processPayout,
+
+  // Reports
+  generateReport,
+  exportReport,
+
+  // Settings
+  getManagerSettings,
+  updateManagerSettings,
+
+  // Notifications
+  sendNotification,
+  sendBulkNotification,
+
+  // KYC Management
+  fetchKycDocuments,
+  verifyKycDocument,
+  rejectKycDocument,
+
+  // Support Management
+  fetchTickets,
+  updateTicketStatus,
+  assignTicket,
+
+  // Zone Management
+  fetchZones,
+  createZone,
+  updateZone,
+  deleteZone,
+
+  // Vehicle Management
+  fetchVehicles,
+  verifyVehicle,
+  rejectVehicle,
+
+  // Promotion Management
+  fetchPromotions,
+  createPromotion,
+  updatePromotion,
+  deletePromotion,
+
+  // Policy Management
+  fetchPolicies,
+  createPolicy,
+  updatePolicy,
+  deletePolicy,
+
+  // Audit Logs
+  fetchAuditLogs,
+  exportAuditLogs,
+
+  // System Health
+  getSystemHealth,
+  getSystemMetrics,
+
+  // Real-time updates
+  subscribeToUpdates,
+  unsubscribeFromUpdates
+}
+
+export default managerApi
+
+export {
+  // Analytics
+  getAnalyticsData,
+  getCourierPerformance,
+  getBusinessAnalytics,
+  exportAnalyticsReport,
+
+  // Users Management
+  fetchUsers,
+  fetchUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  updateUserStatus,
+  bulkUpdateUsers,
+
+  // Couriers Management
+  fetchCouriers,
+  fetchCourierDetails,
+  fetchCourierDeliveries,
+  fetchCourierPayments,
+  addCourier,
+  updateCourier,
+  updateCourierStatus,
+  verifyCourierKyc,
+  rejectCourierKyc,
+  verifyCourierDocument,
+  rejectCourierDocument,
+  sendCourierNotification,
+
+  // Deliveries Management
+  fetchDeliveries,
+  fetchDelivery,
+  updateDeliveryStatus,
+  cancelDelivery,
+  assignCourier,
+
+  // Businesses Management
+  fetchBusinesses,
+  fetchBusiness,
+  updateBusiness,
+  updateBusinessStatus,
+
+  // Financial Management
+  getFinancialSummary,
+  getTransactions,
+  getPayouts,
+  processPayout,
+
+  // Reports
+  generateReport,
+  exportReport,
+
+  // Settings
+  getManagerSettings,
+  updateManagerSettings,
+
+  // Notifications
+  sendNotification,
+  sendBulkNotification,
+
+  // KYC Management
+  fetchKycDocuments,
+  verifyKycDocument,
+  rejectKycDocument,
+
+  // Support Management
+  fetchTickets,
+  updateTicketStatus,
+  assignTicket,
+
+  // Zone Management
+  fetchZones,
+  createZone,
+  updateZone,
+  deleteZone,
+
+  // Vehicle Management
+  fetchVehicles,
+  verifyVehicle,
+  rejectVehicle,
+
+  // Promotion Management
+  fetchPromotions,
+  createPromotion,
+  updatePromotion,
+  deletePromotion,
+
+  // Policy Management
+  fetchPolicies,
+  createPolicy,
+  updatePolicy,
+  deletePolicy,
+
+  // Audit Logs
+  fetchAuditLogs,
+  exportAuditLogs,
+
+  // System Health
+  getSystemHealth,
+  getSystemMetrics,
+
+  // Real-time updates
+  subscribeToUpdates,
+  unsubscribeFromUpdates
+}

@@ -78,4 +78,24 @@ export default {
     const response = await settingsApi.post('/test-connections')
     return response.data
   },
+  //Added language settings functions based on the intention
+  async getLanguageSettings() {
+    try {
+      const response = await settingsApi.get('/language')
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des paramètres de langue:', error)
+      throw error
+    }
+  },
+
+  async updateLanguageSettings(settings) {
+    try {
+      const response = await settingsApi.put('/language', settings)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des paramètres de langue:', error)
+      throw error
+    }
+  },
 }
