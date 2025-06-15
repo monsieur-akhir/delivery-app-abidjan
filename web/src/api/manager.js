@@ -1,3 +1,4 @@
+
 import axios from 'axios'
 import { API_URL } from '@/config'
 import authApi from './auth'
@@ -670,6 +671,127 @@ export const fetchDashboardData = async () => {
   return response.data
 }
 
+// Fonctions manquantes ajoutées
+export const sendNotification = async (notificationData) => {
+  const response = await apiClient.post('/notifications/send', notificationData)
+  return response.data
+}
+
+export const sendBulkNotification = async (notificationData) => {
+  const response = await apiClient.post('/notifications/bulk-send', notificationData)
+  return response.data
+}
+
+export const fetchKycDocuments = async (params = {}) => {
+  const response = await apiClient.get('/kyc/documents', { params })
+  return response.data
+}
+
+export const verifyKycDocument = async (documentId) => {
+  const response = await apiClient.post(`/kyc/documents/${documentId}/verify`)
+  return response.data
+}
+
+export const rejectKycDocument = async (documentId, reason) => {
+  const response = await apiClient.post(`/kyc/documents/${documentId}/reject`, { reason })
+  return response.data
+}
+
+export const fetchTickets = async (params = {}) => {
+  const response = await apiClient.get('/support/tickets', { params })
+  return response.data
+}
+
+export const updateTicketStatus = async (ticketId, status) => {
+  const response = await apiClient.patch(`/support/tickets/${ticketId}/status`, { status })
+  return response.data
+}
+
+export const assignTicket = async (ticketId, assigneeId) => {
+  const response = await apiClient.post(`/support/tickets/${ticketId}/assign`, { assignee_id: assigneeId })
+  return response.data
+}
+
+export const fetchVehicles = async (params = {}) => {
+  const response = await apiClient.get('/vehicles', { params })
+  return response.data
+}
+
+export const verifyVehicle = async (vehicleId) => {
+  const response = await apiClient.post(`/vehicles/${vehicleId}/verify`)
+  return response.data
+}
+
+export const rejectVehicle = async (vehicleId, reason) => {
+  const response = await apiClient.post(`/vehicles/${vehicleId}/reject`, { reason })
+  return response.data
+}
+
+export const fetchPolicies = async (params = {}) => {
+  const response = await apiClient.get('/policies', { params })
+  return response.data
+}
+
+export const createPolicy = async (policyData) => {
+  const response = await apiClient.post('/policies', policyData)
+  return response.data
+}
+
+export const updatePolicy = async (policyId, policyData) => {
+  const response = await apiClient.put(`/policies/${policyId}`, policyData)
+  return response.data
+}
+
+export const deletePolicy = async (policyId) => {
+  const response = await apiClient.delete(`/policies/${policyId}`)
+  return response.data
+}
+
+export const exportAuditLogs = async (params = {}) => {
+  const response = await apiClient.post('/audit/export', params, {
+    responseType: 'blob',
+  })
+
+  const url = window.URL.createObjectURL(new Blob([response.data]))
+  const link = document.createElement('a')
+  link.href = url
+
+  const contentDisposition = response.headers['content-disposition']
+  let filename = 'audit-logs.csv'
+
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename="(.+)"/)
+    if (filenameMatch && filenameMatch.length === 2) {
+      filename = filenameMatch[1]
+    }
+  }
+
+  link.setAttribute('download', filename)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+
+  return true
+}
+
+export const getSystemHealth = async () => {
+  const response = await apiClient.get('/system/health')
+  return response.data
+}
+
+export const getSystemMetrics = async () => {
+  const response = await apiClient.get('/system/metrics')
+  return response.data
+}
+
+export const subscribeToUpdates = (callback) => {
+  console.log('Subscribe to updates:', callback)
+}
+
+export const unsubscribeFromUpdates = () => {
+  console.log('Unsubscribe from updates')
+}
+
 /**
  * Get global statistics for the dashboard
  * @param {Object} params - Query parameters
@@ -873,24 +995,6 @@ export const deleteWeatherAlert = async alertId => {
 }
 
 /**
- * @typedef {Object} ManagerDashboard
- * @property {number} totalDeliveries - Nombre total de livraisons
- * @property {number} activeDeliveries - Livraisons en cours
- * @property {number} completedDeliveries - Livraisons terminées
- * @property {number} totalRevenue - Revenu total
- * @property {Object} statistics - Statistiques détaillées
- */
-
-/**
- * @typedef {Object} Transaction
- * @property {number} id - ID de la transaction
- * @property {string} type - Type de transaction
- * @property {number} amount - Montant
- * @property {string} status - Statut
- * @property {string} date - Date
- */
-
-/**
  * Récupérer les données du tableau de bord pour un manager
  * @param {string} period - Période (week, month, year)
  * @returns {Promise<ManagerDashboard>} - Données du tableau de bord
@@ -1002,166 +1106,6 @@ export async function addZone(zoneData) {
     console.error("Erreur lors de l'ajout de la zone:", error)
     throw error
   }
-}
-
-// Nouvelles APIs pour la gestion des utilisateurs
-const getUsers = (filters = {}) => {
-  return apiClient.get('/manager/users', { params: filters })
-}
-
-const createUserManager = userData => {
-  return apiClient.post('/manager/users', userData)
-}
-
-const getUserStats = userId => {
-  return apiClient.get(`/manager/users/${userId}/stats`)
-}
-
-const getUserActivity = userId => {
-  return apiClient.get(`/manager/users/${userId}/activity`)
-}
-
-const getCourierProfile = userId => {
-  return apiClient.get(`/manager/users/${userId}/courier-profile`)
-}
-
-const getBusinessProfile = userId => {
-  return apiClient.get(`/manager/users/${userId}/business-profile`)
-}
-
-const exportUsers = () => {
-  return apiClient.get('/manager/users/export', { responseType: 'blob' })
-}
-
-// APIs pour la gestion KYC
-const getUserKycDocuments = userId => {
-  return apiClient.get(`/manager/users/${userId}/kyc/documents`)
-}
-
-const getKycHistory = userId => {
-  return apiClient.get(`/manager/users/${userId}/kyc/history`)
-}
-
-const updateKycStatus = (userId, statusData) => {
-  return apiClient.put(`/manager/users/${userId}/kyc`, statusData)
-}
-
-const updateKycDocument = (documentId, documentData) => {
-  return apiClient.put(`/manager/kyc/documents/${documentId}`, documentData)
-}
-
-const requestKycInfo = (userId, requestData) => {
-  return apiClient.post(`/manager/users/${userId}/kyc/request-info`, requestData)
-}
-
-// APIs pour les permissions et rôles
-const getUserPermissions = userId => {
-  return apiClient.get(`/manager/users/${userId}/permissions`)
-}
-
-const updateUserPermissions = (userId, permissions) => {
-  return apiClient.put(`/manager/users/${userId}/permissions`, permissions)
-}
-
-const getRoles = () => {
-  return apiClient.get('/manager/roles')
-}
-
-const createRole = roleData => {
-  return apiClient.post('/manager/roles', roleData)
-}
-
-const updateRole = (roleId, roleData) => {
-  return apiClient.put(`/manager/roles/${roleId}`, roleData)
-}
-
-const deleteRole = roleId => {
-  return apiClient.delete(`/manager/roles/${roleId}`)
-}
-
-// APIs pour les statistiques avancées
-const getAdvancedStats = (period = 'month') => {
-  return apiClient.get('/manager/stats/advanced', { params: { period } })
-}
-
-const getUserGrowthStats = () => {
-  return apiClient.get('/manager/stats/user-growth')
-}
-
-const getKycStats = () => {
-  return apiClient.get('/manager/stats/kyc')
-}
-
-const getPerformanceMetrics = () => {
-  return apiClient.get('/manager/stats/performance')
-}
-
-// API pour la santé du système
-export const getSystemHealth = async () => {
-  const response = await apiClient.get('/system/health')
-  return response.data
-}
-
-export const getSystemMetrics = async () => {
-  const response = await apiClient.get('/system/metrics')
-  return response.data
-}
-
-// API pour les mises à jour en temps réel
-export const subscribeToUpdates = (callback) => {
-  // Implementation WebSocket ou SSE
-  console.log('Subscribe to updates:', callback)
-}
-
-export const unsubscribeFromUpdates = () => {
-  // Implementation WebSocket ou SSE
-  console.log('Unsubscribe from updates')
-}
-
-export const managerService = {
-  getGlobalStats,
-  getAnalyticsData,
-  getCourierPerformance,
-  getActiveCouriers,
-  getTrafficReports,
-  deleteTrafficReport,
-  getWeatherAlerts,
-  addWeatherAlert,
-  deleteWeatherAlert,
-  getChartData,
-  getRevenueStats,
-  getExpenseStats,
-  generateFinancialReport,
-  // Nouvelles APIs utilisateurs
-  getUsers,
-  createUserManager,
-  updateUser,
-  getUserStats,
-  getUserActivity,
-  getCourierProfile,
-  getBusinessProfile,
-  exportUsers,
-
-  // APIs KYC
-  getUserKycDocuments,
-  getKycHistory,
-  updateKycStatus,
-  updateKycDocument,
-  requestKycInfo,
-
-  // APIs permissions et rôles
-  getUserPermissions,
-  updateUserPermissions,
-  getRoles,
-  createRole,
-  updateRole,
-  deleteRole,
-
-  // APIs statistiques
-  getAdvancedStats,
-  getUserGrowthStats,
-  getKycStats,
-  getPerformanceMetrics,
 }
 
 // Export par défaut
