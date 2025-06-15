@@ -68,30 +68,30 @@
     </div>
 
     <div v-else v-for="product in paginatedProducts" :key="product.id" class="product-card">
-        <div class="product-image">
-          <img :src="product.image_url || '/images/default-product.png'" :alt="product.name" />
-          <span class="availability-badge" :class="{ available: product.is_available }">
-            {{ product.is_available ? 'Disponible' : 'Non disponible' }}
-          </span>
-        </div>
-        <div class="product-details">
-          <h3>{{ product.name }}</h3>
-          <p class="product-category">{{ getCategoryLabel(product.category) }}</p>
-          <p class="product-price">{{ formatPrice(product.price) }} FCFA</p>
-          <p class="product-description">{{ truncateText(product.description, 100) }}</p>
-        </div>
-        <div class="product-actions">
-          <button class="btn btn-icon" @click="editProduct(product)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-icon" @click="toggleAvailability(product)">
-            <i :class="product.is_available ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-          </button>
-          <button class="btn btn-icon btn-danger" @click="confirmDeleteProduct(product)">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
+      <div class="product-image">
+        <img :src="product.image_url || '/images/default-product.png'" :alt="product.name" />
+        <span class="availability-badge" :class="{ available: product.is_available }">
+          {{ product.is_available ? 'Disponible' : 'Non disponible' }}
+        </span>
       </div>
+      <div class="product-details">
+        <h3>{{ product.name }}</h3>
+        <p class="product-category">{{ getCategoryLabel(product.category) }}</p>
+        <p class="product-price">{{ formatPrice(product.price) }} FCFA</p>
+        <p class="product-description">{{ truncateText(product.description, 100) }}</p>
+      </div>
+      <div class="product-actions">
+        <button class="btn btn-icon" @click="editProduct(product)">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-icon" @click="toggleAvailability(product)">
+          <i :class="product.is_available ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+        </button>
+        <button class="btn btn-icon btn-danger" @click="confirmDeleteProduct(product)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
 
     <!-- Pagination -->
     <div v-if="filteredProducts.length > 0" class="pagination">
@@ -1034,7 +1034,7 @@ input[type='file'] {
     flex-direction: column;
   }
 
-.products-grid {
+  .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 }
