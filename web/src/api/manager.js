@@ -357,6 +357,11 @@ export const fetchUser = async userId => {
   return response.data
 }
 
+export const fetchUserDetails = async userId => {
+  const response = await apiClient.get(`/api/users/${userId}`)
+  return response.data
+}
+
 export const createUser = async userData => {
   const response = await apiClient.post('/api/users', userData)
   return response.data
@@ -454,6 +459,11 @@ export const fetchDeliveries = async (params = {}) => {
 }
 
 export const fetchDelivery = async deliveryId => {
+  const response = await apiClient.get(`/deliveries/${deliveryId}`)
+  return response.data
+}
+
+export const fetchDeliveryDetails = async deliveryId => {
   const response = await apiClient.get(`/deliveries/${deliveryId}`)
   return response.data
 }
