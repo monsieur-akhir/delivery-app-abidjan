@@ -67,7 +67,7 @@
       </button>
     </div>
 
-    <div v-else v-for="product in paginatedProducts" :key="product.id" class="product-card">
+    <div v-else v-for="product in filteredProducts" :key="product.id" class="product-card">
       <div class="product-image">
         <img :src="product.image_url || '/images/default-product.png'" :alt="product.name" />
         <span class="availability-badge" :class="{ available: product.is_available }">
@@ -92,25 +92,10 @@
         </button>
       </div>
     </div>
+    </div>
 
     <!-- Pagination -->
-    <div v-if="filteredProducts.length > 0" class="pagination">
-      <button
-        :disabled="currentPage === 1"
-        @click="changePage(currentPage - 1)"
-        class="btn btn-icon"
-      >
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <span>Page {{ currentPage }} sur {{ totalPages }}</span>
-      <button
-        :disabled="currentPage === totalPages"
-        @click="changePage(currentPage + 1)"
-        class="btn btn-icon"
-      >
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
+    <div v-if="paginatedProducts.length > 0" class="pagination"></div>
 
     <!-- Modal d'ajout/modification de produit -->
     <div v-if="showAddProductModal || showEditProductModal" class="modal-overlay">
