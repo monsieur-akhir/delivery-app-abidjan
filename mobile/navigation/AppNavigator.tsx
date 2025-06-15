@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../hooks/useAuth';
@@ -31,6 +32,7 @@ import CourierEarningsScreen from '../screens/courier/CourierEarningsScreen';
 import CollaborativeDeliveriesScreen from '../screens/courier/CollaborativeDeliveriesScreen';
 import GamificationScreen from '../screens/courier/GamificationScreen';
 import CommunityWalletScreen from '../screens/courier/CommunityWalletScreen';
+import CourierHomeScreen from '../screens/courier/HomeScreen';
 
 // Profile Screens
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -71,7 +73,7 @@ function ClientTabs() {
 
           return <FeatherIcon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#FF6B00',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}
@@ -93,8 +95,8 @@ function CourierTabs() {
           let iconName: string;
 
           switch (route.name) {
-            case 'Dashboard':
-              iconName = 'grid';
+            case 'Home':
+              iconName = 'home';
               break;
             case 'Deliveries':
               iconName = 'truck';
@@ -114,12 +116,12 @@ function CourierTabs() {
 
           return <FeatherIcon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#FF6B00',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Dashboard" component={CourierDashboardScreen} />
+      <Tab.Screen name="Home" component={CourierHomeScreen} />
       <Tab.Screen name="Deliveries" component={AvailableDeliveriesScreen} />
       <Tab.Screen name="Earnings" component={CourierEarningsScreen} />
       <Tab.Screen name="Collaborative" component={CollaborativeDeliveriesScreen} />
@@ -136,44 +138,47 @@ export default function AppNavigator() {
   }
 
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      {!user ? (
-        // Auth Stack
-        <Stack.Group>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-          <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
-          <Stack.Screen name="OTPLogin" component={OTPLoginScreen} />
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        </Stack.Group>
-      ) : (
-        // Main App Stack
-        <Stack.Group>
-          {user.role === 'courier' ? (
-            <Stack.Screen name="CourierMain" component={CourierTabs} />
-          ) : (
-            <Stack.Screen name="ClientMain" component={ClientTabs} />
-          )}
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="Login"
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        {!user ? (
+          // Auth Stack
+          <Stack.Group>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
+            <Stack.Screen name="OTPLogin" component={OTPLoginScreen} />
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          </Stack.Group>
+        ) : (
+          // Main App Stack
+          <Stack.Group>
+            {user.role === 'courier' ? (
+              <Stack.Screen name="CourierMain" component={CourierTabs} />
+            ) : (
+              <Stack.Screen name="ClientMain" component={ClientTabs} />
+            )}
 
-          {/* Shared Screens */}
-          <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen name="CreateDelivery" component={CreateDeliveryScreen} />
-          <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
-          <Stack.Screen name="Payment" component={PaymentScreen} />
-          <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+            {/* Shared Screens */}
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="CreateDelivery" component={CreateDeliveryScreen} />
+            <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
+            <Stack.Screen name="Payment" component={PaymentScreen} />
+            <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
 
-          {/* Courier Specific Screens */}
-          <Stack.Screen name="BidScreen" component={BidScreen} />
-          <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />
-          <Stack.Screen name="Gamification" component={GamificationScreen} />
-          <Stack.Screen name="CommunityWallet" component={CommunityWalletScreen} />
-        </Stack.Group>
-      )}
-    </Stack.Navigator>
+            {/* Courier Specific Screens */}
+            <Stack.Screen name="BidScreen" component={BidScreen} />
+            <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />
+            <Stack.Screen name="Gamification" component={GamificationScreen} />
+            <Stack.Screen name="CommunityWallet" component={CommunityWalletScreen} />
+          </Stack.Group>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }

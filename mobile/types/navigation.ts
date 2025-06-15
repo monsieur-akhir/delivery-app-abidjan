@@ -1,20 +1,12 @@
-import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BottomTabNavigationProp, BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { RouteProp } from '@react-navigation/native';
-
-// Root Stack Parameter List
-export type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
-export type CourierStatsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CourierStats'>;
+import type { NavigatorScreenParams } from '@react-navigation/native'
 
 export type RootStackParamList = {
-  // Auth Stack
-  Login: undefined;
-  Register: undefined;
+  Login: undefined
+  Register: undefined
+  ClientTabs: NavigatorScreenParams<TabParamList>
+  CourierTabs: NavigatorScreenParams<CourierTabParamList>
   ForgotPassword: undefined;
   VerifyOTP: { phoneNumber: string; phone?: string; isRegistration?: boolean };
-  ClientTabs: undefined;
-  CourierTabs: undefined;
-  CourierDeliveryHistory: undefined;
   AddVehicleScreen: { vehicleId?: number };
   OTPLogin: undefined;
   Onboarding: undefined;
@@ -68,6 +60,7 @@ export type RootStackParamList = {
   CollaborativeChat: { deliveryId: string };
   VehicleManagement: undefined;
   CourierProfile: undefined;
+  CourierDeliveryHistory: undefined;
 
   // Settings Screens
   NotificationSettings: undefined;
@@ -88,43 +81,22 @@ export type RootStackParamList = {
   OfflineManagerScreen: undefined;
 };
 
-// Tab Parameter Lists
 export type TabParamList = {
-  Home: undefined;
-  Orders: undefined;
+  Home: undefined
+  Orders: undefined
+  Profile: undefined
   Wallet: undefined;
   Notifications: undefined;
-  Profile: undefined;
+}
+
+export type CourierTabParamList = {
+  Home: undefined
+  Deliveries: undefined
+  Earnings: undefined
+  Profile: undefined
   Dashboard: undefined;
-  Deliveries: undefined;
-  Earnings: undefined;
   Collaborative: undefined;
 };
-
-// Navigation Props
-export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
-export type TabNavigationProp = BottomTabNavigationProp<TabParamList>;
-
-// Screen Props
-export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
-export type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>;
-export type VerifyOTPScreenProps = NativeStackScreenProps<RootStackParamList, 'VerifyOTP'>;
-export type TrackDeliveryScreenProps = NativeStackScreenProps<RootStackParamList, 'TrackDelivery'>;
-export type BidScreenProps = NativeStackScreenProps<RootStackParamList, 'BidScreen'>;
-export type PaymentScreenProps = NativeStackScreenProps<RootStackParamList, 'Payment'>;
-
-// Tab Screen Props
-export type HomeTabProps = BottomTabScreenProps<TabParamList, 'Home'>;
-export type ProfileTabProps = BottomTabScreenProps<TabParamList, 'Profile'>;
-
-// Route Props
-export type VerifyOTPRouteProp = RouteProp<RootStackParamList, 'VerifyOTP'>;
-export type TrackDeliveryRouteProp = RouteProp<RootStackParamList, 'TrackDelivery'>;
-export type BidScreenRouteProp = RouteProp<RootStackParamList, 'BidScreen'>;
-export type PaymentRouteProp = RouteProp<RootStackParamList, 'Payment'>;
-
-// Generic navigation prop for components that need navigation
-export type NavigationProp = RootStackNavigationProp;
 
 declare global {
   namespace ReactNavigation {

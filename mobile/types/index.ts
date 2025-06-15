@@ -71,5 +71,5 @@ declare global {
 }
 
 // Additional type exports for common usage
-export type { FeatherIconName } from './models'
-export type { RootStackParamList, TabParamList } from './navigation'
+export type { FeatherIconName } from '../components/FeatherIcon'
+export type { RootStackParamList, TabParamList, CourierTabParamList } from './navigation'

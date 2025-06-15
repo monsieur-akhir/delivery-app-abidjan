@@ -1,141 +1,41 @@
-import React from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react'
+import { Feather } from '@expo/vector-icons'
 
-export interface FeatherIconProps {
-  name: string;
-  size?: number;
-  color?: string;
-  style?: any;
+// Valid Feather icon names
+export type FeatherIconName = 
+  | 'home' | 'user' | 'settings' | 'bell' | 'search' | 'menu' | 'chevron-right'
+  | 'chevron-left' | 'chevron-up' | 'chevron-down' | 'plus' | 'minus' | 'x'
+  | 'check' | 'star' | 'heart' | 'eye' | 'eye-off' | 'edit' | 'trash'
+  | 'save' | 'download' | 'share' | 'copy' | 'link' | 'external-link'
+  | 'mail' | 'phone' | 'message-circle' | 'send' | 'paperclip'
+  | 'camera' | 'image' | 'video' | 'music' | 'file' | 'folder'
+  | 'map-pin' | 'navigation' | 'compass' | 'clock' | 'calendar'
+  | 'dollar-sign' | 'credit-card' | 'shopping-cart' | 'package' | 'truck'
+  | 'car' | 'bicycle' | 'motorcycle' | 'user-plus' | 'users' | 'shield'
+  | 'lock' | 'unlock' | 'key' | 'refresh-cw' | 'loader' | 'alert-circle'
+  | 'info' | 'help-circle' | 'more-horizontal' | 'more-vertical'
+  | 'filter' | 'grid' | 'list' | 'bar-chart' | 'pie-chart' | 'trending-up'
+  | 'wifi' | 'wifi-off' | 'battery' | 'bluetooth' | 'headphones'
+  | 'volume-2' | 'volume-x' | 'play' | 'pause' | 'skip-back' | 'skip-forward'
+  | 'fast-forward' | 'rewind' | 'repeat' | 'shuffle' | 'maximize'
+  | 'minimize' | 'square' | 'circle' | 'triangle'
+
+interface FeatherIconProps {
+  name: FeatherIconName
+  size?: number
+  color?: string
+  style?: any
 }
 
-// Map common Feather icon names to Ionicons
-const iconMap: { [key: string]: keyof typeof Ionicons.glyphMap } = {
-  'home': 'home-outline',
-  'search': 'search-outline',
-  'package': 'cube-outline',
-  'user': 'person-outline',
-  'bell': 'notifications-outline',
-  'settings': 'settings-outline',
-  'truck': 'car-outline',
-  'map': 'map-outline',
-  'dollar-sign': 'cash-outline',
-  'clock': 'time-outline',
-  'check': 'checkmark-outline',
-  'x': 'close-outline',
-  'phone': 'call-outline',
-  'mail': 'mail-outline',
-  'location': 'location-outline',
-  'star': 'star-outline',
-  'heart': 'heart-outline',
-  'camera': 'camera-outline',
-  'image': 'image-outline',
-  'lock': 'lock-closed-outline',
-  'unlock': 'lock-open-outline',
-  'eye': 'eye-outline',
-  'eye-off': 'eye-off-outline',
-  'edit': 'create-outline',
-  'trash': 'trash-outline',
-  'plus': 'add-outline',
-  'minus': 'remove-outline',
-  'arrow-left': 'arrow-back-outline',
-  'arrow-right': 'arrow-forward-outline',
-  'arrow-up': 'arrow-up-outline',
-  'arrow-down': 'arrow-down-outline',
-  'chevron-left': 'chevron-back-outline',
-  'chevron-right': 'chevron-forward-outline',
-  'chevron-up': 'chevron-up-outline',
-  'chevron-down': 'chevron-down-outline',
-  'refresh': 'refresh-outline',
-  'download': 'download-outline',
-  'upload': 'cloud-upload-outline',
-  'share': 'share-outline',
-  'menu': 'menu-outline',
-  'more-vertical': 'ellipsis-vertical-outline',
-  'more-horizontal': 'ellipsis-horizontal-outline',
-  'grid': 'grid-outline',
-  'list': 'list-outline',
-  'calendar': 'calendar-outline',
-  'bookmark': 'bookmark-outline',
-  'flag': 'flag-outline',
-  'filter': 'filter-outline',
-  'wifi': 'wifi-outline',
-  'wifi-off': 'wifi-outline',
-  'battery': 'battery-full-outline',
-  'volume': 'volume-high-outline',
-  'volume-off': 'volume-mute-outline',
-  'play': 'play-outline',
-  'pause': 'pause-outline',
-  'stop': 'stop-outline',
-  'skip-back': 'play-skip-back-outline',
-  'skip-forward': 'play-skip-forward-outline',
-  'repeat': 'repeat-outline',
-  'shuffle': 'shuffle-outline',
-  'mic': 'mic-outline',
-  'mic-off': 'mic-off-outline',
-  'video': 'videocam-outline',
-  'video-off': 'videocam-outline',
-  'monitor': 'desktop-outline',
-  'smartphone': 'phone-portrait-outline',
-  'tablet': 'tablet-portrait-outline',
-  'laptop': 'laptop-outline',
-  'printer': 'print-outline',
-  'database': 'server-outline',
-  'cloud': 'cloud-outline',
-  'link': 'link-outline',
-  'external-link': 'open-outline',
-  'file': 'document-outline',
-  'folder': 'folder-outline',
-  'shopping-bag': 'bag-outline' as keyof typeof Ionicons.glyphMap,
-  'shopping-cart': 'cart-outline',
-  'credit-card': 'card-outline',
-  'gift': 'gift-outline',
-  'tool': 'construct-outline',
-  'wrench': 'build-outline',
-  'sliders': 'options-outline',
-  'users': 'people-outline',
-  'user-plus': 'person-add-outline',
-  'user-minus': 'person-remove-outline',
-  'user-check': 'person-outline',
-  'message-circle': 'chatbubble-outline',
-  'message-square': 'chatbox-outline',
-  'send': 'send-outline',
-  'paperclip': 'attach-outline',
-  'globe': 'globe-outline',
-  'trending-up': 'trending-up-outline',
-  'trending-down': 'trending-down-outline',
-  'bar-chart': 'bar-chart-outline',
-  'pie-chart': 'pie-chart-outline',
-  'activity': 'pulse-outline',
-  'zap': 'flash-outline',
-  'sun': 'sunny-outline',
-  'moon': 'moon-outline',
-  'cloud-rain': 'rainy-outline',
-  'thermometer': 'thermometer-outline',
-  'key': 'key-outline',
-  'shield': 'shield-outline',
-  'award': 'trophy-outline',
-  'target': 'radio-button-on-outline',
-  'coffee': 'cafe-outline',
-  'briefcase': 'briefcase-outline',
-  'layers': 'layers-outline',
-  'package-variant': 'cube-outline',
-  'truck-delivery': 'car-outline',
-  'motorcycle': 'bicycle-outline',
-  'bicycle': 'bicycle-outline',
-  'scooter': 'bicycle-outline',
-  'van': 'car-outline',
-  'car': 'car-outline'
-}
-
-export type FeatherIconName = keyof typeof iconMap
-
-const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size = 24, color = '#000', style }) => {
-  const iconName = typeof name === 'string' ? name : String(name)
-  const ioniconsName = iconMap[iconName] || iconName
-
+export const FeatherIcon: React.FC<FeatherIconProps> = ({
+  name,
+  size = 24,
+  color = '#000',
+  style,
+}) => {
   return (
-    <Ionicons
-      name={ioniconsName}
+    <Feather
+      name={name}
       size={size}
       color={color}
       style={style}
@@ -144,4 +44,3 @@ const FeatherIcon: React.FC<FeatherIconProps> = ({ name, size = 24, color = '#00
 }
 
 export default FeatherIcon
-export { FeatherIcon };
