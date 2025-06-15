@@ -53,6 +53,7 @@
     "@types/node": "^24.0.1",
     "expo-haptics": "^14.1.4",
     "expo-linear-gradient": "^14.1.5",
-    "expo-speech": "^13.1.7"
+    "expo-speech": "^13.1.7",
+    "vue-toastification": "^2.0.0-rc.5"
   }
 }
