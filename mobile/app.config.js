@@ -60,5 +60,6 @@ export default {
       wsUrl: process.env.WS_URL,
       environment: process.env.ENVIRONMENT,
     },
+    platforms: ["ios", "android", "web"],
   },
 }

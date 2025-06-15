@@ -11,4 +11,7 @@ config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg'];
 // Configuration pour TypeScript
 config.resolver.sourceExts.push('ts', 'tsx');
 
+// Configuration pour éviter les erreurs Metro
+config.resolver.platforms = ['ios', 'android', 'native', 'web'];
+
 module.exports = config;
