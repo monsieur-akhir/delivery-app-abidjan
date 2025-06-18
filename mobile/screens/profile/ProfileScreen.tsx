@@ -44,14 +44,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         phone: profileData.phone,
         email: profileData.email || '',
         role: profileData.role,
-
         vehicle_type: profileData.vehicle_type,
         license_plate: profileData.license_plate,
         business_name: profileData.business_name,
         business_address: profileData.business_address,
         profile_picture: profileData.profile_picture,
         full_name: profileData.full_name,
-        
       }
       setProfile(userProfile)
       setEditedProfile(userProfile)
@@ -59,7 +57,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       console.error("Error loading profile:", error)
       // Utiliser les données locales en cas d'erreur
       if (user) {
-        setProfile({
+        const fallbackProfile: UserProfile = {
           user_id: user.id,
           full_name: user.full_name,
           phone: user.phone,
@@ -68,27 +66,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           address: user.commune || "",
           email: user.email || "",
           role: user.role,
-          // language_preference managed separately
           vehicle_type: user.role === 'courier' ? 'motorcycle' : undefined,
           license_plate: "",
           business_name: "",
           business_address: "",
-        })
-        setEditedProfile({
-          user_id: user.id,
-          full_name: user.full_name,
-          phone: user.phone,
-          city: user.commune || "",
-          country: "Côte d'Ivoire",
-          address: user.commune || "",
-          email: user.email || "",
-          role: user.role,
-          // language_preference managed separately
-          vehicle_type: user.role === 'courier' ? 'motorcycle' : undefined,
-          license_plate: "",
-          business_name: "",
-          business_address: "",
-        })
+          profile_picture: user.profile_picture,
+        }
+        setProfile(fallbackProfile)
+        setEditedProfile(fallbackProfile)
       }
     } finally {
       setLoading(false)
@@ -199,25 +184,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       setSaving(true)
 
       if (isConnected) {
-        // Mettre à jour le profil en ligne
-        const updatedUser = await updateUserProfile(editedProfile as Partial<User>)
-        // Convert User to UserProfile
-        setProfile({
-          user_id: updatedUser.id,
-          full_name: updatedUser.full_name,
-          phone: updatedUser.phone,
-          city: updatedUser.commune || "",
-          country: "Côte d'Ivoire",
-          address: updatedUser.commune || "",
-          email: updatedUser.email || "",
-          role: updatedUser.role,
-          // language_preference managed separately
-          vehicle_type: updatedUser.role === 'courier' ? 'motorcycle' : undefined,
-          license_plate: "",
-          business_name: "",
-          business_address: "",
-        })
-        updateUserData(updatedUser)
+        await updateUserProfile(editedProfile)
+        setProfile(editedProfile as UserProfile)
+        updateUserData(editedProfile)
+        setEditing(false)
+        Alert.alert(t("profile.success"), t("profile.profileUpdated"))
       } else {
         // Stocker pour synchronisation ultérieure
         addPendingUpload({
@@ -225,18 +196,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           data: editedProfile,
           retries: 0
         })
-
-        // Mettre à jour localement
-        setProfile((prev) => ({ ...prev, ...editedProfile }) as UserProfile)
-        updateUserData(editedProfile as Partial<User>)
-
-        Alert.alert(t("profile.offlineUpdateSaved"), t("profile.offlineUpdateSavedMessage"))
+        setEditing(false)
+        Alert.alert(t("profile.offlineSaved"), t("profile.offlineSavedMessage"))
       }
-
-      setEditing(false)
     } catch (error) {
-      console.error("Error updating profile:", error)
-      Alert.alert(t("profile.error"), t("profile.errorUpdatingProfile"))
+      console.error("Error saving profile:", error)
+      Alert.alert(t("profile.error"), t("profile.errorSavingProfile"))
     } finally {
       setSaving(false)
     }
@@ -244,11 +209,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>{t("profile.loading")}</Text>
-        </View>
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6B00" />
+        <Text style={styles.loadingText}>{t("common.loading")}</Text>
+      </SafeAreaView>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <SafeAreaView style={styles.errorContainer}>
+        <Text style={styles.errorText}>{t("profile.errorLoadingProfile")}</Text>
+        <Button mode="contained" onPress={loadProfile}>
+          {t("common.retry")}
+        </Button>
       </SafeAreaView>
     )
   }
@@ -256,210 +230,251 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <IconButton icon="arrow-left" size={24} />
-        </TouchableOpacity>
+        <IconButton
+          icon="arrow-left"
+          size={24}
+          onPress={() => navigation.goBack()}
+        />
         <Text style={styles.headerTitle}>{t("profile.title")}</Text>
-        {!editing ? (
-          <TouchableOpacity onPress={handleEdit}>
-            <IconButton icon="pencil" size={24} />
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
+        <View style={styles.headerRight}>
+          {editing ? (
+            <>
+              <IconButton
+                icon="check"
+                size={24}
+                onPress={handleSave}
+                disabled={saving}
+              />
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={handleCancel}
+                disabled={saving}
+              />
+            </>
+          ) : (
+            <IconButton
+              icon="pencil"
+              size={24}
+              onPress={handleEdit}
+            />
+          )}
+        </View>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FF6B00"]} />}
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        <View style={styles.profileImageContainer}>
-          {uploadingImage ? (
-            <ActivityIndicator size="large" color="#FF6B00" style={styles.uploadingIndicator} />
-          ) : profile?.profile_picture ? (
-            <Avatar.Image source={{ uri: profile.profile_picture }} size={120} />
-          ) : (
-            <Avatar.Icon size={120} icon="account" style={{ backgroundColor: "#FF6B00" }} />
-          )}
+        {/* Profile Picture Section */}
+        <Card style={styles.profileCard}>
+          <View style={styles.profilePictureContainer}>
+            <Avatar.Image
+              size={100}
+              source={
+                profile.profile_picture
+                  ? { uri: profile.profile_picture }
+                  : require("../../assets/default-avatar.png")
+              }
+            />
+            {!editing && (
+              <TouchableOpacity
+                style={styles.editPictureButton}
+                onPress={handlePickImage}
+                disabled={uploadingImage}
+              >
+                <IconButton
+                  icon="camera"
+                  size={20}
+                  iconColor="#FFFFFF"
+                  style={styles.cameraIcon}
+                />
+              </TouchableOpacity>
+            )}
+            {uploadingImage && (
+              <View style={styles.uploadingOverlay}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              </View>
+            )}
+          </View>
+        </Card>
 
-          <TouchableOpacity style={styles.changePhotoButton} onPress={handlePickImage} disabled={uploadingImage}>
-            <Text style={styles.changePhotoText}>{t("profile.changePhoto")}</Text>
-          </TouchableOpacity>
-        </View>
-
+        {/* Profile Information */}
         <Card style={styles.infoCard}>
+          <Card.Title title={t("profile.personalInfo")} />
           <Card.Content>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{t("profile.fullName")}</Text>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>{t("profile.fullName")}</Text>
               {editing ? (
                 <TextInput
                   value={editedProfile.full_name || ""}
-                  onChangeText={(value) => handleChange("full_name", value)}
-                  style={styles.editInput}
+                  onChangeText={(text) => handleChange("full_name", text)}
+                  style={styles.textInput}
                   mode="outlined"
                 />
               ) : (
-                <Text style={styles.infoValue}>{profile?.full_name}</Text>
+                <Text style={styles.fieldValue}>{profile.full_name}</Text>
               )}
             </View>
 
-            <Divider style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{t("profile.phone")}</Text>
-              <Text style={styles.infoValue}>{profile?.phone}</Text>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>{t("profile.phone")}</Text>
+              {editing ? (
+                <TextInput
+                  value={editedProfile.phone || ""}
+                  onChangeText={(text) => handleChange("phone", text)}
+                  style={styles.textInput}
+                  mode="outlined"
+                  keyboardType="phone-pad"
+                />
+              ) : (
+                <Text style={styles.fieldValue}>{profile.phone}</Text>
+              )}
             </View>
 
-            <Divider style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{t("profile.email")}</Text>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>{t("profile.email")}</Text>
               {editing ? (
                 <TextInput
                   value={editedProfile.email || ""}
-                  onChangeText={(value) => handleChange("email", value)}
-                  style={styles.editInput}
+                  onChangeText={(text) => handleChange("email", text)}
+                  style={styles.textInput}
                   mode="outlined"
                   keyboardType="email-address"
                 />
               ) : (
-                <Text style={styles.infoValue}>{profile?.email || t("profile.notProvided")}</Text>
+                <Text style={styles.fieldValue}>{profile.email}</Text>
               )}
             </View>
 
-            <Divider style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{t("profile.role")}</Text>
-              <Text style={styles.infoValue}>
-                {profile?.role === "client"
-                  ? t("roles.client")
-                  : profile?.role === "courier"
-                    ? t("roles.courier")
-                    : profile?.role === "business"
-                      ? t("roles.business")
-                      : profile?.role}
-              </Text>
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{t("profile.commune")}</Text>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>{t("profile.address")}</Text>
               {editing ? (
                 <TextInput
                   value={editedProfile.address || ""}
-                  onChangeText={(value) => handleChange("address", value)}
-                  style={styles.editInput}
+                  onChangeText={(text) => handleChange("address", text)}
+                  style={styles.textInput}
                   mode="outlined"
+                  multiline
                 />
               ) : (
-                <Text style={styles.infoValue}>{profile?.address || t("profile.notProvided")}</Text>
+                <Text style={styles.fieldValue}>{profile.address}</Text>
               )}
             </View>
 
-            {profile?.role === "courier" && (
-              <>
-                <Divider style={styles.divider} />
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{t("profile.vehicleType")}</Text>
-                  {editing ? (
-                    <TextInput
-                      value={editedProfile.vehicle_type || ""}
-                      onChangeText={(value) => handleChange("vehicle_type", value)}
-                      style={styles.editInput}
-                      mode="outlined"
-                    />
-                  ) : (
-                    <Text style={styles.infoValue}>{profile?.vehicle_type || t("profile.notProvided")}</Text>
-                  )}
-                </View>
-
-                <Divider style={styles.divider} />
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{t("profile.licensePlate")}</Text>
-                  {editing ? (
-                    <TextInput
-                      value={editedProfile.license_plate || ""}
-                      onChangeText={(value) => handleChange("license_plate", value)}
-                      style={styles.editInput}
-                      mode="outlined"
-                    />
-                  ) : (
-                    <Text style={styles.infoValue}>{profile?.license_plate || t("profile.notProvided")}</Text>
-                  )}
-                </View>
-              </>
-            )}
-
-            {profile?.role === "business" && (
-              <>
-                <Divider style={styles.divider} />
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{t("profile.businessName")}</Text>
-                  {editing ? (
-                    <TextInput
-                      value={editedProfile.business_name || ""}
-                      onChangeText={(value) => handleChange("business_name", value)}
-                      style={styles.editInput}
-                      mode="outlined"
-                    />
-                  ) : (
-                    <Text style={styles.infoValue}>{profile?.business_name || t("profile.notProvided")}</Text>
-                  )}
-                </View>
-
-                <Divider style={styles.divider} />
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{t("profile.businessAddress")}</Text>
-                  {editing ? (
-                    <TextInput
-                      value={editedProfile.business_address || ""}
-                      onChangeText={(value) => handleChange("business_address", value)}
-                      style={styles.editInput}
-                      mode="outlined"
-                    />
-                  ) : (
-                    <Text style={styles.infoValue}>{profile?.business_address || t("profile.notProvided")}</Text>
-                  )}
-                </View>
-              </>
-            )}
-
-            <Divider style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{t("profile.memberSince")}</Text>
-              <Text style={styles.infoValue}>
-                {profile ? new Date().toLocaleDateString() : "-"}
-              </Text>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>{t("profile.city")}</Text>
+              {editing ? (
+                <TextInput
+                  value={editedProfile.city || ""}
+                  onChangeText={(text) => handleChange("city", text)}
+                  style={styles.textInput}
+                  mode="outlined"
+                />
+              ) : (
+                <Text style={styles.fieldValue}>{profile.city}</Text>
+              )}
             </View>
           </Card.Content>
         </Card>
 
-        {editing && (
-          <View style={styles.editButtonsContainer}>
-            <Button mode="outlined" onPress={handleCancel} style={styles.cancelButton} disabled={saving}>
-              {t("common.cancel")}
-            </Button>
-            <Button mode="contained" onPress={handleSave} style={styles.saveButton} loading={saving} disabled={saving}>
-              {t("common.save")}
-            </Button>
-          </View>
+        {/* Courier Specific Information */}
+        {user?.role === 'courier' && (
+          <Card style={styles.infoCard}>
+            <Card.Title title={t("profile.vehicleInfo")} />
+            <Card.Content>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>{t("profile.vehicleType")}</Text>
+                {editing ? (
+                  <TextInput
+                    value={editedProfile.vehicle_type || ""}
+                    onChangeText={(text) => handleChange("vehicle_type", text)}
+                    style={styles.textInput}
+                    mode="outlined"
+                  />
+                ) : (
+                  <Text style={styles.fieldValue}>{profile.vehicle_type}</Text>
+                )}
+              </View>
+
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>{t("profile.licensePlate")}</Text>
+                {editing ? (
+                  <TextInput
+                    value={editedProfile.license_plate || ""}
+                    onChangeText={(text) => handleChange("license_plate", text)}
+                    style={styles.textInput}
+                    mode="outlined"
+                  />
+                ) : (
+                  <Text style={styles.fieldValue}>{profile.license_plate}</Text>
+                )}
+              </View>
+            </Card.Content>
+          </Card>
         )}
 
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate("Settings")}
-          style={styles.settingsButton}
-          icon="cog"
-        >
-          {t("profile.settings")}
-        </Button>
+        {/* Business Information for Clients */}
+        {user?.role === 'client' && (
+          <Card style={styles.infoCard}>
+            <Card.Title title={t("profile.businessInfo")} />
+            <Card.Content>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>{t("profile.businessName")}</Text>
+                {editing ? (
+                  <TextInput
+                    value={editedProfile.business_name || ""}
+                    onChangeText={(text) => handleChange("business_name", text)}
+                    style={styles.textInput}
+                    mode="outlined"
+                  />
+                ) : (
+                  <Text style={styles.fieldValue}>{profile.business_name}</Text>
+                )}
+              </View>
+
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>{t("profile.businessAddress")}</Text>
+                {editing ? (
+                  <TextInput
+                    value={editedProfile.business_address || ""}
+                    onChangeText={(text) => handleChange("business_address", text)}
+                    style={styles.textInput}
+                    mode="outlined"
+                    multiline
+                  />
+                ) : (
+                  <Text style={styles.fieldValue}>{profile.business_address}</Text>
+                )}
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <Button
+            mode="contained"
+            onPress={() => navigation.navigate("Settings")}
+            style={styles.actionButton}
+            icon="cog"
+          >
+            {t("profile.settings")}
+          </Button>
+
+          {user?.role === 'courier' && (
+            <Button
+              mode="outlined"
+              onPress={() => navigation.navigate("VehicleManagement")}
+              style={styles.actionButton}
+              icon="truck"
+            >
+              {t("profile.manageVehicles")}
+            </Button>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -470,20 +485,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -491,65 +492,108 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    color: "#757575",
+    fontSize: 16,
+    color: "#666",
   },
-  scrollContainer: {
-    padding: 16,
-  },
-  profileImageContainer: {
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
     marginBottom: 20,
   },
-  uploadingIndicator: {
-    marginVertical: 40,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEEEEE",
   },
-  changePhotoButton: {
-    marginTop: 12,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    flex: 1,
+    textAlign: "center",
   },
-  changePhotoText: {
-    color: "#FF6B00",
-    fontSize: 14,
+  headerRight: {
+    flexDirection: "row",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  profileCard: {
+    margin: 16,
+    elevation: 2,
+  },
+  profilePictureContainer: {
+    alignItems: "center",
+    padding: 20,
+    position: "relative",
+  },
+  editPictureButton: {
+    position: "absolute",
+    bottom: 0,
+    right: "35%",
+    backgroundColor: "#FF6B00",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cameraIcon: {
+    margin: 0,
+  },
+  uploadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 50,
   },
   infoCard: {
-    marginBottom: 20,
+    margin: 16,
+    marginTop: 0,
+    elevation: 2,
   },
-  infoRow: {
-    marginVertical: 8,
+  fieldContainer: {
+    marginBottom: 16,
   },
-  infoLabel: {
+  fieldLabel: {
     fontSize: 14,
-    color: "#757575",
-    marginBottom: 4,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
   },
-  infoValue: {
+  fieldValue: {
     fontSize: 16,
-    color: "#212121",
+    color: "#666",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 8,
   },
-  divider: {
-    marginVertical: 8,
-  },
-  editInput: {
+  textInput: {
     backgroundColor: "#FFFFFF",
-    fontSize: 16,
   },
-  editButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
+  actionButtons: {
+    padding: 16,
+    paddingTop: 0,
   },
-  cancelButton: {
-    flex: 1,
-    marginRight: 8,
-    borderColor: "#757575",
-  },
-  saveButton: {
-    flex: 1,
-    marginLeft: 8,
-    backgroundColor: "#FF6B00",
-  },
-  settingsButton: {
-    backgroundColor: "#212121",
-    marginBottom: 20,
+  actionButton: {
+    marginBottom: 12,
   },
 })
 

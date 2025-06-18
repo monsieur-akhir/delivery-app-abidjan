@@ -124,6 +124,7 @@ export const API_ENDPOINTS = {
     earnings: "/api/courier/earnings",
     stats: "/api/courier/stats",
     deliveries: "/api/courier/deliveries",
+    profile: "/api/courier/profile",
   },
   payments: {
     create: "/api/payments",

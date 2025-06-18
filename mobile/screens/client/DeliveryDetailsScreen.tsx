@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -7,7 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  TextInput
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button, Card, Chip, Avatar } from 'react-native-paper'
@@ -140,6 +141,100 @@ const DeliveryDetailsScreen: React.FC = () => {
       cancelled: 'Annulée'
     }
     return texts[status as keyof typeof texts] || status
+  }
+
+  // Fonction pour confirmer la livraison avec notation
+  const confirmDeliveryWithRating = async (rating: number, comment: string) => {
+    if (!delivery) return
+    
+    try {
+      setLoading(true)
+      await DeliveryService.clientConfirmDelivery(delivery.id, rating, comment)
+      
+      // Afficher un message de succès
+      Alert.alert(
+        "Livraison confirmée",
+        "Votre livraison a été confirmée avec succès. Merci pour votre évaluation !",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Rafraîchir les données ou naviguer
+              loadDeliveryDetails()
+            }
+          }
+        ]
+      )
+    } catch (error) {
+      console.error('Erreur lors de la confirmation:', error)
+      Alert.alert(
+        "Erreur",
+        "Impossible de confirmer la livraison. Veuillez réessayer.",
+        [{ text: "OK" }]
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Composant de notation
+  const RatingModal = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
+    const [rating, setRating] = useState(5)
+    const [comment, setComment] = useState("")
+    
+    const handleSubmit = () => {
+      if (comment.trim().length === 0) {
+        Alert.alert("Commentaire requis", "Veuillez ajouter un commentaire.")
+        return
+      }
+      
+      confirmDeliveryWithRating(rating, comment)
+      onClose()
+    }
+    
+    return (
+      <Modal visible={visible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Évaluer votre livraison</Text>
+            
+            {/* Étoiles de notation */}
+            <View style={styles.ratingContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setRating(star)}
+                  style={styles.starButton}
+                >
+                  <Text style={[styles.star, rating >= star && styles.starSelected]}>
+                    ★
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            {/* Commentaire */}
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Ajoutez un commentaire..."
+              value={comment}
+              onChangeText={setComment}
+              multiline
+              numberOfLines={3}
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+                <Text style={styles.submitButtonText}>Confirmer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    )
   }
 
   if (loading) {
@@ -678,6 +773,67 @@ const styles = StyleSheet.create({
   },
   trackButton: {
     backgroundColor: '#FF6B00'
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 12,
+    width: '80%'
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 16
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16
+  },
+  starButton: {
+    padding: 8
+  },
+  star: {
+    fontSize: 24,
+    color: '#FF6B00'
+  },
+  starSelected: {
+    color: '#FFD700'
+  },
+  commentInput: {
+    height: 100,
+    borderColor: '#E0E0E0',
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 8
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: '#EF5350',
+    fontWeight: '600'
+  },
+  submitButton: {
+    backgroundColor: '#FF6B00',
+    padding: 16,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 8
+  },
+  submitButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '600'
   }
 })
 

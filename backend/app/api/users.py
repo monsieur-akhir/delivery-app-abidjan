@@ -250,3 +250,36 @@ def create_user(
     Créer un nouvel utilisateur (gestionnaires uniquement).
     """
     return register_user_admin(db, user_data)
+
+@router.post("/push-token")
+def register_push_token(
+    token_data: dict = Body(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Enregistrer le token de notification push pour l'utilisateur.
+    """
+    # Ici vous pouvez sauvegarder le token dans la base de données
+    # ou l'envoyer à votre service de notification (OneSignal, Firebase, etc.)
+    
+    return {
+        "message": "Token de notification enregistré avec succès",
+        "user_id": current_user.id,
+        "token": token_data.get("token")
+    }
+
+@router.delete("/push-token")
+def unregister_push_token(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Supprimer le token de notification push pour l'utilisateur.
+    """
+    # Ici vous pouvez supprimer le token de votre service de notification
+    
+    return {
+        "message": "Token de notification supprimé avec succès",
+        "user_id": current_user.id
+    }

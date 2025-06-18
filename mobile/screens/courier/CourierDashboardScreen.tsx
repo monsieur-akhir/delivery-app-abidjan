@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from "react-native"
 import { Text, Card, Button, Avatar, Divider, IconButton, ProgressBar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -80,24 +80,7 @@ const CourierDashboardScreen = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Add loading state to component rendering
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  // Add a loading indicator at the top of the component if needed
-  if (loading && !refreshing) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
-          <Text style={styles.loadingText}>Chargement du tableau de bord...</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -128,6 +111,23 @@ const CourierDashboardScreen = () => {
       setLoading(false)
       setRefreshing(false)
     }
+  }, [])
+
+  // Add loading state to component rendering
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
+
+  // Add a loading indicator at the top of the component if needed
+  if (loading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B00" />
+          <Text style={styles.loadingText}>Chargement du tableau de bord...</Text>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   const onRefresh = () => {

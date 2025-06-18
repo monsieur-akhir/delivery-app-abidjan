@@ -31,6 +31,8 @@ import CourierEarningsScreen from '../screens/courier/CourierEarningsScreen';
 import CollaborativeDeliveriesScreen from '../screens/courier/CollaborativeDeliveriesScreen';
 import GamificationScreen from '../screens/courier/GamificationScreen';
 import CommunityWalletScreen from '../screens/courier/CommunityWalletScreen';
+import CourierStatusScreen from '../screens/courier/CourierStatusScreen';
+import VehicleManagementScreen from '../screens/courier/VehicleManagementScreen';
 
 // Profile Screens
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -38,6 +40,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 
 // Other Screens
 import OnboardingScreen from '../screens/OnboardingScreen';
+import AlertDemo from '../components/AlertDemo';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -166,12 +169,21 @@ export default function AppNavigator() {
           <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          <Stack.Screen name="DeliveryDetails" component={TrackDeliveryScreen} />
+          <Stack.Screen name="AlertDemo" component={AlertDemo} />
 
           {/* Courier Specific Screens */}
           <Stack.Screen name="BidScreen" component={BidScreen} />
           <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />
           <Stack.Screen name="Gamification" component={GamificationScreen} />
           <Stack.Screen name="CommunityWallet" component={CommunityWalletScreen} />
+          <Stack.Screen name="CourierStatus" component={CourierStatusScreen} />
+          <Stack.Screen name="VehicleManagement" component={VehicleManagementScreen} />
+          <Stack.Screen name="CourierStats" component={ProfileScreen} />
+          <Stack.Screen name="CourierEarnings" component={CourierEarningsScreen} />
+          <Stack.Screen name="AvailableDeliveries" component={AvailableDeliveriesScreen} />
+          <Stack.Screen name="CollaborativeDeliveries" component={CollaborativeDeliveriesScreen} />
         </Stack.Group>
       )}
     </Stack.Navigator>

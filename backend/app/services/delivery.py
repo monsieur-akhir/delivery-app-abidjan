@@ -66,13 +66,13 @@ def get_deliveries_by_courier(
     status: Optional[DeliveryStatus] = None
 ) -> List[Delivery]:
     query = db.query(Delivery).filter(Delivery.courier_id == courier_id)
-
     if status:
         query = query.filter(Delivery.status == status)
 
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
-def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) -> Delivery:
+def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: User) -> Delivery:
+    from ..services.promotions import PromotionService
     """
     Créer une nouvelle livraison.
     """
@@ -101,19 +101,53 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) 
             # En cas d'erreur, continuer sans recommandation
             logger.error(f"Erreur lors de la recommandation de véhicule: {str(e)}")
 
-    # Créer la livraison
-    db_delivery = Delivery(
-        client_id=client_id,
-        **delivery_data.dict()
+    # Calculer le prix estimé
+    estimated_price = estimate_delivery_price(
+        delivery_data.pickup_lat or 0.0,
+        delivery_data.pickup_lng or 0.0,
+        delivery_data.delivery_lat or 0.0,
+        delivery_data.delivery_lng or 0.0,
+        delivery_data.package_weight,
+        delivery_data.cargo_category,
+        delivery_data.is_fragile,
+        delivery_data.delivery_type == DeliveryType.express
     )
 
-    db.add(db_delivery)
+    # Créer la livraison d'abord
+    delivery = Delivery(
+        **delivery_data.dict(),
+        client_id=current_user.id,
+        estimated_price=estimated_price,
+        status=DeliveryStatus.pending
+    )
+
+    db.add(delivery)
     db.commit()
-    db.refresh(db_delivery)
+    db.refresh(delivery)
+
+    # Appliquer les promotions automatiques
+    try:
+        applied_promotions = PromotionService.check_auto_apply_promotions(
+            db, current_user, delivery, estimated_price
+        )
+
+        # Mettre à jour le prix final après promotions
+        total_discount = sum(promo["result"]["discount_applied"] for promo in applied_promotions)
+        total_cashback = sum(promo["result"]["cashback_earned"] for promo in applied_promotions)
+
+        delivery.final_price = estimated_price - total_discount
+        delivery.total_discount = total_discount
+        delivery.cashback_earned = total_cashback
+
+        db.commit()
+    except Exception as e:
+        # En cas d'erreur avec les promotions, continuer sans
+        logger.error(f"Erreur lors de l'application des promotions: {str(e)}")
+        delivery.final_price = estimated_price
 
     # Notifier les coursiers disponibles (implémenté dans le service de notification)
 
-    return db_delivery
+    return delivery
 
 def update_delivery(db: Session, delivery_id: int, delivery_data: DeliveryUpdate, user_id: int) -> Delivery:
     delivery = get_delivery(db, delivery_id)
@@ -376,6 +410,58 @@ def get_user_deliveries(db: Session, user_id: int, role: UserRole, status: Optio
         return get_deliveries_by_courier(db, user_id, status=status)
     else:
         raise ForbiddenError("Rôle non autorisé pour consulter les livraisons")
+
+def get_user_deliveries_with_filters(
+    db: Session, 
+    user_id: int, 
+    status: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    commune: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 20
+) -> List[Delivery]:
+    """Récupérer les livraisons d'un utilisateur avec filtres avancés"""
+    query = db.query(Delivery)
+    
+    # Filtrer par utilisateur (client ou coursier)
+    query = query.filter(
+        (Delivery.client_id == user_id) | (Delivery.courier_id == user_id)
+    )
+    
+    # Filtrer par statut
+    if status:
+        query = query.filter(Delivery.status == status)
+    
+    # Filtrer par date de début
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, "%Y-%m-%d")
+            query = query.filter(Delivery.created_at >= from_date)
+        except ValueError:
+            pass  # Ignorer si le format de date est invalide
+    
+    # Filtrer par date de fin
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, "%Y-%m-%d")
+            query = query.filter(Delivery.created_at <= to_date)
+        except ValueError:
+            pass  # Ignorer si le format de date est invalide
+    
+    # Filtrer par commune (pickup ou delivery)
+    if commune:
+        query = query.filter(
+            (Delivery.pickup_commune == commune) | (Delivery.delivery_commune == commune)
+        )
+    
+    # Trier par date de création (plus récent en premier)
+    query = query.order_by(Delivery.created_at.desc())
+    
+    # Pagination
+    query = query.offset(skip).limit(limit)
+    
+    return query.all()
 
 def get_bids(db: Session, delivery_id: Optional[int] = None, courier_id: Optional[int] = None) -> List[Bid]:
     query = db.query(Bid)
@@ -652,106 +738,6 @@ def get_active_deliveries_for_client(db: Session, client_id: int) -> List[Delive
         Delivery.client_id == client_id,
         Delivery.status.in_(active_statuses)
     ).order_by(desc(Delivery.created_at)).all()
-
-def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) -> Delivery:
-    from ..services.promotions import PromotionService
-    """
-    Créer une nouvelle livraison.
-    """
-    # Vérifier si le prix proposé est supérieur au minimum
-    if delivery_data.proposed_price < settings.MIN_DELIVERY_PRICE:
-        raise BadRequestError(f"Le prix proposé doit être d'au moins {settings.MIN_DELIVERY_PRICE} FCFA")
-
-    # Recommander un véhicule si nécessaire
-    if delivery_data.cargo_category and not delivery_data.required_vehicle_type:
-        try:
-            transport_service = TransportService(db)
-            recommendation_data = VehicleRecommendationRequest(
-                cargo_category=delivery_data.cargo_category,
-                distance=delivery_data.estimated_distance or 10,  # Valeur par défaut si non fournie
-                weight=delivery_data.package_weight,
-                is_fragile=delivery_data.is_fragile or False
-            )
-            recommendation = transport_service.recommend_vehicle(recommendation_data)
-
-            # Appliquer le multiplicateur de prix
-            delivery_data.proposed_price = delivery_data.proposed_price * recommendation["price_multiplier"]
-
-            # Définir le type de véhicule requis
-            delivery_data.required_vehicle_type = recommendation["recommended_vehicle"].type
-        except Exception as e:
-            # En cas d'erreur, continuer sans recommandation
-            logger.error(f"Erreur lors de la recommandation de véhicule: {str(e)}")
-
-    # Calculer le prix estimé
-    estimated_price = estimate_delivery_price(
-        delivery_data.pickup_latitude,
-        delivery_data.pickup_longitude,
-        delivery_data.delivery_latitude,
-        delivery_data.delivery_longitude,
-        delivery_data.package_weight,
-        delivery_data.cargo_category,
-        delivery_data.is_fragile,
-        delivery_data.is_express
-    )
-
-    # Créer la livraison d'abord
-    db_delivery = Delivery(
-        client_id=client_id,
-        **delivery_data.dict()
-    )
-
-    db.add(db_delivery)
-    db.commit()
-    db.refresh(db_delivery)
-
-    # Notifier les coursiers disponibles (implémenté dans le service de notification)
-
-    return db_delivery
-
-def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: User) -> Delivery:
-    from ..services.promotions import PromotionService
-
-    # Calculer le prix estimé
-    estimated_price = estimate_delivery_price(
-        delivery_data.pickup_latitude,
-        delivery_data.pickup_longitude,
-        delivery_data.delivery_latitude,
-        delivery_data.delivery_longitude,
-        delivery_data.package_weight,
-        delivery_data.cargo_category,
-        delivery_data.is_fragile,
-        delivery_data.is_express
-    )
-
-    # Créer la livraison d'abord
-    delivery = Delivery(
-        **delivery_data.dict(),
-        client_id=current_user.id,
-        estimated_price=estimated_price,
-        status=DeliveryStatus.pending
-    )
-
-    db.add(delivery)
-    db.commit()
-    db.refresh(delivery)
-
-    # Appliquer les promotions automatiques
-    applied_promotions = PromotionService.check_auto_apply_promotions(
-        db, current_user, delivery, estimated_price
-    )
-
-    # Mettre à jour le prix final après promotions
-    total_discount = sum(promo["result"]["discount_applied"] for promo in applied_promotions)
-    total_cashback = sum(promo["result"]["cashback_earned"] for promo in applied_promotions)
-
-    delivery.final_price = estimated_price - total_discount
-    delivery.total_discount = total_discount
-    delivery.cashback_earned = total_cashback
-
-    db.commit()
-
-    return delivery
 
 def get_courier_deliveries(
     db: Session,

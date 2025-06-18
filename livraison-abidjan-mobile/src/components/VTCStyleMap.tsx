@@ -278,7 +278,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
               ]}
             >
               <LinearGradient
-                colors={['#4ECDC4', '#44A08D']}
+                colors={Array.isArray(getStatusGradient(deliveryStatus.status)) ? getStatusGradient(deliveryStatus.status) : [getStatusGradient(deliveryStatus.status)] as [string]}
                 style={styles.pickupMarker}
               >
                 <MaterialIcons name="location-on" size={20} color="white" />
@@ -296,7 +296,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
           >
             <View style={styles.markerContainer}>
               <LinearGradient
-                colors={['#FF6B6B', '#FF8E53']}
+                colors={Array.isArray(getStatusGradient(deliveryStatus.status)) ? getStatusGradient(deliveryStatus.status) : [getStatusGradient(deliveryStatus.status)] as [string]}
                 style={styles.deliveryMarker}
               >
                 <MaterialIcons name="flag" size={20} color="white" />
@@ -344,7 +344,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
       >
         <Surface style={styles.statusCard} elevation={4}>
           <LinearGradient
-            colors={getStatusGradient(deliveryStatus.status)}
+            colors={Array.isArray(getStatusGradient(deliveryStatus.status)) ? getStatusGradient(deliveryStatus.status) : [getStatusGradient(deliveryStatus.status)] as [string]}
             style={styles.statusGradient}
           >
             <View style={styles.statusContent}>
@@ -379,7 +379,7 @@ export const VTCStyleMap: React.FC<VTCStyleMapProps> = ({
                   styles.progressBar,
                   { 
                     width: `${deliveryStatus.progress}%`,
-                    backgroundColor: getStatusGradient(deliveryStatus.status)[0]
+                    backgroundColor: Array.isArray(getStatusGradient(deliveryStatus.status)) ? getStatusGradient(deliveryStatus.status)[0] : getStatusGradient(deliveryStatus.status)
                   }
                 ]} 
               />
