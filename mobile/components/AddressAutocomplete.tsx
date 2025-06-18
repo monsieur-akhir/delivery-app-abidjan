@@ -9,7 +9,8 @@ import {
   Animated,
   Platform,
   Dimensions,
-  Modal
+  Modal,
+  TouchableWithoutFeedback
 } from 'react-native';
 import {
   TextInput,
@@ -77,6 +78,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-10)).current;
+  const inputRef = useRef<any>(null);
 
   // Communes et zones populaires d'Abidjan avec coordonnées précises
   const popularPlaces = useMemo(() => [
@@ -285,7 +287,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     };
   }, [abidjanCommunes]);
 
-  // Gestionnaires d'événements
+  // Gestionnaires d'événements améliorés
   const handleTextChange = useCallback((text: string) => {
     onChangeText(text);
     setInputValue(text);
@@ -312,7 +314,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     onAddressSelect(address);
     setShowSuggestionsState(false);
     setSuggestions([]);
-    Keyboard.dismiss();
+    
+    // Ne pas fermer le clavier pour permettre la continuation de la saisie
+    // Keyboard.dismiss();
 
     // Ajouter aux récents (simulation)
     setRecentAddresses(prev => [
@@ -351,10 +355,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const handleBlur = useCallback(() => {
     setIsFocused(false);
-    // Délai pour permettre la sélection
+    // Délai plus long pour permettre la sélection
     setTimeout(() => {
       setShowSuggestionsState(false);
-    }, 200);
+    }, 300);
   }, []);
 
   const clearInput = useCallback(() => {
@@ -407,6 +411,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     <TouchableOpacity
       style={styles.suggestionItem}
       onPress={() => handleAddressSelect(item)}
+      activeOpacity={0.7}
     >
       <View style={styles.suggestionContent}>
         <View style={styles.suggestionIcon}>
@@ -430,6 +435,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     <View style={[styles.container, style]}>
       <View style={styles.inputContainer}>
         <TextInput
+          ref={inputRef}
           label={label}
           value={inputValue}
           onChangeText={handleTextChange}
@@ -450,137 +456,144 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         {error && <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>}
       </View>
 
-      {/* Suggestions en overlay (pas en modal) */}
-      {showSuggestionsState && (
-        <Animated.View
-          style={[
-            styles.suggestionsOverlay,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Card style={styles.suggestionsCard}>
-            <ScrollView 
-              style={styles.suggestionsList}
-              contentContainerStyle={styles.suggestionsContent}
-              keyboardShouldPersistTaps="handled"
-              nestedScrollEnabled={true}
-            >
-              {/* Position actuelle */}
-              {showCurrentLocation && currentLocation && (
-                <>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Position actuelle</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.suggestionItem}
-                    onPress={handleCurrentLocationSelect}
-                    disabled={loading}
+      {/* Suggestions en modal pour éviter les problèmes de positionnement */}
+      <Modal
+        visible={showSuggestionsState}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuggestionsState(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowSuggestionsState(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.suggestionsContainer}>
+                <Card style={styles.suggestionsCard}>
+                  <ScrollView 
+                    style={styles.suggestionsList}
+                    contentContainerStyle={styles.suggestionsContent}
+                    keyboardShouldPersistTaps="handled"
+                    nestedScrollEnabled={true}
+                    showsVerticalScrollIndicator={false}
                   >
-                    <View style={styles.suggestionContent}>
-                      <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
-                        {loading ? (
-                          <ActivityIndicator size="small" color="#4CAF50" />
-                        ) : (
-                          <Ionicons name="location" size={16} color="#4CAF50" />
-                        )}
-                      </View>
-                      <View style={styles.suggestionText}>
-                        <Text style={styles.suggestionTitle}>Utiliser ma position actuelle</Text>
-                        <Text style={styles.suggestionSubtitle}>Détection automatique</Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                  <Divider style={styles.divider} />
-                </>
-              )}
-
-              {/* Adresses récentes */}
-              {recentAddresses.length > 0 && (
-                <>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Récents</Text>
-                  </View>
-                  {recentAddresses.map((address) => (
-                    <TouchableOpacity
-                      key={address.id}
-                      style={styles.suggestionItem}
-                      onPress={() => handleAddressSelect(address)}
-                    >
-                      <View style={styles.suggestionContent}>
-                        <View style={styles.suggestionIcon}>
-                          <Ionicons 
-                            name={getIconForType(address.type)} 
-                            size={16} 
-                            color={getIconColor(address.type)} 
-                          />
+                    {/* Position actuelle */}
+                    {showCurrentLocation && currentLocation && (
+                      <>
+                        <View style={styles.sectionHeader}>
+                          <Text style={styles.sectionTitle}>Position actuelle</Text>
                         </View>
-                        <View style={styles.suggestionText}>
-                          <Text style={styles.suggestionTitle}>{address.description}</Text>
-                          <Text style={styles.suggestionSubtitle}>
-                            {address.commune && `Commune: ${address.commune}`}
-                          </Text>
+                        <TouchableOpacity
+                          style={styles.suggestionItem}
+                          onPress={handleCurrentLocationSelect}
+                          disabled={loading}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.suggestionContent}>
+                            <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
+                              {loading ? (
+                                <ActivityIndicator size="small" color="#4CAF50" />
+                              ) : (
+                                <Ionicons name="location" size={16} color="#4CAF50" />
+                              )}
+                            </View>
+                            <View style={styles.suggestionText}>
+                              <Text style={styles.suggestionTitle}>Utiliser ma position actuelle</Text>
+                              <Text style={styles.suggestionSubtitle}>Détection automatique</Text>
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                        <Divider style={styles.divider} />
+                      </>
+                    )}
+
+                    {/* Adresses récentes */}
+                    {recentAddresses.length > 0 && (
+                      <>
+                        <View style={styles.sectionHeader}>
+                          <Text style={styles.sectionTitle}>Récents</Text>
                         </View>
+                        {recentAddresses.map((address) => (
+                          <TouchableOpacity
+                            key={address.id}
+                            style={styles.suggestionItem}
+                            onPress={() => handleAddressSelect(address)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={styles.suggestionContent}>
+                              <View style={styles.suggestionIcon}>
+                                <Ionicons 
+                                  name={getIconForType(address.type)} 
+                                  size={16} 
+                                  color={getIconColor(address.type)} 
+                                />
+                              </View>
+                              <View style={styles.suggestionText}>
+                                <Text style={styles.suggestionTitle}>{address.description}</Text>
+                                <Text style={styles.suggestionSubtitle}>
+                                  {address.commune && `Commune: ${address.commune}`}
+                                </Text>
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                        {suggestions.length > 0 && <Divider style={styles.divider} />}
+                      </>
+                    )}
+
+                    {/* Suggestions */}
+                    {suggestions.length > 0 && (
+                      <>
+                        <View style={styles.sectionHeader}>
+                          <Text style={styles.sectionTitle}>Suggestions</Text>
+                        </View>
+                        {suggestions.map((address) => (
+                          <TouchableOpacity
+                            key={address.id}
+                            style={styles.suggestionItem}
+                            onPress={() => handleAddressSelect(address)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={styles.suggestionContent}>
+                              <View style={styles.suggestionIcon}>
+                                <Ionicons 
+                                  name={getIconForType(address.type)} 
+                                  size={16} 
+                                  color={getIconColor(address.type)} 
+                                />
+                              </View>
+                              <View style={styles.suggestionText}>
+                                <Text style={styles.suggestionTitle}>{address.description}</Text>
+                                <Text style={styles.suggestionSubtitle}>
+                                  {address.commune && `Commune: ${address.commune}`}
+                                </Text>
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Aucun résultat */}
+                    {suggestions.length === 0 && recentAddresses.length === 0 && value.length >= 2 && !loading && (
+                      <View style={styles.noResults}>
+                        <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
+                        <Text style={styles.noResultsSubtext}>Essayez avec d'autres mots-clés</Text>
                       </View>
-                    </TouchableOpacity>
-                  ))}
-                  {suggestions.length > 0 && <Divider style={styles.divider} />}
-                </>
-              )}
+                    )}
 
-              {/* Suggestions */}
-              {suggestions.length > 0 && (
-                <>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Suggestions</Text>
-                  </View>
-                  {suggestions.map((address) => (
-                    <TouchableOpacity
-                      key={address.id}
-                      style={styles.suggestionItem}
-                      onPress={() => handleAddressSelect(address)}
-                    >
-                      <View style={styles.suggestionContent}>
-                        <View style={styles.suggestionIcon}>
-                          <Ionicons 
-                            name={getIconForType(address.type)} 
-                            size={16} 
-                            color={getIconColor(address.type)} 
-                          />
-                        </View>
-                        <View style={styles.suggestionText}>
-                          <Text style={styles.suggestionTitle}>{address.description}</Text>
-                          <Text style={styles.suggestionSubtitle}>
-                            {address.commune && `Commune: ${address.commune}`}
-                          </Text>
-                        </View>
+                    {/* Loading */}
+                    {loading && (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color="#666" />
+                        <Text style={styles.loadingText}>Recherche en cours...</Text>
                       </View>
-                    </TouchableOpacity>
-                  ))}
-                </>
-              )}
-
-              {/* Aucun résultat */}
-              {suggestions.length === 0 && recentAddresses.length === 0 && value.length >= 2 && !loading && (
-                <View style={styles.noResults}>
-                  <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
-                  <Text style={styles.noResultsSubtext}>Essayez avec d'autres mots-clés</Text>
-                </View>
-              )}
-
-              {/* Loading */}
-              {loading && (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#666" />
-                  <Text style={styles.loadingText}>Recherche en cours...</Text>
-                </View>
-              )}
-            </ScrollView>
-          </Card>
-        </Animated.View>
-      )}
+                    )}
+                  </ScrollView>
+                </Card>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -605,18 +618,20 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 4,
   },
-  suggestionsOverlay: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    zIndex: 1001,
-    marginTop: 4,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-start',
+    paddingTop: 100, // Espace pour le header
+  },
+  suggestionsContainer: {
+    marginHorizontal: 16,
+    marginTop: 8,
   },
   suggestionsCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    maxHeight: 300,
+    maxHeight: 400,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -630,7 +645,7 @@ const styles = StyleSheet.create({
     }),
   },
   suggestionsList: {
-    maxHeight: 300,
+    maxHeight: 400,
   },
   suggestionsContent: {
     paddingVertical: 8,
