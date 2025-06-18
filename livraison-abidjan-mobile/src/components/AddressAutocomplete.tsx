@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -72,11 +73,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [recentAddresses, setRecentAddresses] = useState<Address[]>([]);
   const [isFocused, setIsFocused] = useState(false);
-  const [inputValue, setInputValue] = useState(value);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-10)).current;
+  const inputRef = useRef<any>(null);
 
   // Communes et zones populaires d'Abidjan avec coordonnées précises
   const popularPlaces = useMemo(() => [
@@ -181,83 +182,86 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  // Recherche d'adresses intelligente
-  const searchAddresses = useCallback(async (query: string) => {
-    if (query.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const results: Address[] = [];
-      const normalizedQuery = query.toLowerCase().trim();
-
-      // 1. Recherche dans les lieux populaires
-      popularPlaces.forEach((place, index) => {
-        if (
-          place.name.toLowerCase().includes(normalizedQuery) ||
-          place.commune.toLowerCase().includes(normalizedQuery)
-        ) {
-          results.push({
-            id: `popular_${index}`,
-            description: `${place.name}, ${place.commune}`,
-            latitude: place.latitude,
-            longitude: place.longitude,
-            commune: place.commune,
-            type: 'suggestion'
-          });
-        }
-      });
-
-      // 2. Recherche par commune
-      abidjanCommunes.forEach((commune, index) => {
-        if (commune.name.toLowerCase().includes(normalizedQuery)) {
-          results.push({
-            id: `commune_${index}`,
-            description: `${commune.name}, Abidjan`,
-            latitude: commune.latitude,
-            longitude: commune.longitude,
-            commune: commune.name,
-            type: 'suggestion'
-          });
-        }
-      });
-
-      // 3. Recherche de rues et adresses spécifiques
-      if (query.length >= 4) {
-        const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place'];
-        const randomStreets = [
-          'des Jardins', 'de la Paix', 'du Commerce', 'de l\'Indépendance',
-          'des Cocotiers', 'de la République', 'du Stade', 'de l\'Église'
-        ];
-
-        // Générer des suggestions de rues réalistes
-        for (let i = 0; i < Math.min(3, maxSuggestions - results.length); i++) {
-          const prefix = streetPrefixes[Math.floor(Math.random() * streetPrefixes.length)];
-          const suffix = randomStreets[Math.floor(Math.random() * randomStreets.length)];
-          const commune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
-
-          results.push({
-            id: `street_${i}_${Date.now()}`,
-            description: `${prefix} ${query} ${suffix}, ${commune.name}`,
-            latitude: commune.latitude + (Math.random() - 0.5) * 0.02,
-            longitude: commune.longitude + (Math.random() - 0.5) * 0.02,
-            commune: commune.name,
-            type: 'suggestion'
-          });
-        }
+  // Recherche d'adresses intelligente avec debounce
+  const debouncedSearchAddresses = useCallback(
+    debounce(async (query: string) => {
+      if (query.length < 2) {
+        setSuggestions([]);
+        return;
       }
 
-      // Limiter le nombre de résultats
-      setSuggestions(results.slice(0, maxSuggestions));
-    } catch (error) {
-      console.error('Error searching addresses:', error);
-      setSuggestions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [popularPlaces, abidjanCommunes, maxSuggestions]);
+      setLoading(true);
+      try {
+        const results: Address[] = [];
+        const normalizedQuery = query.toLowerCase().trim();
+
+        // 1. Recherche dans les lieux populaires
+        popularPlaces.forEach((place, index) => {
+          if (
+            place.name.toLowerCase().includes(normalizedQuery) ||
+            place.commune.toLowerCase().includes(normalizedQuery)
+          ) {
+            results.push({
+              id: `popular_${index}`,
+              description: `${place.name}, ${place.commune}`,
+              latitude: place.latitude,
+              longitude: place.longitude,
+              commune: place.commune,
+              type: 'suggestion'
+            });
+          }
+        });
+
+        // 2. Recherche par commune
+        abidjanCommunes.forEach((commune, index) => {
+          if (commune.name.toLowerCase().includes(normalizedQuery)) {
+            results.push({
+              id: `commune_${index}`,
+              description: `${commune.name}, Abidjan`,
+              latitude: commune.latitude,
+              longitude: commune.longitude,
+              commune: commune.name,
+              type: 'suggestion'
+            });
+          }
+        });
+
+        // 3. Recherche de rues et adresses spécifiques
+        if (query.length >= 4) {
+          const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place'];
+          const randomStreets = [
+            'des Jardins', 'de la Paix', 'du Commerce', 'de l\'Indépendance',
+            'des Cocotiers', 'de la République', 'du Stade', 'de l\'Église'
+          ];
+
+          // Générer des suggestions de rues réalistes
+          for (let i = 0; i < Math.min(3, maxSuggestions - results.length); i++) {
+            const prefix = streetPrefixes[Math.floor(Math.random() * streetPrefixes.length)];
+            const suffix = randomStreets[Math.floor(Math.random() * randomStreets.length)];
+            const commune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
+
+            results.push({
+              id: `street_${i}_${Date.now()}`,
+              description: `${prefix} ${query} ${suffix}, ${commune.name}`,
+              latitude: commune.latitude + (Math.random() - 0.5) * 0.02,
+              longitude: commune.longitude + (Math.random() - 0.5) * 0.02,
+              commune: commune.name,
+              type: 'suggestion'
+            });
+          }
+        }
+
+        // Limiter le nombre de résultats
+        setSuggestions(results.slice(0, maxSuggestions));
+      } catch (error) {
+        console.error('Error searching addresses:', error);
+        setSuggestions([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300),
+    [popularPlaces, abidjanCommunes, maxSuggestions]
+  );
 
   // Géocodage inverse pour la position actuelle
   const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<Address> => {
@@ -285,30 +289,56 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     };
   }, [abidjanCommunes]);
 
-  // Gestionnaires d'événements
+  // Gestionnaires d'événements améliorés
   const handleTextChange = useCallback((text: string) => {
     onChangeText(text);
-    setShowSuggestionsState(true);
-
-    // Debounce search
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    
+    if (text.length >= 2) {
+      setShowSuggestionsState(true);
+      debouncedSearchAddresses(text);
+    } else if (text.length === 0) {
+      // Afficher les suggestions par défaut quand le champ est vide mais focalisé
+      if (isFocused) {
+        setShowSuggestionsState(true);
+        const defaultSuggestions = [
+          ...recentAddresses,
+          ...popularPlaces.slice(0, 4).map(place => ({
+            id: place.name,
+            description: `${place.name}, ${place.commune}`,
+            latitude: place.latitude,
+            longitude: place.longitude,
+            commune: place.commune,
+            type: 'suggestion' as const
+          }))
+        ];
+        setSuggestions(defaultSuggestions);
+      } else {
+        setShowSuggestionsState(false);
+        setSuggestions([]);
+      }
     }
-    timeoutRef.current = setTimeout(() => {
-      searchAddresses(text);
-    }, 300);
-  }, [onChangeText, searchAddresses]);
+  }, [onChangeText, debouncedSearchAddresses, isFocused, recentAddresses, popularPlaces]);
 
   const handleAddressSelect = useCallback((address: Address) => {
     onChangeText(address.description);
     onAddressSelect(address);
+    
+    // Fermer les suggestions mais garder le focus sur l'input
     setShowSuggestionsState(false);
     setSuggestions([]);
-    Keyboard.dismiss();
+    
+    // Garder le focus sur l'input pour permettre la modification
+    // Ne pas fermer le clavier automatiquement
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
 
-    // Ajouter aux récents (simulation)
+    // Ajouter aux récents
+    const newRecent = { ...address, type: 'recent' as const };
     setRecentAddresses(prev => [
-      address,
+      newRecent,
       ...prev.filter(addr => addr.id !== address.id).slice(0, 2)
     ]);
   }, [onChangeText, onAddressSelect]);
@@ -332,30 +362,34 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const handleFocus = useCallback(() => {
     setIsFocused(true);
-    if (value.length >= 2 || recentAddresses.length > 0) {
+    
+    // Afficher les suggestions si il y a du texte ou des récents
+    if (value.length >= 2) {
       setShowSuggestionsState(true);
-      if (value.length >= 2) {
-        searchAddresses(value);
-      }
+      debouncedSearchAddresses(value);
+    } else {
+      // Afficher les suggestions par défaut
+      setShowSuggestionsState(true);
+      const defaultSuggestions = [
+        ...recentAddresses,
+        ...popularPlaces.slice(0, 4).map(place => ({
+          id: place.name,
+          description: `${place.name}, ${place.commune}`,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          commune: place.commune,
+          type: 'suggestion' as const
+        }))
+      ];
+      setSuggestions(defaultSuggestions);
     }
-    onFocus?.()
-    const combinedSuggestions: Address[] = [
-      ...recentAddresses,
-      ...popularPlaces.map(place => ({
-        id: place.name,
-        description: `${place.name}, ${place.commune}`,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        commune: place.commune,
-        type: 'suggestion' as const
-      }))
-    ]
-    setSuggestions(combinedSuggestions)
-  }, [value, recentAddresses.length, searchAddresses, onFocus, popularPlaces]);
+    
+    onFocus?.();
+  }, [value, recentAddresses, popularPlaces, debouncedSearchAddresses, onFocus]);
 
   const handleBlur = useCallback(() => {
     setIsFocused(false);
-    // Délai pour permettre la sélection
+    // Délai plus long pour permettre la sélection dans les suggestions
     setTimeout(() => {
       setShowSuggestionsState(false);
     }, 200);
@@ -365,6 +399,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     onChangeText('');
     setSuggestions([]);
     setShowSuggestionsState(false);
+    // Garder le focus après effacement
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   }, [onChangeText]);
 
   // Icônes pour différents types de suggestions
@@ -398,59 +436,20 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     switch (type) {
       case "airport": return "airplane"
       case "university": return "school"
-      case "market": return "shopping"
-      case "mall": return "shopping-outline"
+      case "hospital": return "medical"
+      case "market": return "storefront"
       case "transport": return "train"
-      case "recent": return "history"
-      default: return "map-marker"
+      case "business": return "business"
+      case "recent": return "time"
+      default: return "location"
     }
-  }
-
-  const renderSuggestion = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.suggestionItem}
-      onPress={() => {
-        setInputValue(item.description)
-        onAddressSelect(item)
-
-        // Ajouter aux adresses récentes
-        const newRecent = {
-          ...item,
-          type: "recent",
-          timestamp: Date.now()
-        }
-        setRecentAddresses(prev => [newRecent, ...prev.filter(addr => addr.id !== item.id)].slice(0, 3))
-      }}
-    >
-      <View style={styles.suggestionContent}>
-        <IconButton 
-          icon={getIconForType2(item.type)} 
-          size={20} 
-          iconColor={item.type === "recent" ? "#757575" : "#FF6B00"}
-        />
-        <View style={styles.suggestionTextContainer}>
-          <Text style={styles.suggestionTitle}>{item.description}</Text>
-          <Text style={styles.suggestionSubtitle}>{item.commune}</Text>
-        </View>
-        {item.type === "recent" && (
-          <IconButton 
-            icon="close" 
-            size={16} 
-            iconColor="#BDBDBD"
-            onPress={(e) => {
-              e.stopPropagation()
-              setRecentAddresses(prev => prev.filter(addr => addr.id !== item.id))
-            }}
-          />
-        )}
-      </View>
-    </TouchableOpacity>
-  )
+  };
 
   return (
     <View style={[styles.container, style]}>
       <View style={styles.inputContainer}>
         <TextInput
+          ref={inputRef}
           label={label}
           value={value}
           onChangeText={handleTextChange}
@@ -490,7 +489,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
       {/* Modal pour les suggestions */}
       <Modal
-        visible={showSuggestionsState && (suggestions.length > 0 || recentAddresses.length > 0)}
+        visible={showSuggestionsState && (suggestions.length > 0 || loading)}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowSuggestionsState(false)}
@@ -498,31 +497,41 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setShowSuggestionsState(false)}
+          onPress={() => {
+            setShowSuggestionsState(false);
+            // Garder le focus sur l'input
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
+          }}
         >
-          <View style={styles.modalContent}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <Card style={styles.suggestionsCard}>
               <ScrollView 
                 style={styles.suggestionsList}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled={true}
               >
                 <View style={styles.suggestionsContent}>
+                  {/* Chargement */}
+                  {loading && (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size={20} color="#007AFF" />
+                      <Text style={styles.loadingText}>Recherche en cours...</Text>
+                    </View>
+                  )}
+
                   {/* Localisation actuelle */}
-                  {showCurrentLocation && currentLocation && value.length < 2 && (
+                  {showCurrentLocation && currentLocation && value.length < 2 && !loading && (
                     <>
                       <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Localisation actuelle</Text>
                       </View>
                       <TouchableOpacity
                         style={styles.suggestionItem}
-                        onPress={() => handleAddressSelect({
-                          id: 'current_location',
-                          description: 'Ma position actuelle',
-                          latitude: currentLocation.coords.latitude,
-                          longitude: currentLocation.coords.longitude,
-                          type: 'current_location'
-                        })}
+                        onPress={handleCurrentLocationSelect}
+                        activeOpacity={0.7}
                       >
                         <View style={styles.suggestionContent}>
                           <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
@@ -534,21 +543,22 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                           </View>
                         </View>
                       </TouchableOpacity>
-                      <Divider style={styles.divider} />
+                      {suggestions.length > 0 && <Divider style={styles.divider} />}
                     </>
                   )}
 
                   {/* Adresses récentes */}
-                  {recentAddresses.length > 0 && value.length < 2 && (
+                  {recentAddresses.length > 0 && value.length < 2 && !loading && (
                     <>
                       <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Récemment utilisées</Text>
+                        <Text style={styles.sectionTitle}>Récents</Text>
                       </View>
                       {recentAddresses.map((address) => (
                         <TouchableOpacity
                           key={address.id}
                           style={styles.suggestionItem}
                           onPress={() => handleAddressSelect(address)}
+                          activeOpacity={0.7}
                         >
                           <View style={styles.suggestionContent}>
                             <View style={styles.suggestionIcon}>
@@ -572,7 +582,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                   )}
 
                   {/* Suggestions */}
-                  {suggestions.length > 0 && (
+                  {suggestions.length > 0 && !loading && (
                     <>
                       <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Suggestions</Text>
@@ -582,11 +592,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                           key={address.id}
                           style={styles.suggestionItem}
                           onPress={() => handleAddressSelect(address)}
+                          activeOpacity={0.7}
                         >
                           <View style={styles.suggestionContent}>
                             <View style={styles.suggestionIcon}>
                               <Ionicons 
-                                name={getIconForType(address.type)} 
+                                name={getIconForType2(address.type || 'suggestion')} 
                                 size={16} 
                                 color={getIconColor(address.type)} 
                               />
@@ -604,8 +615,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                   )}
 
                   {/* Aucun résultat */}
-                  {suggestions.length === 0 && recentAddresses.length === 0 && value.length >= 2 && !loading && (
+                  {suggestions.length === 0 && value.length >= 2 && !loading && (
                     <View style={styles.noResults}>
+                      <Ionicons name="search-outline" size={32} color="#ccc" />
                       <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
                       <Text style={styles.noResultsSubtext}>Essayez avec d'autres mots-clés</Text>
                     </View>
@@ -644,7 +656,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-start',
-    paddingTop: 100, // Espace pour éviter que le modal soit caché derrière le header
+    paddingTop: 100,
   },
   modalContent: {
     flex: 1,
@@ -739,14 +751,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
-  suggestionTextContainer: {
-    flex: 1,
-    marginLeft: 8,
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
-  suggestionCommune: {
-    fontSize: 12,
-    color: "#757575",
-    marginTop: 2,
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
   },
 });
 
