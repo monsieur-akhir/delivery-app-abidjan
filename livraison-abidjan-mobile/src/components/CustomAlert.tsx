@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -8,18 +9,21 @@ import {
   Animated,
   Dimensions,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
 
 export interface AlertButton {
   text: string;
   onPress?: () => void;
-  style?: 'default' | 'cancel' | 'destructive';
+  style?: 'default' | 'cancel' | 'destructive' | 'primary';
   isPrimary?: boolean;
+  icon?: string;
 }
 
 export interface CustomAlertProps {
@@ -27,12 +31,15 @@ export interface CustomAlertProps {
   title: string;
   message?: string;
   buttons?: AlertButton[];
-  type?: 'info' | 'success' | 'warning' | 'error' | 'confirmation';
+  type?: 'info' | 'success' | 'warning' | 'error' | 'confirmation' | 'payment' | 'location';
   icon?: string;
   onDismiss?: () => void;
   showCloseButton?: boolean;
   autoDismiss?: boolean;
   dismissAfter?: number;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  soundEnabled?: boolean;
+  customStyle?: object;
 }
 
 const CustomAlert: React.FC<CustomAlertProps> = ({
@@ -45,36 +52,67 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   onDismiss,
   showCloseButton = true,
   autoDismiss = false,
-  dismissAfter = 3000,
+  dismissAfter = 5000,
+  priority = 'medium',
+  soundEnabled = true,
+  customStyle = {},
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const slideAnim = useRef(new Animated.Value(-50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
+  const slideAnim = useRef(new Animated.Value(-100)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
-      // Animation d'entrée
-      Animated.parallel([
+      // Feedback haptique intelligent selon le type
+      switch (type) {
+        case 'error':
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          break;
+        case 'success':
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          break;
+        case 'warning':
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          break;
+        default:
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+
+      // Animation d'entrée sophistiquée
+      Animated.sequence([
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 300,
           useNativeDriver: true,
         }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            tension: 100,
+            friction: 8,
+            useNativeDriver: true,
+          }),
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            tension: 120,
+            friction: 7,
+            useNativeDriver: true,
+          }),
+        ]),
       ]).start();
 
-      // Auto-dismiss si activé
+      // Animation de secousse pour les erreurs critiques
+      if (type === 'error' && priority === 'critical') {
+        Animated.sequence([
+          Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+          Animated.timing(shakeAnim, { toValue: -10, duration: 100, useNativeDriver: true }),
+          Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+          Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+        ]).start();
+      }
+
+      // Auto-dismiss intelligent
       if (autoDismiss) {
         const timer = setTimeout(() => {
           handleDismiss();
@@ -82,41 +120,45 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         return () => clearTimeout(timer);
       }
     } else {
-      // Animation de sortie
+      // Animation de sortie fluide
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 200,
+          duration: 250,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
-          toValue: 0.8,
-          duration: 200,
+          toValue: 0.3,
+          duration: 250,
           useNativeDriver: true,
         }),
         Animated.timing(slideAnim, {
-          toValue: -50,
-          duration: 200,
+          toValue: -100,
+          duration: 250,
           useNativeDriver: true,
         }),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, type, priority]);
 
   const handleDismiss = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (onDismiss) {
       onDismiss();
     }
   };
 
   const handleButtonPress = (button: AlertButton) => {
-    // Feedback haptique
-    if (button.style === 'destructive') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } else if (button.isPrimary) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Feedback haptique contextuel
+    switch (button.style) {
+      case 'destructive':
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        break;
+      case 'primary':
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        break;
+      default:
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
     if (button.onPress) {
@@ -129,43 +171,66 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     switch (type) {
       case 'success':
         return {
-          colors: ['#4CAF50', '#45A049'],
+          colors: ['#4CAF50', '#45A049', '#388E3C'],
           icon: icon || 'checkmark-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#E8F5E8',
           borderColor: '#4CAF50',
+          shadowColor: '#4CAF50',
         };
       case 'warning':
         return {
-          colors: ['#FF9800', '#F57C00'],
+          colors: ['#FF9800', '#F57C00', '#E65100'],
           icon: icon || 'warning',
           iconColor: '#FFFFFF',
           backgroundColor: '#FFF3E0',
           borderColor: '#FF9800',
+          shadowColor: '#FF9800',
         };
       case 'error':
         return {
-          colors: ['#F44336', '#D32F2F'],
+          colors: ['#F44336', '#D32F2F', '#B71C1C'],
           icon: icon || 'close-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#FFEBEE',
           borderColor: '#F44336',
+          shadowColor: '#F44336',
+        };
+      case 'payment':
+        return {
+          colors: ['#9C27B0', '#7B1FA2', '#4A148C'],
+          icon: icon || 'card',
+          iconColor: '#FFFFFF',
+          backgroundColor: '#F3E5F5',
+          borderColor: '#9C27B0',
+          shadowColor: '#9C27B0',
+        };
+      case 'location':
+        return {
+          colors: ['#00BCD4', '#0097A7', '#006064'],
+          icon: icon || 'location',
+          iconColor: '#FFFFFF',
+          backgroundColor: '#E0F2F1',
+          borderColor: '#00BCD4',
+          shadowColor: '#00BCD4',
         };
       case 'confirmation':
         return {
-          colors: ['#2196F3', '#1976D2'],
+          colors: ['#2196F3', '#1976D2', '#0D47A1'],
           icon: icon || 'help-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#E3F2FD',
           borderColor: '#2196F3',
+          shadowColor: '#2196F3',
         };
       default:
         return {
-          colors: ['#607D8B', '#455A64'],
+          colors: ['#607D8B', '#455A64', '#263238'],
           icon: icon || 'information-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#ECEFF1',
           borderColor: '#607D8B',
+          shadowColor: '#607D8B',
         };
     }
   };
@@ -178,6 +243,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         <TouchableOpacity
           style={[styles.button, styles.primaryButton]}
           onPress={handleDismiss}
+          activeOpacity={0.8}
         >
           <Text style={styles.primaryButtonText}>OK</Text>
         </TouchableOpacity>
@@ -185,7 +251,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     }
 
     return buttons.map((button, index) => {
-      const isPrimary = button.isPrimary || (buttons.length === 1);
+      const isPrimary = button.isPrimary || button.style === 'primary';
       const isDestructive = button.style === 'destructive';
       const isCancel = button.style === 'cancel';
 
@@ -198,19 +264,32 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
             isDestructive && styles.destructiveButton,
             isCancel && styles.cancelButton,
             buttons.length > 1 && styles.multiButton,
+            { borderColor: typeConfig.borderColor },
           ]}
           onPress={() => handleButtonPress(button)}
+          activeOpacity={0.8}
         >
-          <Text
-            style={[
-              styles.buttonText,
-              isPrimary && styles.primaryButtonText,
-              isDestructive && styles.destructiveButtonText,
-              isCancel && styles.cancelButtonText,
-            ]}
-          >
-            {button.text}
-          </Text>
+          <View style={styles.buttonContent}>
+            {button.icon && (
+              <Ionicons
+                name={button.icon as any}
+                size={18}
+                color={isPrimary ? '#FFFFFF' : typeConfig.borderColor}
+                style={styles.buttonIcon}
+              />
+            )}
+            <Text
+              style={[
+                styles.buttonText,
+                isPrimary && styles.primaryButtonText,
+                isDestructive && styles.destructiveButtonText,
+                isCancel && styles.cancelButtonText,
+                { color: isPrimary ? '#FFFFFF' : typeConfig.borderColor },
+              ]}
+            >
+              {button.text}
+            </Text>
+          </View>
         </TouchableOpacity>
       );
     });
@@ -222,139 +301,115 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
       transparent
       animationType="none"
       onRequestClose={handleDismiss}
+      statusBarTranslucent
     >
-      <Animated.View
-        style={[
-          styles.overlay,
-          {
-            opacity: fadeAnim,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.backdrop}
-          activeOpacity={1}
-          onPress={handleDismiss}
-        />
-        
+      <StatusBar backgroundColor="rgba(0, 0, 0, 0.6)" barStyle="light-content" />
+      
+      <BlurView intensity={80} style={styles.blurContainer}>
         <Animated.View
           style={[
-            styles.alertContainer,
+            styles.overlay,
             {
               opacity: fadeAnim,
-              transform: [
-                { scale: scaleAnim },
-                { translateY: slideAnim },
-              ],
             },
           ]}
         >
-          <LinearGradient
-            colors={Array.isArray(typeConfig.colors) ? typeConfig.colors : [typeConfig.colors] as [string]}
-            style={styles.headerGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+          <TouchableOpacity
+            style={styles.backdrop}
+            activeOpacity={1}
+            onPress={handleDismiss}
+          />
+          
+          <Animated.View
+            style={[
+              styles.alertContainer,
+              customStyle,
+              {
+                opacity: fadeAnim,
+                transform: [
+                  { scale: scaleAnim },
+                  { translateY: slideAnim },
+                  { translateX: shakeAnim },
+                ],
+                shadowColor: typeConfig.shadowColor,
+              },
+            ]}
           >
-            <View style={styles.iconContainer}>
-              <Ionicons
-                name={typeConfig.icon as any}
-                size={32}
-                color={typeConfig.iconColor}
-              />
-            </View>
-          </LinearGradient>
+            {/* Header avec gradient */}
+            <LinearGradient
+              colors={typeConfig.colors}
+              style={styles.headerGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons
+                  name={typeConfig.icon as any}
+                  size={36}
+                  color={typeConfig.iconColor}
+                />
+              </View>
+              
+              {/* Effet de brillance */}
+              <View style={styles.shineEffect} />
+            </LinearGradient>
 
-          <View style={[styles.content, { backgroundColor: typeConfig.backgroundColor }]}>
-            {showCloseButton && (
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={handleDismiss}
-              >
-                <Ionicons name="close" size={20} color="#666" />
-              </TouchableOpacity>
+            {/* Contenu principal */}
+            <View style={[styles.content, { backgroundColor: typeConfig.backgroundColor }]}>
+              {showCloseButton && (
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={handleDismiss}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="close" size={20} color="#666" />
+                </TouchableOpacity>
+              )}
+
+              <View style={styles.textContainer}>
+                <Text style={[styles.title, { color: typeConfig.borderColor }]}>
+                  {title}
+                </Text>
+                {message && (
+                  <Text style={styles.message}>
+                    {message}
+                  </Text>
+                )}
+              </View>
+
+              {/* Ligne de séparation subtile */}
+              <View style={[styles.separator, { backgroundColor: typeConfig.borderColor }]} />
+
+              {/* Boutons d'action */}
+              <View style={[
+                styles.buttonContainer,
+                buttons.length > 1 && styles.multiButtonContainer
+              ]}>
+                {renderButtons()}
+              </View>
+            </View>
+
+            {/* Indicateur de priorité */}
+            {priority === 'critical' && (
+              <View style={[styles.priorityIndicator, { backgroundColor: typeConfig.borderColor }]} />
             )}
-
-            <View style={styles.textContainer}>
-              <Text style={styles.title}>{title}</Text>
-              {message && <Text style={styles.message}>{message}</Text>}
-            </View>
-
-            <View style={[
-              styles.buttonContainer,
-              buttons.length > 1 && styles.multiButtonContainer
-            ]}>
-              {renderButtons()}
-            </View>
-          </View>
+          </Animated.View>
         </Animated.View>
-      </Animated.View>
+      </BlurView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  blurContainer: {
+    flex: 1,
+  },
   overlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     zIndex: 1000,
-  },
-  modal: {
-    minWidth: 300,
-    maxWidth: '90%',
-    backgroundColor: '#FFF',
-    borderRadius: 24,
-    padding: 28,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 12,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 18,
-  },
-  icon: {
-    fontSize: 36,
-    color: '#FFF',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  message: {
-    fontSize: 16,
-    color: '#444',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  button: {
-    width: '100%',
-    backgroundColor: '#FF6B00',
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#FF6B00',
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   backdrop: {
     position: 'absolute',
@@ -362,37 +417,49 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   alertContainer: {
     width: Math.min(width * 0.9, 400),
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
+        shadowOffset: { width: 0, height: 15 },
         shadowOpacity: 0.3,
-        shadowRadius: 20,
+        shadowRadius: 25,
       },
       android: {
-        elevation: 20,
+        elevation: 25,
       },
     }),
   },
   headerGradient: {
-    height: 80,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
   },
   iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  shineEffect: {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    transform: [{ rotate: '45deg' }],
   },
   content: {
     padding: 24,
@@ -402,24 +469,76 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   textContainer: {
-    marginBottom: 24,
+    marginBottom: 20,
     alignItems: 'center',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 28,
+  },
+  message: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  separator: {
+    height: 1,
+    marginBottom: 20,
+    opacity: 0.1,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    gap: 12,
   },
   multiButtonContainer: {
-    gap: 12,
+    flexDirection: 'column',
+  },
+  button: {
+    flex: 1,
+    height: 52,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  multiButton: {
+    marginBottom: 12,
   },
   primaryButton: {
     backgroundColor: '#3B82F6',
@@ -433,6 +552,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     borderColor: '#D1D5DB',
   },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
   primaryButtonText: {
     color: '#FFFFFF',
   },
@@ -442,6 +574,13 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#6B7280',
   },
+  priorityIndicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+  },
 });
 
-export default CustomAlert; 
+export default CustomAlert;
