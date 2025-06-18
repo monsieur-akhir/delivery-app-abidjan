@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button, Card, Chip, Divider } from 'react-native-paper'
-import { Feather, Ionicons } from '@expo/vector-icons'
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
@@ -91,6 +91,26 @@ interface RouteParams {
 }
 
 type CreateDeliveryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateDelivery'>
+
+// Fonction utilitaire pour choisir la bonne icône
+function getIcon(icon: string, color: string, size: number): React.ReactElement {
+  switch (icon) {
+    case 'package':
+      return <Feather name="package" size={size} color={color} />
+    case 'alert-triangle':
+      return <Feather name="alert-triangle" size={size} color={color} />
+    case 'coffee':
+      return <MaterialCommunityIcons name="coffee" size={size} color={color} />
+    case 'file-text':
+      return <Feather name="file-text" size={size} color={color} />
+    case 'motorcycle':
+      return <MaterialCommunityIcons name="motorbike" size={size} color={color} />
+    case 'clock':
+      return <Feather name="clock" size={size} color={color} />
+    default:
+      return <Ionicons name={icon as any} size={size} color={color} />
+  }
+}
 
 const CreateDeliveryScreen: React.FC = () => {
   const navigation = useNavigation<CreateDeliveryScreenNavigationProp>()
@@ -171,7 +191,7 @@ const CreateDeliveryScreen: React.FC = () => {
     // Charger dynamiquement les options depuis le backend
     const fetchOptions = async () => {
       try {
-        const response = await api.get('/deliveries/options')
+        const response = await api.get('/api/deliveries/options')
         setDeliveryOptions(response.data)
       } catch (e) {
         // fallback statique si besoin
@@ -184,11 +204,11 @@ const CreateDeliveryScreen: React.FC = () => {
           delivery_speeds: [
             { key: 'urgent', label: 'Urgent', min_price: 700, delay: '30min', icon: 'flash' },
             { key: 'normal', label: 'Un peu plus long', min_price: 500, delay: '1h', icon: 'clock' },
-            { key: 'slow', label: 'En 3h', min_price: 400, delay: '3h', icon: 'time' }
+            { key: 'slow', label: 'En 3h', min_price: 400, delay: '3h', icon: 'clock' }
           ],
           extras: [
             { key: 'isothermal_bag', label: 'Sac isotherme', price: 200, icon: 'thermometer' },
-            { key: 'comment', label: 'Commentaire', price: 0, icon: 'chatbubble' }
+            { key: 'comment', label: 'Commentaire', price: 0, icon: 'file-text' }
           ]
         })
       }
@@ -201,7 +221,17 @@ const CreateDeliveryScreen: React.FC = () => {
       calculatePriceEstimate()
       fetchWeatherData()
     }
-  }, [pickupLocation, deliveryLocation, packageType, selectedVehicleType, selectedSpeed, selectedExtras])
+  }, [pickupLocation, deliveryLocation, selectedVehicleType, selectedSpeed, selectedExtras])
+
+  // Mettre à jour le prix proposé quand les options changent
+  useEffect(() => {
+    if (deliveryOptions && selectedVehicleType) {
+      const selectedVehicle = deliveryOptions.vehicle_types?.find((v: any) => v.type === selectedVehicleType)
+      if (selectedVehicle) {
+        setProposedPrice(selectedVehicle.min_price.toString())
+      }
+    }
+  }, [selectedVehicleType, deliveryOptions])
 
   const calculatePriceEstimate = async () => {
     if (!pickupLocation || !deliveryLocation) return
@@ -499,11 +529,7 @@ const CreateDeliveryScreen: React.FC = () => {
                     ]}
                     onPress={() => setSelectedVehicleType(option.type)}
                   >
-                    <Ionicons 
-                      name={option.icon as any} 
-                      size={24} 
-                      color={selectedVehicleType === option.type ? '#FFF' : '#FF6B00'} 
-                    />
+                    {getIcon(option.icon, selectedVehicleType === option.type ? '#FFF' : '#FF6B00', 32)}
                     <Text style={[
                       styles.vehicleTypeLabel,
                       selectedVehicleType === option.type && styles.selectedText
@@ -536,11 +562,7 @@ const CreateDeliveryScreen: React.FC = () => {
                     ]}
                     onPress={() => setSelectedSpeed(speed.key)}
                   >
-                    <Ionicons 
-                      name={speed.icon as any} 
-                      size={20} 
-                      color={selectedSpeed === speed.key ? '#FFF' : '#FF6B00'} 
-                    />
+                    {getIcon(speed.icon, selectedSpeed === speed.key ? '#FFF' : '#FF6B00', 20)}
                     <Text style={[
                       styles.speedLabel,
                       selectedSpeed === speed.key && styles.selectedText
@@ -570,11 +592,7 @@ const CreateDeliveryScreen: React.FC = () => {
                     onPress={() => toggleExtra(extra.key)}
                   >
                     <View style={styles.extraOptionContent}>
-                      <Ionicons 
-                        name={extra.icon as any} 
-                        size={20} 
-                        color={selectedExtras.includes(extra.key) ? '#FF6B00' : '#666'} 
-                      />
+                      {getIcon(extra.icon, selectedExtras.includes(extra.key) ? '#FF6B00' : '#666', 20)}
                       <Text style={styles.extraOptionLabel}>{extra.label}</Text>
                       {extra.price > 0 && (
                         <Text style={styles.extraOptionPrice}>+{extra.price} FCFA</Text>
@@ -606,7 +624,7 @@ const CreateDeliveryScreen: React.FC = () => {
                   ]}
                   onPress={() => setPackageType(type.key)}
                 >
-                  <Feather name={type.icon as any} size={20} color={packageType === type.key ? '#FFF' : '#666'} />
+                  {getIcon(type.icon, packageType === type.key ? '#FFF' : '#666', 20)}
                   <Text style={[
                     styles.packageTypeLabel,
                     packageType === type.key && styles.selectedText
@@ -677,9 +695,97 @@ const CreateDeliveryScreen: React.FC = () => {
 
           {/* Prix et validation */}
           <Card style={styles.formCard}>
+            <Text style={styles.sectionTitle}>Prix et paiement</Text>
+            
+            {/* Suggestions de prix */}
+            <View style={styles.priceSuggestionsContainer}>
+              <Text style={styles.priceSuggestionsTitle}>Suggestions de prix</Text>
+              <View style={styles.priceSuggestionsGrid}>
+                {deliveryOptions?.vehicle_types?.map((vehicle: any) => (
+                  <TouchableOpacity
+                    key={vehicle.type}
+                    style={[
+                      styles.priceSuggestionCard,
+                      parseFloat(proposedPrice) === vehicle.min_price && styles.selectedPriceCard
+                    ]}
+                    onPress={() => setProposedPrice(vehicle.min_price.toString())}
+                  >
+                    <Text style={[
+                      styles.priceSuggestionLabel,
+                      parseFloat(proposedPrice) === vehicle.min_price && styles.selectedPriceText
+                    ]}>
+                      {vehicle.label}
+                    </Text>
+                    <Text style={[
+                      styles.priceSuggestionValue,
+                      parseFloat(proposedPrice) === vehicle.min_price && styles.selectedPriceText
+                    ]}>
+                      {formatPrice(vehicle.min_price)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Prix estimé total */}
             <View style={styles.priceContainer}>
               <Text style={styles.priceLabel}>Prix total estimé</Text>
               <Text style={styles.priceValue}>{formatPrice(totalPrice)}</Text>
+            </View>
+
+            {/* Détails du calcul du prix */}
+            {totalPrice > 0 && (
+              <View style={styles.priceBreakdownContainer}>
+                <Text style={styles.priceBreakdownTitle}>Détails du calcul</Text>
+                <View style={styles.priceBreakdownItem}>
+                  <Text style={styles.priceBreakdownLabel}>Prix de base</Text>
+                  <Text style={styles.priceBreakdownValue}>
+                    {formatPrice(estimate?.estimated_price || 0)}
+                  </Text>
+                </View>
+                {selectedVehicleType && deliveryOptions?.vehicle_types && (
+                  <View style={styles.priceBreakdownItem}>
+                    <Text style={styles.priceBreakdownLabel}>Type de véhicule</Text>
+                    <Text style={styles.priceBreakdownValue}>
+                      {deliveryOptions.vehicle_types.find((v: any) => v.type === selectedVehicleType)?.label}
+                    </Text>
+                  </View>
+                )}
+                {selectedSpeed && deliveryOptions?.delivery_speeds && (
+                  <View style={styles.priceBreakdownItem}>
+                    <Text style={styles.priceBreakdownLabel}>Délai de livraison</Text>
+                    <Text style={styles.priceBreakdownValue}>
+                      {deliveryOptions.delivery_speeds.find((s: any) => s.key === selectedSpeed)?.label}
+                    </Text>
+                  </View>
+                )}
+                {selectedExtras.length > 0 && deliveryOptions?.extras && (
+                  <View style={styles.priceBreakdownItem}>
+                    <Text style={styles.priceBreakdownLabel}>Options supplémentaires</Text>
+                    <Text style={styles.priceBreakdownValue}>
+                      +{formatPrice(selectedExtras.reduce((total, extraKey) => {
+                        const extra = deliveryOptions.extras.find((e: any) => e.key === extraKey)
+                        return total + (extra?.price || 0)
+                      }, 0))}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Saisie manuelle du prix */}
+            <View style={styles.manualPriceContainer}>
+              <Text style={styles.manualPriceLabel}>Prix que vous proposez</Text>
+              <TextInput
+                placeholder="Saisissez votre prix (FCFA)"
+                value={proposedPrice}
+                onChangeText={setProposedPrice}
+                keyboardType="numeric"
+                style={styles.manualPriceInput}
+              />
+              <Text style={styles.priceNote}>
+                💡 Vous pouvez ajuster le prix selon vos besoins
+              </Text>
             </View>
 
             <Button
@@ -719,7 +825,7 @@ const CreateDeliveryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F7F7F7',
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -753,19 +859,20 @@ const styles = StyleSheet.create({
   },
   formCard: {
     margin: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    elevation: 2,
+    marginBottom: 16,
+    borderRadius: 20,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    backgroundColor: '#FFF',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 18,
   },
   addressInput: {
     marginBottom: 16,
@@ -777,26 +884,35 @@ const styles = StyleSheet.create({
   },
   vehicleTypeCard: {
     width: '48%',
-    padding: 16,
+    padding: 18,
     borderWidth: 2,
     borderColor: '#FF6B00',
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: 16,
+    marginBottom: 14,
     alignItems: 'center',
     backgroundColor: '#FFF',
+    shadowColor: '#FF6B00',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    transform: [{ scale: 1 }],
   },
   selectedCard: {
     backgroundColor: '#FF6B00',
+    borderColor: '#FF6B00',
+    shadowOpacity: 0.18,
+    transform: [{ scale: 1.04 }],
   },
   vehicleTypeLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: 'bold',
     color: '#333',
-    marginTop: 8,
+    marginTop: 10,
     textAlign: 'center',
   },
   selectedText: {
     color: '#FFF',
+    fontWeight: 'bold',
   },
   vehicleTypePrice: {
     fontSize: 12,
@@ -903,15 +1019,61 @@ const styles = StyleSheet.create({
   textArea: {
     marginBottom: 16,
   },
+  priceSuggestionsContainer: {
+    marginBottom: 16,
+  },
+  priceSuggestionsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  priceSuggestionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  priceSuggestionCard: {
+    width: '48%',
+    padding: 12,
+    borderWidth: 2,
+    borderColor: '#FF6B00',
+    borderRadius: 8,
+    marginBottom: 8,
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+  },
+  selectedPriceCard: {
+    backgroundColor: '#FF6B00',
+  },
+  priceSuggestionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  selectedPriceText: {
+    color: '#FFF',
+  },
+  priceSuggestionValue: {
+    fontSize: 12,
+    color: '#666',
+  },
   priceContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    backgroundColor: '#FFF6ED',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#FFD6B0',
+    shadowColor: '#FF6B00',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
   priceLabel: {
     fontSize: 16,
@@ -919,20 +1081,76 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   priceValue: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#FF6B00',
   },
+  manualPriceContainer: {
+    marginBottom: 16,
+  },
+  manualPriceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  manualPriceInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#FFF',
+    marginBottom: 8,
+  },
+  priceNote: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+  },
   submitButton: {
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: '#FF6B00',
+    marginTop: 10,
+    shadowColor: '#FF6B00',
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   submitButtonContent: {
-    height: 50,
+    height: 56,
   },
   submitButtonLabel: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  priceBreakdownContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+  },
+  priceBreakdownTitle: {
+    fontSize: 14,
     fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  priceBreakdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  priceBreakdownLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  priceBreakdownValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
   },
 })
 

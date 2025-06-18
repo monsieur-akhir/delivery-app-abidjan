@@ -294,10 +294,67 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
+  },
+  modal: {
+    minWidth: 300,
+    maxWidth: '90%',
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 28,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  icon: {
+    fontSize: 36,
+    color: '#FFF',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  button: {
+    width: '100%',
+    backgroundColor: '#FF6B00',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#FF6B00',
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   backdrop: {
     position: 'absolute',
@@ -357,39 +414,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-    textAlign: 'center',
-    marginBottom: 8,
-    lineHeight: 28,
-  },
-  message: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
   },
   multiButtonContainer: {
     gap: 12,
-  },
-  button: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  multiButton: {
-    flex: 1,
   },
   primaryButton: {
     backgroundColor: '#3B82F6',
@@ -402,11 +432,6 @@ const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: '#F9FAFB',
     borderColor: '#D1D5DB',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
   },
   primaryButtonText: {
     color: '#FFFFFF',
