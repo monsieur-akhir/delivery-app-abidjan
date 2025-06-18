@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react'
+
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   View,
   Text,
@@ -8,12 +9,17 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Switch
+  Switch,
+  Animated,
+  Dimensions,
+  Alert,
+  Haptic,
+  LayoutAnimation
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Button, Card, Chip, Divider } from 'react-native-paper'
+import { Button, Card, Chip, Divider, ProgressBar, Surface } from 'react-native-paper'
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import AddressAutocomplete from '../../components/AddressAutocomplete'
@@ -42,15 +48,43 @@ import type {
 
 import { formatPrice, formatDistance } from "../../utils/formatters"
 
-// Helper function to extract commune from address
+const { width } = Dimensions.get('window')
+const COLORS = {
+  primary: '#FF6B00',
+  primaryLight: '#FF8A33',
+  primaryDark: '#E55A00',
+  secondary: '#FFF6ED',
+  background: '#F8F9FA',
+  white: '#FFFFFF',
+  text: '#1A1A1A',
+  textSecondary: '#6C757D',
+  border: '#E9ECEF',
+  success: '#28A745',
+  warning: '#FFC107',
+  error: '#DC3545',
+  shadow: 'rgba(0, 0, 0, 0.1)'
+}
+
+// Animation configurations
+const animationConfig = {
+  duration: 300,
+  create: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+  update: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+  },
+}
+
+// Helper functions
 const extractCommune = (address: string): string => {
   const parts = address.split(',')
   return parts.length > 1 ? parts[parts.length - 1].trim() : 'Unknown'
 }
 
-// Helper function to calculate distance between two coordinates
 const calculateDistance = (coord1: { latitude: number; longitude: number }, coord2: { latitude: number; longitude: number }): number => {
-  const R = 6371 // Earth's radius in km
+  const R = 6371
   const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180
   const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -58,6 +92,12 @@ const calculateDistance = (coord1: { latitude: number; longitude: number }, coor
     Math.sin(dLon/2) * Math.sin(dLon/2)
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
   return R * c
+}
+
+const hapticFeedback = () => {
+  if (Platform.OS === 'ios') {
+    Haptic.impactAsync(Haptic.ImpactFeedbackStyle.Medium)
+  }
 }
 
 interface DeliveryCreateRequest {
@@ -92,24 +132,235 @@ interface RouteParams {
 
 type CreateDeliveryScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateDelivery'>
 
-// Fonction utilitaire pour choisir la bonne icône
-function getIcon(icon: string, color: string, size: number): React.ReactElement {
-  switch (icon) {
-    case 'package':
-      return <Feather name="package" size={size} color={color} />
-    case 'alert-triangle':
-      return <Feather name="alert-triangle" size={size} color={color} />
-    case 'coffee':
-      return <MaterialCommunityIcons name="coffee" size={size} color={color} />
-    case 'file-text':
-      return <Feather name="file-text" size={size} color={color} />
-    case 'motorcycle':
-      return <MaterialCommunityIcons name="motorbike" size={size} color={color} />
-    case 'clock':
-      return <Feather name="clock" size={size} color={color} />
-    default:
-      return <Ionicons name={icon as any} size={size} color={color} />
+// Enhanced Icon Component
+const EnhancedIcon: React.FC<{
+  name: string
+  size?: number
+  color?: string
+  animated?: boolean
+}> = ({ name, size = 24, color = COLORS.primary, animated = false }) => {
+  const animatedValue = useRef(new Animated.Value(1)).current
+
+  useEffect(() => {
+    if (animated) {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(animatedValue, {
+            toValue: 1.2,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(animatedValue, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      )
+      animation.start()
+      return () => animation.stop()
+    }
+  }, [animated, animatedValue])
+
+  const getIcon = (iconName: string) => {
+    const iconMap: { [key: string]: JSX.Element } = {
+      'package': <Feather name="package" size={size} color={color} />,
+      'alert-triangle': <Feather name="alert-triangle" size={size} color={color} />,
+      'coffee': <MaterialCommunityIcons name="coffee" size={size} color={color} />,
+      'file-text': <Feather name="file-text" size={size} color={color} />,
+      'motorcycle': <MaterialCommunityIcons name="motorbike" size={size} color={color} />,
+      'car': <Feather name="truck" size={size} color={color} />,
+      'bus': <Ionicons name="bus" size={size} color={color} />,
+      'clock': <Feather name="clock" size={size} color={color} />,
+      'flash': <Ionicons name="flash" size={size} color={color} />,
+      'thermometer': <Feather name="thermometer" size={size} color={color} />,
+      'default': <Ionicons name={iconName as any} size={size} color={color} />
+    }
+    return iconMap[iconName] || iconMap['default']
   }
+
+  if (animated) {
+    return (
+      <Animated.View style={{ transform: [{ scale: animatedValue }] }}>
+        {getIcon(name)}
+      </Animated.View>
+    )
+  }
+
+  return getIcon(name)
+}
+
+// Progress Step Component
+const ProgressStep: React.FC<{
+  currentStep: number
+  totalSteps: number
+}> = ({ currentStep, totalSteps }) => {
+  return (
+    <View style={styles.progressContainer}>
+      <ProgressBar
+        progress={currentStep / totalSteps}
+        color={COLORS.primary}
+        style={styles.progressBar}
+      />
+      <Text style={styles.progressText}>
+        Étape {currentStep} sur {totalSteps}
+      </Text>
+    </View>
+  )
+}
+
+// Enhanced Selection Card
+const SelectionCard: React.FC<{
+  title: string
+  subtitle?: string
+  icon: string
+  selected: boolean
+  onPress: () => void
+  disabled?: boolean
+  price?: string
+  animated?: boolean
+}> = ({ title, subtitle, icon, selected, onPress, disabled = false, price, animated = false }) => {
+  const animatedValue = useRef(new Animated.Value(0)).current
+  const scaleValue = useRef(new Animated.Value(1)).current
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: selected ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start()
+  }, [selected, animatedValue])
+
+  const handlePress = () => {
+    if (disabled) return
+    
+    hapticFeedback()
+    
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleValue, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start()
+    
+    onPress()
+  }
+
+  const backgroundColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [COLORS.white, COLORS.primary],
+  })
+
+  const textColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [COLORS.text, COLORS.white],
+  })
+
+  return (
+    <TouchableOpacity
+      onPress={handlePress}
+      disabled={disabled}
+      activeOpacity={0.8}
+      style={[styles.selectionCardContainer, disabled && styles.disabledCard]}
+    >
+      <Animated.View
+        style={[
+          styles.selectionCard,
+          {
+            backgroundColor,
+            transform: [{ scale: scaleValue }],
+          },
+        ]}
+      >
+        <EnhancedIcon
+          name={icon}
+          size={32}
+          color={selected ? COLORS.white : COLORS.primary}
+          animated={animated && selected}
+        />
+        <Animated.Text style={[styles.selectionCardTitle, { color: textColor }]}>
+          {title}
+        </Animated.Text>
+        {subtitle && (
+          <Animated.Text style={[styles.selectionCardSubtitle, { color: textColor }]}>
+            {subtitle}
+          </Animated.Text>
+        )}
+        {price && (
+          <Animated.Text style={[styles.selectionCardPrice, { color: textColor }]}>
+            {price}
+          </Animated.Text>
+        )}
+      </Animated.View>
+    </TouchableOpacity>
+  )
+}
+
+// Enhanced Input Component
+const EnhancedInput: React.FC<{
+  label: string
+  value: string
+  onChangeText: (text: string) => void
+  placeholder: string
+  multiline?: boolean
+  numberOfLines?: number
+  keyboardType?: 'default' | 'numeric' | 'phone-pad'
+  error?: string
+  required?: boolean
+}> = ({ label, value, onChangeText, placeholder, multiline = false, numberOfLines = 1, keyboardType = 'default', error, required = false }) => {
+  const [focused, setFocused] = useState(false)
+  const animatedValue = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: focused || value ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start()
+  }, [focused, value, animatedValue])
+
+  const labelStyle = {
+    fontSize: animatedValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [16, 12],
+    }),
+    color: animatedValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [COLORS.textSecondary, focused ? COLORS.primary : COLORS.text],
+    }),
+  }
+
+  return (
+    <View style={styles.inputContainer}>
+      <Animated.Text style={[styles.inputLabel, labelStyle]}>
+        {label} {required && <Text style={styles.required}>*</Text>}
+      </Animated.Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={focused ? '' : placeholder}
+        placeholderTextColor={COLORS.textSecondary}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
+        keyboardType={keyboardType}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={[
+          styles.input,
+          multiline && styles.textArea,
+          focused && styles.inputFocused,
+          error && styles.inputError,
+        ]}
+      />
+      {error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  )
 }
 
 const CreateDeliveryScreen: React.FC = () => {
@@ -133,68 +384,83 @@ const CreateDeliveryScreen: React.FC = () => {
     hideToast
   } = useAlert()
 
-  const mapRef = useRef<any>(null)
+  // Enhanced state management
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 4
 
-  // Form states
-  const [packageType, setPackageType] = useState<string>('small')
-  const [selectedPackageType, setSelectedPackageType] = useState<string>('small')
-  const [packageSize, setPackageSize] = useState<string>('small')
-  const [packageWeight, setPackageWeight] = useState<string>('')
-  const [isFragile, setIsFragile] = useState<boolean>(false)
-  const [pickupAddress, setPickupAddress] = useState<string>('')
-  const [deliveryAddress, setDeliveryAddress] = useState<string>('')
+  // Form states with validation
+  const [formData, setFormData] = useState({
+    packageType: 'small',
+    packageSize: 'small',
+    packageWeight: '',
+    isFragile: false,
+    pickupAddress: '',
+    deliveryAddress: '',
+    proposedPrice: '',
+    packageDescription: '',
+    specialInstructions: '',
+    recipientName: '',
+    recipientPhone: '',
+    selectedVehicleType: '',
+    selectedSpeed: '',
+    selectedExtras: [] as string[],
+  })
+
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({})
   const [pickupLocation, setPickupLocation] = useState<Address | null>(null)
   const [deliveryLocation, setDeliveryLocation] = useState<Address | null>(null)
-  const [proposedPrice, setProposedPrice] = useState<string>('')
-  const [packageDescription, setPackageDescription] = useState<string>('')
-  const [specialInstructions, setSpecialInstructions] = useState<string>('')
-  const [weather, setWeather] = useState<any>(null)
-  const [recipientName, setRecipientName] = useState<string>('')
-  const [recipientPhone, setRecipientPhone] = useState<string>('')
-  const [isUrgent, setIsUrgent] = useState<boolean>(false)
-
-  // UI states
-  const [loading, setLoading] = useState<boolean>(false)
-  const [showMap, setShowMap] = useState<boolean>(false)
+  const [loading, setLoading] = useState(false)
+  const [deliveryOptions, setDeliveryOptions] = useState<any>(null)
+  const [totalPrice, setTotalPrice] = useState(0)
   const [weatherData, setWeatherData] = useState<Weather | null>(null)
   const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null)
-  const [recommendedVehicle, setRecommendedVehicle] = useState<{
-    type: VehicleType
-    name: string
-    reason: string
-    priceMultiplier: number
-  } | null>(null)
 
-  // Nouveaux états pour les options dynamiques
-  const [deliveryOptions, setDeliveryOptions] = useState<any>(null)
-  const [selectedVehicleType, setSelectedVehicleType] = useState<string>('')
-  const [selectedSpeed, setSelectedSpeed] = useState<string>('')
-  const [selectedExtras, setSelectedExtras] = useState<string[]>([])
-  const [totalPrice, setTotalPrice] = useState<number>(0)
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(50)).current
 
-  const packageTypes = [
-    { key: 'small', label: 'Petit colis', icon: 'package' },
-    { key: 'medium', label: 'Colis moyen', icon: 'package' },
-    { key: 'large', label: 'Gros colis', icon: 'package' },
-    { key: 'fragile', label: 'Fragile', icon: 'alert-triangle' },
-    { key: 'food', label: 'Nourriture', icon: 'coffee' },
-    { key: 'documents', label: 'Documents', icon: 'file-text' }
-  ]
+  // Package types configuration
+  const packageTypes = useMemo(() => [
+    { key: 'small', label: 'Petit colis', icon: 'package', description: 'Jusqu\'à 5kg' },
+    { key: 'medium', label: 'Colis moyen', icon: 'package', description: '5-15kg' },
+    { key: 'large', label: 'Gros colis', icon: 'package', description: '15-30kg' },
+    { key: 'fragile', label: 'Fragile', icon: 'alert-triangle', description: 'Manipulation délicate' },
+    { key: 'food', label: 'Nourriture', icon: 'coffee', description: 'Produits alimentaires' },
+    { key: 'documents', label: 'Documents', icon: 'file-text', description: 'Papiers importants' }
+  ], [])
 
+  // Initialize animations
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [fadeAnim, slideAnim])
+
+  // Handle route params
   useEffect(() => {
     if (params?.searchQuery) {
-      setPickupAddress(params.searchQuery)
+      setFormData(prev => ({ ...prev, pickupAddress: params.searchQuery }))
     }
   }, [params])
 
+  // Load delivery options
   useEffect(() => {
-    // Charger dynamiquement les options depuis le backend
     const fetchOptions = async () => {
       try {
         const response = await api.get('/api/deliveries/options')
         setDeliveryOptions(response.data)
-      } catch (e) {
-        // fallback statique si besoin
+      } catch (error) {
+        console.warn('Erreur lors du chargement des options:', error)
+        // Fallback data
         setDeliveryOptions({
           vehicle_types: [
             { type: 'moto', label: 'Livraison à moto', min_price: 500, icon: 'motorcycle' },
@@ -216,22 +482,40 @@ const CreateDeliveryScreen: React.FC = () => {
     fetchOptions()
   }, [])
 
+  // Calculate price when dependencies change
   useEffect(() => {
     if (pickupLocation && deliveryLocation) {
       calculatePriceEstimate()
       fetchWeatherData()
     }
-  }, [pickupLocation, deliveryLocation, selectedVehicleType, selectedSpeed, selectedExtras])
+  }, [pickupLocation, deliveryLocation, formData.selectedVehicleType, formData.selectedSpeed, formData.selectedExtras])
 
-  // Mettre à jour le prix proposé quand les options changent
-  useEffect(() => {
-    if (deliveryOptions && selectedVehicleType) {
-      const selectedVehicle = deliveryOptions.vehicle_types?.find((v: any) => v.type === selectedVehicleType)
-      if (selectedVehicle) {
-        setProposedPrice(selectedVehicle.min_price.toString())
-      }
+  // Form validation
+  const validateForm = useCallback((): boolean => {
+    const errors: {[key: string]: string} = {}
+
+    if (!formData.pickupAddress.trim()) {
+      errors.pickupAddress = 'Adresse de ramassage requise'
     }
-  }, [selectedVehicleType, deliveryOptions])
+    if (!formData.deliveryAddress.trim()) {
+      errors.deliveryAddress = 'Adresse de livraison requise'
+    }
+    if (!pickupLocation) {
+      errors.pickupLocation = 'Veuillez sélectionner une adresse de ramassage valide'
+    }
+    if (!deliveryLocation) {
+      errors.deliveryLocation = 'Veuillez sélectionner une adresse de livraison valide'
+    }
+    if (!formData.recipientName.trim()) {
+      errors.recipientName = 'Nom du destinataire requis'
+    }
+    if (!formData.proposedPrice || parseFloat(formData.proposedPrice) <= 0) {
+      errors.proposedPrice = 'Prix valide requis'
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }, [formData, pickupLocation, deliveryLocation])
 
   const calculatePriceEstimate = async () => {
     if (!pickupLocation || !deliveryLocation) return
@@ -243,13 +527,13 @@ const CreateDeliveryScreen: React.FC = () => {
       )
 
       const estimateData = {
-        pickup_address: pickupAddress,
-        delivery_address: deliveryAddress,
+        pickup_address: formData.pickupAddress,
+        delivery_address: formData.deliveryAddress,
         pickup_lat: pickupLocation.latitude,
         pickup_lng: pickupLocation.longitude,
         delivery_lat: deliveryLocation.latitude,
         delivery_lng: deliveryLocation.longitude,
-        package_type: packageType,
+        package_type: formData.packageType,
         proposed_price: 0,
         recipient_name: '',
         distance: distance
@@ -260,25 +544,23 @@ const CreateDeliveryScreen: React.FC = () => {
       if (estimate) {
         let basePrice = estimate.estimated_price
         
-        // Ajouter les coûts des options sélectionnées
-        if (selectedVehicleType && deliveryOptions?.vehicle_types) {
-          const vehicle = deliveryOptions.vehicle_types.find((v: any) => v.type === selectedVehicleType)
+        if (formData.selectedVehicleType && deliveryOptions?.vehicle_types) {
+          const vehicle = deliveryOptions.vehicle_types.find((v: any) => v.type === formData.selectedVehicleType)
           if (vehicle) {
             basePrice = Math.max(basePrice, vehicle.min_price)
           }
         }
 
-        if (selectedSpeed && deliveryOptions?.delivery_speeds) {
-          const speed = deliveryOptions.delivery_speeds.find((s: any) => s.key === selectedSpeed)
+        if (formData.selectedSpeed && deliveryOptions?.delivery_speeds) {
+          const speed = deliveryOptions.delivery_speeds.find((s: any) => s.key === formData.selectedSpeed)
           if (speed) {
             basePrice = Math.max(basePrice, speed.min_price)
           }
         }
 
-        // Ajouter le coût des extras
         let extrasCost = 0
-        if (selectedExtras.length > 0 && deliveryOptions?.extras) {
-          selectedExtras.forEach(extraKey => {
+        if (formData.selectedExtras.length > 0 && deliveryOptions?.extras) {
+          formData.selectedExtras.forEach(extraKey => {
             const extra = deliveryOptions.extras.find((e: any) => e.key === extraKey)
             if (extra) {
               extrasCost += extra.price
@@ -289,32 +571,7 @@ const CreateDeliveryScreen: React.FC = () => {
         const finalPrice = basePrice + extrasCost
         setTotalPrice(finalPrice)
         setRecommendedPrice(finalPrice)
-        setProposedPrice(finalPrice.toString())
-      }
-
-      // Recommendation de véhicule
-      const vehicleData = {
-        pickup_lat: pickupLocation.latitude,
-        pickup_lng: pickupLocation.longitude,
-        delivery_lat: deliveryLocation.latitude,
-        delivery_lng: deliveryLocation.longitude,
-        package_type: selectedPackageType,
-        package_size: packageSize,
-        package_weight: parseFloat(packageWeight) || 1,
-        is_fragile: isFragile,
-        distance: distance
-      }
-
-      try {
-        const recommendation = await DeliveryService.getVehicleRecommendation(vehicleData)
-        setRecommendedVehicle({
-          type: recommendation.recommended_vehicle as VehicleType,
-          name: getVehicleName(recommendation.recommended_vehicle as VehicleType),
-          reason: recommendation.reason,
-          priceMultiplier: 1.0 // Valeur par défaut
-        })
-      } catch (error) {
-        console.warn('Erreur lors de la recommandation de véhicule:', error)
+        setFormData(prev => ({ ...prev, proposedPrice: finalPrice.toString() }))
       }
     } catch (error) {
       console.error('Erreur lors du calcul du prix:', error)
@@ -336,52 +593,72 @@ const CreateDeliveryScreen: React.FC = () => {
     }
   }
 
-  const getVehicleName = (type: VehicleType): string => {
-    switch (type) {
-      case 'motorcycle':
-        return 'Moto'
-      case 'car':
-        return 'Voiture'
-      case 'van':
-        return 'Camionnette'
-      case 'truck':
-        return 'Camion'
-      default:
-        return 'Véhicule'
+  const updateFormData = useCallback((key: string, value: any) => {
+    setFormData(prev => ({ ...prev, [key]: value }))
+    // Clear error when user starts typing
+    if (formErrors[key]) {
+      setFormErrors(prev => ({ ...prev, [key]: '' }))
     }
-  }
+  }, [formErrors])
+
+  const handleAddressSelect = useCallback((address: any, type: 'pickup' | 'delivery') => {
+    LayoutAnimation.configureNext(animationConfig)
+    
+    if (type === 'pickup') {
+      setPickupLocation(address)
+      updateFormData('pickupAddress', address.description)
+    } else {
+      setDeliveryLocation(address)
+      updateFormData('deliveryAddress', address.description)
+    }
+  }, [updateFormData])
+
+  const toggleExtra = useCallback((extraKey: string) => {
+    hapticFeedback()
+    
+    setFormData(prev => ({
+      ...prev,
+      selectedExtras: prev.selectedExtras.includes(extraKey)
+        ? prev.selectedExtras.filter(k => k !== extraKey)
+        : [...prev.selectedExtras, extraKey]
+    }))
+  }, [])
 
   const handleSubmit = async () => {
-    if (!validateForm()) return
+    if (!validateForm()) {
+      showErrorAlert('Formulaire incomplet', 'Veuillez corriger les erreurs avant de continuer')
+      return
+    }
 
     setLoading(true)
+    hapticFeedback()
 
-    const payload = {
-      pickup_address: pickupAddress,
-      pickup_commune: extractCommune(pickupAddress),
+    const payload: DeliveryCreateRequest = {
+      pickup_address: formData.pickupAddress,
+      pickup_commune: extractCommune(formData.pickupAddress),
       pickup_lat: pickupLocation!.latitude,
       pickup_lng: pickupLocation!.longitude,
-      delivery_address: deliveryAddress,
-      delivery_commune: extractCommune(deliveryAddress),
+      delivery_address: formData.deliveryAddress,
+      delivery_commune: extractCommune(formData.deliveryAddress),
       delivery_lat: deliveryLocation!.latitude,
       delivery_lng: deliveryLocation!.longitude,
-      package_type: packageType,
-      package_description: packageDescription,
-      package_size: packageSize,
-      package_weight: parseFloat(packageWeight) || 1,
-      is_fragile: isFragile,
-      proposed_price: parseFloat(proposedPrice),
-      recipient_name: recipientName,
-      recipient_phone: recipientPhone,
-      special_instructions: specialInstructions,
+      package_type: formData.packageType,
+      package_description: formData.packageDescription,
+      package_size: formData.packageSize,
+      package_weight: parseFloat(formData.packageWeight) || 1,
+      is_fragile: formData.isFragile,
+      proposed_price: parseFloat(formData.proposedPrice),
+      recipient_name: formData.recipientName,
+      recipient_phone: formData.recipientPhone,
+      special_instructions: formData.specialInstructions,
       distance: calculateDistance(
         { latitude: pickupLocation!.latitude, longitude: pickupLocation!.longitude },
         { latitude: deliveryLocation!.latitude, longitude: deliveryLocation!.longitude }
       ),
       weather_conditions: weatherData?.current?.condition || 'clear',
-      vehicle_type: selectedVehicleType,
-      delivery_speed: selectedSpeed,
-      extras: selectedExtras
+      vehicle_type: formData.selectedVehicleType,
+      delivery_speed: formData.selectedSpeed,
+      extras: formData.selectedExtras
     }
 
     try {
@@ -407,69 +684,232 @@ const CreateDeliveryScreen: React.FC = () => {
     }
   }
 
-  const validateForm = (): boolean => {
-    if (!pickupAddress.trim()) {
-      showErrorAlert('Erreur', 'Veuillez saisir l\'adresse de ramassage')
-      return false
-    }
-    if (!deliveryAddress.trim()) {
-      showErrorAlert('Erreur', 'Veuillez saisir l\'adresse de livraison')
-      return false
-    }
-    if (!pickupLocation) {
-      showErrorAlert('Erreur', 'Veuillez sélectionner une adresse de ramassage valide')
-      return false
-    }
-    if (!deliveryLocation) {
-      showErrorAlert('Erreur', 'Veuillez sélectionner une adresse de livraison valide')
-      return false
-    }
-    if (!recipientName.trim()) {
-      showErrorAlert('Erreur', 'Veuillez saisir le nom du destinataire')
-      return false
-    }
-    if (!proposedPrice || parseFloat(proposedPrice) <= 0) {
-      showErrorAlert('Erreur', 'Veuillez saisir un prix valide')
-      return false
-    }
-    return true
-  }
-
-  const handleAddressSelect = (address: any, type: 'pickup' | 'delivery') => {
-    if (type === 'pickup') {
-      setPickupLocation(address)
-      setPickupAddress(address.description)
-    } else {
-      setDeliveryLocation(address)
-      setDeliveryAddress(address.description)
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      LayoutAnimation.configureNext(animationConfig)
+      setCurrentStep(prev => prev + 1)
     }
   }
 
-  const getAddressSuggestions = async (query: string) => {
-    // Méthode non implémentée dans ce projet
-    console.log('getAddressSuggestions not implemented')
-    return []
+  const prevStep = () => {
+    if (currentStep > 1) {
+      LayoutAnimation.configureNext(animationConfig)
+      setCurrentStep(prev => prev - 1)
+    }
   }
 
-  const getPopularPlaces = async (category?: string) => {
-    // Méthode non implémentée dans ce projet
-    console.log('getPopularPlaces not implemented')
-    return []
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return renderAddressStep()
+      case 2:
+        return renderDeliveryOptionsStep()
+      case 3:
+        return renderPackageInfoStep()
+      case 4:
+        return renderRecipientStep()
+      default:
+        return renderAddressStep()
+    }
   }
 
-  const performSmartMatching = async () => {
-    // Méthode non implémentée dans ce projet
-    console.log('smartMatching not implemented')
-    return null
-  }
+  const renderAddressStep = () => (
+    <Card style={styles.stepCard}>
+      <Text style={styles.stepTitle}>Adresses</Text>
+      
+      <AddressAutocomplete
+        label="Adresse de ramassage"
+        value={formData.pickupAddress}
+        onChangeText={(text) => updateFormData('pickupAddress', text)}
+        onAddressSelect={(address) => handleAddressSelect(address, 'pickup')}
+        placeholder="Où récupérer le colis ?"
+        style={styles.addressInput}
+        error={formErrors.pickupAddress}
+      />
 
-  const toggleExtra = (extraKey: string) => {
-    setSelectedExtras(prev => 
-      prev.includes(extraKey) 
-        ? prev.filter(k => k !== extraKey) 
-        : [...prev, extraKey]
-    )
-  }
+      <AddressAutocomplete
+        label="Adresse de livraison"
+        value={formData.deliveryAddress}
+        onChangeText={(text) => updateFormData('deliveryAddress', text)}
+        onAddressSelect={(address) => handleAddressSelect(address, 'delivery')}
+        placeholder="Où livrer le colis ?"
+        style={styles.addressInput}
+        error={formErrors.deliveryAddress}
+      />
+    </Card>
+  )
+
+  const renderDeliveryOptionsStep = () => (
+    <>
+      {deliveryOptions?.vehicle_types && (
+        <Card style={styles.stepCard}>
+          <Text style={styles.stepTitle}>Types de livraison</Text>
+          <View style={styles.selectionGrid}>
+            {deliveryOptions.vehicle_types.map((option: any, index: number) => (
+              <SelectionCard
+                key={option.type}
+                title={option.label}
+                subtitle={`${formatPrice(option.min_price)}`}
+                icon={option.icon}
+                selected={formData.selectedVehicleType === option.type}
+                onPress={() => updateFormData('selectedVehicleType', option.type)}
+                animated={index === 0}
+              />
+            ))}
+          </View>
+        </Card>
+      )}
+
+      {deliveryOptions?.delivery_speeds && (
+        <Card style={styles.stepCard}>
+          <Text style={styles.stepTitle}>Délais</Text>
+          <View style={styles.selectionRow}>
+            {deliveryOptions.delivery_speeds.map((speed: any) => (
+              <SelectionCard
+                key={speed.key}
+                title={speed.label}
+                subtitle={speed.delay}
+                icon={speed.icon}
+                selected={formData.selectedSpeed === speed.key}
+                onPress={() => updateFormData('selectedSpeed', speed.key)}
+              />
+            ))}
+          </View>
+        </Card>
+      )}
+
+      {deliveryOptions?.extras && (
+        <Card style={styles.stepCard}>
+          <Text style={styles.stepTitle}>Options supplémentaires</Text>
+          {deliveryOptions.extras.map((extra: any) => (
+            <View key={extra.key} style={styles.extraOption}>
+              <TouchableOpacity
+                style={styles.extraOptionContent}
+                onPress={() => toggleExtra(extra.key)}
+              >
+                <View style={styles.extraInfo}>
+                  <EnhancedIcon name={extra.icon} size={20} />
+                  <Text style={styles.extraLabel}>{extra.label}</Text>
+                  {extra.price > 0 && (
+                    <Text style={styles.extraPrice}>+{formatPrice(extra.price)}</Text>
+                  )}
+                </View>
+                <Switch
+                  value={formData.selectedExtras.includes(extra.key)}
+                  onValueChange={() => toggleExtra(extra.key)}
+                  trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                  thumbColor={COLORS.white}
+                />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </Card>
+      )}
+    </>
+  )
+
+  const renderPackageInfoStep = () => (
+    <Card style={styles.stepCard}>
+      <Text style={styles.stepTitle}>Informations du colis</Text>
+      
+      <View style={styles.selectionGrid}>
+        {packageTypes.map((type) => (
+          <SelectionCard
+            key={type.key}
+            title={type.label}
+            subtitle={type.description}
+            icon={type.icon}
+            selected={formData.packageType === type.key}
+            onPress={() => updateFormData('packageType', type.key)}
+          />
+        ))}
+      </View>
+
+      <View style={styles.inputRow}>
+        <EnhancedInput
+          label="Poids"
+          value={formData.packageWeight}
+          onChangeText={(text) => updateFormData('packageWeight', text)}
+          placeholder="Poids en kg"
+          keyboardType="numeric"
+        />
+        
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>Fragile</Text>
+          <Switch
+            value={formData.isFragile}
+            onValueChange={(value) => updateFormData('isFragile', value)}
+            trackColor={{ false: COLORS.border, true: COLORS.primary }}
+            thumbColor={COLORS.white}
+          />
+        </View>
+      </View>
+
+      <EnhancedInput
+        label="Description du colis"
+        value={formData.packageDescription}
+        onChangeText={(text) => updateFormData('packageDescription', text)}
+        placeholder="Décrivez le contenu du colis"
+        multiline
+        numberOfLines={3}
+      />
+    </Card>
+  )
+
+  const renderRecipientStep = () => (
+    <>
+      <Card style={styles.stepCard}>
+        <Text style={styles.stepTitle}>Destinataire</Text>
+        
+        <EnhancedInput
+          label="Nom du destinataire"
+          value={formData.recipientName}
+          onChangeText={(text) => updateFormData('recipientName', text)}
+          placeholder="Nom complet"
+          error={formErrors.recipientName}
+          required
+        />
+
+        <EnhancedInput
+          label="Téléphone"
+          value={formData.recipientPhone}
+          onChangeText={(text) => updateFormData('recipientPhone', text)}
+          placeholder="Numéro de téléphone (optionnel)"
+          keyboardType="phone-pad"
+        />
+
+        <EnhancedInput
+          label="Instructions spéciales"
+          value={formData.specialInstructions}
+          onChangeText={(text) => updateFormData('specialInstructions', text)}
+          placeholder="Instructions pour le livreur"
+          multiline
+          numberOfLines={3}
+        />
+      </Card>
+
+      <Card style={styles.stepCard}>
+        <Text style={styles.stepTitle}>Prix et validation</Text>
+        
+        {totalPrice > 0 && (
+          <Surface style={styles.priceContainer}>
+            <Text style={styles.priceLabel}>Prix total estimé</Text>
+            <Text style={styles.priceValue}>{formatPrice(totalPrice)}</Text>
+          </Surface>
+        )}
+
+        <EnhancedInput
+          label="Prix que vous proposez"
+          value={formData.proposedPrice}
+          onChangeText={(text) => updateFormData('proposedPrice', text)}
+          placeholder="Montant en FCFA"
+          keyboardType="numeric"
+          error={formErrors.proposedPrice}
+          required
+        />
+      </Card>
+    </>
+  )
 
   return (
     <SafeAreaView style={styles.container}>
@@ -477,317 +917,43 @@ const CreateDeliveryScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
-        <ScrollView 
-          style={styles.scrollView}
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
+            <Feather name="arrow-left" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Nouvelle livraison</Text>
+          <View style={styles.headerButton} />
+        </View>
+
+        {/* Progress */}
+        <ProgressStep currentStep={currentStep} totalSteps={totalSteps} />
+
+        {/* Content */}
+        <Animated.ScrollView
+          style={[styles.scrollView, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Feather name="arrow-left" size={24} color="#333" />
+          {renderStep()}
+        </Animated.ScrollView>
+
+        {/* Navigation Buttons */}
+        <View style={styles.navigationContainer}>
+          {currentStep > 1 && (
+            <TouchableOpacity onPress={prevStep} style={styles.navButton}>
+              <Text style={styles.navButtonText}>Précédent</Text>
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Nouvelle livraison</Text>
-            <View style={styles.placeholder} />
-          </View>
-
-          {/* Adresses */}
-          <Card style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Adresses</Text>
-            
-            <AddressAutocomplete
-              label="Adresse de ramassage"
-              value={pickupAddress}
-              onChangeText={setPickupAddress}
-              onAddressSelect={(address) => handleAddressSelect(address, 'pickup')}
-              placeholder="Où récupérer le colis ?"
-              style={styles.addressInput}
-            />
-
-            <AddressAutocomplete
-              label="Adresse de livraison"
-              value={deliveryAddress}
-              onChangeText={setDeliveryAddress}
-              onAddressSelect={(address) => handleAddressSelect(address, 'delivery')}
-              placeholder="Où livrer le colis ?"
-              style={styles.addressInput}
-            />
-          </Card>
-
-          {/* Types de livraison dynamiques */}
-          {deliveryOptions?.vehicle_types && (
-            <Card style={styles.formCard}>
-              <Text style={styles.sectionTitle}>Types de livraison</Text>
-              <View style={styles.vehicleTypesContainer}>
-                {deliveryOptions.vehicle_types.map((option: any) => (
-                  <TouchableOpacity
-                    key={option.type}
-                    style={[
-                      styles.vehicleTypeCard,
-                      selectedVehicleType === option.type && styles.selectedCard
-                    ]}
-                    onPress={() => setSelectedVehicleType(option.type)}
-                  >
-                    {getIcon(option.icon, selectedVehicleType === option.type ? '#FFF' : '#FF6B00', 32)}
-                    <Text style={[
-                      styles.vehicleTypeLabel,
-                      selectedVehicleType === option.type && styles.selectedText
-                    ]}>
-                      {option.label}
-                    </Text>
-                    <Text style={[
-                      styles.vehicleTypePrice,
-                      selectedVehicleType === option.type && styles.selectedText
-                    ]}>
-                      {option.min_price} FCFA
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </Card>
           )}
-
-          {/* Délais dynamiques */}
-          {deliveryOptions?.delivery_speeds && (
-            <Card style={styles.formCard}>
-              <Text style={styles.sectionTitle}>Délais</Text>
-              <View style={styles.speedsContainer}>
-                {deliveryOptions.delivery_speeds.map((speed: any) => (
-                  <TouchableOpacity
-                    key={speed.key}
-                    style={[
-                      styles.speedCard,
-                      selectedSpeed === speed.key && styles.selectedCard
-                    ]}
-                    onPress={() => setSelectedSpeed(speed.key)}
-                  >
-                    {getIcon(speed.icon, selectedSpeed === speed.key ? '#FFF' : '#FF6B00', 20)}
-                    <Text style={[
-                      styles.speedLabel,
-                      selectedSpeed === speed.key && styles.selectedText
-                    ]}>
-                      {speed.label}
-                    </Text>
-                    <Text style={[
-                      styles.speedDelay,
-                      selectedSpeed === speed.key && styles.selectedText
-                    ]}>
-                      {speed.delay}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </Card>
-          )}
-
-          {/* Options supplémentaires dynamiques */}
-          {deliveryOptions?.extras && (
-            <Card style={styles.formCard}>
-              <Text style={styles.sectionTitle}>Options supplémentaires</Text>
-              {deliveryOptions.extras.map((extra: any) => (
-                <View key={extra.key} style={styles.extraOptionContainer}>
-                  <TouchableOpacity
-                    style={styles.extraOption}
-                    onPress={() => toggleExtra(extra.key)}
-                  >
-                    <View style={styles.extraOptionContent}>
-                      {getIcon(extra.icon, selectedExtras.includes(extra.key) ? '#FF6B00' : '#666', 20)}
-                      <Text style={styles.extraOptionLabel}>{extra.label}</Text>
-                      {extra.price > 0 && (
-                        <Text style={styles.extraOptionPrice}>+{extra.price} FCFA</Text>
-                      )}
-                    </View>
-                    <Switch
-                      value={selectedExtras.includes(extra.key)}
-                      onValueChange={() => toggleExtra(extra.key)}
-                      trackColor={{ false: '#E0E0E0', true: '#FF6B00' }}
-                      thumbColor={selectedExtras.includes(extra.key) ? '#FFF' : '#FFF'}
-                    />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </Card>
-          )}
-
-          {/* Informations du colis */}
-          <Card style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Informations du colis</Text>
-            
-            <View style={styles.packageTypesContainer}>
-              {packageTypes.map((type) => (
-                <TouchableOpacity
-                  key={type.key}
-                  style={[
-                    styles.packageTypeCard,
-                    packageType === type.key && styles.selectedCard
-                  ]}
-                  onPress={() => setPackageType(type.key)}
-                >
-                  {getIcon(type.icon, packageType === type.key ? '#FFF' : '#666', 20)}
-                  <Text style={[
-                    styles.packageTypeLabel,
-                    packageType === type.key && styles.selectedText
-                  ]}>
-                    {type.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.inputRow}>
-              <TextInput
-                placeholder="Poids (kg)"
-                value={packageWeight}
-                onChangeText={setPackageWeight}
-                keyboardType="numeric"
-                style={styles.halfInput}
-              />
-              <View style={styles.fragileContainer}>
-                <Text style={styles.fragileLabel}>Fragile</Text>
-                <Switch
-                  value={isFragile}
-                  onValueChange={setIsFragile}
-                  trackColor={{ false: '#E0E0E0', true: '#FF6B00' }}
-                  thumbColor={isFragile ? '#FFF' : '#FFF'}
-                />
-              </View>
-            </View>
-
-            <TextInput
-              placeholder="Description du colis"
-              value={packageDescription}
-              onChangeText={setPackageDescription}
-              multiline
-              numberOfLines={3}
-              style={styles.textArea}
-            />
-          </Card>
-
-          {/* Informations du destinataire */}
-          <Card style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Destinataire</Text>
-            
-            <TextInput
-              placeholder="Nom du destinataire"
-              value={recipientName}
-              onChangeText={setRecipientName}
-              style={styles.input}
-            />
-
-            <TextInput
-              placeholder="Téléphone (optionnel)"
-              value={recipientPhone}
-              onChangeText={setRecipientPhone}
-              keyboardType="phone-pad"
-              style={styles.input}
-            />
-
-            <TextInput
-              placeholder="Instructions spéciales"
-              value={specialInstructions}
-              onChangeText={setSpecialInstructions}
-              multiline
-              numberOfLines={3}
-              style={styles.textArea}
-            />
-          </Card>
-
-          {/* Prix et validation */}
-          <Card style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Prix et paiement</Text>
-            
-            {/* Suggestions de prix */}
-            <View style={styles.priceSuggestionsContainer}>
-              <Text style={styles.priceSuggestionsTitle}>Suggestions de prix</Text>
-              <View style={styles.priceSuggestionsGrid}>
-                {deliveryOptions?.vehicle_types?.map((vehicle: any) => (
-                  <TouchableOpacity
-                    key={vehicle.type}
-                    style={[
-                      styles.priceSuggestionCard,
-                      parseFloat(proposedPrice) === vehicle.min_price && styles.selectedPriceCard
-                    ]}
-                    onPress={() => setProposedPrice(vehicle.min_price.toString())}
-                  >
-                    <Text style={[
-                      styles.priceSuggestionLabel,
-                      parseFloat(proposedPrice) === vehicle.min_price && styles.selectedPriceText
-                    ]}>
-                      {vehicle.label}
-                    </Text>
-                    <Text style={[
-                      styles.priceSuggestionValue,
-                      parseFloat(proposedPrice) === vehicle.min_price && styles.selectedPriceText
-                    ]}>
-                      {formatPrice(vehicle.min_price)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Prix estimé total */}
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceLabel}>Prix total estimé</Text>
-              <Text style={styles.priceValue}>{formatPrice(totalPrice)}</Text>
-            </View>
-
-            {/* Détails du calcul du prix */}
-            {totalPrice > 0 && (
-              <View style={styles.priceBreakdownContainer}>
-                <Text style={styles.priceBreakdownTitle}>Détails du calcul</Text>
-                <View style={styles.priceBreakdownItem}>
-                  <Text style={styles.priceBreakdownLabel}>Prix de base</Text>
-                  <Text style={styles.priceBreakdownValue}>
-                    {formatPrice(estimate?.estimated_price || 0)}
-                  </Text>
-                </View>
-                {selectedVehicleType && deliveryOptions?.vehicle_types && (
-                  <View style={styles.priceBreakdownItem}>
-                    <Text style={styles.priceBreakdownLabel}>Type de véhicule</Text>
-                    <Text style={styles.priceBreakdownValue}>
-                      {deliveryOptions.vehicle_types.find((v: any) => v.type === selectedVehicleType)?.label}
-                    </Text>
-                  </View>
-                )}
-                {selectedSpeed && deliveryOptions?.delivery_speeds && (
-                  <View style={styles.priceBreakdownItem}>
-                    <Text style={styles.priceBreakdownLabel}>Délai de livraison</Text>
-                    <Text style={styles.priceBreakdownValue}>
-                      {deliveryOptions.delivery_speeds.find((s: any) => s.key === selectedSpeed)?.label}
-                    </Text>
-                  </View>
-                )}
-                {selectedExtras.length > 0 && deliveryOptions?.extras && (
-                  <View style={styles.priceBreakdownItem}>
-                    <Text style={styles.priceBreakdownLabel}>Options supplémentaires</Text>
-                    <Text style={styles.priceBreakdownValue}>
-                      +{formatPrice(selectedExtras.reduce((total, extraKey) => {
-                        const extra = deliveryOptions.extras.find((e: any) => e.key === extraKey)
-                        return total + (extra?.price || 0)
-                      }, 0))}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Saisie manuelle du prix */}
-            <View style={styles.manualPriceContainer}>
-              <Text style={styles.manualPriceLabel}>Prix que vous proposez</Text>
-              <TextInput
-                placeholder="Saisissez votre prix (FCFA)"
-                value={proposedPrice}
-                onChangeText={setProposedPrice}
-                keyboardType="numeric"
-                style={styles.manualPriceInput}
-              />
-              <Text style={styles.priceNote}>
-                💡 Vous pouvez ajuster le prix selon vos besoins
-              </Text>
-            </View>
-
+          
+          <View style={styles.navButtonSpacer} />
+          
+          {currentStep < totalSteps ? (
+            <TouchableOpacity onPress={nextStep} style={[styles.navButton, styles.navButtonPrimary]}>
+              <Text style={[styles.navButtonText, styles.navButtonTextPrimary]}>Suivant</Text>
+            </TouchableOpacity>
+          ) : (
             <Button
               mode="contained"
               onPress={handleSubmit}
@@ -797,10 +963,10 @@ const CreateDeliveryScreen: React.FC = () => {
               contentStyle={styles.submitButtonContent}
               labelStyle={styles.submitButtonLabel}
             >
-              Valider la méthode de livraison
+              Créer la livraison
             </Button>
-          </Card>
-        </ScrollView>
+          )}
+        </View>
       </KeyboardAvoidingView>
 
       {/* Alerts et Toasts */}
@@ -825,332 +991,268 @@ const CreateDeliveryScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F7F7',
+    backgroundColor: COLORS.background,
   },
   keyboardAvoidingView: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFF',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.border,
+    elevation: 2,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  backButton: {
-    padding: 8,
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text,
+    letterSpacing: -0.5,
   },
-  placeholder: {
-    width: 40,
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: COLORS.white,
   },
-  formCard: {
-    margin: 16,
+  progressBar: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.border,
+  },
+  progressText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  stepCard: {
+    margin: 20,
     marginBottom: 16,
-    borderRadius: 20,
-    elevation: 4,
-    shadowColor: '#000',
+    borderRadius: 16,
+    elevation: 3,
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    backgroundColor: '#FFF',
+    backgroundColor: COLORS.white,
+    padding: 20,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 18,
+  stepTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 20,
+    letterSpacing: -0.5,
   },
   addressInput: {
     marginBottom: 16,
   },
-  vehicleTypesContainer: {
+  selectionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: 12,
   },
-  vehicleTypeCard: {
-    width: '48%',
-    padding: 18,
-    borderWidth: 2,
-    borderColor: '#FF6B00',
-    borderRadius: 16,
-    marginBottom: 14,
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    shadowColor: '#FF6B00',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    transform: [{ scale: 1 }],
-  },
-  selectedCard: {
-    backgroundColor: '#FF6B00',
-    borderColor: '#FF6B00',
-    shadowOpacity: 0.18,
-    transform: [{ scale: 1.04 }],
-  },
-  vehicleTypeLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  selectedText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  vehicleTypePrice: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  speedsContainer: {
+  selectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 8,
   },
-  speedCard: {
-    flex: 1,
-    padding: 12,
+  selectionCardContainer: {
+    width: '48%',
+  },
+  selectionCard: {
+    padding: 20,
+    borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#FF6B00',
-    borderRadius: 8,
-    marginHorizontal: 4,
+    borderColor: COLORS.primary,
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    minHeight: 120,
   },
-  speedLabel: {
-    fontSize: 12,
+  disabledCard: {
+    opacity: 0.5,
+  },
+  selectionCardTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    marginTop: 12,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  selectionCardSubtitle: {
+    fontSize: 12,
     marginTop: 4,
     textAlign: 'center',
+    opacity: 0.8,
   },
-  speedDelay: {
-    fontSize: 10,
-    color: '#666',
-    marginTop: 2,
-  },
-  extraOptionContainer: {
-    marginBottom: 12,
+  selectionCardPrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 6,
+    textAlign: 'center',
   },
   extraOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
+    marginBottom: 16,
   },
   extraOptionContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  extraInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  extraOptionLabel: {
-    fontSize: 14,
-    color: '#333',
+  extraLabel: {
+    fontSize: 16,
+    color: COLORS.text,
     marginLeft: 12,
     flex: 1,
   },
-  extraOptionPrice: {
-    fontSize: 12,
-    color: '#FF6B00',
+  extraPrice: {
+    fontSize: 14,
+    color: COLORS.primary,
     fontWeight: '600',
+    marginRight: 12,
   },
-  packageTypesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+  inputContainer: {
+    marginBottom: 20,
   },
-  packageTypeCard: {
-    width: '48%',
-    padding: 12,
-    borderWidth: 2,
-    borderColor: '#FF6B00',
-    borderRadius: 8,
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
     marginBottom: 8,
-    alignItems: 'center',
-    backgroundColor: '#FFF',
+    color: COLORS.text,
   },
-  packageTypeLabel: {
+  required: {
+    color: COLORS.error,
+  },
+  input: {
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
+    backgroundColor: COLORS.white,
+    color: COLORS.text,
+  },
+  inputFocused: {
+    borderColor: COLORS.primary,
+  },
+  inputError: {
+    borderColor: COLORS.error,
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  errorText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
+    color: COLORS.error,
     marginTop: 4,
-    textAlign: 'center',
   },
   inputRow: {
     flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 16,
+  },
+  switchContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    paddingBottom: 16,
   },
-  halfInput: {
-    flex: 1,
-    marginRight: 16,
-  },
-  fragileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minWidth: 100,
-  },
-  fragileLabel: {
-    fontSize: 14,
-    color: '#333',
-    marginRight: 8,
-  },
-  input: {
-    marginBottom: 16,
-  },
-  textArea: {
-    marginBottom: 16,
-  },
-  priceSuggestionsContainer: {
-    marginBottom: 16,
-  },
-  priceSuggestionsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  priceSuggestionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  priceSuggestionCard: {
-    width: '48%',
-    padding: 12,
-    borderWidth: 2,
-    borderColor: '#FF6B00',
-    borderRadius: 8,
-    marginBottom: 8,
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-  },
-  selectedPriceCard: {
-    backgroundColor: '#FF6B00',
-  },
-  priceSuggestionLabel: {
+  switchLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  selectedPriceText: {
-    color: '#FFF',
-  },
-  priceSuggestionValue: {
-    fontSize: 12,
-    color: '#666',
+    color: COLORS.text,
+    marginBottom: 8,
   },
   priceContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: COLORS.secondary,
     marginBottom: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    backgroundColor: '#FFF6ED',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#FFD6B0',
-    shadowColor: '#FF6B00',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
   },
   priceLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.text,
   },
   priceValue: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FF6B00',
+    fontWeight: '700',
+    color: COLORS.primary,
   },
-  manualPriceContainer: {
-    marginBottom: 16,
+  navigationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
-  manualPriceLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  manualPriceInput: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+  navButton: {
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#FFF',
-    marginBottom: 8,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: COLORS.border,
   },
-  priceNote: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
+  navButtonPrimary: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  navButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  navButtonTextPrimary: {
+    color: COLORS.white,
+  },
+  navButtonSpacer: {
+    flex: 1,
   },
   submitButton: {
-    borderRadius: 16,
-    backgroundColor: '#FF6B00',
-    marginTop: 10,
-    shadowColor: '#FF6B00',
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    borderRadius: 25,
+    backgroundColor: COLORS.primary,
+    flex: 1,
   },
   submitButtonContent: {
-    height: 56,
+    height: 50,
   },
   submitButtonLabel: {
     fontSize: 18,
-    fontWeight: 'bold',
-  },
-  priceBreakdownContainer: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  priceBreakdownTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  priceBreakdownItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  priceBreakdownLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  priceBreakdownValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
 })
 
