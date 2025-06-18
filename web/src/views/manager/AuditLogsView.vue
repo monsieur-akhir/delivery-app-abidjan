@@ -161,13 +161,15 @@
 
 <script>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-
+import { useRouter } from 'vue-router'
 import { fetchAuditLogs, fetchUsers } from '@/api/manager'
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters'
 
 export default {
   name: 'AuditLogsView',
   setup() {
+    const router = useRouter()
+
     // État
     const auditLogs = ref([])
     const users = ref([])

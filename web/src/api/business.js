@@ -1,6 +1,7 @@
 import authApi from './auth'
 import { handleApiError } from '../services/errorHandler'
-
+import axios from 'axios'
+import { BASE_URL, getAuthHeaders } from '../config'
 /**
  * @typedef {Object} Delivery
  * @property {number} id - ID de la livraison
@@ -438,9 +439,15 @@ export const uploadBusinessLogo = async file => {
  */
 export async function fetchBusinesses(params = {}) {
   try {
-    const response = await authApi.get('/businesses', { params })
+    const response = await axios.get(`${BASE_URL}/businesses`, {
+      params,
+      headers: getAuthHeaders(),
+    })
     return response.data
   } catch (error) {
-    return handleApiError(error)
+    console.error('Erreur lors de la récupération des entreprises:', error)
+    throw error
   }
 }
+
+// Using imported handleApiError from auth.js

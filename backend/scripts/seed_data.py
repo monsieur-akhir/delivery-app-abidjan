@@ -1,9 +1,9 @@
-
 import sys
 import os
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import List, Dict, Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -20,6 +20,7 @@ from app.models.promotions import Promotion, PromotionType, PromotionStatus, Pro
 from app.models.zones import Zone, ZoneType, ZonePricingRule
 from app.models.support import SupportTicket, TicketStatus, TicketPriority
 from app.core.security import get_password_hash
+from app.models.market import BusinessProfile
 
 # Données réalistes pour Abidjan
 COMMUNES_ABIDJAN = [
@@ -55,94 +56,106 @@ CATEGORIES_MARCHANDISES = [
     "Documents", "Colis fragile", "Mobilier", "Cosmétiques"
 ]
 
-def create_admin_user(db: Session):
-    """Créer un utilisateur administrateur"""
-    print("Création de l'administrateur...")
-    
+def create_admin_user(db: Session) -> User:
+    """Crée un utilisateur administrateur."""
     admin = User(
-        phone="+2250700000000",
-        email="admin@livreco.ci",
+        phone="+2250700000003",
+        email="admin-deleverie-test@yopmail.com",
         hashed_password=get_password_hash("admin123"),
         full_name="Administrateur Principal",
-        role=UserRole.manager,
-        status=UserStatus.active,
-        kyc_status=KYCStatus.verified,
-        commune="Plateau"
+        role="manager",
+        status="active",
+        commune="Plateau",
+        kyc_status="verified"
     )
     db.add(admin)
     db.commit()
-    
-    # Créer le portefeuille admin
-    admin_wallet = Wallet(
-        user_id=admin.id,
-        balance=100000.0,
-        bonus_balance=5000.0
-    )
-    db.add(admin_wallet)
-    db.commit()
-    
-    print(f"✅ Administrateur créé: {admin.phone}")
+    db.refresh(admin)
     return admin
 
-def create_test_users(db: Session):
-    """Créer des utilisateurs de test"""
-    print("Création des utilisateurs...")
+def create_test_users(db: Session, num_users: int = 10) -> List[User]:
+    """Crée des utilisateurs de test."""
     users = []
-    
-    # Créer 15 clients
-    for i in range(15):
-        commune = random.choice(COMMUNES_ABIDJAN)
-        client = User(
-            phone=f"+22507{str(i+1).zfill(6)}01",
-            email=f"client{i+1}@test.ci",
-            hashed_password=get_password_hash("client123"),
-            full_name=random.choice(NOMS_IVOIRIENS),
-            role=UserRole.client,
-            status=UserStatus.active,
-            kyc_status=random.choice([KYCStatus.verified, KYCStatus.pending]),
-            commune=commune["name"],
-            created_at=datetime.now() - timedelta(days=random.randint(1, 180))
+    for i in range(num_users):
+        user = User(
+            phone=f"+22507000000{i+2:02d}",
+            email=f"user{i+1}@yopmail.com",
+            hashed_password=get_password_hash("password123"),
+            full_name=f"Utilisateur Test {i+1}",
+            role="user",
+            status="active",
+            commune=random.choice(COMMUNES_ABIDJAN),
+            kyc_status="verified"
         )
-        db.add(client)
-        users.append(client)
-    
-    # Créer 10 coursiers
-    for i in range(10):
-        commune = random.choice(COMMUNES_ABIDJAN)
+        db.add(user)
+        users.append(user)
+    db.commit()
+    for user in users:
+        db.refresh(user)
+    return users
+
+def create_test_couriers(db: Session, num_couriers: int = 5) -> List[User]:
+    """Crée des livreurs de test."""
+    couriers = []
+    for i in range(num_couriers):
         courier = User(
-            phone=f"+22507{str(i+1).zfill(6)}02",
-            email=f"coursier{i+1}@test.ci",
-            hashed_password=get_password_hash("coursier123"),
-            full_name=random.choice(NOMS_IVOIRIENS),
-            role=UserRole.courier,
-            status=UserStatus.active,
-            kyc_status=KYCStatus.verified,
-            commune=commune["name"],
-            created_at=datetime.now() - timedelta(days=random.randint(1, 120))
+            phone=f"+2250700000{i+12:02d}",
+            email=f"courier{i+1}@yopmail.com",
+            hashed_password=get_password_hash("password123"),
+            full_name=f"Livreur Test {i+1}",
+            role="courier",
+            status="active",
+            commune=random.choice(COMMUNES_ABIDJAN),
+            kyc_status="verified"
         )
         db.add(courier)
-        users.append(courier)
-    
-    # Créer 5 entreprises
-    for i in range(5):
-        commune = random.choice(COMMUNES_ABIDJAN)
-        business_info = random.choice(ENTREPRISES_ABIDJAN)
-        business = User(
-            phone=f"+22507{str(i+1).zfill(6)}03",
-            email=f"business{i+1}@test.ci",
-            hashed_password=get_password_hash("business123"),
-            full_name=business_info["name"],
-            role=UserRole.business,
-            status=UserStatus.active,
-            kyc_status=KYCStatus.verified,
-            commune=commune["name"]
-        )
-        db.add(business)
-        users.append(business)
-    
+        couriers.append(courier)
     db.commit()
-    print(f"✅ {len(users)} utilisateurs créés")
-    return users
+    for courier in couriers:
+        db.refresh(courier)
+    return couriers
+
+def create_test_managers(db: Session, num_managers: int = 3) -> List[User]:
+    """Crée des managers de test."""
+    managers = []
+    for i in range(num_managers):
+        manager = User(
+            phone=f"+2250770000{i+17:02d}",
+            email=f"manager{i+1}@yopmail.com",
+            hashed_password=get_password_hash("password123"),
+            full_name=f"Manager Test {i+1}",
+            role="manager",
+            status="active",
+            commune=random.choice(COMMUNES_ABIDJAN),
+            kyc_status="verified"
+        )
+        db.add(manager)
+        managers.append(manager)
+    db.commit()
+    for manager in managers:
+        db.refresh(manager)
+    return managers
+
+def create_test_markets(db: Session, num_markets: int = 5) -> List[BusinessProfile]:
+    """Crée des marchés de test."""
+    markets = []
+    for i in range(num_markets):
+        market = BusinessProfile(
+            name=f"Marché Test {i+1}",
+            description=f"Description du marché test {i+1}",
+            address=f"Adresse du marché {i+1}",
+            phone=f"+2250770000{i+20:02d}",
+            email=f"market{i+1}@yopmail.com",
+            commune=random.choice(COMMUNES_ABIDJAN),
+            status="active",
+            owner_id=random.choice([u.id for u in db.query(User).filter(User.role == "manager").all()])
+        )
+        db.add(market)
+        markets.append(market)
+    db.commit()
+    for market in markets:
+        db.refresh(market)
+    return markets
 
 def create_profiles(db: Session, users: list):
     """Créer les profils spécialisés"""

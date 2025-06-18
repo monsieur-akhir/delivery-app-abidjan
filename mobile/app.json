@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Livraison Abidjan",
-    "slug": "livraison-abidjan",
+    "slug": "livraison-abidjan-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#FF6B00"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.livraisonabidjan.app",
@@ -70,8 +72,19 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "ed599d90-9299-428b-bea9-ffa3a1e47a93"
       }
-    }
+    },
+    "developmentClient": {
+      "silentLaunch": true
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "http://192.168.1.4:8081"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "owner": "monsieur-akhir"
   }
 }

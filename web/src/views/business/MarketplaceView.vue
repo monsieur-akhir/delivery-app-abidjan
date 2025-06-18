@@ -100,19 +100,17 @@
       <button
         :disabled="currentPage === 1"
         @click="changePage(currentPage - 1)"
-        class="btn btn-outline"
+        class="btn btn-icon"
       >
         <i class="fas fa-chevron-left"></i>
-        Précédent
       </button>
       <span>Page {{ currentPage }} sur {{ totalPages }}</span>
       <button
         :disabled="currentPage === totalPages"
         @click="changePage(currentPage + 1)"
-        class="btn btn-outline"
+        class="btn btn-icon"
       >
         <i class="fas fa-chevron-right"></i>
-        Suivant
       </button>
     </div>
 
@@ -249,8 +247,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { formatPrice, truncateText } from '@/utils/formatters'
-import { exportToCSV } from '@/utils/export-utils'
-import { getProducts, updateProduct, deleteProduct } from '@/api/market'
+import { exportToCSV, exportToExcel } from '@/utils/export-utils'
+import { getProducts, createProduct, updateProduct, deleteProduct } from '@/api/market'
 import { uploadImage } from '@/api/storage'
 import { categories } from '@/config'
 
@@ -261,7 +259,7 @@ export default {
 
     // État
     const products = ref([])
-    const loading = ref(true)
+    const loading = ref(false)
     const error = ref(null)
     const currentPage = ref(1)
     const itemsPerPage = ref(12)
@@ -330,6 +328,12 @@ export default {
       })
 
       return result
+    })
+
+    const paginatedProducts = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value
+      const end = start + itemsPerPage.value
+      return filteredProducts.value.slice(start, end)
     })
 
     const totalPages = computed(() => {
@@ -413,6 +417,42 @@ export default {
       // Réinitialiser l'input file
       const fileInput = document.getElementById('productImage')
       if (fileInput) fileInput.value = ''
+    }
+
+    const createProduct = async () => {
+      isSubmitting.value = true
+
+      try {
+        // Télécharger l'image si présente
+        let imageUrl = ''
+        if (productForm.image_file) {
+          const formData = new FormData()
+          formData.append('file', productForm.image_file)
+          const uploadResponse = await uploadImage(formData)
+          imageUrl = uploadResponse.data.url
+        }
+
+        // Créer le produit
+        const productData = {
+          name: productForm.name,
+          category: productForm.category,
+          price: parseFloat(productForm.price),
+          description: productForm.description,
+          image_url: imageUrl,
+          is_available: productForm.is_available,
+        }
+
+        await createProduct(productData)
+
+        showToast('Succès', 'Produit ajouté avec succès', 'success')
+        closeModals()
+        fetchProducts()
+      } catch (err) {
+        console.error('Erreur lors de la création du produit:', err)
+        showToast('Erreur', "Impossible d'ajouter le produit. Veuillez réessayer.", 'error')
+      } finally {
+        isSubmitting.value = false
+      }
     }
 
     const editProduct = product => {
@@ -561,6 +601,7 @@ export default {
       closeModals,
       handleImageUpload,
       removeImage,
+      createProduct,
       editProduct,
       updateProduct: updateProductData,
       toggleAvailability,

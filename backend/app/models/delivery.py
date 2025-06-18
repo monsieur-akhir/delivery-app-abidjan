@@ -92,6 +92,7 @@ class Delivery(Base):
     courier = relationship("User", back_populates="courier_deliveries", foreign_keys=[courier_id])
     bids = relationship("Bid", back_populates="delivery")
     tracking_points = relationship("TrackingPoint", back_populates="delivery")
+    complaints = relationship("Complaint", back_populates="delivery")
 
     # Nouveau champ pour le véhicule utilisé
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=True)

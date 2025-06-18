@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Livraison Abidjan"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8080", "http://localhost:5173"]
+    CORS_ORIGINS: List[str] = ["*"]
     
     # Paramètres de paiement
     CINETPAY_API_KEY: str = ""
