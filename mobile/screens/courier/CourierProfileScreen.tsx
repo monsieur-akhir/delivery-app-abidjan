@@ -12,8 +12,7 @@ import StarRating from "../../components/StarRating"
 import ErrorView from "../../components/ErrorView"
 import type { CourierStats } from "../../types/models"
 import type { CourierStatsScreenNavigationProp } from "../../types/navigation"
-import axios from "axios"
-import { API_ENDPOINTS, API_URL } from "../../config/environment"
+import { fetchCourierStats } from "../../services/api"
 
 const CourierProfileScreen: React.FC = () => {
   const { t } = useTranslation()
@@ -31,8 +30,8 @@ const CourierProfileScreen: React.FC = () => {
   const fetchCourierStats = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}${API_ENDPOINTS.courier.stats}`)
-      setStats(response.data)
+      const response = await fetchCourierStats()
+      setStats(response)
       setError(null)
     } catch (err) {
       setError(t("errors.failedToLoadStats"))
@@ -61,7 +60,7 @@ const CourierProfileScreen: React.FC = () => {
           size={100}
           source={user?.profile_image ? { uri: user.profile_image } : require("../../assets/default-avatar.png")}
         />
-        <Text style={styles.name}>{`${user?.name}`}</Text>
+        <Text style={styles.name}>{user?.name || ""}</Text>
         <View style={styles.ratingContainer}>
           <StarRating rating={stats.average_rating || 0} size={20} />
           <Text style={styles.ratingText}>{(stats.average_rating || 0).toFixed(1)}</Text>

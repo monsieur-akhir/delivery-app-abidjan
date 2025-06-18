@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform
 } from 'react-native'
@@ -19,10 +18,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import AddressAutocomplete from '../../components/AddressAutocomplete'
 import MapView from '../../components/MapView'
 import WeatherInfo from '../../components/WeatherInfo'
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNetwork } from '../../contexts/NetworkContext'
 import { useDelivery } from '../../hooks/useDelivery'
 import { useUser } from '../../hooks/useUser'
+import { useAlert } from '../../hooks/useAlert'
 import DeliveryService from '../../services/DeliveryService'
 
 import type {
@@ -92,6 +94,18 @@ const CreateDeliveryScreen: React.FC = () => {
   const { isConnected, addPendingUpload } = useNetwork()
   const { createDelivery, getPriceEstimate, estimate } = useDelivery()
   const { } = useUser()
+  const { 
+    alertVisible,
+    alertConfig,
+    toastVisible,
+    toastConfig,
+    showErrorAlert, 
+    showSuccessAlert, 
+    showInfoAlert, 
+    showConfirmationAlert,
+    hideAlert,
+    hideToast
+  } = useAlert()
 
   const mapRef = useRef<any>(null)
 
@@ -236,7 +250,7 @@ const CreateDeliveryScreen: React.FC = () => {
     if (!validateForm()) return
 
     if (!pickupLocation || !deliveryLocation) {
-      Alert.alert('Erreur', 'Veuillez sélectionner les adresses de retrait et de livraison')
+      showErrorAlert('Erreur', 'Veuillez sélectionner les adresses de retrait et de livraison')
       return
     }
 
@@ -266,19 +280,16 @@ const CreateDeliveryScreen: React.FC = () => {
           data: deliveryData,
           retries: 0
         })
-        Alert.alert('Mode hors ligne', 'Votre livraison sera créée dès que la connexion sera rétablie')
+        showInfoAlert('Mode hors ligne', 'Votre livraison sera créée dès que la connexion sera rétablie')
         navigation.goBack()
         return
       }
 
       const result = await createDelivery(deliveryData)
-      Alert.alert('Succès', 'Votre livraison a été créée avec succès!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('TrackDelivery', { deliveryId: result.id })
-        }
-      ])    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.')
+      showSuccessAlert('Succès', 'Votre livraison a été créée avec succès!')
+      navigation.navigate('TrackDelivery', { deliveryId: result.id })
+    } catch (error) {
+      showErrorAlert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }
@@ -286,17 +297,17 @@ const CreateDeliveryScreen: React.FC = () => {
 
   const validateForm = (): boolean => {
     if (!pickupAddress || !deliveryAddress) {
-      Alert.alert('Erreur', 'Veuillez renseigner les adresses de retrait et de livraison')
+      showErrorAlert('Erreur', 'Veuillez renseigner les adresses de retrait et de livraison')
       return false
     }
 
     if (!packageType) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un type de colis')
+      showErrorAlert('Erreur', 'Veuillez sélectionner un type de colis')
       return false
     }
 
     if (!proposedPrice || parseFloat(proposedPrice) <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un prix valide')
+      showErrorAlert('Erreur', 'Veuillez saisir un prix valide')
       return false
     }
 
@@ -521,6 +532,31 @@ const CreateDeliveryScreen: React.FC = () => {
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Composants d'alerte modernes */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        type={alertConfig.type}
+        icon={alertConfig.icon}
+        onDismiss={hideAlert}
+        showCloseButton={alertConfig.showCloseButton}
+        autoDismiss={alertConfig.autoDismiss}
+        dismissAfter={alertConfig.dismissAfter}
+      />
+
+      <CustomToast
+        visible={toastVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        onDismiss={hideToast}
+        action={toastConfig.action}
+        icon={toastConfig.icon}
+        title={toastConfig.title}
+      />
     </SafeAreaView>
   )
 }

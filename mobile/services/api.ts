@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 import axios from "axios"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { API_URL } from "../config/environment"
+import { API_URL, API_ENDPOINTS } from "../config/environment"
 import type { Delivery, User, DeliveryStatus, Weather, VehicleType, CargoCategory } from "../types/models"
 
 // API Response Interfaces
@@ -971,7 +971,7 @@ export const updateCourierStatus = async (
 }
 
 export const fetchCourierStats = async (period = "month") => {
-  const response = await api.get(`/api/courier/stats?period=${period}`)
+  const response = await api.get(`${API_ENDPOINTS.courier.stats}?period=${period}`)
   return response.data
 }
 

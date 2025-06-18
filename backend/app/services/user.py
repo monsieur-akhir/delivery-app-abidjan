@@ -1,6 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
+import os
 
 from ..models.user import User, UserRole, UserStatus, KYCStatus, BusinessProfile, CourierProfile
 from ..schemas.user import UserCreate, UserUpdate, UserStatusUpdate, KYCUpdate, BusinessProfileCreate, BusinessProfileUpdate, CourierProfileCreate, CourierProfileUpdate
@@ -72,10 +73,10 @@ def update_user_kyc(db: Session, user_id: int, kyc_data: KYCUpdate) -> User:
 def upload_profile_picture(db: Session, user_id: int, file: UploadFile) -> User:
     user = get_user(db, user_id)
     
-    # Logique pour sauvegarder l'image et obtenir l'URL
-    # Ceci est un exemple simplifié, dans une application réelle,
-    # vous utiliseriez un service de stockage comme AWS S3
-    file_location = f"uploads/profile_pictures/{user_id}_{file.filename}"
+    # Créer le dossier s'il n'existe pas
+    upload_dir = "uploads/profile_pictures"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_location = f"{upload_dir}/{user_id}_{file.filename}"
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
     
@@ -87,8 +88,10 @@ def upload_profile_picture(db: Session, user_id: int, file: UploadFile) -> User:
 def upload_kyc_document(db: Session, user_id: int, file: UploadFile) -> User:
     user = get_user(db, user_id)
     
-    # Logique pour sauvegarder le document et obtenir l'URL
-    file_location = f"uploads/kyc_documents/{user_id}_{file.filename}"
+    # Créer le dossier s'il n'existe pas
+    upload_dir = "uploads/kyc_documents"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_location = f"{upload_dir}/{user_id}_{file.filename}"
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
     

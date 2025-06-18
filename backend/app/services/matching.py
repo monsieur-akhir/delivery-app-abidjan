@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from typing import List, Optional, Dict, Any
@@ -132,3 +131,64 @@ class MatchingService:
             return best_courier['courier_id']
             
         return None
+
+    @staticmethod
+    async def smart_matching(db: Session, delivery_request: dict, client_id: int) -> Dict[str, Any]:
+        """
+        Matching intelligent des coursiers pour une livraison
+        """
+        try:
+            # Extraire les paramètres de la requête
+            pickup_address = delivery_request.get("pickup_address")
+            delivery_address = delivery_request.get("delivery_address")
+            package_weight = delivery_request.get("package_weight", 1.0)
+            is_fragile = delivery_request.get("is_fragile", False)
+            is_express = delivery_request.get("is_express", False)
+            
+            # Simuler une livraison pour le matching
+            from ..models.delivery import Delivery
+            temp_delivery = Delivery(
+                client_id=client_id,
+                pickup_address=pickup_address,
+                delivery_address=delivery_address,
+                package_weight=package_weight,
+                is_fragile=is_fragile,
+                status=DeliveryStatus.pending
+            )
+            
+            # Trouver les meilleurs coursiers
+            max_distance = delivery_request.get("max_distance", 10.0)
+            limit = delivery_request.get("limit", 5)
+            
+            best_couriers = MatchingService.find_best_couriers(
+                db, temp_delivery, max_distance, limit
+            )
+            
+            # Calculer le prix estimé
+            estimated_price = 1500  # Prix de base
+            if is_express:
+                estimated_price *= 1.5
+            if is_fragile:
+                estimated_price *= 1.2
+            if package_weight > 5:
+                estimated_price += (package_weight - 5) * 100
+            
+            return {
+                "success": True,
+                "estimated_price": estimated_price,
+                "suggested_couriers": best_couriers,
+                "delivery_request": delivery_request,
+                "matching_criteria": {
+                    "max_distance_km": max_distance,
+                    "package_weight": package_weight,
+                    "is_fragile": is_fragile,
+                    "is_express": is_express
+                }
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Erreur lors du matching intelligent"
+            }

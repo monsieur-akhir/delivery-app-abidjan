@@ -62,7 +62,7 @@ class DeliveryService {
 
   static async createDelivery(deliveryData: DeliveryCreateRequest): Promise<Delivery> {
     try {
-      const response = await api.post('/deliveries', deliveryData)
+      const response = await api.post('/api/v1/deliveries/', deliveryData)
       return response.data
     } catch (error) {
       console.error('Erreur lors de la création de la livraison:', error)
@@ -119,7 +119,7 @@ class DeliveryService {
 
   static async getDeliveryDetails(id: string): Promise<Delivery> {
     try {
-      const response = await api.get(`/deliveries/${id}`)
+      const response = await api.get(`/api/v1/deliveries/${id}`)
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération des détails:', error)
@@ -220,7 +220,7 @@ class DeliveryService {
   // Méthodes pour les estimations
   static async getPriceEstimate(estimateData: PriceEstimateData): Promise<number> {
     try {
-      const response = await api.post('/deliveries/estimate-price', estimateData)
+      const response = await api.post('/api/v1/deliveries/estimate-price/', estimateData)
       return response.data.estimated_price
     } catch (error) {
       console.error('Erreur lors de l\'estimation du prix:', error)
@@ -375,12 +375,13 @@ class DeliveryService {
     }
   }
 
-  static async clientConfirmDelivery(deliveryId: number, rating: number, comment?: string): Promise<void> {
+  static async clientConfirmDelivery(deliveryId: number, rating: number, comment: string): Promise<any> {
     try {
-      await api.post(`/deliveries/${deliveryId}/confirm`, {
+      const response = await api.post(`/api/deliveries/${deliveryId}/client-confirm`, {
         rating,
         comment
       })
+      return response.data
     } catch (error) {
       console.error('Erreur lors de la confirmation de livraison:', error)
       throw error
@@ -481,6 +482,64 @@ class DeliveryService {
       await api.post('/deliveries/assign-courier', data)
     } catch (error) {
       console.error('Erreur lors de l\'assignation du coursier:', error)
+      throw error
+    }
+  }
+
+  static async getDeliveryHistory() {
+    const res = await api.get('/api/v1/deliveries/')
+    return res.data
+  }
+
+  static async getWeatherData(lat, lng) {
+    const res = await api.get(`/api/weather?lat=${lat}&lng=${lng}`)
+    return res.data
+  }
+
+  /**
+   * Matching intelligent des coursiers pour une livraison
+   */
+  async smartMatching(deliveryRequest: any): Promise<any> {
+    try {
+      const response = await api.post('/api/deliveries/smart-matching', deliveryRequest)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors du matching intelligent:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtenir des suggestions d'adresses
+   */
+  async getAddressSuggestions(query: string, lat?: number, lng?: number, limit: number = 8): Promise<any> {
+    try {
+      const params = new URLSearchParams({ query, limit: limit.toString() })
+      if (lat !== undefined) params.append('user_lat', lat.toString())
+      if (lng !== undefined) params.append('user_lng', lng.toString())
+      
+      const response = await api.get(`/api/deliveries/address-autocomplete?${params}`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de l\'autocomplétion d\'adresses:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtenir les lieux populaires d'Abidjan
+   */
+  async getPopularPlaces(lat?: number, lng?: number, category?: string, limit: number = 10): Promise<any> {
+    try {
+      const params = new URLSearchParams({ limit: limit.toString() })
+      if (lat !== undefined) params.append('user_lat', lat.toString())
+      if (lng !== undefined) params.append('user_lng', lng.toString())
+      if (category) params.append('category', category)
+      
+      const response = await api.get(`/api/deliveries/popular-places?${params}`)
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des lieux populaires:', error)
       throw error
     }
   }

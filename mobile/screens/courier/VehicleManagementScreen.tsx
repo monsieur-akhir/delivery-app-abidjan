@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react"
 import { View, StyleSheet, FlatList, Alert, TouchableOpacity, ScrollView } from "react-native"
-import { Text, Card, Button, FAB, Avatar, Chip, ActivityIndicator, ProgressBar } from "react-native-paper"
+import { Text, Card, Button, FAB, Avatar, Chip, ActivityIndicator, ProgressBar, TextInput, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
 import { useAuth } from "../../contexts/AuthContext"
@@ -12,17 +12,30 @@ import type { Vehicle } from "../../types/models"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import { formatDate } from "../../utils/formatters"
+import { useTranslation } from "react-i18next"
+import { useNetwork } from "../../contexts/NetworkContext"
+import FeatherIcon from "../../components/FeatherIcon"
 
 type VehicleManagementScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "VehicleManagement">
 }
 
 const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navigation }) => {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { vehicles, isLoading, error, deleteVehicle } = useVehicle()
+  const { isConnected } = useNetwork()
 
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState<boolean>(false)
+  const [addingVehicle, setAddingVehicle] = useState<boolean>(false)
+  const [newVehicle, setNewVehicle] = useState<Partial<Vehicle>>({
+    type: 'motorcycle',
+    license_plate: '',
+    model: '',
+    year: new Date().getFullYear(),
+    is_active: true
+  })
 
   useEffect(() => {
     // Vehicles are loaded automatically by the hook
@@ -168,6 +181,68 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
         </Card.Content>
       </Card>
     )
+  }
+
+  const handleAddVehicle = async (): Promise<void> => {
+    if (!newVehicle.license_plate?.trim()) {
+      Alert.alert(t("errors.error"), t("vehicle.licensePlateRequired"))
+      return
+    }
+
+    try {
+      setAddingVehicle(true)
+      
+      if (isConnected) {
+        // En production, cela enverrait à l'API
+        const vehicle: Vehicle = {
+          id: Date.now(),
+          type: newVehicle.type || 'motorcycle',
+          license_plate: newVehicle.license_plate,
+          model: newVehicle.model,
+          year: newVehicle.year,
+          is_active: true
+        }
+        
+        // Assuming you have a function to add a new vehicle
+        // This is a placeholder and should be replaced with the actual implementation
+        // For example, you can use a state to manage the vehicles
+        // setVehicles(prev => [...prev, vehicle])
+        
+        setNewVehicle({
+          type: 'motorcycle',
+          license_plate: '',
+          model: '',
+          year: new Date().getFullYear(),
+          is_active: true
+        })
+        
+        Alert.alert(t("vehicle.success"), t("vehicle.vehicleAdded"))
+      } else {
+        Alert.alert(t("vehicle.offlineTitle"), t("vehicle.offlineMessage"))
+      }
+    } catch (error) {
+      console.error("Error adding vehicle:", error)
+      Alert.alert(t("errors.error"), t("errors.failedToAddVehicle"))
+    } finally {
+      setAddingVehicle(false)
+    }
+  }
+
+  const handleToggleVehicle = async (vehicleId: number): Promise<void> => {
+    try {
+      // Assuming you have a function to toggle a vehicle's active status
+      // This is a placeholder and should be replaced with the actual implementation
+      // For example, you can use a state to manage the vehicles
+      // setVehicles(prev => 
+      //   prev.map(vehicle => 
+      //     vehicle.id === vehicleId 
+      //       ? { ...vehicle, is_active: !vehicle.is_active }
+      //       : vehicle
+      //   )
+    } catch (error) {
+      console.error("Error toggling vehicle:", error)
+      Alert.alert(t("errors.error"), t("errors.failedToUpdateVehicle"))
+    }
   }
 
   if (isLoading) {

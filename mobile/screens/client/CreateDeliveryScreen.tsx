@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform
 } from 'react-native'
@@ -19,10 +18,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import AddressAutocomplete from '../../components/AddressAutocomplete'
 import MapView from '../../components/MapView'
 import WeatherInfo from '../../components/WeatherInfo'
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNetwork } from '../../contexts/NetworkContext'
 import { useDelivery } from '../../hooks/useDelivery'
 import { useUser } from '../../hooks/useUser'
+import { useAlert } from '../../hooks/useAlert'
 import DeliveryService from '../../services/DeliveryService'
 
 import type {
@@ -92,6 +94,18 @@ const CreateDeliveryScreen: React.FC = () => {
   const { isConnected, addPendingUpload } = useNetwork()
   const { createDelivery, getPriceEstimate, estimate } = useDelivery()
   const { } = useUser()
+  const { 
+    alertVisible,
+    alertConfig,
+    toastVisible,
+    toastConfig,
+    showErrorAlert, 
+    showSuccessAlert, 
+    showInfoAlert, 
+    showConfirmationAlert,
+    hideAlert,
+    hideToast
+  } = useAlert()
 
   const mapRef = useRef<any>(null)
 
@@ -236,7 +250,7 @@ const CreateDeliveryScreen: React.FC = () => {
     if (!validateForm()) return
 
     if (!pickupLocation || !deliveryLocation) {
-      Alert.alert('Erreur', 'Veuillez sélectionner les adresses de retrait et de livraison')
+      showErrorAlert('Erreur', 'Veuillez sélectionner les adresses de retrait et de livraison')
       return
     }
 
@@ -266,37 +280,60 @@ const CreateDeliveryScreen: React.FC = () => {
           data: deliveryData,
           retries: 0
         })
-        Alert.alert('Mode hors ligne', 'Votre livraison sera créée dès que la connexion sera rétablie')
+        showInfoAlert('Mode hors ligne', 'Votre livraison sera créée dès que la connexion sera rétablie')
         navigation.goBack()
         return
       }
 
       const result = await createDelivery(deliveryData)
-      Alert.alert('Succès', 'Votre livraison a été créée avec succès!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('TrackDelivery', { deliveryId: result.id })
-        }
-      ])    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.')
+      showSuccessAlert('Succès', 'Votre livraison a été créée avec succès!')
+      navigation.navigate('TrackDelivery', { deliveryId: result.id })
+    } catch (error) {
+      showErrorAlert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }
   }
 
   const validateForm = (): boolean => {
-    if (!pickupAddress || !deliveryAddress) {
-      Alert.alert('Erreur', 'Veuillez renseigner les adresses de retrait et de livraison')
+    // Validation des adresses
+    if (!pickupAddress || pickupAddress.trim() === '') {
+      showErrorAlert('Champ requis', 'Veuillez renseigner l\'adresse de retrait')
       return false
     }
 
+    if (!deliveryAddress || deliveryAddress.trim() === '') {
+      showErrorAlert('Champ requis', 'Veuillez renseigner l\'adresse de livraison')
+      return false
+    }
+
+    // Validation des coordonnées
+    if (!pickupLocation || !deliveryLocation) {
+      showErrorAlert('Adresse invalide', 'Veuillez sélectionner des adresses valides depuis les suggestions')
+      return false
+    }
+
+    // Validation du type de colis
     if (!packageType) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un type de colis')
+      showErrorAlert('Champ requis', 'Veuillez sélectionner un type de colis')
       return false
     }
 
-    if (!proposedPrice || parseFloat(proposedPrice) <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un prix valide')
+    // Validation du nom du destinataire
+    if (!recipientName || recipientName.trim() === '') {
+      showErrorAlert('Champ requis', 'Veuillez saisir le nom du destinataire')
+      return false
+    }
+
+    // Validation du prix
+    if (!proposedPrice || proposedPrice.trim() === '') {
+      showErrorAlert('Champ requis', 'Veuillez saisir un prix')
+      return false
+    }
+
+    const price = parseFloat(proposedPrice)
+    if (isNaN(price) || price <= 0) {
+      showErrorAlert('Prix invalide', 'Veuillez saisir un prix valide supérieur à 0')
       return false
     }
 
@@ -315,6 +352,51 @@ const CreateDeliveryScreen: React.FC = () => {
     } else {
       setDeliveryLocation(addressWithName)
       setDeliveryAddress(addressWithName.name)
+    }
+  }
+
+  // Fonction pour obtenir les suggestions d'adresses
+  const getAddressSuggestions = async (query: string) => {
+    if (query.length < 2) return []
+    
+    try {
+      const response = await DeliveryService.getAddressSuggestions(query, userLocation?.latitude, userLocation?.longitude)
+      return response.suggestions || []
+    } catch (error) {
+      console.error('Erreur lors de l\'autocomplétion:', error)
+      return []
+    }
+  }
+
+  // Fonction pour obtenir les lieux populaires
+  const getPopularPlaces = async (category?: string) => {
+    try {
+      const response = await DeliveryService.getPopularPlaces(userLocation?.latitude, userLocation?.longitude, category)
+      return response.places || []
+    } catch (error) {
+      console.error('Erreur lors de la récupération des lieux populaires:', error)
+      return []
+    }
+  }
+
+  // Fonction pour le matching intelligent
+  const performSmartMatching = async () => {
+    if (!pickupAddress || !deliveryAddress) return
+    
+    try {
+      const deliveryRequest = {
+        pickup_address: pickupAddress,
+        delivery_address: deliveryAddress,
+        package_weight: packageWeight,
+        is_fragile: isFragile,
+        is_express: isExpress
+      }
+      
+      const response = await DeliveryService.smartMatching(deliveryRequest)
+      console.log('Matching intelligent:', response)
+      // Traiter la réponse du matching intelligent
+    } catch (error) {
+      console.error('Erreur lors du matching intelligent:', error)
     }
   }
 
@@ -521,6 +603,31 @@ const CreateDeliveryScreen: React.FC = () => {
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Composants d'alerte modernes */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        type={alertConfig.type}
+        icon={alertConfig.icon}
+        onDismiss={hideAlert}
+        showCloseButton={alertConfig.showCloseButton}
+        autoDismiss={alertConfig.autoDismiss}
+        dismissAfter={alertConfig.dismissAfter}
+      />
+
+      <CustomToast
+        visible={toastVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        onDismiss={hideToast}
+        action={toastConfig.action}
+        icon={toastConfig.icon}
+        title={toastConfig.title}
+      />
     </SafeAreaView>
   )
 }

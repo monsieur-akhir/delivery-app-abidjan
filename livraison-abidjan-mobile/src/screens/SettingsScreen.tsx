@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from "react-native"
-import { Text, Card, Divider, Button, List, Avatar } from "react-native-paper"
+import { Text, Card, Divider, Button, List, Avatar, IconButton } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../contexts/AuthContext"
@@ -71,7 +71,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <IconButton
+          icon="arrow-left"
+          size={24}
+          onPress={() => navigation.goBack()}
+        />
         <Text style={styles.headerTitle}>{t("settings.title")}</Text>
+        <View style={styles.headerRight} />
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* User Profile Card */}
@@ -242,7 +248,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   header: {
-    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#EEEEEE",
@@ -250,7 +260,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    flex: 1,
+    textAlign: "center",
     color: "#212121",
+  },
+  headerRight: {
+    width: 48, // Même largeur que le bouton de retour pour centrer le titre
   },
   scrollContainer: {
     padding: 16,

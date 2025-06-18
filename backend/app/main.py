@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from typing import Optional
 import os
+from datetime import datetime
 
 from .core.config import settings
 from .db.base import Base
@@ -39,7 +41,7 @@ app.mount("/static", StaticFiles(directory="uploads"), name="static")
 # Inclure les routes API
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentification"])
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["Utilisateurs"])
-app.include_router(deliveries.router, prefix=f"{settings.API_V1_STR}/deliveries", tags=["Livraisons"])
+app.include_router(deliveries.router, prefix=f"{settings.API_V1_STR}", tags=["Livraisons"])
 app.include_router(ratings.router, prefix=f"{settings.API_V1_STR}/ratings", tags=["Évaluations"])
 app.include_router(gamification.router, prefix=f"{settings.API_V1_STR}/gamification", tags=["Gamification"])
 app.include_router(market.router, prefix=f"{settings.API_V1_STR}/market", tags=["Marché"])
@@ -70,6 +72,10 @@ async def startup_event():
     # Initialiser la base de données avec les données de base
     db = next(get_db())
     init_db(db)
+    
+    # Démarrer le nettoyage automatique des WebSockets
+    from .websockets.tracking import start_cleanup_task
+    await start_cleanup_task()
 
 # Route de base
 @app.get("/")
@@ -98,8 +104,42 @@ async def get_active_client_deliveries(
     from .services.delivery import get_user_active_deliveries
     return get_user_active_deliveries(db, current_user.id)
 
+@app.get("/api/client/delivery-history")
+async def get_client_delivery_history(
+    status: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    skip: int = 0,
+    limit: int = 20,
+    current_user = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer l'historique des livraisons du client"""
+    if current_user.role != "client":
+        raise HTTPException(status_code=403, detail="Accès réservé aux clients")
+
+    from .services.delivery import get_deliveries_by_client
+    return get_deliveries_by_client(db, current_user.id, skip, limit, status)
+
+@app.get("/api/courier/delivery-history")
+async def get_courier_delivery_history(
+    status: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    skip: int = 0,
+    limit: int = 20,
+    current_user = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer l'historique des livraisons du coursier"""
+    if current_user.role != "courier":
+        raise HTTPException(status_code=403, detail="Accès réservé aux coursiers")
+
+    from .services.delivery import get_courier_deliveries
+    return get_courier_deliveries(db, current_user.id, status, limit, skip)
+
 # Endpoints pour les marchands
-@app.get("/merchants/nearby")
+@app.get("/api/merchants/nearby")
 async def get_nearby_merchants(
     commune: str = None,
     category: str = None,
@@ -141,7 +181,7 @@ async def get_nearby_merchants(
 
     return get_merchants(db, lat, lng, radius, category)
 
-@app.get("/merchants/{merchant_id}")
+@app.get("/api/merchants/{merchant_id}")
 async def get_merchant_details(
     merchant_id: int,
     db: Session = Depends(get_db)
@@ -153,7 +193,7 @@ async def get_merchant_details(
         raise HTTPException(status_code=404, detail="Marchand non trouvé")
     return merchant
 
-@app.get("/merchants/{merchant_id}/products")
+@app.get("/api/merchants/{merchant_id}/products")
 async def get_merchant_products(
     merchant_id: int,
     skip: int = 0,
@@ -252,6 +292,133 @@ async def estimate_delivery_price_endpoint(
         is_fragile,
         is_express
     )
+
+# Alias pour l'estimation de prix (compatibilité mobile)
+@app.post("/api/v1/deliveries/estimate-price/")
+async def estimate_delivery_price_v1_endpoint(
+    request: dict,
+    db: Session = Depends(get_db)
+):
+    """Estimer le prix d'une livraison (version v1)"""
+    return await estimate_delivery_price_endpoint(request, db)
+
+# Endpoint de création de livraison (compatibilité mobile)
+@app.post("/api/v1/deliveries/")
+async def create_delivery_v1_endpoint(
+    delivery_data: dict,
+    current_user = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Créer une nouvelle livraison (version v1)"""
+    if current_user.role != "client":
+        raise HTTPException(status_code=403, detail="Accès réservé aux clients")
+
+    from .services.delivery import create_delivery
+    from .schemas.delivery import DeliveryCreate
+    
+    # Convertir le dict en DeliveryCreate
+    delivery_create = DeliveryCreate(**delivery_data)
+    return create_delivery(db, delivery_create, current_user)
+
+# Endpoint de confirmation côté client
+@app.post("/api/deliveries/{delivery_id}/client-confirm")
+async def client_confirm_delivery_endpoint(
+    delivery_id: int,
+    confirm_data: dict,
+    current_user = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Confirmer la livraison côté client avec notation"""
+    if current_user.role != "client":
+        raise HTTPException(status_code=403, detail="Accès réservé aux clients")
+
+    from .services.delivery import get_delivery
+    from .services.rating import create_rating
+    
+    delivery = get_delivery(db, delivery_id)
+    if delivery.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    # Confirmer la livraison
+    delivery.status = "completed"
+    delivery.completed_at = datetime.utcnow()
+    db.commit()
+    
+    # Créer une évaluation si fournie
+    if "rating" in confirm_data and "comment" in confirm_data:
+        try:
+            from .schemas.rating import RatingCreate
+            rating_data = RatingCreate(
+                delivery_id=delivery_id,
+                rated_user_id=delivery.courier_id,
+                score=confirm_data["rating"],
+                comment=confirm_data["comment"]
+            )
+            create_rating(db, rating_data, current_user.id)
+        except Exception as e:
+            print(f"Erreur lors de la création de l'évaluation: {e}")
+    
+    return {"message": "Livraison confirmée avec succès"}
+
+# Endpoint de matching intelligent
+@app.post("/api/deliveries/smart-matching")
+async def smart_matching_endpoint(
+    delivery_request: dict,
+    current_user = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Matching intelligent des coursiers pour une livraison"""
+    if current_user.role != "client":
+        raise HTTPException(status_code=403, detail="Accès réservé aux clients")
+
+    from .services.matching import MatchingService
+    return await MatchingService.smart_matching(db, delivery_request, current_user.id)
+
+# Endpoint d'autocomplétion d'adresses
+@app.get("/api/deliveries/address-autocomplete")
+async def address_autocomplete_endpoint(
+    query: str = Query(..., min_length=2),
+    user_lat: Optional[float] = Query(None),
+    user_lng: Optional[float] = Query(None),
+    limit: int = Query(8, ge=1, le=20),
+    db: Session = Depends(get_db)
+):
+    """Autocomplétion intelligente d'adresses pour Abidjan"""
+    from .services.geolocation import get_address_suggestions
+    
+    user_location = None
+    if user_lat is not None and user_lng is not None:
+        user_location = {"latitude": user_lat, "longitude": user_lng}
+
+    suggestions = await get_address_suggestions(db, query, user_location, limit)
+    return {
+        "success": True,
+        "suggestions": suggestions,
+        "query": query
+    }
+
+# Endpoint des lieux populaires
+@app.get("/api/deliveries/popular-places")
+async def popular_places_endpoint(
+    user_lat: Optional[float] = Query(None),
+    user_lng: Optional[float] = Query(None),
+    category: Optional[str] = Query(None),
+    limit: int = Query(10, ge=1, le=20),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les lieux populaires d'Abidjan"""
+    from .services.geolocation import get_popular_places
+    
+    user_location = None
+    if user_lat is not None and user_lng is not None:
+        user_location = {"latitude": user_lat, "longitude": user_lng}
+
+    places = await get_popular_places(db, user_location, category, limit)
+    return {
+        "success": True,
+        "places": places
+    }
+
 from .api import business_analytics
 app.include_router(business_analytics.router, prefix="/api/v1/business/analytics", tags=["business-analytics"])
 # Importer les nouveaux routers

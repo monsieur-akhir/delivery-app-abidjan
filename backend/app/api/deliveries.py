@@ -13,8 +13,73 @@ from ..services import geolocation as geolocation_service
 
 router = APIRouter()
 
-from ..services.delivery import get_delivery, get_courier_deliveries
+from ..services.delivery import get_delivery, get_courier_deliveries, get_user_deliveries_with_filters
 from ..services.matching import MatchingService
+
+@router.get("/deliveries")
+async def get_deliveries(
+    user_id: Optional[int] = Query(None, description="ID de l'utilisateur"),
+    status: Optional[str] = Query(None, description="Statut de la livraison"),
+    date_from: Optional[str] = Query(None, description="Date de début (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(None, description="Date de fin (YYYY-MM-DD)"),
+    commune: Optional[str] = Query(None, description="Commune"),
+    skip: int = Query(0, ge=0, description="Nombre d'éléments à ignorer"),
+    limit: int = Query(20, ge=1, le=100, description="Nombre maximum d'éléments"),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les livraisons avec filtres"""
+    try:
+        # Si user_id est fourni, vérifier les permissions
+        if user_id and current_user.role not in ["admin", "manager"]:
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Accès non autorisé")
+        
+        # Si aucun user_id n'est fourni, utiliser l'utilisateur connecté
+        if not user_id:
+            user_id = current_user.id
+
+        deliveries = get_user_deliveries_with_filters(
+            db, 
+            user_id, 
+            status=status,
+            date_from=date_from,
+            date_to=date_to,
+            commune=commune,
+            skip=skip,
+            limit=limit
+        )
+
+        return {
+            "success": True,
+            "deliveries": deliveries,
+            "total": len(deliveries),
+            "skip": skip,
+            "limit": limit
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des livraisons: {str(e)}")
+
+@router.get("/deliveries/{delivery_id}")
+async def get_delivery_by_id(
+    delivery_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer une livraison par son ID"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+
+    # Vérifier les permissions
+    if current_user.role not in ["admin", "manager"]:
+        if delivery.client_id != current_user.id and delivery.courier_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+
+    return {
+        "success": True,
+        "delivery": delivery
+    }
 
 @router.get("/deliveries/{delivery_id}/suggested-couriers")
 async def get_suggested_couriers(
@@ -145,3 +210,53 @@ async def popular_places_endpoint(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des lieux: {str(e)}")
+
+@router.post("/recommend-vehicle")
+async def recommend_vehicle_endpoint(
+    request_data: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Recommander un véhicule pour une livraison"""
+    try:
+        from ..services.transport import TransportService
+        from ..schemas.transport import VehicleRecommendationRequest
+        
+        transport_service = TransportService(db)
+        
+        recommendation_data = VehicleRecommendationRequest(
+            cargo_category=request_data.get("cargo_category"),
+            distance=request_data.get("distance", 10),
+            weight=request_data.get("weight"),
+            is_fragile=request_data.get("is_fragile", False),
+            is_urgent=request_data.get("is_urgent", False)
+        )
+        
+        recommendation = transport_service.recommend_vehicle(recommendation_data)
+        
+        return {
+            "success": True,
+            "recommendation": recommendation
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la recommandation: {str(e)}")
+
+@router.get("/options")
+async def get_delivery_options():
+    """Retourne la structure dynamique des options de livraison pour l'UI mobile"""
+    return {
+        "vehicle_types": [
+            {"type": "moto", "label": "Livraison à moto", "min_price": 500},
+            {"type": "voiture", "label": "Livraison en voiture", "min_price": 500},
+            {"type": "interville", "label": "Intervilles", "min_price": 1990}
+        ],
+        "delivery_speeds": [
+            {"key": "urgent", "label": "Urgent", "description": "", "min_price": 700, "delay": "30min"},
+            {"key": "normal", "label": "Un peu plus long", "description": "Le coursier peut livrer un autre colis sur la route", "min_price": 600, "delay": "1h"},
+            {"key": "slow", "label": "En 3 heures", "description": "", "min_price": 500, "delay": "3h"}
+        ],
+        "options": [
+            {"key": "isotherme", "label": "Sac de livraison isotherme", "price": 0},
+            {"key": "comment", "label": "Commentaire à l'attention du coursier"}
+        ]
+    }

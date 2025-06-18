@@ -1,18 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from typing import Any
+from typing import Any, Optional
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+import logging
 
 from ..db.session import get_db
 from ..services.auth import register_user, login_user, enable_two_factor, refresh_token
 from ..services.otp_service import OTPService
 from ..schemas.user import UserCreate, UserLogin, Token, UserResponse, PasswordChangeRequest, PasswordResetRequest, PasswordResetConfirm
 from ..schemas.otp import OTPRequest, OTPVerification, OTPResend, OTPResponse, OTPVerificationResponse
-from ..core.security import get_current_user
+from ..core.security import get_current_user, verify_password, get_password_hash
 from ..models.user import User
 from ..models.otp import OTPType
+from ..core.config import settings
+from ..websockets.tracking import manager
 
 router = APIRouter(tags=["authentication"])
+logger = logging.getLogger(__name__)
 
 @router.post("/register", response_model=UserResponse)
 def register(
@@ -153,7 +159,6 @@ def reset_password(
         )
     
     # Update password
-    from ..core.security import get_password_hash
     otp.user.hashed_password = get_password_hash(request.new_password)
     db.commit()
     
@@ -209,16 +214,26 @@ def update_user_profile(
     return current_user
 
 # Security Endpoints
-@router.post("/logout", response_model=dict)
-def logout(
-    current_user: User = Depends(get_current_user)
-) -> Any:
-    """
-    Déconnecter l'utilisateur.
-    """
-    # For JWT tokens, logout is handled client-side by removing the token
-    # Here we could add token blacklisting if needed
-    return {"message": "Déconnexion réussie"}
+@router.post("/logout")
+async def logout(current_user: User = Depends(get_current_user)):
+    """Déconnecter l'utilisateur et fermer tous ses WebSockets"""
+    try:
+        # Déconnecter l'utilisateur de tous ses WebSockets
+        await manager.disconnect_user(current_user.id)
+        
+        logger.info(f"Utilisateur {current_user.id} déconnecté avec succès")
+        
+        return {
+            "success": True,
+            "message": "Déconnexion réussie",
+            "user_id": current_user.id
+        }
+    except Exception as e:
+        logger.error(f"Erreur lors de la déconnexion: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de la déconnexion"
+        )
 
 @router.post("/refresh", response_model=Token)
 def refresh_access_token(
@@ -246,8 +261,6 @@ def change_password(
     """
     Changer le mot de passe de l'utilisateur.
     """
-    from ..core.security import verify_password, get_password_hash
-    
     # Verify current password
     if not verify_password(password_data.current_password, current_user.hashed_password):
         raise HTTPException(
@@ -298,3 +311,34 @@ def verify_two_factor_code(
     
     success, _ = otp_service.verify_otp(verification)
     return {"success": success}
+
+@router.get("/websocket-status")
+async def get_websocket_status(current_user: User = Depends(get_current_user)):
+    """Vérifier l'état des connexions WebSocket de l'utilisateur"""
+    try:
+        user_connections = []
+        
+        for delivery_id, connections in manager.user_connections.items():
+            user_conns = [
+                {
+                    "delivery_id": delivery_id,
+                    "connected_at": conn["connected_at"].isoformat(),
+                    "user_role": conn["user_role"]
+                }
+                for conn in connections 
+                if conn["user_id"] == current_user.id
+            ]
+            user_connections.extend(user_conns)
+        
+        return {
+            "success": True,
+            "user_id": current_user.id,
+            "active_connections": len(user_connections),
+            "connections": user_connections
+        }
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification du statut WebSocket: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de la vérification du statut"
+        )

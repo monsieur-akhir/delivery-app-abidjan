@@ -288,19 +288,27 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   // Gestionnaires d'événements
   const handleTextChange = useCallback((text: string) => {
     onChangeText(text);
-    setShowSuggestionsState(true);
-
-    // Debounce search
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    setInputValue(text);
+    
+    if (text.length >= 2) {
+      setShowSuggestionsState(true);
+      
+      // Debounce search
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        searchAddresses(text);
+      }, 300);
+    } else {
+      setShowSuggestionsState(false);
+      setSuggestions([]);
     }
-    timeoutRef.current = setTimeout(() => {
-      searchAddresses(text);
-    }, 300);
   }, [onChangeText, searchAddresses]);
 
   const handleAddressSelect = useCallback((address: Address) => {
     onChangeText(address.description);
+    setInputValue(address.description);
     onAddressSelect(address);
     setShowSuggestionsState(false);
     setSuggestions([]);
@@ -338,20 +346,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         searchAddresses(value);
       }
     }
-    onFocus?.()
-    const combinedSuggestions: Address[] = [
-      ...recentAddresses,
-      ...popularPlaces.map(place => ({
-        id: place.name,
-        description: `${place.name}, ${place.commune}`,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        commune: place.commune,
-        type: 'suggestion' as const
-      }))
-    ]
-    setSuggestions(combinedSuggestions)
-  }, [value, recentAddresses.length, searchAddresses, onFocus, popularPlaces]);
+    onFocus?.();
+  }, [value, recentAddresses.length, searchAddresses, onFocus]);
 
   const handleBlur = useCallback(() => {
     setIsFocused(false);
@@ -363,6 +359,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const clearInput = useCallback(() => {
     onChangeText('');
+    setInputValue('');
     setSuggestions([]);
     setShowSuggestionsState(false);
   }, [onChangeText]);
@@ -398,142 +395,113 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     switch (type) {
       case "airport": return "airplane"
       case "university": return "school"
-      case "market": return "shopping"
-      case "mall": return "shopping-outline"
-      case "transport": return "train"
-      case "recent": return "history"
-      default: return "map-marker"
+      case "hospital": return "medical"
+      case "market": return "cart"
+      case "transport": return "bus"
+      case "business": return "business"
+      default: return "location"
     }
-  }
+  };
 
   const renderSuggestion = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.suggestionItem}
-      onPress={() => {
-        setInputValue(item.description)
-        onAddressSelect(item)
-
-        // Ajouter aux adresses récentes
-        const newRecent = {
-          ...item,
-          type: "recent",
-          timestamp: Date.now()
-        }
-        setRecentAddresses(prev => [newRecent, ...prev.filter(addr => addr.id !== item.id)].slice(0, 3))
-      }}
+      onPress={() => handleAddressSelect(item)}
     >
       <View style={styles.suggestionContent}>
-        <IconButton 
-          icon={getIconForType2(item.type)} 
-          size={20} 
-          iconColor={item.type === "recent" ? "#757575" : "#FF6B00"}
-        />
-        <View style={styles.suggestionTextContainer}>
-          <Text style={styles.suggestionTitle}>{item.description}</Text>
-          <Text style={styles.suggestionSubtitle}>{item.commune}</Text>
-        </View>
-        {item.type === "recent" && (
-          <IconButton 
-            icon="close" 
+        <View style={styles.suggestionIcon}>
+          <Ionicons 
+            name={getIconForType(item.type)} 
             size={16} 
-            iconColor="#BDBDBD"
-            onPress={(e) => {
-              e.stopPropagation()
-              setRecentAddresses(prev => prev.filter(addr => addr.id !== item.id))
-            }}
+            color={getIconColor(item.type)} 
           />
-        )}
+        </View>
+        <View style={styles.suggestionText}>
+          <Text style={styles.suggestionTitle}>{item.description}</Text>
+          <Text style={styles.suggestionSubtitle}>
+            {item.commune && `Commune: ${item.commune}`}
+          </Text>
+        </View>
       </View>
     </TouchableOpacity>
-  )
+  );
 
   return (
     <View style={[styles.container, style]}>
       <View style={styles.inputContainer}>
         <TextInput
           label={label}
-          value={value}
+          value={inputValue}
           onChangeText={handleTextChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          mode="outlined"
-          disabled={disabled}
           error={!!error}
+          disabled={disabled}
           style={[styles.input, isFocused && styles.inputFocused]}
-          left={<TextInput.Icon icon="map-marker" color={isFocused ? '#007AFF' : '#666'} />}
           right={
-            value.length > 0 ? (
-              <TextInput.Icon
-                icon="close-circle"
-                color="#666"
-                onPress={clearInput}
-              />
-            ) : loading ? (
-              <TextInput.Icon icon={() => <ActivityIndicator size={16} color="#007AFF" />} />
-            ) : undefined
+            <TextInput.Icon
+              icon="map-marker"
+              onPress={clearInput}
+              disabled={!inputValue}
+            />
           }
-          theme={{
-            colors: {
-              primary: '#007AFF',
-              outline: isFocused ? '#007AFF' : '#e0e0e0'
-            }
-          }}
         />
+        {error && <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>}
       </View>
 
-      {error && (
-        <HelperText type="error" visible={!!error} style={styles.errorText}>
-          {error}
-        </HelperText>
-      )}
-
+      {/* Suggestions en overlay (pas en modal) */}
       {showSuggestionsState && (
         <Animated.View
           style={[
-            styles.suggestionsContainer,
+            styles.suggestionsOverlay,
             {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <Card style={styles.suggestionsCard}>
-            <ScrollView
+            <ScrollView 
               style={styles.suggestionsList}
+              contentContainerStyle={styles.suggestionsContent}
               keyboardShouldPersistTaps="handled"
               nestedScrollEnabled={true}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.suggestionsContent}
             >
               {/* Position actuelle */}
-              {currentLocation && showCurrentLocation && (
+              {showCurrentLocation && currentLocation && (
                 <>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Position actuelle</Text>
+                  </View>
                   <TouchableOpacity
                     style={styles.suggestionItem}
                     onPress={handleCurrentLocationSelect}
+                    disabled={loading}
                   >
                     <View style={styles.suggestionContent}>
                       <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
-                        <Ionicons name="locate" size={16} color="#4CAF50" />
+                        {loading ? (
+                          <ActivityIndicator size="small" color="#4CAF50" />
+                        ) : (
+                          <Ionicons name="location" size={16} color="#4CAF50" />
+                        )}
                       </View>
                       <View style={styles.suggestionText}>
                         <Text style={styles.suggestionTitle}>Utiliser ma position actuelle</Text>
-                        <Text style={styles.suggestionSubtitle}>Localisation précise</Text>
+                        <Text style={styles.suggestionSubtitle}>Détection automatique</Text>
                       </View>
                     </View>
                   </TouchableOpacity>
-                  {(suggestions.length > 0 || recentAddresses.length > 0) && (
-                    <Divider style={styles.divider} />
-                  )}
+                  <Divider style={styles.divider} />
                 </>
               )}
 
               {/* Adresses récentes */}
-              {recentAddresses.length > 0 && value.length < 2 && (
+              {recentAddresses.length > 0 && (
                 <>
                   <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Récemment utilisées</Text>
+                    <Text style={styles.sectionTitle}>Récents</Text>
                   </View>
                   {recentAddresses.map((address) => (
                     <TouchableOpacity
@@ -565,11 +533,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               {/* Suggestions */}
               {suggestions.length > 0 && (
                 <>
-                  {value.length >= 2 && (
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>Suggestions</Text>
-                    </View>
-                  )}
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Suggestions</Text>
+                  </View>
                   {suggestions.map((address) => (
                     <TouchableOpacity
                       key={address.id}
@@ -596,22 +562,19 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                 </>
               )}
 
-              {/* État de chargement */}
-              {loading && suggestions.length === 0 && (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#007AFF" />
-                  <Text style={styles.loadingText}>Recherche en cours...</Text>
+              {/* Aucun résultat */}
+              {suggestions.length === 0 && recentAddresses.length === 0 && value.length >= 2 && !loading && (
+                <View style={styles.noResults}>
+                  <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
+                  <Text style={styles.noResultsSubtext}>Essayez avec d'autres mots-clés</Text>
                 </View>
               )}
 
-              {/* Aucun résultat */}
-              {!loading && suggestions.length === 0 && value.length >= 2 && (
-                <View style={styles.noResultsContainer}>
-                  <Ionicons name="search-outline" size={24} color="#ccc" />
-                  <Text style={styles.noResultsText}>Aucune adresse trouvée</Text>
-                  <Text style={styles.noResultsSubtext}>
-                    Essayez avec un nom de commune ou de quartier
-                  </Text>
+              {/* Loading */}
+              {loading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#666" />
+                  <Text style={styles.loadingText}>Recherche en cours...</Text>
                 </View>
               )}
             </ScrollView>
@@ -642,12 +605,12 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 4,
   },
-  suggestionsContainer: {
+  suggestionsOverlay: {
     position: 'absolute',
     top: '100%',
     left: 0,
     right: 0,
-    zIndex: 1000,
+    zIndex: 1001,
     marginTop: 4,
   },
   suggestionsCard: {
@@ -721,18 +684,7 @@ const styles = StyleSheet.create({
   divider: {
     marginVertical: 4,
   },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-  },
-  loadingText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#666',
-  },
-  noResultsContainer: {
+  noResults: {
     alignItems: 'center',
     paddingVertical: 24,
     paddingHorizontal: 16,
@@ -750,14 +702,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "flex-start",
-    paddingTop: 120,
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
-  sectionDivider: {
-    marginVertical: 8,
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
   },
   suggestionTextContainer: {
     flex: 1,
