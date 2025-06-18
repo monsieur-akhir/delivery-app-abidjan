@@ -175,7 +175,7 @@ export default {
       default: () => new Date(),
     },
   },
-  setup() {
+  setup(props) {
     const metrics = ref({
       totalDeliveries: 0,
       totalEarnings: 0,

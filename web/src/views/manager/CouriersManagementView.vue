@@ -732,7 +732,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.id_verified"
                                 class="btn-icon"
-                                @click="handleDocumentAction('id', 'verify')"
+                                @click="verifyDocument(selectedCourier.id, 'id')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
@@ -740,7 +740,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.id_verified"
                                 class="btn-icon"
-                                @click="handleDocumentAction('id', 'reject')"
+                                @click="rejectDocument(selectedCourier.id, 'id')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
@@ -782,7 +782,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.license_verified"
                                 class="btn-icon"
-                                @click="handleDocumentAction('license', 'verify')"
+                                @click="verifyDocument(selectedCourier.id, 'license')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
@@ -790,7 +790,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.license_verified"
                                 class="btn-icon"
-                                @click="handleDocumentAction('license', 'reject')"
+                                @click="rejectDocument(selectedCourier.id, 'license')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
@@ -832,7 +832,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.vehicle_verified"
                                 class="btn-icon"
-                                @click="handleDocumentAction('vehicle', 'verify')"
+                                @click="verifyDocument(selectedCourier.id, 'vehicle')"
                                 title="Vérifier"
                               >
                                 <font-awesome-icon icon="check" />
@@ -840,7 +840,7 @@
                               <button
                                 v-if="!selectedCourier.kyc.vehicle_verified"
                                 class="btn-icon"
-                                @click="handleDocumentAction('vehicle', 'reject')"
+                                @click="rejectDocument(selectedCourier.id, 'vehicle')"
                                 title="Rejeter"
                               >
                                 <font-awesome-icon icon="times" />
@@ -1194,8 +1194,7 @@
 
 <script>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useStore } from 'vuex'
-import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
 import {
   fetchCouriers,
   fetchCourierDetails,
@@ -1219,19 +1218,19 @@ import 'leaflet-draw/dist/leaflet.draw.css'
 export default {
   name: 'CouriersManagementView',
   setup() {
-    const store = useStore()
-    const { showToast } = useToast()
+    const router = useRouter()
 
     // État
     const couriers = ref([])
     const selectedCourier = ref(null)
+    const courierToDelete = ref(null)
     const showAddCourierModal = ref(false)
     const showEditCourierModal = ref(false)
     const showCourierDetailsModal = ref(false)
     const showNotificationModal = ref(false)
     const showRejectVerificationModal = ref(false)
     const loading = ref(true)
-    const isSaving = ref(isSaving)
+    const isSaving = ref(false)
     const isSendingNotification = ref(false)
     const currentPage = ref(1)
     const totalPages = ref(1)
@@ -1668,40 +1667,66 @@ export default {
       }
     }
 
-    const suspendCourier = async id => {
-      try {
-        await updateCourierStatus(id, 'suspended')
-        showToast('Coursier suspendu avec succès', 'success')
-        fetchData()
-      } catch (error) {
-        console.error('Erreur lors de la suspension du coursier:', error)
-        showToast('Erreur lors de la suspension du coursier', 'error')
+    const suspendCourier = async courierId => {
+      if (!confirm(`Êtes-vous sûr de vouloir suspendre ce coursier ?`)) {
+        return
       }
-    }
 
-    const activateCourier = async id => {
       try {
-        await updateCourierStatus(id, 'active')
-        showToast('Coursier activé avec succès', 'success')
-        fetchData()
-      } catch (error) {
-        console.error("Erreur lors de l'activation du coursier:", error)
-        showToast("Erreur lors de l'activation du coursier", 'error')
-      }
-    }
-
-    const verifyCourier = async id => {
-      try {
-        await verifyCourierKyc(id)
+        await updateCourierStatus(courierId, 'suspended')
 
         // Mettre à jour le coursier dans la liste
-        const index = couriers.value.findIndex(c => c.id === id)
+        const index = couriers.value.findIndex(c => c.id === courierId)
+        if (index !== -1) {
+          couriers.value[index].status = 'suspended'
+        }
+
+        // Mettre à jour le coursier sélectionné si nécessaire
+        if (selectedCourier.value && selectedCourier.value.id === courierId) {
+          selectedCourier.value.status = 'suspended'
+        }
+
+        // Afficher une notification de succès
+      } catch (error) {
+        console.error('Erreur lors de la suspension du coursier:', error)
+        // Gérer l'erreur (afficher une notification, etc.)
+      }
+    }
+
+    const activateCourier = async courierId => {
+      try {
+        await updateCourierStatus(courierId, 'active')
+
+        // Mettre à jour le coursier dans la liste
+        const index = couriers.value.findIndex(c => c.id === courierId)
         if (index !== -1) {
           couriers.value[index].status = 'active'
         }
 
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value && selectedCourier.value.id === id) {
+        if (selectedCourier.value && selectedCourier.value.id === courierId) {
+          selectedCourier.value.status = 'active'
+        }
+
+        // Afficher une notification de succès
+      } catch (error) {
+        console.error("Erreur lors de l'activation du coursier:", error)
+        // Gérer l'erreur (afficher une notification, etc.)
+      }
+    }
+
+    const verifyCourier = async courierId => {
+      try {
+        await verifyCourierKyc(courierId)
+
+        // Mettre à jour le coursier dans la liste
+        const index = couriers.value.findIndex(c => c.id === courierId)
+        if (index !== -1) {
+          couriers.value[index].status = 'active'
+        }
+
+        // Mettre à jour le coursier sélectionné si nécessaire
+        if (selectedCourier.value && selectedCourier.value.id === courierId) {
           selectedCourier.value.status = 'active'
           if (selectedCourier.value.kyc) {
             selectedCourier.value.kyc.status = 'verified'
@@ -1709,10 +1734,9 @@ export default {
         }
 
         // Afficher une notification de succès
-        showToast('Coursier vérifié avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors de la vérification du coursier:', error)
-        showToast('Erreur lors de la vérification du coursier', { type: 'error' })
+        // Gérer l'erreur (afficher une notification, etc.)
       }
     }
 
@@ -1743,72 +1767,54 @@ export default {
         showRejectVerificationModal.value = false
 
         // Afficher une notification de succès
-        showToast('Vérification rejetée avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors du rejet de la vérification:', error)
-        showToast('Erreur lors du rejet de la vérification', { type: 'error' })
+        // Gérer l'erreur (afficher une notification, etc.)
       }
     }
 
-    const verifyDocument = async (documentType) => {
+    const verifyDocument = async (courierId, documentType) => {
       try {
-        if (!selectedCourier.value) return
-
-        await verifyCourierDocument(selectedCourier.value.id, documentType)
+        await verifyCourierDocument(courierId, documentType)
 
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value.kyc) {
+        if (
+          selectedCourier.value &&
+          selectedCourier.value.id === courierId &&
+          selectedCourier.value.kyc
+        ) {
           selectedCourier.value.kyc[`${documentType}_verified`] = true
         }
 
-        // Mettre à jour aussi dans la liste des coursiers
-        const courierIndex = couriers.value.findIndex(c => c.id === selectedCourier.value.id)
-        if (courierIndex !== -1 && couriers.value[courierIndex].kyc) {
-          couriers.value[courierIndex].kyc[`${documentType}_verified`] = true
-        }
-
-        // Rafraîchir les données pour s'assurer de la cohérence
-        await fetchData()
-
         // Afficher une notification de succès
-        showToast('Document vérifié avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors de la vérification du document:', error)
-        showToast('Erreur lors de la vérification du document', { type: 'error' })
+        // Gérer l'erreur (afficher une notification, etc.)
       }
     }
 
-    const rejectDocument = async (documentType) => {
+    const rejectDocument = async (courierId, documentType) => {
       if (!confirm('Êtes-vous sûr de vouloir rejeter ce document ?')) {
         return
       }
 
       try {
-        if (!selectedCourier.value) return
-
-        await rejectCourierDocument(selectedCourier.value.id, documentType)
+        await rejectCourierDocument(courierId, documentType)
 
         // Mettre à jour le coursier sélectionné si nécessaire
-        if (selectedCourier.value.kyc) {
+        if (
+          selectedCourier.value &&
+          selectedCourier.value.id === courierId &&
+          selectedCourier.value.kyc
+        ) {
           selectedCourier.value.kyc[`${documentType}_verified`] = false
           selectedCourier.value.kyc[`${documentType}_document`] = null
         }
 
-        // Mettre à jour aussi dans la liste des coursiers
-        const courierIndex = couriers.value.findIndex(c => c.id === selectedCourier.value.id)
-        if (courierIndex !== -1 && couriers.value[courierIndex].kyc) {
-          couriers.value[courierIndex].kyc[`${documentType}_verified`] = false
-          couriers.value[courierIndex].kyc[`${documentType}_document`] = null
-        }
-
-        // Rafraîchir les données pour s'assurer de la cohérence
-        await fetchData()
-
         // Afficher une notification de succès
-        showToast('Document rejeté avec succès', { type: 'success' })
       } catch (error) {
         console.error('Erreur lors du rejet du document:', error)
-        showToast('Erreur lors du rejet du document', { type: 'error' })
+        // Gérer l'erreur (afficher une notification, etc.)
       }
     }
 
@@ -1853,62 +1859,13 @@ export default {
         closeNotificationModal()
 
         // Afficher une notification de succès
-        showToast('Notification envoyée avec succès', { type: 'success' })
       } catch (error) {
         console.error("Erreur lors de l'envoi de la notification:", error)
-        showToast("Erreur lors de l'envoi de la notification", { type: 'error' })
+        // Gérer l'erreur (afficher une notification, etc.)
       } finally {
         isSendingNotification.value = false
       }
     }
-
-    const blockCourier = async reason => {
-      try {
-        if (!selectedCourier.value) return
-
-        await store.dispatch('blockCourier', {
-          courierId: selectedCourier.value.id,
-          reason: reason,
-        })
-
-        showToast('Coursier bloqué avec succès', { type: 'success' })
-      } catch (error) {
-        console.error('Erreur lors du blocage du coursier:', error)
-        showToast('Erreur lors du blocage du coursier', { type: 'error' })
-      }
-    }
-
-    const unblockCourier = async () => {
-      try {
-        if (!selectedCourier.value) return
-
-        await store.dispatch('unblockCourier', {
-          courierId: selectedCourier.value.id,
-        })
-
-        showToast('Coursier débloqué avec succès', { type: 'success' })
-      } catch (error) {
-        console.error('Erreur lors du déblocage du coursier:', error)
-        showToast('Erreur lors du déblocage du coursier', { type: 'error' })
-      }
-    }
-
-    const onCourierBlocked = () => {
-      showToast('Coursier bloqué avec succès', { type: 'info' })
-    }
-
-    store.subscribeAction({
-      after: (action, state, error, response) => {
-        if (action.type === 'auth/login') {
-          if (response?.payload?.success) {
-            this.$router.push('/')
-          }
-        }
-      },
-      onError: (error, response) => {
-        showToast(response?.payload?.message, { type: 'error' })
-      },
-    })
 
     // Utilitaires
     const getInitials = name => {
@@ -2099,19 +2056,6 @@ export default {
       return statusLabels[status] || status
     }
 
-    const handleDocumentAction = async (documentType, action) => {
-      try {
-        if (action === 'verify') {
-          await verifyDocument(documentType)
-        } else if (action === 'reject') {
-          await rejectDocument(documentType)
-        }
-      } catch (error) {
-        console.error(`Erreur lors de l'action sur le document:`, error)
-        showToast(`Erreur lors de l'action sur le document`, { type: 'error' })
-      }
-    }
-
     // Computed properties
     const sortBy = ref('name_asc')
 
@@ -2269,8 +2213,6 @@ export default {
       sendNotification,
       closeNotificationModal,
       submitNotification,
-      blockCourier,
-      unblockCourier,
 
       getInitials,
       isImageDocument,
@@ -2294,8 +2236,6 @@ export default {
       formatDateTime,
       formatMinutes,
       debounceSearch,
-      onCourierBlocked,
-      handleDocumentAction,
     }
   },
 }
@@ -2981,7 +2921,10 @@ input:checked + .toggle-slider:before {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem.checkbox-group {
+  margin-top: 1.5rem;
+}
+
+.checkbox-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -3041,7 +2984,7 @@ input:checked + .toggle-slider:before {
 
 .courier-details-actions {
   display: flex;
-  flex-direction: column: column;
+  flex-direction: column;
   gap: 0.5rem;
 }
 

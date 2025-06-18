@@ -1,5 +1,5 @@
 <template>
-  <div class="delivery-detail-view">
+  <div class="delivery-detail">
     <div class="page-header">
       <div class="header-title">
         <router-link to="/business/deliveries" class="back-button">
@@ -436,9 +436,9 @@
                 class="form-control"
                 required
               >
-                <option value="small">Petit (&lt; 5kg)</option>
+                <option value="small">Petit (< 5kg)</option>
                 <option value="medium">Moyen (5-10kg)</option>
-                <option value="large">Grand (&gt; 10kg)</option>
+                <option value="large">Grand (> 10kg)</option>
               </select>
             </div>
             <div class="form-group">
@@ -494,7 +494,6 @@ export default {
   name: 'BusinessDeliveryDetailView',
   setup() {
     const route = useRoute()
-
     const deliveryId = route.params.id
 
     const loading = ref(true)
@@ -751,7 +750,7 @@ export default {
 </script>
 
 <style scoped>
-.delivery-detail-view {
+.delivery-detail {
   padding: 1.5rem;
 }
 
@@ -1544,7 +1543,7 @@ export default {
     display: none !important;
   }
 
-  .delivery-detail-view {
+  .delivery-detail {
     padding: 0;
   }
 

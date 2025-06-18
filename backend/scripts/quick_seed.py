@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 Script rapide pour créer des données de test minimales
@@ -9,6 +8,7 @@ import sys
 import os
 import random
 from datetime import datetime, timedelta
+
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -25,68 +25,87 @@ def quick_seed():
     try:
         print("🚀 Création rapide des données de test...")
         
+        # Vérifier si des utilisateurs existent déjà
+        existing_users = db.query(User).all()
+        if existing_users:
+            print("⚠️ Des utilisateurs existent déjà dans la base de données.")
+            print("Voulez-vous continuer et mettre à jour les utilisateurs existants? (y/N)")
+            response = input().lower()
+            if response != 'y':
+                print("❌ Opération annulée")
+                return
+        
         # Admin
-        admin = User(
-            phone="+2250700000000",
-            email="admin@test.ci",
-            hashed_password=get_password_hash("admin123"),
-            full_name="Admin Test",
-            role=UserRole.manager,
-            status=UserStatus.active,
-            kyc_status=KYCStatus.verified,
-            commune="Plateau"
-        )
-        db.add(admin)
+        admin = db.query(User).filter(User.phone == "+2250700000000").first()
+        if not admin:
+            admin = User(
+                phone="+2250700000000",
+                email="admin@test.ci",
+                hashed_password=get_password_hash("admin123"),
+                full_name="Admin Test",
+                role=UserRole.manager,
+                status=UserStatus.active,
+                kyc_status=KYCStatus.verified,
+                commune="Plateau"
+            )
+            db.add(admin)
         
         # Client de test
-        client = User(
-            phone="+2250701234567",
-            email="client@test.ci",
-            hashed_password=get_password_hash("client123"),
-            full_name="Client Test",
-            role=UserRole.client,
-            status=UserStatus.active,
-            kyc_status=KYCStatus.verified,
-            commune="Cocody"
-        )
-        db.add(client)
+        client = db.query(User).filter(User.phone == "+2250701234567").first()
+        if not client:
+            client = User(
+                phone="+2250701234567",
+                email="client@test.ci",
+                hashed_password=get_password_hash("client123"),
+                full_name="Client Test",
+                role=UserRole.client,
+                status=UserStatus.active,
+                kyc_status=KYCStatus.verified,
+                commune="Cocody"
+            )
+            db.add(client)
         
         # Coursier de test
-        courier = User(
-            phone="+2250707654321",
-            email="coursier@test.ci",
-            hashed_password=get_password_hash("coursier123"),
-            full_name="Coursier Test",
-            role=UserRole.courier,
-            status=UserStatus.active,
-            kyc_status=KYCStatus.verified,
-            commune="Yopougon"
-        )
-        db.add(courier)
+        courier = db.query(User).filter(User.phone == "+2250707654321").first()
+        if not courier:
+            courier = User(
+                phone="+2250707654321",
+                email="coursier@test.ci",
+                hashed_password=get_password_hash("coursier123"),
+                full_name="Coursier Test",
+                role=UserRole.courier,
+                status=UserStatus.active,
+                kyc_status=KYCStatus.verified,
+                commune="Yopougon"
+            )
+            db.add(courier)
         
         # Entreprise de test
-        business = User(
-            phone="+2250709876543",
-            email="business@test.ci",
-            hashed_password=get_password_hash("business123"),
-            full_name="Entreprise Test",
-            role=UserRole.business,
-            status=UserStatus.active,
-            kyc_status=KYCStatus.verified,
-            commune="Adjamé"
-        )
-        db.add(business)
+        business = db.query(User).filter(User.phone == "+2250709876543").first()
+        if not business:
+            business = User(
+                phone="+2250709876543",
+                email="business@test.ci",
+                hashed_password=get_password_hash("business123"),
+                full_name="Entreprise Test",
+                role=UserRole.business,
+                status=UserStatus.active,
+                kyc_status=KYCStatus.verified,
+                commune="Adjamé"
+            )
+            db.add(business)
         
         db.commit()
         
         # Portefeuilles
         for user in [admin, client, courier, business]:
-            wallet = Wallet(
-                user_id=user.id,
-                balance=10000.0,
-                bonus_balance=1000.0
-            )
-            db.add(wallet)
+            existing_wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
+            if not existing_wallet:
+                wallet = Wallet(
+                    user_id=user.id,
+                    balance=10000.0
+                )
+                db.add(wallet)
         
         # Quelques livraisons de test
         for i in range(5):

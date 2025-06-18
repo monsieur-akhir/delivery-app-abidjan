@@ -240,10 +240,19 @@ export default {
   props: {
     user: {
       type: Object,
-      required: true,
-    },
+      required: true
+    }
   },
-  emits: ['close', 'edit', 'updateUser'],
+  data() {
+    return {
+      localUser: { ...this.user }
+    }
+  },
+  methods: {
+    updateUser() {
+      this.$emit('update', this.localUser)
+    }
+  },
   setup(props, { emit }) {
     const { showToast } = useToast()
 
@@ -305,13 +314,10 @@ export default {
     }
 
     const reviewKyc = () => {
-      // Ouvrir le modal de révision KYC
-      // Cette fonctionnalité sera gérée par le composant parent
       showToast('Fonctionnalité de révision KYC à implémenter', 'info')
     }
 
     const sendMessage = () => {
-      // Ouvrir le modal d'envoi de message
       showToast("Fonctionnalité d'envoi de message à implémenter", 'info')
     }
 
@@ -325,7 +331,7 @@ export default {
 
       try {
         await managerApi.updateUserStatus(props.user.id, { status: newStatus })
-        emit('updateUser', { ...props.user, status: newStatus })
+        props.user.status = newStatus
         showToast(
           `Utilisateur ${action === 'suspendre' ? 'suspendu' : 'activé'} avec succès`,
           'success'
@@ -358,11 +364,6 @@ export default {
       loadRoleSpecificData()
     })
 
-    const updateUserStatus = () => {
-      const updatedUser = { ...props.user, status: 'verified' }
-      emit('edit', updatedUser)
-    }
-
     return {
       loadingStats,
       loadingActivity,
@@ -376,7 +377,6 @@ export default {
       toggleUserStatus,
       formatDate,
       formatCurrency,
-      updateUserStatus,
     }
   },
 }

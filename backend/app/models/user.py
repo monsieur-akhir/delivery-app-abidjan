@@ -1,4 +1,3 @@
-# Ajouter ces imports si nécessaire
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, Enum, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -8,7 +7,6 @@ from typing import List, Optional
 
 from ..db.base import Base
 from .transport import VehicleType
-from .delivery import Delivery
 
 class UserRole(str, enum.Enum):
     client = "client"
@@ -48,19 +46,12 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relations
-    client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="Delivery.client_id")
-    courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="Delivery.courier_id")
-    complaints = relationship("Complaint", back_populates="user", foreign_keys="Complaint.user_id")
-    assigned_complaints = relationship("Complaint", back_populates="assigned_manager", foreign_keys="Complaint.assigned_to")
-    tickets = relationship("SupportTicket", back_populates="user", foreign_keys="SupportTicket.user_id")
-    assigned_tickets = relationship("SupportTicket", back_populates="assigned_agent", foreign_keys="SupportTicket.assigned_agent_id")
-    # TODO: Re-add rating relationships after fixing circular imports
-    # ratings_received = relationship("Rating", back_populates="rated_user", foreign_keys="Rating.rated_user_id")
-    # ratings_given = relationship("Rating", back_populates="rater", foreign_keys="Rating.rater_id")
-    # TODO: Re-add gamification and other relationships after fixing circular imports
-    # courier_points = relationship("CourierPoints", back_populates="courier", uselist=False)
-    # wallet = relationship("Wallet", back_populates="user", uselist=False)
-    # notifications = relationship("Notification", back_populates="user")
+    client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="[Delivery.client_id]")
+    courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="[Delivery.courier_id]")
+    complaints = relationship("Complaint", back_populates="user", foreign_keys="[Complaint.user_id]")
+    assigned_complaints = relationship("Complaint", back_populates="assigned_manager", foreign_keys="[Complaint.assigned_to]")
+    assigned_tickets = relationship("SupportTicket", back_populates="assigned_agent", foreign_keys="[SupportTicket.assigned_agent_id]")
+    tickets = relationship("SupportTicket", back_populates="user", foreign_keys="[SupportTicket.user_id]")
     
     # Relations spécifiques au rôle business
     business_profile = relationship("BusinessProfile", back_populates="user", uselist=False)
@@ -86,17 +77,13 @@ class BusinessProfile(Base):
     lng = Column(Float, nullable=True)
     logo_url = Column(String, nullable=True)
     description = Column(Text, nullable=True)
-    commission_rate = Column(Float, default=0.10)  # 10% par défaut
+    commission_rate = Column(Float, default=0.10)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relations
     user = relationship("User", back_populates="business_profile")
     vehicles = relationship("Vehicle", back_populates="business")
     products = relationship("Product", back_populates="business")
-    
-    # TODO: Re-add vehicle relationships after fixing circular imports
-    # vehicles = relationship("Vehicle", back_populates="business")
 
 class CourierProfile(Base):
     __tablename__ = "courier_profiles"
@@ -105,7 +92,7 @@ class CourierProfile(Base):
     user_id = Column(Integer, ForeignKey("users.id"), unique=True)
     id_card_number = Column(String, nullable=True)
     id_card_url = Column(String, nullable=True)
-    vehicle_type = Column(Enum(VehicleType), default=VehicleType.MOTORCYCLE)  # Mise à jour pour utiliser l'enum VehicleType
+    vehicle_type = Column(Enum(VehicleType), default=VehicleType.MOTORCYCLE)
     license_plate = Column(String, nullable=True)
     driving_license_url = Column(String, nullable=True)
     insurance_url = Column(String, nullable=True)
@@ -116,5 +103,4 @@ class CourierProfile(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relations
     user = relationship("User", back_populates="courier_profile")

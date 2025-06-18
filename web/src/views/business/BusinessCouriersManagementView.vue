@@ -56,20 +56,20 @@
         <button @click="showInviteModal = true" class="btn btn-primary">Inviter un coursier</button>
       </div>
 
-      <div v-else v-for="courier in couriers" :key="courier.id" class="courier-card">
+      <div v-else v-for="(_, index) in couriers" :key="index" class="courier-card">
         <div class="courier-header">
           <div class="courier-avatar">
-            <img :src="courier.profile_picture || '/default-avatar.png'" :alt="courier.full_name" />
-            <div v-if="courier.is_online" class="online-indicator"></div>
+            <img :src="couriers[index].profile_picture || '/default-avatar.png'" :alt="couriers[index].full_name" />
+            <div v-if="couriers[index].is_online" class="online-indicator"></div>
           </div>
           <div class="courier-info">
-            <h3>{{ courier.full_name }}</h3>
-            <p class="courier-phone">{{ courier.phone }}</p>
+            <h3>{{ couriers[index].full_name }}</h3>
+            <p class="courier-phone">{{ couriers[index].phone }}</p>
             <div class="courier-status">
-              <span :class="['status-badge', courier.status]">
-                {{ getStatusLabel(courier.status) }}
+              <span :class="['status-badge', couriers[index].status]">
+                {{ getStatusLabel(couriers[index].status) }}
               </span>
-              <span v-if="courier.is_favorite" class="favorite-badge">
+              <span v-if="couriers[index].is_favorite" class="favorite-badge">
                 <i class="fas fa-star"></i>
                 Favori
               </span>
@@ -81,35 +81,35 @@
                 <i class="fas fa-ellipsis-v"></i>
               </button>
               <div class="dropdown-menu">
-                <button @click="viewCourierDetails(courier)" class="dropdown-item">
+                <button @click="viewCourierDetails(couriers[index])" class="dropdown-item">
                   <i class="fas fa-eye"></i>
                   Voir détails
                 </button>
-                <button @click="toggleFavorite(courier)" class="dropdown-item">
-                  <i :class="courier.is_favorite ? 'fas fa-star-half-alt' : 'fas fa-star'"></i>
-                  {{ courier.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
+                <button @click="toggleFavorite(couriers[index])" class="dropdown-item">
+                  <i :class="couriers[index].is_favorite ? 'fas fa-star-half-alt' : 'fas fa-star'"></i>
+                  {{ couriers[index].is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
                 </button>
                 <button
-                  @click="sendMessage(courier)"
+                  @click="sendMessage(couriers[index])"
                   class="dropdown-item"
-                  :disabled="!courier.is_online"
+                  :disabled="!couriers[index].is_online"
                 >
                   <i class="fas fa-comment"></i>
                   Envoyer un message
                 </button>
                 <div class="dropdown-divider"></div>
                 <button
-                  @click="suspendCourier(courier)"
+                  @click="suspendCourier(couriers[index])"
                   class="dropdown-item danger"
-                  v-if="courier.status === 'active'"
+                  v-if="couriers[index].status === 'active'"
                 >
                   <i class="fas fa-ban"></i>
                   Suspendre
                 </button>
                 <button
-                  @click="reactivateCourier(courier)"
+                  @click="reactivateCourier(couriers[index])"
                   class="dropdown-item"
-                  v-if="courier.status === 'suspended'"
+                  v-if="couriers[index].status === 'suspended'"
                 >
                   <i class="fas fa-check"></i>
                   Réactiver
@@ -122,8 +122,8 @@
         <div class="courier-stats">
           <div class="stat-item">
             <i class="fas fa-star text-yellow"></i>
-            <span>{{ courier.average_rating || 0 }}/5</span>
-            <small>({{ courier.ratings_count || 0 }} avis)</small>
+            <span>{{ couriers[index].average_rating || 0 }}/5</span>
+            <small>({{ couriers[index].ratings_count || 0 }} avis)</small>
           </div>
           <div class="stat-item">
             <i class="fas fa-truck text-blue"></i>
@@ -353,8 +353,8 @@ export default {
       }
     }
 
-    const viewCourierDetails = courierData => {
-      selectedCourier.value = courierData
+    const viewCourierDetails = courier => {
+      selectedCourier.value = courier
     }
 
     const toggleFavorite = async courier => {
@@ -394,7 +394,7 @@ export default {
       }
     }
 
-    const reactivateCourier = async () => {
+    const reactivateCourier = async courier => {
       try {
         // API call to reactivate courier
         showToast('Coursier réactivé avec succès', 'success')

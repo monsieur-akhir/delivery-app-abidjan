@@ -82,7 +82,7 @@ export default {
       // Préparer les données avec fill pour l'effet d'aire
       const chartData = {
         ...props.data,
-        datasets: props.data.datasets.map(dataset => ({
+        datasets: props.data.datasets.map((dataset, index) => ({
           ...dataset,
           fill: true,
           backgroundColor: dataset.backgroundColor || `rgba(54, 162, 235, 0.2)`,

@@ -13,7 +13,7 @@
         "API_URL": "https://dev-api.livraison-abidjan.com/v1",
         "WEBSOCKET_URL": "wss://dev-api.livraison-abidjan.com/ws",
         "MAPS_API_KEY": "AIzaSyDev123456789",
-        "SENTRY_DSN": "",
+        "SENTRY_DSN": "https://dev123456789@o123456.ingest.sentry.io/123456",
         "ENABLE_LOGS": "true"
       },
       "android": {
@@ -57,10 +57,10 @@
       "channel": "local",
       "env": {
         "ENVIRONMENT": "local",
-        "API_URL": "http://localhost:8000/v1",
-        "WEBSOCKET_URL": "ws://localhost:8000/ws",
+        "API_URL": "http://192.168.1.4:8000/v1",
+        "WEBSOCKET_URL": "ws://192.168.1.4:8000/ws",
         "MAPS_API_KEY": "AIzaSyLocal123456789",
-        "SENTRY_DSN": "",
+        "SENTRY_DSN": "https://local123456789@o123456.ingest.sentry.io/123456",
         "ENABLE_LOGS": "true"
       },
       "android": {

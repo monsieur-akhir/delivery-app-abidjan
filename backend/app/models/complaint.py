@@ -1,4 +1,3 @@
-
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -43,5 +42,5 @@ class Complaint(Base):
 
     # Relations
     user = relationship("User", back_populates="complaints", foreign_keys=[user_id])
-    delivery = relationship("Delivery")
-    assigned_manager = relationship("User", foreign_keys=[assigned_to])
+    assigned_manager = relationship("User", back_populates="assigned_complaints", foreign_keys=[assigned_to])
+    delivery = relationship("Delivery", back_populates="complaints")

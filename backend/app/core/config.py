@@ -27,13 +27,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     
     # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "http://localhost:5173",
-        "https://livraison-abidjan.com",
-        "https://admin.livraison-abidjan.com"
-    ]
+    CORS_ORIGINS: List[str] = ["*"]
     
     # Upload Configuration
     MAX_UPLOAD_SIZE: int = int(os.getenv("MAX_UPLOAD_SIZE", "10485760"))  # 10MB par défaut
