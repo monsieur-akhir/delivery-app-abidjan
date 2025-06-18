@@ -72,28 +72,52 @@ def get_deliveries_by_courier(
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
 def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: User) -> Delivery:
-    from ..services.promotions import PromotionService
     """
     Créer une nouvelle livraison.
     """
+    from ..models.delivery import Delivery
+    from ..core.settings import settings
+    
     # Vérifier si le prix proposé est supérieur au minimum
-    if delivery_data.proposed_price < settings.MIN_DELIVERY_PRICE:
-        raise BadRequestError(f"Le prix proposé doit être d'au moins {settings.MIN_DELIVERY_PRICE} FCFA")
+    min_price = getattr(settings, 'MIN_DELIVERY_PRICE', 500)
+    if delivery_data.proposed_price < min_price:
+        raise ValueError(f"Le prix proposé doit être d'au moins {min_price} FCFA")
 
-    # Recommander un véhicule si nécessaire
-    if delivery_data.cargo_category and not delivery_data.required_vehicle_type:
-        try:
-            transport_service = TransportService(db)
-            recommendation_data = VehicleRecommendationRequest(
-                cargo_category=delivery_data.cargo_category,
-                distance=delivery_data.estimated_distance or 10,  # Valeur par défaut si non fournie
-                weight=delivery_data.package_weight,
-                is_fragile=delivery_data.is_fragile or False
-            )
-            recommendation = transport_service.recommend_vehicle(recommendation_data)
-
-            # Appliquer le multiplicateur de prix
-            delivery_data.proposed_price = delivery_data.proposed_price * recommendation["price_multiplier"]
+    # Créer la livraison
+    db_delivery = Delivery(
+        client_id=current_user.id,
+        pickup_address=delivery_data.pickup_address,
+        pickup_commune=delivery_data.pickup_commune,
+        pickup_lat=delivery_data.pickup_lat,
+        pickup_lng=delivery_data.pickup_lng,
+        pickup_contact_name=delivery_data.pickup_contact_name,
+        pickup_contact_phone=delivery_data.pickup_contact_phone,
+        delivery_address=delivery_data.delivery_address,
+        delivery_commune=delivery_data.delivery_commune,
+        delivery_lat=delivery_data.delivery_lat,
+        delivery_lng=delivery_data.delivery_lng,
+        delivery_contact_name=delivery_data.delivery_contact_name or getattr(delivery_data, 'recipient_name', None),
+        delivery_contact_phone=delivery_data.delivery_contact_phone or getattr(delivery_data, 'recipient_phone', None),
+        package_description=delivery_data.package_description,
+        package_size=delivery_data.package_size,
+        package_weight=delivery_data.package_weight,
+        is_fragile=delivery_data.is_fragile or False,
+        cargo_category=delivery_data.cargo_category,
+        required_vehicle_type=delivery_data.required_vehicle_type,
+        proposed_price=delivery_data.proposed_price,
+        delivery_type=delivery_data.delivery_type or "standard",
+        estimated_distance=getattr(delivery_data, 'distance', None),
+        estimated_duration=getattr(delivery_data, 'estimated_duration', None)
+    )
+    
+    try:
+        db.add(db_delivery)
+        db.commit()
+        db.refresh(db_delivery)
+        return db_delivery
+    except Exception as e:
+        db.rollback()
+        raise ValueError(f"Erreur lors de la création de la livraison: {str(e)}")ltiplier"]
 
             # Définir le type de véhicule requis
             delivery_data.required_vehicle_type = recommendation["recommended_vehicle"].type

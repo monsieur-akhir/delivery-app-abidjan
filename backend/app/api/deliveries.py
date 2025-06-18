@@ -13,8 +13,29 @@ from ..services import geolocation as geolocation_service
 
 router = APIRouter()
 
-from ..services.delivery import get_delivery, get_courier_deliveries, get_user_deliveries_with_filters
+from ..services.delivery import get_delivery, get_courier_deliveries, get_user_deliveries_with_filters, create_delivery
 from ..services.matching import MatchingService
+
+@router.post("/deliveries", response_model=delivery_schemas.DeliveryResponse)
+async def create_new_delivery(
+    delivery_data: delivery_schemas.DeliveryCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Créer une nouvelle demande de livraison.
+    Seuls les clients et les entreprises peuvent créer des livraisons.
+    """
+    if current_user.role not in ["client", "business"]:
+        raise HTTPException(status_code=403, detail="Seuls les clients peuvent créer des livraisons")
+    
+    try:
+        delivery = create_delivery(db, delivery_data, current_user)
+        return delivery
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la création de la livraison: {str(e)}")
 
 @router.get("/deliveries")
 async def get_deliveries(

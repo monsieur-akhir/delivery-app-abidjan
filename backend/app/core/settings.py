@@ -52,6 +52,7 @@ class Settings(BaseSettings):
 
     # === Rasa ===
     RASA_URL: str
+    MIN_DELIVERY_PRICE: float = 500.0
 
     model_config = SettingsConfigDict(env_file=str(env_file_path), extra="ignore")
 

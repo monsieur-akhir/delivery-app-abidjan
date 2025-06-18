@@ -51,11 +51,29 @@ class DeliveryBase(BaseModel):
 # === CREATE / UPDATE ===
 
 class DeliveryCreate(DeliveryBase):
+    # Champs additionnels du mobile
+    package_type: Optional[str] = None
+    recipient_name: Optional[str] = None
+    recipient_phone: Optional[str] = None
+    special_instructions: Optional[str] = None
+    distance: Optional[float] = None
+    estimated_duration: Optional[int] = None
+    weather_conditions: Optional[str] = None
+    vehicle_type: Optional[str] = None
+    delivery_speed: Optional[str] = None
+    extras: Optional[List[str]] = None
+    
     @validator('proposed_price')
     def price_must_be_positive(cls, v):
         if v <= 0:
             raise ValueError('Le prix proposé doit être positif')
         return v
+    
+    @validator('pickup_address', 'delivery_address')
+    def addresses_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Les adresses ne peuvent pas être vides')
+        return v.strip()
 
 class DeliveryUpdate(BaseModel):
     pickup_address: Optional[str] = None
