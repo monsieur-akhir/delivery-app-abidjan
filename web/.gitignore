@@ -27,7 +27,7 @@ dist-ssr
 .env
 .env.local
 .env.*.local
-
+./delivery-app-abidjan/livraison-abidjan-mobile/.env
 # Build outputs
 build/
 dist/
