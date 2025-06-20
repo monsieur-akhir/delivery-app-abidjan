@@ -1543,7 +1543,7 @@ const CreateDeliveryScreen: React.FC = () => {
             <Text style={styles.routeText}>
               {pickupAddress || 'Sélectionner une adresse'}
             </Text>
-            <Feather name="navigate" size={20} color={COLORS.primary} />
+            <Feather name="map-pin" size={20} color={COLORS.primary} />
           </View>
 
           {/* Indicateur de prix */}
