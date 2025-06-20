@@ -115,4 +115,5 @@ const styles = StyleSheet.create({
   },
 })
 
+export { DeliveryStatusBadge }
 export default DeliveryStatusBadge

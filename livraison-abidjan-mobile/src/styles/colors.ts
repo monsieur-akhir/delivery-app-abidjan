@@ -46,4 +46,8 @@ export const colors = {
   info: '#2196F3',
 };
 
-export default theme;
+export default colors
+
+// Export alternatif pour la compatibilité
+export const COLORS = colors
+export { colors }

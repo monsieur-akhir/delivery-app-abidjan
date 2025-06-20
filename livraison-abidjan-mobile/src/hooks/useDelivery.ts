@@ -168,6 +168,7 @@ export interface UseDeliveryReturn {
   getClientDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
   getCourierDeliveryHistory: (filters?: DeliveryFilters) => Promise<void>
   getDeliveryDetails: (id: string) => Promise<Delivery>
+  getUserDeliveries: (filters?: DeliveryFilters) => Promise<void>
 
   // Estimations
   getPriceEstimate: (data: PriceEstimateData) => Promise<number>
@@ -721,6 +722,7 @@ const getVehicleRecommendation = useCallback(async (data: VehicleRecommendationD
     getClientDeliveryHistory,
     getCourierDeliveryHistory,
     getDeliveryDetails,
+    getUserDeliveries: getDeliveries, // Alias pour la compatibilité
 
     // Estimations
     getPriceEstimate,
