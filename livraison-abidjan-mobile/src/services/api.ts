@@ -581,7 +581,6 @@ api.interceptors.response.use(
 // Nouvelle fonction de connexion par OTP uniquement
 export const loginWithOTP = async (phone: string, otp: string): Promise<{ token: string; user: User }> => {
   try {
-    // Utiliser l'endpoint correct pour vérifier l'OTP de login
     const response = await api.post("/api/auth/verify-otp", { 
       phone: phone,
       code: otp,
@@ -589,7 +588,8 @@ export const loginWithOTP = async (phone: string, otp: string): Promise<{ token:
     }, {
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 10000 // Timeout de 10 secondes
     })
     
     if (response.data.success && response.data.token) {
@@ -695,6 +695,8 @@ export const sendOTP = async (phone: string, otpType: 'registration' | 'login' |
     const response = await api.post("/api/auth/send-otp", { 
       phone: phone,
       otp_type: otpType
+    }, {
+      timeout: 10000 // Timeout de 10 secondes
     })
     return response.data
   } catch (error: unknown) {

@@ -14,6 +14,7 @@ import LoginIllustration from "../../assets/login-connexion.svg"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import i18n from "../../i18n"
+import CustomAlert from "../../components/CustomAlert"
 
 type OTPLoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "OTPLogin">
@@ -33,6 +34,8 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
   const [countdown, setCountdown] = useState<number>(0)
+  const [alertVisible, setAlertVisible] = useState(false)
+  const [alertConfig, setAlertConfig] = useState({ title: '', message: '', type: 'error' })
 
   // Charger le téléphone sauvegardé
   useEffect(() => {
@@ -79,14 +82,14 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
   }
   const handleSendOTP = async (): Promise<void> => {
     if (phone.trim() === "") {
-      setError(t("otpLogin.errorPhoneRequired"))
-      setVisible(true)
+      setAlertConfig({ title: 'Erreur', message: t("otpLogin.errorPhoneRequired"), type: 'error' })
+      setAlertVisible(true)
       return
     }    // Validation basique du numéro de téléphone
     const phoneRegex = /^[+]?[1-9][\d]{0,15}$/
     if (!phoneRegex.test(phone.replace(/[\s\-()]/g, ''))) {
-      setError(t("otpLogin.errorPhoneInvalid"))
-      setVisible(true)
+      setAlertConfig({ title: 'Erreur', message: t("otpLogin.errorPhoneInvalid"), type: 'error' })
+      setAlertVisible(true)
       return
     }    setLoading(true)
     try {
@@ -110,22 +113,26 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
       }
     } catch (error) {
       console.error("Send OTP error:", error)
-      setError(error instanceof Error ? error.message : t("otpLogin.errorSendingOtp"))
-      setVisible(true)
+      setAlertConfig({
+        title: 'Erreur',
+        message: error instanceof Error ? error.message : t("otpLogin.errorSendingOtp"),
+        type: 'error'
+      })
+      setAlertVisible(true)
     } finally {
       setLoading(false)
     }
   }
   const handleVerifyOTP = async (): Promise<void> => {
     if (otp.trim() === "") {
-      setError(t("otpLogin.errorOtpRequired"))
-      setVisible(true)
+      setAlertConfig({ title: 'Erreur', message: t("otpLogin.errorOtpRequired"), type: 'error' })
+      setAlertVisible(true)
       return
     }
 
     if (otp.length !== 6) {
-      setError(t("otpLogin.errorOtpInvalid"))
-      setVisible(true)
+      setAlertConfig({ title: 'Erreur', message: t("otpLogin.errorOtpInvalid"), type: 'error' })
+      setAlertVisible(true)
       return
     }
 
@@ -149,8 +156,12 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
     } catch (err: unknown) {
       const error = err as Error;
       console.error("OTP Login error:", error)
-      setError(error instanceof Error ? error.message : t("otpLogin.errorVerifyingOtp"))
-      setVisible(true)
+      setAlertConfig({
+        title: 'Erreur',
+        message: error instanceof Error ? error.message : t("otpLogin.errorVerifyingOtp"),
+        type: 'error'
+      })
+      setAlertVisible(true)
     } finally {
       setLoading(false)
     }
@@ -166,8 +177,12 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
       setError("")
     } catch (error) {
       console.error("Resend OTP error:", error)
-      setError(error instanceof Error ? error.message : t("otpLogin.errorSendingOtp"))
-      setVisible(true)
+      setAlertConfig({
+        title: 'Erreur',
+        message: error instanceof Error ? error.message : t("otpLogin.errorSendingOtp"),
+        type: 'error'
+      })
+      setAlertVisible(true)
     } finally {
       setLoading(false)
     }
@@ -315,17 +330,14 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
           </Animatable.View>
         </Animatable.View>
 
-        <Snackbar
-          visible={visible}
-          onDismiss={() => setVisible(false)}
-          duration={3000}
-          action={{
-            label: "OK",
-            onPress: () => setVisible(false),
-          }}
-        >
-          {error}
-        </Snackbar>
+        <CustomAlert
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          type={alertConfig.type as any}
+          onDismiss={() => setAlertVisible(false)}
+          showCloseButton
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   )
