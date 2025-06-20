@@ -200,7 +200,13 @@ const ExpressDeliveriesScreen: React.FC = () => {
             {canAccept && (
               <>                <Button
                   mode="outlined"
-                  onPress={() => navigation.navigate("DeliveryDetails", { deliveryId: item.id.toString() })}
+                  onPress={() => {
+                    if (item.id !== undefined && item.id !== null && item.id !== "") {
+                      navigation.navigate("DeliveryDetails", { deliveryId: item.id.toString() })
+                    } else {
+                      console.error('Tentative de navigation vers DeliveryDetails sans deliveryId', item)
+                    }
+                  }}
                   style={styles.actionButton}
                 >
                   {t("delivery.viewDetails")}
@@ -218,7 +224,13 @@ const ExpressDeliveriesScreen: React.FC = () => {
             {canStart && (
               <>                <Button
                   mode="outlined"
-                  onPress={() => navigation.navigate("DeliveryDetails", { deliveryId: item.id.toString() })}
+                  onPress={() => {
+                    if (item.id !== undefined && item.id !== null && item.id !== "") {
+                      navigation.navigate("DeliveryDetails", { deliveryId: item.id.toString() })
+                    } else {
+                      console.error('Tentative de navigation vers DeliveryDetails sans deliveryId', item)
+                    }
+                  }}
                   style={styles.actionButton}
                 >
                   {t("delivery.viewDetails")}

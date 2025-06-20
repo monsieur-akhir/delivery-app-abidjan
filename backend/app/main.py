@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -638,8 +637,7 @@ async def notify_available_couriers(db: Session, delivery_id: int):
         # Récupérer les coursiers actifs dans la zone
         available_couriers = db.query(User).filter(
             User.role == "courier",
-            User.is_active == True,
-            User.is_verified == True
+            User.status == "active"
         ).all()
         
         # Envoyer notification à chaque coursier

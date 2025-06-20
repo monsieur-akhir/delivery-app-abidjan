@@ -17,6 +17,8 @@ import MapView, {
 } from 'react-native-maps'
 import { MaterialIcons } from '@expo/vector-icons'
 import { getDirections, getTrafficInfo } from '../services/api'
+import { Feather } from '@expo/vector-icons'
+import { colors } from '../styles/colors'
 
 const { width, height } = Dimensions.get('window')
 const ASPECT_RATIO = width / height
@@ -113,12 +115,39 @@ const CustomMapView: React.FC<MapViewProps> = ({
   const [calculatedRoute, setCalculatedRoute] = useState<Route | null>(null)
   const [trafficInfo, setTrafficInfo] = useState<TrafficInfo | null>(null)
   const [loading, setLoading] = useState(false)
+  const [directions, setDirections] = useState(null)
+  const [traffic, setTraffic] = useState([])
   // Refs
   const mapRef = useRef<MapView>(null)
 
+  const getInitialRegion = () => {
+    if (pickupLocation && deliveryLocation) {
+      const midLat = (pickupLocation.latitude + deliveryLocation.latitude) / 2
+      const midLng = (pickupLocation.longitude + deliveryLocation.longitude) / 2
+      const latDelta = Math.abs(pickupLocation.latitude - deliveryLocation.latitude) * 1.5
+      const lngDelta = Math.abs(pickupLocation.longitude - deliveryLocation.longitude) * 1.5
+      return { latitude: midLat, longitude: midLng, latitudeDelta: latDelta, longitudeDelta: lngDelta }
+    }
+    const location = pickupLocation || deliveryLocation
+    if (location) {
+      return {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      }
+    }
+    return {
+      latitude: 5.36, // Abidjan
+      longitude: -4.0,
+      latitudeDelta: 0.5,
+      longitudeDelta: 0.5,
+    }
+  }
+
   // Effect pour calculer la route
   useEffect(() => {
-    const calculateRoute = async () => {
+    const fetchDirectionsAndTraffic = async () => {
       const pickup = pickupLocation || pickupPoint
       const delivery = deliveryLocation || deliveryPoint
       
@@ -189,8 +218,10 @@ const CustomMapView: React.FC<MapViewProps> = ({
       }
     }
 
-    calculateRoute()
-  }, [pickupLocation, deliveryLocation, pickupPoint, deliveryPoint, showTraffic, showsTraffic, onRouteCalculated, onTrafficUpdate])
+    if (pickupLocation && deliveryLocation) {
+      fetchDirectionsAndTraffic()
+    }
+  }, [pickupLocation, deliveryLocation])
 
   // Gestionnaire de changement de région
   const handleRegionChange = (newRegion: Region) => {
@@ -245,7 +276,7 @@ const CustomMapView: React.FC<MapViewProps> = ({
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_DEFAULT}
-        region={region}
+        region={region || getInitialRegion()}
         onRegionChangeComplete={handleRegionChange}
         showsUserLocation={showUserLocation || showsUserLocation}
         showsTraffic={showTraffic || showsTraffic}
@@ -263,7 +294,11 @@ const CustomMapView: React.FC<MapViewProps> = ({
             pinColor="#FF6B00"
             draggable={isInteractive}
             onDragEnd={handlePickupDrag}
-          />
+          >
+            <View style={[styles.markerContainer, styles.pickupMarker]}>
+              <Feather name="map-pin" size={24} color={colors.primary} />
+            </View>
+          </Marker>
         )}
 
         {/* Marqueur de livraison */}
@@ -275,7 +310,11 @@ const CustomMapView: React.FC<MapViewProps> = ({
             pinColor="#4CAF50"
             draggable={isInteractive}
             onDragEnd={handleDeliveryDrag}
-          />
+          >
+            <View style={[styles.markerContainer, styles.deliveryMarker]}>
+              <Feather name="flag" size={24} color={colors.primary} />
+            </View>
+          </Marker>
         )}
 
         {/* Marqueur du coursier */}
@@ -395,6 +434,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     textAlign: 'center',
+  },
+  markerContainer: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  pickupMarker: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  deliveryMarker: {
+    borderColor: colors.primary,
+    borderWidth: 2,
   },
 })
 

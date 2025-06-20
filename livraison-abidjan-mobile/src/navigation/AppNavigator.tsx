@@ -1,6 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { View, Text } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { FeatherIcon } from '../components';
 import { RootStackParamList, TabParamList } from '../types/navigation';
@@ -17,6 +19,7 @@ import HomeScreen from '../screens/client/HomeScreen';
 import CreateDeliveryScreen from '../screens/client/CreateDeliveryScreen';
 import TrackDeliveryScreen from '../screens/client/TrackDeliveryScreen';
 import DeliveryHistoryScreen from '../screens/client/DeliveryHistoryScreen';
+import DeliveryDetailsScreen from '../screens/client/DeliveryDetailsScreen';
 import NotificationsScreen from '../screens/client/NotificationsScreen';
 import WalletScreen from '../screens/client/WalletScreen';
 import PaymentScreen from '../screens/client/PaymentScreen';
@@ -41,6 +44,13 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
+
+// Composant temporaire pour tester
+const TestHomeScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>Test Home Screen</Text>
+  </View>
+);
 
 function ClientTabs() {
   return (
@@ -164,6 +174,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="CreateDelivery" component={CreateDeliveryScreen} />
           <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
+          <Stack.Screen name="DeliveryDetails" component={DeliveryDetailsScreen} />
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
 

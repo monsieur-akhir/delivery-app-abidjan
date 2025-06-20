@@ -412,7 +412,7 @@ class DeliveryService {
       if (filters?.date_from) params.append('date_from', filters.date_from)
       if (filters?.date_to) params.append('date_to', filters.date_to)
 
-      const response = await api.get(`/client/delivery-history?${params.toString()}`)
+      const response = await api.get(`/api/client/delivery-history?${params.toString()}`)
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique client:', error)

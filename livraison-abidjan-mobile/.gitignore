@@ -30,8 +30,47 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# Environment Variables - Tous les fichiers .env
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+.env.*.local
+*.env
+*.env.local
+*.env.development
+*.env.development.local
+*.env.test
+*.env.test.local
+*.env.production
+*.env.production.local
+*.env.staging
+*.env.staging.local
+
+# Fichiers de configuration d'environnement spécifiques
+config/environment.ts
+config/environment.js
+config/environment.json
+config/.env*
+src/config/environment.ts
+src/config/environment.js
+src/config/environment.json
+src/config/.env*
+
+# Fichiers de secrets et clés API
+secrets/
+keys/
+api-keys/
+*.key
+*.pem
+*.p12
+*.pfx
 
 # typescript
 *.tsbuildinfo

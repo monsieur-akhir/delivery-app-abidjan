@@ -1,45 +1,16 @@
-
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Keyboard,
-  ActivityIndicator,
-  Animated,
-  Platform,
-  Dimensions,
-  Modal
-} from 'react-native';
-import {
-  TextInput,
-  List,
-  Card,
-  Text,
-  HelperText,
-  Divider,
-  IconButton,
-  Surface
-} from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, Keyboard, ActivityIndicator } from 'react-native';
+import { TextInput, Card, Text, Button, HelperText } from 'react-native-paper';
+import { Feather } from '@expo/vector-icons';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import * as Location from 'expo-location';
-import { LinearGradient } from 'expo-linear-gradient';
-import debounce from 'lodash/debounce';
-
-export interface Address {
-  id: string;
-  description: string;
-  latitude: number;
-  longitude: number;
-  commune?: string;
-  district?: string;
-  postalCode?: string;
-  type?: 'current_location' | 'saved' | 'recent' | 'suggestion';
-}
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getGoogleMapsApiKey } from '../config/environment';
+import { colors } from '../styles/colors';
+import type { Address } from '../types/models';
 
 interface AddressAutocompleteProps {
-  label: string;
+  label?: string;
   value: string;
   onChangeText: (text: string) => void;
   onAddressSelect: (address: Address) => void;
@@ -47,11 +18,9 @@ interface AddressAutocompleteProps {
   error?: string;
   style?: object;
   disabled?: boolean;
-  showCurrentLocation?: boolean;
-  maxSuggestions?: number;
-  onFocus?: () => void;
-  showSuggestions?: boolean;
 }
+
+const HISTORY_KEY = 'address_history';
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   label,
@@ -62,706 +31,326 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   error,
   style,
   disabled = false,
-  showCurrentLocation = true,
-  maxSuggestions = 8,
-  onFocus,
-  showSuggestions = false,
 }) => {
-  const [suggestions, setSuggestions] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [showSuggestionsState, setShowSuggestionsState] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
-  const [recentAddresses, setRecentAddresses] = useState<Address[]>([]);
-  const [isFocused, setIsFocused] = useState(false);
-
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(-10)).current;
+  const [history, setHistory] = useState<Address[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const inputRef = useRef<any>(null);
-
-  // Communes et zones populaires d'Abidjan avec coordonnées précises
-  const popularPlaces = useMemo(() => [
-    {
-      name: 'Aéroport Félix Houphouët-Boigny',
-      commune: 'Port-Bouët',
-      latitude: 5.2612,
-      longitude: -3.9269,
-      type: 'airport'
-    },
-    {
-      name: 'Plateau Centre-ville',
-      commune: 'Plateau',
-      latitude: 5.3274,
-      longitude: -4.0266,
-      type: 'business'
-    },
-    {
-      name: 'Université Félix Houphouët-Boigny',
-      commune: 'Cocody',
-      latitude: 5.3844,
-      longitude: -3.9731,
-      type: 'university'
-    },
-    {
-      name: 'Marché de Treichville',
-      commune: 'Treichville',
-      latitude: 5.2969,
-      longitude: -4.0178,
-      type: 'market'
-    },
-    {
-      name: 'Gare de Yopougon',
-      commune: 'Yopougon',
-      latitude: 5.3456,
-      longitude: -4.0642,
-      type: 'transport'
-    },
-    {
-      name: 'CHU de Cocody',
-      commune: 'Cocody',
-      latitude: 5.3667,
-      longitude: -3.9833,
-      type: 'hospital'
-    }
-  ], []);
-
-  const abidjanCommunes = useMemo(() => [
-    { name: 'Abobo', latitude: 5.4167, longitude: -4.0167 },
-    { name: 'Adjamé', latitude: 5.3667, longitude: -4.0333 },
-    { name: 'Attécoubé', latitude: 5.3333, longitude: -4.0667 },
-    { name: 'Cocody', latitude: 5.3500, longitude: -3.9874 },
-    { name: 'Koumassi', latitude: 5.2833, longitude: -3.9500 },
-    { name: 'Marcory', latitude: 5.2833, longitude: -4.0000 },
-    { name: 'Plateau', latitude: 5.3274, longitude: -4.0266 },
-    { name: 'Port-Bouët', latitude: 5.2500, longitude: -3.9167 },
-    { name: 'Treichville', latitude: 5.3000, longitude: -4.0167 },
-    { name: 'Yopougon', latitude: 5.3667, longitude: -4.0833 }
-  ], []);
-
-  // Animation d'entrée
-  useEffect(() => {
-    if (showSuggestionsState) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      fadeAnim.setValue(0);
-      slideAnim.setValue(-10);
-    }
-  }, [showSuggestionsState, fadeAnim, slideAnim]);
-
-  // Obtenir la position actuelle
-  useEffect(() => {
-    if (showCurrentLocation) {
-      getCurrentLocation();
-    }
-  }, [showCurrentLocation]);
-
-  const getCurrentLocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setCurrentLocation(location);
-    } catch (error) {
-      console.warn('Error getting current location:', error);
-    }
-  };
-
-  // Recherche d'adresses intelligente avec debounce
-  const debouncedSearchAddresses = useCallback(
-    debounce(async (query: string) => {
-      if (query.length < 2) {
-        setSuggestions([]);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const results: Address[] = [];
-        const normalizedQuery = query.toLowerCase().trim();
-
-        // 1. Recherche dans les lieux populaires
-        popularPlaces.forEach((place, index) => {
-          if (
-            place.name.toLowerCase().includes(normalizedQuery) ||
-            place.commune.toLowerCase().includes(normalizedQuery)
-          ) {
-            results.push({
-              id: `popular_${index}`,
-              description: `${place.name}, ${place.commune}`,
-              latitude: place.latitude,
-              longitude: place.longitude,
-              commune: place.commune,
-              type: 'suggestion'
-            });
-          }
-        });
-
-        // 2. Recherche par commune
-        abidjanCommunes.forEach((commune, index) => {
-          if (commune.name.toLowerCase().includes(normalizedQuery)) {
-            results.push({
-              id: `commune_${index}`,
-              description: `${commune.name}, Abidjan`,
-              latitude: commune.latitude,
-              longitude: commune.longitude,
-              commune: commune.name,
-              type: 'suggestion'
-            });
-          }
-        });
-
-        // 3. Recherche de rues et adresses spécifiques
-        if (query.length >= 4) {
-          const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place'];
-          const randomStreets = [
-            'des Jardins', 'de la Paix', 'du Commerce', 'de l\'Indépendance',
-            'des Cocotiers', 'de la République', 'du Stade', 'de l\'Église'
-          ];
-
-          // Générer des suggestions de rues réalistes
-          for (let i = 0; i < Math.min(3, maxSuggestions - results.length); i++) {
-            const prefix = streetPrefixes[Math.floor(Math.random() * streetPrefixes.length)];
-            const suffix = randomStreets[Math.floor(Math.random() * randomStreets.length)];
-            const commune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
-
-            results.push({
-              id: `street_${i}_${Date.now()}`,
-              description: `${prefix} ${query} ${suffix}, ${commune.name}`,
-              latitude: commune.latitude + (Math.random() - 0.5) * 0.02,
-              longitude: commune.longitude + (Math.random() - 0.5) * 0.02,
-              commune: commune.name,
-              type: 'suggestion'
-            });
-          }
-        }
-
-        // Limiter le nombre de résultats
-        setSuggestions(results.slice(0, maxSuggestions));
-      } catch (error) {
-        console.error('Error searching addresses:', error);
-        setSuggestions([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 300),
-    [popularPlaces, abidjanCommunes, maxSuggestions]
-  );
-
-  // Géocodage inverse pour la position actuelle
-  const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<Address> => {
-    // Trouver la commune la plus proche
-    let nearestCommune = abidjanCommunes[0];
-    let minDistance = Infinity;
-
-    abidjanCommunes.forEach(commune => {
-      const distance = Math.sqrt(
-        Math.pow(latitude - commune.latitude, 2) + Math.pow(longitude - commune.longitude, 2)
-      );
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestCommune = commune;
-      }
-    });
-
-    return {
-      id: 'current_location',
-      description: `Position actuelle (${nearestCommune.name})`,
-      latitude,
-      longitude,
-      commune: nearestCommune.name,
-      type: 'current_location'
+  const [predictions, setPredictions] = useState<Array<{
+    place_id: string;
+    structured_formatting: {
+      main_text: string;
+      secondary_text: string;
     };
-  }, [abidjanCommunes]);
+    description: string;
+  }>>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Gestionnaires d'événements améliorés
-  const handleTextChange = useCallback((text: string) => {
-    onChangeText(text);
-    
-    if (text.length >= 2) {
-      setShowSuggestionsState(true);
-      debouncedSearchAddresses(text);
-    } else if (text.length === 0) {
-      // Afficher les suggestions par défaut quand le champ est vide mais focalisé
-      if (isFocused) {
-        setShowSuggestionsState(true);
-        const defaultSuggestions = [
-          ...recentAddresses,
-          ...popularPlaces.slice(0, 4).map(place => ({
-            id: place.name,
-            description: `${place.name}, ${place.commune}`,
-            latitude: place.latitude,
-            longitude: place.longitude,
-            commune: place.commune,
-            type: 'suggestion' as const
-          }))
-        ];
-        setSuggestions(defaultSuggestions);
-      } else {
-        setShowSuggestionsState(false);
-        setSuggestions([]);
+  // Charger l'historique local
+  useEffect(() => {
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(HISTORY_KEY);
+        setHistory(stored ? (JSON.parse(stored) as Address[]) : []);
+      } catch {
+        setHistory([]);
       }
-    }
-  }, [onChangeText, debouncedSearchAddresses, isFocused, recentAddresses, popularPlaces]);
-
-  const handleAddressSelect = useCallback((address: Address) => {
-    onChangeText(address.description);
-    onAddressSelect(address);
-    
-    // Fermer les suggestions mais garder le focus sur l'input
-    setShowSuggestionsState(false);
-    setSuggestions([]);
-    
-    // Garder le focus sur l'input pour permettre la modification
-    // Ne pas fermer le clavier automatiquement
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, 100);
-
-    // Ajouter aux récents
-    const newRecent = { ...address, type: 'recent' as const };
-    setRecentAddresses(prev => [
-      newRecent,
-      ...prev.filter(addr => addr.id !== address.id).slice(0, 2)
-    ]);
-  }, [onChangeText, onAddressSelect]);
-
-  const handleCurrentLocationSelect = async () => {
-    if (!currentLocation) return;
-
-    try {
-      setLoading(true);
-      const address = await reverseGeocode(
-        currentLocation.coords.latitude,
-        currentLocation.coords.longitude
-      );
-      handleAddressSelect(address);
-    } catch (error) {
-      console.error('Error getting current location address:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFocus = useCallback(() => {
-    setIsFocused(true);
-    
-    // Afficher les suggestions si il y a du texte ou des récents
-    if (value.length >= 2) {
-      setShowSuggestionsState(true);
-      debouncedSearchAddresses(value);
-    } else {
-      // Afficher les suggestions par défaut
-      setShowSuggestionsState(true);
-      const defaultSuggestions = [
-        ...recentAddresses,
-        ...popularPlaces.slice(0, 4).map(place => ({
-          id: place.name,
-          description: `${place.name}, ${place.commune}`,
-          latitude: place.latitude,
-          longitude: place.longitude,
-          commune: place.commune,
-          type: 'suggestion' as const
-        }))
-      ];
-      setSuggestions(defaultSuggestions);
-    }
-    
-    onFocus?.();
-  }, [value, recentAddresses, popularPlaces, debouncedSearchAddresses, onFocus]);
-
-  const handleBlur = useCallback(() => {
-    setIsFocused(false);
-    // Délai plus long pour permettre la sélection dans les suggestions
-    setTimeout(() => {
-      setShowSuggestionsState(false);
-    }, 200);
+    })();
   }, []);
 
-  const clearInput = useCallback(() => {
-    onChangeText('');
-    setSuggestions([]);
-    setShowSuggestionsState(false);
-    // Garder le focus après effacement
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [onChangeText]);
+  // Ajouter à l'historique
+  const addToHistory = async (address: Address) => {
+    try {
+      const newHistory = [address, ...history.filter(a => a.description !== address.description)].slice(0, 8);
+      setHistory(newHistory);
+      await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+    } catch {}
+  };
 
-  // Icônes pour différents types de suggestions
-  const getIconForType = (type?: string) => {
-    switch (type) {
-      case 'current_location':
-        return 'location';
-      case 'recent':
-        return 'time-outline';
-      case 'saved':
-        return 'bookmark-outline';
-      default:
-        return 'location-outline';
+  // Utiliser la position actuelle
+  const handleUseCurrentLocation = async () => {
+    setLoadingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') throw new Error('Permission refusée');
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      let address = '';
+      let commune = '';
+      try {
+        const res = await Location.reverseGeocodeAsync({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+        if (res && res[0]) {
+          address = `${res[0].name || ''} ${res[0].street || ''}, ${res[0].city || res[0].region || ''}`.trim();
+          commune = res[0].city || res[0].region || '';
+        }
+      } catch {}
+      const addr: Address = {
+        id: 'current_location',
+        name: address,
+        description: address,
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        commune,
+        type: 'current_location',
+      };
+      onChangeText(address);
+      onAddressSelect(addr);
+      addToHistory(addr);
+    } catch {}
+    setLoadingLocation(false);
+  };
+
+  // Sélection d'une suggestion Google ou historique
+  const handleSelect = (address: Address) => {
+    onChangeText(address.description);
+    onAddressSelect(address);
+    addToHistory(address);
+    setShowHistory(false);
+    Keyboard.dismiss();
+  };
+
+  const handleTextChange = async (text: string) => {
+    onChangeText(text);
+    if (text.length > 2) {
+      setIsLoading(true);
+      try {
+        // TODO: Implémenter l'appel à l'API Google Places
+        const results: Array<{
+          place_id: string;
+          structured_formatting: {
+            main_text: string;
+            secondary_text: string;
+          };
+          description: string;
+        }> = []; // Remplacer par l'appel API réel
+        setPredictions(results);
+      } catch (error) {
+        console.error('Error fetching predictions:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setPredictions([]);
     }
   };
 
-  const getIconColor = (type?: string) => {
-    switch (type) {
-      case 'current_location':
-        return '#4CAF50';
-      case 'recent':
-        return '#FF9800';
-      case 'saved':
-        return '#2196F3';
-      default:
-        return '#666';
+  const handleSelectAddress = async (prediction: any) => {
+    try {
+      // TODO: Get address details from Google
+      const addressDetails: Address = {
+        id: prediction.place_id,
+        name: prediction.structured_formatting.main_text,
+        description: prediction.description,
+        commune: prediction.structured_formatting.secondary_text,
+        latitude: 0, // Replace with actual coords
+        longitude: 0, // Replace with actual coords
+        type: 'google',
+      };
+      onAddressSelect(addressDetails);
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
+    } catch (error) {
+      console.error('Error getting address details:', error);
     }
   };
 
-  const getIconForType2 = (type: string) => {
-    switch (type) {
-      case "airport": return "airplane"
-      case "university": return "school"
-      case "hospital": return "medical"
-      case "market": return "storefront"
-      case "transport": return "train"
-      case "business": return "business"
-      case "recent": return "time"
-      default: return "location"
-    }
+  const handleSelectHistory = (item: Address) => {
+    onAddressSelect({
+      ...item,
+    });
+    setShowHistory(false);
+    Keyboard.dismiss();
   };
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, error ? styles.inputError : null]}>
         <TextInput
-          ref={inputRef}
           label={label}
+          placeholder={placeholder || 'Saisir une adresse'}
           value={value}
           onChangeText={handleTextChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          mode="outlined"
-          disabled={disabled}
+          placeholderTextColor={colors.text}
+          style={[styles.textInput, { borderRadius: 12, backgroundColor: '#fff', fontSize: 16, padding: 12 }]}
+          editable={!disabled}
+          right={<TextInput.Icon icon={() => <Feather name="map-pin" size={20} color="#007AFF" />} onPress={() => setShowHistory(true)} />}
           error={!!error}
-          style={[styles.input, isFocused && styles.inputFocused]}
-          left={<TextInput.Icon icon="map-marker" color={isFocused ? '#007AFF' : '#666'} />}
-          right={
-            value.length > 0 ? (
-              <TextInput.Icon
-                icon="close-circle"
-                color="#666"
-                onPress={clearInput}
-              />
-            ) : loading ? (
-              <TextInput.Icon icon={() => <ActivityIndicator size={16} color="#007AFF" />} />
-            ) : undefined
-          }
-          theme={{
-            colors: {
-              primary: '#007AFF',
-              outline: isFocused ? '#007AFF' : '#e0e0e0'
-            }
-          }}
         />
+        {isLoading ? (
+          <ActivityIndicator size="small" color={colors.primary} style={styles.icon} />
+        ) : value ? (
+          <TouchableOpacity onPress={() => onChangeText('')} style={styles.icon}>
+            <Feather name="x" size={20} color={colors.text} />
+          </TouchableOpacity>
+        ) : null}
       </View>
-
-      {error && (
-        <HelperText type="error" visible={!!error} style={styles.errorText}>
-          {error}
-        </HelperText>
+      {error && <HelperText type="error" visible={!!error}>{error}</HelperText>}
+      <Button
+        mode="outlined"
+        icon={loadingLocation ? 'loading' : 'crosshairs-gps'}
+        onPress={handleUseCurrentLocation}
+        style={{ marginTop: 8, borderRadius: 8 }}
+        loading={loadingLocation}
+      >Utiliser ma position actuelle</Button>
+      {showHistory && history.length > 0 && (
+        <Card style={styles.suggestionsCard}>
+          {history.map((h, idx) => (
+            <TouchableOpacity key={idx} style={styles.suggestionItem} onPress={() => handleSelect(h)}>
+              <Text style={styles.suggestionText}>{h.description}</Text>
+            </TouchableOpacity>
+          ))}
+        </Card>
       )}
-
-      {/* Modal pour les suggestions */}
-      <Modal
-        visible={showSuggestionsState && (suggestions.length > 0 || loading)}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowSuggestionsState(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => {
-            setShowSuggestionsState(false);
-            // Garder le focus sur l'input
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          }}
-        >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <Card style={styles.suggestionsCard}>
-              <ScrollView 
-                style={styles.suggestionsList}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled={true}
-              >
-                <View style={styles.suggestionsContent}>
-                  {/* Chargement */}
-                  {loading && (
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator size={20} color="#007AFF" />
-                      <Text style={styles.loadingText}>Recherche en cours...</Text>
-                    </View>
-                  )}
-
-                  {/* Localisation actuelle */}
-                  {showCurrentLocation && currentLocation && value.length < 2 && !loading && (
-                    <>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Localisation actuelle</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.suggestionItem}
-                        onPress={handleCurrentLocationSelect}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.suggestionContent}>
-                          <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
-                            <Ionicons name="location" size={16} color="#4CAF50" />
-                          </View>
-                          <View style={styles.suggestionText}>
-                            <Text style={styles.suggestionTitle}>Ma position actuelle</Text>
-                            <Text style={styles.suggestionSubtitle}>Utiliser ma localisation GPS</Text>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
-                      {suggestions.length > 0 && <Divider style={styles.divider} />}
-                    </>
-                  )}
-
-                  {/* Adresses récentes */}
-                  {recentAddresses.length > 0 && value.length < 2 && !loading && (
-                    <>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Récents</Text>
-                      </View>
-                      {recentAddresses.map((address) => (
-                        <TouchableOpacity
-                          key={address.id}
-                          style={styles.suggestionItem}
-                          onPress={() => handleAddressSelect(address)}
-                          activeOpacity={0.7}
-                        >
-                          <View style={styles.suggestionContent}>
-                            <View style={styles.suggestionIcon}>
-                              <Ionicons 
-                                name={getIconForType(address.type)} 
-                                size={16} 
-                                color={getIconColor(address.type)} 
-                              />
-                            </View>
-                            <View style={styles.suggestionText}>
-                              <Text style={styles.suggestionTitle}>{address.description}</Text>
-                              <Text style={styles.suggestionSubtitle}>
-                                {address.commune && `Commune: ${address.commune}`}
-                              </Text>
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                      {suggestions.length > 0 && <Divider style={styles.divider} />}
-                    </>
-                  )}
-
-                  {/* Suggestions */}
-                  {suggestions.length > 0 && !loading && (
-                    <>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Suggestions</Text>
-                      </View>
-                      {suggestions.map((address) => (
-                        <TouchableOpacity
-                          key={address.id}
-                          style={styles.suggestionItem}
-                          onPress={() => handleAddressSelect(address)}
-                          activeOpacity={0.7}
-                        >
-                          <View style={styles.suggestionContent}>
-                            <View style={styles.suggestionIcon}>
-                              <Ionicons 
-                                name={getIconForType2(address.type || 'suggestion')} 
-                                size={16} 
-                                color={getIconColor(address.type)} 
-                              />
-                            </View>
-                            <View style={styles.suggestionText}>
-                              <Text style={styles.suggestionTitle}>{address.description}</Text>
-                              <Text style={styles.suggestionSubtitle}>
-                                {address.commune && `Commune: ${address.commune}`}
-                              </Text>
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                    </>
-                  )}
-
-                  {/* Aucun résultat */}
-                  {suggestions.length === 0 && value.length >= 2 && !loading && (
-                    <View style={styles.noResults}>
-                      <Ionicons name="search-outline" size={32} color="#ccc" />
-                      <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
-                      <Text style={styles.noResultsSubtext}>Essayez avec d'autres mots-clés</Text>
-                    </View>
-                  )}
-                </View>
-              </ScrollView>
-            </Card>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <GooglePlacesAutocomplete
+        ref={inputRef}
+        placeholder={placeholder || 'Rechercher une adresse'}
+        minLength={2}
+        fetchDetails={true}
+        enablePoweredByContainer={false}
+        debounce={400}
+        onPress={(data, details = null) => {
+          if (!data || !details || !details.geometry || !details.geometry.location) return;
+          const address: Address = {
+            id: data.place_id,
+            name: data.description,
+            description: data.description,
+            latitude: details.geometry.location.lat,
+            longitude: details.geometry.location.lng,
+            commune: (details.address_components || []).find((c: any) => (c.types || []).includes('locality'))?.long_name || '',
+            type: 'google',
+          };
+          handleSelect(address);
+        }}
+        query={{
+          key: getGoogleMapsApiKey(),
+          language: 'fr',
+          components: 'country:ci',
+        }}
+        predefinedPlaces={[]}
+        styles={{
+          textInput: { borderRadius: 12, backgroundColor: '#fff', fontSize: 16, padding: 12 },
+          listView: { borderRadius: 12, backgroundColor: '#fff', marginTop: 4 },
+          row: { padding: 12 },
+          description: { fontSize: 15 },
+          poweredContainer: { display: 'none' },
+        }}
+        renderLeftButton={() => (
+          <Feather name="map-pin" size={20} color="#007AFF" style={{ marginLeft: 8 }} />
+        )}
+        textInputProps={{
+          value,
+          onChangeText: (txt: string) => {
+            onChangeText(txt);
+            setShowHistory(false);
+          },
+          editable: !disabled,
+        }}
+      />
+      {predictions.length > 0 && (
+        <View style={styles.predictionsContainer}>
+          {predictions.map((prediction) => (
+            <TouchableOpacity
+              key={prediction.place_id}
+              style={styles.predictionItem}
+              onPress={() => handleSelectAddress(prediction)}
+            >
+              <Feather name="map-pin" size={16} color={colors.text} style={styles.predictionIcon} />
+              <View style={styles.predictionTextContainer}>
+                <Text style={styles.mainText}>{prediction.structured_formatting.main_text}</Text>
+                <Text style={styles.secondaryText}>{prediction.structured_formatting.secondary_text}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </View>
   );
 };
-
-const { width, height } = Dimensions.get('window')
 
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
     zIndex: 1000,
+    marginBottom: 16,
   },
-  inputContainer: {
-    position: 'relative',
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    fontSize: 16,
-  },
-  inputFocused: {
-    backgroundColor: '#FFFFFF',
-  },
-  errorText: {
-    marginTop: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-start',
-    paddingTop: 100,
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: 16,
+  textInput: {
+    marginBottom: 8,
   },
   suggestionsCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    maxHeight: 400,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
-  },
-  suggestionsList: {
-    maxHeight: 400,
-  },
-  suggestionsContent: {
-    paddingVertical: 8,
-  },
-  sectionHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f8f9fa',
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
-    textTransform: 'uppercase',
+    marginTop: 4,
+    marginBottom: 8,
+    elevation: 2,
+    paddingVertical: 4,
   },
   suggestionItem: {
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#f0f0f0',
-  },
-  suggestionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  suggestionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  currentLocationIcon: {
-    backgroundColor: '#e8f5e8',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E0E0E0',
   },
   suggestionText: {
-    flex: 1,
-  },
-  suggestionTitle: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
     color: '#333',
-    marginBottom: 2,
   },
-  suggestionSubtitle: {
-    fontSize: 12,
-    color: '#666',
-  },
-  divider: {
-    marginVertical: 4,
-  },
-  noResults: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-  },
-  noResultsText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  noResultsSubtext: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  loadingContainer: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
   },
-  loadingText: {
+  inputError: {
+    borderColor: colors.error,
+  },
+  icon: {
+    padding: 4,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  predictionsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    marginTop: 4,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 1000,
+  },
+  predictionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  predictionIcon: {
+    marginRight: 12,
+  },
+  predictionTextContainer: {
+    flex: 1,
+  },
+  mainText: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  secondaryText: {
     fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
+    color: colors.text,
+    opacity: 0.7,
   },
 });
 

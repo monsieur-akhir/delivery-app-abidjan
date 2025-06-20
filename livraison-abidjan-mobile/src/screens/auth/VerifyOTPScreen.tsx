@@ -105,7 +105,7 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
         // Navigate to appropriate screen
         navigation.reset({
           index: 0,
-          routes: [{ name: "ClientTabs" }],
+          routes: [{ name: "ClientMain" }],
         })
       }
     } catch (error) {

@@ -11,6 +11,7 @@ import { Feather } from "@expo/vector-icons"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import i18n from "../../i18n"
+import { useAuth } from '../../contexts/AuthContext'
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">
@@ -19,6 +20,8 @@ type LoginScreenProps = {
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
+  const { sessionExpired, setSessionExpired } = useAuth()
+  const [showSessionExpired, setShowSessionExpired] = useState(sessionExpired)
 
   const [error] = useState<string>("")
   const [visible, setVisible] = useState<boolean>(false)
@@ -42,6 +45,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
   }, [])
 
+  useEffect(() => {
+    if (sessionExpired) {
+      setShowSessionExpired(true)
+      setSessionExpired(false)
+    }
+  }, [sessionExpired])
+
+  const handleDismissSessionExpired = () => setShowSessionExpired(false)
+
   if (!isI18nReady) {
     return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
   }
@@ -54,6 +66,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Snackbar
+          visible={showSessionExpired}
+          onDismiss={handleDismissSessionExpired}
+          duration={4000}
+          style={{ backgroundColor: '#FF6B00', borderRadius: 8, marginBottom: 16 }}
+          action={{ label: 'OK', onPress: handleDismissSessionExpired, textColor: '#fff' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Votre session a expiré, veuillez vous reconnecter.</Text>
+        </Snackbar>
         {/* Image d'illustration de connexion */}
         <Animatable.View animation="fadeIn" duration={1000} style={styles.illustrationContainer}>
           <View style={styles.illustrationPlaceholder}>

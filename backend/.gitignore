@@ -78,8 +78,49 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Environment Variables - Tous les fichiers .env
 .env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+.env.*.local
+*.env
+*.env.local
+*.env.development
+*.env.development.local
+*.env.test
+*.env.test.local
+*.env.production
+*.env.production.local
+*.env.staging
+*.env.staging.local
+*.env.dev
+*.env.prod
+
+# Fichiers de configuration d'environnement spécifiques
+config/settings.py
+config/settings_local.py
+config/settings_production.py
+config/settings_development.py
+config/.env*
+app/config/.env*
+
+# Fichiers de secrets et clés API
+secrets/
+keys/
+api-keys/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Environments
 .venv
 env/
 venv/

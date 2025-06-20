@@ -117,61 +117,7 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: Us
         return db_delivery
     except Exception as e:
         db.rollback()
-        raise ValueError(f"Erreur lors de la création de la livraison: {str(e)}")ltiplier"]
-
-            # Définir le type de véhicule requis
-            delivery_data.required_vehicle_type = recommendation["recommended_vehicle"].type
-        except Exception as e:
-            # En cas d'erreur, continuer sans recommandation
-            logger.error(f"Erreur lors de la recommandation de véhicule: {str(e)}")
-
-    # Calculer le prix estimé
-    estimated_price = estimate_delivery_price(
-        delivery_data.pickup_lat or 0.0,
-        delivery_data.pickup_lng or 0.0,
-        delivery_data.delivery_lat or 0.0,
-        delivery_data.delivery_lng or 0.0,
-        delivery_data.package_weight,
-        delivery_data.cargo_category,
-        delivery_data.is_fragile,
-        delivery_data.delivery_type == DeliveryType.express
-    )
-
-    # Créer la livraison d'abord
-    delivery = Delivery(
-        **delivery_data.dict(),
-        client_id=current_user.id,
-        estimated_price=estimated_price,
-        status=DeliveryStatus.pending
-    )
-
-    db.add(delivery)
-    db.commit()
-    db.refresh(delivery)
-
-    # Appliquer les promotions automatiques
-    try:
-        applied_promotions = PromotionService.check_auto_apply_promotions(
-            db, current_user, delivery, estimated_price
-        )
-
-        # Mettre à jour le prix final après promotions
-        total_discount = sum(promo["result"]["discount_applied"] for promo in applied_promotions)
-        total_cashback = sum(promo["result"]["cashback_earned"] for promo in applied_promotions)
-
-        delivery.final_price = estimated_price - total_discount
-        delivery.total_discount = total_discount
-        delivery.cashback_earned = total_cashback
-
-        db.commit()
-    except Exception as e:
-        # En cas d'erreur avec les promotions, continuer sans
-        logger.error(f"Erreur lors de l'application des promotions: {str(e)}")
-        delivery.final_price = estimated_price
-
-    # Notifier les coursiers disponibles (implémenté dans le service de notification)
-
-    return delivery
+        raise ValueError(f"Erreur lors de la création de la livraison: {str(e)}")
 
 def update_delivery(db: Session, delivery_id: int, delivery_data: DeliveryUpdate, user_id: int) -> Delivery:
     delivery = get_delivery(db, delivery_id)

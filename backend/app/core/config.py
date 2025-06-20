@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     RASA_URL: str = os.getenv("RASA_URL", "http://localhost:5005")
     
     # SMS
-    SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "twilio")
+    SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "brevo")
     SMS_API_KEY: str = os.getenv("SMS_API_KEY", "")
     SMS_SENDER_NUMBER: str = os.getenv("SMS_SENDER_NUMBER", "")
     SMS_DAILY_LIMIT: int = int(os.getenv("SMS_DAILY_LIMIT", "1000"))
@@ -91,6 +91,27 @@ class Settings(BaseSettings):
     
     # Langues supportées
     SUPPORTED_LANGUAGES: List[str] = ["fr", "dioula", "baoulé"]
+    
+    # Brevo (Sendinblue)
+    BREVO_API_KEY: str = os.getenv("BREVO_API_KEY", "")
+    BREVO_API_KEY_MAIL: str = os.getenv("BREVO_API_KEY_MAIL", "")
+    BREVO_API_KEY_SMS: str = os.getenv("BREVO_API_KEY_SMS", "")
+    BREVO_MAIL_API_URL: str = os.getenv("BREVO_MAIL_API_URL", "https://api.brevo.com/v3/smtp/email")
+    BREVO_SMS_API_URL: str = os.getenv("BREVO_SMS_API_URL", "https://api.brevo.com/v3/transactionalSMS/sms")
+    BREVO_ENABLED: bool = os.getenv("BREVO_ENABLED", "True").lower() == "true"
+    BREVO_FROM_EMAIL: str = os.getenv("MAIL_FROM", "")
+    BREVO_FROM_NAME: str = os.getenv("EMAIL_SENDER_NAME", "")
+    SMS_SENDER: str = os.getenv("SMS_SENDER", "")
+    
+    # SMTP/Mail générique
+    MAIL_HOST: str = os.getenv("MAIL_HOST", "")
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
+    MAIL_USER: str = os.getenv("MAIL_USER", "")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
+    MAIL_FROM: str = os.getenv("MAIL_FROM", "")
+    MAIL_TRANSPORT: str = os.getenv("MAIL_TRANSPORT", "")
+    EMAIL_SENDER_ADDRESS: str = os.getenv("EMAIL_SENDER_ADDRESS", "")
+    EMAIL_SENDER_NAME: str = os.getenv("EMAIL_SENDER_NAME", "")
     
     class Config:
         env_file = ".env"

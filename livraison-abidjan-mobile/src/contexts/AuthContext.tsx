@@ -14,10 +14,12 @@ interface AuthContextType {
   token: string | null
   loading: boolean
   error: string | null
+  sessionExpired: boolean
+  setSessionExpired: (expired: boolean) => void
   signIn: (phone: string, password: string) => Promise<void>
   signUp: (userData: RegisterUserData) => Promise<void>
   verify: (phone: string, otp: string) => Promise<void>
-  signOut: () => Promise<void>
+  signOut: (expired?: boolean) => Promise<void>
   updateUserData: (data: Partial<User>) => void
   setAuthData: (user: User, token: string) => void
 }
@@ -27,6 +29,8 @@ export const AuthContext = createContext<AuthContextType>({
   token: null,
   loading: false,
   error: null,
+  sessionExpired: false,
+  setSessionExpired: () => {},
   signIn: async () => {},
   signUp: async () => {},
   verify: async () => {},
@@ -42,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [sessionExpired, setSessionExpired] = useState(false)
 
   useEffect(() => {
     // Check if user is already logged in
@@ -141,11 +146,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const signOut = async () => {
+  const signOut = async (expired?: boolean) => {
     setUser(null)
     setToken(null)
     await AsyncStorage.removeItem("user")
     await AsyncStorage.removeItem("token")
+    await AsyncStorage.removeItem("refreshToken")
+    if (expired) setSessionExpired(true)
+    // La redirection est gérée par la navigation conditionnelle dans AppNavigator
   }
 
   const updateUserData = (data: Partial<User>) => {
@@ -162,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, error, signIn, signUp, verify, signOut, updateUserData, setAuthData }}>
+    <AuthContext.Provider value={{ user, token, loading, error, sessionExpired, setSessionExpired, signIn, signUp, verify, signOut, updateUserData, setAuthData }}>
       {children}
     </AuthContext.Provider>
   )

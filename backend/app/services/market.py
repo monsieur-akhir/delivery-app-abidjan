@@ -181,7 +181,7 @@ def get_nearby_merchants(db: Session, lat: float, lng: float, radius: float = 5.
         # Pour l'instant, retourner tous les marchands avec des profils business
         query = db.query(User).join(BusinessProfile).filter(
             User.role == "business",
-            User.is_active == True
+            User.status == "active"
         )
         
         # Filtrer par catégorie si fournie
@@ -220,7 +220,7 @@ def get_merchant(db: Session, merchant_id: int) -> Optional[dict]:
         merchant = db.query(User).filter(
             User.id == merchant_id,
             User.role == "business",
-            User.is_active == True
+            User.status == "active"
         ).first()
         
         if not merchant:

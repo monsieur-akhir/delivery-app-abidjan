@@ -169,7 +169,7 @@ const CreateDeliveryScreen: React.FC = () => {
     // Charger dynamiquement les options depuis le backend
     const fetchOptions = async () => {
       try {
-        const response = await api.get('/deliveries/options')
+        const response = await api.get('/api/deliveries/options')
         setDeliveryOptions(response.data)
       } catch (e) {
         // fallback statique si besoin

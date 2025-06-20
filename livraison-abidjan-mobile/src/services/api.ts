@@ -1009,7 +1009,7 @@ export const sendDeliveryNotification = async (userId: string, notification: Del
 
 // Récupérer l'historique des livraisons pour un client
 export const fetchClientDeliveryHistory = async (filter?: string): Promise<Delivery[]> => {
-  let url = "/api/client/deliveries/history"
+  let url = "/api/client/delivery-history"
   if (filter) {
     url += `?status=${filter}`
   }
@@ -1050,12 +1050,15 @@ export const fetchWeatherForecast = async (latitude: number, longitude: number, 
     url += `&commune=${encodeURIComponent(commune)}`
   }
   const response = await api.get(url)
-  const data = response.data
-  // Transformer condition si nécessaire
-  if (data.current && data.current.condition && typeof data.current.condition === "object") {
-    data.current.condition = data.current.condition.text || "unknown"
+  if (!response.data || !response.data.weather) {
+    throw new Error("Format de données météo inattendu")
   }
-  return data
+  let weatherData = response.data.weather
+  // Transformer condition si nécessaire
+  if (weatherData.current && weatherData.current.condition && typeof weatherData.current.condition === "object") {
+    weatherData.current.condition = weatherData.current.condition.text || "unknown"
+  }
+  return weatherData
 }
 
 // Récupérer les alertes météo
@@ -1149,8 +1152,14 @@ export const fetchLoanHistory = async (): Promise<LoanResponse[]> => {
 
 // Fonctions pour le support
 export const fetchSupportTickets = async (): Promise<SupportTicket[]> => {
-  const response = await api.get("/api/support/tickets")
-  return response.data
+  try {
+    const response = await api.get("/api/support/tickets")
+    // Vérifier que response.data est un tableau valide
+    return Array.isArray(response.data) ? response.data : []
+  } catch (error) {
+    console.error("Error fetching support tickets:", error)
+    return []
+  }
 }
 
 export const createSupportTicket = async (subject: string, message: string): Promise<TicketResponse> => {
@@ -1184,8 +1193,14 @@ export const uploadTicketImage = async (ticketId: string, imageUri: string): Pro
 }
 
 export const fetchFAQs = async (): Promise<FAQ[]> => {
-  const response = await api.get("/api/support/faqs")
-  return response.data
+  try {
+    const response = await api.get("/api/support/faqs")
+    // Vérifier que response.data est un tableau valide
+    return Array.isArray(response.data) ? response.data : []
+  } catch (error) {
+    console.error("Error fetching FAQs:", error)
+    return []
+  }
 }
 
 // Nouvelle fonction pour remplacer fetchWeatherForecast
@@ -1214,7 +1229,10 @@ export const getWeatherData = async (latitude: number, longitude: number, commun
 
     // Effectuer la requête API
     const response = await api.get(url)
-    let weatherData = response.data
+    if (!response.data || !response.data.weather) {
+      throw new Error("Format de données météo inattendu")
+    }
+    let weatherData = response.data.weather
 
     // Transformer condition si nécessaire
     if (weatherData.current && weatherData.current.condition && typeof weatherData.current.condition === "object") {
