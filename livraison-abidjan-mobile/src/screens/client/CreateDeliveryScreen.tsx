@@ -1559,9 +1559,9 @@ const CreateDeliveryScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>Adresses de livraison</Text>
 
             {/* Pickup Address avec design moderne */}
-            
+
             {/* Delivery Address avec design moderne */}
-          
+
 
             {/* Distance indicator */}
             {pickupLocation && deliveryLocation && (
@@ -1596,47 +1596,68 @@ const CreateDeliveryScreen: React.FC = () => {
             {/* Package Weight */}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Poids estimé (kg)</Text>
-              
+
             </View>
 
             {/* Package Description */}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Description du colis</Text>
-              
+
             </View>
 
             {/* Fragile Switch */}
             <View style={styles.switchContainer}>
-              
-              
+
+
             </View>
 
             {/* Urgent Switch */}
             <View style={styles.switchContainer}>
-              
-              
+
+
             </View>
           </View>
 
           {/* Recipient Information Section */}
           <View style={styles.recipientSection}>
             <Text style={styles.sectionTitle}>Informations du destinataire</Text>
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Nom du destinataire</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Nom complet"
+                value={recipientName}
+                onChangeText={setRecipientName}
+              />
+            </View>
 
-            
-              
-            
+            {/* Recipient Phone */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Numéro de téléphone</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Numéro de téléphone"
+                keyboardType="phone-pad"
+                value={recipientPhone}
+                onChangeText={setRecipientPhone}
+              />
+            </View>
 
-            
-              
-            
-
-            
-              
-            
+            {/* Special Instructions */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Instructions spéciales</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                placeholder="Instructions pour le livreur"
+                multiline
+                value={specialInstructions}
+                onChangeText={setSpecialInstructions}
+              />
+            </View>
           </View>
 
           {/* Proposed Price */}
-          
+
 
           {/* Delivery Options modernisées avec calcul dynamique */}
           <View style={styles.deliveryOptionsSection}>
@@ -1648,30 +1669,30 @@ const CreateDeliveryScreen: React.FC = () => {
 
       {/* Action Button */}
       <View style={styles.actionButtonContainer}>
-        
-            
-            
-          
-          
+
+
+
+
+
             Créer la livraison - {formatPrice(estimatedPrice)}
-          
-        
+
+
       </View>
 
       {/* Loading Modal */}
       <Modal visible={loading} transparent animationType="fade">
-        
-          
-            
+
+
+
             Création en cours...
-          
-        
+
+
       </Modal>
 
       {/* Alerts et Toasts */}
-      
 
-      
+
+
     </SafeAreaView>
   )
 }
