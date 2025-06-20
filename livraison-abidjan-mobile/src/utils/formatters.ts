@@ -1,3 +1,11 @@
+export const formatPrice = (amount: number): string => {
+  if (typeof amount !== 'number' || isNaN(amount)) return '0';
+  return new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('fr-CI', {
     style: 'currency',
