@@ -1050,9 +1050,6 @@ const CreateDeliveryScreen: React.FC = () => {
   const modernDeliveryOptions = useMemo(() => {
     const weight = parseFloat(packageWeight) || 1
     const size = packageSize
-    const I will modify the `handleTextChange` function to remove the length constraint for address searching.
-```javascript
- size = packageSize
     const distance = currentDistance
 
     const allOptions = [
