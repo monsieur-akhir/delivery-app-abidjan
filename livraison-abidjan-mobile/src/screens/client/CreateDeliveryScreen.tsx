@@ -1497,19 +1497,12 @@ const CreateDeliveryScreen: React.FC = () => {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Map Section avec overlay navigation */}
         <View style={styles.mapContainer}>
-          {pickupLocation && deliveryLocation ? (
-            <MapView
-              pickupLocation={pickupLocation}
-              deliveryLocation={deliveryLocation}
-            />
-          ) : (
-            <View style={styles.mapPlaceholder}>
-              <Feather name="map" size={48} color={COLORS.textSecondary} />
-              <Text style={{ color: COLORS.textSecondary, marginTop: 8 }}>
-                Carte interactive
-              </Text>
-            </View>
-          )}
+          <MapView
+            pickupLocation={pickupLocation}
+            deliveryLocation={deliveryLocation}
+            style={{ flex: 1 }}
+            showRoute={!!(pickupLocation && deliveryLocation)}
+          />
 
           {/* Navigation overlay avec icônes de véhicules */}
           <View style={styles.navigationOverlay}>
