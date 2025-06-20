@@ -187,6 +187,25 @@ const ABIDJAN_PLACES = [
   }
 ]
 
+// Catégories de colis
+const PACKAGE_CATEGORIES = [
+  { key: 'small', label: 'Petit colis', icon: '📦', description: 'Documents, bijoux, etc.' },
+  { key: 'medium', label: 'Colis moyen', icon: '📋', description: 'Vêtements, livres, etc.' },
+  { key: 'large', label: 'Gros colis', icon: '📺', description: 'Électronique, meuble, etc.' },
+  { key: 'food', label: 'Nourriture', icon: '🍕', description: 'Repas, courses, etc.' },
+  { key: 'fragile', label: 'Fragile', icon: '🍷', description: 'Verre, céramique, etc.' },
+  { key: 'documents', label: 'Documents', icon: '📄', description: 'Papiers importants' }
+]
+
+// Tailles de colis
+const PACKAGE_SIZES = [
+  { key: 'xs', label: 'Très petit', dimensions: '< 20cm', weight: '< 1kg' },
+  { key: 'small', label: 'Petit', dimensions: '20-30cm', weight: '1-3kg' },
+  { key: 'medium', label: 'Moyen', dimensions: '30-50cm', weight: '3-10kg' },
+  { key: 'large', label: 'Grand', dimensions: '50-80cm', weight: '10-25kg' },
+  { key: 'xl', label: 'Très grand', dimensions: '> 80cm', weight: '> 25kg' }
+]
+
 // Styles modernes
 const styles = StyleSheet.create({
   container: {
@@ -223,7 +242,7 @@ const styles = StyleSheet.create({
   
   // Map container avec overlay de navigation
   mapContainer: {
-    height: height * 0.4,
+    height: height * 0.3,
     backgroundColor: COLORS.mapBackground,
     position: 'relative',
   },
@@ -305,7 +324,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     flex: 1,
-    minHeight: height * 0.6,
+    minHeight: height * 0.7,
   },
   
   bottomSheetHandle: {
@@ -351,6 +370,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    minHeight: 60,
   },
   
   addressInputRowLast: {
@@ -385,10 +405,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   
-  addressInputText: {
+  addressInput: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '400',
     color: COLORS.text,
+    paddingVertical: 4,
+    minHeight: 24,
   },
   
   addressInputPlaceholder: {
@@ -444,6 +466,163 @@ const styles = StyleSheet.create({
   },
   
   suggestionSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+
+  // Section des informations du colis
+  packageSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 16,
+  },
+
+  packageCategoriesContainer: {
+    marginBottom: 20,
+  },
+
+  packageCategoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
+  },
+
+  packageCategoryItem: {
+    width: (width - 64) / 2,
+    margin: 6,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+
+  packageCategoryItemSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.secondary,
+  },
+
+  packageCategoryIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+
+  packageCategoryLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+
+  packageCategoryDescription: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+
+  // Form inputs
+  formGroup: {
+    marginBottom: 20,
+  },
+
+  formLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+
+  textInput: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    color: COLORS.text,
+  },
+
+  textInputFocused: {
+    borderColor: COLORS.primary,
+  },
+
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+
+  // Package size selector
+  packageSizeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+
+  packageSizeItem: {
+    flex: 1,
+    margin: 4,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    minWidth: 80,
+  },
+
+  packageSizeItemSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.secondary,
+  },
+
+  packageSizeLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.text,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+
+  packageSizeDimensions: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+
+  // Switches
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+
+  switchLabel: {
+    flex: 1,
+  },
+
+  switchTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+
+  switchDescription: {
     fontSize: 14,
     color: COLORS.textSecondary,
   },
@@ -512,31 +691,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.text,
   },
-  
-  // Section promotionnelle
-  promotionalSection: {
+
+  // Recipient section
+  recipientSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
-  },
-  
-  promotionalCard: {
-    backgroundColor: COLORS.warning,
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  
-  promotionalText: {
-    flex: 1,
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  
-  promotionalIcon: {
-    marginLeft: 12,
   },
   
   // Action button avec design moderne
@@ -598,27 +757,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: COLORS.text,
-  },
-  
-  // Informations supplémentaires
-  deliveryInfoSection: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  
-  infoIcon: {
-    marginRight: 12,
-  },
-  
-  infoText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
   },
 })
 
@@ -701,6 +839,7 @@ const CreateDeliveryScreen: React.FC = () => {
   const [packageSize, setPackageSize] = useState<string>('small')
   const [packageWeight, setPackageWeight] = useState<string>('')
   const [isFragile, setIsFragile] = useState<boolean>(false)
+  const [isUrgent, setIsUrgent] = useState<boolean>(false)
   const [pickupAddress, setPickupAddress] = useState<string>('')
   const [deliveryAddress, setDeliveryAddress] = useState<string>('')
   const [pickupLocation, setPickupLocation] = useState<Address | null>(null)
@@ -711,7 +850,6 @@ const CreateDeliveryScreen: React.FC = () => {
   const [weather, setWeather] = useState<any>(null)
   const [recipientName, setRecipientName] = useState<string>('')
   const [recipientPhone, setRecipientPhone] = useState<string>('')
-  const [isUrgent, setIsUrgent] = useState<boolean>(false)
 
   // UI states
   const [loading, setLoading] = useState<boolean>(false)
@@ -741,6 +879,10 @@ const CreateDeliveryScreen: React.FC = () => {
   const [selectedExtras, setSelectedExtras] = useState<string[]>([])
   const [totalPrice, setTotalPrice] = useState<number>(400)
   const [estimatedPrice, setEstimatedPrice] = useState(400)
+
+  // Focus states pour les inputs
+  const [pickupFocused, setPickupFocused] = useState<boolean>(false)
+  const [deliveryFocused, setDeliveryFocused] = useState<boolean>(false)
 
   // Options de livraison modernisées
   const modernDeliveryOptions = [
@@ -892,11 +1034,13 @@ const CreateDeliveryScreen: React.FC = () => {
       setPickupQuery(suggestion.description)
       setPickupLocation(address)
       setShowPickupSuggestions(false)
+      setPickupFocused(false)
     } else {
       setDeliveryAddress(suggestion.description)
       setDeliveryQuery(suggestion.description)
       setDeliveryLocation(address)
       setShowDeliverySuggestions(false)
+      setDeliveryFocused(false)
     }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -907,9 +1051,15 @@ const CreateDeliveryScreen: React.FC = () => {
     if (type === 'pickup') {
       setPickupQuery(text)
       setPickupAddress(text)
+      if (text.length === 0) {
+        setPickupLocation(null)
+      }
     } else {
       setDeliveryQuery(text)
       setDeliveryAddress(text)
+      if (text.length === 0) {
+        setDeliveryLocation(null)
+      }
     }
     
     searchAddresses(text, type)
@@ -1046,6 +1196,17 @@ const CreateDeliveryScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }
 
+  const handlePackageCategorySelect = (category: string) => {
+    setPackageType(category)
+    setSelectedPackageType(category)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }
+
+  const handlePackageSizeSelect = (size: string) => {
+    setPackageSize(size)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }
+
   const handleSubmit = async () => {
     if (!validateForm()) return
 
@@ -1065,7 +1226,7 @@ const CreateDeliveryScreen: React.FC = () => {
       package_size: packageSize,
       package_weight: parseFloat(packageWeight) || 1,
       is_fragile: isFragile,
-      proposed_price: parseFloat(proposedPrice),
+      proposed_price: parseFloat(proposedPrice) || estimatedPrice,
       recipient_name: recipientName,
       recipient_phone: recipientPhone,
       special_instructions: specialInstructions,
@@ -1119,8 +1280,44 @@ const CreateDeliveryScreen: React.FC = () => {
       showErrorAlert('Erreur', 'Veuillez sélectionner une adresse de livraison valide')
       return false
     }
+    if (!recipientName.trim()) {
+      showErrorAlert('Erreur', 'Veuillez saisir le nom du destinataire')
+      return false
+    }
     return true
   }
+
+  const renderPackageCategory = (category: any) => (
+    <TouchableOpacity
+      key={category.key}
+      style={[
+        styles.packageCategoryItem,
+        selectedPackageType === category.key && styles.packageCategoryItemSelected
+      ]}
+      onPress={() => handlePackageCategorySelect(category.key)}
+      activeOpacity={0.8}
+    >
+      <Text style={styles.packageCategoryIcon}>{category.icon}</Text>
+      <Text style={styles.packageCategoryLabel}>{category.label}</Text>
+      <Text style={styles.packageCategoryDescription}>{category.description}</Text>
+    </TouchableOpacity>
+  )
+
+  const renderPackageSize = (size: any) => (
+    <TouchableOpacity
+      key={size.key}
+      style={[
+        styles.packageSizeItem,
+        packageSize === size.key && styles.packageSizeItemSelected
+      ]}
+      onPress={() => handlePackageSizeSelect(size.key)}
+      activeOpacity={0.8}
+    >
+      <Text style={styles.packageSizeLabel}>{size.label}</Text>
+      <Text style={styles.packageSizeDimensions}>{size.dimensions}</Text>
+      <Text style={styles.packageSizeDimensions}>{size.weight}</Text>
+    </TouchableOpacity>
+  )
 
   const renderDeliveryOption = (option: any) => (
     <TouchableOpacity
@@ -1237,48 +1434,50 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.addressSection}>
             <View style={styles.addressContainer}>
               {/* Pickup Address */}
-              <TouchableOpacity 
-                style={[styles.addressInputRow]}
-                onPress={() => {
-                  setActiveField('pickup')
-                  setShowPickupSuggestions(true)
-                  setShowDeliverySuggestions(false)
-                }}
-              >
+              <View style={[styles.addressInputRow]}>
                 <View style={[styles.addressInputIcon, styles.pickupIcon]}>
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.white }} />
                 </View>
                 <View style={styles.addressInputContent}>
                   <Text style={styles.addressInputLabel}>Prise en charge</Text>
-                  <Text style={[
-                    pickupAddress ? styles.addressInputText : styles.addressInputPlaceholder
-                  ]}>
-                    {pickupAddress || 'Adresse de prise en charge'}
-                  </Text>
+                  <TextInput
+                    style={[styles.addressInput, pickupFocused && styles.textInputFocused]}
+                    value={pickupQuery}
+                    onChangeText={(text) => handleTextChange(text, 'pickup')}
+                    onFocus={() => {
+                      setPickupFocused(true)
+                      setActiveField('pickup')
+                      setShowDeliverySuggestions(false)
+                    }}
+                    onBlur={() => setPickupFocused(false)}
+                    placeholder="Adresse de prise en charge"
+                    placeholderTextColor={COLORS.textSecondary}
+                  />
                 </View>
-              </TouchableOpacity>
+              </View>
               
               {/* Delivery Address */}
-              <TouchableOpacity 
-                style={[styles.addressInputRow, styles.addressInputRowLast]}
-                onPress={() => {
-                  setActiveField('delivery')
-                  setShowDeliverySuggestions(true)
-                  setShowPickupSuggestions(false)
-                }}
-              >
+              <View style={[styles.addressInputRow, styles.addressInputRowLast]}>
                 <View style={[styles.addressInputIcon, styles.destinationIcon]}>
                   <Feather name="navigation" size={12} color={COLORS.white} />
                 </View>
                 <View style={styles.addressInputContent}>
                   <Text style={styles.addressInputLabel}>Destination</Text>
-                  <Text style={[
-                    deliveryAddress ? styles.addressInputText : styles.addressInputPlaceholder
-                  ]}>
-                    {deliveryAddress || 'Adresse de livraison'}
-                  </Text>
+                  <TextInput
+                    style={[styles.addressInput, deliveryFocused && styles.textInputFocused]}
+                    value={deliveryQuery}
+                    onChangeText={(text) => handleTextChange(text, 'delivery')}
+                    onFocus={() => {
+                      setDeliveryFocused(true)
+                      setActiveField('delivery')
+                      setShowPickupSuggestions(false)
+                    }}
+                    onBlur={() => setDeliveryFocused(false)}
+                    placeholder="Adresse de livraison"
+                    placeholderTextColor={COLORS.textSecondary}
+                  />
                 </View>
-              </TouchableOpacity>
+              </View>
             </View>
 
             {/* Suggestions d'autocomplétion */}
@@ -1307,41 +1506,140 @@ const CreateDeliveryScreen: React.FC = () => {
             )}
           </View>
 
+          {/* Package Information Section */}
+          <View style={styles.packageSection}>
+            <Text style={styles.sectionTitle}>Informations du colis</Text>
+            
+            {/* Package Categories */}
+            <View style={styles.packageCategoriesContainer}>
+              <Text style={styles.formLabel}>Type de colis</Text>
+              <View style={styles.packageCategoriesGrid}>
+                {PACKAGE_CATEGORIES.map(renderPackageCategory)}
+              </View>
+            </View>
+
+            {/* Package Size */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Taille du colis</Text>
+              <View style={styles.packageSizeContainer}>
+                {PACKAGE_SIZES.map(renderPackageSize)}
+              </View>
+            </View>
+
+            {/* Package Weight */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Poids estimé (kg)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={packageWeight}
+                onChangeText={setPackageWeight}
+                placeholder="Ex: 2.5"
+                keyboardType="numeric"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+
+            {/* Package Description */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Description du colis</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                value={packageDescription}
+                onChangeText={setPackageDescription}
+                placeholder="Décrivez le contenu du colis..."
+                multiline
+                numberOfLines={3}
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+
+            {/* Fragile Switch */}
+            <View style={styles.switchContainer}>
+              <View style={styles.switchLabel}>
+                <Text style={styles.switchTitle}>Colis fragile</Text>
+                <Text style={styles.switchDescription}>Manipulation délicate requise</Text>
+              </View>
+              <Switch
+                value={isFragile}
+                onValueChange={setIsFragile}
+                trackColor={{ false: COLORS.border, true: COLORS.primaryLight }}
+                thumbColor={isFragile ? COLORS.primary : COLORS.textLight}
+              />
+            </View>
+
+            {/* Urgent Switch */}
+            <View style={styles.switchContainer}>
+              <View style={styles.switchLabel}>
+                <Text style={styles.switchTitle}>Livraison urgente</Text>
+                <Text style={styles.switchDescription}>Livraison prioritaire</Text>
+              </View>
+              <Switch
+                value={isUrgent}
+                onValueChange={setIsUrgent}
+                trackColor={{ false: COLORS.border, true: COLORS.primaryLight }}
+                thumbColor={isUrgent ? COLORS.primary : COLORS.textLight}
+              />
+            </View>
+          </View>
+
+          {/* Recipient Information Section */}
+          <View style={styles.recipientSection}>
+            <Text style={styles.sectionTitle}>Informations du destinataire</Text>
+            
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Nom du destinataire *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={recipientName}
+                onChangeText={setRecipientName}
+                placeholder="Nom complet du destinataire"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Téléphone du destinataire</Text>
+              <TextInput
+                style={styles.textInput}
+                value={recipientPhone}
+                onChangeText={setRecipientPhone}
+                placeholder="+225 XX XX XX XX XX"
+                keyboardType="phone-pad"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Instructions spéciales</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                value={specialInstructions}
+                onChangeText={setSpecialInstructions}
+                placeholder="Instructions pour le livreur..."
+                multiline
+                numberOfLines={2}
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+
+            {/* Proposed Price */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Prix proposé (F CFA)</Text>
+              <TextInput
+                style={styles.textInput}
+                value={proposedPrice}
+                onChangeText={setProposedPrice}
+                placeholder={`Prix recommandé: ${estimatedPrice} F`}
+                keyboardType="numeric"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+          </View>
+
           {/* Delivery Options modernisées */}
           <View style={styles.deliveryOptionsSection}>
+            <Text style={styles.sectionTitle}>Options de livraison</Text>
             {modernDeliveryOptions.map(renderDeliveryOption)}
-          </View>
-
-          {/* Section promotionnelle */}
-          <View style={styles.promotionalSection}>
-            <TouchableOpacity style={styles.promotionalCard}>
-              <Text style={styles.promotionalText}>
-                💰 Gagnez du temps et récupérez vos achats avec la Livraison
-              </Text>
-              <View style={styles.promotionalIcon}>
-                <Feather name="chevron-right" size={20} color={COLORS.white} />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Informations de livraison */}
-          <View style={styles.deliveryInfoSection}>
-            <View style={styles.infoRow}>
-              <View style={styles.infoIcon}>
-                <Feather name="clock" size={16} color={COLORS.textSecondary} />
-              </View>
-              <Text style={styles.infoText}>
-                Livraison estimée en 25-35 min
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoIcon}>
-                <Feather name="shield" size={16} color={COLORS.textSecondary} />
-              </View>
-              <Text style={styles.infoText}>
-                Assurance incluse jusqu'à 50 000 F
-              </Text>
-            </View>
           </View>
         </View>
       </ScrollView>
@@ -1351,13 +1649,13 @@ const CreateDeliveryScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.actionButton,
-            (!pickupAddress || !deliveryAddress || !selectedVehicleType) && styles.actionButtonDisabled
+            (!pickupAddress || !deliveryAddress || !selectedVehicleType || !recipientName) && styles.actionButtonDisabled
           ]}
           onPress={handleSubmit}
-          disabled={!pickupAddress || !deliveryAddress || !selectedVehicleType || loading}
+          disabled={!pickupAddress || !deliveryAddress || !selectedVehicleType || !recipientName || loading}
         >
           <Text style={styles.actionButtonText}>
-            Choix de la méthode de livraison
+            Créer la livraison - {formatPrice(estimatedPrice)}
           </Text>
         </TouchableOpacity>
       </View>
