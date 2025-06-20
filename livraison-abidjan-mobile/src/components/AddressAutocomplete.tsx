@@ -480,17 +480,27 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           mode="outlined"
           dense
           right={
-            inputValue ? (
-              <TextInput.Icon
-                icon="close"
-                onPress={clearInput}
-              />
-            ) : (
-              <TextInput.Icon
-                icon="map-marker"
-                disabled
-              />
-            )
+            <View style={{ flexDirection: 'row' }}>
+              {showCurrentLocation && currentLocation && (
+                <TextInput.Icon
+                  icon="location"
+                  iconColor="#4CAF50"
+                  onPress={handleCurrentLocationSelect}
+                  disabled={loading}
+                />
+              )}
+              {inputValue ? (
+                <TextInput.Icon
+                  icon="close"
+                  onPress={clearInput}
+                />
+              ) : (
+                <TextInput.Icon
+                  icon="map-marker"
+                  disabled
+                />
+              )}
+            </View>
           }
         />
         {error && <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>}

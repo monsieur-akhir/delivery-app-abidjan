@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next'
 import * as Location from 'expo-location'
 
 import MapView from '../../components/MapView'
+import AddressAutocomplete from '../../components/AddressAutocomplete'
 import WeatherInfo from '../../components/WeatherInfo'
 import CustomAlert from '../../components/CustomAlert'
 import CustomToast from '../../components/CustomToast'
@@ -1533,21 +1534,7 @@ const CreateDeliveryScreen: React.FC = () => {
             </View>
 
             {/* Bouton Position actuelle */}
-            <TouchableOpacity
-              style={styles.currentLocationButton}
-              onPress={() => activeField && useCurrentLocation(activeField)}
-              disabled={loadingLocation || !activeField}
-            >
-              {loadingLocation ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <Ionicons name="location" size={16} color={COLORS.white} />
-              )}
-              <Text style={styles.currentLocationText}>
-                {loadingLocation ? 'Localisation...' : 'Utiliser ma position actuelle'}
-              </Text>
-            </TouchableOpacity>
-
+            
             {/* Distance indicator */}
             {pickupLocation && deliveryLocation && (
               <View style={styles.distanceIndicator}>
