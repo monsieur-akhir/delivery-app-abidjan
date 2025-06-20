@@ -5,10 +5,27 @@ from typing import Optional, Dict, Any
 import logging
 import requests
 import json
+import asyncio
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+import os
 
 from ..core.config import settings
+from .sms_notification import SmsNotificationService
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+def render_template(template_name: str, context: dict) -> str:
+    """
+    Rendu d'un template Jinja2 pour email (dossier templates/email).
+    """
+    templates_dir = os.path.join(os.path.dirname(__file__), '../templates/email')
+    env = Environment(
+        loader=FileSystemLoader(templates_dir),
+        autoescape=select_autoescape(['html', 'xml'])
+    )
+    template = env.get_template(template_name)
+    return template.render(**context)
 
 class EmailService:
     """
@@ -82,14 +99,15 @@ class EmailService:
             logger.error("Error sending email via Brevo to %s: %s", to_email, str(e))
             return False
     
-    def send_email(self, to_email: str, subject: str, message: str, html_content: Optional[str] = None) -> bool:
+    def send_email(self, to_email: str, subject: str, message: str, html_content: Optional[str] = None, template_name: Optional[str] = None, context: Optional[dict] = None) -> bool:
         """
-        Send an email using the preferred method (Brevo first, then SMTP fallback).
+        Envoie un email, avec rendu Jinja2 si template_name fourni.
         """
+        if template_name and context:
+            html_content = render_template(template_name, context)
         # Try Brevo first if enabled
         if self.brevo_enabled and self.brevo_api_key:
             return self.send_email_via_brevo(to_email, subject, message, html_content)
-        
         # Fallback to SMTP
         return self.send_email_via_smtp(to_email, subject, message)
     
@@ -430,3 +448,15 @@ class EmailService:
         }
         
         return self.send_push_by_tag(tag_key, tag_value, title, message, data)
+
+def send_email_and_sms(db: Session, to_email: str, to_phone: str, subject: str, message: str, html_content: str = None) -> bool:
+    """
+    Envoie toujours un email ET un SMS (Brevo) au destinataire.
+    """
+    email_service = EmailService()
+    sms_service = SmsNotificationService(db)
+    email_ok = email_service.send_email(to_email, subject, message, html_content)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    sms_result = loop.run_until_complete(sms_service.send_sms(to_phone, message))
+    return email_ok and sms_result.get('status') == 'success'

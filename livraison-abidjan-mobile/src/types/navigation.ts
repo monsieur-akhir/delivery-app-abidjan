@@ -12,10 +12,6 @@ export type RootStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   VerifyOTP: { phoneNumber: string; phone?: string; isRegistration?: boolean };
-  ClientTabs: undefined;
-  CourierTabs: undefined;
-  CourierDeliveryHistory: undefined;
-  AddVehicleScreen: { vehicleId?: number };
   OTPLogin: undefined;
   Onboarding: undefined;
   ClassicLogin: undefined;
@@ -30,19 +26,19 @@ export type RootStackParamList = {
   TrackDelivery: { deliveryId: string | number };
   Payment: { deliveryId?: string; amount?: number } | undefined;
   PaymentMethods: undefined;
+  Notifications: undefined;
+  DeliveryDetails: { deliveryId: string | number };
 
   // Client Screens
   Home: undefined;
   Wallet: undefined;
   DeliveryHistory: undefined;
-  Notifications: undefined;
   Profile: undefined;
   Support: undefined;
   TransactionHistory: undefined;
   AddFunds: undefined;
   Marketplace: undefined;
   MerchantDetails: { merchantId: string };
-  DeliveryDetails: { deliveryId: string | number };
   RateDelivery: { deliveryId: string };
   EnhancedRateDelivery: { deliveryId: string };
   ComplaintsScreen: undefined;

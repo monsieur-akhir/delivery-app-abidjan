@@ -141,18 +141,11 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
       // Mettre à jour le contexte d'authentification
       setAuthData(result.user, result.token)
       
-      // Redirection basée sur le rôle utilisateur
-      if (result.user.role === 'courier') {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'CourierTabs' }],
-        })
-      } else {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'ClientTabs' }],
-        })
-      }
+      // Navigate to appropriate screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "ClientMain" }],
+      })
     } catch (err: unknown) {
       const error = err as Error;
       console.error("OTP Login error:", error)

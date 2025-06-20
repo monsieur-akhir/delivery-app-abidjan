@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+from pydantic import BaseModel
 
 from ..db.session import get_db
 from ..core.security import get_current_user
@@ -15,6 +16,9 @@ router = APIRouter()
 
 from ..services.delivery import get_delivery, get_courier_deliveries, get_user_deliveries_with_filters, create_delivery
 from ..services.matching import MatchingService
+
+class CancelReason(BaseModel):
+    reason: str = None
 
 @router.post("/deliveries", response_model=delivery_schemas.DeliveryResponse)
 async def create_new_delivery(
@@ -264,20 +268,167 @@ async def recommend_vehicle_endpoint(
 
 @router.get("/options")
 async def get_delivery_options():
-    """Retourne la structure dynamique des options de livraison pour l'UI mobile"""
+    """Obtenir les options de livraison disponibles"""
     return {
-        "vehicle_types": [
-            {"type": "moto", "label": "Livraison à moto", "min_price": 500},
-            {"type": "voiture", "label": "Livraison en voiture", "min_price": 500},
-            {"type": "interville", "label": "Intervilles", "min_price": 1990}
-        ],
-        "delivery_speeds": [
-            {"key": "urgent", "label": "Urgent", "description": "", "min_price": 700, "delay": "30min"},
-            {"key": "normal", "label": "Un peu plus long", "description": "Le coursier peut livrer un autre colis sur la route", "min_price": 600, "delay": "1h"},
-            {"key": "slow", "label": "En 3 heures", "description": "", "min_price": 500, "delay": "3h"}
-        ],
-        "options": [
-            {"key": "isotherme", "label": "Sac de livraison isotherme", "price": 0},
-            {"key": "comment", "label": "Commentaire à l'attention du coursier"}
-        ]
+        "package_sizes": ["small", "medium", "large", "extra_large"],
+        "delivery_types": ["standard", "express", "collaborative"],
+        "cargo_categories": ["electronics", "clothing", "food", "fragile", "documents", "other"],
+        "vehicle_types": ["bicycle", "motorcycle", "car", "van", "truck"]
     }
+
+# Endpoints pour les enchères (bids)
+@router.get("/deliveries/{delivery_id}/bids")
+async def get_delivery_bids(
+    delivery_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les enchères pour une livraison"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+
+    # Vérifier les permissions
+    if current_user.role not in ["admin", "manager"]:
+        if delivery.client_id != current_user.id and delivery.courier_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+
+    bids = delivery_service.get_bids_for_delivery(db, delivery_id)
+    
+    return {
+        "success": True,
+        "bids": bids,
+        "delivery_id": delivery_id
+    }
+
+@router.post("/deliveries/{delivery_id}/bids")
+async def create_bid(
+    delivery_id: int,
+    bid_data: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Créer une enchère pour une livraison"""
+    if current_user.role != "courier":
+        raise HTTPException(status_code=403, detail="Seuls les coursiers peuvent créer des enchères")
+
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+
+    if delivery.status != "pending":
+        raise HTTPException(status_code=400, detail="Cette livraison n'accepte plus d'enchères")
+
+    try:
+        bid = delivery_service.create_bid(db, delivery_id, current_user.id, bid_data)
+        return {
+            "success": True,
+            "bid": bid,
+            "message": "Enchère créée avec succès"
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la création de l'enchère: {str(e)}")
+
+@router.post("/deliveries/{delivery_id}/bids/{bid_id}/accept")
+async def accept_bid(
+    delivery_id: int,
+    bid_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Accepter une enchère"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+
+    # Vérifier que l'utilisateur est le client de la livraison
+    if delivery.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Seul le client peut accepter une enchère")
+
+    try:
+        updated_delivery = delivery_service.accept_bid(db, delivery_id, bid_id, current_user.id)
+        return {
+            "success": True,
+            "delivery": updated_delivery,
+            "message": "Enchère acceptée avec succès"
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'acceptation de l'enchère: {str(e)}")
+
+@router.post("/deliveries/{delivery_id}/bids/{bid_id}/decline")
+async def decline_bid(
+    delivery_id: int,
+    bid_id: int,
+    reason: Optional[str] = None,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Refuser une enchère"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+
+    # Vérifier que l'utilisateur est le client de la livraison
+    if delivery.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Seul le client peut refuser une enchère")
+
+    try:
+        # Marquer l'enchère comme refusée
+        bid = delivery_service.get_bid(db, bid_id)
+        bid.status = "rejected"
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Enchère refusée avec succès"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du refus de l'enchère: {str(e)}")
+
+@router.get("/bids")
+async def get_bids(
+    delivery_id: Optional[int] = Query(None, description="ID de la livraison"),
+    courier_id: Optional[int] = Query(None, description="ID du coursier"),
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les enchères avec filtres"""
+    try:
+        bids = delivery_service.get_bids(db, delivery_id=delivery_id, courier_id=courier_id)
+        return {
+            "success": True,
+            "bids": bids
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des enchères: {str(e)}")
+
+@router.post("/deliveries/{delivery_id}/cancel")
+async def cancel_delivery(
+    delivery_id: int,
+    reason_body: CancelReason,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Annuler une livraison (accessible au client ou à l'entreprise)"""
+    delivery = get_delivery(db, delivery_id)
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Livraison non trouvée")
+    # Vérifier que l'utilisateur est bien le client ou l'entreprise propriétaire
+    if current_user.role not in ["client", "business", "admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    if delivery.client_id != current_user.id and current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Seul le client ou un admin peut annuler")
+    if delivery.status in ['delivered', 'completed']:
+        raise HTTPException(status_code=400, detail="Cette livraison ne peut plus être annulée")
+    delivery.status = 'cancelled'
+    delivery.cancelled_at = datetime.utcnow()
+    # Notifier le coursier si assigné
+    if delivery.courier_id:
+        # Remplace send_notification par ta fonction de notification réelle si besoin
+        pass
+    db.commit()
+    return {"message": "Livraison annulée avec succès"}

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -171,7 +170,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     switch (type) {
       case 'success':
         return {
-          colors: ['#4CAF50', '#45A049', '#388E3C'],
+          colors: ['#4CAF50', '#45A049', '#388E3C'] as const,
           icon: icon || 'checkmark-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#E8F5E8',
@@ -180,7 +179,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         };
       case 'warning':
         return {
-          colors: ['#FF9800', '#F57C00', '#E65100'],
+          colors: ['#FF9800', '#F57C00', '#E65100'] as const,
           icon: icon || 'warning',
           iconColor: '#FFFFFF',
           backgroundColor: '#FFF3E0',
@@ -189,7 +188,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         };
       case 'error':
         return {
-          colors: ['#F44336', '#D32F2F', '#B71C1C'],
+          colors: ['#F44336', '#D32F2F', '#B71C1C'] as const,
           icon: icon || 'close-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#FFEBEE',
@@ -198,7 +197,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         };
       case 'payment':
         return {
-          colors: ['#9C27B0', '#7B1FA2', '#4A148C'],
+          colors: ['#9C27B0', '#7B1FA2', '#4A148C'] as const,
           icon: icon || 'card',
           iconColor: '#FFFFFF',
           backgroundColor: '#F3E5F5',
@@ -207,7 +206,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         };
       case 'location':
         return {
-          colors: ['#00BCD4', '#0097A7', '#006064'],
+          colors: ['#00BCD4', '#0097A7', '#006064'] as const,
           icon: icon || 'location',
           iconColor: '#FFFFFF',
           backgroundColor: '#E0F2F1',
@@ -216,7 +215,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         };
       case 'confirmation':
         return {
-          colors: ['#2196F3', '#1976D2', '#0D47A1'],
+          colors: ['#2196F3', '#1976D2', '#0D47A1'] as const,
           icon: icon || 'help-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#E3F2FD',
@@ -225,7 +224,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         };
       default:
         return {
-          colors: ['#607D8B', '#455A64', '#263238'],
+          colors: ['#607D8B', '#455A64', '#263238'] as const,
           icon: icon || 'information-circle',
           iconColor: '#FFFFFF',
           backgroundColor: '#ECEFF1',

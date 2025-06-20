@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -28,7 +27,7 @@ type DeliveryDetailsScreenNavigationProp = NativeStackNavigationProp<RootStackPa
 const DeliveryDetailsScreen: React.FC = () => {
   const navigation = useNavigation<DeliveryDetailsScreenNavigationProp>()
   const route = useRoute()
-  const { deliveryId } = route.params as RouteParams
+  const { deliveryId } = route.params as { deliveryId: string | number }
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
   const [bids, setBids] = useState<Bid[]>([])
@@ -41,19 +40,35 @@ const DeliveryDetailsScreen: React.FC = () => {
   }, [deliveryId])
 
   const loadDeliveryDetails = async () => {
+    console.log('🚀 [DEBUG] Début loadDeliveryDetails')
+    console.log('🔍 [DEBUG] deliveryId reçu:', deliveryId)
+    console.log('🔍 [DEBUG] Type de deliveryId:', typeof deliveryId)
+    
     try {
       setLoading(true)
-      const [deliveryData, bidsData] = await Promise.all([
-        DeliveryService.getDeliveryById(deliveryId.toString()),
-        DeliveryService.getDeliveryBids(deliveryId.toString())
-      ])
+      console.log('📡 [DEBUG] Appel de getDeliveryById avec ID:', String(deliveryId))
+      
+      const deliveryData = await DeliveryService.getDeliveryById(String(deliveryId))
+      console.log('📦 [DEBUG] Données livraison reçues:', deliveryData)
+      console.log('📦 [DEBUG] Type de deliveryData:', typeof deliveryData)
+      
+      console.log('📡 [DEBUG] Appel de getDeliveryBids avec ID:', String(deliveryId))
+      const bidsData = await DeliveryService.getDeliveryBids(String(deliveryId))
+      console.log('💰 [DEBUG] Données enchères reçues:', bidsData)
+      console.log('💰 [DEBUG] Nombre d\'enchères:', bidsData.length)
+      
       setDelivery(deliveryData)
       setBids(bidsData)
+      
+      console.log('✅ [DEBUG] État mis à jour avec succès')
     } catch (error) {
-      console.error('Erreur lors du chargement:', error)
+      console.error('❌ [DEBUG] Erreur lors du chargement:', error)
+      console.error('❌ [DEBUG] Message d\'erreur:', error.message)
+      console.error('❌ [DEBUG] Stack trace:', error.stack)
       Alert.alert('Erreur', 'Impossible de charger les détails de la livraison')
     } finally {
       setLoading(false)
+      console.log('🏁 [DEBUG] loadDeliveryDetails terminé')
     }
   }
 
@@ -69,7 +84,7 @@ const DeliveryDetailsScreen: React.FC = () => {
           onPress: async () => {
             setCancelling(true)
             try {
-              await DeliveryService.cancelDelivery(deliveryId.toString(), "Annulée par le client")
+              await DeliveryService.cancelDelivery(String(deliveryId), "Annulée par le client")
               Alert.alert('Succès', 'Livraison annulée avec succès')
               navigation.goBack()
             } catch (error) {
@@ -94,7 +109,7 @@ const DeliveryDetailsScreen: React.FC = () => {
           onPress: async () => {
             setAcceptingBid(bidId)
             try {
-              await DeliveryService.acceptBid(deliveryId.toString(), bidId)
+              await DeliveryService.acceptBid(String(deliveryId), bidId)
               Alert.alert('Succès', 'Enchère acceptée!')
               loadDeliveryDetails()
             } catch (error) {
@@ -140,6 +155,21 @@ const DeliveryDetailsScreen: React.FC = () => {
       cancelled: 'Annulée'
     }
     return texts[status as keyof typeof texts] || status
+  }
+
+  if (deliveryId === undefined || deliveryId === null || deliveryId === "") {
+    console.error("DeliveryDetailsScreen: deliveryId est manquant ou invalide", route.params)
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Feather name="alert-circle" size={64} color="#EF5350" />
+          <Text style={styles.errorText}>Aucun identifiant de livraison fourni</Text>
+          <Button mode="outlined" onPress={() => navigation.goBack()}>
+            Retour
+          </Button>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   if (loading) {
@@ -250,7 +280,7 @@ const DeliveryDetailsScreen: React.FC = () => {
           <View style={styles.routeInfo}>
             <View style={styles.routeDetail}>
               <Feather name="navigation" size={16} color="#757575" />
-              <Text style={styles.routeText}>~{delivery.distance.toFixed(1)} km</Text>
+              <Text style={styles.routeText}>~{typeof delivery.distance === 'number' ? delivery.distance.toFixed(1) : 'N/A'} km</Text>
             </View>
             <View style={styles.routeDetail}>
               <Feather name="clock" size={16} color="#757575" />
@@ -299,7 +329,7 @@ const DeliveryDetailsScreen: React.FC = () => {
                 <View style={styles.courierRating}>
                   <Feather name="star" size={14} color="#FFD700" />
                   <Text style={styles.ratingText}>
-                    {delivery.courier.rating?.toFixed(1) || 'N/A'}
+                    {typeof delivery.courier.rating === 'number' ? delivery.courier.rating.toFixed(1) : 'N/A'}
                   </Text>
                 </View>
               </View>
@@ -365,7 +395,7 @@ const DeliveryDetailsScreen: React.FC = () => {
           {delivery.status === 'delivered' && (
             <Button
               mode="contained"
-              onPress={() => navigation.navigate('RateDelivery', { deliveryId: deliveryId.toString() })}
+              onPress={() => navigation.navigate('RateDelivery', { deliveryId: String(deliveryId) })}
               style={styles.rateButton}
             >
               Noter la livraison

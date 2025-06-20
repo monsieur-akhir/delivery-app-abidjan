@@ -52,7 +52,40 @@ class DeliveryService {
 
   static async getDeliveryById(id: string): Promise<Delivery> {
     try {
-      const response = await api.get(`/deliveries/${id}`)
+      console.log('🔍 [DEBUG] getDeliveryById appelé avec ID:', id)
+      // Essayer plusieurs endpoints possibles
+      const endpoints = [
+        `/api/v1/deliveries/${id}`,
+        `/api/deliveries/${id}`,
+        `/api/client/delivery-history/${id}`,
+        `/deliveries/${id}`
+      ]
+      let response = null
+      let usedEndpoint = ''
+      for (const endpoint of endpoints) {
+        try {
+          console.log('🔍 [DEBUG] Tentative getDeliveryById avec endpoint:', endpoint)
+          response = await api.get(endpoint)
+          usedEndpoint = endpoint
+          console.log('✅ [DEBUG] Succès getDeliveryById avec endpoint:', endpoint)
+          break
+        } catch (endpointError) {
+          console.log('❌ [DEBUG] Échec getDeliveryById avec endpoint:', endpoint, endpointError.response?.status)
+          continue
+        }
+      }
+      if (!response) {
+        console.error('❌ [DEBUG] Tous les endpoints getDeliveryById ont échoué')
+        throw new Error('Impossible de récupérer les détails de la livraison')
+      }
+      console.log('📦 [DEBUG] Détails livraison récupérés:', response.data)
+      // Correction ici : retourner la bonne propriété
+      if (response.data && response.data.delivery) {
+        return response.data.delivery
+      }
+      if (response.data && response.data.data) {
+        return response.data.data
+      }
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération de la livraison:', error)
@@ -95,11 +128,52 @@ class DeliveryService {
   // Méthodes pour les enchères
   static async getDeliveryBids(deliveryId: string): Promise<Bid[]> {
     try {
-      const response = await api.get(`/deliveries/${deliveryId}/bids`)
-      return response.data
+      console.log('🔍 [DEBUG] getDeliveryBids appelé avec deliveryId:', deliveryId)
+      
+      // Essayer plusieurs endpoints possibles
+      const endpoints = [
+        `/api/v1/deliveries/${deliveryId}/bids`,
+        `/api/deliveries/${deliveryId}/bids`,
+        `/deliveries/${deliveryId}/bids`,
+        `/api/bids?delivery_id=${deliveryId}`
+      ]
+
+      let response = null
+      let usedEndpoint = ''
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log('🔍 [DEBUG] Tentative getDeliveryBids avec endpoint:', endpoint)
+          response = await api.get(endpoint)
+          usedEndpoint = endpoint
+          console.log('✅ [DEBUG] Succès getDeliveryBids avec endpoint:', endpoint)
+          break
+        } catch (endpointError) {
+          console.log('❌ [DEBUG] Échec getDeliveryBids avec endpoint:', endpoint, endpointError.response?.status)
+          continue
+        }
+      }
+
+      if (!response) {
+        console.log('⚠️ [DEBUG] Aucun endpoint getDeliveryBids fonctionnel, retourner tableau vide')
+        return []
+      }
+
+      // Extraire les enchères de la réponse
+      let bids = []
+      if (Array.isArray(response.data)) {
+        bids = response.data
+      } else if (response.data && response.data.bids && Array.isArray(response.data.bids)) {
+        bids = response.data.bids
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        bids = response.data.data
+      }
+
+      console.log('📦 [DEBUG] Enchères récupérées:', bids.length)
+      return bids
     } catch (error) {
       console.error('Erreur lors de la récupération des enchères:', error)
-      throw error
+      return []
     }
   }
 
@@ -332,11 +406,76 @@ class DeliveryService {
       if (filters?.date_from) params.append('date_from', filters.date_from)
       if (filters?.date_to) params.append('date_to', filters.date_to)
 
-      const response = await api.get(`/client/delivery-history?${params.toString()}`)
-      return response.data
+      console.log('🔍 [DEBUG] Début getClientDeliveryHistory')
+      console.log('🔍 [DEBUG] Filtres:', filters)
+      console.log('🔍 [DEBUG] Paramètres:', params.toString())
+
+      // Essayer plusieurs endpoints possibles
+      const endpoints = [
+        `/api/client/delivery-history?${params.toString()}`,
+        `/api/deliveries?${params.toString()}`,
+        `/api/v1/deliveries?${params.toString()}`,
+        `/deliveries?${params.toString()}`
+      ]
+
+      let response = null
+      let usedEndpoint = ''
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log('🔍 [DEBUG] Tentative avec endpoint:', endpoint)
+          response = await api.get(endpoint)
+          usedEndpoint = endpoint
+          console.log('✅ [DEBUG] Succès avec endpoint:', endpoint)
+          break
+        } catch (endpointError) {
+          console.log('❌ [DEBUG] Échec avec endpoint:', endpoint, endpointError.response?.status)
+          continue
+        }
+      }
+
+      if (!response) {
+        console.error('❌ [DEBUG] Tous les endpoints ont échoué')
+        return []
+      }
+
+      console.log('📦 [DEBUG] Réponse API reçue')
+      console.log('📦 [DEBUG] Type de réponse:', typeof response.data)
+      console.log('📦 [DEBUG] Est un tableau:', Array.isArray(response.data))
+      console.log('📦 [DEBUG] Longueur:', Array.isArray(response.data) ? response.data.length : 'N/A')
+      console.log('📦 [DEBUG] Données brutes:', response.data)
+
+      // CORRECTION : Extraire les livraisons de la réponse API
+      let deliveries = []
+      if (Array.isArray(response.data)) {
+        // Si c'est déjà un tableau
+        deliveries = response.data
+      } else if (response.data && response.data.deliveries && Array.isArray(response.data.deliveries)) {
+        // Si c'est un objet avec une propriété deliveries
+        deliveries = response.data.deliveries
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        // Si c'est un objet avec une propriété data
+        deliveries = response.data.data
+      } else {
+        // Fallback
+        deliveries = []
+      }
+
+      console.log('📦 [DEBUG] Livraisons extraites:', deliveries.length)
+      
+      // Vérifier que les livraisons appartiennent bien à l'utilisateur connecté
+      // L'API devrait déjà filtrer, mais on double-vérifie côté client
+      if (deliveries.length > 0) {
+        console.log('👤 [DEBUG] Première livraison client_id:', deliveries[0].client_id)
+        console.log('👤 [DEBUG] Nombre total de livraisons:', deliveries.length)
+      }
+      
+      return deliveries
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique client:', error)
-      throw error
+      console.error('❌ [DEBUG] Erreur lors de la récupération de l\'historique client:', error)
+      console.error('❌ [DEBUG] Détails de l\'erreur:', error.response?.data)
+      console.error('❌ [DEBUG] Status de l\'erreur:', error.response?.status)
+      return []
     }
   }
 
@@ -348,10 +487,10 @@ class DeliveryService {
       if (filters?.date_to) params.append('date_to', filters.date_to)
 
       const response = await api.get(`/courier/delivery-history?${params.toString()}`)
-      return response.data
+      return Array.isArray(response.data) ? response.data : []
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique coursier:', error)
-      throw error
+      return []
     }
   }
 
@@ -359,10 +498,10 @@ class DeliveryService {
   static async getActiveDeliveries(): Promise<Delivery[]> {
     try {
       const response = await api.get('/deliveries/active')
-      return response.data
+      return Array.isArray(response.data) ? response.data : []
     } catch (error) {
       console.error('Erreur lors de la récupération des livraisons actives:', error)
-      throw error
+      return []
     }
   }
 

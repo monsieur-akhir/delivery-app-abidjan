@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -61,16 +60,35 @@ const DeliveryHistoryScreen = ({ navigation }: DeliveryHistoryScreenProps) => {
   }, [deliveries, searchQuery, selectedStatus, dateFilter])
 
   const loadDeliveries = async () => {
-    if (!user) return
+    console.log('🚀 [DEBUG] Début loadDeliveries')
+    console.log('👤 [DEBUG] Utilisateur:', user)
+    
+    if (!user) {
+      console.log('❌ [DEBUG] Aucun utilisateur connecté')
+      return
+    }
+
+    console.log('👤 [DEBUG] ID utilisateur:', user.id)
+    console.log('👤 [DEBUG] Rôle utilisateur:', user.role)
+    console.log('👤 [DEBUG] Email utilisateur:', user.email)
 
     try {
-      const response = await DeliveryService.getUserDeliveries(user.id)
+      console.log('📡 [DEBUG] Appel de DeliveryService.getClientDeliveryHistory()')
+      const response = await DeliveryService.getClientDeliveryHistory()
+      console.log('📦 [DEBUG] Réponse reçue:', response)
+      console.log('📦 [DEBUG] Type de réponse:', typeof response)
+      console.log('📦 [DEBUG] Est un tableau:', Array.isArray(response))
+      console.log('📦 [DEBUG] Nombre de livraisons:', Array.isArray(response) ? response.length : 'N/A')
+      
       setDeliveries(response)
+      console.log('✅ [DEBUG] Livraisons définies dans l\'état')
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'historique:', error)
+      console.error('❌ [DEBUG] Erreur lors du chargement de l\'historique:', error)
+      console.error('❌ [DEBUG] Détails de l\'erreur:', error.response?.data)
     } finally {
       setLoading(false)
       setRefreshing(false)
+      console.log('🏁 [DEBUG] loadDeliveries terminé')
     }
   }
 

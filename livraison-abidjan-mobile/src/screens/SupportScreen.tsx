@@ -100,16 +100,26 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
     try {
       setLoading(true)
       const ticketsData = await fetchSupportTickets()
-      setTickets(ticketsData.map((ticket: any) => ({
+      
+      // Vérifier que ticketsData est un tableau valide
+      const safeTicketsData = Array.isArray(ticketsData) ? ticketsData : []
+      
+      setTickets(safeTicketsData.map((ticket: any) => ({
         ...ticket,
         updated_at: ticket.updated_at || ticket.created_at,
-        messages: ticket.messages || []
+        messages: Array.isArray(ticket.messages) ? ticket.messages : []
       })))
 
       const faqsData = await fetchFAQs()
-      setFaqs(faqsData)
+      
+      // Vérifier que faqsData est un tableau valide
+      const safeFaqsData = Array.isArray(faqsData) ? faqsData : []
+      setFaqs(safeFaqsData)
     } catch (error) {
       console.error("Error loading support data:", error)
+      // En cas d'erreur, initialiser avec des tableaux vides
+      setTickets([])
+      setFaqs([])
     } finally {
       setLoading(false)
     }
@@ -134,9 +144,9 @@ const SupportScreen: React.FC<SupportScreenProps> = ({ navigation }) => {
         const newTicket = await createSupportTicket(ticketSubject, ticketMessage)
 
         // Upload images if any
-        if (ticketImages.length > 0) {
-          for (const imageUri of ticketImages) {
-            await uploadTicketImage(newTicket.id, imageUri)
+        if (ticketImages && ticketImages.length > 0) {
+          for (let i = 0; i < ticketImages.length; i++) {
+            await uploadTicketImage(newTicket.id, ticketImages[i])
           }
         }
 

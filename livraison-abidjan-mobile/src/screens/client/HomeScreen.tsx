@@ -137,12 +137,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     try {
       setLoading(true)
       const deliveries = await getClientDeliveryHistory({})
-      if (Array.isArray(deliveries)) {
-        const active = deliveries.filter((d: any) => d.status === 'in_progress' || d.status === 'picked_up')
-        const recent = deliveries.filter((d: any) => d.status === 'completed' || d.status === 'cancelled')
-        setActiveDeliveries(active)
-        setRecentDeliveries(recent)
-      }
+      const active = (deliveries || []).filter((d: any) => d.status === 'in_progress' || d.status === 'picked_up')
+      const recent = (deliveries || []).filter((d: any) => d.status === 'completed' || d.status === 'cancelled')
+      setActiveDeliveries(active)
+      setRecentDeliveries(recent)
     } catch (error) {
       console.error('Error loading data:', error)
       Alert.alert('Erreur', 'Impossible de charger les données')
@@ -274,7 +272,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <TouchableOpacity 
       key={delivery.id}
       style={styles.recentDeliveryItem}
-      onPress={() => navigation.navigate('DeliveryDetails', { deliveryId: delivery.id.toString() })}
+      onPress={() => {
+        if (delivery.id !== undefined && delivery.id !== null && delivery.id !== "") {
+          navigation.navigate('DeliveryDetails', { deliveryId: delivery.id.toString() })
+        } else {
+          console.error('Tentative de navigation vers DeliveryDetails sans deliveryId', delivery)
+        }
+      }}
     >
       <View style={[styles.recentStatusDot, { backgroundColor: getStatusColor(delivery.status) }]} />
       <View style={styles.recentDeliveryContent}>
@@ -312,13 +316,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
             <Avatar.Text 
               size={40} 
-              label={user?.first_name?.charAt(0) || 'U'} 
+              label={
+                user?.full_name
+                  ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2)
+                  : user?.first_name
+                    ? user.first_name.charAt(0).toUpperCase()
+                    : 'U'
+              }
               style={styles.avatar}
             />
           </TouchableOpacity>
           <View style={styles.greeting}>
             <Text style={styles.greetingText}>Bonjour</Text>
-            <Text style={styles.userName}>{user?.first_name || 'Utilisateur'}</Text>
+            <Text style={styles.userName}>
+              {user?.full_name || user?.first_name || 'Utilisateur'}
+            </Text>
           </View>
         </View>
 

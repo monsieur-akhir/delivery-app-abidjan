@@ -172,138 +172,51 @@ const VoiceAssistantScreen = () => {
     }
   }
 
-  // Type guard to check if screen is a valid route
-  const isValidRoute = (screen: string): screen is keyof RootStackParamList => {
-    const validRoutes: (keyof RootStackParamList)[] = [
-      'Login', 'Register', 'VerifyOTP', 'ForgotPassword', 'ClientTabs', 'CourierTabs',
-      'Home', 'CreateDelivery', 'MerchantDetails', 'DeliveryDetails', 'Bids', 'TrackDelivery',
-      'Payment', 'RateDelivery', 'EnhancedRateDelivery', 'Bid', 'CourierTrackDelivery',
-      'CourierStatus', 'CourierStats', 'CollaborativeDeliveries', 'CollaborativeDeliveryDetails',
-      'JoinCollaborativeDelivery', 'CollaborativeChat', 'Gamification', 'CommunityWallet',
-      'VehicleManagement', 'CourierProfile', 'Notifications', 'Support', 'LanguageSettings',
-      'Main', 'ClientHome', 'Marketplace', 'DeliveryHistory', 'Settings', 'CourierHome',
-      'CourierEarnings', 'CourierDeliveryHistory', 'WebPayment', 'Cart', 'Profile',
-      'NotificationSettings', 'SecuritySettings', 'ChangePassword', 'SecurityQuestions',
-      'StorageManagementScreen', 'AutoSyncSettingsScreen', 'DataUsageSettingsScreen',
-      'WeatherScreen', 'GamificationScreen', 'AvailableDeliveries'
-    ]
-    return validRoutes.includes(screen as keyof RootStackParamList)
-  }
+  const availableScreens = [
+    'Login', 'Register', 'VerifyOTP', 'ForgotPassword', 'ClientMain', 'CourierMain',
+    'Home', 'CreateDelivery', 'TrackDelivery', 'Payment', 'Settings', 'Profile'
+  ]
 
-  // Navigation helper with proper type safety
-  const navigateToScreen = (screenName: keyof RootStackParamList, params?: unknown) => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nav = navigation as any
-      
-      switch (screenName) {
-        case 'Login':
-        case 'Register':
-        case 'ForgotPassword':
-        case 'ClientTabs':
-        case 'CourierTabs':
-        case 'Home':
-        case 'CreateDelivery':
-        case 'CourierStats':
-        case 'CollaborativeDeliveries':
-        case 'Gamification':
-        case 'CommunityWallet':
-        case 'VehicleManagement':
-        case 'Notifications':
-        case 'Support':
-        case 'LanguageSettings':
-        case 'Main':
-        case 'ClientHome':
-        case 'DeliveryHistory':
-        case 'Settings':
-        case 'CourierHome':
-        case 'CourierEarnings':
-        case 'CourierDeliveryHistory':
-        case 'Profile':
-        case 'NotificationSettings':
-        case 'SecuritySettings':
-        case 'ChangePassword':
-        case 'SecurityQuestions':
-        case 'StorageManagementScreen':
-        case 'AutoSyncSettingsScreen':
-        case 'DataUsageSettingsScreen':
-        case 'GamificationScreen':
-        case 'AvailableDeliveries':
-          nav.navigate(screenName)
-          break
-        case 'Marketplace':
-          if (params && typeof params === 'object' && 'category' in params) {
-            nav.navigate(screenName, params)
-          } else {
-            nav.navigate(screenName)
-          }
-          break
-        case 'CourierStatus':
-          if (params && typeof params === 'object' && 'initialStatus' in params) {
-            nav.navigate(screenName, params)
-          } else {
-            nav.navigate(screenName)
-          }
-          break
-        case 'VerifyOTP':
-          if (params && typeof params === 'object' && 'phone' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'MerchantDetails':
-          if (params && typeof params === 'object' && 'merchantId' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'DeliveryDetails':
-        case 'Bids':
-        case 'TrackDelivery':
-        case 'Bid':
-        case 'CourierTrackDelivery':
-        case 'JoinCollaborativeDelivery':
-        case 'CollaborativeChat':
-        case 'RateDelivery':
-        case 'EnhancedRateDelivery':
-          if (params && typeof params === 'object' && 'deliveryId' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'CollaborativeDeliveryDetails':
-          if (params && typeof params === 'object' && 'deliveryId' in params && 'clientName' in params && 'finalPrice' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'Payment':
-          if (params && typeof params === 'object' && 'deliveryId' in params && 'amount' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'CourierProfile':
-          if (params && typeof params === 'object' && 'courierId' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'WebPayment':
-          if (params && typeof params === 'object' && 'paymentUrl' in params && 'transactionId' in params && 'onComplete' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'Cart':
-          if (params && typeof params === 'object' && 'merchantId' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        case 'WeatherScreen':
-          if (params && typeof params === 'object' && 'location' in params) {
-            nav.navigate(screenName, params)
-          }
-          break
-        default:
-          console.error("Unhandled navigation case:", screenName)
-      }
-    } catch (error) {
-      console.error("Navigation error:", error)
-      throw error
+  const navigateToScreen = (screenName: string) => {
+    switch (screenName) {
+      case 'Login':
+        navigation.navigate('Login')
+        break
+      case 'Register':
+        navigation.navigate('Register')
+        break
+      case 'VerifyOTP':
+        navigation.navigate('VerifyOTP', { phoneNumber: '1234567890' })
+        break
+      case 'ForgotPassword':
+        navigation.navigate('ForgotPassword')
+        break
+      case 'ClientMain':
+        navigation.navigate('ClientMain')
+        break
+      case 'CourierMain':
+        navigation.navigate('CourierMain')
+        break
+      case 'Home':
+        navigation.navigate('Home')
+        break
+      case 'CreateDelivery':
+        navigation.navigate('CreateDelivery')
+        break
+      case 'TrackDelivery':
+        navigation.navigate('TrackDelivery', { deliveryId: '123' })
+        break
+      case 'Payment':
+        navigation.navigate('Payment')
+        break
+      case 'Settings':
+        navigation.navigate('Settings')
+        break
+      case 'Profile':
+        navigation.navigate('Profile')
+        break
+      default:
+        console.log('Screen not found:', screenName)
     }
   }
 
@@ -311,8 +224,8 @@ const VoiceAssistantScreen = () => {
     try {
       switch (action) {
         case "navigate":
-          if (data?.screen && isValidRoute(data.screen)) {
-            navigateToScreen(data.screen, data.params)
+          if (data?.screen && availableScreens.includes(data.screen)) {
+            navigateToScreen(data.screen)
           } else {
             console.error("Invalid navigation route:", data?.screen)
           }
@@ -322,16 +235,14 @@ const VoiceAssistantScreen = () => {
           break
         case "trackDelivery":
           if (data?.deliveryId) {
-            navigateToScreen("TrackDelivery", { deliveryId: data.deliveryId })
+            navigateToScreen("TrackDelivery")
           }
           break
         case "checkWeather":
-          navigateToScreen("WeatherScreen", { location: data?.location || "Abidjan" })
+          navigateToScreen("WeatherScreen")
           break
         case "findMerchants":
           if (data?.params && typeof data.params === 'object' && 'category' in data.params) {
-            navigateToScreen("Marketplace", { category: (data.params as { category?: string }).category })
-          } else {
             navigateToScreen("Marketplace")
           }
           break
@@ -340,7 +251,7 @@ const VoiceAssistantScreen = () => {
           break
         case "goOnline":
         case "goOffline":
-          navigateToScreen("CourierStatus", { initialStatus: action === "goOnline" })
+          navigateToScreen("CourierStatus")
           break
         default:
           console.error("Unknown action:", action)

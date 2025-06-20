@@ -488,6 +488,8 @@ export interface PriceEstimateData {
   package_weight?: number
   vehicle_type?: string
   delivery_type?: string
+  is_fragile?: boolean
+  is_urgent?: boolean
 }
 
 export interface VehicleRecommendationData {

@@ -72,12 +72,47 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variable files
+# Environment Variables - Tous les fichiers .env
 .env
-.env.development.local
-.env.test.local
-.env.production.local
 .env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+.env.*.local
+*.env
+*.env.local
+*.env.development
+*.env.development.local
+*.env.test
+*.env.test.local
+*.env.production
+*.env.production.local
+*.env.staging
+*.env.staging.local
+
+# Fichiers de configuration d'environnement spécifiques
+config/environment.ts
+config/environment.js
+config/environment.json
+config/.env*
+src/config/environment.ts
+src/config/environment.js
+src/config/environment.json
+src/config/.env*
+
+# Fichiers de secrets et clés API
+secrets/
+keys/
+api-keys/
+*.key
+*.pem
+*.p12
+*.pfx
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -155,6 +190,7 @@ backend/dist/
 backend/.env
 mobile/node_modules/
 mobile/dist/
+./delivery-app-abidjan/livraison-abidjan-mobile/.env
 # Fichiers à ignorer
 *.log
 *.env

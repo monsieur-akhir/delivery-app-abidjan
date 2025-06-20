@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { WS_URL } from "../config/environment"
 import { useAuth } from "./AuthContext"
+import { Snackbar } from 'react-native-paper'
 
 export interface WebSocketMessage {
   type: string
@@ -36,18 +37,30 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [subscriptions, setSubscriptions] = useState<{
     [key: string]: (data: any) => void
   }>({})
+  const [showWsError, setShowWsError] = useState(false)
 
   const getWsUrl = () => {
-    return `${WS_URL}/${user?.id}?token=${token}`
+    const url = `${WS_URL}/${user?.id}?token=${token}`
+    if (__DEV__) {
+      console.log('[WebSocket] URL:', url, 'user:', user, 'token:', token?.slice(0, 10) + '...')
+    }
+    return url
   }
 
   const connectWebSocket = useCallback(() => {
-    if (!token || !user) return
+    if (!token || !user || !user.id) {
+      if (__DEV__) {
+        console.log('[WebSocket] Connexion refusée : user ou token manquant', { user, token })
+      }
+      setShowWsError(true)
+      setConnected(false)
+      return
+    }
 
     const ws = new WebSocket(getWsUrl())
 
     ws.onopen = () => {
-      console.log("WebSocket connected")
+      if (__DEV__) console.log('[WebSocket] Connecté')
       setConnected(true)
     }
 
@@ -55,29 +68,35 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         const message = JSON.parse(event.data)
         setLastMessage(message)
-
-        // Notify subscribers about the new message
         if (message.type && subscriptions[message.type]) {
           subscriptions[message.type](message.data)
         }
       } catch (error) {
-        console.error("Error parsing WebSocket message:", error)
+        console.error('[WebSocket] Erreur parsing message:', error)
       }
     }
 
     ws.onclose = () => {
-      console.log("WebSocket disconnected")
+      if (__DEV__) console.log('[WebSocket] Déconnecté')
       setConnected(false)
-      // Try to reconnect after a delay
       setTimeout(() => {
-        if (token && user) {
+        if (token && user && user.id) {
           connectWebSocket()
         }
       }, 5000)
     }
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
+    ws.onerror = (error: any) => {
+      if (error?.message?.includes('403')) {
+        if (__DEV__) {
+          console.log('[WebSocket] Refusé (403) : utilisateur non authentifié')
+        }
+        setShowWsError(true)
+        ws.close()
+        return
+      }
+      if (__DEV__) console.error('[WebSocket] Erreur :', error)
+      setShowWsError(true)
       ws.close()
     }
 
@@ -89,9 +108,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [token, user, subscriptions])
 
   useEffect(() => {
-    if (token && user) {
+    if (token && user && user.id) {
       const cleanup = connectWebSocket()
       return cleanup
+    } else {
+      setConnected(false)
     }
   }, [token, user, connectWebSocket])
 
@@ -130,6 +151,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       value={{ connected, sendMessage, lastMessage, subscribe, unsubscribe }}
     >
       {children}
+      <Snackbar
+        visible={showWsError}
+        onDismiss={() => setShowWsError(false)}
+        duration={4000}
+        style={{ backgroundColor: '#FF6B00', borderRadius: 8 }}
+      >
+        Connexion temps réel perdue, veuillez vous reconnecter.
+      </Snackbar>
+      */}
     </WebSocketContext.Provider>
   )
 }

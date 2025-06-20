@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -64,7 +63,7 @@ const DeliveryHistoryScreen = ({ navigation }: DeliveryHistoryScreenProps) => {
     if (!user) return
 
     try {
-      const response = await DeliveryService.getUserDeliveries(user.id)
+      const response = await DeliveryService.getClientDeliveryHistory()
       setDeliveries(response)
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error)

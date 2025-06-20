@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -8,13 +7,12 @@ import {
   Animated,
   Dimensions,
   Platform,
-  PanGestureHandler,
-  State,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
 const { width } = Dimensions.get('window');
 
@@ -157,42 +155,42 @@ const CustomToast: React.FC<CustomToastProps> = ({
     switch (type) {
       case 'success':
         return {
-          colors: ['#4CAF50', '#45A049'],
+          colors: ['#4CAF50', '#45A049'] as const,
           icon: icon || 'checkmark-circle',
           iconColor: '#FFFFFF',
           textColor: '#FFFFFF',
         };
       case 'error':
         return {
-          colors: ['#F44336', '#D32F2F'],
+          colors: ['#F44336', '#D32F2F'] as const,
           icon: icon || 'close-circle',
           iconColor: '#FFFFFF',
           textColor: '#FFFFFF',
         };
       case 'warning':
         return {
-          colors: ['#FF9800', '#F57C00'],
+          colors: ['#FF9800', '#F57C00'] as const,
           icon: icon || 'warning',
           iconColor: '#FFFFFF',
           textColor: '#FFFFFF',
         };
       case 'payment':
         return {
-          colors: ['#9C27B0', '#7B1FA2'],
+          colors: ['#9C27B0', '#7B1FA2'] as const,
           icon: icon || 'card',
           iconColor: '#FFFFFF',
           textColor: '#FFFFFF',
         };
       case 'delivery':
         return {
-          colors: ['#00BCD4', '#0097A7'],
+          colors: ['#00BCD4', '#0097A7'] as const,
           icon: icon || 'bicycle',
           iconColor: '#FFFFFF',
           textColor: '#FFFFFF',
         };
       default:
         return {
-          colors: ['#2196F3', '#1976D2'],
+          colors: ['#2196F3', '#1976D2'] as const,
           icon: icon || 'information-circle',
           iconColor: '#FFFFFF',
           textColor: '#FFFFFF',

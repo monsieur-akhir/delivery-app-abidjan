@@ -44,7 +44,9 @@ class SmsNotificationService:
         
         # Envoyer le SMS selon le fournisseur configuré
         try:
-            if self.provider == "twilio":
+            if self.provider == "brevo":
+                return await self._send_via_brevo(phone_number, message, priority)
+            elif self.provider == "twilio":
                 return await self._send_via_twilio(phone_number, message, priority)
             elif self.provider == "africas_talking":
                 return await self._send_via_africas_talking(phone_number, message, priority)
@@ -309,6 +311,37 @@ class SmsNotificationService:
                 "message": str(e),
                 "to": phone_number
             }
+    
+    async def _send_via_brevo(self, phone_number: str, message: str, priority: str) -> Dict[str, Any]:
+        """
+        Envoyer un SMS via Brevo (Sendinblue).
+        """
+        import requests
+        try:
+            logger.info(f"[BREVO_SMS] Tentative d'envoi SMS à {phone_number} : {message}")
+            headers = {
+                "accept": "application/json",
+                "api-key": settings.BREVO_API_KEY_SMS,
+                "content-type": "application/json"
+            }
+            payload = {
+                "sender": settings.SMS_SENDER or "Djemin",
+                "recipient": phone_number,
+                "content": message,
+                "type": "transactional"
+            }
+            response = requests.post(settings.BREVO_SMS_API_URL, headers=headers, json=payload)
+            logger.info(f"[BREVO_SMS] Réponse API: {response.status_code} {response.text}")
+            if response.status_code in [200, 201]:
+                logger.info("SMS envoyé via Brevo à %s", phone_number)
+                self._increment_sms_counter()
+                return {"status": "success", "to": phone_number, "message": message}
+            else:
+                logger.error("Erreur Brevo SMS: %s", response.text)
+                return {"status": "error", "message": response.text, "to": phone_number}
+        except Exception as e:
+            logger.exception("Erreur Brevo SMS: %s", str(e))
+            return {"status": "error", "message": str(e), "to": phone_number}
     
     def _validate_phone_number(self, phone_number: str) -> bool:
         """

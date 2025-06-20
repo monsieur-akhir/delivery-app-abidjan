@@ -1,4 +1,3 @@
-
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -128,7 +127,7 @@ def assign_vehicle_to_courier(db: Session, business_id: int, vehicle_id: int, co
         and_(
             CourierVehicle.courier_id == courier_id,
             CourierVehicle.vehicle_id == vehicle_id,
-            CourierVehicle.is_active == True
+            CourierVehicle.status == 'active'
         )
     ).first()
     
@@ -138,7 +137,7 @@ def assign_vehicle_to_courier(db: Session, business_id: int, vehicle_id: int, co
     assignment = CourierVehicle(
         courier_id=courier_id,
         vehicle_id=vehicle_id,
-        is_active=True
+        status='active'
     )
     
     db.add(assignment)
