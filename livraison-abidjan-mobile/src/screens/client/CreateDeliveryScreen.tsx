@@ -352,29 +352,24 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  addressContainer: {
+  addressInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 12,
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    marginBottom: 16,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
-  addressInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    minHeight: 60,
-  },
-
-  addressInputRowLast: {
-    borderBottomWidth: 0,
+  addressInput: {
+    flex: 1,
+    marginLeft: 12,
   },
 
   addressInputIcon: {
@@ -1334,52 +1329,50 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.bottomSheetHandle} />
           <Text style={styles.bottomSheetTitle}>ENVOYER UN COLIS</Text>
 
-          {/* Address Inputs avec design Google Maps */}
+          {/* Address Inputs simplifiés */}
           <View style={styles.addressSection}>
-            <View style={styles.addressContainer}>
-              {/* Pickup Address */}
-              <View style={[styles.addressInputRow]}>
-                <View style={[styles.addressInputIcon, styles.pickupIcon]}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.white }} />
-                </View>
-                <View style={styles.addressInputContent}>
-                  <AddressAutocomplete
-                    label="Prise en charge"
-                    value={pickupQuery}
-                    onChangeText={(text) => handleTextChange(text, 'pickup')}
-                    onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
-                    placeholder="Adresse de prise en charge"
-                    showCurrentLocation={true}
-                    maxSuggestions={5}
-                    onFocus={() => {
-                      setPickupFocused(true)
-                      setActiveField('pickup')
-                    }}
-                  />
-                </View>
+            <Text style={styles.sectionTitle}>Adresses</Text>
+            
+            {/* Pickup Address */}
+            <View style={styles.addressInputContainer}>
+              <View style={[styles.addressInputIcon, styles.pickupIcon]}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.white }} />
               </View>
+              <AddressAutocomplete
+                label="Prise en charge"
+                value={pickupQuery}
+                onChangeText={(text) => handleTextChange(text, 'pickup')}
+                onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
+                placeholder="Adresse de prise en charge"
+                showCurrentLocation={true}
+                maxSuggestions={6}
+                style={styles.addressInput}
+                onFocus={() => {
+                  setPickupFocused(true)
+                  setActiveField('pickup')
+                }}
+              />
+            </View>
 
-              {/* Delivery Address */}
-              <View style={[styles.addressInputRow, styles.addressInputRowLast]}>
-                <View style={[styles.addressInputIcon, styles.destinationIcon]}>
-                  <Feather name="navigation" size={12} color={COLORS.white} />
-                </View>
-                <View style={styles.addressInputContent}>
-                  <AddressAutocomplete
-                    label="Destination"
-                    value={deliveryQuery}
-                    onChangeText={(text) => handleTextChange(text, 'delivery')}
-                    onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
-                    placeholder="Adresse de livraison"
-                    showCurrentLocation={true}
-                    maxSuggestions={5}
-                    onFocus={() => {
-                      setDeliveryFocused(true)
-                      setActiveField('delivery')
-                    }}
-                  />
-                </View>
+            {/* Delivery Address */}
+            <View style={styles.addressInputContainer}>
+              <View style={[styles.addressInputIcon, styles.destinationIcon]}>
+                <Feather name="navigation" size={12} color={COLORS.white} />
               </View>
+              <AddressAutocomplete
+                label="Destination"
+                value={deliveryQuery}
+                onChangeText={(text) => handleTextChange(text, 'delivery')}
+                onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
+                placeholder="Adresse de livraison"
+                showCurrentLocation={true}
+                maxSuggestions={6}
+                style={styles.addressInput}
+                onFocus={() => {
+                  setDeliveryFocused(true)
+                  setActiveField('delivery')
+                }}
+              />
             </View>
 
             {/* Bouton Position actuelle */}
