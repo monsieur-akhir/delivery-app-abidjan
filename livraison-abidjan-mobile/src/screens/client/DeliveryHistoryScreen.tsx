@@ -149,7 +149,7 @@ const MotorcycleLoader: React.FC = () => {
 
       <Text style={styles.loadingText}>Chargement de votre historique...</Text>
       <View style={styles.loadingDots}>
-        <ActivityIndicator size="small" color={colors.primary} />
+        <ActivityIndicator size="small" color={colors.orange} />
       </View>
     </View>
   )
@@ -158,14 +158,13 @@ const MotorcycleLoader: React.FC = () => {
 export const DeliveryHistoryScreen: React.FC = () => {
   const navigation = useNavigation()
   const { user } = useAuth()
-  const { getAllDeliveries } = useDelivery()
+  const { getDeliveries } = useDelivery()
 
   const getUserDeliveries = async () => {
     try {
-      return await getAllDeliveries()
+      await getDeliveries()
     } catch (error) {
       console.error('Erreur lors de la récupération des livraisons:', error)
-      return []
     }
   }
 
@@ -180,9 +179,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
   const loadDeliveries = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await getUserDeliveries()
-      setDeliveries(response.data || [])
-
+      await getUserDeliveries()
       // Animation d'entrée
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -201,7 +198,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }, [fadeAnim, slideAnim])
+  }, [fadeAnim, slideAnim, getUserDeliveries])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -246,7 +243,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
       case 'pending':
         return '#6B7280'
       default:
-        return colors.primary
+        return colors.orange
     }
   }
 
@@ -445,8 +442,8 @@ export const DeliveryHistoryScreen: React.FC = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
+              colors={[colors.orange]}
+              tintColor={colors.orange}
             />
           }
         />
@@ -583,7 +580,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   filterButtonActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.orange,
   },
   filterText: {
     fontSize: 14,

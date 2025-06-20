@@ -400,14 +400,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
-  addressInput: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: COLORS.text,
-    paddingVertical: 4,
-    minHeight: 24,
-  },
-
   addressInputPlaceholder: {
     fontSize: 16,
     color: COLORS.textSecondary,
@@ -431,8 +423,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-
-
 
   // Section des informations du colis
   packageSection: {
@@ -1531,7 +1521,6 @@ const CreateDeliveryScreen: React.FC = () => {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Map Section avec overlay navigation */}
         <View style={styles.mapContainer}>
-
           {pickupLocation && deliveryLocation && (
             <MapView
               pickupLocation={pickupLocation}
@@ -1539,8 +1528,6 @@ const CreateDeliveryScreen: React.FC = () => {
               style={{ flex: 1 }}
             />
           )}
-
-
 
           {/* Navigation overlay avec icônes de véhicules */}
           <View style={styles.navigationOverlay}>
@@ -1595,14 +1582,17 @@ const CreateDeliveryScreen: React.FC = () => {
                   }}
                 />
                 {showPickupSuggestions && pickupFocused && (
-                  
-                    {pickupSuggestions.map((item) => (
-                      
-                          {item.description}
-                        
-                      
+                  <View style={{ backgroundColor: '#fff', borderRadius: 8, marginTop: 4, elevation: 2 }}>
+                    {pickupSuggestions.map((item: Address) => (
+                      <TouchableOpacity
+                        key={item.id + item.description}
+                        style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}
+                        onPress={() => handleSuggestionSelect(item, 'pickup')}
+                      >
+                        <Text>{item.description}</Text>
+                      </TouchableOpacity>
                     ))}
-                  
+                  </View>
                 )}
               </View>
             </View>
@@ -1635,14 +1625,17 @@ const CreateDeliveryScreen: React.FC = () => {
                   }}
                 />
                 {showDeliverySuggestions && deliveryFocused && (
-                  
-                    {deliverySuggestions.map((item) => (
-                      
-                          {item.description}
-                        
-                      
+                  <View style={{ backgroundColor: '#fff', borderRadius: 8, marginTop: 4, elevation: 2 }}>
+                    {deliverySuggestions.map((item: Address) => (
+                      <TouchableOpacity
+                        key={item.id + item.description}
+                        style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}
+                        onPress={() => handleSuggestionSelect(item, 'delivery')}
+                      >
+                        <Text>{item.description}</Text>
+                      </TouchableOpacity>
                     ))}
-                  
+                  </View>
                 )}
               </View>
             </View>
@@ -1786,35 +1779,45 @@ const CreateDeliveryScreen: React.FC = () => {
           onPress={handleSubmit}
           disabled={loading}
         >
-          
+          <Text>
             Créer la livraison - {formatPrice(estimatedPrice)}
-          
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Loading Modal */}
       <Modal visible={loading} transparent animationType="fade">
-        
-          
-            
-              
-                Création en cours...
-              
-            
-          
-        
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Création en cours...</Text>
+          </View>
+        </View>
       </Modal>
 
       {/* Alerts et Toasts */}
-      
-        
-          {alertConfig.message}
-        
-      
-
-      
-        {toastConfig.message}
-      
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        type={alertConfig.type}
+        icon={alertConfig.icon}
+        onDismiss={hideAlert}
+        showCloseButton={alertConfig.showCloseButton}
+        autoDismiss={alertConfig.autoDismiss}
+        dismissAfter={alertConfig.dismissAfter}
+      />
+      <CustomToast
+        visible={toastVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        onDismiss={hideToast}
+        action={toastConfig.action}
+        icon={toastConfig.icon}
+        title={toastConfig.title}
+      />
     </SafeAreaView>
   )
 }
