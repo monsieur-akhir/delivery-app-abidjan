@@ -417,8 +417,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
   },
+
+  // Position actuelle button
+  currentLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+
+  currentLocationText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
   
-  // Autocomplete suggestions
+  // Autocomplete suggestions - Version corrigée sans VirtualizedList
   suggestionsContainer: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
@@ -428,7 +447,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-    maxHeight: 300,
+    maxHeight: 250,
   },
   
   suggestionItem: {
@@ -758,6 +777,21 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.text,
   },
+
+  // Distance indicator
+  distanceIndicator: {
+    backgroundColor: COLORS.backgroundSecondary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+
+  distanceText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
 })
 
 // Helper functions
@@ -775,6 +809,36 @@ const calculateDistance = (coord1: { latitude: number; longitude: number }, coor
     Math.sin(dLon/2) * Math.sin(dLon/2)
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
   return R * c
+}
+
+// Fonction pour calculer le prix en fonction de la distance et du type de véhicule
+const calculateDynamicPrice = (distance: number, vehicleType: string, isUrgent: boolean): number => {
+  let basePrice = 400 // Prix de base
+  let pricePerKm = 50 // Prix par kilomètre
+  
+  // Ajustement selon le type de véhicule
+  switch (vehicleType) {
+    case 'moto':
+      basePrice = 400
+      pricePerKm = 50
+      break
+    case 'voiture':
+      basePrice = 500
+      pricePerKm = 75
+      break
+    case 'express':
+      basePrice = 800
+      pricePerKm = 100
+      break
+    default:
+      basePrice = 400
+      pricePerKm = 50
+  }
+  
+  const distancePrice = distance * pricePerKm
+  const urgentMultiplier = isUrgent ? 1.5 : 1
+  
+  return Math.round((basePrice + distancePrice) * urgentMultiplier)
 }
 
 interface DeliveryCreateRequest {
@@ -853,6 +917,7 @@ const CreateDeliveryScreen: React.FC = () => {
 
   // UI states
   const [loading, setLoading] = useState<boolean>(false)
+  const [loadingLocation, setLoadingLocation] = useState<boolean>(false)
   const [showMap, setShowMap] = useState<boolean>(false)
   const [weatherData, setWeatherData] = useState<Weather | null>(null)
   const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null)
@@ -879,38 +944,50 @@ const CreateDeliveryScreen: React.FC = () => {
   const [selectedExtras, setSelectedExtras] = useState<string[]>([])
   const [totalPrice, setTotalPrice] = useState<number>(400)
   const [estimatedPrice, setEstimatedPrice] = useState(400)
+  const [currentDistance, setCurrentDistance] = useState<number>(0)
 
   // Focus states pour les inputs
   const [pickupFocused, setPickupFocused] = useState<boolean>(false)
   const [deliveryFocused, setDeliveryFocused] = useState<boolean>(false)
 
-  // Options de livraison modernisées
-  const modernDeliveryOptions = [
-    {
-      key: 'moto',
-      title: 'Livraison à moto',
-      subtitle: 'à partir de 400 F',
-      icon: '🏍️',
-      price: 400,
-      time: '25-35 min'
-    },
-    {
-      key: 'voiture', 
-      title: 'Livraison en voiture',
-      subtitle: 'à partir de 500 F',
-      icon: '🚗',
-      price: 500,
-      time: '30-45 min'
-    },
-    {
-      key: 'express',
-      title: 'Express Cargo',
-      subtitle: 'à partir de 3100 F',
-      icon: '🚛',
-      price: 3100,
-      time: '15-25 min'
-    }
-  ]
+  // Options de livraison modernisées - maintenant calculées dynamiquement
+  const modernDeliveryOptions = useMemo(() => {
+    const baseOptions = [
+      {
+        key: 'moto',
+        title: 'Livraison à moto',
+        subtitle: '',
+        icon: '🏍️',
+        price: 400,
+        time: '25-35 min'
+      },
+      {
+        key: 'voiture', 
+        title: 'Livraison en voiture',
+        subtitle: '',
+        icon: '🚗',
+        price: 500,
+        time: '30-45 min'
+      },
+      {
+        key: 'express',
+        title: 'Express Cargo',
+        subtitle: '',
+        icon: '🚛',
+        price: 800,
+        time: '15-25 min'
+      }
+    ]
+
+    return baseOptions.map(option => {
+      const calculatedPrice = calculateDynamicPrice(currentDistance, option.key, isUrgent)
+      return {
+        ...option,
+        price: calculatedPrice,
+        subtitle: `à partir de ${calculatedPrice} F`
+      }
+    })
+  }, [currentDistance, isUrgent])
 
   // Fonction de recherche avec autocomplétion locale et Google
   const searchAddresses = useCallback(async (query: string, type: 'pickup' | 'delivery') => {
@@ -956,7 +1033,8 @@ const CreateDeliveryScreen: React.FC = () => {
   }, [])
 
   // Fonction pour utiliser la position actuelle
-  const useCurrentLocation = async () => {
+  const useCurrentLocation = async (field: 'pickup' | 'delivery') => {
+    setLoadingLocation(true)
     try {
       const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
@@ -992,12 +1070,12 @@ const CreateDeliveryScreen: React.FC = () => {
         type: 'current_location'
       }
 
-      if (activeField === 'pickup') {
+      if (field === 'pickup') {
         setPickupAddress(addressName)
         setPickupQuery(addressName)
         setPickupLocation(currentLocationAddress)
         setShowPickupSuggestions(false)
-      } else if (activeField === 'delivery') {
+      } else if (field === 'delivery') {
         setDeliveryAddress(addressName)
         setDeliveryQuery(addressName)
         setDeliveryLocation(currentLocationAddress)
@@ -1008,14 +1086,15 @@ const CreateDeliveryScreen: React.FC = () => {
     } catch (error) {
       console.error('Erreur lors de la géolocalisation:', error)
       showErrorAlert('Erreur', 'Impossible de récupérer votre position')
+    } finally {
+      setLoadingLocation(false)
     }
   }
 
   // Gestion de la sélection d'une suggestion
   const handleSuggestionSelect = useCallback((suggestion: any, type: 'pickup' | 'delivery') => {
     if (suggestion.id === 'votre_position') {
-      setActiveField(type)
-      useCurrentLocation()
+      useCurrentLocation(type)
       return
     }
 
@@ -1104,10 +1183,15 @@ const CreateDeliveryScreen: React.FC = () => {
 
   useEffect(() => {
     if (pickupLocation && deliveryLocation) {
+      const distance = calculateDistance(
+        { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+        { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
+      )
+      setCurrentDistance(distance)
       calculatePriceEstimate()
       fetchWeatherData()
     }
-  }, [pickupLocation, deliveryLocation, packageType, selectedVehicleType, selectedSpeed, selectedExtras])
+  }, [pickupLocation, deliveryLocation, packageType, selectedVehicleType, selectedSpeed, selectedExtras, isUrgent])
 
   // Conservation de toutes vos fonctions existantes
   const calculatePriceEstimate = async () => {
@@ -1119,56 +1203,13 @@ const CreateDeliveryScreen: React.FC = () => {
         { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
       )
 
-      const estimateData = {
-        pickup_address: pickupAddress,
-        delivery_address: deliveryAddress,
-        pickup_lat: pickupLocation.latitude,
-        pickup_lng: pickupLocation.longitude,
-        delivery_lat: deliveryLocation.latitude,
-        delivery_lng: deliveryLocation.longitude,
-        package_type: packageType,
-        proposed_price: 0,
-        recipient_name: '',
-        distance: distance
-      }
-
-      await getPriceEstimate(estimateData)
-
-      if (estimate) {
-        let basePrice = estimate.estimated_price
-        
-        // Ajouter les coûts des options sélectionnées
-        if (selectedVehicleType && deliveryOptions?.vehicle_types) {
-          const vehicle = deliveryOptions.vehicle_types.find((v: any) => v.type === selectedVehicleType)
-          if (vehicle) {
-            basePrice = Math.max(basePrice, vehicle.min_price)
-          }
-        }
-
-        if (selectedSpeed && deliveryOptions?.delivery_speeds) {
-          const speed = deliveryOptions.delivery_speeds.find((s: any) => s.key === selectedSpeed)
-          if (speed) {
-            basePrice = Math.max(basePrice, speed.min_price)
-          }
-        }
-
-        // Ajouter le coût des extras
-        let extrasCost = 0
-        if (selectedExtras.length > 0 && deliveryOptions?.extras) {
-          selectedExtras.forEach(extraKey => {
-            const extra = deliveryOptions.extras.find((e: any) => e.key === extraKey)
-            if (extra) {
-              extrasCost += extra.price
-            }
-          })
-        }
-
-        const finalPrice = basePrice + extrasCost
-        setTotalPrice(finalPrice)
-        setRecommendedPrice(finalPrice)
-        setProposedPrice(finalPrice.toString())
-        setEstimatedPrice(finalPrice)
-      }
+      // Utiliser le calcul dynamique local
+      const calculatedPrice = calculateDynamicPrice(distance, selectedVehicleType, isUrgent)
+      
+      setTotalPrice(calculatedPrice)
+      setRecommendedPrice(calculatedPrice)
+      setProposedPrice(calculatedPrice.toString())
+      setEstimatedPrice(calculatedPrice)
     } catch (error) {
       console.error('Erreur lors du calcul du prix:', error)
       showErrorAlert('Erreur', 'Impossible de calculer le prix estimé')
@@ -1348,29 +1389,41 @@ const CreateDeliveryScreen: React.FC = () => {
     </TouchableOpacity>
   )
 
-  const renderSuggestionItem = ({ item, index }: { item: any; index: number }) => (
-    <TouchableOpacity
-      style={[
-        styles.suggestionItem,
-        index === pickupSuggestions.length - 1 || index === deliverySuggestions.length - 1 ? styles.suggestionItemLast : null
-      ]}
-      onPress={() => handleSuggestionSelect(item, activeField || 'pickup')}
-      activeOpacity={0.7}
-    >
-      <View style={styles.suggestionIcon}>
-        <Feather
-          name={item.icon || 'map-pin'}
-          size={16}
-          color={item.id === 'votre_position' ? COLORS.primary : COLORS.textSecondary}
-        />
-      </View>
-      <View style={styles.suggestionContent}>
-        <Text style={styles.suggestionTitle}>{item.name}</Text>
-        {item.description !== item.name && (
-          <Text style={styles.suggestionSubtitle}>{item.description}</Text>
-        )}
-      </View>
-    </TouchableOpacity>
+  // Render suggestions sans VirtualizedList (solution au problème)
+  const renderSuggestions = (suggestions: any[], type: 'pickup' | 'delivery') => (
+    <View style={styles.suggestionsContainer}>
+      <ScrollView 
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {suggestions.map((item, index) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+              styles.suggestionItem,
+              index === suggestions.length - 1 ? styles.suggestionItemLast : null
+            ]}
+            onPress={() => handleSuggestionSelect(item, type)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.suggestionIcon}>
+              <Feather
+                name={item.icon || 'map-pin'}
+                size={16}
+                color={item.id === 'votre_position' ? COLORS.primary : COLORS.textSecondary}
+              />
+            </View>
+            <View style={styles.suggestionContent}>
+              <Text style={styles.suggestionTitle}>{item.name}</Text>
+              {item.description !== item.name && (
+                <Text style={styles.suggestionSubtitle}>{item.description}</Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
   )
 
   return (
@@ -1389,7 +1442,7 @@ const CreateDeliveryScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Map Section avec overlay navigation */}
         <View style={styles.mapContainer}>
           {pickupLocation && deliveryLocation ? (
@@ -1480,30 +1533,39 @@ const CreateDeliveryScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Suggestions d'autocomplétion */}
-            {showPickupSuggestions && pickupSuggestions.length > 0 && activeField === 'pickup' && (
-              <View style={styles.suggestionsContainer}>
-                <FlatList
-                  data={pickupSuggestions}
-                  renderItem={renderSuggestionItem}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={false}
-                  nestedScrollEnabled={true}
-                />
+            {/* Bouton Position actuelle */}
+            <TouchableOpacity
+              style={styles.currentLocationButton}
+              onPress={() => activeField && useCurrentLocation(activeField)}
+              disabled={loadingLocation || !activeField}
+            >
+              {loadingLocation ? (
+                <ActivityIndicator size="small" color={COLORS.white} />
+              ) : (
+                <Feather name="crosshairs" size={16} color={COLORS.white} />
+              )}
+              <Text style={styles.currentLocationText}>
+                {loadingLocation ? 'Localisation...' : 'Utiliser ma position actuelle'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Distance indicator */}
+            {pickupLocation && deliveryLocation && (
+              <View style={styles.distanceIndicator}>
+                <Text style={styles.distanceText}>
+                  Distance: {formatDistance(currentDistance)}
+                </Text>
               </View>
             )}
 
-            {showDeliverySuggestions && deliverySuggestions.length > 0 && activeField === 'delivery' && (
-              <View style={styles.suggestionsContainer}>
-                <FlatList
-                  data={deliverySuggestions}
-                  renderItem={renderSuggestionItem}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={false}
-                  nestedScrollEnabled={true}
-                />
-              </View>
-            )}
+            {/* Suggestions d'autocomplétion - Version corrigée */}
+            {showPickupSuggestions && pickupSuggestions.length > 0 && activeField === 'pickup' && 
+              renderSuggestions(pickupSuggestions, 'pickup')
+            }
+
+            {showDeliverySuggestions && deliverySuggestions.length > 0 && activeField === 'delivery' && 
+              renderSuggestions(deliverySuggestions, 'delivery')
+            }
           </View>
 
           {/* Package Information Section */}
@@ -1571,7 +1633,7 @@ const CreateDeliveryScreen: React.FC = () => {
             <View style={styles.switchContainer}>
               <View style={styles.switchLabel}>
                 <Text style={styles.switchTitle}>Livraison urgente</Text>
-                <Text style={styles.switchDescription}>Livraison prioritaire</Text>
+                <Text style={styles.switchDescription}>Livraison prioritaire (+50% sur le prix)</Text>
               </View>
               <Switch
                 value={isUrgent}
@@ -1636,7 +1698,7 @@ const CreateDeliveryScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Delivery Options modernisées */}
+          {/* Delivery Options modernisées avec calcul dynamique */}
           <View style={styles.deliveryOptionsSection}>
             <Text style={styles.sectionTitle}>Options de livraison</Text>
             {modernDeliveryOptions.map(renderDeliveryOption)}
