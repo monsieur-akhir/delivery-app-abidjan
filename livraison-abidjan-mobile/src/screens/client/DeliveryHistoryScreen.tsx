@@ -158,15 +158,7 @@ const MotorcycleLoader: React.FC = () => {
 export const DeliveryHistoryScreen: React.FC = () => {
   const navigation = useNavigation()
   const { user } = useAuth()
-  const { getDeliveries } = useDelivery()
-
-  const getUserDeliveries = async () => {
-    try {
-      await getDeliveries()
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons:', error)
-    }
-  }
+  const { getClientDeliveryHistory, deliveries: globalDeliveries } = useDelivery()
 
   const [deliveries, setDeliveries] = useState<DeliveryHistory[]>([])
   const [loading, setLoading] = useState(true)
@@ -179,8 +171,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
   const loadDeliveries = useCallback(async () => {
     try {
       setLoading(true)
-      await getUserDeliveries()
-      // Animation d'entrée
+      await getClientDeliveryHistory()
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -198,7 +189,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }, [fadeAnim, slideAnim, getUserDeliveries])
+  }, [fadeAnim, slideAnim, getClientDeliveryHistory])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -211,6 +202,24 @@ export const DeliveryHistoryScreen: React.FC = () => {
       loadDeliveries()
     }, [loadDeliveries])
   )
+
+  useEffect(() => {
+    // Mapping explicite pour correspondre à DeliveryHistory
+    setDeliveries(
+      (globalDeliveries || []).map((d: any) => ({
+        id: d.id,
+        title: d.title || d.package_type || 'Livraison',
+        pickup_address: d.pickup_address,
+        delivery_address: d.delivery_address,
+        status: d.status,
+        total_cost: d.total_cost || d.price || d.final_price || 0,
+        created_at: d.created_at,
+        estimated_time: d.estimated_time,
+        courier_name: d.courier_name,
+        rating: d.rating
+      }))
+    )
+  }, [globalDeliveries])
 
   const filteredDeliveries = deliveries.filter(delivery => {
     if (filter === 'all') return true
