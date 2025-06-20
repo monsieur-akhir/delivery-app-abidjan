@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   View,
@@ -212,7 +211,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  
+
   // Header moderne avec navigation icons
   modernHeader: {
     flexDirection: 'row',
@@ -224,7 +223,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  
+
   headerButton: {
     width: 40,
     height: 40,
@@ -233,27 +232,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
   },
-  
+
   // Map container avec overlay de navigation
   mapContainer: {
     height: height * 0.3,
     backgroundColor: COLORS.mapBackground,
     position: 'relative',
   },
-  
+
   mapPlaceholder: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#E8E8E8',
   },
-  
+
   // Navigation overlay au top de la carte
   navigationOverlay: {
     position: 'absolute',
@@ -272,24 +271,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  
+
   vehicleIconsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 12,
   },
-  
+
   vehicleIcon: {
     marginRight: 8,
   },
-  
+
   routeText: {
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
     color: COLORS.text,
   },
-  
+
   // Indicateur de prix en haut à droite
   priceIndicator: {
     position: 'absolute',
@@ -305,13 +304,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  
+
   priceText: {
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '700',
   },
-  
+
   // Bottom sheet avec handle
   bottomSheet: {
     backgroundColor: COLORS.white,
@@ -326,7 +325,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: height * 0.7,
   },
-  
+
   bottomSheetHandle: {
     width: 40,
     height: 4,
@@ -335,7 +334,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
-  
+
   bottomSheetTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -345,13 +344,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  
+
   // Address section avec style Google Maps
   addressSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
   },
-  
+
   addressContainer: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
@@ -363,7 +362,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 16,
   },
-  
+
   addressInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -372,11 +371,11 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
     minHeight: 60,
   },
-  
+
   addressInputRowLast: {
     borderBottomWidth: 0,
   },
-  
+
   addressInputIcon: {
     width: 24,
     height: 24,
@@ -385,26 +384,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
-  
+
   pickupIcon: {
     backgroundColor: COLORS.primary,
   },
-  
+
   destinationIcon: {
     backgroundColor: COLORS.text,
   },
-  
+
   addressInputContent: {
     flex: 1,
   },
-  
+
   addressInputLabel: {
     fontSize: 12,
     fontWeight: '500',
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
-  
+
   addressInput: {
     fontSize: 16,
     fontWeight: '400',
@@ -412,7 +411,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     minHeight: 24,
   },
-  
+
   addressInputPlaceholder: {
     fontSize: 16,
     color: COLORS.textSecondary,
@@ -436,7 +435,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  
+
   // Autocomplete suggestions - Version corrigée sans VirtualizedList
   suggestionsContainer: {
     backgroundColor: COLORS.white,
@@ -449,7 +448,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     maxHeight: 250,
   },
-  
+
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -458,11 +457,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  
+
   suggestionItemLast: {
     borderBottomWidth: 0,
   },
-  
+
   suggestionIcon: {
     width: 32,
     height: 32,
@@ -472,18 +471,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  
+
   suggestionContent: {
     flex: 1,
   },
-  
+
   suggestionTitle: {
     fontSize: 16,
     fontWeight: '500',
     color: COLORS.text,
     marginBottom: 2,
   },
-  
+
   suggestionSubtitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
@@ -645,13 +644,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
   },
-  
+
   // Delivery options modernisées
   deliveryOptionsSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
   },
-  
+
   deliveryOptionCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -667,14 +666,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  
+
   deliveryOptionCardSelected: {
     borderColor: COLORS.primary,
     backgroundColor: COLORS.secondary,
     shadowColor: COLORS.primary,
     shadowOpacity: 0.15,
   },
-  
+
   deliveryOptionIcon: {
     width: 56,
     height: 56,
@@ -684,27 +683,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
-  
+
   deliveryOptionIconSelected: {
     backgroundColor: COLORS.primary,
   },
-  
+
   deliveryOptionInfo: {
     flex: 1,
   },
-  
+
   deliveryOptionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.text,
     marginBottom: 4,
   },
-  
+
   deliveryOptionSubtitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
   },
-  
+
   deliveryOptionPrice: {
     fontSize: 16,
     fontWeight: '700',
@@ -716,7 +715,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 24,
   },
-  
+
   // Action button avec design moderne
   actionButtonContainer: {
     paddingHorizontal: 20,
@@ -725,7 +724,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
-  
+
   actionButton: {
     backgroundColor: COLORS.primary,
     borderRadius: 16,
@@ -738,19 +737,19 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  
+
   actionButtonDisabled: {
     backgroundColor: COLORS.textLight,
     shadowOpacity: 0,
     elevation: 0,
   },
-  
+
   actionButtonText: {
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },
-  
+
   // Loading modal
   loadingContainer: {
     flex: 1,
@@ -758,7 +757,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   loadingContent: {
     backgroundColor: COLORS.white,
     borderRadius: 20,
@@ -770,7 +769,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  
+
   loadingText: {
     marginTop: 16,
     fontSize: 16,
@@ -815,7 +814,7 @@ const calculateDistance = (coord1: { latitude: number; longitude: number }, coor
 const calculateDynamicPrice = (distance: number, vehicleType: string, isUrgent: boolean): number => {
   let basePrice = 400 // Prix de base
   let pricePerKm = 50 // Prix par kilomètre
-  
+
   // Ajustement selon le type de véhicule
   switch (vehicleType) {
     case 'moto':
@@ -834,10 +833,10 @@ const calculateDynamicPrice = (distance: number, vehicleType: string, isUrgent: 
       basePrice = 400
       pricePerKm = 50
   }
-  
+
   const distancePrice = distance * pricePerKm
   const urgentMultiplier = isUrgent ? 1.5 : 1
-  
+
   return Math.round((basePrice + distancePrice) * urgentMultiplier)
 }
 
@@ -1012,7 +1011,7 @@ const CreateDeliveryScreen: React.FC = () => {
     try {
       // const googleSuggestions = await GooglePlacesService.searchPlaces(query)
       const allSuggestions = localSuggestions // [...localSuggestions, ...googleSuggestions]
-      
+
       if (type === 'pickup') {
         setPickupSuggestions(allSuggestions)
         setShowPickupSuggestions(true)
@@ -1140,7 +1139,7 @@ const CreateDeliveryScreen: React.FC = () => {
         setDeliveryLocation(null)
       }
     }
-    
+
     searchAddresses(text, type)
   }, [searchAddresses])
 
@@ -1205,7 +1204,7 @@ const CreateDeliveryScreen: React.FC = () => {
 
       // Utiliser le calcul dynamique local
       const calculatedPrice = calculateDynamicPrice(distance, selectedVehicleType, isUrgent)
-      
+
       setTotalPrice(calculatedPrice)
       setRecommendedPrice(calculatedPrice)
       setProposedPrice(calculatedPrice.toString())
@@ -1458,7 +1457,7 @@ const CreateDeliveryScreen: React.FC = () => {
               </Text>
             </View>
           )}
-          
+
           {/* Navigation overlay avec icônes de véhicules */}
           <View style={styles.navigationOverlay}>
             <View style={styles.vehicleIconsContainer}>
@@ -1471,7 +1470,7 @@ const CreateDeliveryScreen: React.FC = () => {
             </Text>
             <Feather name="navigation" size={20} color={COLORS.primary} />
           </View>
-          
+
           {/* Indicateur de prix */}
           <View style={styles.priceIndicator}>
             <Text style={styles.priceText}>F {estimatedPrice}</Text>
@@ -1508,7 +1507,7 @@ const CreateDeliveryScreen: React.FC = () => {
                   />
                 </View>
               </View>
-              
+
               {/* Delivery Address */}
               <View style={[styles.addressInputRow, styles.addressInputRowLast]}>
                 <View style={[styles.addressInputIcon, styles.destinationIcon]}>
@@ -1542,7 +1541,7 @@ const CreateDeliveryScreen: React.FC = () => {
               {loadingLocation ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
               ) : (
-                <Feather name="crosshairs" size={16} color={COLORS.white} />
+                <Ionicons name="location" size={16} color={COLORS.white} />
               )}
               <Text style={styles.currentLocationText}>
                 {loadingLocation ? 'Localisation...' : 'Utiliser ma position actuelle'}
@@ -1571,7 +1570,7 @@ const CreateDeliveryScreen: React.FC = () => {
           {/* Package Information Section */}
           <View style={styles.packageSection}>
             <Text style={styles.sectionTitle}>Informations du colis</Text>
-            
+
             {/* Package Categories */}
             <View style={styles.packageCategoriesContainer}>
               <Text style={styles.formLabel}>Type de colis</Text>
@@ -1647,7 +1646,7 @@ const CreateDeliveryScreen: React.FC = () => {
           {/* Recipient Information Section */}
           <View style={styles.recipientSection}>
             <Text style={styles.sectionTitle}>Informations du destinataire</Text>
-            
+
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Nom du destinataire *</Text>
               <TextInput

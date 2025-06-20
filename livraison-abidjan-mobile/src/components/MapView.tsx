@@ -1,458 +1,408 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
   Dimensions,
-  TouchableOpacity,
   Text,
-  ActivityIndicator
-} from 'react-native'
-import MapView, { 
-  Marker, 
-  Polyline, 
-  PROVIDER_DEFAULT,
-  LatLng,
-  Region,
-  MarkerDragStartEndEvent
-} from 'react-native-maps'
-import { MaterialIcons } from '@expo/vector-icons'
-import { getDirections, getTrafficInfo } from '../services/api'
-import { Feather } from '@expo/vector-icons'
-import { colors } from '../styles/colors'
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform
+} from 'react-native';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import { formatDistance, formatDuration } from '../utils/formatters';
 
-const { width, height } = Dimensions.get('window')
-const ASPECT_RATIO = width / height
-const LATITUDE_DELTA = 0.0922
-const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO
-
-// Interface pour les coordonnées
-export interface Coordinates {
-  latitude: number
-  longitude: number
+interface Address {
+  id: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  commune?: string;
+  type?: string;
 }
 
-// Interface pour les points d'intérêt
-export interface MapPoint {
-  id: string
-  coordinate: Coordinates
-  title: string
-  description?: string
-  type: 'pickup' | 'delivery' | 'courier' | 'poi'
+interface MapViewProps {
+  pickupLocation?: Address | null;
+  deliveryLocation?: Address | null;
+  courierLocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  showCourierLocation?: boolean;
+  onMapReady?: () => void;
+  style?: any;
 }
 
-// Interface pour les routes
-export interface Route {
-  coordinates: LatLng[]
-  distance: number
-  duration: number
-  instructions: string[]
-}
+const COLORS = {
+  primary: '#FF4D4D',
+  success: '#34C759',
+  warning: '#FF9500',
+  background: '#F8F9FA',
+  text: '#1A1A1A',
+  textSecondary: '#8E8E93',
+  white: '#FFFFFF',
+  shadow: 'rgba(0, 0, 0, 0.1)'
+};
 
-// Interface pour les informations de trafic
-export interface TrafficInfo {
-  level: 'low' | 'moderate' | 'high' | 'severe'
-  delay: number
-  description: string
-}
-
-// Props du composant
-export interface MapViewProps {
-  initialRegion?: Region
-  pickupPoint?: Coordinates & { title: string; description: string }
-  deliveryPoint?: Coordinates & { title: string; description: string }
-  pickupLocation?: Coordinates
-  deliveryLocation?: Coordinates
-  courierLocation?: Coordinates
-  onPickupPointSelected?: (coordinate: Coordinates) => void
-  onDeliveryPointSelected?: (coordinate: Coordinates) => void
-  onPickupLocationChange?: (location: Coordinates) => void
-  onDeliveryLocationChange?: (location: Coordinates) => void
-  onRegionChange?: (region: Region) => void
-  onRouteCalculated?: (route: Route) => void
-  onTrafficUpdate?: (traffic: TrafficInfo) => void
-  showUserLocation?: boolean
-  showsUserLocation?: boolean
-  showTraffic?: boolean
-  showsTraffic?: boolean
-  isInteractive?: boolean
-  route?: Route
-  markers?: MapPoint[]
-  style?: object
-}
+const { width, height } = Dimensions.get('window');
 
 const CustomMapView: React.FC<MapViewProps> = ({
-  initialRegion,
-  pickupPoint,
-  deliveryPoint,
   pickupLocation,
   deliveryLocation,
   courierLocation,
-  onPickupPointSelected,
-  onDeliveryPointSelected,
-  onPickupLocationChange,
-  onDeliveryLocationChange,
-  onRegionChange,
-  onRouteCalculated,
-  onTrafficUpdate,
-  showUserLocation = true,
-  showsUserLocation = true,
-  showTraffic = false,
-  showsTraffic = false,
-  isInteractive = true,
-  route,
-  markers = [],
+  showCourierLocation = false,
+  onMapReady,
   style
 }) => {
-  // States
-  const [region, setRegion] = useState<Region>(
-    initialRegion || {
-      latitude: 5.3599517,
-      longitude: -4.0082563,
-      latitudeDelta: LATITUDE_DELTA,
-      longitudeDelta: LONGITUDE_DELTA,
-    }
-  )
-  const [calculatedRoute, setCalculatedRoute] = useState<Route | null>(null)
-  const [trafficInfo, setTrafficInfo] = useState<TrafficInfo | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [directions, setDirections] = useState(null)
-  const [traffic, setTraffic] = useState([])
-  // Refs
-  const mapRef = useRef<MapView>(null)
+  const mapRef = useRef<MapView>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
+  const [distance, setDistance] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [mapReady, setMapReady] = useState<boolean>(false);
 
-  const getInitialRegion = () => {
-    if (pickupLocation && deliveryLocation) {
-      const midLat = (pickupLocation.latitude + deliveryLocation.latitude) / 2
-      const midLng = (pickupLocation.longitude + deliveryLocation.longitude) / 2
-      const latDelta = Math.abs(pickupLocation.latitude - deliveryLocation.latitude) * 1.5
-      const lngDelta = Math.abs(pickupLocation.longitude - deliveryLocation.longitude) * 1.5
-      return { latitude: midLat, longitude: midLng, latitudeDelta: latDelta, longitudeDelta: lngDelta }
-    }
-    const location = pickupLocation || deliveryLocation
-    if (location) {
-      return {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      }
-    }
-    return {
-      latitude: 5.36, // Abidjan
-      longitude: -4.0,
-      latitudeDelta: 0.5,
-      longitudeDelta: 0.5,
-    }
-  }
+  // Calculer la distance entre deux points
+  const calculateDistance = (coord1: any, coord2: any): number => {
+    const R = 6371; // Rayon de la Terre en km
+    const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
+    const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
-  // Effect pour calculer la route
+  // Calculer et afficher la route
   useEffect(() => {
-    const fetchDirectionsAndTraffic = async () => {
-      const pickup = pickupLocation || pickupPoint
-      const delivery = deliveryLocation || deliveryPoint
-      
-      if (!pickup || !delivery) return
+    if (pickupLocation && deliveryLocation && mapReady) {
+      calculateRoute();
+    }
+  }, [pickupLocation, deliveryLocation, mapReady]);
 
-      try {
-        setLoading(true)
-        const directions = await getDirections(
-          pickup.latitude,
-          pickup.longitude,
-          delivery.latitude,
-          delivery.longitude
-        )
+  const calculateRoute = async () => {
+    if (!pickupLocation || !deliveryLocation) return;
 
-        if (directions && directions.coordinates) {
-          const routeData: Route = {
-            coordinates: directions.coordinates,
-            distance: directions.distance || 0,
-            duration: directions.duration || 0,
-            instructions: directions.instructions || [],
-          }
-          setCalculatedRoute(routeData)
-          
-          if (onRouteCalculated) {
-            onRouteCalculated(routeData)
-          }
+    setLoading(true);
+    try {
+      // Simulation d'une route simple (ligne droite avec quelques points intermédiaires)
+      const dist = calculateDistance(
+        { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+        { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
+      );
 
-          // Obtenir les infos de trafic
-          if (showTraffic || showsTraffic) {            const traffic = await getTrafficInfo(
-              pickup.latitude,
-              pickup.longitude,
-              delivery.latitude,
-              delivery.longitude
-            )
+      setDistance(dist);
+      setDuration(dist * 2.5); // Estimation: 2.5 minutes par km
 
-            if (traffic) {
-              // Transform API response to TrafficInfo format
-              const durationMinutes = Math.round(traffic.duration / 60)
-              let level: 'low' | 'moderate' | 'high' | 'severe' = 'low'
-              
-              // Determine traffic level based on duration and distance
-              const speedKmh = (traffic.distance / 1000) / (traffic.duration / 3600)
-              if (speedKmh < 10) {
-                level = 'severe'
-              } else if (speedKmh < 20) {
-                level = 'high'
-              } else if (speedKmh < 30) {
-                level = 'moderate'
-              }
-              
-              const trafficData: TrafficInfo = {
-                level,
-                delay: Math.max(0, durationMinutes - (traffic.distance / 1000) * 2), // Estimate delay based on normal travel time
-                description: `Route de ${(traffic.distance / 1000).toFixed(1)} km, durée estimée ${durationMinutes} min`,
-              }
-              setTrafficInfo(trafficData)
-              
-              if (onTrafficUpdate) {
-                onTrafficUpdate(trafficData)
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error calculating route:', error)
-      } finally {
-        setLoading(false)
+      // Créer une route simple avec des points intermédiaires
+      const coords = [];
+      const steps = 5;
+      for (let i = 0; i <= steps; i++) {
+        const lat = pickupLocation.latitude + 
+          (deliveryLocation.latitude - pickupLocation.latitude) * (i / steps);
+        const lng = pickupLocation.longitude + 
+          (deliveryLocation.longitude - pickupLocation.longitude) * (i / steps);
+        coords.push({ latitude: lat, longitude: lng });
       }
-    }
 
-    if (pickupLocation && deliveryLocation) {
-      fetchDirectionsAndTraffic()
-    }
-  }, [pickupLocation, deliveryLocation])
+      setRouteCoordinates(coords);
 
-  // Gestionnaire de changement de région
-  const handleRegionChange = (newRegion: Region) => {
-    setRegion(newRegion)
-    if (onRegionChange) {
-      onRegionChange(newRegion)
-    }
-  }
-
-  // Gestionnaire de drag des marqueurs
-  const handlePickupDrag = (e: MarkerDragStartEndEvent) => {
-    const coordinate = e.nativeEvent.coordinate
-    if (onPickupLocationChange) {
-      onPickupLocationChange(coordinate)
-    }
-    if (onPickupPointSelected) {
-      onPickupPointSelected(coordinate)
-    }
-  }
-
-  const handleDeliveryDrag = (e: MarkerDragStartEndEvent) => {
-    const coordinate = e.nativeEvent.coordinate
-    if (onDeliveryLocationChange) {
-      onDeliveryLocationChange(coordinate)
-    }
-    if (onDeliveryPointSelected) {
-      onDeliveryPointSelected(coordinate)
-    }
-  }
-
-  // Fonction pour centrer la carte sur tous les points
-  const fitToCoordinates = () => {
-    const pickup = pickupLocation || pickupPoint
-    const delivery = deliveryLocation || deliveryPoint
-    
-    if (mapRef.current && pickup && delivery) {
-      const coordinates = [pickup, delivery]
-      if (courierLocation) {
-        coordinates.push(courierLocation)
+      // Ajuster la vue de la carte
+      if (mapRef.current) {
+        mapRef.current.fitToCoordinates([
+          { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+          { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
+        ], {
+          edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+          animated: true,
+        });
       }
-      
-      mapRef.current.fitToCoordinates(coordinates, {
-        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-        animated: true,
-      })
+    } catch (error) {
+      console.error('Erreur lors du calcul de route:', error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  // Région initiale
+  const initialRegion = useMemo(() => {
+    if (pickupLocation) {
+      return {
+        latitude: pickupLocation.latitude,
+        longitude: pickupLocation.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      };
+    }
+    // Région par défaut pour Abidjan
+    return {
+      latitude: 5.3599,
+      longitude: -3.9569,
+      latitudeDelta: 0.1,
+      longitudeDelta: 0.1,
+    };
+  }, [pickupLocation]);
+
+  const handleMapReady = () => {
+    setMapReady(true);
+    onMapReady?.();
+  };
 
   return (
     <View style={[styles.container, style]}>
       <MapView
         ref={mapRef}
         style={styles.map}
-        provider={PROVIDER_DEFAULT}
-        region={region || getInitialRegion()}
-        onRegionChangeComplete={handleRegionChange}
-        showsUserLocation={showUserLocation || showsUserLocation}
-        showsTraffic={showTraffic || showsTraffic}
-        scrollEnabled={isInteractive}
-        zoomEnabled={isInteractive}
-        rotateEnabled={isInteractive}
-        pitchEnabled={isInteractive}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={initialRegion}
+        onMapReady={handleMapReady}
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        showsCompass={false}
+        toolbarEnabled={false}
+        loadingEnabled={true}
+        mapType="standard"
       >
-        {/* Marqueur de ramassage */}
-        {(pickupLocation || pickupPoint) && (
+        {/* Marker de prise en charge */}
+        {pickupLocation && (
           <Marker
-            coordinate={pickupLocation || pickupPoint!}
-            title={pickupPoint?.title || "Point de ramassage"}
-            description={pickupPoint?.description || ""}
-            pinColor="#FF6B00"
-            draggable={isInteractive}
-            onDragEnd={handlePickupDrag}
+            coordinate={{
+              latitude: pickupLocation.latitude,
+              longitude: pickupLocation.longitude,
+            }}
+            title="Prise en charge"
+            description={pickupLocation.description}
+            pinColor={COLORS.primary}
           >
-            <View style={[styles.markerContainer, styles.pickupMarker]}>
-              <Feather name="map-pin" size={24} color={colors.primary} />
+            <View style={styles.markerContainer}>
+              <View style={[styles.marker, styles.pickupMarker]}>
+                <Ionicons name="location" size={20} color={COLORS.white} />
+              </View>
             </View>
           </Marker>
         )}
 
-        {/* Marqueur de livraison */}
-        {(deliveryLocation || deliveryPoint) && (
+        {/* Marker de livraison */}
+        {deliveryLocation && (
           <Marker
-            coordinate={deliveryLocation || deliveryPoint!}
-            title={deliveryPoint?.title || "Point de livraison"}
-            description={deliveryPoint?.description || ""}
-            pinColor="#4CAF50"
-            draggable={isInteractive}
-            onDragEnd={handleDeliveryDrag}
+            coordinate={{
+              latitude: deliveryLocation.latitude,
+              longitude: deliveryLocation.longitude,
+            }}
+            title="Livraison"
+            description={deliveryLocation.description}
+            pinColor={COLORS.success}
           >
-            <View style={[styles.markerContainer, styles.deliveryMarker]}>
-              <Feather name="flag" size={24} color={colors.primary} />
+            <View style={styles.markerContainer}>
+              <View style={[styles.marker, styles.deliveryMarker]}>
+                <Ionicons name="flag" size={20} color={COLORS.white} />
+              </View>
             </View>
           </Marker>
         )}
 
-        {/* Marqueur du coursier */}
-        {courierLocation && (
+        {/* Marker du coursier avec icône moto */}
+        {showCourierLocation && courierLocation && (
           <Marker
             coordinate={courierLocation}
             title="Coursier"
-            pinColor="#2196F3"
-          />
+            description="Position du coursier"
+          >
+            <View style={styles.markerContainer}>
+              <View style={[styles.marker, styles.courierMarker]}>
+                <MaterialCommunityIcons name="motorbike" size={24} color={COLORS.white} />
+              </View>
+            </View>
+          </Marker>
         )}
 
-        {/* Marqueurs personnalisés */}
-        {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            coordinate={marker.coordinate}
-            title={marker.title}
-            description={marker.description}
-            pinColor={
-              marker.type === 'pickup' ? '#FF6B00' :
-              marker.type === 'delivery' ? '#4CAF50' :
-              marker.type === 'courier' ? '#2196F3' : '#9C27B0'
-            }
-          />
-        ))}
-
-        {/* Route calculée */}
-        {(calculatedRoute || route) && (
+        {/* Route */}
+        {routeCoordinates.length > 0 && (
           <Polyline
-            coordinates={(route?.coordinates || calculatedRoute?.coordinates) || []}
-            strokeColor={
-              trafficInfo?.level === 'severe' ? '#FF0000' :
-              trafficInfo?.level === 'high' ? '#FF4500' :
-              trafficInfo?.level === 'moderate' ? '#FFA500' : '#0000FF'
-            }
+            coordinates={routeCoordinates}
+            strokeColor={COLORS.primary}
             strokeWidth={4}
+            lineDashPattern={[0]}
           />
         )}
       </MapView>
 
-      {/* Contrôles de la carte */}
-      <View style={styles.controls}>
-        {loading && (
-          <TouchableOpacity style={styles.loadingButton} disabled>
-            <ActivityIndicator size="small" color="#fff" />
-            <Text style={styles.buttonText}>Calcul...</Text>
-          </TouchableOpacity>
-        )}
-        
-        <TouchableOpacity style={styles.centerButton} onPress={fitToCoordinates}>
-          <MaterialIcons name="center-focus-strong" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Informations de trafic */}
-      {trafficInfo && (
-        <View style={styles.trafficInfo}>
-          <Text style={styles.trafficText}>
-            Trafic: {trafficInfo.level} - Délai: {trafficInfo.delay} min
-          </Text>
+      {/* Informations de route */}
+      {distance > 0 && (
+        <View style={styles.routeInfo}>
+          <View style={styles.routeInfoCard}>
+            <View style={styles.routeInfoRow}>
+              <View style={styles.routeInfoItem}>
+                <Ionicons name="navigate" size={16} color={COLORS.primary} />
+                <Text style={styles.routeInfoText}>{formatDistance(distance)}</Text>
+              </View>
+              <View style={styles.routeInfoItem}>
+                <Ionicons name="time" size={16} color={COLORS.warning} />
+                <Text style={styles.routeInfoText}>{formatDuration(duration)}</Text>
+              </View>
+              <View style={styles.routeInfoItem}>
+                <MaterialCommunityIcons name="motorbike" size={16} color={COLORS.success} />
+                <Text style={styles.routeInfoText}>Moto</Text>
+              </View>
+            </View>
+          </View>
         </View>
       )}
+
+      {/* Indicateur de chargement */}
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Calcul de l'itinéraire...</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Contrôles de la carte */}
+      <View style={styles.mapControls}>
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={() => {
+            if (mapRef.current && pickupLocation && deliveryLocation) {
+              mapRef.current.fitToCoordinates([
+                { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+                { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
+              ], {
+                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+                animated: true,
+              });
+            }
+          }}
+        >
+          <Ionicons name="resize" size={20} color={COLORS.text} />
+        </TouchableOpacity>
+      </View>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
   },
   map: {
     flex: 1,
   },
-  controls: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    flexDirection: 'column',
-    gap: 10,
-  },
-  centerButton: {
-    backgroundColor: '#2196F3',
-    padding: 12,
-    borderRadius: 25,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  loadingButton: {
-    backgroundColor: '#FF6B00',
-    padding: 12,
-    borderRadius: 25,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    flexDirection: 'row',
+  markerContainer: {
     alignItems: 'center',
-    gap: 8,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+  marker: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  trafficInfo: {
+  pickupMarker: {
+    backgroundColor: COLORS.primary,
+  },
+  deliveryMarker: {
+    backgroundColor: COLORS.success,
+  },
+  courierMarker: {
+    backgroundColor: COLORS.warning,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  routeInfo: {
     position: 'absolute',
     top: 20,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    padding: 10,    borderRadius: 8,
-  },  trafficText: {
-    color: '#fff',
-    fontSize: 14,
-    textAlign: 'center',
+    zIndex: 1000,
   },
-  markerContainer: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
+  routeInfoCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 5,
   },
-  pickupMarker: {
-    borderColor: colors.primary,
-    borderWidth: 2,
+  routeInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  deliveryMarker: {
-    borderColor: colors.primary,
-    borderWidth: 2,
+  routeInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
-})
+  routeInfoText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginLeft: 4,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2000,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  mapControls: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    zIndex: 1000,
+  },
+  controlButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    marginBottom: 8,
+  },
+});
 
-export default CustomMapView
+export default CustomMapView;
