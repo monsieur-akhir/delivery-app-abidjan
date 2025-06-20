@@ -16,11 +16,12 @@ import { Card } from 'react-native-paper'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Feather } from '@expo/vector-icons'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import { colors } from '../../styles/colors'
+import { useAuth } from '../../contexts/AuthContext'
 import { useDelivery } from '../../hooks/useDelivery'
 import { formatPrice } from '../../utils/formatters'
-import { COLORS } from '../../styles/colors'
 import { EmptyState } from '../../components/EmptyState'
-import { DeliveryStatusBadge } from '../../components/DeliveryStatusBadge'
+import DeliveryStatusBadge from '../../components/DeliveryStatusBadge'
 
 const { width, height } = Dimensions.get('window')
 
@@ -148,7 +149,7 @@ const MotorcycleLoader: React.FC = () => {
 
       <Text style={styles.loadingText}>Chargement de votre historique...</Text>
       <View style={styles.loadingDots}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     </View>
   )
@@ -156,7 +157,17 @@ const MotorcycleLoader: React.FC = () => {
 
 export const DeliveryHistoryScreen: React.FC = () => {
   const navigation = useNavigation()
-  const { getUserDeliveries } = useDelivery()
+  const { user } = useAuth()
+  const { getAllDeliveries } = useDelivery()
+
+  const getUserDeliveries = async () => {
+    try {
+      return await getAllDeliveries()
+    } catch (error) {
+      console.error('Erreur lors de la récupération des livraisons:', error)
+      return []
+    }
+  }
 
   const [deliveries, setDeliveries] = useState<DeliveryHistory[]>([])
   const [loading, setLoading] = useState(true)
@@ -235,7 +246,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
       case 'pending':
         return '#6B7280'
       default:
-        return COLORS.primary
+        return colors.primary
     }
   }
 
@@ -434,8 +445,8 @@ export const DeliveryHistoryScreen: React.FC = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[COLORS.primary]}
-              tintColor={COLORS.primary}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
           }
         />
@@ -572,7 +583,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   filterButtonActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   filterText: {
     fontSize: 14,
@@ -706,7 +717,3 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 })
-```
-
-```
-</replit_final_file>
