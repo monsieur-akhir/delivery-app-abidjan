@@ -427,7 +427,7 @@ class LocationService {
           if (b.type === 'google_place' && a.type !== 'google_place') return 1
           if (a.type === 'popular' && b.type !== 'popular') return -1
           if (b.type === 'popular' && a.type !== 'popular') return 1
-          
+
           // Ensuite par distance
           return (a.distance || 0) - (b.distance || 0)
         })
@@ -456,32 +456,32 @@ class LocationService {
       { name: 'Hotel Ibis Abidjan Plateau', category: 'hotel', lat: 5.3267, lng: -4.0252, commune: 'Plateau' },
       { name: 'Sofitel Abidjan Hotel Ivoire', category: 'hotel', lat: 5.3439, lng: -3.9889, commune: 'Cocody' },
       { name: 'Pullman Abidjan', category: 'hotel', lat: 5.3400, lng: -3.9900, commune: 'Cocody' },
-      
+
       // Centres commerciaux
       { name: 'Cap Sud', category: 'mall', lat: 5.2800, lng: -3.9600, commune: 'Marcory' },
       { name: 'Cosmos Yopougon', category: 'mall', lat: 5.3200, lng: -4.0700, commune: 'Yopougon' },
-      
+
       // Pharmacies
       { name: 'Pharmacie de la Paix', category: 'pharmacy', lat: 5.3200, lng: -4.0200, commune: 'Plateau' },
       { name: 'Pharmacie du Plateau', category: 'pharmacy', lat: 5.3250, lng: -4.0250, commune: 'Plateau' },
       { name: 'Pharmacie de Cocody', category: 'pharmacy', lat: 5.3500, lng: -3.9800, commune: 'Cocody' },
-      
+
       // Restaurants
       { name: 'Restaurant Chez Amina', category: 'restaurant', lat: 5.3300, lng: -4.0100, commune: 'Plateau' },
       { name: 'Maquis du Rail', category: 'restaurant', lat: 5.3100, lng: -4.0300, commune: 'Treichville' },
-      
+
       // Banques
       { name: 'SGBCI Plateau', category: 'bank', lat: 5.3280, lng: -4.0280, commune: 'Plateau' },
       { name: 'Ecobank Cocody', category: 'bank', lat: 5.3600, lng: -3.9700, commune: 'Cocody' },
-      
+
       // Écoles et universités
       { name: 'École Internationale Jean-Mermoz', category: 'school', lat: 5.3700, lng: -3.9600, commune: 'Cocody' },
       { name: 'Lycée Classique d\'Abidjan', category: 'school', lat: 5.3300, lng: -4.0200, commune: 'Plateau' },
-      
+
       // Hôpitaux et cliniques
       { name: 'CHU de Treichville', category: 'hospital', lat: 5.2900, lng: -4.0100, commune: 'Treichville' },
       { name: 'Clinique Farah', category: 'hospital', lat: 5.3400, lng: -3.9800, commune: 'Cocody' },
-      
+
       // Centres d'affaires
       { name: 'Tour BCEAO', category: 'office', lat: 5.3250, lng: -4.0220, commune: 'Plateau' },
       { name: 'Immeuble CCIA', category: 'office', lat: 5.3280, lng: -4.0240, commune: 'Plateau' },
@@ -514,13 +514,13 @@ class LocationService {
     ]
 
     const suggestions: AddressSuggestion[] = []
-    
+
     // Générer des suggestions réalistes basées sur la requête
     streetPrefixes.forEach(prefix => {
       streetSuffixes.forEach(suffix => {
         if (suffix.toLowerCase().includes(query.toLowerCase()) || 
             query.toLowerCase().includes(suffix.toLowerCase())) {
-          
+
           const randomCommune = this.getRandomCommune()
           suggestions.push({
             id: `street_${prefix}_${suffix}_${Date.now()}_${Math.random()}`,
@@ -551,7 +551,7 @@ class LocationService {
       { name: 'Adjamé', latitude: 5.3700, longitude: -4.0200 },
       { name: 'Yopougon', latitude: 5.3200, longitude: -4.0800 }
     ]
-    
+
     return communes[Math.floor(Math.random() * communes.length)]
   }
 
@@ -752,3 +752,4 @@ class LocationService {
 }
 
 export default LocationService
+```

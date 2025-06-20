@@ -176,9 +176,10 @@ const BidsScreen: React.FC<BidsScreenProps> = () => {
               await new Promise(resolve => setTimeout(resolve, 2000));
               
               // Redirection vers l'écran de suivi
-              navigation.replace('TrackDeliveryScreen', {
+              navigation.replace('EnhancedTrackDeliveryScreen', {
                 deliveryId: 'delivery_' + Date.now(),
                 delivery: {
+                  id: 'delivery_' + Date.now(),
                   ...deliveryRequest,
                   courier: {
                     id: bid.courierId,
@@ -188,10 +189,11 @@ const BidsScreen: React.FC<BidsScreenProps> = () => {
                     phone: '+225 07 00 00 00 00',
                     vehicleType: bid.vehicleType
                   },
-                  price: bid.price,
+                  finalPrice: bid.price,
                   estimatedDuration: bid.estimatedDuration,
-                  status: 'confirmed',
-                  arrivalTime: bid.arrivalTime
+                  status: 'assigned',
+                  courierArrivalTime: bid.arrivalTime,
+                  createdAt: new Date().toISOString()
                 }
               });
             } catch (error) {
