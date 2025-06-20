@@ -102,6 +102,14 @@ celerybeat-schedule
 *.env.staging.local
 *.env.dev
 *.env.prod
+*.env.stage
+*.env.uat
+*.env.qa
+*.env.demo
+*.env.backup
+*.env.old
+*.env.tmp
+*.env.temp
 
 # Fichiers de configuration d'environnement spécifiques
 config/settings.py
@@ -110,6 +118,10 @@ config/settings_production.py
 config/settings_development.py
 config/.env*
 app/config/.env*
+**/config/.env*
+**/settings_local.py
+**/settings_production.py
+**/settings_development.py
 
 # Fichiers de secrets et clés API
 secrets/
