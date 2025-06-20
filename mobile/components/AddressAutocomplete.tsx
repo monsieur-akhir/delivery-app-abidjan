@@ -223,28 +223,35 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const results: Address[] = [];
       const normalizedQuery = query.toLowerCase().trim();
 
-      // 1. Recherche dans les lieux populaires locaux
-      popularPlaces.forEach((place, index) => {
-        if (
-          place.name.toLowerCase().includes(normalizedQuery) ||
-          place.commune.toLowerCase().includes(normalizedQuery)
-        ) {
-          results.push({
-            id: `popular_${index}`,
-            description: `${place.name}, ${place.commune}`,
-            latitude: place.latitude,
-            longitude: place.longitude,
-            commune: place.commune,
-            type: 'suggestion'
-          });
-        }
+      // 1. Recherche exhaustive dans les lieux populaires d'Abidjan
+      const popularResults = popularPlaces.filter(place => 
+        place.name.toLowerCase().includes(normalizedQuery) ||
+        place.commune.toLowerCase().includes(normalizedQuery) ||
+        normalizedQuery.includes(place.name.toLowerCase().split(' ')[0]) ||
+        normalizedQuery.includes(place.commune.toLowerCase())
+      );
+
+      popularResults.forEach((place, index) => {
+        results.push({
+          id: `popular_${index}_${Date.now()}`,
+          description: `${place.name}, ${place.commune}`,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          commune: place.commune,
+          type: 'suggestion'
+        });
       });
 
-      // 2. Recherche par commune
+      // 2. Recherche Google Places simulée mais exhaustive
+      const googlePlacesResults = await searchGooglePlaces(query);
+      results.push(...googlePlacesResults);
+
+      // 3. Recherche par commune avec correspondance partielle
       abidjanCommunes.forEach((commune, index) => {
-        if (commune.name.toLowerCase().includes(normalizedQuery)) {
+        if (commune.name.toLowerCase().includes(normalizedQuery) || 
+            normalizedQuery.includes(commune.name.toLowerCase())) {
           results.push({
-            id: `commune_${index}`,
+            id: `commune_${index}_${Date.now()}`,
             description: `${commune.name}, Abidjan`,
             latitude: commune.latitude,
             longitude: commune.longitude,
@@ -254,39 +261,20 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         }
       });
 
-      // 3. Recherche avec Google Places API (simulée pour l'environnement local)
-      if (query.length >= 3) {
-        const googlePlaces = await searchGooglePlaces(query);
-        results.push(...googlePlaces);
-      }
+      // 4. Génération d'adresses de rues dynamiques
+      const streetSuggestions = generateStreetAddresses(query, normalizedQuery);
+      results.push(...streetSuggestions);
 
-      // 4. Recherche de rues et adresses spécifiques
-      if (query.length >= 4) {
-        const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place'];
-        const randomStreets = [
-          'des Jardins', 'de la Paix', 'du Commerce', 'de l\'Indépendance',
-          'des Cocotiers', 'de la République', 'du Stade', 'de l\'Église'
-        ];
+      // 5. Ajout de lieux spécifiques d'Abidjan
+      const specificPlaces = getSpecificAbidjanPlaces(normalizedQuery);
+      results.push(...specificPlaces);
 
-        // Générer des suggestions de rues réalistes
-        for (let i = 0; i < Math.min(2, maxSuggestions - results.length); i++) {
-          const prefix = streetPrefixes[Math.floor(Math.random() * streetPrefixes.length)];
-          const suffix = randomStreets[Math.floor(Math.random() * randomStreets.length)];
-          const commune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
+      // Dédoublonner et limiter les résultats
+      const uniqueResults = results.filter((result, index, self) => 
+        index === self.findIndex(r => r.description.toLowerCase() === result.description.toLowerCase())
+      );
 
-          results.push({
-            id: `street_${i}_${Date.now()}`,
-            description: `${prefix} ${query} ${suffix}, ${commune.name}`,
-            latitude: commune.latitude + (Math.random() - 0.5) * 0.02,
-            longitude: commune.longitude + (Math.random() - 0.5) * 0.02,
-            commune: commune.name,
-            type: 'suggestion'
-          });
-        }
-      }
-
-      // Limiter le nombre de résultats
-      setSuggestions(results.slice(0, maxSuggestions));
+      setSuggestions(uniqueResults.slice(0, maxSuggestions));
     } catch (error) {
       console.error('Error searching addresses:', error);
       setSuggestions([]);
@@ -295,42 +283,143 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   }, [popularPlaces, abidjanCommunes, maxSuggestions]);
 
-  // Simulation de recherche Google Places (à remplacer par une vraie API)
+  // Simulation de recherche Google Places améliorée
   const searchGooglePlaces = async (query: string): Promise<Address[]> => {
-    // Simulation de lieux Google Places réels d'Abidjan
+    // Base de données étendue de lieux réels d'Abidjan
     const mockGooglePlaces = [
-      {
-        id: 'google_1',
-        description: `Hotel Ibis Abidjan Plateau, ${query}`,
-        latitude: 5.3267,
-        longitude: -4.0252,
-        commune: 'Plateau',
-        placeId: 'ChIJ1234567890',
-        type: 'google_place' as const
-      },
-      {
-        id: 'google_2',
-        description: `Sofitel Abidjan Hôtel Ivoire, ${query}`,
-        latitude: 5.3439,
-        longitude: -3.9889,
-        commune: 'Cocody',
-        placeId: 'ChIJ0987654321',
-        type: 'google_place' as const
-      },
-      {
-        id: 'google_3',
-        description: `Pharmacie de la Paix, ${query}`,
-        latitude: 5.3200 + (Math.random() - 0.5) * 0.01,
-        longitude: -4.0200 + (Math.random() - 0.5) * 0.01,
-        commune: 'Plateau',
-        placeId: 'ChIJ1357924680',
-        type: 'google_place' as const
-      }
+      // Hôtels
+      { name: 'Hotel Ibis Abidjan Plateau', commune: 'Plateau', lat: 5.3267, lng: -4.0252, category: 'hotel' },
+      { name: 'Sofitel Abidjan Hôtel Ivoire', commune: 'Cocody', lat: 5.3439, lng: -3.9889, category: 'hotel' },
+      { name: 'Pullman Abidjan', commune: 'Cocody', lat: 5.3400, lng: -3.9900, category: 'hotel' },
+      { name: 'Radisson Blu Hotel', commune: 'Plateau', lat: 5.3250, lng: -4.0230, category: 'hotel' },
+      
+      // Centres commerciaux
+      { name: 'Cap Sud Shopping Center', commune: 'Marcory', lat: 5.2800, lng: -3.9600, category: 'mall' },
+      { name: 'Cosmos Yopougon', commune: 'Yopougon', lat: 5.3200, lng: -4.0700, category: 'mall' },
+      { name: 'Abidjan Mall', commune: 'Marcory', lat: 5.2850, lng: -3.9650, category: 'mall' },
+      
+      // Restaurants populaires
+      { name: 'Restaurant Chez Amina', commune: 'Plateau', lat: 5.3300, lng: -4.0100, category: 'restaurant' },
+      { name: 'Maquis du Rail', commune: 'Treichville', lat: 5.3100, lng: -4.0300, category: 'restaurant' },
+      { name: 'Restaurant Allocodrome', commune: 'Marcory', lat: 5.2900, lng: -3.9750, category: 'restaurant' },
+      { name: 'Brasserie Abidjanaise', commune: 'Plateau', lat: 5.3280, lng: -4.0200, category: 'restaurant' },
+      
+      // Pharmacies
+      { name: 'Pharmacie de la Paix', commune: 'Plateau', lat: 5.3200, lng: -4.0200, category: 'pharmacy' },
+      { name: 'Pharmacie du Plateau', commune: 'Plateau', lat: 5.3250, lng: -4.0250, category: 'pharmacy' },
+      { name: 'Pharmacie Cocody', commune: 'Cocody', lat: 5.3500, lng: -3.9800, category: 'pharmacy' },
+      { name: 'Pharmacie Nouvelle', commune: 'Adjamé', lat: 5.3650, lng: -4.0180, category: 'pharmacy' },
+      
+      // Banques
+      { name: 'SGBCI Plateau', commune: 'Plateau', lat: 5.3280, lng: -4.0280, category: 'bank' },
+      { name: 'Ecobank Cocody', commune: 'Cocody', lat: 5.3600, lng: -3.9700, category: 'bank' },
+      { name: 'BICICI Marcory', commune: 'Marcory', lat: 5.2900, lng: -3.9700, category: 'bank' },
+      
+      // Universités et écoles
+      { name: 'Université Félix Houphouët-Boigny', commune: 'Cocody', lat: 5.3847, lng: -3.9883, category: 'university' },
+      { name: 'École Internationale Jean-Mermoz', commune: 'Cocody', lat: 5.3700, lng: -3.9600, category: 'school' },
+      { name: 'Institut National Polytechnique', commune: 'Yamoussoukro', lat: 5.3500, lng: -4.0000, category: 'school' },
+      
+      // Hôpitaux
+      { name: 'CHU de Treichville', commune: 'Treichville', lat: 5.2900, lng: -4.0100, category: 'hospital' },
+      { name: 'Clinique Farah', commune: 'Cocody', lat: 5.3400, lng: -3.9800, category: 'hospital' },
+      { name: 'Hôpital Général de Bingerville', commune: 'Bingerville', lat: 5.3550, lng: -3.8950, category: 'hospital' },
+      
+      // Centres d'affaires
+      { name: 'Tour BCEAO', commune: 'Plateau', lat: 5.3250, lng: -4.0220, category: 'office' },
+      { name: 'Immeuble CCIA', commune: 'Plateau', lat: 5.3280, lng: -4.0240, category: 'office' },
+      { name: 'Centre des Affaires', commune: 'Plateau', lat: 5.3270, lng: -4.0210, category: 'office' },
+      
+      // Marchés
+      { name: 'Marché de Treichville', commune: 'Treichville', lat: 5.2833, lng: -4.0000, category: 'market' },
+      { name: 'Marché d\'Adjamé', commune: 'Adjamé', lat: 5.3667, lng: -4.0167, category: 'market' },
+      { name: 'Marché de Cocody', commune: 'Cocody', lat: 5.3500, lng: -3.9850, category: 'market' },
+      
+      // Transports
+      { name: 'Gare de Bassam', commune: 'Plateau', lat: 5.3200, lng: -4.0200, category: 'transport' },
+      { name: 'Gare Routière d\'Adjamé', commune: 'Adjamé', lat: 5.3700, lng: -4.0200, category: 'transport' },
+      { name: 'Aéroport Félix Houphouët-Boigny', commune: 'Port-Bouët', lat: 5.2539, lng: -3.9263, category: 'airport' }
     ];
 
-    return mockGooglePlaces.filter(place => 
-      place.description.toLowerCase().includes(query.toLowerCase())
+    const normalizedQuery = query.toLowerCase();
+    const matchingPlaces = mockGooglePlaces.filter(place => 
+      place.name.toLowerCase().includes(normalizedQuery) ||
+      place.commune.toLowerCase().includes(normalizedQuery) ||
+      place.category.toLowerCase().includes(normalizedQuery) ||
+      normalizedQuery.includes(place.name.toLowerCase().split(' ')[0])
     );
+
+    return matchingPlaces.map((place, index) => ({
+      id: `google_${index}_${Date.now()}`,
+      description: `${place.name}, ${place.commune}, Abidjan`,
+      latitude: place.lat,
+      longitude: place.lng,
+      commune: place.commune,
+      placeId: `ChIJ${Math.random().toString(36).substr(2, 9)}`,
+      type: 'google_place' as const
+    }));
+  };
+
+  // Génération d'adresses de rues spécifiques
+  const generateStreetAddresses = (query: string, normalizedQuery: string): Address[] => {
+    const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place', 'Carrefour'];
+    const streetNames = [
+      'de la Paix', 'de l\'Indépendance', 'des Jardins', 'du Commerce',
+      'de la République', 'des Cocotiers', 'du Stade', 'de l\'Église',
+      'des Martyrs', 'de l\'Université', 'du Marché', 'de la Gare',
+      'Jessé Jackson', 'Nangui Abrogoua', 'du 7 Décembre', 'Franchet d\'Esperey'
+    ];
+
+    const results: Address[] = [];
+    
+    streetPrefixes.forEach(prefix => {
+      streetNames.forEach(streetName => {
+        if (streetName.toLowerCase().includes(normalizedQuery) || 
+            prefix.toLowerCase().includes(normalizedQuery) ||
+            normalizedQuery.length >= 3) {
+          
+          const randomCommune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
+          results.push({
+            id: `street_${prefix}_${streetName}_${Date.now()}_${Math.random()}`,
+            description: `${prefix} ${streetName}, ${randomCommune.name}, Abidjan`,
+            latitude: randomCommune.latitude + (Math.random() - 0.5) * 0.02,
+            longitude: randomCommune.longitude + (Math.random() - 0.5) * 0.02,
+            commune: randomCommune.name,
+            type: 'suggestion'
+          });
+        }
+      });
+    });
+
+    return results.slice(0, 3);
+  };
+
+  // Lieux spécifiques d'Abidjan basés sur la requête
+  const getSpecificAbidjanPlaces = (normalizedQuery: string): Address[] => {
+    const specificPlaces = [
+      { name: 'Zone 4C', commune: 'Marcory', lat: 5.2950, lng: -3.9720 },
+      { name: 'Riviera Golf', commune: 'Cocody', lat: 5.3789, lng: -3.9956 },
+      { name: 'Carrefour Kennedy', commune: 'Yopougon', lat: 5.3289, lng: -4.0756 },
+      { name: 'Deux Plateaux', commune: 'Cocody', lat: 5.3600, lng: -3.9750 },
+      { name: 'Angré', commune: 'Cocody', lat: 5.3700, lng: -3.9600 },
+      { name: 'Banco', commune: 'Yopougon', lat: 5.3400, lng: -4.0900 },
+      { name: 'Vridi', commune: 'Port-Bouët', lat: 5.2400, lng: -3.9200 },
+      { name: 'Koumassi Centre', commune: 'Koumassi', lat: 5.2900, lng: -3.9400 }
+    ];
+
+    return specificPlaces
+      .filter(place => 
+        place.name.toLowerCase().includes(normalizedQuery) ||
+        place.commune.toLowerCase().includes(normalizedQuery)
+      )
+      .map((place, index) => ({
+        id: `specific_${index}_${Date.now()}`,
+        description: `${place.name}, ${place.commune}, Abidjan`,
+        latitude: place.lat,
+        longitude: place.lng,
+        commune: place.commune,
+        type: 'suggestion'
+      }));
   };
 
   // Géocodage inverse pour la position actuelle

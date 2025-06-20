@@ -77,6 +77,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
   const [urgencyLevel, setUrgencyLevel] = useState('normal');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState(0);
+  const [customPrice, setCustomPrice] = useState('');
 
   // États pour le loader et la recherche de coursiers
   const [searchingCouriers, setSearchingCouriers] = useState(false);
@@ -179,7 +180,8 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
         packageType,
         urgencyLevel,
         specialInstructions,
-        estimatedPrice
+        estimatedPrice: customPrice ? parseInt(customPrice) : estimatedPrice,
+        customPrice: customPrice ? parseInt(customPrice) : null
       }
     });
   };
@@ -368,6 +370,27 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
                 style={styles.input}
                 left={<TextInput.Icon icon="note-text-outline" />}
               />
+            </Card.Content>
+          </Card>
+
+          {/* Proposition de prix personnalisé */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <Text style={styles.sectionTitle}>Votre proposition de prix (optionnel)</Text>
+              
+              <TextInput
+                label="Prix proposé (FCFA)"
+                value={customPrice}
+                onChangeText={setCustomPrice}
+                keyboardType="numeric"
+                style={styles.input}
+                left={<TextInput.Icon icon="currency-usd" />}
+                placeholder="Ex: 2000"
+              />
+              
+              <Text style={styles.priceHint}>
+                Laissez vide pour recevoir des offres des coursiers
+              </Text>
             </Card.Content>
           </Card>
 
@@ -623,6 +646,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  priceHint: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 4,
     fontStyle: 'italic',
   },
 });
