@@ -210,7 +210,7 @@ const PACKAGE_SIZES = [
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#f5f5f5',
   },
 
   // Header moderne avec navigation icons
@@ -1128,10 +1128,20 @@ const CreateDeliveryScreen: React.FC = () => {
       )
 
       if (field === 'pickup') {
-        setPickupSuggestions(results)
+        setPickupSuggestions(results.map(result => ({
+          ...result,
+          commune: result.commune || '',
+          latitude: result.latitude || 0,
+          longitude: result.longitude || 0
+        })))
         setShowPickupSuggestions(true)
       } else {
-        setDeliverySuggestions(results)
+        setDeliverySuggestions(results.map(result => ({
+          ...result,
+          commune: result.commune || '',
+          latitude: result.latitude || 0,
+          longitude: result.longitude || 0
+        })))
         setShowDeliverySuggestions(true)
       }
     } catch (error) {
@@ -1522,12 +1532,10 @@ const CreateDeliveryScreen: React.FC = () => {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Map Section avec overlay navigation */}
         <View style={styles.mapContainer}>
-          <MapView
-            pickupLocation={pickupLocation}
-            deliveryLocation={deliveryLocation}
-            style={{ flex: 1 }}
-            showRoute={!!(pickupLocation && deliveryLocation)}
-          />
+          
+          
+          
+          
 
           {/* Navigation overlay avec icônes de véhicules */}
           <View style={styles.navigationOverlay}>
