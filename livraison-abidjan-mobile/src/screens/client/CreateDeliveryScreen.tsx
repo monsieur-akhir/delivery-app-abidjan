@@ -1392,64 +1392,43 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.bottomSheetHandle} />
           <Text style={styles.bottomSheetTitle}>ENVOYER UN COLIS</Text>
 
-          {/* Address Inputs améliorés */}
+          {/* Address Inputs modernes comme sur la capture */}
           <View style={styles.addressSection}>
             <Text style={styles.sectionTitle}>Adresses de livraison</Text>
 
-            {/* Pickup Address */}
-            <View style={styles.modernAddressContainer}>
-              <View style={[styles.addressIndicator, styles.pickupIndicator]}>
-                <View style={styles.pickupDot} />
-              </View>
-              <View style={styles.addressInputWrapper}>
-                <Text style={styles.addressLabel}>Prise en charge</Text>
-                <AddressAutocomplete
-                  label=""
-                  value={pickupQuery}
-                  onChangeText={(text) => handleTextChange(text, 'pickup')}
-                  onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
-                  placeholder="Où récupérer le colis ?"
-                  showCurrentLocation={true}
-                  maxSuggestions={5}
-                  style={styles.modernAddressInput}
-                  onFocus={() => {
-                    setPickupFocused(true)
-                    setActiveField('pickup')
-                  }}
-                />
-              </View>
-            </View>
+            {/* Pickup Address avec design moderne */}
+            <AddressAutocomplete
+              label="Prise en charge"
+              value={pickupQuery}
+              onChangeText={(text) => handleTextChange(text, 'pickup')}
+              onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
+              placeholder="Adresse de prise en charge"
+              showCurrentLocation={true}
+              maxSuggestions={8}
+              icon="package"
+              onFocus={() => {
+                setPickupFocused(true)
+                setActiveField('pickup')
+              }}
+              style={{ marginBottom: 16 }}
+            />
 
-            {/* Connecting Line */}
-            <View style={styles.addressConnector}>
-              <View style={styles.connectorLine} />
-            </View>
-
-            {/* Delivery Address */}
-            <View style={styles.modernAddressContainer}>
-              <View style={[styles.addressIndicator, styles.destinationIndicator]}>
-                <Feather name="navigation" size={14} color={COLORS.white} />
-              </View>
-              <View style={styles.addressInputWrapper}>
-                <Text style={styles.addressLabel}>Destination</Text>
-                <AddressAutocomplete
-                  label=""
-                  value={deliveryQuery}
-                  onChangeText={(text) => handleTextChange(text, 'delivery')}
-                  onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
-                  placeholder="Où livrer le colis ?"
-                  showCurrentLocation={true}
-                  maxSuggestions={5}
-                  style={styles.modernAddressInput}
-                  onFocus={() => {
-                    setDeliveryFocused(true)
-                    setActiveField('delivery')
-                  }}
-                />
-              </View>
-            </View>
-
-            {/* Bouton Position actuelle */}
+            {/* Delivery Address avec design moderne */}
+            <AddressAutocomplete
+              label="Destination"
+              value={deliveryQuery}
+              onChangeText={(text) => handleTextChange(text, 'delivery')}
+              onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
+              placeholder="Adresse de livraison"
+              showCurrentLocation={true}
+              maxSuggestions={8}
+              icon="navigation"
+              onFocus={() => {
+                setDeliveryFocused(true)
+                setActiveField('delivery')
+              }}
+              style={{ marginBottom: 16 }}
+            />
 
             {/* Distance indicator */}
             {pickupLocation && deliveryLocation && (
@@ -1459,8 +1438,6 @@ const CreateDeliveryScreen: React.FC = () => {
                 </Text>
               </View>
             )}
-
-
           </View>
 
           {/* Package Information Section */}
