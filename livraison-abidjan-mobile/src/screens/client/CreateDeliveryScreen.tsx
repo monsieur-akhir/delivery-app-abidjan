@@ -656,6 +656,26 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
 
+  // Styles pour les options recommandées
+  deliveryOptionRecommended: {
+    borderColor: COLORS.success,
+    backgroundColor: '#F0FFF4',
+  },
+
+  deliveryOptionIconRecommended: {
+    backgroundColor: COLORS.success,
+  },
+
+  deliveryOptionTitleRecommended: {
+    color: COLORS.success,
+    fontWeight: '700',
+  },
+
+  deliveryOptionPriceRecommended: {
+    color: COLORS.success,
+    fontWeight: '800',
+  },
+
   // Recipient section
   recipientSection: {
     paddingHorizontal: 20,
@@ -819,8 +839,14 @@ const calculateDistance = (coord1: { latitude: number; longitude: number }, coor
   return R * c
 }
 
-// Fonction pour calculer le prix en fonction de la distance et du type de véhicule
-const calculateDynamicPrice = (distance: number, vehicleType: string, isUrgent: boolean): number => {
+// Fonction pour calculer le prix en fonction de la distance, poids, taille et type de véhicule
+const calculateDynamicPrice = (
+  distance: number, 
+  vehicleType: string, 
+  isUrgent: boolean,
+  packageWeight: number = 1,
+  packageSize: string = 'small'
+): number => {
   let basePrice = 400 // Prix de base
   let pricePerKm = 50 // Prix par kilomètre
 
@@ -838,15 +864,77 @@ const calculateDynamicPrice = (distance: number, vehicleType: string, isUrgent: 
       basePrice = 800
       pricePerKm = 100
       break
+    case 'camion':
+      basePrice = 1200
+      pricePerKm = 150
+      break
     default:
       basePrice = 400
       pricePerKm = 50
   }
 
-  const distancePrice = distance * pricePerKm
+  // Multiplicateur selon le poids
+  let weightMultiplier = 1
+  if (packageWeight > 25) {
+    weightMultiplier = 2.0  // Très lourd
+  } else if (packageWeight > 10) {
+    weightMultiplier = 1.5  // Lourd
+  } else if (packageWeight > 3) {
+    weightMultiplier = 1.2  // Moyen
+  }
+
+  // Multiplicateur selon la taille
+  let sizeMultiplier = 1
+  switch (packageSize) {
+    case 'xl':
+      sizeMultiplier = 1.8
+      break
+    case 'large':
+      sizeMultiplier = 1.5
+      break
+    case 'medium':
+      sizeMultiplier = 1.2
+      break
+    case 'small':
+      sizeMultiplier = 1.0
+      break
+    case 'xs':
+      sizeMultiplier = 0.9
+      break
+  }
+
+  // Multiplicateur pour la distance (livraisons inter-villes)
+  let distanceMultiplier = 1
+  if (distance > 100) { // Inter-villes
+    distanceMultiplier = 2.0
+  } else if (distance > 50) {
+    distanceMultiplier = 1.5
+  }
+
+  const distancePrice = distance * pricePerKm * distanceMultiplier
   const urgentMultiplier = isUrgent ? 1.5 : 1
 
-  return Math.round((basePrice + distancePrice) * urgentMultiplier)
+  return Math.round((basePrice + distancePrice) * weightMultiplier * sizeMultiplier * urgentMultiplier)
+}
+
+// Fonction pour recommander le type de véhicule selon poids et taille
+const recommendVehicleType = (packageWeight: number, packageSize: string, distance: number): string => {
+  // Pour les livraisons inter-villes (> 50km)
+  if (distance > 50) {
+    if (packageWeight > 25 || packageSize === 'xl') {
+      return 'camion'
+    }
+    return 'voiture'
+  }
+
+  // Pour les livraisons urbaines
+  if (packageWeight > 15 || packageSize === 'xl') {
+    return 'camion'
+  } else if (packageWeight > 5 || packageSize === 'large') {
+    return 'voiture'
+  } else {
+    return 'moto'
+  }
 }
 
 interface DeliveryCreateRequest {
@@ -954,16 +1042,23 @@ const CreateDeliveryScreen: React.FC = () => {
   const [pickupFocused, setPickupFocused] = useState<boolean>(false)
   const [deliveryFocused, setDeliveryFocused] = useState<boolean>(false)
 
-  // Options de livraison modernisées - maintenant calculées dynamiquement
+  // Options de livraison dynamiques selon poids, taille et distance
   const modernDeliveryOptions = useMemo(() => {
-    const baseOptions = [
+    const weight = parseFloat(packageWeight) || 1
+    const size = packageSize
+    const distance = currentDistance
+    
+    const allOptions = [
       {
         key: 'moto',
         title: 'Livraison à moto',
         subtitle: '',
         icon: '🏍️',
         price: 400,
-        time: '25-35 min'
+        time: '25-35 min',
+        maxWeight: 5,
+        maxSize: 'small',
+        suitable: weight <= 5 && ['xs', 'small'].includes(size) && distance <= 50
       },
       {
         key: 'voiture', 
@@ -971,27 +1066,55 @@ const CreateDeliveryScreen: React.FC = () => {
         subtitle: '',
         icon: '🚗',
         price: 500,
-        time: '30-45 min'
+        time: '30-45 min',
+        maxWeight: 15,
+        maxSize: 'large',
+        suitable: weight <= 15 && ['xs', 'small', 'medium', 'large'].includes(size)
+      },
+      {
+        key: 'camion',
+        title: 'Livraison par camion',
+        subtitle: '',
+        icon: '🚛',
+        price: 1200,
+        time: '45-60 min',
+        maxWeight: 100,
+        maxSize: 'xl',
+        suitable: true // Toujours disponible pour gros colis
       },
       {
         key: 'express',
         title: 'Express Cargo',
         subtitle: '',
-        icon: '🚛',
+        icon: '⚡',
         price: 800,
-        time: '15-25 min'
+        time: '15-25 min',
+        maxWeight: 10,
+        maxSize: 'medium',
+        suitable: weight <= 10 && ['xs', 'small', 'medium'].includes(size) && distance <= 30
       }
     ]
 
-    return baseOptions.map(option => {
-      const calculatedPrice = calculateDynamicPrice(currentDistance, option.key, isUrgent)
+    // Filtrer les options appropriées
+    const suitableOptions = allOptions.filter(option => option.suitable)
+    
+    // Recommander le meilleur véhicule
+    const recommendedVehicle = recommendVehicleType(weight, size, distance)
+    
+    return suitableOptions.map(option => {
+      const calculatedPrice = calculateDynamicPrice(distance, option.key, isUrgent, weight, size)
+      const isRecommended = option.key === recommendedVehicle
+      
       return {
         ...option,
         price: calculatedPrice,
-        subtitle: `à partir de ${calculatedPrice} F`
+        subtitle: isRecommended 
+          ? `🌟 Recommandé - ${calculatedPrice} F` 
+          : `à partir de ${calculatedPrice} F`,
+        recommended: isRecommended
       }
     })
-  }, [currentDistance, isUrgent])
+  }, [currentDistance, isUrgent, packageWeight, packageSize])
 
 
 
@@ -1147,8 +1270,10 @@ const CreateDeliveryScreen: React.FC = () => {
         { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
       )
 
-      // Utiliser le calcul dynamique local
-      const calculatedPrice = calculateDynamicPrice(distance, selectedVehicleType, isUrgent)
+      const weight = parseFloat(packageWeight) || 1
+      
+      // Utiliser le calcul dynamique local avec poids et taille
+      const calculatedPrice = calculateDynamicPrice(distance, selectedVehicleType, isUrgent, weight, packageSize)
 
       setTotalPrice(calculatedPrice)
       setRecommendedPrice(calculatedPrice)
@@ -1309,27 +1434,45 @@ const CreateDeliveryScreen: React.FC = () => {
       key={option.key}
       style={[
         styles.deliveryOptionCard,
-        selectedVehicleType === option.key && styles.deliveryOptionCardSelected
+        selectedVehicleType === option.key && styles.deliveryOptionCardSelected,
+        option.recommended && styles.deliveryOptionRecommended
       ]}
       onPress={() => handleDeliverySelection(option)}
       activeOpacity={0.8}
     >
       <View style={[
         styles.deliveryOptionIcon,
-        selectedVehicleType === option.key && styles.deliveryOptionIconSelected
+        selectedVehicleType === option.key && styles.deliveryOptionIconSelected,
+        option.recommended && styles.deliveryOptionIconRecommended
       ]}>
         <Text style={{ fontSize: 28 }}>{option.icon}</Text>
       </View>
       <View style={styles.deliveryOptionInfo}>
-        <Text style={styles.deliveryOptionTitle}>{option.title}</Text>
+        <Text style={[
+          styles.deliveryOptionTitle,
+          option.recommended && styles.deliveryOptionTitleRecommended
+        ]}>
+          {option.title}
+          {option.recommended && ' ⭐'}
+        </Text>
         <Text style={styles.deliveryOptionSubtitle}>{option.subtitle}</Text>
         {option.time && (
           <Text style={[styles.deliveryOptionSubtitle, { marginTop: 2, fontSize: 12 }]}>
             ⏱️ {option.time}
           </Text>
         )}
+        {option.maxWeight && (
+          <Text style={[styles.deliveryOptionSubtitle, { marginTop: 2, fontSize: 11, color: '#999' }]}>
+            Max: {option.maxWeight}kg, Taille {option.maxSize}
+          </Text>
+        )}
       </View>
-      <Text style={styles.deliveryOptionPrice}>{formatPrice(option.price)}</Text>
+      <Text style={[
+        styles.deliveryOptionPrice,
+        option.recommended && styles.deliveryOptionPriceRecommended
+      ]}>
+        {formatPrice(option.price)}
+      </Text>
     </TouchableOpacity>
   )
 

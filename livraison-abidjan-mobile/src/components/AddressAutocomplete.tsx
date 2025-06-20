@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Platform,
   Dimensions,
-  FlatList
+  ScrollView
 } from 'react-native';
 import {
   TextInput,
@@ -28,6 +28,8 @@ export interface Address {
   longitude: number;
   commune?: string;
   district?: string;
+  region?: string;
+  city?: string;
   postalCode?: string;
   type?: 'current_location' | 'saved' | 'recent' | 'suggestion';
 }
@@ -59,7 +61,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   showCurrentLocation = true,
   maxSuggestions = 6,
   onFocus,
-  icon = "map-pin"
+  icon = "location-outline"
 }) => {
   const [suggestions, setSuggestions] = useState<Address[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,120 +71,210 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const inputRef = useRef<any>(null);
 
-  // Communes et zones populaires d'Abidjan avec coordonnées précises
+  // Villes et lieux populaires de Côte d'Ivoire avec coordonnées précises
   const popularPlaces = useMemo(() => [
     {
       id: 'votre_position',
       name: 'Votre position',
       description: 'Prise en charge à votre position GPS',
-      latitude: 5.3364,
-      longitude: -4.0266,
-      commune: 'Abidjan',
+      latitude: 7.539989,
+      longitude: -5.54708,
+      region: 'Côte d\'Ivoire',
       type: 'current_location',
     },
+    // ABIDJAN
     {
       id: 'domicile',
       name: 'Domicile',
       description: '918, Rue M60',
       commune: 'Cocody',
+      city: 'Abidjan',
       latitude: 5.3599,
       longitude: -3.9569,
       type: 'saved',
     },
     {
-      id: 'groupe_itermi',
-      name: 'Groupe Itermi',
-      description: 'Quartier de la Djorabilité I, Cocody, Abidjan',
-      commune: 'Cocody',
-      latitude: 5.3599,
-      longitude: -3.9569,
+      id: 'plateau_abidjan',
+      name: 'Plateau',
+      description: 'Centre des affaires, Abidjan',
+      commune: 'Plateau',
+      city: 'Abidjan',
+      latitude: 5.3274,
+      longitude: -4.0266,
       type: 'business',
     },
     {
-      id: 'rue_l125',
-      name: 'Rue L125, 2166',
-      description: 'Cocody, Abidjan',
+      id: 'cocody_abidjan',
+      name: 'Cocody',
+      description: 'Quartier résidentiel, Abidjan',
       commune: 'Cocody',
+      city: 'Abidjan',
       latitude: 5.3599,
       longitude: -3.9569,
-      type: 'address',
+      type: 'residential',
     },
     {
-      id: 'blvd_martyrs',
-      name: 'Blvd des Martyrs 8303',
-      description: 'Cocody, Abidjan',
-      commune: 'Cocody',
-      latitude: 5.3599,
-      longitude: -3.9569,
-      type: 'address',
-    },
-    {
-      id: 'rue_l129',
-      name: 'Rue L129, 107',
-      description: 'Cocody, Abidjan',
-      commune: 'Cocody',
-      latitude: 5.3599,
-      longitude: -3.9569,
-      type: 'address',
-    },
-    {
-      id: 'voie_djibi',
-      name: 'Voie Djibi',
-      description: 'Abidjan',
+      id: 'yopougon_abidjan',
+      name: 'Yopougon',
+      description: 'Plus grande commune d\'Abidjan',
       commune: 'Yopougon',
+      city: 'Abidjan',
       latitude: 5.3364,
       longitude: -4.0669,
-      type: 'area',
+      type: 'residential',
+    },
+    // YAMOUSSOUKRO
+    {
+      id: 'yamoussoukro_centre',
+      name: 'Yamoussoukro Centre',
+      description: 'Capitale politique de la Côte d\'Ivoire',
+      city: 'Yamoussoukro',
+      latitude: 6.8276,
+      longitude: -5.2893,
+      type: 'capital',
     },
     {
-      id: 'chawarma_plus',
-      name: 'Chawarma+',
-      description: 'Rue L156, Cocody, Abidjan',
-      commune: 'Cocody',
-      latitude: 5.3599,
-      longitude: -3.9569,
-      type: 'restaurant',
+      id: 'basilique_yamoussoukro',
+      name: 'Basilique Notre-Dame de la Paix',
+      description: 'Monument emblématique, Yamoussoukro',
+      city: 'Yamoussoukro',
+      latitude: 6.8108,
+      longitude: -5.2894,
+      type: 'landmark',
     },
+    // BOUAKÉ
     {
-      id: 'rue_m2',
-      name: 'Rue M2',
-      description: 'Cocody, Abidjan',
-      commune: 'Cocody',
-      latitude: 5.3599,
-      longitude: -3.9569,
-      type: 'address',
+      id: 'bouake_centre',
+      name: 'Bouaké Centre',
+      description: 'Deuxième plus grande ville',
+      city: 'Bouaké',
+      latitude: 7.6904,
+      longitude: -5.0300,
+      type: 'city_center',
     },
+    // SAN PEDRO
     {
-      id: 'azito',
-      name: 'Azito',
-      description: 'Abidjan',
-      commune: 'Yopougon',
-      latitude: 5.3364,
-      longitude: -4.0669,
-      type: 'area',
+      id: 'san_pedro_port',
+      name: 'Port de San Pedro',
+      description: 'Port autonome, San Pedro',
+      city: 'San Pedro',
+      latitude: 4.7467,
+      longitude: -6.6364,
+      type: 'port',
     },
+    // KORHOGO
     {
-      id: 'cinema_benin',
-      name: 'Le Cinéma Benin',
-      description: 'La commune Attécoubé, Rue I34, 514',
-      commune: 'Attécoubé',
-      latitude: 5.3164,
-      longitude: -4.0269,
-      type: 'entertainment',
+      id: 'korhogo_centre',
+      name: 'Korhogo Centre',
+      description: 'Capitale du Nord',
+      city: 'Korhogo',
+      latitude: 9.4580,
+      longitude: -5.6297,
+      type: 'city_center',
+    },
+    // DALOA
+    {
+      id: 'daloa_centre',
+      name: 'Daloa Centre',
+      description: 'Ville de l\'Ouest',
+      city: 'Daloa',
+      latitude: 6.8772,
+      longitude: -6.4503,
+      type: 'city_center',
+    },
+    // MAN
+    {
+      id: 'man_centre',
+      name: 'Man Centre',
+      description: 'Ville des 18 montagnes',
+      city: 'Man',
+      latitude: 7.4123,
+      longitude: -7.5539,
+      type: 'city_center',
+    },
+    // GAGNOA
+    {
+      id: 'gagnoa_centre',
+      name: 'Gagnoa Centre',
+      description: 'Chef-lieu du Gôh',
+      city: 'Gagnoa',
+      latitude: 6.1319,
+      longitude: -5.9506,
+      type: 'city_center',
     }
   ], []);
 
-  const abidjanCommunes = useMemo(() => [
-    { name: 'Abobo', latitude: 5.4167, longitude: -4.0167 },
-    { name: 'Adjamé', latitude: 5.3667, longitude: -4.0333 },
-    { name: 'Attécoubé', latitude: 5.3333, longitude: -4.0667 },
-    { name: 'Cocody', latitude: 5.3500, longitude: -3.9874 },
-    { name: 'Koumassi', latitude: 5.2833, longitude: -3.9500 },
-    { name: 'Marcory', latitude: 5.2833, longitude: -4.0000 },
-    { name: 'Plateau', latitude: 5.3274, longitude: -4.0266 },
-    { name: 'Port-Bouët', latitude: 5.2500, longitude: -3.9167 },
-    { name: 'Treichville', latitude: 5.3000, longitude: -4.0167 },
-    { name: 'Yopougon', latitude: 5.3667, longitude: -4.0833 }
+  // Toutes les villes importantes de Côte d'Ivoire
+  const ivoryCoastCities = useMemo(() => [
+    // District d'Abidjan
+    { name: 'Abidjan', latitude: 5.3364, longitude: -4.0266, region: 'District d\'Abidjan' },
+    { name: 'Abobo', latitude: 5.4167, longitude: -4.0167, region: 'District d\'Abidjan' },
+    { name: 'Adjamé', latitude: 5.3667, longitude: -4.0333, region: 'District d\'Abidjan' },
+    { name: 'Attécoubé', latitude: 5.3333, longitude: -4.0667, region: 'District d\'Abidjan' },
+    { name: 'Cocody', latitude: 5.3500, longitude: -3.9874, region: 'District d\'Abidjan' },
+    { name: 'Koumassi', latitude: 5.2833, longitude: -3.9500, region: 'District d\'Abidjan' },
+    { name: 'Marcory', latitude: 5.2833, longitude: -4.0000, region: 'District d\'Abidjan' },
+    { name: 'Plateau', latitude: 5.3274, longitude: -4.0266, region: 'District d\'Abidjan' },
+    { name: 'Port-Bouët', latitude: 5.2500, longitude: -3.9167, region: 'District d\'Abidjan' },
+    { name: 'Treichville', latitude: 5.3000, longitude: -4.0167, region: 'District d\'Abidjan' },
+    { name: 'Yopougon', latitude: 5.3667, longitude: -4.0833, region: 'District d\'Abidjan' },
+    
+    // District de Yamoussoukro
+    { name: 'Yamoussoukro', latitude: 6.8276, longitude: -5.2893, region: 'District de Yamoussoukro' },
+    
+    // Région des Lagunes
+    { name: 'Dabou', latitude: 5.3275, longitude: -4.3767, region: 'Lagunes' },
+    { name: 'Grand-Lahou', latitude: 5.2500, longitude: -5.0000, region: 'Lagunes' },
+    { name: 'Tiassalé', latitude: 5.8989, longitude: -4.8222, region: 'Lagunes' },
+    
+    // Région du Haut-Sassandra
+    { name: 'Daloa', latitude: 6.8772, longitude: -6.4503, region: 'Haut-Sassandra' },
+    { name: 'Issia', latitude: 6.4931, longitude: -6.5856, region: 'Haut-Sassandra' },
+    { name: 'Vavoua', latitude: 7.3817, longitude: -6.4794, region: 'Haut-Sassandra' },
+    
+    // Région de la Vallée du Bandama
+    { name: 'Bouaké', latitude: 7.6904, longitude: -5.0300, region: 'Vallée du Bandama' },
+    { name: 'Béoumi', latitude: 7.6744, longitude: -5.5811, region: 'Vallée du Bandama' },
+    { name: 'Sakassou', latitude: 7.4547, longitude: -5.2925, region: 'Vallée du Bandama' },
+    
+    // Région des Montagnes
+    { name: 'Man', latitude: 7.4123, longitude: -7.5539, region: 'Montagnes' },
+    { name: 'Danané', latitude: 7.2658, longitude: -8.1511, region: 'Montagnes' },
+    { name: 'Duékoué', latitude: 6.7406, longitude: -7.3572, region: 'Montagnes' },
+    { name: 'Bangolo', latitude: 6.8381, longitude: -7.4881, region: 'Montagnes' },
+    
+    // Région des Savanes
+    { name: 'Korhogo', latitude: 9.4580, longitude: -5.6297, region: 'Savanes' },
+    { name: 'Boundiali', latitude: 9.5200, longitude: -6.4847, region: 'Savanes' },
+    { name: 'Ferkessédougou', latitude: 9.5900, longitude: -5.1956, region: 'Savanes' },
+    { name: 'Tengrela', latitude: 10.4833, longitude: -6.4086, region: 'Savanes' },
+    
+    // Région du Bas-Sassandra
+    { name: 'San Pedro', latitude: 4.7467, longitude: -6.6364, region: 'Bas-Sassandra' },
+    { name: 'Sassandra', latitude: 4.9500, longitude: -6.0833, region: 'Bas-Sassandra' },
+    { name: 'Soubré', latitude: 5.7856, longitude: -6.5939, region: 'Bas-Sassandra' },
+    
+    // Région du Zanzan
+    { name: 'Bondoukou', latitude: 8.0406, longitude: -2.8000, region: 'Zanzan' },
+    { name: 'Bouna', latitude: 9.2717, longitude: -2.9950, region: 'Zanzan' },
+    { name: 'Tanda', latitude: 7.8031, longitude: -3.1689, region: 'Zanzan' },
+    
+    // Région du Gôh-Djiboua
+    { name: 'Gagnoa', latitude: 6.1319, longitude: -5.9506, region: 'Gôh-Djiboua' },
+    { name: 'Divo', latitude: 5.8397, longitude: -5.3569, region: 'Gôh-Djiboua' },
+    { name: 'Lakota', latitude: 5.8519, longitude: -5.6831, region: 'Gôh-Djiboua' },
+    
+    // Région du Lôh-Djiboua
+    { name: 'Duekoué', latitude: 6.7406, longitude: -7.3572, region: 'Lôh-Djiboua' },
+    
+    // Région de l'Agnéby-Tiassa
+    { name: 'Agboville', latitude: 5.9278, longitude: -4.2139, region: 'Agnéby-Tiassa' },
+    { name: 'Sikensi', latitude: 5.6856, longitude: -4.5853, region: 'Agnéby-Tiassa' },
+    
+    // Région du Sud-Comoé
+    { name: 'Aboisso', latitude: 5.4714, longitude: -3.2069, region: 'Sud-Comoé' },
+    { name: 'Grand-Bassam', latitude: 5.2011, longitude: -3.7389, region: 'Sud-Comoé' },
+    { name: 'Adiaké', latitude: 5.2908, longitude: -3.2994, region: 'Sud-Comoé' }
   ], []);
 
   // Obtenir la position actuelle
@@ -208,7 +300,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  // Recherche d'adresses améliorée
+  // Recherche d'adresses améliorée pour toute la Côte d'Ivoire
   const searchAddresses = useCallback(
     debounce(async (query: string) => {
       if (query.length < 2) {
@@ -225,13 +317,13 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         const normalizedQuery = query.toLowerCase().trim();
 
         // Ajouter "Votre position" en premier si demandé
-        if (showCurrentLocation && normalizedQuery.includes('votre') || normalizedQuery.includes('position')) {
+        if (showCurrentLocation && (normalizedQuery.includes('votre') || normalizedQuery.includes('position'))) {
           results.push({
             id: 'current_location',
             description: 'Prise en charge à votre position GPS',
-            latitude: currentLocation?.coords.latitude || 5.3364,
-            longitude: currentLocation?.coords.longitude || -4.0266,
-            commune: 'Abidjan',
+            latitude: currentLocation?.coords.latitude || 7.539989,
+            longitude: currentLocation?.coords.longitude || -5.54708,
+            region: 'Côte d\'Ivoire',
             type: 'current_location'
           });
         }
@@ -241,7 +333,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           if (
             place.name.toLowerCase().includes(normalizedQuery) ||
             place.description.toLowerCase().includes(normalizedQuery) ||
-            place.commune.toLowerCase().includes(normalizedQuery)
+            (place.commune && place.commune.toLowerCase().includes(normalizedQuery)) ||
+            (place.city && place.city.toLowerCase().includes(normalizedQuery)) ||
+            (place.region && place.region.toLowerCase().includes(normalizedQuery))
           ) {
             results.push({
               id: place.id,
@@ -249,20 +343,24 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               latitude: place.latitude,
               longitude: place.longitude,
               commune: place.commune,
+              city: place.city,
+              region: place.region,
               type: place.type as any
             });
           }
         });
 
-        // Recherche par commune
-        abidjanCommunes.forEach((commune, index) => {
-          if (commune.name.toLowerCase().includes(normalizedQuery)) {
+        // Recherche par ville dans toute la Côte d'Ivoire
+        ivoryCoastCities.forEach((city, index) => {
+          if (city.name.toLowerCase().includes(normalizedQuery) ||
+              city.region.toLowerCase().includes(normalizedQuery)) {
             results.push({
-              id: `commune_${index}`,
-              description: `${commune.name}, Abidjan`,
-              latitude: commune.latitude,
-              longitude: commune.longitude,
-              commune: commune.name,
+              id: `city_${index}`,
+              description: `${city.name}, ${city.region}`,
+              latitude: city.latitude,
+              longitude: city.longitude,
+              city: city.name,
+              region: city.region,
               type: 'suggestion'
             });
           }
@@ -281,7 +379,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         setLoading(false);
       }
     }, 300),
-    [popularPlaces, abidjanCommunes, maxSuggestions, showCurrentLocation, currentLocation]
+    [popularPlaces, ivoryCoastCities, maxSuggestions, showCurrentLocation, currentLocation]
   );
 
   const handleTextChange = useCallback((text: string) => {
@@ -303,27 +401,28 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     try {
       setLoading(true);
 
-      // Trouver la commune la plus proche
-      let nearestCommune = abidjanCommunes[0];
+      // Trouver la ville la plus proche en Côte d'Ivoire
+      let nearestCity = ivoryCoastCities[0];
       let minDistance = Infinity;
 
-      abidjanCommunes.forEach(commune => {
+      ivoryCoastCities.forEach(city => {
         const distance = Math.sqrt(
-          Math.pow(currentLocation.coords.latitude - commune.latitude, 2) + 
-          Math.pow(currentLocation.coords.longitude - commune.longitude, 2)
+          Math.pow(currentLocation.coords.latitude - city.latitude, 2) + 
+          Math.pow(currentLocation.coords.longitude - city.longitude, 2)
         );
         if (distance < minDistance) {
           minDistance = distance;
-          nearestCommune = commune;
+          nearestCity = city;
         }
       });
 
       const address: Address = {
         id: 'current_location',
-        description: `Position actuelle (${nearestCommune.name})`,
+        description: `Position actuelle (${nearestCity.name}, ${nearestCity.region})`,
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
-        commune: nearestCommune.name,
+        city: nearestCity.name,
+        region: nearestCity.region,
         type: 'current_location'
       };
 
@@ -360,29 +459,38 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const getIconForType = (type?: string) => {
     switch (type) {
       case 'current_location':
-        return 'navigation';
+        return 'navigate-outline';
       case 'saved':
-        return 'home';
+        return 'home-outline';
       case 'business':
-        return 'briefcase';
+        return 'business-outline';
       case 'restaurant':
-        return 'restaurant';
+        return 'restaurant-outline';
       case 'entertainment':
-        return 'film';
+        return 'film-outline';
+      case 'capital':
+        return 'flag-outline';
+      case 'port':
+        return 'boat-outline';
+      case 'landmark':
+        return 'library-outline';
+      case 'city_center':
+        return 'business-outline';
       default:
-        return 'map-pin';
+        return 'location-outline';
     }
   };
 
-  const renderSuggestion = ({ item }: { item: Address }) => (
+  const renderSuggestion = (item: Address, index: number) => (
     <TouchableOpacity
+      key={item.id}
       style={styles.suggestionItem}
       onPress={() => handleAddressSelect(item)}
       activeOpacity={0.7}
     >
       <View style={styles.suggestionIcon}>
         <Ionicons 
-          name={getIconForType(item.type)} 
+          name={getIconForType(item.type) as any} 
           size={20} 
           color="#666" 
         />
@@ -394,7 +502,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         </Text>
         <Text style={styles.suggestionSubtitle}>
           {item.type === 'current_location' ? 'Prise en charge à votre position GPS' :
-           item.commune ? `${item.commune}, Abidjan` : item.description}
+           item.city && item.region ? `${item.city}, ${item.region}` :
+           item.commune ? `${item.commune}, ${item.city || 'Abidjan'}` : 
+           item.description}
         </Text>
       </View>
     </TouchableOpacity>
@@ -406,7 +516,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       <View style={styles.inputContainer}>
         <View style={styles.inputWrapper}>
           <View style={styles.iconContainer}>
-            <Ionicons name={icon as any} size={20} color="#666" />
+            <Feather name={icon === "package" ? "box" : icon === "navigation" ? "navigation" : "map-pin"} size={20} color="#666" />
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.labelText}>{label}</Text>
@@ -447,17 +557,19 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               <Text style={styles.loadingText}>Recherche...</Text>
             </View>
           ) : (
-            <FlatList
-              data={suggestions}
-              renderItem={renderSuggestion}
-              keyExtractor={(item) => item.id}
+            <ScrollView
               style={styles.suggestionsList}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
-              ItemSeparatorComponent={() => <Divider />}
-              maxToRenderPerBatch={10}
-              windowSize={10}
-            />
+              nestedScrollEnabled={true}
+            >
+              {suggestions.map((item, index) => (
+                <View key={item.id}>
+                  {renderSuggestion(item, index)}
+                  {index < suggestions.length - 1 && <Divider />}
+                </View>
+              ))}
+            </ScrollView>
           )}
         </Surface>
       )}
