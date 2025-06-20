@@ -686,16 +686,18 @@ export interface TrackingPointRequest {
 }
 
 export interface VehicleCreateRequest {
+  name?: string
   type: VehicleType
   vehicle_type?: VehicleType
   license_plate: string
   brand?: string
   model: string
   year: number
-  color: string
+  color?: string
   capacity?: number
   customType?: string
   maxDistance?: number
+  is_electric?: boolean
 }
 
 export interface VehicleUpdateRequest {

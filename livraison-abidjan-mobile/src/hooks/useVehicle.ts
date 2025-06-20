@@ -46,7 +46,7 @@ export interface UseVehicleReturn {
   isLoading: boolean
   error: string | null
   refreshVehicles: () => Promise<void>
-  addVehicle: (data: VehicleCreateRequest) => Promise<void>
+  addVehicle: (data: any) => Promise<void>
   updateVehicle: (vehicleId: number, data: Partial<Vehicle>) => Promise<void>
   deleteVehicle: (vehicleId: number) => Promise<void>
   setSelectedVehicle: (vehicle: Vehicle | null) => void
@@ -90,10 +90,10 @@ export const useVehicle = (): UseVehicleReturn => {
     }
   }
 
-  const addVehicle = async (data: VehicleCreateRequest) => {
+  const addVehicle = async (vehicleData: any) => {
     try {
       setLoading(true)
-      await VehicleService.createVehicle(data)
+      await VehicleService.createVehicle(vehicleData)
       await refreshVehicles()
     } catch (error) {
       console.error('Error adding vehicle:', error)
