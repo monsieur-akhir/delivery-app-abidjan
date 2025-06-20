@@ -1,0 +1,375 @@
+[{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryDetailsScreen.tsx",
+	"owner": "typescript",
+	"code": "18046",
+	"severity": 8,
+	"message": "'error' is of type 'unknown'.",
+	"source": "ts",
+	"startLineNumber": 66,
+	"startColumn": 53,
+	"endLineNumber": 66,
+	"endColumn": 58,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryDetailsScreen.tsx",
+	"owner": "typescript",
+	"code": "18046",
+	"severity": 8,
+	"message": "'error' is of type 'unknown'.",
+	"source": "ts",
+	"startLineNumber": 67,
+	"startColumn": 47,
+	"endLineNumber": 67,
+	"endColumn": 52,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryHistoryScreen.tsx",
+	"owner": "typescript",
+	"code": "2724",
+	"severity": 8,
+	"message": "'\"../../styles/colors\"' has no exported member named 'COLORS'. Did you mean 'colors'?",
+	"source": "ts",
+	"startLineNumber": 22,
+	"startColumn": 10,
+	"endLineNumber": 22,
+	"endColumn": 16,
+	"relatedInformation": [
+		{
+			"startLineNumber": 34,
+			"startColumn": 14,
+			"endLineNumber": 34,
+			"endColumn": 20,
+			"message": "'colors' is declared here.",
+			"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/styles/colors.ts"
+		}
+	],
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryHistoryScreen.tsx",
+	"owner": "typescript",
+	"code": "2614",
+	"severity": 8,
+	"message": "Module '\"../../components/DeliveryStatusBadge\"' has no exported member 'DeliveryStatusBadge'. Did you mean to use 'import DeliveryStatusBadge from \"../../components/DeliveryStatusBadge\"' instead?",
+	"source": "ts",
+	"startLineNumber": 24,
+	"startColumn": 10,
+	"endLineNumber": 24,
+	"endColumn": 29,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryHistoryScreen.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'getUserDeliveries' does not exist on type 'UseDeliveryReturn'.",
+	"source": "ts",
+	"startLineNumber": 160,
+	"startColumn": 11,
+	"endLineNumber": 160,
+	"endColumn": 28,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD040",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md040.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD040/fenced-code-language: Fenced code blocks should have a language specified",
+	"source": "markdownlint",
+	"startLineNumber": 15,
+	"startColumn": 1,
+	"endLineNumber": 15,
+	"endColumn": 4
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD022",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md022.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD022/blanks-around-headings: Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below]",
+	"source": "markdownlint",
+	"startLineNumber": 105,
+	"startColumn": 1,
+	"endLineNumber": 105,
+	"endColumn": 16
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD031",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md031.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD031/blanks-around-fences: Fenced code blocks should be surrounded by blank lines",
+	"source": "markdownlint",
+	"startLineNumber": 106,
+	"startColumn": 1,
+	"endLineNumber": 106,
+	"endColumn": 8
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD022",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md022.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD022/blanks-around-headings: Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below]",
+	"source": "markdownlint",
+	"startLineNumber": 113,
+	"startColumn": 1,
+	"endLineNumber": 113,
+	"endColumn": 12
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD031",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md031.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD031/blanks-around-fences: Fenced code blocks should be surrounded by blank lines",
+	"source": "markdownlint",
+	"startLineNumber": 114,
+	"startColumn": 1,
+	"endLineNumber": 114,
+	"endColumn": 8
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD022",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md022.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD022/blanks-around-headings: Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below]",
+	"source": "markdownlint",
+	"startLineNumber": 121,
+	"startColumn": 1,
+	"endLineNumber": 121,
+	"endColumn": 15
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD031",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md031.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD031/blanks-around-fences: Fenced code blocks should be surrounded by blank lines",
+	"source": "markdownlint",
+	"startLineNumber": 122,
+	"startColumn": 1,
+	"endLineNumber": 122,
+	"endColumn": 8
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD022",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md022.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD022/blanks-around-headings: Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below]",
+	"source": "markdownlint",
+	"startLineNumber": 131,
+	"startColumn": 1,
+	"endLineNumber": 131,
+	"endColumn": 47
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD026",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md026.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD026/no-trailing-punctuation: Trailing punctuation in heading [Punctuation: ' :']",
+	"source": "markdownlint",
+	"startLineNumber": 131,
+	"startColumn": 45,
+	"endLineNumber": 131,
+	"endColumn": 47
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD032",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md032.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD032/blanks-around-lists: Lists should be surrounded by blank lines",
+	"source": "markdownlint",
+	"startLineNumber": 132,
+	"startColumn": 1,
+	"endLineNumber": 132,
+	"endColumn": 15
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD022",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md022.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD022/blanks-around-headings: Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below]",
+	"source": "markdownlint",
+	"startLineNumber": 138,
+	"startColumn": 1,
+	"endLineNumber": 138,
+	"endColumn": 51
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD026",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md026.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD026/no-trailing-punctuation: Trailing punctuation in heading [Punctuation: ' :']",
+	"source": "markdownlint",
+	"startLineNumber": 138,
+	"startColumn": 49,
+	"endLineNumber": 138,
+	"endColumn": 51
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD032",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md032.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD032/blanks-around-lists: Lists should be surrounded by blank lines",
+	"source": "markdownlint",
+	"startLineNumber": 139,
+	"startColumn": 1,
+	"endLineNumber": 139,
+	"endColumn": 13
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD032",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md032.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD032/blanks-around-lists: Lists should be surrounded by blank lines",
+	"source": "markdownlint",
+	"startLineNumber": 169,
+	"startColumn": 1,
+	"endLineNumber": 169,
+	"endColumn": 55
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD009",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md009.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD009/no-trailing-spaces: Trailing spaces [Expected: 0 or 2; Actual: 1]",
+	"source": "markdownlint",
+	"startLineNumber": 172,
+	"startColumn": 31,
+	"endLineNumber": 172,
+	"endColumn": 32
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/ENVIRONMENT_VARIABLES.md",
+	"owner": "markdownlint",
+	"code": {
+		"value": "MD047",
+		"target": {
+			"$mid": 1,
+			"path": "/DavidAnson/markdownlint/blob/v0.38.0/doc/md047.md",
+			"scheme": "https",
+			"authority": "github.com"
+		}
+	},
+	"severity": 4,
+	"message": "MD047/single-trailing-newline: Files should end with a single newline character",
+	"source": "markdownlint",
+	"startLineNumber": 172,
+	"startColumn": 31,
+	"endLineNumber": 172,
+	"endColumn": 32
+}]
