@@ -3,15 +3,15 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User } from '../types/models';
-import { loginUser, registerUser, verifyToken } from '../services/api';
+import axios from 'axios';
+import type { User } from '../types/models';
+import type { RegisterUserData } from '../services/api';
+import { login, register, verifyOTP, getApiUrl } from '../services/api';
 
 // Fonction utilitaire pour vérifier la validité des objets
 const isValidObject = (obj: any): boolean => {
   return obj !== null && obj !== undefined && typeof obj === 'object';
 };
-import type { User } from "../types/models"
-import type { RegisterUserData } from "../services/api"
 
 interface AuthContextType {
   user: User | null
