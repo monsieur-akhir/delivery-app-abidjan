@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   View,
@@ -70,7 +71,8 @@ const COLORS = {
   warning: '#FF9500',
   error: '#FF3B30',
   shadow: 'rgba(0, 0, 0, 0.1)',
-  overlay: 'rgba(0, 0, 0, 0.4)'
+  overlay: 'rgba(0, 0, 0, 0.4)',
+  mapBackground: '#F5F5F5'
 }
 
 // Styles modernes
@@ -80,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   
-  // Header moderne
+  // Header moderne avec navigation icons
   modernHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -107,10 +109,10 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   
-  // Map container
+  // Map container avec overlay de navigation
   mapContainer: {
     height: height * 0.4,
-    backgroundColor: COLORS.backgroundSecondary,
+    backgroundColor: COLORS.mapBackground,
     position: 'relative',
   },
   
@@ -121,7 +123,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8E8E8',
   },
   
-  mapOverlay: {
+  // Navigation overlay au top de la carte
+  navigationOverlay: {
     position: 'absolute',
     top: 20,
     left: 20,
@@ -134,37 +137,51 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 5,
   },
   
-  mapOverlayIcon: {
+  vehicleIconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginRight: 12,
   },
   
-  mapOverlayText: {
+  vehicleIcon: {
+    marginRight: 8,
+  },
+  
+  routeText: {
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
     color: COLORS.text,
   },
   
+  // Indicateur de prix en haut à droite
   priceIndicator: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
     backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginLeft: 8,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   
   priceText: {
     color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   },
   
-  // Bottom sheet
+  // Bottom sheet avec handle
   bottomSheet: {
     backgroundColor: COLORS.white,
     borderTopLeftRadius: 24,
@@ -175,7 +192,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
-    maxHeight: height * 0.7,
+    flex: 1,
+    minHeight: height * 0.6,
   },
   
   bottomSheetHandle: {
@@ -188,17 +206,24 @@ const styles = StyleSheet.create({
   },
   
   bottomSheetTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.text,
-    marginBottom: 8,
+    marginBottom: 24,
     paddingHorizontal: 20,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   
-  // Address inputs
+  // Address inputs avec design moderne
   addressSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
+  },
+  
+  addressInputContainer: {
+    position: 'relative',
+    marginBottom: 16,
   },
   
   addressInput: {
@@ -208,17 +233,30 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    marginBottom: 12,
+    minHeight: 56,
   },
   
   addressInputIcon: {
     marginRight: 12,
   },
   
+  pickupDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: COLORS.primary,
+  },
+  
+  deliveryIcon: {
+    width: 12,
+    height: 12,
+  },
+  
   addressInputText: {
     flex: 1,
     fontSize: 16,
     color: COLORS.text,
+    fontWeight: '500',
   },
   
   addressInputPlaceholder: {
@@ -227,17 +265,20 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   
-  // Delivery options
+  // Ligne de connexion entre les adresses
+  connectionLine: {
+    position: 'absolute',
+    left: 36,
+    top: 56,
+    width: 2,
+    height: 16,
+    backgroundColor: COLORS.border,
+  },
+  
+  // Delivery options avec design amélioré
   deliveryOptionsSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
-  },
-  
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 16,
   },
   
   deliveryOptionCard: {
@@ -245,26 +286,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.white,
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     marginBottom: 12,
     borderWidth: 2,
     borderColor: COLORS.border,
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   
   deliveryOptionCardSelected: {
     borderColor: COLORS.primary,
     backgroundColor: COLORS.secondary,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.15,
   },
   
   deliveryOptionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: COLORS.backgroundSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -293,30 +336,37 @@ const styles = StyleSheet.create({
   
   deliveryOptionPrice: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: COLORS.text,
   },
   
-  // Special features section
-  specialFeaturesSection: {
+  // Section promotionnelle
+  promotionalSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
   },
   
-  specialFeatureCard: {
+  promotionalCard: {
     backgroundColor: COLORS.warning,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   
-  specialFeatureText: {
+  promotionalText: {
+    flex: 1,
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    lineHeight: 20,
   },
   
-  // Action button
+  promotionalIcon: {
+    marginLeft: 12,
+  },
+  
+  // Action button avec design moderne
   actionButtonContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20,
@@ -328,7 +378,7 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: COLORS.primary,
     borderRadius: 16,
-    paddingVertical: 16,
+    paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: COLORS.primary,
@@ -340,6 +390,8 @@ const styles = StyleSheet.create({
   
   actionButtonDisabled: {
     backgroundColor: COLORS.textLight,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   
   actionButtonText: {
@@ -360,7 +412,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 12,
-    maxHeight: height * 0.9,
+    maxHeight: height * 0.85,
   },
   
   modalHandle: {
@@ -372,7 +424,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   
-  // Package types
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  
+  // Package types grid
   packageTypesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -385,7 +445,7 @@ const styles = StyleSheet.create({
     width: (width - 52) / 3,
     backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 12,
+    padding: 16,
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 2,
@@ -420,9 +480,10 @@ const styles = StyleSheet.create({
   
   packageTypeLabelSelected: {
     color: COLORS.primary,
+    fontWeight: '600',
   },
   
-  // Loading
+  // Loading modal
   loadingContainer: {
     flex: 1,
     backgroundColor: COLORS.overlay,
@@ -432,14 +493,14 @@ const styles = StyleSheet.create({
   
   loadingContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 20,
+    padding: 32,
     alignItems: 'center',
     shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 10,
   },
   
   loadingText: {
@@ -447,6 +508,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: COLORS.text,
+  },
+  
+  // Informations supplémentaires
+  deliveryInfoSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  
+  infoIcon: {
+    marginRight: 12,
+  },
+  
+  infoText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
 })
 
@@ -516,45 +598,87 @@ const CreateDeliveryScreen: React.FC = () => {
   const { user } = useAuth()
   const { isConnected, addPendingUpload } = useNetwork()
   const { createDelivery, getPriceEstimate, estimate } = useDelivery()
+  const { } = useUser()
+  const { 
+    alertVisible,
+    alertConfig,
+    toastVisible,
+    toastConfig,
+    showErrorAlert, 
+    showSuccessAlert, 
+    showInfoAlert, 
+    showConfirmationAlert,
+    hideAlert,
+    hideToast
+  } = useAlert()
   const { t } = useTranslation()
 
-  // State management
-  const [pickupAddress, setPickupAddress] = useState('')
-  const [deliveryAddress, setDeliveryAddress] = useState('')
+  const mapRef = useRef<any>(null)
+
+  // Form states - conservation de votre logique existante
+  const [packageType, setPackageType] = useState<string>('small')
+  const [selectedPackageType, setSelectedPackageType] = useState<string>('small')
+  const [packageSize, setPackageSize] = useState<string>('small')
+  const [packageWeight, setPackageWeight] = useState<string>('')
+  const [isFragile, setIsFragile] = useState<boolean>(false)
+  const [pickupAddress, setPickupAddress] = useState<string>('Rue M60, 918')
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('')
   const [pickupLocation, setPickupLocation] = useState<Address | null>(null)
   const [deliveryLocation, setDeliveryLocation] = useState<Address | null>(null)
-  const [selectedDeliveryType, setSelectedDeliveryType] = useState('moto')
+  const [proposedPrice, setProposedPrice] = useState<string>('')
+  const [packageDescription, setPackageDescription] = useState<string>('')
+  const [specialInstructions, setSpecialInstructions] = useState<string>('')
+  const [weather, setWeather] = useState<any>(null)
+  const [recipientName, setRecipientName] = useState<string>('')
+  const [recipientPhone, setRecipientPhone] = useState<string>('')
+  const [isUrgent, setIsUrgent] = useState<boolean>(false)
+
+  // UI states
+  const [loading, setLoading] = useState<boolean>(false)
+  const [showMap, setShowMap] = useState<boolean>(false)
+  const [weatherData, setWeatherData] = useState<Weather | null>(null)
+  const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null)
+  const [recommendedVehicle, setRecommendedVehicle] = useState<{
+    type: VehicleType
+    name: string
+    reason: string
+    priceMultiplier: number
+  } | null>(null)
+
+  // États pour les options dynamiques - conservation de votre logique
+  const [deliveryOptions, setDeliveryOptions] = useState<any>(null)
+  const [selectedVehicleType, setSelectedVehicleType] = useState<string>('moto')
+  const [selectedSpeed, setSelectedSpeed] = useState<string>('')
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([])
+  const [totalPrice, setTotalPrice] = useState<number>(400)
   const [estimatedPrice, setEstimatedPrice] = useState(400)
   const [showPackageModal, setShowPackageModal] = useState(false)
-  const [showDeliveryModal, setShowDeliveryModal] = useState(false)
-  const [selectedPackageType, setSelectedPackageType] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  // Delivery options
-  const deliveryOptions = [
+  // Options de livraison modernisées
+  const modernDeliveryOptions = [
     {
       key: 'moto',
       title: 'Livraison à moto',
       subtitle: 'à partir de 400 F',
-      icon: 'motorcycle',
+      icon: '🏍️',
       price: 400,
-      image: '🏍️'
+      time: '25-35 min'
     },
     {
       key: 'voiture', 
       title: 'Livraison en voiture',
       subtitle: 'à partir de 500 F',
-      icon: 'car',
+      icon: '🚗',
       price: 500,
-      image: '🚗'
+      time: '30-45 min'
     },
     {
       key: 'express',
       title: 'Express Cargo',
       subtitle: 'à partir de 3100 F',
-      icon: 'truck',
+      icon: '🚛',
       price: 3100,
-      image: '🚛'
+      time: '15-25 min'
     }
   ]
 
@@ -568,28 +692,267 @@ const CreateDeliveryScreen: React.FC = () => {
     { key: 'documents', label: 'Documents', icon: 'file-text' }
   ]
 
-  const handleDeliverySelection = (option: any) => {
-    setSelectedDeliveryType(option.key)
-    setEstimatedPrice(option.price)
+  // Conservation de tous vos useEffect existants
+  useEffect(() => {
+    if (params?.searchQuery) {
+      setPickupAddress(params.searchQuery)
+    }
+  }, [params])
+
+  useEffect(() => {
+    // Charger dynamiquement les options depuis le backend
+    const fetchOptions = async () => {
+      try {
+        const response = await api.get('/api/deliveries/options')
+        setDeliveryOptions(response.data)
+      } catch (e) {
+        // fallback statique si besoin
+        setDeliveryOptions({
+          vehicle_types: [
+            { type: 'moto', label: 'Livraison à moto', min_price: 500, icon: 'motorcycle' },
+            { type: 'voiture', label: 'Livraison en voiture', min_price: 500, icon: 'car' },
+            { type: 'interville', label: 'Intervilles', min_price: 1990, icon: 'bus' }
+          ],
+          delivery_speeds: [
+            { key: 'urgent', label: 'Urgent', min_price: 700, delay: '30min', icon: 'flash' },
+            { key: 'normal', label: 'Un peu plus long', min_price: 500, delay: '1h', icon: 'clock' },
+            { key: 'slow', label: 'En 3h', min_price: 400, delay: '3h', icon: 'time' }
+          ],
+          extras: [
+            { key: 'isothermal_bag', label: 'Sac isotherme', price: 200, icon: 'thermometer' },
+            { key: 'comment', label: 'Commentaire', price: 0, icon: 'chatbubble' }
+          ]
+        })
+      }
+    }
+    fetchOptions()
+  }, [])
+
+  useEffect(() => {
+    if (pickupLocation && deliveryLocation) {
+      calculatePriceEstimate()
+      fetchWeatherData()
+    }
+  }, [pickupLocation, deliveryLocation, packageType, selectedVehicleType, selectedSpeed, selectedExtras])
+
+  // Conservation de toutes vos fonctions existantes
+  const calculatePriceEstimate = async () => {
+    if (!pickupLocation || !deliveryLocation) return
+
+    try {
+      const distance = calculateDistance(
+        { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
+        { latitude: deliveryLocation.latitude, longitude: deliveryLocation.longitude }
+      )
+
+      const estimateData = {
+        pickup_address: pickupAddress,
+        delivery_address: deliveryAddress,
+        pickup_lat: pickupLocation.latitude,
+        pickup_lng: pickupLocation.longitude,
+        delivery_lat: deliveryLocation.latitude,
+        delivery_lng: deliveryLocation.longitude,
+        package_type: packageType,
+        proposed_price: 0,
+        recipient_name: '',
+        distance: distance
+      }
+
+      await getPriceEstimate(estimateData)
+
+      if (estimate) {
+        let basePrice = estimate.estimated_price
+        
+        // Ajouter les coûts des options sélectionnées
+        if (selectedVehicleType && deliveryOptions?.vehicle_types) {
+          const vehicle = deliveryOptions.vehicle_types.find((v: any) => v.type === selectedVehicleType)
+          if (vehicle) {
+            basePrice = Math.max(basePrice, vehicle.min_price)
+          }
+        }
+
+        if (selectedSpeed && deliveryOptions?.delivery_speeds) {
+          const speed = deliveryOptions.delivery_speeds.find((s: any) => s.key === selectedSpeed)
+          if (speed) {
+            basePrice = Math.max(basePrice, speed.min_price)
+          }
+        }
+
+        // Ajouter le coût des extras
+        let extrasCost = 0
+        if (selectedExtras.length > 0 && deliveryOptions?.extras) {
+          selectedExtras.forEach(extraKey => {
+            const extra = deliveryOptions.extras.find((e: any) => e.key === extraKey)
+            if (extra) {
+              extrasCost += extra.price
+            }
+          })
+        }
+
+        const finalPrice = basePrice + extrasCost
+        setTotalPrice(finalPrice)
+        setRecommendedPrice(finalPrice)
+        setProposedPrice(finalPrice.toString())
+        setEstimatedPrice(finalPrice)
+      }
+
+      // Recommendation de véhicule
+      const vehicleData = {
+        pickup_lat: pickupLocation.latitude,
+        pickup_lng: pickupLocation.longitude,
+        delivery_lat: deliveryLocation.latitude,
+        delivery_lng: deliveryLocation.longitude,
+        package_type: selectedPackageType,
+        package_weight: parseFloat(packageWeight) || 1,
+        is_fragile: isFragile,
+        distance: distance
+      }
+
+      try {
+        const recommendation = await DeliveryService.getVehicleRecommendation(vehicleData)
+        setRecommendedVehicle({
+          type: recommendation.recommended_vehicle as VehicleType,
+          name: getVehicleName(recommendation.recommended_vehicle as VehicleType),
+          reason: recommendation.reason,
+          priceMultiplier: recommendation.price_multiplier || 1.0
+        })
+      } catch (error) {
+        console.warn('Erreur lors de la recommandation de véhicule:', error)
+      }
+    } catch (error) {
+      console.error('Erreur lors du calcul du prix:', error)
+      showErrorAlert('Erreur', 'Impossible de calculer le prix estimé')
+    }
   }
 
-  const handleCreateDelivery = async () => {
-    if (!pickupAddress || !deliveryAddress || !selectedDeliveryType) {
-      return
+  const fetchWeatherData = async () => {
+    if (!pickupLocation || !deliveryLocation) return
+
+    try {
+      const response = await fetch(
+        `https://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${pickupLocation.latitude},${pickupLocation.longitude}`
+      )
+      const data = await response.json()
+      setWeatherData(data)
+    } catch (error) {
+      console.warn('Erreur lors de la récupération des données météo:', error)
     }
+  }
+
+  const getVehicleName = (type: VehicleType): string => {
+    switch (type) {
+      case 'motorcycle':
+        return 'Moto'
+      case 'car':
+        return 'Voiture'
+      case 'van':
+        return 'Camionnette'
+      case 'truck':
+        return 'Camion'
+      default:
+        return 'Véhicule'
+    }
+  }
+
+  const handleDeliverySelection = (option: any) => {
+    setSelectedVehicleType(option.key)
+    setEstimatedPrice(option.price)
+    setTotalPrice(option.price)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return
 
     setLoading(true)
+
+    const payload = {
+      pickup_address: pickupAddress,
+      pickup_commune: extractCommune(pickupAddress),
+      pickup_lat: pickupLocation!.latitude,
+      pickup_lng: pickupLocation!.longitude,
+      delivery_address: deliveryAddress,
+      delivery_commune: extractCommune(deliveryAddress),
+      delivery_lat: deliveryLocation!.latitude,
+      delivery_lng: deliveryLocation!.longitude,
+      package_type: packageType,
+      package_description: packageDescription,
+      package_size: packageSize,
+      package_weight: parseFloat(packageWeight) || 1,
+      is_fragile: isFragile,
+      proposed_price: parseFloat(proposedPrice),
+      recipient_name: recipientName,
+      recipient_phone: recipientPhone,
+      special_instructions: specialInstructions,
+      distance: calculateDistance(
+        { latitude: pickupLocation!.latitude, longitude: pickupLocation!.longitude },
+        { latitude: deliveryLocation!.latitude, longitude: deliveryLocation!.longitude }
+      ),
+      weather_conditions: weatherData?.current?.condition || 'clear',
+      vehicle_type: selectedVehicleType,
+      delivery_speed: selectedSpeed,
+      extras: selectedExtras
+    }
+
     try {
-      // Simulation d'appel API
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Navigation vers écran de suivi
-      navigation.navigate('TrackDelivery', { deliveryId: 'DEL123' })
+      if (!isConnected) {
+        addPendingUpload({
+          type: 'delivery',
+          data: payload,
+          retries: 0
+        })
+        showInfoAlert('Hors ligne', 'Votre livraison sera créée dès la reconnexion')
+        navigation.navigate('Home')
+        return
+      }
+
+      const result = await createDelivery(payload)
+      showSuccessAlert('Succès', 'Votre livraison a été créée avec succès!')
+      navigation.navigate('TrackDelivery', { deliveryId: result.id })
     } catch (error) {
-      console.error('Erreur création livraison:', error)
+      console.error('Erreur lors de la création de la livraison:', error)
+      showErrorAlert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const validateForm = (): boolean => {
+    if (!pickupAddress.trim()) {
+      showErrorAlert('Erreur', 'Veuillez saisir l\'adresse de ramassage')
+      return false
+    }
+    if (!deliveryAddress.trim()) {
+      showErrorAlert('Erreur', 'Veuillez saisir l\'adresse de livraison')
+      return false
+    }
+    if (!pickupLocation) {
+      showErrorAlert('Erreur', 'Veuillez sélectionner une adresse de ramassage valide')
+      return false
+    }
+    if (!deliveryLocation) {
+      showErrorAlert('Erreur', 'Veuillez sélectionner une adresse de livraison valide')
+      return false
+    }
+    return true
+  }
+
+  const handleAddressSelect = (address: any, type: 'pickup' | 'delivery') => {
+    if (type === 'pickup') {
+      setPickupLocation(address)
+      setPickupAddress(address.description)
+    } else {
+      setDeliveryLocation(address)
+      setDeliveryAddress(address.description)
+    }
+  }
+
+  const toggleExtra = (extraKey: string) => {
+    setSelectedExtras(prev => 
+      prev.includes(extraKey) 
+        ? prev.filter(k => k !== extraKey) 
+        : [...prev, extraKey]
+    )
   }
 
   const renderDeliveryOption = (option: any) => (
@@ -597,20 +960,25 @@ const CreateDeliveryScreen: React.FC = () => {
       key={option.key}
       style={[
         styles.deliveryOptionCard,
-        selectedDeliveryType === option.key && styles.deliveryOptionCardSelected
+        selectedVehicleType === option.key && styles.deliveryOptionCardSelected
       ]}
       onPress={() => handleDeliverySelection(option)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
       <View style={[
         styles.deliveryOptionIcon,
-        selectedDeliveryType === option.key && styles.deliveryOptionIconSelected
+        selectedVehicleType === option.key && styles.deliveryOptionIconSelected
       ]}>
-        <Text style={{ fontSize: 24 }}>{option.image}</Text>
+        <Text style={{ fontSize: 28 }}>{option.icon}</Text>
       </View>
       <View style={styles.deliveryOptionInfo}>
         <Text style={styles.deliveryOptionTitle}>{option.title}</Text>
         <Text style={styles.deliveryOptionSubtitle}>{option.subtitle}</Text>
+        {option.time && (
+          <Text style={[styles.deliveryOptionSubtitle, { marginTop: 2, fontSize: 12 }]}>
+            ⏱️ {option.time}
+          </Text>
+        )}
       </View>
       <Text style={styles.deliveryOptionPrice}>{formatPrice(option.price)}</Text>
     </TouchableOpacity>
@@ -626,7 +994,7 @@ const CreateDeliveryScreen: React.FC = () => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHandle} />
-          <Text style={styles.bottomSheetTitle}>Type de colis</Text>
+          <Text style={styles.modalTitle}>Type de colis</Text>
           
           <View style={styles.packageTypesGrid}>
             {packageTypes.map((type) => (
@@ -638,7 +1006,9 @@ const CreateDeliveryScreen: React.FC = () => {
                 ]}
                 onPress={() => {
                   setSelectedPackageType(type.key)
+                  setPackageType(type.key)
                   setShowPackageModal(false)
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
                 }}
               >
                 <View style={[
@@ -677,12 +1047,12 @@ const CreateDeliveryScreen: React.FC = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Envoyer un colis</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <Feather name="more-horizontal" size={20} color={COLORS.text} />
+          <Feather name="settings" size={20} color={COLORS.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        {/* Map Section */}
+        {/* Map Section avec overlay navigation */}
         <View style={styles.mapContainer}>
           {pickupLocation && deliveryLocation ? (
             <MapView
@@ -691,21 +1061,29 @@ const CreateDeliveryScreen: React.FC = () => {
             />
           ) : (
             <View style={styles.mapPlaceholder}>
-              <Text style={{ color: COLORS.textSecondary }}>Carte interactive</Text>
+              <Feather name="map" size={48} color={COLORS.textSecondary} />
+              <Text style={{ color: COLORS.textSecondary, marginTop: 8 }}>
+                Carte interactive
+              </Text>
             </View>
           )}
           
-          {/* Map Overlay */}
-          <View style={styles.mapOverlay}>
-            <View style={styles.mapOverlayIcon}>
-              <Feather name="navigation" size={20} color={COLORS.primary} />
+          {/* Navigation overlay avec icônes de véhicules */}
+          <View style={styles.navigationOverlay}>
+            <View style={styles.vehicleIconsContainer}>
+              <Text style={[styles.vehicleIcon, { fontSize: 16 }]}>🚛</Text>
+              <Text style={[styles.vehicleIcon, { fontSize: 16 }]}>🚗</Text>
+              <Text style={[styles.vehicleIcon, { fontSize: 16 }]}>🏍️</Text>
             </View>
-            <Text style={styles.mapOverlayText}>
+            <Text style={styles.routeText}>
               {pickupAddress || 'Sélectionner une adresse'}
             </Text>
-            <View style={styles.priceIndicator}>
-              <Text style={styles.priceText}>F {estimatedPrice}</Text>
-            </View>
+            <Feather name="navigation" size={20} color={COLORS.primary} />
+          </View>
+          
+          {/* Indicateur de prix */}
+          <View style={styles.priceIndicator}>
+            <Text style={styles.priceText}>F {estimatedPrice}</Text>
           </View>
         </View>
 
@@ -714,43 +1092,88 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.bottomSheetHandle} />
           <Text style={styles.bottomSheetTitle}>ENVOYER UN COLIS</Text>
 
-          {/* Address Inputs */}
+          {/* Address Inputs avec design moderne */}
           <View style={styles.addressSection}>
-            <AddressAutocomplete
-              label="Adresse de ramassage"
-              value={pickupAddress}
-              onChangeText={setPickupAddress}
-              onAddressSelect={(address) => {
-                setPickupLocation(address)
-                setPickupAddress(address.description)
-              }}
-              placeholder="Où doit-on récupérer le colis ?"
-            />
+            <View style={styles.addressInputContainer}>
+              <TouchableOpacity 
+                style={styles.addressInput}
+                onPress={() => {
+                  // Ouvrir la sélection d'adresse de pickup
+                }}
+              >
+                <View style={styles.addressInputIcon}>
+                  <View style={styles.pickupDot} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 2 }}>
+                    Prise en charge
+                  </Text>
+                  <Text style={styles.addressInputText}>
+                    {pickupAddress || 'Rue M60, 918'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              
+              <View style={styles.connectionLine} />
+            </View>
             
-            <AddressAutocomplete
-              label="Adresse de livraison"
-              value={deliveryAddress}
-              onChangeText={setDeliveryAddress}
-              onAddressSelect={(address) => {
-                setDeliveryLocation(address)
-                setDeliveryAddress(address.description)
+            <TouchableOpacity 
+              style={styles.addressInput}
+              onPress={() => {
+                // Ouvrir la sélection d'adresse de livraison
               }}
-              placeholder="Où doit-on livrer le colis ?"
-            />
+            >
+              <View style={styles.addressInputIcon}>
+                <Feather name="navigation" size={16} color={COLORS.textSecondary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 2 }}>
+                  Adresse de livraison
+                </Text>
+                <Text style={[
+                  deliveryAddress ? styles.addressInputText : styles.addressInputPlaceholder
+                ]}>
+                  {deliveryAddress || 'Où doit-on livrer le colis ?'}
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
-          {/* Delivery Options */}
+          {/* Delivery Options modernisées */}
           <View style={styles.deliveryOptionsSection}>
-            {deliveryOptions.map(renderDeliveryOption)}
+            {modernDeliveryOptions.map(renderDeliveryOption)}
           </View>
 
-          {/* Special Features */}
-          <View style={styles.specialFeaturesSection}>
-            <TouchableOpacity style={styles.specialFeatureCard}>
-              <Text style={styles.specialFeatureText}>
+          {/* Section promotionnelle */}
+          <View style={styles.promotionalSection}>
+            <TouchableOpacity style={styles.promotionalCard}>
+              <Text style={styles.promotionalText}>
                 💰 Gagnez du temps et récupérez vos achats avec la Livraison
               </Text>
+              <View style={styles.promotionalIcon}>
+                <Feather name="chevron-right" size={20} color={COLORS.white} />
+              </View>
             </TouchableOpacity>
+          </View>
+
+          {/* Informations de livraison */}
+          <View style={styles.deliveryInfoSection}>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <Feather name="clock" size={16} color={COLORS.textSecondary} />
+              </View>
+              <Text style={styles.infoText}>
+                Livraison estimée en 25-35 min
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <Feather name="shield" size={16} color={COLORS.textSecondary} />
+              </View>
+              <Text style={styles.infoText}>
+                Assurance incluse jusqu'à 50 000 F
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -760,10 +1183,10 @@ const CreateDeliveryScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.actionButton,
-            (!pickupAddress || !deliveryAddress || !selectedDeliveryType) && styles.actionButtonDisabled
+            (!pickupAddress || !deliveryAddress || !selectedVehicleType) && styles.actionButtonDisabled
           ]}
-          onPress={handleCreateDelivery}
-          disabled={!pickupAddress || !deliveryAddress || !selectedDeliveryType}
+          onPress={handleSubmit}
+          disabled={!pickupAddress || !deliveryAddress || !selectedVehicleType || loading}
         >
           <Text style={styles.actionButtonText}>
             Choix de la méthode de livraison
@@ -783,6 +1206,23 @@ const CreateDeliveryScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Alerts et Toasts */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onDismiss={hideAlert}
+        onConfirm={alertConfig.onConfirm}
+      />
+
+      <CustomToast
+        visible={toastVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onDismiss={hideToast}
+      />
     </SafeAreaView>
   )
 }
