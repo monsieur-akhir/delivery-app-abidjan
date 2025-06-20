@@ -1,271 +1,426 @@
-import React, { useState, useEffect } from 'react'
+
+import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  FlatList,
-  TouchableOpacity,
+  ScrollView,
   Alert,
+  Dimensions,
   ActivityIndicator,
-  RefreshControl,
-  Image
-} from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
-import DeliveryService from '../../services/DeliveryService'
+  RefreshControl
+} from 'react-native';
+import {
+  Text,
+  Card,
+  Button,
+  Avatar,
+  Chip,
+  Surface,
+  IconButton,
+  Divider
+} from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+
+import StarRating from '../../components/StarRating';
+import { formatCurrency, formatDuration } from '../../utils/formatters';
+
+const { width } = Dimensions.get('window');
+
+const COLORS = {
+  primary: '#2196F3',
+  secondary: '#FFC107',
+  success: '#4CAF50',
+  error: '#F44336',
+  warning: '#FF9800',
+  text: '#333333',
+  textSecondary: '#666666',
+  background: '#F5F5F5',
+  white: '#FFFFFF',
+  shadow: '#000000',
+  border: '#E0E0E0',
+};
 
 interface Bid {
-  id: number
-  courier: {
-    id: number
-    full_name: string
-    phone: string
-    profile_image?: string
-    average_rating: number
-    total_deliveries: number
-  }
-  amount: number
-  estimated_time: number
-  message?: string
-  created_at: string
-  status: 'pending' | 'accepted' | 'rejected'
+  id: string;
+  courierId: string;
+  courierName: string;
+  courierPhoto?: string;
+  courierRating: number;
+  courierDeliveries: number;
+  price: number;
+  estimatedDuration: number;
+  vehicleType: string;
+  isOnline: boolean;
+  distance: number;
+  specialOffer?: string;
+  arrivalTime: string;
 }
 
-interface BidsScreenProps {
-  route: {
-    params: {
-      deliveryId: number
-    }
-  }
-  navigation: any
-}
+interface BidsScreenProps {}
 
-const BidsScreen = ({ route, navigation }: BidsScreenProps) => {
-  const { deliveryId } = route.params
-  const [bids, setBids] = useState<Bid[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [acceptingBid, setAcceptingBid] = useState<number | null>(null)
+const BidsScreen: React.FC<BidsScreenProps> = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { deliveryRequest } = route.params as any;
+
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [acceptingBid, setAcceptingBid] = useState<string | null>(null);
 
   useEffect(() => {
-    loadBids()
-  }, [deliveryId])
+    loadBids();
+  }, []);
 
-  const loadBids = async () => {
-    try {
-      const response = await DeliveryService.getDeliveryBids(deliveryId.toString())
-      setBids(response.map((bid: any) => ({
-        ...bid,
-        courier: bid.courier || {
-          id: 0,
-          full_name: 'Coursier inconnu',
-          phone: '',
-          profile_image: undefined,
-          average_rating: 0,
-          total_deliveries: 0
-        }
-      })))
-    } catch (error) {
-      console.error('Erreur lors du chargement des enchères:', error)
-      Alert.alert('Erreur', 'Impossible de charger les enchères')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
+  const loadBids = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
-  }
 
-  const handleRefresh = () => {
-    setRefreshing(true)
-    loadBids()
-  }
+    try {
+      // Simulation de chargement des offres de coursiers
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Données simulées des offres
+      const mockBids: Bid[] = [
+        {
+          id: '1',
+          courierId: 'courier_1',
+          courierName: 'Kouamé Jean',
+          courierPhoto: 'https://randomuser.me/api/portraits/men/1.jpg',
+          courierRating: 4.8,
+          courierDeliveries: 127,
+          price: deliveryRequest.estimatedPrice - 200,
+          estimatedDuration: 25,
+          vehicleType: 'Moto',
+          isOnline: true,
+          distance: 2.3,
+          arrivalTime: '5 min',
+          specialOffer: 'Livraison express gratuite'
+        },
+        {
+          id: '2',
+          courierId: 'courier_2',
+          courierName: 'Fatou Sanogo',
+          courierPhoto: 'https://randomuser.me/api/portraits/women/2.jpg',
+          courierRating: 4.9,
+          courierDeliveries: 203,
+          price: deliveryRequest.estimatedPrice,
+          estimatedDuration: 20,
+          vehicleType: 'Scooter',
+          isOnline: true,
+          distance: 1.8,
+          arrivalTime: '3 min'
+        },
+        {
+          id: '3',
+          courierId: 'courier_3',
+          courierName: 'Mamadou Traoré',
+          courierPhoto: 'https://randomuser.me/api/portraits/men/3.jpg',
+          courierRating: 4.7,
+          courierDeliveries: 89,
+          price: deliveryRequest.estimatedPrice + 300,
+          estimatedDuration: 15,
+          vehicleType: 'Voiture',
+          isOnline: true,
+          distance: 3.1,
+          arrivalTime: '8 min',
+          specialOffer: 'Service premium'
+        },
+        {
+          id: '4',
+          courierId: 'courier_4',
+          courierName: 'Aissatou Diallo',
+          courierPhoto: 'https://randomuser.me/api/portraits/women/4.jpg',
+          courierRating: 4.6,
+          courierDeliveries: 156,
+          price: deliveryRequest.estimatedPrice - 100,
+          estimatedDuration: 30,
+          vehicleType: 'Vélo',
+          isOnline: true,
+          distance: 1.5,
+          arrivalTime: '2 min'
+        }
+      ];
 
-  const handleAcceptBid = async (bidId: number) => {
+      setBids(mockBids.sort((a, b) => a.price - b.price));
+    } catch (error) {
+      console.error('Erreur lors du chargement des offres:', error);
+      Alert.alert('Erreur', 'Impossible de charger les offres. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleAcceptBid = async (bid: Bid) => {
     Alert.alert(
-      'Accepter cette enchère',
-      'Voulez-vous vraiment accepter cette enchère ? Cette action est irréversible.',
+      'Confirmer la sélection',
+      `Voulez-vous accepter l'offre de ${bid.courierName} pour ${formatCurrency(bid.price)} ?`,
       [
-        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Annuler',
+          style: 'cancel'
+        },
         {
           text: 'Accepter',
           onPress: async () => {
-            setAcceptingBid(bidId)
+            setAcceptingBid(bid.id);
+            
             try {
-              await DeliveryService.acceptBid(deliveryId.toString(), bidId)
-              Alert.alert('Succès', 'Enchère acceptée! Le coursier a été assigné.', [
-                {
-                  text: 'OK',
-                  onPress: () => navigation.navigate('ActiveOrderTracking', { deliveryId })
+              // Simulation de l'acceptation de l'offre
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              
+              // Redirection vers l'écran de suivi
+              navigation.replace('TrackDeliveryScreen', {
+                deliveryId: 'delivery_' + Date.now(),
+                delivery: {
+                  ...deliveryRequest,
+                  courier: {
+                    id: bid.courierId,
+                    name: bid.courierName,
+                    photo: bid.courierPhoto,
+                    rating: bid.courierRating,
+                    phone: '+225 07 00 00 00 00',
+                    vehicleType: bid.vehicleType
+                  },
+                  price: bid.price,
+                  estimatedDuration: bid.estimatedDuration,
+                  status: 'confirmed',
+                  arrivalTime: bid.arrivalTime
                 }
-              ])
+              });
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
+              console.error('Erreur lors de l\'acceptation:', error);
+              Alert.alert('Erreur', 'Impossible d\'accepter l\'offre. Veuillez réessayer.');
             } finally {
-              setAcceptingBid(null)
+              setAcceptingBid(null);
             }
           }
         }
       ]
-    )
-  }
+    );
+  };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price)
-  }
-
-  const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    if (hours > 0) {
-      return `${hours}h ${mins}min`
+  const getVehicleIcon = (vehicleType: string) => {
+    switch (vehicleType.toLowerCase()) {
+      case 'moto':
+        return 'motorcycle';
+      case 'scooter':
+        return 'scooter';
+      case 'voiture':
+        return 'car-sport';
+      case 'vélo':
+        return 'bicycle';
+      default:
+        return 'car';
     }
-    return `${mins} min`
-  }
+  };
 
-  const renderBidItem = ({ item }: { item: Bid }) => (
-    <View style={styles.bidCard}>
-      <View style={styles.bidHeader}>
-        <View style={styles.courierInfo}>
-          <Image
-            source={
-              item.courier.profile_image
-                ? { uri: item.courier.profile_image }
-                : require('../../assets/default-avatar.png')
-            }
-            style={styles.courierAvatar}
+  const renderBidCard = (bid: Bid, index: number) => (
+    <Card key={bid.id} style={[styles.bidCard, index === 0 && styles.bestOfferCard]}>
+      <Card.Content>
+        {index === 0 && (
+          <View style={styles.bestOfferBadge}>
+            <Chip
+              icon="star"
+              style={styles.bestOfferChip}
+              textStyle={styles.bestOfferText}
+            >
+              Meilleure offre
+            </Chip>
+          </View>
+        )}
+
+        <View style={styles.courierHeader}>
+          <Avatar.Image
+            size={60}
+            source={{ uri: bid.courierPhoto || 'https://via.placeholder.com/60' }}
           />
-          <View style={styles.courierDetails}>
-            <Text style={styles.courierName}>{item.courier.full_name}</Text>
-            <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={14} color="#FFD700" />
+          
+          <View style={styles.courierInfo}>
+            <View style={styles.courierNameRow}>
+              <Text style={styles.courierName}>{bid.courierName}</Text>
+              {bid.isOnline && (
+                <View style={styles.onlineIndicator}>
+                  <View style={styles.onlineDot} />
+                  <Text style={styles.onlineText}>En ligne</Text>
+                </View>
+              )}
+            </View>
+            
+            <View style={styles.courierStats}>
+              <StarRating rating={bid.courierRating} size={16} />
               <Text style={styles.ratingText}>
-                {item.courier.average_rating.toFixed(1)} ({item.courier.total_deliveries} livraisons)
+                {bid.courierRating} ({bid.courierDeliveries} livraisons)
               </Text>
+            </View>
+            
+            <View style={styles.vehicleInfo}>
+              <Ionicons 
+                name={getVehicleIcon(bid.vehicleType)} 
+                size={16} 
+                color={COLORS.textSecondary} 
+              />
+              <Text style={styles.vehicleText}>{bid.vehicleType}</Text>
+              <Text style={styles.distanceText}>• {bid.distance} km</Text>
+              <Text style={styles.arrivalText}>• Arrivée: {bid.arrivalTime}</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.bidAmount}>
-          <Text style={styles.amountText}>{formatPrice(item.amount)} FCFA</Text>
-          <Text style={styles.timeText}>{formatTime(item.estimated_time)}</Text>
+        <Divider style={styles.divider} />
+
+        <View style={styles.offerDetails}>
+          <View style={styles.priceSection}>
+            <Text style={styles.priceLabel}>Prix de la course</Text>
+            <Text style={styles.priceValue}>{formatCurrency(bid.price)}</Text>
+          </View>
+          
+          <View style={styles.durationSection}>
+            <Text style={styles.durationLabel}>Durée estimée</Text>
+            <Text style={styles.durationValue}>{formatDuration(bid.estimatedDuration)}</Text>
+          </View>
         </View>
-      </View>
 
-      {item.message && (
-        <View style={styles.messageContainer}>
-          <Text style={styles.messageText}>{item.message}</Text>
-        </View>
-      )}
-
-      <View style={styles.bidFooter}>
-        <Text style={styles.bidTime}>
-          Enchère placée {new Date(item.created_at).toLocaleDateString('fr-FR')} à{' '}
-          {new Date(item.created_at).toLocaleTimeString('fr-FR')}
-        </Text>
-
-        {item.status === 'pending' && (
-          <TouchableOpacity
-            style={[
-              styles.acceptButton,
-              acceptingBid === item.id && styles.acceptButtonDisabled
-            ]}
-            onPress={() => handleAcceptBid(item.id)}
-            disabled={acceptingBid === item.id}
-          >
-            {acceptingBid === item.id ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-                <Text style={styles.acceptButtonText}>Accepter</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
-
-        {item.status === 'accepted' && (
-          <View style={styles.statusBadge}>
-            <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-            <Text style={styles.statusText}>Acceptée</Text>
+        {bid.specialOffer && (
+          <View style={styles.specialOfferContainer}>
+            <Chip
+              icon="gift"
+              style={styles.specialOfferChip}
+              textStyle={styles.specialOfferText}
+            >
+              {bid.specialOffer}
+            </Chip>
           </View>
         )}
 
-        {item.status === 'rejected' && (
-          <View style={[styles.statusBadge, { backgroundColor: '#ffebee' }]}>
-            <Ionicons name="close-circle" size={16} color="#f44336" />
-            <Text style={[styles.statusText, { color: '#f44336' }]}>Rejetée</Text>
+        <Button
+          mode="contained"
+          onPress={() => handleAcceptBid(bid)}
+          disabled={acceptingBid !== null}
+          loading={acceptingBid === bid.id}
+          style={[styles.acceptButton, index === 0 && styles.bestOfferButton]}
+          contentStyle={styles.acceptButtonContent}
+          labelStyle={styles.acceptButtonLabel}
+        >
+          {acceptingBid === bid.id ? 'Confirmation...' : 'Accepter cette offre'}
+        </Button>
+      </Card.Content>
+    </Card>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Surface style={styles.header}>
+          <View style={styles.headerContent}>
+            <IconButton
+              icon="arrow-left"
+              size={24}
+              onPress={() => navigation.goBack()}
+            />
+            <Text style={styles.headerTitle}>Propositions de coursiers</Text>
+            <View style={{ width: 40 }} />
           </View>
-        )}
-      </View>
-    </View>
-  )
-
-  const sortedBids = bids.sort((a, b) => {
-    // Les enchères acceptées en premier
-    if (a.status === 'accepted' && b.status !== 'accepted') return -1
-    if (b.status === 'accepted' && a.status !== 'accepted') return 1
-
-    // Puis par prix croissant
-    return a.amount - b.amount
-  })
+        </Surface>
+        
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Chargement des offres...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={['#007AFF', '#0056CC']} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Enchères reçues</Text>
-        <TouchableOpacity onPress={handleRefresh}>
-          <Ionicons name="refresh" size={24} color="#ffffff" />
-        </TouchableOpacity>
-      </LinearGradient>
+      <Surface style={styles.header}>
+        <View style={styles.headerContent}>
+          <IconButton
+            icon="arrow-left"
+            size={24}
+            onPress={() => navigation.goBack()}
+          />
+          <Text style={styles.headerTitle}>Propositions de coursiers</Text>
+          <View style={{ width: 40 }} />
+        </View>
+      </Surface>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement des enchères...</Text>
-        </View>
-      ) : bids.length > 0 ? (
-        <FlatList
-          data={sortedBids}
-          renderItem={renderBidItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContainer}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-          showsVerticalScrollIndicator={false}
-        />
-      ) : (
-        <View style={styles.emptyState}>
-          <Ionicons name="folder-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyTitle}>Aucune enchère reçue</Text>
-          <Text style={styles.emptyMessage}>
-            Les coursiers n'ont pas encore placé d'enchères pour cette livraison
-          </Text>
-        </View>
-      )}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => loadBids(true)}
+            colors={[COLORS.primary]}
+          />
+        }
+      >
+        <Card style={styles.summaryCard}>
+          <Card.Content>
+            <Text style={styles.summaryTitle}>Résumé de votre demande</Text>
+            <View style={styles.summaryRow}>
+              <Ionicons name="radio-button-on" size={16} color={COLORS.primary} />
+              <Text style={styles.summaryText}>
+                {deliveryRequest.pickup?.description}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Ionicons name="location" size={16} color={COLORS.success} />
+              <Text style={styles.summaryText}>
+                {deliveryRequest.delivery?.description}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Ionicons name="person" size={16} color={COLORS.textSecondary} />
+              <Text style={styles.summaryText}>
+                {deliveryRequest.recipientName} • {deliveryRequest.recipientPhone}
+              </Text>
+            </View>
+          </Card.Content>
+        </Card>
+
+        <Text style={styles.bidsTitle}>
+          {bids.length} coursier{bids.length > 1 ? 's' : ''} disponible{bids.length > 1 ? 's' : ''}
+        </Text>
+
+        {bids.map((bid, index) => renderBidCard(bid, index))}
+
+        <View style={styles.bottomSpace} />
+      </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: COLORS.background,
   },
   header: {
+    elevation: 4,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 4,
+    paddingVertical: 8,
   },
   headerTitle: {
-    color: '#ffffff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: COLORS.text,
   },
   loadingContainer: {
     flex: 1,
@@ -275,142 +430,192 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: COLORS.textSecondary,
   },
-  listContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 16,
+  },
+  summaryCard: {
+    marginBottom: 16,
+    borderRadius: 12,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  summaryText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginLeft: 8,
+    flex: 1,
+  },
+  bidsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 16,
   },
   bidCard: {
-    backgroundColor: '#ffffff',
+    marginBottom: 16,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
   },
-  bidHeader: {
+  bestOfferCard: {
+    borderWidth: 2,
+    borderColor: COLORS.success,
+  },
+  bestOfferBadge: {
+    position: 'absolute',
+    top: -8,
+    right: 16,
+    zIndex: 1,
+  },
+  bestOfferChip: {
+    backgroundColor: COLORS.success,
+  },
+  bestOfferText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  courierHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   courierInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  courierNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-  },
-  courierAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
-  },
-  courierDetails: {
-    flex: 1,
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   courierName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.text,
   },
-  ratingContainer: {
+  onlineIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+  },
+  onlineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.success,
+    marginRight: 4,
+  },
+  onlineText: {
+    fontSize: 12,
+    color: COLORS.success,
+    fontWeight: '500',
+  },
+  courierStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   ratingText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginLeft: 8,
+  },
+  vehicleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  vehicleText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
     marginLeft: 4,
+  },
+  distanceText: {
     fontSize: 12,
-    color: '#666',
+    color: COLORS.textSecondary,
+    marginLeft: 4,
   },
-  bidAmount: {
-    alignItems: 'flex-end',
-  },
-  amountText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  timeText: {
+  arrivalText: {
     fontSize: 12,
-    color: '#666',
-    marginTop: 2,
+    color: COLORS.primary,
+    marginLeft: 4,
+    fontWeight: '500',
   },
-  messageContainer: {
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+  divider: {
+    marginVertical: 16,
   },
-  messageText: {
-    fontSize: 14,
-    color: '#333',
-    fontStyle: 'italic',
-  },
-  bidFooter: {
+  offerDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 16,
   },
-  bidTime: {
-    fontSize: 12,
-    color: '#666',
+  priceSection: {
     flex: 1,
+  },
+  priceLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  priceValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  durationSection: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  durationLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  durationValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  specialOfferContainer: {
+    marginBottom: 16,
+  },
+  specialOfferChip: {
+    backgroundColor: COLORS.warning,
+    alignSelf: 'flex-start',
+  },
+  specialOfferText: {
+    color: COLORS.white,
+    fontSize: 12,
   },
   acceptButton: {
-    backgroundColor: '#4CAF50',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+  },
+  bestOfferButton: {
+    backgroundColor: COLORS.success,
+  },
+  acceptButtonContent: {
     paddingVertical: 8,
-    borderRadius: 20,
   },
-  acceptButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  acceptButtonText: {
-    color: '#ffffff',
+  acceptButtonLabel: {
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 4,
   },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8f5e8',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
+  bottomSpace: {
+    height: 32,
   },
-  statusText: {
-    marginLeft: 4,
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#4CAF50',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  emptyMessage: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-  },
-})
+});
 
-export default BidsScreen
+export default BidsScreen;

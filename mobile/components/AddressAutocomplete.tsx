@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -10,7 +11,8 @@ import {
   Platform,
   Dimensions,
   Modal,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Alert
 } from 'react-native';
 import {
   TextInput,
@@ -20,7 +22,8 @@ import {
   HelperText,
   Divider,
   IconButton,
-  Surface
+  Surface,
+  Button
 } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -35,7 +38,8 @@ export interface Address {
   commune?: string;
   district?: string;
   postalCode?: string;
-  type?: 'current_location' | 'saved' | 'recent' | 'suggestion';
+  placeId?: string;
+  type?: 'current_location' | 'saved' | 'recent' | 'suggestion' | 'google_place';
 }
 
 interface AddressAutocompleteProps {
@@ -51,6 +55,7 @@ interface AddressAutocompleteProps {
   maxSuggestions?: number;
   onFocus?: () => void;
   showSuggestions?: boolean;
+  icon?: string;
 }
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -66,6 +71,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   maxSuggestions = 8,
   onFocus,
   showSuggestions = false,
+  icon = "location-outline"
 }) => {
   const [suggestions, setSuggestions] = useState<Address[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,6 +80,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [recentAddresses, setRecentAddresses] = useState<Address[]>([]);
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState(value);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -123,6 +130,20 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       latitude: 5.3667,
       longitude: -3.9833,
       type: 'hospital'
+    },
+    {
+      name: 'Centre Commercial PlaYce Marcory',
+      commune: 'Marcory',
+      latitude: 5.2956,
+      longitude: -3.9750,
+      type: 'mall'
+    },
+    {
+      name: 'Riviera Golf',
+      commune: 'Cocody',
+      latitude: 5.3789,
+      longitude: -3.9956,
+      type: 'entertainment'
     }
   ], []);
 
@@ -167,10 +188,16 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   }, [showCurrentLocation]);
 
+  // Synchroniser la valeur
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
   const getCurrentLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
+        Alert.alert('Permission refusée', 'Veuillez autoriser l\'accès à la localisation pour utiliser cette fonctionnalité.');
         return;
       }
 
@@ -180,10 +207,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       setCurrentLocation(location);
     } catch (error) {
       console.warn('Error getting current location:', error);
+      Alert.alert('Erreur', 'Impossible d\'obtenir votre position actuelle.');
     }
   };
 
-  // Recherche d'adresses intelligente
+  // Recherche avec Google Places API et données locales
   const searchAddresses = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSuggestions([]);
@@ -195,7 +223,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const results: Address[] = [];
       const normalizedQuery = query.toLowerCase().trim();
 
-      // 1. Recherche dans les lieux populaires
+      // 1. Recherche dans les lieux populaires locaux
       popularPlaces.forEach((place, index) => {
         if (
           place.name.toLowerCase().includes(normalizedQuery) ||
@@ -226,7 +254,13 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         }
       });
 
-      // 3. Recherche de rues et adresses spécifiques
+      // 3. Recherche avec Google Places API (simulée pour l'environnement local)
+      if (query.length >= 3) {
+        const googlePlaces = await searchGooglePlaces(query);
+        results.push(...googlePlaces);
+      }
+
+      // 4. Recherche de rues et adresses spécifiques
       if (query.length >= 4) {
         const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place'];
         const randomStreets = [
@@ -235,7 +269,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         ];
 
         // Générer des suggestions de rues réalistes
-        for (let i = 0; i < Math.min(3, maxSuggestions - results.length); i++) {
+        for (let i = 0; i < Math.min(2, maxSuggestions - results.length); i++) {
           const prefix = streetPrefixes[Math.floor(Math.random() * streetPrefixes.length)];
           const suffix = randomStreets[Math.floor(Math.random() * randomStreets.length)];
           const commune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
@@ -260,6 +294,44 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       setLoading(false);
     }
   }, [popularPlaces, abidjanCommunes, maxSuggestions]);
+
+  // Simulation de recherche Google Places (à remplacer par une vraie API)
+  const searchGooglePlaces = async (query: string): Promise<Address[]> => {
+    // Simulation de lieux Google Places réels d'Abidjan
+    const mockGooglePlaces = [
+      {
+        id: 'google_1',
+        description: `Hotel Ibis Abidjan Plateau, ${query}`,
+        latitude: 5.3267,
+        longitude: -4.0252,
+        commune: 'Plateau',
+        placeId: 'ChIJ1234567890',
+        type: 'google_place' as const
+      },
+      {
+        id: 'google_2',
+        description: `Sofitel Abidjan Hôtel Ivoire, ${query}`,
+        latitude: 5.3439,
+        longitude: -3.9889,
+        commune: 'Cocody',
+        placeId: 'ChIJ0987654321',
+        type: 'google_place' as const
+      },
+      {
+        id: 'google_3',
+        description: `Pharmacie de la Paix, ${query}`,
+        latitude: 5.3200 + (Math.random() - 0.5) * 0.01,
+        longitude: -4.0200 + (Math.random() - 0.5) * 0.01,
+        commune: 'Plateau',
+        placeId: 'ChIJ1357924680',
+        type: 'google_place' as const
+      }
+    ];
+
+    return mockGooglePlaces.filter(place => 
+      place.description.toLowerCase().includes(query.toLowerCase())
+    );
+  };
 
   // Géocodage inverse pour la position actuelle
   const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<Address> => {
@@ -293,15 +365,15 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     setInputValue(text);
     
     if (text.length >= 2) {
-    setShowSuggestionsState(true);
+      setShowSuggestionsState(true);
 
-    // Debounce search
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      searchAddresses(text);
-    }, 300);
+      // Debounce search
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        searchAddresses(text);
+      }, 300);
     } else {
       setShowSuggestionsState(false);
       setSuggestions([]);
@@ -315,9 +387,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     setShowSuggestionsState(false);
     setSuggestions([]);
     
-    // Ne pas fermer le clavier pour permettre la continuation de la saisie
-    // Keyboard.dismiss();
-
     // Ajouter aux récents (simulation)
     setRecentAddresses(prev => [
       address,
@@ -326,7 +395,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   }, [onChangeText, onAddressSelect]);
 
   const handleCurrentLocationSelect = async () => {
-    if (!currentLocation) return;
+    if (!currentLocation) {
+      setLocationLoading(true);
+      await getCurrentLocation();
+      setLocationLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -337,6 +411,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       handleAddressSelect(address);
     } catch (error) {
       console.error('Error getting current location address:', error);
+      Alert.alert('Erreur', 'Impossible d\'obtenir l\'adresse de votre position actuelle.');
     } finally {
       setLoading(false);
     }
@@ -377,6 +452,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         return 'time-outline';
       case 'saved':
         return 'bookmark-outline';
+      case 'google_place':
+        return 'business-outline';
       default:
         return 'location-outline';
     }
@@ -390,70 +467,61 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         return '#FF9800';
       case 'saved':
         return '#2196F3';
+      case 'google_place':
+        return '#DB4437';
       default:
         return '#666';
     }
   };
 
-  const getIconForType2 = (type: string) => {
-    switch (type) {
-      case "airport": return "airplane"
-      case "university": return "school"
-      case "hospital": return "medical"
-      case "market": return "cart"
-      case "transport": return "bus"
-      case "business": return "business"
-      default: return "location"
-    }
-  };
-
-  const renderSuggestion = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.suggestionItem}
-      onPress={() => handleAddressSelect(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.suggestionContent}>
-        <View style={styles.suggestionIcon}>
-          <Ionicons 
-            name={getIconForType(item.type)} 
-            size={16} 
-            color={getIconColor(item.type)} 
-        />
-        </View>
-        <View style={styles.suggestionText}>
-          <Text style={styles.suggestionTitle}>{item.description}</Text>
-          <Text style={styles.suggestionSubtitle}>
-            {item.commune && `Commune: ${item.commune}`}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
   return (
     <View style={[styles.container, style]}>
       <View style={styles.inputContainer}>
-        <TextInput
-          ref={inputRef}
-          label={label}
-          value={inputValue}
-          onChangeText={handleTextChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          error={!!error}
-          disabled={disabled}
-          style={[styles.input, isFocused && styles.inputFocused]}
-          right={
-              <TextInput.Icon
-              icon="map-marker"
-                onPress={clearInput}
-              disabled={!inputValue}
-            />
-          }
-        />
-        {error && <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>}
+        <View style={styles.inputWrapper}>
+          <TextInput
+            ref={inputRef}
+            label={label}
+            value={inputValue}
+            onChangeText={handleTextChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            error={!!error}
+            disabled={disabled}
+            style={[styles.input, isFocused && styles.inputFocused]}
+            right={
+              inputValue ? (
+                <TextInput.Icon
+                  icon="close"
+                  onPress={clearInput}
+                />
+              ) : null
+            }
+          />
+          
+          {/* Bouton position actuelle */}
+          <TouchableOpacity
+            style={styles.locationButton}
+            onPress={handleCurrentLocationSelect}
+            disabled={locationLoading || loading}
+          >
+            {locationLoading ? (
+              <ActivityIndicator size="small" color="#4CAF50" />
+            ) : (
+              <Ionicons 
+                name="locate" 
+                size={24} 
+                color={currentLocation ? "#4CAF50" : "#666"} 
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+        
+        {error && (
+          <HelperText type="error" visible={!!error} style={styles.errorText}>
+            {error}
+          </HelperText>
+        )}
       </View>
 
       {/* Suggestions en modal pour éviter les problèmes de positionnement */}
@@ -467,128 +535,130 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
               <View style={styles.suggestionsContainer}>
-          <Card style={styles.suggestionsCard}>
-            <ScrollView
-              style={styles.suggestionsList}
+                <Card style={styles.suggestionsCard}>
+                  <ScrollView
+                    style={styles.suggestionsList}
                     contentContainerStyle={styles.suggestionsContent}
-              keyboardShouldPersistTaps="handled"
-              nestedScrollEnabled={true}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Position actuelle */}
-                    {showCurrentLocation && currentLocation && (
-                <>
+                    keyboardShouldPersistTaps="handled"
+                    nestedScrollEnabled={true}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {/* Position actuelle */}
+                    {showCurrentLocation && (
+                      <>
                         <View style={styles.sectionHeader}>
                           <Text style={styles.sectionTitle}>Position actuelle</Text>
                         </View>
-                  <TouchableOpacity
-                    style={styles.suggestionItem}
-                    onPress={handleCurrentLocationSelect}
+                        <TouchableOpacity
+                          style={styles.suggestionItem}
+                          onPress={handleCurrentLocationSelect}
                           disabled={loading}
                           activeOpacity={0.7}
-                  >
-                    <View style={styles.suggestionContent}>
-                      <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
+                        >
+                          <View style={styles.suggestionContent}>
+                            <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
                               {loading ? (
                                 <ActivityIndicator size="small" color="#4CAF50" />
                               ) : (
                                 <Ionicons name="location" size={16} color="#4CAF50" />
                               )}
-                      </View>
-                      <View style={styles.suggestionText}>
-                        <Text style={styles.suggestionTitle}>Utiliser ma position actuelle</Text>
+                            </View>
+                            <View style={styles.suggestionText}>
+                              <Text style={styles.suggestionTitle}>Utiliser ma position actuelle</Text>
                               <Text style={styles.suggestionSubtitle}>Détection automatique</Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                    <Divider style={styles.divider} />
-                </>
-              )}
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                        <Divider style={styles.divider} />
+                      </>
+                    )}
 
-              {/* Adresses récentes */}
+                    {/* Adresses récentes */}
                     {recentAddresses.length > 0 && (
-                <>
-                  <View style={styles.sectionHeader}>
+                      <>
+                        <View style={styles.sectionHeader}>
                           <Text style={styles.sectionTitle}>Récents</Text>
-                  </View>
-                  {recentAddresses.map((address) => (
-                    <TouchableOpacity
-                      key={address.id}
-                      style={styles.suggestionItem}
-                      onPress={() => handleAddressSelect(address)}
+                        </View>
+                        {recentAddresses.map((address) => (
+                          <TouchableOpacity
+                            key={address.id}
+                            style={styles.suggestionItem}
+                            onPress={() => handleAddressSelect(address)}
                             activeOpacity={0.7}
-                    >
-                      <View style={styles.suggestionContent}>
-                        <View style={styles.suggestionIcon}>
-                          <Ionicons 
-                            name={getIconForType(address.type)} 
-                            size={16} 
-                            color={getIconColor(address.type)} 
-                          />
-                        </View>
-                        <View style={styles.suggestionText}>
-                          <Text style={styles.suggestionTitle}>{address.description}</Text>
-                          <Text style={styles.suggestionSubtitle}>
-                            {address.commune && `Commune: ${address.commune}`}
-                          </Text>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                  {suggestions.length > 0 && <Divider style={styles.divider} />}
-                </>
-              )}
+                          >
+                            <View style={styles.suggestionContent}>
+                              <View style={styles.suggestionIcon}>
+                                <Ionicons 
+                                  name={getIconForType(address.type)} 
+                                  size={16} 
+                                  color={getIconColor(address.type)} 
+                                />
+                              </View>
+                              <View style={styles.suggestionText}>
+                                <Text style={styles.suggestionTitle}>{address.description}</Text>
+                                <Text style={styles.suggestionSubtitle}>
+                                  {address.commune && `Commune: ${address.commune}`}
+                                </Text>
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                        {suggestions.length > 0 && <Divider style={styles.divider} />}
+                      </>
+                    )}
 
-              {/* Suggestions */}
-              {suggestions.length > 0 && (
-                <>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>Suggestions</Text>
-                    </View>
-                  {suggestions.map((address) => (
-                    <TouchableOpacity
-                      key={address.id}
-                      style={styles.suggestionItem}
-                      onPress={() => handleAddressSelect(address)}
+                    {/* Suggestions */}
+                    {suggestions.length > 0 && (
+                      <>
+                        <View style={styles.sectionHeader}>
+                          <Text style={styles.sectionTitle}>Suggestions</Text>
+                        </View>
+                        {suggestions.map((address) => (
+                          <TouchableOpacity
+                            key={address.id}
+                            style={styles.suggestionItem}
+                            onPress={() => handleAddressSelect(address)}
                             activeOpacity={0.7}
-                    >
-                      <View style={styles.suggestionContent}>
-                        <View style={styles.suggestionIcon}>
-                          <Ionicons 
-                            name={getIconForType(address.type)} 
-                            size={16} 
-                            color={getIconColor(address.type)} 
-                          />
-                        </View>
-                        <View style={styles.suggestionText}>
-                          <Text style={styles.suggestionTitle}>{address.description}</Text>
-                          <Text style={styles.suggestionSubtitle}>
-                            {address.commune && `Commune: ${address.commune}`}
-                          </Text>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </>
-              )}
+                          >
+                            <View style={styles.suggestionContent}>
+                              <View style={styles.suggestionIcon}>
+                                <Ionicons 
+                                  name={getIconForType(address.type)} 
+                                  size={16} 
+                                  color={getIconColor(address.type)} 
+                                />
+                              </View>
+                              <View style={styles.suggestionText}>
+                                <Text style={styles.suggestionTitle}>{address.description}</Text>
+                                <Text style={styles.suggestionSubtitle}>
+                                  {address.commune && `Commune: ${address.commune}`}
+                                  {address.type === 'google_place' && ' • Google Places'}
+                                </Text>
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </>
+                    )}
 
                     {/* Aucun résultat */}
                     {suggestions.length === 0 && recentAddresses.length === 0 && value.length >= 2 && !loading && (
                       <View style={styles.noResults}>
+                        <Ionicons name="search-outline" size={48} color="#ccc" />
                         <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
                         <Text style={styles.noResultsSubtext}>Essayez avec d'autres mots-clés</Text>
-                </View>
-              )}
+                      </View>
+                    )}
 
                     {/* Loading */}
                     {loading && (
                       <View style={styles.loadingContainer}>
                         <ActivityIndicator size="small" color="#666" />
                         <Text style={styles.loadingText}>Recherche en cours...</Text>
-                </View>
-              )}
-            </ScrollView>
-          </Card>
+                      </View>
+                    )}
+                  </ScrollView>
+                </Card>
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -598,7 +668,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   );
 };
 
-const { width, height } = Dimensions.get('window')
+const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -608,12 +678,31 @@ const styles = StyleSheet.create({
   inputContainer: {
     position: 'relative',
   },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
   input: {
     backgroundColor: '#FFFFFF',
     fontSize: 16,
+    flex: 1,
   },
   inputFocused: {
     backgroundColor: '#FFFFFF',
+  },
+  locationButton: {
+    position: 'absolute',
+    right: 50,
+    top: 8,
+    bottom: 8,
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
   },
   errorText: {
     marginTop: 4,
@@ -622,7 +711,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-start',
-    paddingTop: 100, // Espace pour le header
+    paddingTop: 100,
   },
   suggestionsContainer: {
     marginHorizontal: 16,
@@ -728,15 +817,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginLeft: 8,
-  },
-  suggestionTextContainer: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  suggestionCommune: {
-    fontSize: 12,
-    color: "#757575",
-    marginTop: 2,
   },
 });
 

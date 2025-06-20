@@ -386,19 +386,29 @@ class LocationService {
     try {
       const suggestions: AddressSuggestion[] = []
 
-      // Rechercher dans les lieux populaires
+      // 1. Rechercher dans les lieux populaires
       const popularPlaces = await this.getPopularPlaces(query)
       suggestions.push(...popularPlaces)
 
-      // Rechercher dans les communes
+      // 2. Rechercher avec Google Places (simulation améliorée)
+      if (query.length >= 3) {
+        const googlePlaces = await this.searchGooglePlaces(query, userLocation)
+        suggestions.push(...googlePlaces)
+      }
+
+      // 3. Rechercher dans les communes
       const communeSuggestions = await this.searchInCommunes(query)
       suggestions.push(...communeSuggestions)
 
-      // Rechercher dans les adresses récentes
+      // 4. Rechercher dans les adresses récentes
       const recentMatches = this.recentSearches.filter(addr =>
         addr.address.toLowerCase().includes(query.toLowerCase())
       )
       suggestions.push(...recentMatches.map(addr => ({ ...addr, type: "recent" })))
+
+      // 5. Ajouter des suggestions d'adresses complètes
+      const streetSuggestions = this.generateStreetSuggestions(query)
+      suggestions.push(...streetSuggestions)
 
       // Calculer la distance si la position de l'utilisateur est disponible
       if (userLocation) {
@@ -410,12 +420,21 @@ class LocationService {
             suggestion.coords.longitude
           )
         })
-        // Trier par distance
-        suggestions.sort((a, b) => (a.distance || 0) - (b.distance || 0))
+        // Trier par pertinence et distance
+        suggestions.sort((a, b) => {
+          // Prioriser les lieux Google Places et populaires
+          if (a.type === 'google_place' && b.type !== 'google_place') return -1
+          if (b.type === 'google_place' && a.type !== 'google_place') return 1
+          if (a.type === 'popular' && b.type !== 'popular') return -1
+          if (b.type === 'popular' && a.type !== 'popular') return 1
+          
+          // Ensuite par distance
+          return (a.distance || 0) - (b.distance || 0)
+        })
       }
 
       // Limiter et dédupliquer
-      const uniqueSuggestions = this.deduplicateSuggestions(suggestions).slice(0, 8)
+      const uniqueSuggestions = this.deduplicateSuggestions(suggestions).slice(0, 10)
 
       // Mettre en cache
       this.cachedSuggestions.set(cacheKey, uniqueSuggestions)
@@ -425,6 +444,115 @@ class LocationService {
       console.error("Error searching addresses:", error)
       return []
     }
+  }
+
+  /**
+   * Recherche avec simulation Google Places améliorée
+   */
+  private async searchGooglePlaces(query: string, userLocation?: LocationCoords): Promise<AddressSuggestion[]> {
+    // Base de données simulée de lieux réels d'Abidjan
+    const realPlaces = [
+      // Hôtels
+      { name: 'Hotel Ibis Abidjan Plateau', category: 'hotel', lat: 5.3267, lng: -4.0252, commune: 'Plateau' },
+      { name: 'Sofitel Abidjan Hotel Ivoire', category: 'hotel', lat: 5.3439, lng: -3.9889, commune: 'Cocody' },
+      { name: 'Pullman Abidjan', category: 'hotel', lat: 5.3400, lng: -3.9900, commune: 'Cocody' },
+      
+      // Centres commerciaux
+      { name: 'Cap Sud', category: 'mall', lat: 5.2800, lng: -3.9600, commune: 'Marcory' },
+      { name: 'Cosmos Yopougon', category: 'mall', lat: 5.3200, lng: -4.0700, commune: 'Yopougon' },
+      
+      // Pharmacies
+      { name: 'Pharmacie de la Paix', category: 'pharmacy', lat: 5.3200, lng: -4.0200, commune: 'Plateau' },
+      { name: 'Pharmacie du Plateau', category: 'pharmacy', lat: 5.3250, lng: -4.0250, commune: 'Plateau' },
+      { name: 'Pharmacie de Cocody', category: 'pharmacy', lat: 5.3500, lng: -3.9800, commune: 'Cocody' },
+      
+      // Restaurants
+      { name: 'Restaurant Chez Amina', category: 'restaurant', lat: 5.3300, lng: -4.0100, commune: 'Plateau' },
+      { name: 'Maquis du Rail', category: 'restaurant', lat: 5.3100, lng: -4.0300, commune: 'Treichville' },
+      
+      // Banques
+      { name: 'SGBCI Plateau', category: 'bank', lat: 5.3280, lng: -4.0280, commune: 'Plateau' },
+      { name: 'Ecobank Cocody', category: 'bank', lat: 5.3600, lng: -3.9700, commune: 'Cocody' },
+      
+      // Écoles et universités
+      { name: 'École Internationale Jean-Mermoz', category: 'school', lat: 5.3700, lng: -3.9600, commune: 'Cocody' },
+      { name: 'Lycée Classique d\'Abidjan', category: 'school', lat: 5.3300, lng: -4.0200, commune: 'Plateau' },
+      
+      // Hôpitaux et cliniques
+      { name: 'CHU de Treichville', category: 'hospital', lat: 5.2900, lng: -4.0100, commune: 'Treichville' },
+      { name: 'Clinique Farah', category: 'hospital', lat: 5.3400, lng: -3.9800, commune: 'Cocody' },
+      
+      // Centres d'affaires
+      { name: 'Tour BCEAO', category: 'office', lat: 5.3250, lng: -4.0220, commune: 'Plateau' },
+      { name: 'Immeuble CCIA', category: 'office', lat: 5.3280, lng: -4.0240, commune: 'Plateau' },
+    ]
+
+    const matchingPlaces = realPlaces.filter(place => 
+      place.name.toLowerCase().includes(query.toLowerCase()) ||
+      place.category.toLowerCase().includes(query.toLowerCase()) ||
+      place.commune.toLowerCase().includes(query.toLowerCase())
+    )
+
+    return matchingPlaces.map((place, index) => ({
+      id: `google_${index}_${Date.now()}`,
+      address: `${place.name}, ${place.commune}, Abidjan`,
+      coords: { latitude: place.lat, longitude: place.lng },
+      commune: place.commune,
+      type: "google_place"
+    }))
+  }
+
+  /**
+   * Génère des suggestions d'adresses de rues
+   */
+  private generateStreetSuggestions(query: string): AddressSuggestion[] {
+    const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place', 'Carrefour']
+    const streetSuffixes = [
+      'de la Paix', 'de l\'Indépendance', 'des Jardins', 'du Commerce',
+      'de la République', 'des Cocotiers', 'du Stade', 'de l\'Église',
+      'des Martyrs', 'de l\'Université', 'du Marché', 'de la Gare'
+    ]
+
+    const suggestions: AddressSuggestion[] = []
+    
+    // Générer des suggestions réalistes basées sur la requête
+    streetPrefixes.forEach(prefix => {
+      streetSuffixes.forEach(suffix => {
+        if (suffix.toLowerCase().includes(query.toLowerCase()) || 
+            query.toLowerCase().includes(suffix.toLowerCase())) {
+          
+          const randomCommune = this.getRandomCommune()
+          suggestions.push({
+            id: `street_${prefix}_${suffix}_${Date.now()}_${Math.random()}`,
+            address: `${prefix} ${suffix}, ${randomCommune.name}, Abidjan`,
+            coords: {
+              latitude: randomCommune.latitude + (Math.random() - 0.5) * 0.01,
+              longitude: randomCommune.longitude + (Math.random() - 0.5) * 0.01
+            },
+            commune: randomCommune.name,
+            type: "suggestion"
+          })
+        }
+      })
+    })
+
+    return suggestions.slice(0, 3) // Limiter à 3 suggestions de rues
+  }
+
+  /**
+   * Obtient une commune aléatoire d'Abidjan
+   */
+  private getRandomCommune() {
+    const communes = [
+      { name: 'Plateau', latitude: 5.3200, longitude: -4.0200 },
+      { name: 'Cocody', latitude: 5.3500, longitude: -3.9800 },
+      { name: 'Marcory', latitude: 5.2900, longitude: -3.9700 },
+      { name: 'Treichville', latitude: 5.2900, longitude: -4.0100 },
+      { name: 'Adjamé', latitude: 5.3700, longitude: -4.0200 },
+      { name: 'Yopougon', latitude: 5.3200, longitude: -4.0800 }
+    ]
+    
+    return communes[Math.floor(Math.random() * communes.length)]
   }
 
   private async getPopularPlaces(query?: string): Promise<AddressSuggestion[]> {
