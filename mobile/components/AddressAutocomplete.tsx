@@ -29,6 +29,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { LinearGradient } from 'expo-linear-gradient';
 import { debounce } from "lodash";
+import LocationService from '../services/LocationService';
 
 export interface Address {
   id: string;
@@ -211,7 +212,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  // Recherche avec Google Places API et données locales
+  // Recherche avec Google Places API réelle
   const searchAddresses = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSuggestions([]);
@@ -220,68 +221,42 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     setLoading(true);
     try {
-      const results: Address[] = [];
-      const normalizedQuery = query.toLowerCase().trim();
+      const locationService = LocationService.getInstance();
+      
+      // Obtenir la position de l'utilisateur pour améliorer les résultats
+      let userLocation = null;
+      try {
+        const currentPos = await locationService.getCurrentPosition();
+        userLocation = {
+          latitude: currentPos.latitude,
+          longitude: currentPos.longitude
+        };
+      } catch (error) {
+        console.warn('Could not get user location for search optimization:', error);
+      }
 
-      // 1. Recherche exhaustive dans les lieux populaires d'Abidjan
-      const popularResults = popularPlaces.filter(place => 
-        place.name.toLowerCase().includes(normalizedQuery) ||
-        place.commune.toLowerCase().includes(normalizedQuery) ||
-        normalizedQuery.includes(place.name.toLowerCase().split(' ')[0]) ||
-        normalizedQuery.includes(place.commune.toLowerCase())
-      );
+      // Recherche avec l'API Google Places réelle
+      const googleResults = await locationService.searchAddresses(query, userLocation);
+      
+      // Convertir les résultats au format attendu par le composant
+      const convertedResults: Address[] = googleResults.map(result => ({
+        id: result.id,
+        description: result.address,
+        latitude: result.coords.latitude,
+        longitude: result.coords.longitude,
+        commune: result.commune,
+        placeId: result.placeId,
+        type: result.type as any
+      }));
 
-      popularResults.forEach((place, index) => {
-        results.push({
-          id: `popular_${index}_${Date.now()}`,
-          description: `${place.name}, ${place.commune}`,
-          latitude: place.latitude,
-          longitude: place.longitude,
-          commune: place.commune,
-          type: 'suggestion'
-        });
-      });
-
-      // 2. Recherche Google Places simulée mais exhaustive
-      const googlePlacesResults = await searchGooglePlaces(query);
-      results.push(...googlePlacesResults);
-
-      // 3. Recherche par commune avec correspondance partielle
-      abidjanCommunes.forEach((commune, index) => {
-        if (commune.name.toLowerCase().includes(normalizedQuery) || 
-            normalizedQuery.includes(commune.name.toLowerCase())) {
-          results.push({
-            id: `commune_${index}_${Date.now()}`,
-            description: `${commune.name}, Abidjan`,
-            latitude: commune.latitude,
-            longitude: commune.longitude,
-            commune: commune.name,
-            type: 'suggestion'
-          });
-        }
-      });
-
-      // 4. Génération d'adresses de rues dynamiques
-      const streetSuggestions = generateStreetAddresses(query, normalizedQuery);
-      results.push(...streetSuggestions);
-
-      // 5. Ajout de lieux spécifiques d'Abidjan
-      const specificPlaces = getSpecificAbidjanPlaces(normalizedQuery);
-      results.push(...specificPlaces);
-
-      // Dédoublonner et limiter les résultats
-      const uniqueResults = results.filter((result, index, self) => 
-        index === self.findIndex(r => r.description.toLowerCase() === result.description.toLowerCase())
-      );
-
-      setSuggestions(uniqueResults.slice(0, maxSuggestions));
+      setSuggestions(convertedResults.slice(0, maxSuggestions));
     } catch (error) {
-      console.error('Error searching addresses:', error);
+      console.error('Error searching addresses with Google API:', error);
       setSuggestions([]);
     } finally {
       setLoading(false);
     }
-  }, [popularPlaces, abidjanCommunes, maxSuggestions]);
+  }, [maxSuggestions]);
 
   // Simulation de recherche Google Places améliorée
   const searchGooglePlaces = async (query: string): Promise<Address[]> => {
@@ -422,9 +397,27 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       }));
   };
 
-  // Géocodage inverse pour la position actuelle
+  // Géocodage inverse pour la position actuelle avec Google API
   const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<Address> => {
-    // Trouver la commune la plus proche
+    try {
+      const locationService = LocationService.getInstance();
+      const result = await locationService.reverseGeocode(latitude, longitude);
+      
+      if (result) {
+        return {
+          id: result.id,
+          description: result.address,
+          latitude: result.coords.latitude,
+          longitude: result.coords.longitude,
+          commune: result.commune,
+          type: result.type as any
+        };
+      }
+    } catch (error) {
+      console.error('Error with Google reverse geocoding:', error);
+    }
+
+    // Fallback vers l'ancienne méthode si Google API échoue
     let nearestCommune = abidjanCommunes[0];
     let minDistance = Infinity;
 
