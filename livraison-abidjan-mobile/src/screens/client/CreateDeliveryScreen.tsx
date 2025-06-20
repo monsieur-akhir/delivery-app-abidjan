@@ -437,57 +437,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // Autocomplete suggestions - Version corrigée sans VirtualizedList
-  suggestionsContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    marginTop: 8,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    maxHeight: 250,
-  },
-
-  suggestionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-
-  suggestionItemLast: {
-    borderBottomWidth: 0,
-  },
-
-  suggestionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.backgroundSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-
-  suggestionContent: {
-    flex: 1,
-  },
-
-  suggestionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: COLORS.text,
-    marginBottom: 2,
-  },
-
-  suggestionSubtitle: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
+  
 
   // Section des informations du colis
   packageSection: {
@@ -931,10 +881,6 @@ const CreateDeliveryScreen: React.FC = () => {
   // États pour l'autocomplétion
   const [pickupQuery, setPickupQuery] = useState<string>('')
   const [deliveryQuery, setDeliveryQuery] = useState<string>('')
-  const [pickupSuggestions, setPickupSuggestions] = useState<any[]>([])
-  const [deliverySuggestions, setDeliverySuggestions] = useState<any[]>([])
-  const [showPickupSuggestions, setShowPickupSuggestions] = useState<boolean>(false)
-  const [showDeliverySuggestions, setShowDeliverySuggestions] = useState<boolean>(false)
   const [activeField, setActiveField] = useState<'pickup' | 'delivery' | null>(null)
 
   // États pour les options dynamiques
@@ -989,48 +935,7 @@ const CreateDeliveryScreen: React.FC = () => {
     })
   }, [currentDistance, isUrgent])
 
-  // Fonction de recherche avec autocomplétion locale et Google
-  const searchAddresses = useCallback(async (query: string, type: 'pickup' | 'delivery') => {
-    if (query.length < 2) {
-      if (type === 'pickup') {
-        setPickupSuggestions([])
-        setShowPickupSuggestions(false)
-      } else {
-        setDeliverySuggestions([])
-        setShowDeliverySuggestions(false)
-      }
-      return
-    }
-
-    // Filtrer les suggestions locales
-    const localSuggestions = ABIDJAN_PLACES.filter(place =>
-      place.name.toLowerCase().includes(query.toLowerCase()) ||
-      place.description.toLowerCase().includes(query.toLowerCase())
-    )
-
-    // TODO: Ajouter l'appel à Google Places API
-    try {
-      // const googleSuggestions = await GooglePlacesService.searchPlaces(query)
-      const allSuggestions = localSuggestions // [...localSuggestions, ...googleSuggestions]
-
-      if (type === 'pickup') {
-        setPickupSuggestions(allSuggestions)
-        setShowPickupSuggestions(true)
-      } else {
-        setDeliverySuggestions(allSuggestions)
-        setShowDeliverySuggestions(true)
-      }
-    } catch (error) {
-      console.error('Erreur lors de la recherche:', error)
-      if (type === 'pickup') {
-        setPickupSuggestions(localSuggestions)
-        setShowPickupSuggestions(true)
-      } else {
-        setDeliverySuggestions(localSuggestions)
-        setShowDeliverySuggestions(true)
-      }
-    }
-  }, [])
+  
 
   // Fonction pour utiliser la position actuelle
   const useCurrentLocation = async (field: 'pickup' | 'delivery') => {
@@ -1092,33 +997,16 @@ const CreateDeliveryScreen: React.FC = () => {
   }
 
   // Gestion de la sélection d'une suggestion
-  const handleSuggestionSelect = useCallback((suggestion: any, type: 'pickup' | 'delivery') => {
-    if (suggestion.id === 'votre_position') {
-      useCurrentLocation(type)
-      return
-    }
-
-    const address: Address = {
-      id: suggestion.id,
-      name: suggestion.name,
-      description: suggestion.description,
-      latitude: suggestion.latitude || 5.3599,
-      longitude: suggestion.longitude || -3.9569,
-      commune: suggestion.commune || 'Abidjan',
-      type: suggestion.type || 'address'
-    }
-
+  const handleSuggestionSelect = useCallback((address: Address, type: 'pickup' | 'delivery') => {
     if (type === 'pickup') {
-      setPickupAddress(suggestion.description)
-      setPickupQuery(suggestion.description)
+      setPickupAddress(address.description)
+      setPickupQuery(address.description)
       setPickupLocation(address)
-      setShowPickupSuggestions(false)
       setPickupFocused(false)
     } else {
-      setDeliveryAddress(suggestion.description)
-      setDeliveryQuery(suggestion.description)
+      setDeliveryAddress(address.description)
+      setDeliveryQuery(address.description)
       setDeliveryLocation(address)
-      setShowDeliverySuggestions(false)
       setDeliveryFocused(false)
     }
 
@@ -1140,9 +1028,7 @@ const CreateDeliveryScreen: React.FC = () => {
         setDeliveryLocation(null)
       }
     }
-
-    searchAddresses(text, type)
-  }, [searchAddresses])
+  }, [])
 
   // Conservation de vos useEffect existants
   useEffect(() => {
@@ -1389,42 +1275,7 @@ const CreateDeliveryScreen: React.FC = () => {
     </TouchableOpacity>
   )
 
-  // Render suggestions sans VirtualizedList (solution au problème)
-  const renderSuggestions = (suggestions: any[], type: 'pickup' | 'delivery') => (
-    <View style={styles.suggestionsContainer}>
-      <ScrollView 
-        nestedScrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {suggestions.map((item, index) => (
-          <TouchableOpacity
-            key={item.id}
-            style={[
-              styles.suggestionItem,
-              index === suggestions.length - 1 ? styles.suggestionItemLast : null
-            ]}
-            onPress={() => handleSuggestionSelect(item, type)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.suggestionIcon}>
-              <Feather
-                name={item.icon || 'map-pin'}
-                size={16}
-                color={item.id === 'votre_position' ? COLORS.primary : COLORS.textSecondary}
-              />
-            </View>
-            <View style={styles.suggestionContent}>
-              <Text style={styles.suggestionTitle}>{item.name}</Text>
-              {item.description !== item.name && (
-                <Text style={styles.suggestionSubtitle}>{item.description}</Text>
-              )}
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  )
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1492,19 +1343,18 @@ const CreateDeliveryScreen: React.FC = () => {
                   <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.white }} />
                 </View>
                 <View style={styles.addressInputContent}>
-                  <Text style={styles.addressInputLabel}>Prise en charge</Text>
-                  <TextInput
-                    style={[styles.addressInput, pickupFocused && styles.textInputFocused]}
+                  <AddressAutocomplete
+                    label="Prise en charge"
                     value={pickupQuery}
                     onChangeText={(text) => handleTextChange(text, 'pickup')}
+                    onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
+                    placeholder="Adresse de prise en charge"
+                    showCurrentLocation={true}
+                    maxSuggestions={5}
                     onFocus={() => {
                       setPickupFocused(true)
                       setActiveField('pickup')
-                      setShowDeliverySuggestions(false)
                     }}
-                    onBlur={() => setPickupFocused(false)}
-                    placeholder="Adresse de prise en charge"
-                    placeholderTextColor={COLORS.textSecondary}
                   />
                 </View>
               </View>
@@ -1515,19 +1365,18 @@ const CreateDeliveryScreen: React.FC = () => {
                   <Feather name="navigation" size={12} color={COLORS.white} />
                 </View>
                 <View style={styles.addressInputContent}>
-                  <Text style={styles.addressInputLabel}>Destination</Text>
-                  <TextInput
-                    style={[styles.addressInput, deliveryFocused && styles.textInputFocused]}
+                  <AddressAutocomplete
+                    label="Destination"
                     value={deliveryQuery}
                     onChangeText={(text) => handleTextChange(text, 'delivery')}
+                    onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
+                    placeholder="Adresse de livraison"
+                    showCurrentLocation={true}
+                    maxSuggestions={5}
                     onFocus={() => {
                       setDeliveryFocused(true)
                       setActiveField('delivery')
-                      setShowPickupSuggestions(false)
                     }}
-                    onBlur={() => setDeliveryFocused(false)}
-                    placeholder="Adresse de livraison"
-                    placeholderTextColor={COLORS.textSecondary}
                   />
                 </View>
               </View>
@@ -1544,14 +1393,7 @@ const CreateDeliveryScreen: React.FC = () => {
               </View>
             )}
 
-            {/* Suggestions d'autocomplétion - Version corrigée */}
-            {showPickupSuggestions && pickupSuggestions.length > 0 && activeField === 'pickup' && 
-              renderSuggestions(pickupSuggestions, 'pickup')
-            }
-
-            {showDeliverySuggestions && deliverySuggestions.length > 0 && activeField === 'delivery' && 
-              renderSuggestions(deliverySuggestions, 'delivery')
-            }
+            
           </View>
 
           {/* Package Information Section */}
