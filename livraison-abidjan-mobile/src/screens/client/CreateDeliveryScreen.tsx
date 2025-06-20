@@ -965,7 +965,13 @@ const CreateDeliveryScreen: React.FC = () => {
   const params = route.params as RouteParams
   const { user } = useAuth()
   const { isConnected, addPendingUpload } = useNetwork()
-  const { createDelivery, getPriceEstimate, estimate } = useDelivery()
+  const {
+    createDelivery,
+    isLoading,
+    error: deliveryError,
+    getPriceEstimate,
+    estimate
+  } = useDelivery()
   const { } = useUser()
   const { 
     alertVisible,
@@ -1002,7 +1008,6 @@ const CreateDeliveryScreen: React.FC = () => {
   const [recipientPhone, setRecipientPhone] = useState<string>('')
 
   // UI states
-  const [loading, setLoading] = useState<boolean>(false)
   const [loadingLocation, setLoadingLocation] = useState<boolean>(false)
   const [showMap, setShowMap] = useState<boolean>(false)
   const [weatherData, setWeatherData] = useState<Weather | null>(null)
@@ -1109,6 +1114,7 @@ const CreateDeliveryScreen: React.FC = () => {
   }, [currentDistance, isUrgent, packageWeight, packageSize])
 
   const searchAddresses = async (query: string, field: 'pickup' | 'delivery') => {
+    console.log(`[Recherche adresse] Champ: ${field}, Saisie:`, query);
     try {
       // Simuler une recherche d'adresses (remplacer par votre propre logique)
       const results = ABIDJAN_PLACES.filter(place =>
@@ -1133,6 +1139,8 @@ const CreateDeliveryScreen: React.FC = () => {
         })))
         setShowDeliverySuggestions(true)
       }
+
+      console.log('[DEBUG] Résultat Google Places:', results)
     } catch (error) {
       console.error('Erreur lors de la recherche d\'adresses:', error)
       showErrorAlert('Erreur', 'Impossible de rechercher les adresses')
@@ -1140,24 +1148,15 @@ const CreateDeliveryScreen: React.FC = () => {
   }
 
   const handleTextChange = (text: string, field: 'pickup' | 'delivery') => {
+    console.log(`[Recherche adresse] Champ: ${field}, Saisie:`, text);
     if (field === 'pickup') {
       setPickupQuery(text);
-
-      if (text.length > 0) {
-        searchAddresses(text, 'pickup');
-      } else {
-        setPickupSuggestions([]);
-        setShowPickupSuggestions(false);
-      }
+      searchAddresses(text, 'pickup');
+      setShowPickupSuggestions(true);
     } else {
       setDeliveryQuery(text);
-
-      if (text.length > 0) {
-        searchAddresses(text, 'delivery');
-      } else {
-        setDeliverySuggestions([]);
-        setShowDeliverySuggestions(false);
-      }
+      searchAddresses(text, 'delivery');
+      setShowDeliverySuggestions(true);
     }
   };
 
@@ -1319,9 +1318,11 @@ const CreateDeliveryScreen: React.FC = () => {
         `https://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${pickupLocation.latitude},${pickupLocation.longitude}`
       )
       const data = await response.json()
+      console.log('[DEBUG] Réponse API météo:', data)
       setWeatherData(data)
     } catch (error) {
       console.warn('Erreur lors de la récupération des données météo:', error)
+      console.log('[DEBUG] Erreur API météo:', error)
     }
   }
 
@@ -1346,7 +1347,12 @@ const CreateDeliveryScreen: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateForm()) return
 
-    setLoading(true)
+    // Validation stricte du prix proposé
+    const prixClient = parseFloat(proposedPrice)
+    if (proposedPrice && (isNaN(prixClient) || prixClient <= 0)) {
+      showErrorAlert('Erreur', 'Le prix proposé doit être un nombre positif.')
+      return
+    }
 
     const payload = {
       pickup_address: pickupAddress,
@@ -1362,7 +1368,7 @@ const CreateDeliveryScreen: React.FC = () => {
       package_size: packageSize,
       package_weight: parseFloat(packageWeight) || 1,
       is_fragile: isFragile,
-      proposed_price: parseFloat(proposedPrice) || estimatedPrice,
+      proposed_price: prixClient > 0 ? prixClient : estimatedPrice,
       recipient_name: recipientName,
       recipient_phone: recipientPhone,
       special_instructions: specialInstructions,
@@ -1387,15 +1393,19 @@ const CreateDeliveryScreen: React.FC = () => {
         navigation.navigate('Home')
         return
       }
-
       const result = await createDelivery(payload)
+      console.log('[DEBUG] Résultat création livraison:', result)
+      // Extraction robuste de l'identifiant
+      const anyResult = result as any
+      const deliveryId = anyResult?.id || anyResult?.delivery?.id || anyResult?.data?.id
+      if (!deliveryId) {
+        showErrorAlert('Erreur', "La livraison a été créée mais l'identifiant est manquant. Veuillez contacter le support.")
+        return
+      }
       showSuccessAlert('Succès', 'Votre livraison a été créée avec succès!')
-      navigation.navigate('TrackDelivery', { deliveryId: result.id })
+      navigation.navigate('BidScreen', { deliveryId: String(deliveryId) })
     } catch (error) {
-      console.error('Erreur lors de la création de la livraison:', error)
-      showErrorAlert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.')
-    } finally {
-      setLoading(false)
+      // L'erreur sera captée par le hook et showErrorAlert via useEffect
     }
   }
 
@@ -1501,6 +1511,13 @@ const CreateDeliveryScreen: React.FC = () => {
       </Text>
     </TouchableOpacity>
   )
+
+  // Effet pour afficher les erreurs du hook useDelivery
+  useEffect(() => {
+    if (deliveryError) {
+      showErrorAlert('Erreur', deliveryError)
+    }
+  }, [deliveryError])
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1696,24 +1713,30 @@ const CreateDeliveryScreen: React.FC = () => {
 
             {/* Fragile Switch */}
             <View style={styles.switchContainer}>
-              
-                Colis fragile ?
-                
-                  Manipuler avec précaution
-                
-              
-              
+              <View style={styles.switchLabel}>
+                <Text style={styles.switchTitle}>Colis fragile ?</Text>
+                <Text style={styles.switchDescription}>Manipuler avec précaution</Text>
+              </View>
+              <Switch
+                value={isFragile}
+                onValueChange={setIsFragile}
+                thumbColor={isFragile ? COLORS.primary : COLORS.border}
+                trackColor={{ false: COLORS.border, true: COLORS.primaryLight }}
+              />
             </View>
 
             {/* Urgent Switch */}
             <View style={styles.switchContainer}>
-              
-                Livraison urgente ?
-                
-                  Livraison plus rapide
-                
-              
-              
+              <View style={styles.switchLabel}>
+                <Text style={styles.switchTitle}>Livraison urgente ?</Text>
+                <Text style={styles.switchDescription}>Livraison plus rapide</Text>
+              </View>
+              <Switch
+                value={isUrgent}
+                onValueChange={setIsUrgent}
+                thumbColor={isUrgent ? COLORS.primary : COLORS.border}
+                trackColor={{ false: COLORS.border, true: COLORS.primaryLight }}
+              />
             </View>
           </View>
 
@@ -1758,7 +1781,16 @@ const CreateDeliveryScreen: React.FC = () => {
           {/* Proposed Price */}
           <View style={styles.packageSection}>
             <Text style={styles.sectionTitle}>Prix</Text>
-            
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Prix proposé par le client (optionnel)</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Proposez un prix (F CFA)"
+                keyboardType="numeric"
+                value={proposedPrice}
+                onChangeText={setProposedPrice}
+              />
+            </View>
           </View>
 
           {/* Delivery Options modernisées avec calcul dynamique */}
@@ -1774,23 +1806,23 @@ const CreateDeliveryScreen: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.actionButton,
-            loading && styles.actionButtonDisabled
+            isLoading && styles.actionButtonDisabled
           ]}
           onPress={handleSubmit}
-          disabled={loading}
+          disabled={isLoading}
         >
           <Text>
-            Créer la livraison - {formatPrice(estimatedPrice)}
+            Créer la livraison - {formatPrice(proposedPrice && parseFloat(proposedPrice) > 0 ? parseFloat(proposedPrice) : estimatedPrice)}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Loading Modal */}
-      <Modal visible={loading} transparent animationType="fade">
+      {/* Loader global pour la création de livraison */}
+      <Modal visible={isLoading || loadingLocation} transparent animationType="fade">
         <View style={styles.loadingContainer}>
           <View style={styles.loadingContent}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Création en cours...</Text>
+            <Text style={styles.loadingText}>{loadingLocation ? 'Localisation en cours...' : 'Création en cours...'}</Text>
           </View>
         </View>
       </Modal>

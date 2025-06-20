@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -20,6 +19,7 @@ import {
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { debounce } from "lodash";
+import { getGoogleMapsApiKey } from '../config/environment';
 
 export interface Address {
   id: string;
@@ -300,11 +300,40 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  // Recherche d'adresses libre comme Google Maps
+  const fetchGooglePlaces = async (query: string): Promise<Address[]> => {
+    try {
+      const apiKey = getGoogleMapsApiKey();
+      if (!apiKey) return [];
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&language=fr&components=country:ci&key=${apiKey}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!data.predictions) return [];
+      // Pour chaque prediction, récupérer les coordonnées via Place Details
+      const detailsPromises = data.predictions.slice(0, 5).map(async (prediction: any) => {
+        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,name,formatted_address&language=fr&key=${apiKey}`;
+        const detailsResp = await fetch(detailsUrl);
+        const detailsData = await detailsResp.json();
+        const loc = detailsData.result?.geometry?.location;
+        return loc ? {
+          id: prediction.place_id,
+          description: detailsData.result.formatted_address || prediction.description,
+          latitude: loc.lat,
+          longitude: loc.lng,
+          type: 'search_result',
+        } : null;
+      });
+      const details = await Promise.all(detailsPromises);
+      return details.filter(Boolean) as Address[];
+    } catch (e) {
+      console.warn('Erreur Google Places:', e);
+      return [];
+    }
+  };
+
   const searchAddresses = useCallback(
     debounce(async (query: string) => {
       if (query.length === 0) {
-        // Afficher les suggestions populaires quand le champ est vide
+        // Suggestions locales par défaut
         const defaultSuggestions = popularPlaces.slice(0, maxSuggestions).map(place => ({
           id: place.id,
           description: place.description,
@@ -319,15 +348,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         setShowSuggestions(true);
         return;
       }
-
       setLoading(true);
       setShowSuggestions(true);
-
       try {
-        const results: Address[] = [];
+        let results: Address[] = [];
         const normalizedQuery = query.toLowerCase().trim();
-
-        // Toujours ajouter "Votre position" en premier si l'option est activée
+        // Suggestions locales (toujours "Votre position" en premier si activé)
         if (showCurrentLocation) {
           results.push({
             id: 'current_location',
@@ -338,8 +364,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             type: 'current_location'
           });
         }
-
-        // Recherche flexible dans les lieux populaires
+        // Suggestions Google Places
+        if (query.length >= 3) {
+          const googleResults = await fetchGooglePlaces(query);
+          results = results.concat(googleResults);
+        }
+        // Suggestions locales (populaires, villes)
         popularPlaces.forEach((place) => {
           const searchableText = `${place.name} ${place.description} ${place.commune || ''} ${place.city || ''} ${place.region || ''}`.toLowerCase();
           if (searchableText.includes(normalizedQuery)) {
@@ -355,8 +385,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             });
           }
         });
-
-        // Recherche par ville dans toute la Côte d'Ivoire
         ivoryCoastCities.forEach((city, index) => {
           const searchableText = `${city.name} ${city.region}`.toLowerCase();
           if (searchableText.includes(normalizedQuery)) {
@@ -371,38 +399,30 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             });
           }
         });
-
-        // Générer des suggestions pour toute adresse tapée (comme Google Maps)
-        if (query.length >= 3) {
-          // Créer une suggestion générique basée sur la recherche
-          const genericSuggestion: Address = {
+        // Générer une suggestion générique si rien trouvé
+        if (query.length >= 3 && results.length === 0) {
+          results.push({
             id: `search_${Date.now()}`,
             description: query,
-            latitude: 5.3599, // Coordonnées par défaut d'Abidjan
+            latitude: 5.3599,
             longitude: -3.9569,
-            commune: 'Abidjan', // Commune par défaut
+            commune: 'Abidjan',
             city: 'Abidjan',
             region: 'Côte d\'Ivoire',
             type: 'search_result'
-          };
-
-          // Ajouter la suggestion de recherche à la fin
-          results.push(genericSuggestion);
+          });
         }
-
-        // Retirer les doublons et limiter les résultats
-        const uniqueResults = results.filter((item, index, self) => 
+        // Retirer les doublons et limiter
+        const uniqueResults = results.filter((item, index, self) =>
           index === self.findIndex((t) => t.description.toLowerCase() === item.description.toLowerCase())
         );
-
         setSuggestions(uniqueResults.slice(0, maxSuggestions));
       } catch (error) {
-        console.error('Error searching addresses:', error);
         setSuggestions([]);
       } finally {
         setLoading(false);
       }
-    }, 300),
+    }, 400),
     [popularPlaces, ivoryCoastCities, maxSuggestions, showCurrentLocation, currentLocation]
   );
 
