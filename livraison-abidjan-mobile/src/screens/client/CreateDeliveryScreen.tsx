@@ -1056,7 +1056,6 @@ const CreateDeliveryScreen: React.FC = () => {
         icon: '🏍️',
         price: 400,
         time: '25-35 min',
-```text
         maxWeight: 5,
         maxSize: 'small',
         suitable: weight <= 5 && ['xs', 'small'].includes(size) && distance <= 50
