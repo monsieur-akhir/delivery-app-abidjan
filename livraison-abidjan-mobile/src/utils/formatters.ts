@@ -1,89 +1,60 @@
-export const formatDate = (dateString: string, format?: string): string => {
-  if (!dateString) return ''
+export const formatDate = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
 
-  try {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return dateString
+export const formatTime = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
-    if (format === 'short') {
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      })
-    }
+export const formatDateTime = (date: Date | string): string => {
+  return `${formatDate(date)} à ${formatTime(date)}`;
+};
 
-    return date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  } catch {
-    return dateString
-  }
-}
-
-export const formatPrice = (price: number): string => {
-  if (typeof price !== 'number' || isNaN(price)) return '0'
+export const formatPrice = (amount: number): string => {
   return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'XOF',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(price)
-}
+    maximumFractionDigits: 0,
+  }).format(amount).replace('XOF', 'F CFA');
+};
 
-export const formatDistance = (distanceInMeters: number): string => {
-  if (distanceInMeters < 1000) {
-    return `${Math.round(distanceInMeters)}m`
+export const formatDistance = (distanceKm: number): string => {
+  if (distanceKm < 1) {
+    return `${Math.round(distanceKm * 1000)} m`;
   }
-  return `${(distanceInMeters / 1000).toFixed(1)}km`
-}
+  return `${distanceKm.toFixed(1)} km`;
+};
 
-export const formatDuration = (durationInMinutes: number): string => {
-  if (durationInMinutes < 60) {
-    return `${Math.round(durationInMinutes)}min`
+export const formatDuration = (durationMinutes: number): string => {
+  if (durationMinutes < 60) {
+    return `${Math.round(durationMinutes)} min`;
   }
-  const hours = Math.floor(durationInMinutes / 60)
-  const minutes = Math.round(durationInMinutes % 60)
-  return minutes > 0 ? `${hours}h${minutes}min` : `${hours}h`
-}
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = Math.round(durationMinutes % 60);
+  return `${hours}h ${minutes}min`;
+};
 
 export const formatPhoneNumber = (phone: string): string => {
-  if (!phone) return ''
-
-  // Remove all non-digit characters
-  const digits = phone.replace(/\D/g, '')
-
-  // Format based on length
-  if (digits.length === 8) {
-    // Ivorian local number: XX XX XX XX
-    return digits.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4')
-  } else if (digits.length === 10 && digits.startsWith('0')) {
-    // Ivorian number with leading 0: 0X XX XX XX XX
-    return digits.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5')
-  } else if (digits.length >= 10) {
-    // International format
-    return `+${digits}`
+  // Format pour numéros ivoiriens
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 8) {
+    return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4');
   }
-
-  return phone
-}
-
-export const formatTime = (timeString: string): string => {
-  if (!timeString) return ''
-
-  try {
-    const date = new Date(timeString)
-    if (isNaN(date.getTime())) return timeString
-
-    return date.toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch {
-    return timeString
+  if (cleaned.length === 10) {
+    return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '+225 $1 $2 $3 $4');
   }
-}
+  return phone;
+};
 
 export const truncateText = (text: string, maxLength: number): string => {
   if (!text || text.length <= maxLength) return text
