@@ -1,19 +1,22 @@
-const { getDefaultConfig } = require("expo/metro-config");
+const { getDefaultConfig } = require('@expo/metro-config');
 
-module.exports = (() => {
-  const config = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname);
 
-  const { transformer, resolver } = config;
+// Configuration pour éviter les erreurs de modules
+config.resolver.assetExts.push(
+  // Adds support for `.db` files for SQLite databases
+  'db'
+);
 
-  config.transformer = {
-    ...transformer,
-    babelTransformerPath: require.resolve("react-native-svg-transformer")
-  };
-  config.resolver = {
-    ...resolver,
-    assetExts: resolver.assetExts.filter((ext) => ext !== "svg"),
-    sourceExts: [...resolver.sourceExts, "svg"]
-  };
+config.resolver.sourceExts.push('js', 'json', 'ts', 'tsx', 'jsx');
 
-  return config;
-})();
+// Transformer configuration pour gérer les erreurs JS
+config.transformer = {
+  ...config.transformer,
+  babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
+};
+
+// Ajouter un resolver pour les modules problématiques
+config.resolver.platforms = ['native', 'ios', 'android', 'web'];
+
+module.exports = config;
