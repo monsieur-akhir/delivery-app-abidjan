@@ -1,0 +1,61 @@
+[{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/components/DeliveryMapView.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'primary' does not exist on type '{ orange: string; lightOrange: string; darkOrange: string; gray: string; lightGray: string; darkGray: string; white: string; black: string; success: string; warning: string; error: string; info: string; }'.",
+	"source": "ts",
+	"startLineNumber": 47,
+	"startColumn": 61,
+	"endLineNumber": 47,
+	"endColumn": 68,
+	"modelVersionId": 4
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/components/DeliveryMapView.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'primary' does not exist on type '{ orange: string; lightOrange: string; darkOrange: string; gray: string; lightGray: string; darkGray: string; white: string; black: string; success: string; warning: string; error: string; info: string; }'.",
+	"source": "ts",
+	"startLineNumber": 60,
+	"startColumn": 58,
+	"endLineNumber": 60,
+	"endColumn": 65,
+	"modelVersionId": 4
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/components/DeliveryMapView.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'surface' does not exist on type '{ orange: string; lightOrange: string; darkOrange: string; gray: string; lightGray: string; darkGray: string; white: string; black: string; success: string; warning: string; error: string; info: string; }'.",
+	"source": "ts",
+	"startLineNumber": 79,
+	"startColumn": 29,
+	"endLineNumber": 79,
+	"endColumn": 36,
+	"modelVersionId": 4
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/components/DeliveryMapView.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'primary' does not exist on type '{ orange: string; lightOrange: string; darkOrange: string; gray: string; lightGray: string; darkGray: string; white: string; black: string; success: string; warning: string; error: string; info: string; }'.",
+	"source": "ts",
+	"startLineNumber": 87,
+	"startColumn": 25,
+	"endLineNumber": 87,
+	"endColumn": 32,
+	"modelVersionId": 4
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/components/DeliveryMapView.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'primary' does not exist on type '{ orange: string; lightOrange: string; darkOrange: string; gray: string; lightGray: string; darkGray: string; white: string; black: string; success: string; warning: string; error: string; info: string; }'.",
+	"source": "ts",
+	"startLineNumber": 91,
+	"startColumn": 25,
+	"endLineNumber": 91,
+	"endColumn": 32,
+	"modelVersionId": 4
+}]
