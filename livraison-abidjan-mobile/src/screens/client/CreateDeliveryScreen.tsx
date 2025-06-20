@@ -16,7 +16,8 @@ import {
   LayoutAnimation,
   Modal,
   ActivityIndicator,
-  Image
+  Image,
+  FlatList
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button, Card, Chip, Divider, ProgressBar, Surface } from 'react-native-paper'
@@ -25,8 +26,8 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Haptics from 'expo-haptics'
 import { useTranslation } from 'react-i18next'
+import * as Location from 'expo-location'
 
-import AddressAutocomplete from '../../components/AddressAutocomplete'
 import MapView from '../../components/MapView'
 import WeatherInfo from '../../components/WeatherInfo'
 import CustomAlert from '../../components/CustomAlert'
@@ -74,6 +75,117 @@ const COLORS = {
   overlay: 'rgba(0, 0, 0, 0.4)',
   mapBackground: '#F5F5F5'
 }
+
+// Données d'Abidjan pour l'autocomplétion locale
+const ABIDJAN_PLACES = [
+  {
+    id: 'votre_position',
+    name: 'Votre position',
+    description: 'Prise en charge à votre position GPS',
+    type: 'current_location',
+    icon: 'crosshairs-gps'
+  },
+  {
+    id: 'domicile',
+    name: 'Domicile',
+    description: '918, Rue M60',
+    commune: 'Cocody',
+    latitude: 5.3599,
+    longitude: -3.9569,
+    type: 'saved',
+    icon: 'home'
+  },
+  {
+    id: 'groupe_itermi',
+    name: 'Groupe Itermi',
+    description: 'Quartier de la Djorabilité I, Cocody, Abidjan',
+    commune: 'Cocody',
+    latitude: 5.3599,
+    longitude: -3.9569,
+    type: 'business',
+    icon: 'map-pin'
+  },
+  {
+    id: 'rue_l125',
+    name: 'Rue L125, 2166',
+    description: 'Cocody, Abidjan',
+    commune: 'Cocody',
+    latitude: 5.3599,
+    longitude: -3.9569,
+    type: 'address',
+    icon: 'map-pin'
+  },
+  {
+    id: 'blvd_martyrs',
+    name: 'Blvd des Martyrs 8303',
+    description: 'Cocody, Abidjan',
+    commune: 'Cocody',
+    latitude: 5.3599,
+    longitude: -3.9569,
+    type: 'address',
+    icon: 'map-pin'
+  },
+  {
+    id: 'rue_l129',
+    name: 'Rue L129, 107',
+    description: 'Cocody, Abidjan',
+    commune: 'Cocody',
+    latitude: 5.3599,
+    longitude: -3.9569,
+    type: 'address',
+    icon: 'map-pin'
+  },
+  {
+    id: 'voie_djibi',
+    name: 'Voie Djibi',
+    description: 'Abidjan',
+    commune: 'Yopougon',
+    latitude: 5.3364,
+    longitude: -4.0669,
+    type: 'area',
+    icon: 'map-pin'
+  },
+  {
+    id: 'chawarma_plus',
+    name: 'Chawarma+',
+    description: 'Rue L156, Cocody, Abidjan',
+    commune: 'Cocody',
+    latitude: 5.3599,
+    longitude: -3.9569,
+    type: 'restaurant',
+    icon: 'restaurant'
+  },
+  {
+    id: 'rue_m2',
+    name: 'Rue M2',
+    description: 'Cocody, Abidjan',
+    commune: 'Cocody',
+    latitude: 5.3599,
+    longitude: -3.9569,
+    type: 'address',
+    icon: 'map-pin'
+  },
+  {
+    id: 'azito',
+    name: 'Azito',
+    description: 'Abidjan',
+    commune: 'Yopougon',
+    latitude: 5.3364,
+    longitude: -4.0669,
+    type: 'area',
+    icon: 'map-pin'
+  },
+  {
+    id: 'cinema_benin',
+    name: 'Le Cinéma Benin',
+    description: 'La commune Attécoubé, Rue I34, 514',
+    commune: 'Attécoubé',
+    latitude: 5.3164,
+    longitude: -4.0269,
+    type: 'entertainment',
+    icon: 'film'
+  }
+]
 
 // Styles modernes
 const styles = StyleSheet.create({
@@ -215,67 +327,128 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   
-  // Address inputs avec design moderne
+  // Address section avec style Google Maps
   addressSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
   },
   
-  addressInputContainer: {
-    position: 'relative',
+  addressContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
     marginBottom: 16,
   },
   
-  addressInput: {
+  addressInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.backgroundSecondary,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    minHeight: 56,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  
+  addressInputRowLast: {
+    borderBottomWidth: 0,
   },
   
   addressInputIcon: {
-    marginRight: 12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
   
-  pickupDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  pickupIcon: {
     backgroundColor: COLORS.primary,
   },
   
-  deliveryIcon: {
-    width: 12,
-    height: 12,
+  destinationIcon: {
+    backgroundColor: COLORS.text,
+  },
+  
+  addressInputContent: {
+    flex: 1,
+  },
+  
+  addressInputLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+    marginBottom: 4,
   },
   
   addressInputText: {
-    flex: 1,
     fontSize: 16,
-    color: COLORS.text,
     fontWeight: '500',
+    color: COLORS.text,
   },
   
   addressInputPlaceholder: {
-    flex: 1,
     fontSize: 16,
     color: COLORS.textSecondary,
   },
   
-  // Ligne de connexion entre les adresses
-  connectionLine: {
-    position: 'absolute',
-    left: 36,
-    top: 56,
-    width: 2,
-    height: 16,
-    backgroundColor: COLORS.border,
+  // Autocomplete suggestions
+  suggestionsContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    marginTop: 8,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    maxHeight: 300,
   },
   
-  // Delivery options avec design amélioré
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  
+  suggestionItemLast: {
+    borderBottomWidth: 0,
+  },
+  
+  suggestionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.backgroundSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  
+  suggestionContent: {
+    flex: 1,
+  },
+  
+  suggestionTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+  
+  suggestionSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  
+  // Delivery options modernisées
   deliveryOptionsSection: {
     paddingHorizontal: 20,
     marginBottom: 24,
@@ -400,89 +573,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: COLORS.overlay,
-    justifyContent: 'flex-end',
-  },
-  
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 12,
-    maxHeight: height * 0.85,
-  },
-  
-  modalHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: COLORS.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 24,
-    paddingHorizontal: 20,
-  },
-  
-  // Package types grid
-  packageTypesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  
-  packageTypeCard: {
-    width: (width - 52) / 3,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: COLORS.border,
-  },
-  
-  packageTypeCardSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.secondary,
-  },
-  
-  packageTypeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.backgroundSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  
-  packageTypeIconSelected: {
-    backgroundColor: COLORS.primary,
-  },
-  
-  packageTypeLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: COLORS.text,
-    textAlign: 'center',
-  },
-  
-  packageTypeLabelSelected: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  
   // Loading modal
   loadingContainer: {
     flex: 1,
@@ -575,16 +665,6 @@ interface DeliveryCreateRequest {
   extras?: string[]
 }
 
-type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
-
-interface DeliverySpeed {
-  key: string;
-  title: string;
-  time: string;
-  icon: FeatherIconName;
-  multiplier: number;
-}
-
 interface RouteParams {
   searchQuery?: string
 }
@@ -615,13 +695,13 @@ const CreateDeliveryScreen: React.FC = () => {
 
   const mapRef = useRef<any>(null)
 
-  // Form states - conservation de votre logique existante
+  // Form states
   const [packageType, setPackageType] = useState<string>('small')
   const [selectedPackageType, setSelectedPackageType] = useState<string>('small')
   const [packageSize, setPackageSize] = useState<string>('small')
   const [packageWeight, setPackageWeight] = useState<string>('')
   const [isFragile, setIsFragile] = useState<boolean>(false)
-  const [pickupAddress, setPickupAddress] = useState<string>('Rue M60, 918')
+  const [pickupAddress, setPickupAddress] = useState<string>('')
   const [deliveryAddress, setDeliveryAddress] = useState<string>('')
   const [pickupLocation, setPickupLocation] = useState<Address | null>(null)
   const [deliveryLocation, setDeliveryLocation] = useState<Address | null>(null)
@@ -645,14 +725,22 @@ const CreateDeliveryScreen: React.FC = () => {
     priceMultiplier: number
   } | null>(null)
 
-  // États pour les options dynamiques - conservation de votre logique
+  // États pour l'autocomplétion
+  const [pickupQuery, setPickupQuery] = useState<string>('')
+  const [deliveryQuery, setDeliveryQuery] = useState<string>('')
+  const [pickupSuggestions, setPickupSuggestions] = useState<any[]>([])
+  const [deliverySuggestions, setDeliverySuggestions] = useState<any[]>([])
+  const [showPickupSuggestions, setShowPickupSuggestions] = useState<boolean>(false)
+  const [showDeliverySuggestions, setShowDeliverySuggestions] = useState<boolean>(false)
+  const [activeField, setActiveField] = useState<'pickup' | 'delivery' | null>(null)
+
+  // États pour les options dynamiques
   const [deliveryOptions, setDeliveryOptions] = useState<any>(null)
   const [selectedVehicleType, setSelectedVehicleType] = useState<string>('moto')
   const [selectedSpeed, setSelectedSpeed] = useState<string>('')
   const [selectedExtras, setSelectedExtras] = useState<string[]>([])
   const [totalPrice, setTotalPrice] = useState<number>(400)
   const [estimatedPrice, setEstimatedPrice] = useState(400)
-  const [showPackageModal, setShowPackageModal] = useState(false)
 
   // Options de livraison modernisées
   const modernDeliveryOptions = [
@@ -682,20 +770,156 @@ const CreateDeliveryScreen: React.FC = () => {
     }
   ]
 
-  // Package types
-  const packageTypes = [
-    { key: 'petit', label: 'Petit', icon: 'package' },
-    { key: 'moyen', label: 'Moyen', icon: 'box' },
-    { key: 'grand', label: 'Grand', icon: 'archive' },
-    { key: 'fragile', label: 'Fragile', icon: 'alert-triangle' },
-    { key: 'nourriture', label: 'Nourriture', icon: 'coffee' },
-    { key: 'documents', label: 'Documents', icon: 'file-text' }
-  ]
+  // Fonction de recherche avec autocomplétion locale et Google
+  const searchAddresses = useCallback(async (query: string, type: 'pickup' | 'delivery') => {
+    if (query.length < 2) {
+      if (type === 'pickup') {
+        setPickupSuggestions([])
+        setShowPickupSuggestions(false)
+      } else {
+        setDeliverySuggestions([])
+        setShowDeliverySuggestions(false)
+      }
+      return
+    }
 
-  // Conservation de tous vos useEffect existants
+    // Filtrer les suggestions locales
+    const localSuggestions = ABIDJAN_PLACES.filter(place =>
+      place.name.toLowerCase().includes(query.toLowerCase()) ||
+      place.description.toLowerCase().includes(query.toLowerCase())
+    )
+
+    // TODO: Ajouter l'appel à Google Places API
+    try {
+      // const googleSuggestions = await GooglePlacesService.searchPlaces(query)
+      const allSuggestions = localSuggestions // [...localSuggestions, ...googleSuggestions]
+      
+      if (type === 'pickup') {
+        setPickupSuggestions(allSuggestions)
+        setShowPickupSuggestions(true)
+      } else {
+        setDeliverySuggestions(allSuggestions)
+        setShowDeliverySuggestions(true)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la recherche:', error)
+      if (type === 'pickup') {
+        setPickupSuggestions(localSuggestions)
+        setShowPickupSuggestions(true)
+      } else {
+        setDeliverySuggestions(localSuggestions)
+        setShowDeliverySuggestions(true)
+      }
+    }
+  }, [])
+
+  // Fonction pour utiliser la position actuelle
+  const useCurrentLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted') {
+        showErrorAlert('Permission refusée', 'Nous avons besoin de votre localisation pour cette fonctionnalité')
+        return
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High
+      })
+
+      let addressName = 'Position actuelle'
+      try {
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        })
+        if (reverseGeocode && reverseGeocode[0]) {
+          const addr = reverseGeocode[0]
+          addressName = `${addr.name || ''} ${addr.street || ''}, ${addr.city || addr.region || ''}`.trim()
+        }
+      } catch (error) {
+        console.warn('Erreur lors du géocodage inverse:', error)
+      }
+
+      const currentLocationAddress: Address = {
+        id: 'current_location',
+        name: addressName,
+        description: addressName,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        commune: 'Abidjan',
+        type: 'current_location'
+      }
+
+      if (activeField === 'pickup') {
+        setPickupAddress(addressName)
+        setPickupQuery(addressName)
+        setPickupLocation(currentLocationAddress)
+        setShowPickupSuggestions(false)
+      } else if (activeField === 'delivery') {
+        setDeliveryAddress(addressName)
+        setDeliveryQuery(addressName)
+        setDeliveryLocation(currentLocationAddress)
+        setShowDeliverySuggestions(false)
+      }
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    } catch (error) {
+      console.error('Erreur lors de la géolocalisation:', error)
+      showErrorAlert('Erreur', 'Impossible de récupérer votre position')
+    }
+  }
+
+  // Gestion de la sélection d'une suggestion
+  const handleSuggestionSelect = useCallback((suggestion: any, type: 'pickup' | 'delivery') => {
+    if (suggestion.id === 'votre_position') {
+      setActiveField(type)
+      useCurrentLocation()
+      return
+    }
+
+    const address: Address = {
+      id: suggestion.id,
+      name: suggestion.name,
+      description: suggestion.description,
+      latitude: suggestion.latitude || 5.3599,
+      longitude: suggestion.longitude || -3.9569,
+      commune: suggestion.commune || 'Abidjan',
+      type: suggestion.type || 'address'
+    }
+
+    if (type === 'pickup') {
+      setPickupAddress(suggestion.description)
+      setPickupQuery(suggestion.description)
+      setPickupLocation(address)
+      setShowPickupSuggestions(false)
+    } else {
+      setDeliveryAddress(suggestion.description)
+      setDeliveryQuery(suggestion.description)
+      setDeliveryLocation(address)
+      setShowDeliverySuggestions(false)
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }, [])
+
+  // Gestion du changement de texte
+  const handleTextChange = useCallback((text: string, type: 'pickup' | 'delivery') => {
+    if (type === 'pickup') {
+      setPickupQuery(text)
+      setPickupAddress(text)
+    } else {
+      setDeliveryQuery(text)
+      setDeliveryAddress(text)
+    }
+    
+    searchAddresses(text, type)
+  }, [searchAddresses])
+
+  // Conservation de vos useEffect existants
   useEffect(() => {
     if (params?.searchQuery) {
       setPickupAddress(params.searchQuery)
+      setPickupQuery(params.searchQuery)
     }
   }, [params])
 
@@ -795,30 +1019,6 @@ const CreateDeliveryScreen: React.FC = () => {
         setProposedPrice(finalPrice.toString())
         setEstimatedPrice(finalPrice)
       }
-
-      // Recommendation de véhicule
-      const vehicleData = {
-        pickup_lat: pickupLocation.latitude,
-        pickup_lng: pickupLocation.longitude,
-        delivery_lat: deliveryLocation.latitude,
-        delivery_lng: deliveryLocation.longitude,
-        package_type: selectedPackageType,
-        package_weight: parseFloat(packageWeight) || 1,
-        is_fragile: isFragile,
-        distance: distance
-      }
-
-      try {
-        const recommendation = await DeliveryService.getVehicleRecommendation(vehicleData)
-        setRecommendedVehicle({
-          type: recommendation.recommended_vehicle as VehicleType,
-          name: getVehicleName(recommendation.recommended_vehicle as VehicleType),
-          reason: recommendation.reason,
-          priceMultiplier: recommendation.price_multiplier || 1.0
-        })
-      } catch (error) {
-        console.warn('Erreur lors de la recommandation de véhicule:', error)
-      }
     } catch (error) {
       console.error('Erreur lors du calcul du prix:', error)
       showErrorAlert('Erreur', 'Impossible de calculer le prix estimé')
@@ -836,21 +1036,6 @@ const CreateDeliveryScreen: React.FC = () => {
       setWeatherData(data)
     } catch (error) {
       console.warn('Erreur lors de la récupération des données météo:', error)
-    }
-  }
-
-  const getVehicleName = (type: VehicleType): string => {
-    switch (type) {
-      case 'motorcycle':
-        return 'Moto'
-      case 'car':
-        return 'Voiture'
-      case 'van':
-        return 'Camionnette'
-      case 'truck':
-        return 'Camion'
-      default:
-        return 'Véhicule'
     }
   }
 
@@ -937,24 +1122,6 @@ const CreateDeliveryScreen: React.FC = () => {
     return true
   }
 
-  const handleAddressSelect = (address: any, type: 'pickup' | 'delivery') => {
-    if (type === 'pickup') {
-      setPickupLocation(address)
-      setPickupAddress(address.description)
-    } else {
-      setDeliveryLocation(address)
-      setDeliveryAddress(address.description)
-    }
-  }
-
-  const toggleExtra = (extraKey: string) => {
-    setSelectedExtras(prev => 
-      prev.includes(extraKey) 
-        ? prev.filter(k => k !== extraKey) 
-        : [...prev, extraKey]
-    )
-  }
-
   const renderDeliveryOption = (option: any) => (
     <TouchableOpacity
       key={option.key}
@@ -984,55 +1151,29 @@ const CreateDeliveryScreen: React.FC = () => {
     </TouchableOpacity>
   )
 
-  const renderPackageTypeModal = () => (
-    <Modal
-      visible={showPackageModal}
-      transparent
-      animationType="slide"
-      onRequestClose={() => setShowPackageModal(false)}
+  const renderSuggestionItem = ({ item, index }: { item: any; index: number }) => (
+    <TouchableOpacity
+      style={[
+        styles.suggestionItem,
+        index === pickupSuggestions.length - 1 || index === deliverySuggestions.length - 1 ? styles.suggestionItemLast : null
+      ]}
+      onPress={() => handleSuggestionSelect(item, activeField || 'pickup')}
+      activeOpacity={0.7}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>Type de colis</Text>
-          
-          <View style={styles.packageTypesGrid}>
-            {packageTypes.map((type) => (
-              <TouchableOpacity
-                key={type.key}
-                style={[
-                  styles.packageTypeCard,
-                  selectedPackageType === type.key && styles.packageTypeCardSelected
-                ]}
-                onPress={() => {
-                  setSelectedPackageType(type.key)
-                  setPackageType(type.key)
-                  setShowPackageModal(false)
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                }}
-              >
-                <View style={[
-                  styles.packageTypeIcon,
-                  selectedPackageType === type.key && styles.packageTypeIconSelected
-                ]}>
-                  <Feather
-                    name={type.icon as any}
-                    size={20}
-                    color={selectedPackageType === type.key ? COLORS.white : COLORS.primary}
-                  />
-                </View>
-                <Text style={[
-                  styles.packageTypeLabel,
-                  selectedPackageType === type.key && styles.packageTypeLabelSelected
-                ]}>
-                  {type.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+      <View style={styles.suggestionIcon}>
+        <Feather
+          name={item.icon || 'map-pin'}
+          size={16}
+          color={item.id === 'votre_position' ? COLORS.primary : COLORS.textSecondary}
+        />
       </View>
-    </Modal>
+      <View style={styles.suggestionContent}>
+        <Text style={styles.suggestionTitle}>{item.name}</Text>
+        {item.description !== item.name && (
+          <Text style={styles.suggestionSubtitle}>{item.description}</Text>
+        )}
+      </View>
+    </TouchableOpacity>
   )
 
   return (
@@ -1092,51 +1233,78 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.bottomSheetHandle} />
           <Text style={styles.bottomSheetTitle}>ENVOYER UN COLIS</Text>
 
-          {/* Address Inputs avec design moderne */}
+          {/* Address Inputs avec design Google Maps */}
           <View style={styles.addressSection}>
-            <View style={styles.addressInputContainer}>
+            <View style={styles.addressContainer}>
+              {/* Pickup Address */}
               <TouchableOpacity 
-                style={styles.addressInput}
+                style={[styles.addressInputRow]}
                 onPress={() => {
-                  // Ouvrir la sélection d'adresse de pickup
+                  setActiveField('pickup')
+                  setShowPickupSuggestions(true)
+                  setShowDeliverySuggestions(false)
                 }}
               >
-                <View style={styles.addressInputIcon}>
-                  <View style={styles.pickupDot} />
+                <View style={[styles.addressInputIcon, styles.pickupIcon]}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.white }} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 2 }}>
-                    Prise en charge
-                  </Text>
-                  <Text style={styles.addressInputText}>
-                    {pickupAddress || 'Rue M60, 918'}
+                <View style={styles.addressInputContent}>
+                  <Text style={styles.addressInputLabel}>Prise en charge</Text>
+                  <Text style={[
+                    pickupAddress ? styles.addressInputText : styles.addressInputPlaceholder
+                  ]}>
+                    {pickupAddress || 'Adresse de prise en charge'}
                   </Text>
                 </View>
               </TouchableOpacity>
               
-              <View style={styles.connectionLine} />
+              {/* Delivery Address */}
+              <TouchableOpacity 
+                style={[styles.addressInputRow, styles.addressInputRowLast]}
+                onPress={() => {
+                  setActiveField('delivery')
+                  setShowDeliverySuggestions(true)
+                  setShowPickupSuggestions(false)
+                }}
+              >
+                <View style={[styles.addressInputIcon, styles.destinationIcon]}>
+                  <Feather name="navigation" size={12} color={COLORS.white} />
+                </View>
+                <View style={styles.addressInputContent}>
+                  <Text style={styles.addressInputLabel}>Destination</Text>
+                  <Text style={[
+                    deliveryAddress ? styles.addressInputText : styles.addressInputPlaceholder
+                  ]}>
+                    {deliveryAddress || 'Adresse de livraison'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
-              style={styles.addressInput}
-              onPress={() => {
-                // Ouvrir la sélection d'adresse de livraison
-              }}
-            >
-              <View style={styles.addressInputIcon}>
-                <Feather name="navigation" size={16} color={COLORS.textSecondary} />
+
+            {/* Suggestions d'autocomplétion */}
+            {showPickupSuggestions && pickupSuggestions.length > 0 && activeField === 'pickup' && (
+              <View style={styles.suggestionsContainer}>
+                <FlatList
+                  data={pickupSuggestions}
+                  renderItem={renderSuggestionItem}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled={true}
+                />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 2 }}>
-                  Adresse de livraison
-                </Text>
-                <Text style={[
-                  deliveryAddress ? styles.addressInputText : styles.addressInputPlaceholder
-                ]}>
-                  {deliveryAddress || 'Où doit-on livrer le colis ?'}
-                </Text>
+            )}
+
+            {showDeliverySuggestions && deliverySuggestions.length > 0 && activeField === 'delivery' && (
+              <View style={styles.suggestionsContainer}>
+                <FlatList
+                  data={deliverySuggestions}
+                  renderItem={renderSuggestionItem}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled={true}
+                />
               </View>
-            </TouchableOpacity>
+            )}
           </View>
 
           {/* Delivery Options modernisées */}
@@ -1193,9 +1361,6 @@ const CreateDeliveryScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* Modals */}
-      {renderPackageTypeModal()}
 
       {/* Loading Modal */}
       <Modal visible={loading} transparent animationType="fade">
