@@ -7,18 +7,17 @@ import { useTranslation } from 'react-i18next'
 import { useVehicle } from '../../hooks'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../types/navigation'
-import type { VehicleCreateRequest } from '../../types/models'
+import type { VehicleCreateRequest as ServiceVehicleCreateRequest } from '../../services/VehicleService'
+import type { VehicleType } from '../../types/models'
 
 // Définition des constantes pour les types de véhicules
 const VEHICLE_TYPES = {
-  MOTORCYCLE: 'motorcycle',
-  PICKUP: 'pickup',
-  BICYCLE: 'bicycle',
-  VAN: 'van',
-  CUSTOM: 'custom'
+  MOTORCYCLE: 'motorcycle' as const,
+  PICKUP: 'pickup' as const,
+  BICYCLE: 'bicycle' as const,
+  VAN: 'van' as const,
+  CUSTOM: 'custom' as const
 } as const
-
-type VehicleType = typeof VEHICLE_TYPES[keyof typeof VEHICLE_TYPES]
 
 interface VehicleFormData {
   type: VehicleType
@@ -58,15 +57,15 @@ const AddVehicleScreen: React.FC<AddVehicleScreenProps> = ({ navigation }) => {
         return
       }
 
-      // Préparation des données pour l'API
-      const vehicleData: VehicleCreateRequest = {
-        license_plate: formData.license_plate || '',
-        brand: formData.brand || '',
-        model: formData.model || '',
+      // Préparation des données pour l'API selon le format attendu par VehicleService
+      const vehicleData: ServiceVehicleCreateRequest = {
+        brand: formData.brand,
+        model: formData.model,
+        license_plate: formData.license_plate,
         year: formData.year ? parseInt(formData.year) : new Date().getFullYear(),
-        vehicle_type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType as any : formData.type as any,
-        capacity: formData.capacity ? parseFloat(formData.capacity) : undefined,
+        vehicle_type: formData.type === VEHICLE_TYPES.CUSTOM ? formData.customType as VehicleType : formData.type as VehicleType,
         is_electric: formData.is_electric,
+        max_load_weight: formData.capacity ? parseFloat(formData.capacity) : undefined,
       }
 
       await addVehicle(vehicleData)
