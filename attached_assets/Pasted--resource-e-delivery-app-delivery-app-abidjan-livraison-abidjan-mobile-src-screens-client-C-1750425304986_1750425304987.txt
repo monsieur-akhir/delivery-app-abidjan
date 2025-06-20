@@ -1,0 +1,49 @@
+[{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/CreateDeliveryScreen.tsx",
+	"owner": "typescript",
+	"code": "2322",
+	"severity": 8,
+	"message": "Type '{ pickupLocation: Address | null; deliveryLocation: Address | null; style: { flex: number; }; showRoute: boolean; }' is not assignable to type 'IntrinsicAttributes & MapViewProps'.\n  Property 'showRoute' does not exist on type 'IntrinsicAttributes & MapViewProps'.",
+	"source": "ts",
+	"startLineNumber": 1529,
+	"startColumn": 13,
+	"endLineNumber": 1529,
+	"endColumn": 22,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/courier/VehicleManagementScreen.tsx",
+	"owner": "typescript",
+	"code": "2345",
+	"severity": 8,
+	"message": "Argument of type '[\"AddVehicleScreen\", {}]' is not assignable to parameter of type '[screen: \"Login\", params?: undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | [screen: \"Register\", params?: undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | ... 59 more ... | [screen: ...]'.\n  Type '[\"AddVehicleScreen\", {}]' is not assignable to type '[screen: \"CreateDelivery\", params?: { serviceType?: string | undefined; searchQuery?: string | undefined; } | undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | [screen: ...] | [screen: ...]'.\n    Type '[\"AddVehicleScreen\", {}]' is not assignable to type '[screen: \"WeatherScreen\", params: { location?: string | undefined; }, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined]'.\n      Type at position 0 in source is not compatible with type at position 0 in target.\n        Type '\"AddVehicleScreen\"' is not assignable to type '\"WeatherScreen\"'.",
+	"source": "ts",
+	"startLineNumber": 242,
+	"startColumn": 46,
+	"endLineNumber": 242,
+	"endColumn": 68,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/courier/VehicleManagementScreen.tsx",
+	"owner": "typescript",
+	"code": "2345",
+	"severity": 8,
+	"message": "Argument of type '[\"AddVehicleScreen\", {}]' is not assignable to parameter of type '[screen: \"Login\", params?: undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | [screen: \"Register\", params?: undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | ... 59 more ... | [screen: ...]'.\n  Type '[\"AddVehicleScreen\", {}]' is not assignable to type '[screen: \"CreateDelivery\", params?: { serviceType?: string | undefined; searchQuery?: string | undefined; } | undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | [screen: ...] | [screen: ...]'.\n    Type '[\"AddVehicleScreen\", {}]' is not assignable to type '[screen: \"WeatherScreen\", params: { location?: string | undefined; }, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined]'.\n      Type at position 0 in source is not compatible with type at position 0 in target.\n        Type '\"AddVehicleScreen\"' is not assignable to type '\"WeatherScreen\"'.",
+	"source": "ts",
+	"startLineNumber": 222,
+	"startColumn": 50,
+	"endLineNumber": 222,
+	"endColumn": 72,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/courier/VehicleManagementScreen.tsx",
+	"owner": "typescript",
+	"code": "2345",
+	"severity": 8,
+	"message": "Argument of type '[\"AddVehicleScreen\", { vehicleId: number; }]' is not assignable to parameter of type '[screen: \"Login\", params?: undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | [screen: \"Register\", params?: undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined] | ... 59 more ... | [screen: ...]'.\n  Type '[\"AddVehicleScreen\", { vehicleId: number; }]' is not assignable to type '[screen: \"OfflineManagerScreen\", params?: undefined, options?: { merge?: boolean | undefined; pop?: boolean | undefined; } | undefined]'.\n    Type at position 0 in source is not compatible with type at position 0 in target.\n      Type '\"AddVehicleScreen\"' is not assignable to type '\"OfflineManagerScreen\"'.",
+	"source": "ts",
+	"startLineNumber": 141,
+	"startColumn": 50,
+	"endLineNumber": 141,
+	"endColumn": 92,
+	"modelVersionId": 1
+}]
