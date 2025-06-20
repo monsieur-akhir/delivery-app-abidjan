@@ -25,13 +25,8 @@ interface Address {
 interface MapViewProps {
   pickupLocation?: Address | null;
   deliveryLocation?: Address | null;
-  courierLocation?: {
-    latitude: number;
-    longitude: number;
-  } | null;
-  showCourierLocation?: boolean;
-  onMapReady?: () => void;
   style?: any;
+  showRoute?: boolean;
 }
 
 const COLORS = {
@@ -53,7 +48,8 @@ const CustomMapView: React.FC<MapViewProps> = ({
   courierLocation,
   showCourierLocation = false,
   onMapReady,
-  style
+  style,
+  showRoute
 }) => {
   const mapRef = useRef<MapView>(null);
   const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
