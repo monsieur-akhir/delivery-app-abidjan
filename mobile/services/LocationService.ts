@@ -2,8 +2,8 @@ import * as Location from 'expo-location'
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-// Configuration Google Places API
-const GOOGLE_PLACES_API_KEY = 'AIzaSyBOti4mM-6x9WDnZIjIeyPU21O1u3VAdpw' // Remplacez par votre vraie clé
+// Configuration Google Places API - Utilisez votre vraie clé Google Maps API
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyBOti4mM-6x9WDnZIjIeyPU21O1u3VAdpw'
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place'
 const GOOGLE_GEOCODING_BASE_URL = 'https://maps.googleapis.com/maps/api/geocode'
 
