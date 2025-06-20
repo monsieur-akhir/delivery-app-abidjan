@@ -364,33 +364,37 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           mode="outlined"
           dense
           right={
-            <View style={{ flexDirection: 'row' }}>
-              {showCurrentLocation && currentLocation && (
-                <TextInput.Icon
-                  icon="crosshair-gps"
-                  iconColor="#4CAF50"
+            <View style={styles.inputRightActions}>
+              {showCurrentLocation && (
+                <TouchableOpacity
+                  style={styles.locationButton}
                   onPress={handleCurrentLocationSelect}
                   disabled={loading}
-                />
+                  activeOpacity={0.7}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#4CAF50" />
+                  ) : (
+                    <Ionicons name="location" size={20} color="#4CAF50" />
+                  )}
+                </TouchableOpacity>
               )}
               {value ? (
-                <TextInput.Icon
-                  icon="close"
+                <TouchableOpacity
+                  style={styles.clearButton}
                   onPress={clearInput}
-                />
-              ) : (
-                <TextInput.Icon
-                  icon="map-marker"
-                  disabled
-                />
-              )}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close" size={18} color="#666" />
+                </TouchableOpacity>
+              ) : null}
             </View>
           }
         />
         {error && <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>}
       </View>
 
-      {/* Suggestions directement sous l'input */}
+      {/* Suggestions avec ScrollView au lieu de FlatList */}
       {showSuggestions && (suggestions.length > 0 || loading) && (
         <Surface style={styles.suggestionsContainer} elevation={4}>
           {loading ? (
@@ -399,15 +403,18 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               <Text style={styles.loadingText}>Recherche...</Text>
             </View>
           ) : (
-            <FlatList
-              data={suggestions}
-              renderItem={renderSuggestion}
-              keyExtractor={(item) => item.id}
+            <ScrollView
               style={styles.suggestionsList}
-              nestedScrollEnabled={true}
               showsVerticalScrollIndicator={false}
-              ItemSeparatorComponent={() => <Divider />}
-            />
+              keyboardShouldPersistTaps="handled"
+            >
+              {suggestions.map((item, index) => (
+                <View key={item.id}>
+                  {renderSuggestion({ item })}
+                  {index < suggestions.length - 1 && <Divider />}
+                </View>
+              ))}
+            </ScrollView>
           )}
         </Surface>
       )}
@@ -429,6 +436,34 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     backgroundColor: '#FFFFFF',
+    borderColor: '#4CAF50',
+  },
+  inputRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 8,
+  },
+  locationButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E8F5E8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  clearButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorText: {
     marginTop: 4,
@@ -439,53 +474,63 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    maxHeight: 300,
+    borderRadius: 12,
+    maxHeight: 280,
     zIndex: 1001,
-    marginTop: 4,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
   },
   suggestionsList: {
-    maxHeight: 300,
+    maxHeight: 280,
+    paddingVertical: 8,
   },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    backgroundColor: 'transparent',
   },
   suggestionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#f8f9fa',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   suggestionContent: {
     flex: 1,
   },
   suggestionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
-    color: '#333',
-    marginBottom: 2,
+    color: '#1A1A1A',
+    marginBottom: 3,
+    lineHeight: 20,
   },
   suggestionSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#666',
+    lineHeight: 16,
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 20,
     paddingHorizontal: 16,
   },
   loadingText: {
     fontSize: 14,
     color: '#666',
-    marginLeft: 8,
+    marginLeft: 10,
+    fontWeight: '500',
   },
 });
 

@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  
+
 
   // Section des informations du colis
   packageSection: {
@@ -737,6 +737,69 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: '500',
   },
+
+  // Styles pour les inputs d'adresse modernisés
+  modernAddressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+
+  addressIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+
+  pickupIndicator: {
+    backgroundColor: COLORS.primary,
+  },
+
+  destinationIndicator: {
+    backgroundColor: COLORS.text,
+  },
+
+  pickupDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.white,
+  },
+
+  addressInputWrapper: {
+    flex: 1,
+  },
+
+  addressLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+
+  modernAddressInput: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: COLORS.text,
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+
+  addressConnector: {
+    paddingLeft: 12 + 24 / 2,
+    marginBottom: 10,
+  },
+
+  connectorLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: COLORS.border,
+    alignSelf: 'center',
+  },
 })
 
 // Helper functions
@@ -930,7 +993,7 @@ const CreateDeliveryScreen: React.FC = () => {
     })
   }, [currentDistance, isUrgent])
 
-  
+
 
   // Fonction pour utiliser la position actuelle
   const useCurrentLocation = async (field: 'pickup' | 'delivery') => {
@@ -1270,7 +1333,7 @@ const CreateDeliveryScreen: React.FC = () => {
     </TouchableOpacity>
   )
 
-  
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1329,54 +1392,65 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.bottomSheetHandle} />
           <Text style={styles.bottomSheetTitle}>ENVOYER UN COLIS</Text>
 
-          {/* Address Inputs simplifiés */}
+          {/* Address Inputs améliorés */}
           <View style={styles.addressSection}>
-            <Text style={styles.sectionTitle}>Adresses</Text>
-            
+            <Text style={styles.sectionTitle}>Adresses de livraison</Text>
+
             {/* Pickup Address */}
-            <View style={styles.addressInputContainer}>
-              <View style={[styles.addressInputIcon, styles.pickupIcon]}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.white }} />
+            <View style={styles.modernAddressContainer}>
+              <View style={[styles.addressIndicator, styles.pickupIndicator]}>
+                <View style={styles.pickupDot} />
               </View>
-              <AddressAutocomplete
-                label="Prise en charge"
-                value={pickupQuery}
-                onChangeText={(text) => handleTextChange(text, 'pickup')}
-                onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
-                placeholder="Adresse de prise en charge"
-                showCurrentLocation={true}
-                maxSuggestions={6}
-                style={styles.addressInput}
-                onFocus={() => {
-                  setPickupFocused(true)
-                  setActiveField('pickup')
-                }}
-              />
+              <View style={styles.addressInputWrapper}>
+                <Text style={styles.addressLabel}>Prise en charge</Text>
+                <AddressAutocomplete
+                  label=""
+                  value={pickupQuery}
+                  onChangeText={(text) => handleTextChange(text, 'pickup')}
+                  onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
+                  placeholder="Où récupérer le colis ?"
+                  showCurrentLocation={true}
+                  maxSuggestions={5}
+                  style={styles.modernAddressInput}
+                  onFocus={() => {
+                    setPickupFocused(true)
+                    setActiveField('pickup')
+                  }}
+                />
+              </View>
+            </View>
+
+            {/* Connecting Line */}
+            <View style={styles.addressConnector}>
+              <View style={styles.connectorLine} />
             </View>
 
             {/* Delivery Address */}
-            <View style={styles.addressInputContainer}>
-              <View style={[styles.addressInputIcon, styles.destinationIcon]}>
-                <Feather name="navigation" size={12} color={COLORS.white} />
+            <View style={styles.modernAddressContainer}>
+              <View style={[styles.addressIndicator, styles.destinationIndicator]}>
+                <Feather name="navigation" size={14} color={COLORS.white} />
               </View>
-              <AddressAutocomplete
-                label="Destination"
-                value={deliveryQuery}
-                onChangeText={(text) => handleTextChange(text, 'delivery')}
-                onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
-                placeholder="Adresse de livraison"
-                showCurrentLocation={true}
-                maxSuggestions={6}
-                style={styles.addressInput}
-                onFocus={() => {
-                  setDeliveryFocused(true)
-                  setActiveField('delivery')
-                }}
-              />
+              <View style={styles.addressInputWrapper}>
+                <Text style={styles.addressLabel}>Destination</Text>
+                <AddressAutocomplete
+                  label=""
+                  value={deliveryQuery}
+                  onChangeText={(text) => handleTextChange(text, 'delivery')}
+                  onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
+                  placeholder="Où livrer le colis ?"
+                  showCurrentLocation={true}
+                  maxSuggestions={5}
+                  style={styles.modernAddressInput}
+                  onFocus={() => {
+                    setDeliveryFocused(true)
+                    setActiveField('delivery')
+                  }}
+                />
+              </View>
             </View>
 
             {/* Bouton Position actuelle */}
-            
+
             {/* Distance indicator */}
             {pickupLocation && deliveryLocation && (
               <View style={styles.distanceIndicator}>
@@ -1386,7 +1460,7 @@ const CreateDeliveryScreen: React.FC = () => {
               </View>
             )}
 
-            
+
           </View>
 
           {/* Package Information Section */}
