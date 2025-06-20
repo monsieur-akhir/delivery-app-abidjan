@@ -1533,7 +1533,11 @@ const CreateDeliveryScreen: React.FC = () => {
         <View style={styles.mapContainer}>
 
           {pickupLocation && deliveryLocation && (
-            
+            <MapView
+              pickupLocation={pickupLocation}
+              deliveryLocation={deliveryLocation}
+              style={{ flex: 1 }}
+            />
           )}
 
 
