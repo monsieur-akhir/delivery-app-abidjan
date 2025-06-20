@@ -413,7 +413,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   }, [onChangeText, searchAddresses]);
 
   const handleAddressSelect = useCallback((address: Address) => {
-    onChangeText(address.description);
+    // Vérifier que l'adresse est un objet valide avant de l'utiliser
+    if (!address || typeof address !== 'object') {
+      console.warn('Invalid address object received');
+      return;
+    }
+
+    const description = address.description || '';
+    onChangeText(description);
     onAddressSelect(address);
     setShowSuggestions(false);
     setSuggestions([]);
