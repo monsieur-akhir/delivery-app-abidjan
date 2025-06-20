@@ -516,7 +516,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       <View style={styles.inputContainer}>
         <View style={styles.inputWrapper}>
           <View style={styles.iconContainer}>
-            <Feather name={icon === "package" ? "box" : icon === "navigation" ? "navigation" : "map-pin"} size={20} color="#666" />
+            <Feather name={icon === "box" ? "box" : icon === "navigation" ? "compass" : "map-pin"} size={20} color="#666" />
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.labelText}>{label}</Text>
@@ -557,19 +557,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               <Text style={styles.loadingText}>Recherche...</Text>
             </View>
           ) : (
-            <ScrollView
-              style={styles.suggestionsList}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              nestedScrollEnabled={true}
-            >
+            <View style={styles.suggestionsList}>
               {suggestions.map((item, index) => (
                 <View key={item.id}>
                   {renderSuggestion(item, index)}
                   {index < suggestions.length - 1 && <Divider />}
                 </View>
               ))}
-            </ScrollView>
+            </View>
           )}
         </Surface>
       )}

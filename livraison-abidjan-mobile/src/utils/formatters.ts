@@ -1,10 +1,53 @@
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('fr-CI', {
+    style: 'currency',
+    currency: 'XOF',
+  }).format(amount);
+};
+
+export const formatDistance = (distance: number): string => {
+  if (distance < 1) {
+    return `${Math.round(distance * 1000)}m`;
+  }
+  return `${distance.toFixed(1)}km`;
+};
+
+export const formatDuration = (duration: number): number | string => {
+  const hours = Math.floor(duration / 60);
+  const minutes = Math.round(duration % 60);
+
+  if (hours > 0) {
+    return `${hours}h${minutes > 0 ? ` ${minutes}min` : ''}`;
+  }
+  return `${minutes}min`;
+};
+
 export const formatDate = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('fr-FR', {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return new Intl.DateTimeFormat('fr-CI', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  });
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(dateObj);
+};
+
+export const formatPhoneNumber = (phone: string): string => {
+  // Format pour les numéros ivoiriens
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('225')) {
+    const number = cleaned.substring(3);
+    return `+225 ${number.substring(0, 2)} ${number.substring(2, 4)} ${number.substring(4, 6)} ${number.substring(6, 8)}`;
+  }
+  return phone;
+};
+
+export const formatWeight = (weight: number): string => {
+  if (weight < 1) {
+    return `${Math.round(weight * 1000)}g`;
+  }
+  return `${weight}kg`;
 };
 
 export const formatTime = (date: Date | string): string => {
@@ -18,52 +61,6 @@ export const formatTime = (date: Date | string): string => {
 export const formatDateTime = (date: Date | string): string => {
   return `${formatDate(date)} à ${formatTime(date)}`;
 };
-
-export const formatPrice = (amount: number): string => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'XOF',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount).replace('XOF', 'F CFA');
-};
-
-export const formatDistance = (distanceKm: number): string => {
-  if (distanceKm < 1) {
-    return `${Math.round(distanceKm * 1000)} m`;
-  }
-  return `${distanceKm.toFixed(1)} km`;
-};
-
-export const formatDuration = (durationMinutes: number): string => {
-  if (durationMinutes < 60) {
-    return `${Math.round(durationMinutes)} min`;
-  }
-  const hours = Math.floor(durationMinutes / 60);
-  const minutes = Math.round(durationMinutes % 60);
-  return `${hours}h ${minutes}min`;
-};
-
-export const formatPhoneNumber = (phone: string): string => {
-  // Format pour numéros ivoiriens
-  const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.length === 8) {
-    return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4');
-  }
-  if (cleaned.length === 10) {
-    return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '+225 $1 $2 $3 $4');
-  }
-  return phone;
-};
-
-export const truncateText = (text: string, maxLength: number): string => {
-  if (!text || text.length <= maxLength) return text
-  return text.substring(0, maxLength - 3) + '...'
-}
-
-export const formatCurrency = (amount: number, currency: string = 'FCFA'): string => {
-  return `${formatPrice(amount)} ${currency}`
-}
 
 export const formatDistanceKm = (distance: number): string => {
   if (distance < 1000) {
@@ -101,4 +98,9 @@ export const formatRelativeTime = (date: string | Date): string => {
   if (diffInDays < 7) return `Il y a ${diffInDays}j`
 
   return formatDate2(date)
+}
+
+export const truncateText = (text: string, maxLength: number): string => {
+  if (!text || text.length <= maxLength) return text
+  return text.substring(0, maxLength - 3) + '...'
 }
