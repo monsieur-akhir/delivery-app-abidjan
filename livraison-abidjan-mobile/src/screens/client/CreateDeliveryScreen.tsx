@@ -1058,6 +1058,7 @@ const CreateDeliveryScreen: React.FC = () => {
         time: '25-35 min',
         maxWeight: 5,
         maxSize: 'small',
+        ```text
         suitable: weight <= 5 && ['xs', 'small'].includes(size) && distance <= 50
       },
       {
@@ -1514,7 +1515,7 @@ const CreateDeliveryScreen: React.FC = () => {
             <Text style={styles.routeText}>
               {pickupAddress || 'Sélectionner une adresse'}
             </Text>
-            <Feather name="navigation" size={20} color={COLORS.primary} />
+            <Feather name="navigate" size={20} color={COLORS.primary} />
           </View>
 
           {/* Indicateur de prix */}
@@ -1541,7 +1542,7 @@ const CreateDeliveryScreen: React.FC = () => {
               placeholder="Adresse de prise en charge"
               showCurrentLocation={true}
               maxSuggestions={8}
-              icon="box"
+              icon="cube"
               onFocus={() => {
                 setPickupFocused(true)
                 setActiveField('pickup')
