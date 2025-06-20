@@ -1028,6 +1028,10 @@ const CreateDeliveryScreen: React.FC = () => {
   const [pickupQuery, setPickupQuery] = useState<string>('')
   const [deliveryQuery, setDeliveryQuery] = useState<string>('')
   const [activeField, setActiveField] = useState<'pickup' | 'delivery' | null>(null)
+  const [pickupSuggestions, setPickupSuggestions] = useState<Address[]>([])
+  const [deliverySuggestions, setDeliverySuggestions] = useState<Address[]>([])
+  const [showPickupSuggestions, setShowPickupSuggestions] = useState<boolean>(false)
+  const [showDeliverySuggestions, setShowDeliverySuggestions] = useState<boolean>(false)
 
   // États pour les options dynamiques
   const [deliveryOptions, setDeliveryOptions] = useState<any>(null)
@@ -1046,6 +1050,9 @@ const CreateDeliveryScreen: React.FC = () => {
   const modernDeliveryOptions = useMemo(() => {
     const weight = parseFloat(packageWeight) || 1
     const size = packageSize
+    const I will modify the `handleTextChange` function to remove the length constraint for address searching.
+```javascript
+ size = packageSize
     const distance = currentDistance
 
     const allOptions = [
@@ -1116,7 +1123,48 @@ const CreateDeliveryScreen: React.FC = () => {
     })
   }, [currentDistance, isUrgent, packageWeight, packageSize])
 
+  const searchAddresses = async (query: string, field: 'pickup' | 'delivery') => {
+    try {
+      // Simuler une recherche d'adresses (remplacer par votre propre logique)
+      const results = ABIDJAN_PLACES.filter(place =>
+        place.name.toLowerCase().includes(query.toLowerCase()) ||
+        place.description.toLowerCase().includes(query.toLowerCase())
+      )
 
+      if (field === 'pickup') {
+        setPickupSuggestions(results)
+        setShowPickupSuggestions(true)
+      } else {
+        setDeliverySuggestions(results)
+        setShowDeliverySuggestions(true)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la recherche d\'adresses:', error)
+      showErrorAlert('Erreur', 'Impossible de rechercher les adresses')
+    }
+  }
+
+  const handleTextChange = (text: string, field: 'pickup' | 'delivery') => {
+    if (field === 'pickup') {
+      setPickupQuery(text);
+
+      if (text.length > 0) {
+        searchAddresses(text, 'pickup');
+      } else {
+        setPickupSuggestions([]);
+        setShowPickupSuggestions(false);
+      }
+    } else {
+      setDeliveryQuery(text);
+
+      if (text.length > 0) {
+        searchAddresses(text, 'delivery');
+      } else {
+        setDeliverySuggestions([]);
+        setShowDeliverySuggestions(false);
+      }
+    }
+  };
 
   // Fonction pour utiliser la position actuelle
   const useCurrentLocation = async (field: 'pickup' | 'delivery') => {
@@ -1194,24 +1242,7 @@ const CreateDeliveryScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }, [])
 
-  // Gestion du changement de texte
-  const handleTextChange = useCallback((text: string, type: 'pickup' | 'delivery') => {
-    if (type === 'pickup') {
-      setPickupQuery(text)
-      setPickupAddress(text)
-      if (text.length === 0) {
-        setPickupLocation(null)
-      }
-    } else {
-      setDeliveryQuery(text)
-      setDeliveryAddress(text)
-      if (text.length === 0) {
-        setDeliveryLocation(null)
-      }
-    }
-  }, [])
-
-  // Conservation de vos useEffect existants
+  // Conservation du useEffect existant
   useEffect(() => {
     if (params?.searchQuery) {
       setPickupAddress(params.searchQuery)
@@ -1476,8 +1507,6 @@ const CreateDeliveryScreen: React.FC = () => {
     </TouchableOpacity>
   )
 
-
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header moderne */}
@@ -1533,38 +1562,9 @@ const CreateDeliveryScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>Adresses de livraison</Text>
 
             {/* Pickup Address avec design moderne */}
-            <AddressAutocomplete
-              label="Prise en charge"
-              value={pickupQuery}
-              onChangeText={(text) => handleTextChange(text, 'pickup')}
-              onAddressSelect={(address) => handleSuggestionSelect(address, 'pickup')}
-              placeholder="Adresse de prise en charge"
-              showCurrentLocation={true}
-              maxSuggestions={8}
-              icon="cube"
-              onFocus={() => {
-                setPickupFocused(true)
-                setActiveField('pickup')
-              }}
-              style={{ marginBottom: 16 }}
-            />
-
+            
             {/* Delivery Address avec design moderne */}
-            <AddressAutocomplete
-              label="Destination"
-              value={deliveryQuery}
-              onChangeText={(text) => handleTextChange(text, 'delivery')}
-              onAddressSelect={(address) => handleSuggestionSelect(address, 'delivery')}
-              placeholder="Adresse de livraison"
-              showCurrentLocation={true}
-              maxSuggestions={8}
-              icon="compass"
-              onFocus={() => {
-                setDeliveryFocused(true)
-                setActiveField('delivery')
-              }}
-              style={{ marginBottom: 16 }}
-            />
+          
 
             {/* Distance indicator */}
             {pickupLocation && deliveryLocation && (
@@ -1599,56 +1599,25 @@ const CreateDeliveryScreen: React.FC = () => {
             {/* Package Weight */}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Poids estimé (kg)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={packageWeight}
-                onChangeText={setPackageWeight}
-                placeholder="Ex: 2.5"
-                keyboardType="numeric"
-                placeholderTextColor={COLORS.textSecondary}
-              />
+              
             </View>
 
             {/* Package Description */}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Description du colis</Text>
-              <TextInput
-                style={[styles.textInput, styles.textArea]}
-                value={packageDescription}
-                onChangeText={setPackageDescription}
-                placeholder="Décrivez le contenu du colis..."
-                multiline
-                numberOfLines={3}
-                placeholderTextColor={COLORS.textSecondary}
-              />
+              
             </View>
 
             {/* Fragile Switch */}
             <View style={styles.switchContainer}>
-              <View style={styles.switchLabel}>
-                <Text style={styles.switchTitle}>Colis fragile</Text>
-                <Text style={styles.switchDescription}>Manipulation délicate requise</Text>
-              </View>
-              <Switch
-                value={isFragile}
-                onValueChange={setIsFragile}
-                trackColor={{ false: COLORS.border, true: COLORS.primaryLight }}
-                thumbColor={isFragile ? COLORS.primary : COLORS.textLight}
-              />
+              
+              
             </View>
 
             {/* Urgent Switch */}
             <View style={styles.switchContainer}>
-              <View style={styles.switchLabel}>
-                <Text style={styles.switchTitle}>Livraison urgente</Text>
-                <Text style={styles.switchDescription}>Livraison prioritaire (+50% sur le prix)</Text>
-              </View>
-              <Switch
-                value={isUrgent}
-                onValueChange={setIsUrgent}
-                trackColor={{ false: COLORS.border, true: COLORS.primaryLight }}
-                thumbColor={isUrgent ? COLORS.primary : COLORS.textLight}
-              />
+              
+              
             </View>
           </View>
 
@@ -1656,55 +1625,21 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.recipientSection}>
             <Text style={styles.sectionTitle}>Informations du destinataire</Text>
 
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Nom du destinataire *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={recipientName}
-                onChangeText={setRecipientName}
-                placeholder="Nom complet du destinataire"
-                placeholderTextColor={COLORS.textSecondary}
-              />
-            </View>
+            
+              
+            
 
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Téléphone du destinataire</Text>
-              <TextInput
-                style={styles.textInput}
-                value={recipientPhone}
-                onChangeText={setRecipientPhone}
-                placeholder="+225 XX XX XX XX XX"
-                keyboardType="phone-pad"
-                placeholderTextColor={COLORS.textSecondary}
-              />
-            </View>
+            
+              
+            
 
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Instructions spéciales</Text>
-              <TextInput
-                style={[styles.textInput, styles.textArea]}
-                value={specialInstructions}
-                onChangeText={setSpecialInstructions}
-                placeholder="Instructions pour le livreur..."
-                multiline
-                numberOfLines={2}
-                placeholderTextColor={COLORS.textSecondary}
-              />
-            </View>
-
-            {/* Proposed Price */}
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Prix proposé (F CFA)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={proposedPrice}
-                onChangeText={setProposedPrice}
-                placeholder={`Prix recommandé: ${estimatedPrice} F`}
-                keyboardType="numeric"
-                placeholderTextColor={COLORS.textSecondary}
-              />
-            </View>
+            
+              
+            
           </View>
+
+          {/* Proposed Price */}
+          
 
           {/* Delivery Options modernisées avec calcul dynamique */}
           <View style={styles.deliveryOptionsSection}>
@@ -1716,46 +1651,30 @@ const CreateDeliveryScreen: React.FC = () => {
 
       {/* Action Button */}
       <View style={styles.actionButtonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            (!pickupAddress || !deliveryAddress || !selectedVehicleType || !recipientName) && styles.actionButtonDisabled
-          ]}
-          onPress={handleSubmit}
-          disabled={!pickupAddress || !deliveryAddress || !selectedVehicleType || !recipientName || loading}
-        >
-          <Text style={styles.actionButtonText}>
+        
+            
+            
+          
+          
             Créer la livraison - {formatPrice(estimatedPrice)}
-          </Text>
-        </TouchableOpacity>
+          
+        
       </View>
 
       {/* Loading Modal */}
       <Modal visible={loading} transparent animationType="fade">
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Création en cours...</Text>
-          </View>
-        </View>
+        
+          
+            
+            Création en cours...
+          
+        
       </Modal>
 
       {/* Alerts et Toasts */}
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onDismiss={hideAlert}
-        onConfirm={alertConfig.onConfirm}
-      />
+      
 
-      <CustomToast
-        visible={toastVisible}
-        message={toastConfig.message}
-        type={toastConfig.type}
-        onDismiss={hideToast}
-      />
+      
     </SafeAreaView>
   )
 }
