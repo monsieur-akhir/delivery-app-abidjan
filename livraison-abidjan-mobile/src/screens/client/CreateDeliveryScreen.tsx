@@ -1047,7 +1047,7 @@ const CreateDeliveryScreen: React.FC = () => {
     const weight = parseFloat(packageWeight) || 1
     const size = packageSize
     const distance = currentDistance
-    
+
     const allOptions = [
       {
         key: 'moto',
@@ -1056,6 +1056,7 @@ const CreateDeliveryScreen: React.FC = () => {
         icon: '🏍️',
         price: 400,
         time: '25-35 min',
+```text
         maxWeight: 5,
         maxSize: 'small',
         suitable: weight <= 5 && ['xs', 'small'].includes(size) && distance <= 50
@@ -1097,14 +1098,14 @@ const CreateDeliveryScreen: React.FC = () => {
 
     // Filtrer les options appropriées
     const suitableOptions = allOptions.filter(option => option.suitable)
-    
+
     // Recommander le meilleur véhicule
     const recommendedVehicle = recommendVehicleType(weight, size, distance)
-    
+
     return suitableOptions.map(option => {
       const calculatedPrice = calculateDynamicPrice(distance, option.key, isUrgent, weight, size)
       const isRecommended = option.key === recommendedVehicle
-      
+
       return {
         ...option,
         price: calculatedPrice,
@@ -1271,7 +1272,7 @@ const CreateDeliveryScreen: React.FC = () => {
       )
 
       const weight = parseFloat(packageWeight) || 1
-      
+
       // Utiliser le calcul dynamique local avec poids et taille
       const calculatedPrice = calculateDynamicPrice(distance, selectedVehicleType, isUrgent, weight, packageSize)
 
@@ -1541,7 +1542,7 @@ const CreateDeliveryScreen: React.FC = () => {
               placeholder="Adresse de prise en charge"
               showCurrentLocation={true}
               maxSuggestions={8}
-              icon="package"
+              icon="box"
               onFocus={() => {
                 setPickupFocused(true)
                 setActiveField('pickup')
@@ -1558,7 +1559,7 @@ const CreateDeliveryScreen: React.FC = () => {
               placeholder="Adresse de livraison"
               showCurrentLocation={true}
               maxSuggestions={8}
-              icon="navigation"
+              icon="compass"
               onFocus={() => {
                 setDeliveryFocused(true)
                 setActiveField('delivery')
