@@ -138,7 +138,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
           <View style={styles.vehicleActions}>
             <Button
               style={styles.editButton}
-              onPress={() => navigation.navigate("AddVehicleScreen", { vehicleId: item.id })}
+              onPress={() => navigation.navigate("AddVehicle", { vehicleId: item.id })}
             >
               <Feather name="edit-2" size={16} color="#2196F3" />
             </Button>
@@ -219,8 +219,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
             <Button
               mode="contained"
               style={styles.emptyButton}
-              onPress={() => navigation.navigate("AddVehicleScreen", {})}
-            >
+              onPress={() => navigation.navigate('AddVehicle')}>
               Ajouter un véhicule
             </Button>
           </View>
@@ -239,7 +238,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
         <FAB
           style={styles.fab}
           icon="plus"
-          onPress={() => navigation.navigate("AddVehicleScreen", {})}
+          onPress={() => navigation.navigate('AddVehicle')}
           label="Ajouter"
         />
       )}

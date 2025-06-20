@@ -63,6 +63,7 @@ export type RootStackParamList = {
   JoinCollaborativeDelivery: { deliveryId: string };
   CollaborativeChat: { deliveryId: string };
   VehicleManagement: undefined;
+  AddVehicle: { vehicleId?: number };
   CourierProfile: undefined;
 
   // Settings Screens

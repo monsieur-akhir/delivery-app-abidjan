@@ -180,7 +180,7 @@ const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ navigatio
   )
 
   const handleViewDetails = (deliveryId: number) => {
-    if (deliveryId !== undefined && deliveryId !== null && deliveryId !== "") {
+    if (deliveryId !== undefined && deliveryId !== null && deliveryId > 0) {
       navigation.navigate("DeliveryDetails", { deliveryId: deliveryId.toString() })
     } else {
       console.error('Tentative de navigation vers DeliveryDetails sans deliveryId', deliveryId)
