@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Feather } from '@expo/vector-icons';
-import { colors } from '../styles/colors';
+import { theme } from '../styles/colors';
 
 interface Location {
   latitude: number;
@@ -44,7 +44,7 @@ const DeliveryMapView: React.FC<DeliveryMapProps> = ({
           description={pickupLocation.description}
         >
           <View style={[styles.markerContainer, styles.pickupMarker]}>
-            <Feather name="map-pin" size={24} color={colors.primary} />
+            <Feather name="map-pin" size={24} color={theme.colors.primary} />
           </View>
         </Marker>
 
@@ -57,7 +57,7 @@ const DeliveryMapView: React.FC<DeliveryMapProps> = ({
           description={deliveryLocation.description}
         >
           <View style={[styles.markerContainer, styles.deliveryMarker]}>
-            <Feather name="flag" size={24} color={colors.primary} />
+            <Feather name="flag" size={24} color={theme.colors.primary} />
           </View>
         </Marker>
       </MapView>
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   markerContainer: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -84,13 +84,13 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   pickupMarker: {
-    borderColor: colors.primary,
+    borderColor: theme.colors.primary,
     borderWidth: 2,
   },
   deliveryMarker: {
-    borderColor: colors.primary,
+    borderColor: theme.colors.primary,
     borderWidth: 2,
   },
 });
 
-export default DeliveryMapView; 
+export default DeliveryMapView;
