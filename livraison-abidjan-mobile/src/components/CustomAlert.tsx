@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,21 +9,33 @@ import {
   Dimensions,
   Platform,
   StatusBar,
+  PanResponder,
+  BackHandler,
+  AccessibilityInfo,
+  InteractionManager,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
+// Types améliorés avec plus de flexibilité
 export interface AlertButton {
+  id?: string;
   text: string;
-  onPress?: () => void;
-  style?: 'default' | 'cancel' | 'destructive' | 'primary';
+  onPress?: () => void | Promise<void>;
+  style?: 'default' | 'cancel' | 'destructive' | 'primary' | 'secondary';
   isPrimary?: boolean;
   icon?: string;
   disabled?: boolean;
+  loading?: boolean;
+  testID?: string;
+  accessibilityLabel?: string;
+  color?: string;
+  backgroundColor?: string;
 }
 
 export interface CustomAlertProps {
@@ -32,7 +43,7 @@ export interface CustomAlertProps {
   title: string;
   message?: string;
   buttons?: AlertButton[];
-  type?: 'info' | 'success' | 'warning' | 'error' | 'confirmation' | 'payment' | 'location' | 'premium' | 'celebration';
+  type?: 'info' | 'success' | 'warning' | 'error' | 'confirmation' | 'payment' | 'location' | 'premium' | 'celebration' | 'custom';
   icon?: string;
   onDismiss?: () => void;
   showCloseButton?: boolean;
@@ -41,9 +52,26 @@ export interface CustomAlertProps {
   priority?: 'low' | 'medium' | 'high' | 'critical';
   soundEnabled?: boolean;
   customStyle?: object;
-  animationType?: 'fade' | 'slide' | 'bounce' | 'pulse';
+  animationType?: 'fade' | 'slide' | 'bounce' | 'pulse' | 'zoom' | 'slideUp';
   backdropOpacity?: number;
   persistent?: boolean;
+  swipeToClose?: boolean;
+  customColors?: {
+    primary: string;
+    secondary: string;
+    background: string;
+    text: string;
+  };
+  maxWidth?: number;
+  position?: 'center' | 'top' | 'bottom';
+  showProgress?: boolean;
+  progressValue?: number;
+  richContent?: React.ReactNode;
+  onShow?: () => void;
+  onHide?: () => void;
+  testID?: string;
+  reducedMotion?: boolean;
+  darkMode?: boolean;
 }
 
 const CustomAlert: React.FC<CustomAlertProps> = ({
@@ -63,114 +91,315 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   animationType = 'bounce',
   backdropOpacity = 0.7,
   persistent = false,
+  swipeToClose = true,
+  customColors,
+  maxWidth = 420,
+  position = 'center',
+  showProgress = false,
+  progressValue = 0,
+  richContent,
+  onShow,
+  onHide,
+  testID = 'custom-alert',
+  reducedMotion = false,
+  darkMode = false,
 }) => {
+  const insets = useSafeAreaInsets();
+  
+  // Animations optimisées avec useRef
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
-  const slideAnim = useRef(new Animated.Value(-100)).current;
+  const slideAnim = useRef(new Animated.Value(position === 'top' ? -200 : position === 'bottom' ? 200 : -100)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const swipeAnim = useRef(new Animated.Value(0)).current;
+  
+  // État pour le loading des boutons
+  const [buttonLoadingStates, setButtonLoadingStates] = React.useState<Record<string, boolean>>({});
+  
+  // Timer refs pour le nettoyage
+  const autoDismissTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const hapticTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
+  // Configuration des types avec support du mode sombre
+  const getTypeConfig = useMemo(() => {
+    const configs = {
+      success: {
+        colors: darkMode 
+          ? ['#22C55E', '#16A34A', '#15803D', '#166534'] as const
+          : ['#4CAF50', '#45A049', '#388E3C', '#2E7D32'] as const,
+        icon: icon || 'checkmark-circle',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#064E3B' : '#E8F5E8',
+        borderColor: darkMode ? '#22C55E' : '#4CAF50',
+        shadowColor: darkMode ? '#22C55E' : '#4CAF50',
+        accentColor: darkMode ? '#34D399' : '#66BB6A',
+      },
+      celebration: {
+        colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'] as const,
+        icon: icon || 'trophy',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#7C2D12' : '#FFF3E0',
+        borderColor: '#FF6B6B',
+        shadowColor: '#FF6B6B',
+        accentColor: '#FFB74D',
+      },
+      warning: {
+        colors: darkMode 
+          ? ['#F59E0B', '#D97706', '#B45309', '#92400E'] as const
+          : ['#FF9800', '#F57C00', '#E65100', '#BF360C'] as const,
+        icon: icon || 'warning',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#78350F' : '#FFF3E0',
+        borderColor: darkMode ? '#F59E0B' : '#FF9800',
+        shadowColor: darkMode ? '#F59E0B' : '#FF9800',
+        accentColor: darkMode ? '#FBBF24' : '#FFB74D',
+      },
+      error: {
+        colors: darkMode 
+          ? ['#EF4444', '#DC2626', '#B91C1C', '#991B1B'] as const
+          : ['#F44336', '#D32F2F', '#B71C1C', '#8E0000'] as const,
+        icon: icon || 'close-circle',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#7F1D1D' : '#FFEBEE',
+        borderColor: darkMode ? '#EF4444' : '#F44336',
+        shadowColor: darkMode ? '#EF4444' : '#F44336',
+        accentColor: darkMode ? '#F87171' : '#E57373',
+      },
+      payment: {
+        colors: darkMode 
+          ? ['#A855F7', '#9333EA', '#7C3AED', '#6D28D9'] as const
+          : ['#9C27B0', '#7B1FA2', '#4A148C', '#1A0033'] as const,
+        icon: icon || 'card',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#581C87' : '#F3E5F5',
+        borderColor: darkMode ? '#A855F7' : '#9C27B0',
+        shadowColor: darkMode ? '#A855F7' : '#9C27B0',
+        accentColor: darkMode ? '#C084FC' : '#BA68C8',
+      },
+      location: {
+        colors: darkMode 
+          ? ['#06B6D4', '#0891B2', '#0E7490', '#155E75'] as const
+          : ['#00BCD4', '#0097A7', '#006064', '#00251A'] as const,
+        icon: icon || 'location',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#164E63' : '#E0F2F1',
+        borderColor: darkMode ? '#06B6D4' : '#00BCD4',
+        shadowColor: darkMode ? '#06B6D4' : '#00BCD4',
+        accentColor: darkMode ? '#22D3EE' : '#4DD0E1',
+      },
+      premium: {
+        colors: darkMode 
+          ? ['#FBBF24', '#F59E0B', '#D97706', '#B45309'] as const
+          : ['#FFD700', '#FFA000', '#FF8F00', '#FF6F00'] as const,
+        icon: icon || 'star',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#78350F' : '#FFFDE7',
+        borderColor: darkMode ? '#FBBF24' : '#FFD700',
+        shadowColor: darkMode ? '#FBBF24' : '#FFD700',
+        accentColor: darkMode ? '#FCD34D' : '#FFEB3B',
+      },
+      confirmation: {
+        colors: darkMode 
+          ? ['#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF'] as const
+          : ['#2196F3', '#1976D2', '#0D47A1', '#002171'] as const,
+        icon: icon || 'help-circle',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#1E3A8A' : '#E3F2FD',
+        borderColor: darkMode ? '#3B82F6' : '#2196F3',
+        shadowColor: darkMode ? '#3B82F6' : '#2196F3',
+        accentColor: darkMode ? '#60A5FA' : '#64B5F6',
+      },
+      custom: customColors ? {
+        colors: [customColors.primary, customColors.secondary, customColors.primary, customColors.secondary] as const,
+        icon: icon || 'information-circle',
+        iconColor: '#FFFFFF',
+        backgroundColor: customColors.background,
+        borderColor: customColors.primary,
+        shadowColor: customColors.primary,
+        accentColor: customColors.secondary,
+      } : {
+        colors: ['#607D8B', '#455A64', '#263238', '#000A12'] as const,
+        icon: icon || 'information-circle',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#334155' : '#ECEFF1',
+        borderColor: darkMode ? '#64748B' : '#607D8B',
+        shadowColor: darkMode ? '#64748B' : '#607D8B',
+        accentColor: darkMode ? '#94A3B8' : '#90A4AE',
+      },
+      info: {
+        colors: darkMode 
+          ? ['#64748B', '#475569', '#334155', '#1E293B'] as const
+          : ['#607D8B', '#455A64', '#263238', '#000A12'] as const,
+        icon: icon || 'information-circle',
+        iconColor: '#FFFFFF',
+        backgroundColor: darkMode ? '#334155' : '#ECEFF1',
+        borderColor: darkMode ? '#64748B' : '#607D8B',
+        shadowColor: darkMode ? '#64748B' : '#607D8B',
+        accentColor: darkMode ? '#94A3B8' : '#90A4AE',
+      },
+    };
+    
+    return configs[type] || configs.info;
+  }, [type, darkMode, customColors, icon]);
+
+  // Gestionnaire de swipe amélioré
+  const panResponder = useMemo(() => PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return swipeToClose && Math.abs(gestureState.dy) > 20;
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      if (swipeToClose) {
+        swipeAnim.setValue(gestureState.dy);
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (swipeToClose) {
+        if (Math.abs(gestureState.dy) > 100 || Math.abs(gestureState.vy) > 0.5) {
+          handleDismiss();
+        } else {
+          Animated.spring(swipeAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      }
+    },
+  }), [swipeToClose]);
+
+  // Animations optimisées avec InteractionManager
+  const getEntranceAnimation = useCallback(() => {
+    const duration = reducedMotion ? 200 : 300;
+    const springConfig = {
+      tension: reducedMotion ? 200 : 120,
+      friction: reducedMotion ? 12 : 8,
+      useNativeDriver: true,
+    };
+
+    switch (animationType) {
+      case 'slide':
+      case 'slideUp':
+        return Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration,
+            useNativeDriver: true,
+          }),
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            ...springConfig,
+          }),
+        ]);
+      case 'zoom':
+        return Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            ...springConfig,
+          }),
+        ]);
+      case 'pulse':
+        return Animated.sequence([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: duration * 0.7,
+            useNativeDriver: true,
+          }),
+          reducedMotion ? Animated.timing(pulseAnim, { toValue: 1, duration: 100, useNativeDriver: true }) :
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(pulseAnim, {
+                toValue: 1.05,
+                duration: 500,
+                useNativeDriver: true,
+              }),
+              Animated.timing(pulseAnim, {
+                toValue: 1,
+                duration: 500,
+                useNativeDriver: true,
+              }),
+            ]),
+            { iterations: 2 }
+          ),
+        ]);
+      case 'bounce':
+      default:
+        return Animated.sequence([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            ...springConfig,
+          }),
+        ]);
+    }
+  }, [animationType, reducedMotion, fadeAnim, slideAnim, scaleAnim, pulseAnim]);
+
+  // Gestion des effets avec nettoyage approprié
   useEffect(() => {
     if (visible) {
-      // Feedback haptique intelligent selon le type
-      switch (type) {
-        case 'error':
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-          break;
-        case 'success':
-        case 'celebration':
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          break;
-        case 'warning':
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-          break;
-        case 'premium':
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          break;
-        default:
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      // Callback onShow
+      onShow?.();
+      
+      // Feedback haptique intelligent avec throttling
+      if (soundEnabled && !hapticTimer.current) {
+        hapticTimer.current = setTimeout(() => {
+          switch (type) {
+            case 'error':
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              break;
+            case 'success':
+            case 'celebration':
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              break;
+            case 'warning':
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              break;
+            case 'premium':
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              break;
+            default:
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+          hapticTimer.current = undefined;
+        }, 100);
       }
 
-      // Animations d'entrée selon le type
-      const getEntranceAnimation = () => {
-        switch (animationType) {
-          case 'slide':
-            return Animated.parallel([
-              Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-              }),
-              Animated.spring(slideAnim, {
-                toValue: 0,
-                tension: 120,
-                friction: 8,
-                useNativeDriver: true,
-              }),
-            ]);
-          case 'pulse':
-            return Animated.sequence([
-              Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-              }),
-              Animated.loop(
-                Animated.sequence([
-                  Animated.timing(pulseAnim, {
-                    toValue: 1.05,
-                    duration: 500,
-                    useNativeDriver: true,
-                  }),
-                  Animated.timing(pulseAnim, {
-                    toValue: 1,
-                    duration: 500,
-                    useNativeDriver: true,
-                  }),
-                ]),
-                { iterations: 2 }
-              ),
-            ]);
-          case 'bounce':
-          default:
-            return Animated.sequence([
-              Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-              }),
-              Animated.spring(scaleAnim, {
-                toValue: 1,
-                tension: 100,
-                friction: 8,
-                useNativeDriver: true,
-              }),
-            ]);
-        }
-      };
+      // Animation d'entrée avec InteractionManager pour de meilleures performances
+      InteractionManager.runAfterInteractions(() => {
+        getEntranceAnimation().start();
+      });
 
-      getEntranceAnimation().start();
-
-      // Animation de brillance continue
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
+      // Animation de brillance continue (seulement si pas de mouvement réduit)
+      if (!reducedMotion) {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(glowAnim, {
+              toValue: 1,
+              duration: 2000,
+              useNativeDriver: true,
+            }),
+            Animated.timing(glowAnim, {
+              toValue: 0,
+              duration: 2000,
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      }
 
       // Animation spéciale pour les erreurs critiques
-      if (type === 'error' && priority === 'critical') {
+      if (type === 'error' && priority === 'critical' && !reducedMotion) {
         Animated.sequence([
           Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
           Animated.timing(shakeAnim, { toValue: -10, duration: 100, useNativeDriver: true }),
@@ -179,8 +408,8 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         ]).start();
       }
 
-      // Animation de célébration pour le succès
-      if (type === 'celebration') {
+      // Animation de célébration
+      if (type === 'celebration' && !reducedMotion) {
         Animated.timing(rotateAnim, {
           toValue: 1,
           duration: 1000,
@@ -188,185 +417,152 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         }).start();
       }
 
-      // Auto-dismiss intelligent
+      // Auto-dismiss intelligent avec nettoyage
       if (autoDismiss) {
-        const timer = setTimeout(() => {
+        autoDismissTimer.current = setTimeout(() => {
           handleDismiss();
         }, dismissAfter);
-        return () => clearTimeout(timer);
       }
+
+      // Gestion du bouton retour Android
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (!persistent) {
+          handleDismiss();
+          return true;
+        }
+        return false;
+      });
+
+      // Annonce pour l'accessibilité
+      if (Platform.OS === 'ios') {
+        AccessibilityInfo.announceForAccessibility(`Alerte: ${title}${message ? `, ${message}` : ''}`);
+      }
+
+      return () => {
+        backHandler.remove();
+      };
     } else {
       // Animation de sortie fluide
+      const exitDuration = reducedMotion ? 150 : 250;
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 250,
+          duration: exitDuration,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
           toValue: 0.3,
-          duration: 250,
+          duration: exitDuration,
           useNativeDriver: true,
         }),
         Animated.timing(slideAnim, {
-          toValue: -100,
-          duration: 250,
+          toValue: position === 'top' ? -200 : position === 'bottom' ? 200 : -100,
+          duration: exitDuration,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        onHide?.();
+      });
     }
-  }, [visible, type, priority, animationType]);
 
-  const handleDismiss = () => {
+    return () => {
+      if (autoDismissTimer.current) {
+        clearTimeout(autoDismissTimer.current);
+      }
+      if (hapticTimer.current) {
+        clearTimeout(hapticTimer.current);
+      }
+    };
+  }, [visible, type, priority, animationType, autoDismiss, dismissAfter, reducedMotion]);
+
+  // Animation de progression
+  useEffect(() => {
+    if (showProgress) {
+      Animated.timing(progressAnim, {
+        toValue: progressValue,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [showProgress, progressValue]);
+
+  const handleDismiss = useCallback(() => {
     if (persistent) return;
     
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (onDismiss) {
-      onDismiss();
+    if (soundEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  };
+    
+    onDismiss?.();
+  }, [persistent, soundEnabled, onDismiss]);
 
-  const handleButtonPress = (button: AlertButton) => {
-    if (button.disabled) return;
+  const handleButtonPress = useCallback(async (button: AlertButton, index: number) => {
+    if (button.disabled || buttonLoadingStates[button.id || index.toString()]) return;
 
     // Feedback haptique contextuel
-    switch (button.style) {
-      case 'destructive':
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        break;
-      case 'primary':
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        break;
-      default:
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (soundEnabled) {
+      switch (button.style) {
+        case 'destructive':
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          break;
+        case 'primary':
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          break;
+        default:
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
     }
 
-    if (button.onPress) {
-      button.onPress();
+    const buttonId = button.id || index.toString();
+    
+    try {
+      // Gérer le loading state
+      if (button.loading !== false) {
+        setButtonLoadingStates(prev => ({ ...prev, [buttonId]: true }));
+      }
+
+      if (button.onPress) {
+        await button.onPress();
+      }
+      
+      handleDismiss();
+    } catch (error) {
+      console.error('Error in button press handler:', error);
+    } finally {
+      setButtonLoadingStates(prev => ({ ...prev, [buttonId]: false }));
     }
-    handleDismiss();
-  };
+  }, [buttonLoadingStates, soundEnabled, handleDismiss]);
 
-  const getTypeConfig = () => {
-    switch (type) {
-      case 'success':
-        return {
-          colors: ['#4CAF50', '#45A049', '#388E3C', '#2E7D32'] as const,
-          icon: icon || 'checkmark-circle',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#E8F5E8',
-          borderColor: '#4CAF50',
-          shadowColor: '#4CAF50',
-          accentColor: '#66BB6A',
-        };
-      case 'celebration':
-        return {
-          colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'] as const,
-          icon: icon || 'trophy',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#FFF3E0',
-          borderColor: '#FF6B6B',
-          shadowColor: '#FF6B6B',
-          accentColor: '#FFB74D',
-        };
-      case 'warning':
-        return {
-          colors: ['#FF9800', '#F57C00', '#E65100', '#BF360C'] as const,
-          icon: icon || 'warning',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#FFF3E0',
-          borderColor: '#FF9800',
-          shadowColor: '#FF9800',
-          accentColor: '#FFB74D',
-        };
-      case 'error':
-        return {
-          colors: ['#F44336', '#D32F2F', '#B71C1C', '#8E0000'] as const,
-          icon: icon || 'close-circle',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#FFEBEE',
-          borderColor: '#F44336',
-          shadowColor: '#F44336',
-          accentColor: '#E57373',
-        };
-      case 'payment':
-        return {
-          colors: ['#9C27B0', '#7B1FA2', '#4A148C', '#1A0033'] as const,
-          icon: icon || 'card',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#F3E5F5',
-          borderColor: '#9C27B0',
-          shadowColor: '#9C27B0',
-          accentColor: '#BA68C8',
-        };
-      case 'location':
-        return {
-          colors: ['#00BCD4', '#0097A7', '#006064', '#00251A'] as const,
-          icon: icon || 'location',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#E0F2F1',
-          borderColor: '#00BCD4',
-          shadowColor: '#00BCD4',
-          accentColor: '#4DD0E1',
-        };
-      case 'premium':
-        return {
-          colors: ['#FFD700', '#FFA000', '#FF8F00', '#FF6F00'] as const,
-          icon: icon || 'star',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#FFFDE7',
-          borderColor: '#FFD700',
-          shadowColor: '#FFD700',
-          accentColor: '#FFEB3B',
-        };
-      case 'confirmation':
-        return {
-          colors: ['#2196F3', '#1976D2', '#0D47A1', '#002171'] as const,
-          icon: icon || 'help-circle',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#E3F2FD',
-          borderColor: '#2196F3',
-          shadowColor: '#2196F3',
-          accentColor: '#64B5F6',
-        };
-      default:
-        return {
-          colors: ['#607D8B', '#455A64', '#263238', '#000A12'] as const,
-          icon: icon || 'information-circle',
-          iconColor: '#FFFFFF',
-          backgroundColor: '#ECEFF1',
-          borderColor: '#607D8B',
-          shadowColor: '#607D8B',
-          accentColor: '#90A4AE',
-        };
-    }
-  };
+  // Memoization des interpolations coûteuses
+  const animationValues = useMemo(() => ({
+    rotateInterpolation: rotateAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg'],
+    }),
+    glowInterpolation: glowAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 0.3],
+    }),
+    progressInterpolation: progressAnim.interpolate({
+      inputRange: [0, 100],
+      outputRange: ['0%', '100%'],
+    }),
+  }), [rotateAnim, glowAnim, progressAnim]);
 
-  const typeConfig = getTypeConfig();
-
-  const rotateInterpolation = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  const glowInterpolation = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.3],
-  });
-
-  const renderButtons = () => {
+  const renderButtons = useCallback(() => {
     if (buttons.length === 0) {
       return (
         <TouchableOpacity
           style={[
             styles.button,
             styles.primaryButton,
-            { backgroundColor: typeConfig.borderColor }
+            { backgroundColor: getTypeConfig.borderColor }
           ]}
           onPress={handleDismiss}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel="OK"
+          testID={`${testID}-ok-button`}
         >
           <Text style={styles.primaryButtonText}>OK</Text>
         </TouchableOpacity>
@@ -377,40 +573,45 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
       const isPrimary = button.isPrimary || button.style === 'primary';
       const isDestructive = button.style === 'destructive';
       const isCancel = button.style === 'cancel';
+      const isSecondary = button.style === 'secondary';
       const isDisabled = button.disabled;
+      const isLoading = buttonLoadingStates[button.id || index.toString()];
 
       return (
         <TouchableOpacity
-          key={index}
+          key={button.id || index}
           style={[
             styles.button,
-            isPrimary && [styles.primaryButton, { backgroundColor: typeConfig.borderColor }],
+            isPrimary && [styles.primaryButton, { backgroundColor: button.backgroundColor || getTypeConfig.borderColor }],
             isDestructive && styles.destructiveButton,
             isCancel && styles.cancelButton,
+            isSecondary && styles.secondaryButton,
             isDisabled && styles.disabledButton,
             buttons.length > 1 && styles.multiButton,
-            { borderColor: typeConfig.borderColor },
+            { borderColor: button.color || getTypeConfig.borderColor },
+            darkMode && styles.darkButton,
           ]}
-          onPress={() => handleButtonPress(button)}
-          activeOpacity={isDisabled ? 1 : 0.8}
-          disabled={isDisabled}
+          onPress={() => handleButtonPress(button, index)}
+          activeOpacity={isDisabled || isLoading ? 1 : 0.8}
+          disabled={isDisabled || isLoading}
           accessibilityRole="button"
-          accessibilityLabel={button.text}
-          accessibilityState={{ disabled: isDisabled }}
+          accessibilityLabel={button.accessibilityLabel || button.text}
+          accessibilityState={{ disabled: isDisabled || isLoading }}
+          testID={button.testID || `${testID}-button-${index}`}
         >
           <View style={styles.buttonContent}>
-            {button.icon && (
+            {(button.icon || isLoading) && (
               <Ionicons
-                name={button.icon as any}
+                name={isLoading ? 'hourglass' : (button.icon as any)}
                 size={18}
                 color={
                   isDisabled 
                     ? '#999' 
                     : isPrimary 
                       ? '#FFFFFF' 
-                      : typeConfig.borderColor
+                      : button.color || getTypeConfig.borderColor
                 }
-                style={styles.buttonIcon}
+                style={[styles.buttonIcon, isLoading && { opacity: 0.7 }]}
               />
             )}
             <Text
@@ -419,8 +620,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                 isPrimary && styles.primaryButtonText,
                 isDestructive && styles.destructiveButtonText,
                 isCancel && styles.cancelButtonText,
+                isSecondary && styles.secondaryButtonText,
                 isDisabled && styles.disabledButtonText,
-                !isPrimary && !isDisabled && { color: typeConfig.borderColor },
+                !isPrimary && !isDisabled && { color: button.color || getTypeConfig.borderColor },
+                darkMode && styles.darkButtonText,
               ]}
             >
               {button.text}
@@ -429,6 +632,17 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         </TouchableOpacity>
       );
     });
+  }, [buttons, getTypeConfig, buttonLoadingStates, handleButtonPress, handleDismiss, darkMode, testID]);
+
+  const getPositionStyle = (): import('react-native').ViewStyle => {
+    switch (position) {
+      case 'top':
+        return { justifyContent: 'flex-start', paddingTop: insets.top + 50 };
+      case 'bottom':
+        return { justifyContent: 'flex-end', paddingBottom: insets.bottom + 50 };
+      default:
+        return { justifyContent: 'center' };
+    }
   };
 
   return (
@@ -440,13 +654,18 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
       statusBarTranslucent
       accessible={true}
       accessibilityViewIsModal={true}
+      testID={testID}
     >
-      <StatusBar backgroundColor={`rgba(0, 0, 0, ${backdropOpacity})`} barStyle="light-content" />
+      <StatusBar 
+        backgroundColor={`rgba(0, 0, 0, ${backdropOpacity})`} 
+        barStyle={darkMode ? "light-content" : "dark-content"} 
+      />
       
       <BlurView intensity={Platform.OS === 'ios' ? 100 : 80} style={styles.blurContainer}>
         <Animated.View
           style={[
             styles.overlay,
+            getPositionStyle() as import('react-native').ViewStyle,
             {
               opacity: fadeAnim,
               backgroundColor: `rgba(0, 0, 0, ${backdropOpacity})`,
@@ -458,60 +677,67 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
             activeOpacity={1}
             onPress={persistent ? undefined : handleDismiss}
             disabled={persistent}
+            testID={`${testID}-backdrop`}
           />
           
           <Animated.View
+            {...(swipeToClose ? panResponder.panHandlers : {})}
             style={[
               styles.alertContainer,
               customStyle,
               {
+                maxWidth: Math.min(width * 0.9, maxWidth),
                 opacity: fadeAnim,
                 transform: [
-                  { scale: animationType === 'bounce' ? scaleAnim : pulseAnim },
-                  { translateY: animationType === 'slide' ? slideAnim : 0 },
+                  { scale: animationType === 'bounce' || animationType === 'zoom' ? scaleAnim : pulseAnim },
+                  { translateY: animationType === 'slide' || animationType === 'slideUp' ? slideAnim : swipeAnim },
                   { translateX: shakeAnim },
-                  { rotate: type === 'celebration' ? rotateInterpolation : '0deg' },
+                  { rotate: type === 'celebration' ? animationValues.rotateInterpolation : '0deg' },
                 ],
-                shadowColor: typeConfig.shadowColor,
-                shadowOpacity: glowInterpolation,
+                shadowColor: getTypeConfig.shadowColor,
+                shadowOpacity: animationValues.glowInterpolation,
+                backgroundColor: darkMode ? '#1F2937' : '#FFFFFF',
               },
             ]}
+            testID={`${testID}-container`}
           >
             {/* Header avec gradient amélioré */}
             <LinearGradient
-              colors={typeConfig.colors}
+              colors={getTypeConfig.colors}
               style={styles.headerGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
               {/* Effet de brillance animé */}
-              <Animated.View 
-                style={[
-                  styles.shineEffect,
-                  {
-                    opacity: glowAnim,
-                    transform: [
-                      {
-                        translateX: glowAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-100, 100],
-                        }),
-                      },
-                    ],
-                  },
-                ]} 
-              />
+              {!reducedMotion && (
+                <Animated.View 
+                  style={[
+                    styles.shineEffect,
+                    {
+                      opacity: glowAnim,
+                      transform: [
+                        {
+                          translateX: glowAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-100, 100],
+                          }),
+                        },
+                      ],
+                    },
+                  ]} 
+                />
+              )}
               
-              <View style={[styles.iconContainer, { borderColor: typeConfig.accentColor }]}>
+              <View style={[styles.iconContainer, { borderColor: getTypeConfig.accentColor }]}>
                 <Ionicons
-                  name={typeConfig.icon as any}
+                  name={getTypeConfig.icon as any}
                   size={40}
-                  color={typeConfig.iconColor}
+                  color={getTypeConfig.iconColor}
                 />
               </View>
               
               {/* Particules flottantes pour premium */}
-              {type === 'premium' && (
+              {type === 'premium' && !reducedMotion && (
                 <View style={styles.particlesContainer}>
                   {[...Array(6)].map((_, i) => (
                     <Animated.View
@@ -519,6 +745,8 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                       style={[
                         styles.particle,
                         {
+                          left: `${15 + i * 12}%`,
+                          top: `${20 + (i % 2) * 40}%`,
                           opacity: glowAnim,
                           transform: [
                             {
@@ -536,77 +764,141 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
               )}
             </LinearGradient>
 
+            {/* Barre de progression */}
+            {showProgress && (
+              <View style={styles.progressContainer}>
+                <Animated.View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: animationValues.progressInterpolation,
+                      backgroundColor: getTypeConfig.borderColor,
+                    },
+                  ]}
+                />
+              </View>
+            )}
+
             {/* Contenu principal */}
-            <View style={[styles.content, { backgroundColor: typeConfig.backgroundColor }]}>
+            <View style={[
+              styles.content,
+              { backgroundColor: darkMode ? '#1F2937' : '#FFFFFF' }
+            ]}>
+              {/* Bouton de fermeture */}
               {showCloseButton && !persistent && (
                 <TouchableOpacity
-                  style={styles.closeButton}
+                  style={[
+                    styles.closeButton,
+                    { 
+                      backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                      borderColor: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'
+                    }
+                  ]}
                   onPress={handleDismiss}
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                   accessibilityRole="button"
-                  accessibilityLabel="Fermer"
+                  accessibilityLabel="Fermer l'alerte"
+                  testID={`${testID}-close-button`}
                 >
-                  <Ionicons name="close" size={20} color="#666" />
+                  <Ionicons
+                    name="close"
+                    size={20}
+                    color={darkMode ? '#9CA3AF' : '#6B7280'}
+                  />
                 </TouchableOpacity>
               )}
 
-              <View style={styles.textContainer}>
-                <Text 
-                  style={[styles.title, { color: typeConfig.borderColor }]}
-                  accessibilityRole="header"
-                >
-                  {title}
-                </Text>
-                {message && (
-                  <Text style={styles.message} accessibilityRole="text">
-                    {message}
-                  </Text>
-                )}
-              </View>
-
-              {/* Ligne de séparation élégante */}
-              <LinearGradient
-                colors={[
-                  'transparent',
-                  typeConfig.borderColor + '30',
-                  typeConfig.borderColor + '60',
-                  typeConfig.borderColor + '30',
-                  'transparent'
+              {/* Titre */}
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    color: customColors?.text || (darkMode ? '#F9FAFB' : '#1F2937'),
+                    textAlign: 'center',
+                  }
                 ]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.separator}
-              />
+                accessibilityRole="header"
+                testID={`${testID}-title`}
+              >
+                {title}
+              </Text>
 
-              {/* Boutons d'action */}
+              {/* Message */}
+              {message && (
+                <Text
+                  style={[
+                    styles.message,
+                    {
+                      color: customColors?.text || (darkMode ? '#D1D5DB' : '#4B5563'),
+                      textAlign: 'center',
+                    }
+                  ]}
+                  testID={`${testID}-message`}
+                >
+                  {message}
+                </Text>
+              )}
+
+              {/* Contenu riche personnalisé */}
+              {richContent && (
+                <View style={styles.richContentContainer}>
+                  {richContent}
+                </View>
+              )}
+
+              {/* Indicateur de priorité */}
+              {priority === 'critical' && (
+                <View style={[
+                  styles.priorityBadge,
+                  { 
+                    backgroundColor: darkMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
+                    borderColor: darkMode ? '#EF4444' : '#F87171'
+                  }
+                ]}>
+                  <Ionicons
+                    name="alert-circle"
+                    size={16}
+                    color={darkMode ? '#EF4444' : '#DC2626'}
+                  />
+                  <Text style={[
+                    styles.priorityText,
+                    { color: darkMode ? '#EF4444' : '#DC2626' }
+                  ]}>
+                    Critique
+                  </Text>
+                </View>
+              )}
+
+              {/* Séparateur */}
+              {(message || richContent || priority === 'critical') && buttons.length > 0 && (
+                <View style={[
+                  styles.separator,
+                  { backgroundColor: darkMode ? '#374151' : '#E5E7EB' }
+                ]} />
+              )}
+
+              {/* Zone des boutons */}
               <View style={[
                 styles.buttonContainer,
-                buttons.length > 1 && styles.multiButtonContainer
+                buttons.length > 2 && styles.verticalButtonContainer,
+                buttons.length === 2 && styles.horizontalButtonContainer,
               ]}>
                 {renderButtons()}
               </View>
+
+              {/* Indicateur de swipe */}
+              {swipeToClose && !persistent && (
+                <View style={[
+                  styles.swipeIndicator,
+                  { backgroundColor: darkMode ? '#4B5563' : '#D1D5DB' }
+                ]}>
+                  <View style={[
+                    styles.swipeHandle,
+                    { backgroundColor: darkMode ? '#6B7280' : '#9CA3AF' }
+                  ]} />
+                </View>
+              )}
             </View>
-
-            {/* Indicateur de priorité critique */}
-            {priority === 'critical' && (
-              <Animated.View 
-                style={[
-                  styles.priorityIndicator, 
-                  { 
-                    backgroundColor: typeConfig.borderColor,
-                    opacity: pulseAnim,
-                  }
-                ]} 
-              />
-            )}
-
-            {/* Badge premium */}
-            {type === 'premium' && (
-              <View style={[styles.premiumBadge, { backgroundColor: typeConfig.accentColor }]}>
-                <Ionicons name="diamond" size={12} color="#FFFFFF" />
-                <Text style={styles.premiumText}>PREMIUM</Text>
-              </View>
-            )}
           </Animated.View>
         </Animated.View>
       </BlurView>
@@ -614,15 +906,14 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   );
 };
 
+// Styles complets pour le composant
 const styles = StyleSheet.create({
   blurContainer: {
     flex: 1,
   },
   overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
+    paddingHorizontal: 20,
   },
   backdrop: {
     position: 'absolute',
@@ -632,20 +923,17 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   alertContainer: {
-    width: Math.min(width * 0.9, 420),
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
+    borderRadius: 24,
     overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 20 },
-        shadowOpacity: 0.4,
-        shadowRadius: 30,
-      },
-      android: {
-        elevation: 30,
-      },
-    }),
+    elevation: 20,
+    shadowOffset: {
+      width: 0,
+      height: 12,
+    },
+    shadowRadius: 20,
+    shadowOpacity: 0.25,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   headerGradient: {
     height: 120,
@@ -654,25 +942,26 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
+  shineEffect: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    transform: [{ skewX: '-20deg' }],
+  },
   iconContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    zIndex: 2,
-  },
-  shineEffect: {
-    position: 'absolute',
-    top: -30,
-    width: 60,
-    height: 120,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    transform: [{ rotate: '25deg' }],
-    zIndex: 1,
+    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    shadowOpacity: 0.3,
   },
   particlesContainer: {
     position: 'absolute',
@@ -680,7 +969,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1,
   },
   particle: {
     position: 'absolute',
@@ -689,103 +977,118 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
+  progressContainer: {
+    height: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    position: 'relative',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 2,
+  },
   content: {
-    padding: 28,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
     position: 'relative',
   },
   closeButton: {
     position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 3,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  textContainer: {
-    marginBottom: 24,
-    alignItems: 'center',
+    borderWidth: 1,
+    zIndex: 1,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 32,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
     letterSpacing: 0.5,
   },
   message: {
-    fontSize: 17,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 26,
-    letterSpacing: 0.3,
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 16,
+    opacity: 0.9,
   },
-  separator: {
-    height: 2,
-    marginBottom: 24,
-    borderRadius: 1,
+  richContentContainer: {
+    marginVertical: 16,
   },
-  buttonContainer: {
+  priorityBadge: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  multiButtonContainer: {
-    flexDirection: 'column',
-  },
-  button: {
-    flex: 1,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  multiButton: {
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
     marginBottom: 16,
   },
+  priorityText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  separator: {
+    height: 1,
+    marginVertical: 16,
+    opacity: 0.3,
+  },
+  buttonContainer: {
+    gap: 12,
+  },
+  verticalButtonContainer: {
+    flexDirection: 'column',
+  },
+  horizontalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  button: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  multiButton: {
+    flex: 1,
+  },
   primaryButton: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
+    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    shadowOpacity: 0.2,
   },
   destructiveButton: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#F87171',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#EF4444',
   },
   cancelButton: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     borderColor: '#D1D5DB',
+  },
+  secondaryButton: {
+    backgroundColor: '#F9FAFB',
+    borderColor: '#E5E7EB',
   },
   disabledButton: {
     backgroundColor: '#F3F4F6',
     borderColor: '#D1D5DB',
     opacity: 0.6,
+  },
+  darkButton: {
+    backgroundColor: '#374151',
+    borderColor: '#4B5563',
   },
   buttonContent: {
     flexDirection: 'row',
@@ -793,13 +1096,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#374151',
-    letterSpacing: 0.3,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   primaryButtonText: {
     color: '#FFFFFF',
@@ -810,44 +1112,26 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#6B7280',
   },
+  secondaryButtonText: {
+    color: '#374151',
+  },
   disabledButtonText: {
     color: '#9CA3AF',
   },
-  priorityIndicator: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 6,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+  darkButtonText: {
+    color: '#D1D5DB',
   },
-  premiumBadge: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  swipeIndicator: {
+    marginTop: 16,
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
     borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
   },
-  premiumText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '800',
-    marginLeft: 4,
-    letterSpacing: 1,
+  swipeHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
   },
 });
 
