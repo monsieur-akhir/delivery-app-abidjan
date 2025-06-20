@@ -300,12 +300,23 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  // Recherche d'adresses améliorée pour toute la Côte d'Ivoire
+  // Recherche d'adresses libre comme Google Maps
   const searchAddresses = useCallback(
     debounce(async (query: string) => {
       if (query.length === 0) {
-        setSuggestions([]);
-        setShowSuggestions(false);
+        // Afficher les suggestions populaires quand le champ est vide
+        const defaultSuggestions = popularPlaces.slice(0, maxSuggestions).map(place => ({
+          id: place.id,
+          description: place.description,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          commune: place.commune,
+          city: place.city,
+          region: place.region,
+          type: place.type as any
+        }));
+        setSuggestions(defaultSuggestions);
+        setShowSuggestions(true);
         return;
       }
 
@@ -316,11 +327,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         const results: Address[] = [];
         const normalizedQuery = query.toLowerCase().trim();
 
-        // Ajouter "Votre position" en premier si demandé
-        if (showCurrentLocation && (normalizedQuery.includes('votre') || normalizedQuery.includes('position'))) {
+        // Toujours ajouter "Votre position" en premier si l'option est activée
+        if (showCurrentLocation) {
           results.push({
             id: 'current_location',
-            description: 'Prise en charge à votre position GPS',
+            description: 'Utiliser ma position actuelle',
             latitude: currentLocation?.coords.latitude || 7.539989,
             longitude: currentLocation?.coords.longitude || -5.54708,
             region: 'Côte d\'Ivoire',
@@ -328,15 +339,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           });
         }
 
-        // Recherche dans les lieux populaires
+        // Recherche flexible dans les lieux populaires
         popularPlaces.forEach((place) => {
-          if (
-            place.name.toLowerCase().includes(normalizedQuery) ||
-            place.description.toLowerCase().includes(normalizedQuery) ||
-            (place.commune && place.commune.toLowerCase().includes(normalizedQuery)) ||
-            (place.city && place.city.toLowerCase().includes(normalizedQuery)) ||
-            (place.region && place.region.toLowerCase().includes(normalizedQuery))
-          ) {
+          const searchableText = `${place.name} ${place.description} ${place.commune || ''} ${place.city || ''} ${place.region || ''}`.toLowerCase();
+          if (searchableText.includes(normalizedQuery)) {
             results.push({
               id: place.id,
               description: place.description,
@@ -352,8 +358,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
         // Recherche par ville dans toute la Côte d'Ivoire
         ivoryCoastCities.forEach((city, index) => {
-          if (city.name.toLowerCase().includes(normalizedQuery) ||
-              city.region.toLowerCase().includes(normalizedQuery)) {
+          const searchableText = `${city.name} ${city.region}`.toLowerCase();
+          if (searchableText.includes(normalizedQuery)) {
             results.push({
               id: `city_${index}`,
               description: `${city.name}, ${city.region}`,
@@ -366,9 +372,27 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           }
         });
 
+        // Générer des suggestions pour toute adresse tapée (comme Google Maps)
+        if (query.length >= 3) {
+          // Créer une suggestion générique basée sur la recherche
+          const genericSuggestion: Address = {
+            id: `search_${Date.now()}`,
+            description: query,
+            latitude: 5.3599, // Coordonnées par défaut d'Abidjan
+            longitude: -3.9569,
+            commune: 'Abidjan', // Commune par défaut
+            city: 'Abidjan',
+            region: 'Côte d\'Ivoire',
+            type: 'search_result'
+          };
+
+          // Ajouter la suggestion de recherche à la fin
+          results.push(genericSuggestion);
+        }
+
         // Retirer les doublons et limiter les résultats
         const uniqueResults = results.filter((item, index, self) => 
-          index === self.findIndex((t) => t.id === item.id)
+          index === self.findIndex((t) => t.description.toLowerCase() === item.description.toLowerCase())
         );
 
         setSuggestions(uniqueResults.slice(0, maxSuggestions));
@@ -384,6 +408,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const handleTextChange = useCallback((text: string) => {
     onChangeText(text);
+    // Recherche libre sans contrainte de longueur
     searchAddresses(text);
   }, [onChangeText, searchAddresses]);
 
@@ -489,6 +514,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         return 'library-outline';
       case 'city_center':
         return 'business-outline';
+      case 'search_result':
+        return 'search-outline';
+      case 'suggestion':
+        return 'location-outline';
       default:
         return 'location-outline';
     }
@@ -510,11 +539,13 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       </View>
       <View style={styles.suggestionContent}>
         <Text style={styles.suggestionTitle}>
-          {item.type === 'current_location' ? 'Votre position' : 
+          {item.type === 'current_location' ? 'Ma position actuelle' : 
+           item.type === 'search_result' ? item.description :
            item.description.split(',')[0] || item.description}
         </Text>
         <Text style={styles.suggestionSubtitle}>
-          {item.type === 'current_location' ? 'Prise en charge à votre position GPS' :
+          {item.type === 'current_location' ? 'Utiliser ma position GPS actuelle' :
+           item.type === 'search_result' ? 'Utiliser cette adresse' :
            item.city && item.region ? `${item.city}, ${item.region}` :
            item.commune ? `${item.commune}, ${item.city || 'Abidjan'}` : 
            item.description}
