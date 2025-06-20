@@ -1,3 +1,55 @@
+# Environment Variables - Tous les fichiers .env (Global)
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+.env.*.local
+*.env
+*.env.local
+*.env.development
+*.env.development.local
+*.env.test
+*.env.test.local
+*.env.production
+*.env.production.local
+*.env.staging
+*.env.staging.local
+*.env.dev
+*.env.prod
+*.env.stage
+*.env.uat
+*.env.qa
+*.env.demo
+*.env.backup
+*.env.old
+*.env.tmp
+*.env.temp
+
+# Fichiers de configuration d'environnement spécifiques
+**/config/environment.ts
+**/config/environment.js
+**/config/environment.json
+**/config/.env*
+**/src/config/environment.ts
+**/src/config/environment.js
+**/src/config/environment.json
+**/src/config/.env*
+
+# Fichiers de secrets et clés API
+**/secrets/
+**/keys/
+**/api-keys/
+*.key
+*.pem
+*.p12
+*.pfx
+
 # Logs
 logs
 *.log
@@ -71,48 +123,6 @@ web_modules/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# Environment Variables - Tous les fichiers .env
-.env
-.env.local
-.env.development
-.env.development.local
-.env.test
-.env.test.local
-.env.production
-.env.production.local
-.env.staging
-.env.staging.local
-.env.*.local
-*.env
-*.env.local
-*.env.development
-*.env.development.local
-*.env.test
-*.env.test.local
-*.env.production
-*.env.production.local
-*.env.staging
-*.env.staging.local
-
-# Fichiers de configuration d'environnement spécifiques
-config/environment.ts
-config/environment.js
-config/environment.json
-config/.env*
-src/config/environment.ts
-src/config/environment.js
-src/config/environment.json
-src/config/.env*
-
-# Fichiers de secrets et clés API
-secrets/
-keys/
-api-keys/
-*.key
-*.pem
-*.p12
-*.pfx
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

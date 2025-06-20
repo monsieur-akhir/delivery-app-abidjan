@@ -45,6 +45,16 @@ dist-ssr
 *.env.production.local
 *.env.staging
 *.env.staging.local
+*.env.dev
+*.env.prod
+*.env.stage
+*.env.uat
+*.env.qa
+*.env.demo
+*.env.backup
+*.env.old
+*.env.tmp
+*.env.temp
 
 # Fichiers de configuration d'environnement spécifiques
 config/environment.ts
@@ -55,6 +65,8 @@ src/config/environment.ts
 src/config/environment.js
 src/config/environment.json
 src/config/.env*
+**/config/.env*
+**/src/config/.env*
 
 # Fichiers de secrets et clés API
 secrets/
