@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -7,12 +6,9 @@ import {
   ScrollView,
   Keyboard,
   ActivityIndicator,
-  Animated,
   Platform,
   Dimensions,
-  Modal,
-  TouchableWithoutFeedback,
-  TextInput as RNTextInput
+  FlatList
 } from 'react-native';
 import {
   TextInput,
@@ -21,12 +17,10 @@ import {
   Text,
   HelperText,
   Divider,
-  IconButton,
   Surface
 } from 'react-native-paper';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { LinearGradient } from 'expo-linear-gradient';
 import { debounce } from "lodash";
 
 export interface Address {
@@ -52,7 +46,6 @@ interface AddressAutocompleteProps {
   showCurrentLocation?: boolean;
   maxSuggestions?: number;
   onFocus?: () => void;
-  showSuggestions?: boolean;
 }
 
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -65,44 +58,27 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   style,
   disabled = false,
   showCurrentLocation = true,
-  maxSuggestions = 8,
+  maxSuggestions = 6,
   onFocus,
-  showSuggestions = false,
 }) => {
   const [suggestions, setSuggestions] = useState<Address[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showSuggestionsState, setShowSuggestionsState] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
-  const [recentAddresses, setRecentAddresses] = useState<Address[]>([]);
   const [isFocused, setIsFocused] = useState(false);
-  const [inputValue, setInputValue] = useState(value);
 
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(-10)).current;
   const inputRef = useRef<any>(null);
 
   // Communes et zones populaires d'Abidjan avec coordonnées précises
   const popularPlaces = useMemo(() => [
     {
-      id: 'votre_position',
-      name: 'Votre position',
-      description: 'Prise en charge à votre position GPS',
-      type: 'current_location',
-      latitude: 0,
-      longitude: 0,
-      commune: 'Position actuelle',
-      icon: 'location'
-    },
-    {
       id: 'domicile',
       name: 'Domicile',
-      description: '918, Rue M60',
+      description: '918, Rue M60, Cocody',
       commune: 'Cocody',
       latitude: 5.3599,
       longitude: -3.9569,
       type: 'saved',
-      icon: 'home'
     },
     {
       id: 'groupe_itermi',
@@ -112,7 +88,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       latitude: 5.3599,
       longitude: -3.9569,
       type: 'business',
-      icon: 'business'
     },
     {
       id: 'rue_l125',
@@ -122,7 +97,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       latitude: 5.3599,
       longitude: -3.9569,
       type: 'address',
-      icon: 'location-outline'
     },
     {
       id: 'blvd_martyrs',
@@ -132,27 +106,15 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       latitude: 5.3599,
       longitude: -3.9569,
       type: 'address',
-      icon: 'location-outline'
-    },
-    {
-      id: 'rue_l129',
-      name: 'Rue L129, 107',
-      description: 'Cocody, Abidjan',
-      commune: 'Cocody',
-      latitude: 5.3599,
-      longitude: -3.9569,
-      type: 'address',
-      icon: 'location-outline'
     },
     {
       id: 'voie_djibi',
       name: 'Voie Djibi',
-      description: 'Abidjan',
+      description: 'Yopougon, Abidjan',
       commune: 'Yopougon',
       latitude: 5.3364,
       longitude: -4.0669,
       type: 'area',
-      icon: 'location-outline'
     },
     {
       id: 'chawarma_plus',
@@ -162,37 +124,24 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       latitude: 5.3599,
       longitude: -3.9569,
       type: 'restaurant',
-      icon: 'restaurant'
-    },
-    {
-      id: 'rue_m2',
-      name: 'Rue M2',
-      description: 'Cocody, Abidjan',
-      commune: 'Cocody',
-      latitude: 5.3599,
-      longitude: -3.9569,
-      type: 'address',
-      icon: 'location-outline'
     },
     {
       id: 'azito',
       name: 'Azito',
-      description: 'Abidjan',
+      description: 'Yopougon, Abidjan',
       commune: 'Yopougon',
       latitude: 5.3364,
       longitude: -4.0669,
       type: 'area',
-      icon: 'location-outline'
     },
     {
       id: 'cinema_benin',
       name: 'Le Cinéma Benin',
-      description: 'La commune Attécoubé, Rue I34, 514',
+      description: 'Attécoubé, Rue I34, 514',
       commune: 'Attécoubé',
       latitude: 5.3164,
       longitude: -4.0269,
       type: 'entertainment',
-      icon: 'film'
     }
   ], []);
 
@@ -208,27 +157,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     { name: 'Treichville', latitude: 5.3000, longitude: -4.0167 },
     { name: 'Yopougon', latitude: 5.3667, longitude: -4.0833 }
   ], []);
-
-  // Animation d'entrée optimisée
-  useEffect(() => {
-    if (showSuggestionsState) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      fadeAnim.setValue(0);
-      slideAnim.setValue(-10);
-    }
-  }, [showSuggestionsState, fadeAnim, slideAnim]);
 
   // Obtenir la position actuelle
   useEffect(() => {
@@ -253,21 +181,24 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  // Recherche d'adresses intelligente et rapide
+  // Recherche d'adresses
   const searchAddresses = useCallback(
     debounce(async (query: string) => {
       if (query.length < 2) {
         setSuggestions([]);
+        setShowSuggestions(false);
         return;
       }
 
       setLoading(true);
+      setShowSuggestions(true);
+
       try {
         const results: Address[] = [];
         const normalizedQuery = query.toLowerCase().trim();
 
-        // 1. Recherche dans les lieux populaires (plus rapide)
-        popularPlaces.forEach((place, index) => {
+        // Recherche dans les lieux populaires
+        popularPlaces.forEach((place) => {
           if (
             place.name.toLowerCase().includes(normalizedQuery) ||
             place.description.toLowerCase().includes(normalizedQuery) ||
@@ -284,7 +215,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           }
         });
 
-        // 2. Recherche par commune
+        // Recherche par commune
         abidjanCommunes.forEach((commune, index) => {
           if (commune.name.toLowerCase().includes(normalizedQuery)) {
             results.push({
@@ -298,30 +229,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           }
         });
 
-        // 3. Générer des adresses dynamiques si nécessaire
-        if (query.length >= 3 && results.length < 3) {
-          const streetPrefixes = ['Rue', 'Avenue', 'Boulevard', 'Allée', 'Place'];
-          const randomStreets = [
-            'des Jardins', 'de la Paix', 'du Commerce', 'de l\'Indépendance',
-            'des Cocotiers', 'de la République', 'du Stade', 'de l\'Église'
-          ];
-
-          for (let i = 0; i < Math.min(2, maxSuggestions - results.length); i++) {
-            const prefix = streetPrefixes[Math.floor(Math.random() * streetPrefixes.length)];
-            const suffix = randomStreets[Math.floor(Math.random() * randomStreets.length)];
-            const commune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
-
-            results.push({
-              id: `street_${i}_${Date.now()}`,
-              description: `${prefix} ${query} ${suffix}, ${commune.name}`,
-              latitude: commune.latitude + (Math.random() - 0.5) * 0.02,
-              longitude: commune.longitude + (Math.random() - 0.5) * 0.02,
-              commune: commune.name,
-              type: 'suggestion'
-            });
-          }
-        }
-
         setSuggestions(results.slice(0, maxSuggestions));
       } catch (error) {
         console.error('Error searching addresses:', error);
@@ -329,61 +236,21 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       } finally {
         setLoading(false);
       }
-    }, 200), // Réduit le délai de debounce pour plus de réactivité
+    }, 300),
     [popularPlaces, abidjanCommunes, maxSuggestions]
   );
 
-  // Géocodage inverse pour la position actuelle
-  const reverseGeocode = useCallback(async (latitude: number, longitude: number): Promise<Address> => {
-    let nearestCommune = abidjanCommunes[0];
-    let minDistance = Infinity;
-
-    abidjanCommunes.forEach(commune => {
-      const distance = Math.sqrt(
-        Math.pow(latitude - commune.latitude, 2) + Math.pow(longitude - commune.longitude, 2)
-      );
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestCommune = commune;
-      }
-    });
-
-    return {
-      id: 'current_location',
-      description: `Position actuelle (${nearestCommune.name})`,
-      latitude,
-      longitude,
-      commune: nearestCommune.name,
-      type: 'current_location'
-    };
-  }, [abidjanCommunes]);
-
-  // Gestionnaires d'événements optimisés
   const handleTextChange = useCallback((text: string) => {
     onChangeText(text);
-    setInputValue(text);
-    
-    if (text.length >= 2) {
-      setShowSuggestionsState(true);
-      searchAddresses(text);
-    } else {
-      setShowSuggestionsState(false);
-      setSuggestions([]);
-    }
+    searchAddresses(text);
   }, [onChangeText, searchAddresses]);
 
   const handleAddressSelect = useCallback((address: Address) => {
     onChangeText(address.description);
-    setInputValue(address.description);
     onAddressSelect(address);
-    setShowSuggestionsState(false);
+    setShowSuggestions(false);
     setSuggestions([]);
-    
-    // Ajouter aux récents
-    setRecentAddresses(prev => [
-      address,
-      ...prev.filter(addr => addr.id !== address.id).slice(0, 2)
-    ]);
+    Keyboard.dismiss();
   }, [onChangeText, onAddressSelect]);
 
   const handleCurrentLocationSelect = async () => {
@@ -391,10 +258,31 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     try {
       setLoading(true);
-      const address = await reverseGeocode(
-        currentLocation.coords.latitude,
-        currentLocation.coords.longitude
-      );
+
+      // Trouver la commune la plus proche
+      let nearestCommune = abidjanCommunes[0];
+      let minDistance = Infinity;
+
+      abidjanCommunes.forEach(commune => {
+        const distance = Math.sqrt(
+          Math.pow(currentLocation.coords.latitude - commune.latitude, 2) + 
+          Math.pow(currentLocation.coords.longitude - commune.longitude, 2)
+        );
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestCommune = commune;
+        }
+      });
+
+      const address: Address = {
+        id: 'current_location',
+        description: `Position actuelle (${nearestCommune.name})`,
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        commune: nearestCommune.name,
+        type: 'current_location'
+      };
+
       handleAddressSelect(address);
     } catch (error) {
       console.error('Error getting current location address:', error);
@@ -405,63 +293,59 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const handleFocus = useCallback(() => {
     setIsFocused(true);
-    if (value.length >= 2 || recentAddresses.length > 0) {
-      setShowSuggestionsState(true);
-      if (value.length >= 2) {
-        searchAddresses(value);
-      }
-    }
     onFocus?.();
-  }, [value, recentAddresses.length, searchAddresses, onFocus]);
+  }, [onFocus]);
 
   const handleBlur = useCallback(() => {
     setIsFocused(false);
+    // Délai pour permettre la sélection d'une suggestion
     setTimeout(() => {
-      setShowSuggestionsState(false);
+      setShowSuggestions(false);
     }, 200);
   }, []);
 
   const clearInput = useCallback(() => {
     onChangeText('');
-    setInputValue('');
     setSuggestions([]);
-    setShowSuggestionsState(false);
+    setShowSuggestions(false);
   }, [onChangeText]);
 
-  // Icônes optimisées
   const getIconForType = (type?: string) => {
     switch (type) {
       case 'current_location':
         return 'location';
-      case 'recent':
-        return 'time-outline';
       case 'saved':
-        return 'bookmark-outline';
+        return 'home';
       case 'business':
-        return 'business-outline';
+        return 'business';
       case 'restaurant':
-        return 'restaurant-outline';
+        return 'restaurant';
       default:
         return 'location-outline';
     }
   };
 
-  const getIconColor = (type?: string) => {
-    switch (type) {
-      case 'current_location':
-        return '#4CAF50';
-      case 'recent':
-        return '#FF9800';
-      case 'saved':
-        return '#2196F3';
-      case 'business':
-        return '#9C27B0';
-      case 'restaurant':
-        return '#FF5722';
-      default:
-        return '#666';
-    }
-  };
+  const renderSuggestion = ({ item }: { item: Address }) => (
+    <TouchableOpacity
+      style={styles.suggestionItem}
+      onPress={() => handleAddressSelect(item)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.suggestionIcon}>
+        <Ionicons 
+          name={getIconForType(item.type)} 
+          size={16} 
+          color="#666" 
+        />
+      </View>
+      <View style={styles.suggestionContent}>
+        <Text style={styles.suggestionTitle}>{item.description}</Text>
+        {item.commune && (
+          <Text style={styles.suggestionSubtitle}>Commune: {item.commune}</Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={[styles.container, style]}>
@@ -469,7 +353,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         <TextInput
           ref={inputRef}
           label={label}
-          value={inputValue}
+          value={value}
           onChangeText={handleTextChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -483,13 +367,13 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             <View style={{ flexDirection: 'row' }}>
               {showCurrentLocation && currentLocation && (
                 <TextInput.Icon
-                  icon="location"
+                  icon="crosshair-gps"
                   iconColor="#4CAF50"
                   onPress={handleCurrentLocationSelect}
                   disabled={loading}
                 />
               )}
-              {inputValue ? (
+              {value ? (
                 <TextInput.Icon
                   icon="close"
                   onPress={clearInput}
@@ -506,157 +390,30 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         {error && <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>}
       </View>
 
-      {/* Suggestions optimisées */}
-      <Modal
-        visible={showSuggestionsState}
-        transparent={true}
-        animationType="none"
-        onRequestClose={() => setShowSuggestionsState(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowSuggestionsState(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback>
-              <Animated.View 
-                style={[
-                  styles.suggestionsContainer,
-                  {
-                    opacity: fadeAnim,
-                    transform: [{ translateY: slideAnim }]
-                  }
-                ]}
-              >
-                <Card style={styles.suggestionsCard}>
-                  <ScrollView
-                    style={styles.suggestionsList}
-                    contentContainerStyle={styles.suggestionsContent}
-                    keyboardShouldPersistTaps="handled"
-                    nestedScrollEnabled={true}
-                    showsVerticalScrollIndicator={false}
-                  >
-                    {/* Position actuelle */}
-                    {showCurrentLocation && currentLocation && (
-                      <>
-                        <View style={styles.sectionHeader}>
-                          <Text style={styles.sectionTitle}>Position actuelle</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={styles.suggestionItem}
-                          onPress={handleCurrentLocationSelect}
-                          disabled={loading}
-                          activeOpacity={0.7}
-                        >
-                          <View style={styles.suggestionContent}>
-                            <View style={[styles.suggestionIcon, styles.currentLocationIcon]}>
-                              {loading ? (
-                                <ActivityIndicator size="small" color="#4CAF50" />
-                              ) : (
-                                <Ionicons name="location" size={16} color="#4CAF50" />
-                              )}
-                            </View>
-                            <View style={styles.suggestionText}>
-                              <Text style={styles.suggestionTitle}>Utiliser ma position actuelle</Text>
-                              <Text style={styles.suggestionSubtitle}>Détection automatique</Text>
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                        <Divider style={styles.divider} />
-                      </>
-                    )}
-
-                    {/* Adresses récentes */}
-                    {recentAddresses.length > 0 && (
-                      <>
-                        <View style={styles.sectionHeader}>
-                          <Text style={styles.sectionTitle}>Récents</Text>
-                        </View>
-                        {recentAddresses.map((address) => (
-                          <TouchableOpacity
-                            key={address.id}
-                            style={styles.suggestionItem}
-                            onPress={() => handleAddressSelect(address)}
-                            activeOpacity={0.7}
-                          >
-                            <View style={styles.suggestionContent}>
-                              <View style={styles.suggestionIcon}>
-                                <Ionicons 
-                                  name={getIconForType(address.type)} 
-                                  size={16} 
-                                  color={getIconColor(address.type)} 
-                                />
-                              </View>
-                              <View style={styles.suggestionText}>
-                                <Text style={styles.suggestionTitle}>{address.description}</Text>
-                                <Text style={styles.suggestionSubtitle}>
-                                  {address.commune && `Commune: ${address.commune}`}
-                                </Text>
-                              </View>
-                            </View>
-                          </TouchableOpacity>
-                        ))}
-                        {suggestions.length > 0 && <Divider style={styles.divider} />}
-                      </>
-                    )}
-
-                    {/* Suggestions */}
-                    {suggestions.length > 0 && (
-                      <>
-                        <View style={styles.sectionHeader}>
-                          <Text style={styles.sectionTitle}>Suggestions</Text>
-                        </View>
-                        {suggestions.map((address) => (
-                          <TouchableOpacity
-                            key={address.id}
-                            style={styles.suggestionItem}
-                            onPress={() => handleAddressSelect(address)}
-                            activeOpacity={0.7}
-                          >
-                            <View style={styles.suggestionContent}>
-                              <View style={styles.suggestionIcon}>
-                                <Ionicons 
-                                  name={getIconForType(address.type)} 
-                                  size={16} 
-                                  color={getIconColor(address.type)} 
-                                />
-                              </View>
-                              <View style={styles.suggestionText}>
-                                <Text style={styles.suggestionTitle}>{address.description}</Text>
-                                <Text style={styles.suggestionSubtitle}>
-                                  {address.commune && `Commune: ${address.commune}`}
-                                </Text>
-                              </View>
-                            </View>
-                          </TouchableOpacity>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Aucun résultat */}
-                    {suggestions.length === 0 && recentAddresses.length === 0 && value.length >= 2 && !loading && (
-                      <View style={styles.noResults}>
-                        <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
-                        <Text style={styles.noResultsSubtext}>Essayez avec d'autres mots-clés</Text>
-                      </View>
-                    )}
-
-                    {/* Loading */}
-                    {loading && (
-                      <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="small" color="#666" />
-                        <Text style={styles.loadingText}>Recherche en cours...</Text>
-                      </View>
-                    )}
-                  </ScrollView>
-                </Card>
-              </Animated.View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+      {/* Suggestions directement sous l'input */}
+      {showSuggestions && (suggestions.length > 0 || loading) && (
+        <Surface style={styles.suggestionsContainer} elevation={4}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#666" />
+              <Text style={styles.loadingText}>Recherche...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={suggestions}
+              renderItem={renderSuggestion}
+              keyExtractor={(item) => item.id}
+              style={styles.suggestionsList}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={false}
+              ItemSeparatorComponent={() => <Divider />}
+            />
+          )}
+        </Surface>
+      )}
     </View>
   );
 };
-
-const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -676,54 +433,21 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 4,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'flex-start',
-    paddingTop: 100,
-  },
   suggestionsContainer: {
-    marginHorizontal: 16,
-    marginTop: 8,
-  },
-  suggestionsCard: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    maxHeight: 400,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
+    borderRadius: 8,
+    maxHeight: 300,
+    zIndex: 1001,
+    marginTop: 4,
   },
   suggestionsList: {
-    maxHeight: 400,
-  },
-  suggestionsContent: {
-    paddingVertical: 8,
-  },
-  sectionHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f8f9fa',
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
-    textTransform: 'uppercase',
+    maxHeight: 300,
   },
   suggestionItem: {
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#f0f0f0',
-  },
-  suggestionContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -738,10 +462,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  currentLocationIcon: {
-    backgroundColor: '#e8f5e8',
-  },
-  suggestionText: {
+  suggestionContent: {
     flex: 1,
   },
   suggestionTitle: {
@@ -753,27 +474,6 @@ const styles = StyleSheet.create({
   suggestionSubtitle: {
     fontSize: 12,
     color: '#666',
-  },
-  divider: {
-    marginVertical: 4,
-  },
-  noResults: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-  },
-  noResultsText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  noResultsSubtext: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 4,
   },
   loadingContainer: {
     flexDirection: 'row',
