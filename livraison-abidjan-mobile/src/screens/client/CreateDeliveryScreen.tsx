@@ -1052,8 +1052,7 @@ const CreateDeliveryScreen: React.FC = () => {
     const size = packageSize
     const distance = currentDistance
 
-    const allOptions = [
-      {
+    const allOptions = [      {
         key: 'moto',
         title: 'Livraison à moto',
         subtitle: '',
