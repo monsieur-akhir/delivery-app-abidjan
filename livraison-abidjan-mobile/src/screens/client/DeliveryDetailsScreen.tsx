@@ -43,23 +43,23 @@ const DeliveryDetailsScreen: React.FC = () => {
     console.log('🚀 [DEBUG] Début loadDeliveryDetails')
     console.log('🔍 [DEBUG] deliveryId reçu:', deliveryId)
     console.log('🔍 [DEBUG] Type de deliveryId:', typeof deliveryId)
-    
+
     try {
       setLoading(true)
       console.log('📡 [DEBUG] Appel de getDeliveryById avec ID:', String(deliveryId))
-      
+
       const deliveryData = await DeliveryService.getDeliveryById(String(deliveryId))
       console.log('📦 [DEBUG] Données livraison reçues:', deliveryData)
       console.log('📦 [DEBUG] Type de deliveryData:', typeof deliveryData)
-      
+
       console.log('📡 [DEBUG] Appel de getDeliveryBids avec ID:', String(deliveryId))
       const bidsData = await DeliveryService.getDeliveryBids(String(deliveryId))
       console.log('💰 [DEBUG] Données enchères reçues:', bidsData)
       console.log('💰 [DEBUG] Nombre d\'enchères:', bidsData.length)
-      
+
       setDelivery(deliveryData)
       setBids(bidsData)
-      
+
       console.log('✅ [DEBUG] État mis à jour avec succès')
     } catch (error) {
       console.error('❌ [DEBUG] Erreur lors du chargement:', error)
@@ -256,7 +256,7 @@ const DeliveryDetailsScreen: React.FC = () => {
 
         <Card style={styles.addressCard}>
           <Text style={styles.cardTitle}>Adresses</Text>
-          
+
           <View style={styles.addressPoint}>
             <View style={styles.addressIcon}>
               <Feather name="map-pin" size={20} color="#4CAF50" />
@@ -368,7 +368,7 @@ const DeliveryDetailsScreen: React.FC = () => {
                 </Button>
               </View>
             ))}
-            
+
             {bids.length > 3 && (
               <TouchableOpacity
                 style={styles.viewAllBids}

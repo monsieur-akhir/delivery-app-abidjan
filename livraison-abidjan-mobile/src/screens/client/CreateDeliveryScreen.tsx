@@ -1051,7 +1051,6 @@ const CreateDeliveryScreen: React.FC = () => {
     const weight = parseFloat(packageWeight) || 1
     const size = packageSize
     const distance = currentDistance
-
     const allOptions = [      {
         key: 'moto',
         title: 'Livraison à moto',
@@ -1532,10 +1531,12 @@ const CreateDeliveryScreen: React.FC = () => {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Map Section avec overlay navigation */}
         <View style={styles.mapContainer}>
-          
-          
-          
-          
+
+          {pickupLocation && deliveryLocation && (
+            
+          )}
+
+
 
           {/* Navigation overlay avec icônes de véhicules */}
           <View style={styles.navigationOverlay}>
@@ -1566,9 +1567,81 @@ const CreateDeliveryScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>Adresses de livraison</Text>
 
             {/* Pickup Address avec design moderne */}
+            <View style={styles.modernAddressContainer}>
+              <View style={styles.addressIndicator}>
+                <View style={styles.pickupIndicator}>
+                  <View style={styles.pickupDot} />
+                </View>
+              </View>
+              <View style={styles.addressInputWrapper}>
+                <Text style={styles.addressLabel}>Adresse de ramassage</Text>
+                <TextInput
+                  style={styles.modernAddressInput}
+                  placeholder="Entrez l'adresse"
+                  value={pickupQuery}
+                  onChangeText={(text) => handleTextChange(text, 'pickup')}
+                  onFocus={() => {
+                    setActiveField('pickup')
+                    setPickupFocused(true)
+                    setShowPickupSuggestions(true)
+                  }}
+                  onBlur={() => {
+                    setPickupFocused(false)
+                    setTimeout(() => setShowPickupSuggestions(false), 200)
+                  }}
+                />
+                {showPickupSuggestions && pickupFocused && (
+                  
+                    {pickupSuggestions.map((item) => (
+                      
+                          {item.description}
+                        
+                      
+                    ))}
+                  
+                )}
+              </View>
+            </View>
+            <View style={styles.addressConnector}>
+              <View style={styles.connectorLine} />
+            </View>
 
             {/* Delivery Address avec design moderne */}
-
+            <View style={styles.modernAddressContainer}>
+              <View style={styles.addressIndicator}>
+                <View style={styles.destinationIndicator}>
+                  <View style={styles.pickupDot} />
+                </View>
+              </View>
+              <View style={styles.addressInputWrapper}>
+                <Text style={styles.addressLabel}>Adresse de destination</Text>
+                <TextInput
+                  style={styles.modernAddressInput}
+                  placeholder="Entrez l'adresse"
+                  value={deliveryQuery}
+                  onChangeText={(text) => handleTextChange(text, 'delivery')}
+                  onFocus={() => {
+                    setActiveField('delivery')
+                    setDeliveryFocused(true)
+                    setShowDeliverySuggestions(true)
+                  }}
+                  onBlur={() => {
+                    setDeliveryFocused(false)
+                    setTimeout(() => setShowDeliverySuggestions(false), 200)
+                  }}
+                />
+                {showDeliverySuggestions && deliveryFocused && (
+                  
+                    {deliverySuggestions.map((item) => (
+                      
+                          {item.description}
+                        
+                      
+                    ))}
+                  
+                )}
+              </View>
+            </View>
 
             {/* Distance indicator */}
             {pickupLocation && deliveryLocation && (
@@ -1603,25 +1676,47 @@ const CreateDeliveryScreen: React.FC = () => {
             {/* Package Weight */}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Poids estimé (kg)</Text>
-
+              <TextInput
+                style={styles.textInput}
+                placeholder="Poids en kg"
+                keyboardType="number-pad"
+                value={packageWeight}
+                onChangeText={setPackageWeight}
+              />
             </View>
 
             {/* Package Description */}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Description du colis</Text>
-
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                placeholder="Décrivez le contenu du colis"
+                multiline
+                value={packageDescription}
+                onChangeText={setPackageDescription}
+              />
             </View>
 
             {/* Fragile Switch */}
             <View style={styles.switchContainer}>
-
-
+              
+                Colis fragile ?
+                
+                  Manipuler avec précaution
+                
+              
+              
             </View>
 
             {/* Urgent Switch */}
             <View style={styles.switchContainer}>
-
-
+              
+                Livraison urgente ?
+                
+                  Livraison plus rapide
+                
+              
+              
             </View>
           </View>
 
@@ -1664,7 +1759,10 @@ const CreateDeliveryScreen: React.FC = () => {
           </View>
 
           {/* Proposed Price */}
-
+          <View style={styles.packageSection}>
+            <Text style={styles.sectionTitle}>Prix</Text>
+            
+          </View>
 
           {/* Delivery Options modernisées avec calcul dynamique */}
           <View style={styles.deliveryOptionsSection}>
@@ -1676,30 +1774,43 @@ const CreateDeliveryScreen: React.FC = () => {
 
       {/* Action Button */}
       <View style={styles.actionButtonContainer}>
-
-
-
-
-
+        <TouchableOpacity
+          style={[
+            styles.actionButton,
+            loading && styles.actionButtonDisabled
+          ]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          
             Créer la livraison - {formatPrice(estimatedPrice)}
-
-
+          
+        </TouchableOpacity>
       </View>
 
       {/* Loading Modal */}
       <Modal visible={loading} transparent animationType="fade">
-
-
-
-            Création en cours...
-
-
+        
+          
+            
+              
+                Création en cours...
+              
+            
+          
+        
       </Modal>
 
       {/* Alerts et Toasts */}
+      
+        
+          {alertConfig.message}
+        
+      
 
-
-
+      
+        {toastConfig.message}
+      
     </SafeAreaView>
   )
 }

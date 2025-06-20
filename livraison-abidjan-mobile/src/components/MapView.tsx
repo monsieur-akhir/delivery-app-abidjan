@@ -25,8 +25,10 @@ interface Address {
 interface MapViewProps {
   pickupLocation?: Address | null;
   deliveryLocation?: Address | null;
+  courierLocation?: { latitude: number; longitude: number } | null;
+  showCourierLocation?: boolean;
+  onMapReady?: () => void;
   style?: any;
-  showRoute?: boolean;
 }
 
 const COLORS = {
