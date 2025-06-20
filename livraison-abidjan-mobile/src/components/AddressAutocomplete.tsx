@@ -303,7 +303,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   // Recherche d'adresses améliorée pour toute la Côte d'Ivoire
   const searchAddresses = useCallback(
     debounce(async (query: string) => {
-      if (query.length < 2) {
+      if (query.length === 0) {
         setSuggestions([]);
         setShowSuggestions(false);
         return;
@@ -437,10 +437,23 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const handleFocus = useCallback(() => {
     setIsFocused(true);
     onFocus?.();
-    if (value.length >= 2) {
+    if (value.length > 0) {
       searchAddresses(value);
+    } else {
+      // Afficher les lieux populaires par défaut
+      setSuggestions(popularPlaces.slice(0, maxSuggestions).map(place => ({
+        id: place.id,
+        description: place.description,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        commune: place.commune,
+        city: place.city,
+        region: place.region,
+        type: place.type as any
+      })));
+      setShowSuggestions(true);
     }
-  }, [onFocus, value, searchAddresses]);
+  }, [onFocus, value, searchAddresses, popularPlaces, maxSuggestions]);
 
   const handleBlur = useCallback(() => {
     setIsFocused(false);
@@ -534,13 +547,29 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               activeUnderlineColor="transparent"
               contentStyle={styles.inputContent}
               right={
-                value ? (
-                  <TextInput.Icon
-                    icon="close"
-                    onPress={clearInput}
-                    size={18}
-                  />
-                ) : undefined
+                <View style={styles.inputActions}>
+                  {showCurrentLocation && (
+                    <TouchableOpacity
+                      onPress={handleCurrentLocationSelect}
+                      style={styles.locationButton}
+                      disabled={loading}
+                    >
+                      <Ionicons 
+                        name="locate" 
+                        size={18} 
+                        color={loading ? "#999" : "#666"} 
+                      />
+                    </TouchableOpacity>
+                  )}
+                  {value ? (
+                    <TouchableOpacity
+                      onPress={clearInput}
+                      style={styles.clearButton}
+                    >
+                      <Ionicons name="close" size={18} color="#666" />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
               }
             />
           </View>
@@ -686,6 +715,19 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: 10,
     fontWeight: '500',
+  },
+  inputActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  locationButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: '#F0F0F0',
+  },
+  clearButton: {
+    padding: 4,
   },
 });
 
