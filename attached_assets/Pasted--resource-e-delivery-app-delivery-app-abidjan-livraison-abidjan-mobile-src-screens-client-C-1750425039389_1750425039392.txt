@@ -1,0 +1,131 @@
+[{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/CreateDeliveryScreen.tsx",
+	"owner": "typescript",
+	"code": "1117",
+	"severity": 8,
+	"message": "An object literal cannot have multiple properties with the same name.",
+	"source": "ts",
+	"startLineNumber": 403,
+	"startColumn": 3,
+	"endLineNumber": 403,
+	"endColumn": 15,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/CreateDeliveryScreen.tsx",
+	"owner": "typescript",
+	"code": "2345",
+	"severity": 8,
+	"message": "Argument of type '({ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; } | { id: string; name: string; description: string; commune: string; latitude: number; longitude: number; type: string; icon: string; })[]' is not assignable to parameter of type 'SetStateAction<Address[]>'.\n  Type '({ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; } | { id: string; name: string; description: string; commune: string; latitude: number; longitude: number; type: string; icon: string; })[]' is not assignable to type 'Address[]'.\n    Type '{ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; } | { id: string; name: string; description: string; commune: string; latitude: number; longitude: number; type: string; icon: string; }' is not assignable to type 'Address'.\n      Type '{ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; }' is not assignable to type 'Address'.\n        Types of property 'commune' are incompatible.\n          Type 'undefined' is not assignable to type 'string'.",
+	"source": "ts",
+	"startLineNumber": 1131,
+	"startColumn": 30,
+	"endLineNumber": 1131,
+	"endColumn": 37,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/CreateDeliveryScreen.tsx",
+	"owner": "typescript",
+	"code": "2345",
+	"severity": 8,
+	"message": "Argument of type '({ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; } | { id: string; name: string; description: string; commune: string; latitude: number; longitude: number; type: string; icon: string; })[]' is not assignable to parameter of type 'SetStateAction<Address[]>'.\n  Type '({ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; } | { id: string; name: string; description: string; commune: string; latitude: number; longitude: number; type: string; icon: string; })[]' is not assignable to type 'Address[]'.\n    Type '{ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; } | { id: string; name: string; description: string; commune: string; latitude: number; longitude: number; type: string; icon: string; }' is not assignable to type 'Address'.\n      Type '{ id: string; name: string; description: string; type: string; icon: string; commune?: undefined; latitude?: undefined; longitude?: undefined; }' is not assignable to type 'Address'.\n        Types of property 'commune' are incompatible.\n          Type 'undefined' is not assignable to type 'string'.",
+	"source": "ts",
+	"startLineNumber": 1134,
+	"startColumn": 32,
+	"endLineNumber": 1134,
+	"endColumn": 39,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/CreateDeliveryScreen.tsx",
+	"owner": "typescript",
+	"code": "2322",
+	"severity": 8,
+	"message": "Type '{ pickupLocation: Address | null; deliveryLocation: Address | null; style: { flex: number; }; showRoute: boolean; }' is not assignable to type 'IntrinsicAttributes & MapViewProps'.\n  Property 'showRoute' does not exist on type 'IntrinsicAttributes & MapViewProps'.",
+	"source": "ts",
+	"startLineNumber": 1529,
+	"startColumn": 13,
+	"endLineNumber": 1529,
+	"endColumn": 22,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryHistoryScreen.tsx",
+	"owner": "typescript",
+	"code": "2724",
+	"severity": 8,
+	"message": "'\"../../styles/colors\"' has no exported member named 'COLORS'. Did you mean 'colors'?",
+	"source": "ts",
+	"startLineNumber": 22,
+	"startColumn": 10,
+	"endLineNumber": 22,
+	"endColumn": 16,
+	"relatedInformation": [
+		{
+			"startLineNumber": 34,
+			"startColumn": 14,
+			"endLineNumber": 34,
+			"endColumn": 20,
+			"message": "'colors' is declared here.",
+			"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/styles/colors.ts"
+		}
+	],
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryHistoryScreen.tsx",
+	"owner": "typescript",
+	"code": "2614",
+	"severity": 8,
+	"message": "Module '\"../../components/DeliveryStatusBadge\"' has no exported member 'DeliveryStatusBadge'. Did you mean to use 'import DeliveryStatusBadge from \"../../components/DeliveryStatusBadge\"' instead?",
+	"source": "ts",
+	"startLineNumber": 24,
+	"startColumn": 10,
+	"endLineNumber": 24,
+	"endColumn": 29,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/DeliveryHistoryScreen.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'getUserDeliveries' does not exist on type 'UseDeliveryReturn'.",
+	"source": "ts",
+	"startLineNumber": 160,
+	"startColumn": 11,
+	"endLineNumber": 160,
+	"endColumn": 28,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/HomeScreen.tsx",
+	"owner": "typescript",
+	"code": "1345",
+	"severity": 8,
+	"message": "An expression of type 'void' cannot be tested for truthiness.",
+	"source": "ts",
+	"startLineNumber": 140,
+	"startColumn": 23,
+	"endLineNumber": 140,
+	"endColumn": 33,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/HomeScreen.tsx",
+	"owner": "typescript",
+	"code": "1345",
+	"severity": 8,
+	"message": "An expression of type 'void' cannot be tested for truthiness.",
+	"source": "ts",
+	"startLineNumber": 141,
+	"startColumn": 23,
+	"endLineNumber": 141,
+	"endColumn": 33,
+	"modelVersionId": 1
+},{
+	"resource": "/e:/delivery-app/delivery-app-abidjan/livraison-abidjan-mobile/src/screens/client/HomeScreen.tsx",
+	"owner": "typescript",
+	"code": "2367",
+	"severity": 8,
+	"message": "This comparison appears to be unintentional because the types 'number' and 'string' have no overlap.",
+	"source": "ts",
+	"startLineNumber": 276,
+	"startColumn": 66,
+	"endLineNumber": 276,
+	"endColumn": 84,
+	"modelVersionId": 1
+}]

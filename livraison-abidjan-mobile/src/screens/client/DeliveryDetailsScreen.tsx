@@ -63,8 +63,10 @@ const DeliveryDetailsScreen: React.FC = () => {
       console.log('✅ [DEBUG] État mis à jour avec succès')
     } catch (error) {
       console.error('❌ [DEBUG] Erreur lors du chargement:', error)
-      console.error('❌ [DEBUG] Message d\'erreur:', error.message)
-      console.error('❌ [DEBUG] Stack trace:', error.stack)
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+      const errorStack = error instanceof Error ? error.stack : 'Pas de stack trace disponible'
+      console.error('❌ [DEBUG] Message d\'erreur:', errorMessage)
+      console.error('❌ [DEBUG] Stack trace:', errorStack)
       Alert.alert('Erreur', 'Impossible de charger les détails de la livraison')
     } finally {
       setLoading(false)
@@ -88,7 +90,8 @@ const DeliveryDetailsScreen: React.FC = () => {
               Alert.alert('Succès', 'Livraison annulée avec succès')
               navigation.goBack()
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible d\'annuler la livraison')
+              const errorMessage = error instanceof Error ? error.message : 'Impossible d\'annuler la livraison'
+              Alert.alert('Erreur', errorMessage)
             } finally {
               setCancelling(false)
             }
@@ -113,7 +116,8 @@ const DeliveryDetailsScreen: React.FC = () => {
               Alert.alert('Succès', 'Enchère acceptée!')
               loadDeliveryDetails()
             } catch (error) {
-              Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
+              const errorMessage = error instanceof Error ? error.message : 'Impossible d\'accepter cette enchère'
+              Alert.alert('Erreur', errorMessage)
             } finally {
               setAcceptingBid(null)
             }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   View,
@@ -106,7 +105,7 @@ const MotorcycleLoader: React.FC = () => {
           <View style={styles.roadLine} />
         </View>
       </View>
-      
+
       <Animated.View
         style={[
           styles.motorcycleContainer,
@@ -123,7 +122,7 @@ const MotorcycleLoader: React.FC = () => {
           <View style={styles.motorcycleBody}>
             <Text style={styles.motorcycleEmoji}>🏍️</Text>
           </View>
-          
+
           {/* Roues animées */}
           <Animated.View
             style={[
@@ -134,7 +133,7 @@ const MotorcycleLoader: React.FC = () => {
           >
             <View style={styles.wheelInner} />
           </Animated.View>
-          
+
           <Animated.View
             style={[
               styles.wheel,
@@ -158,12 +157,12 @@ const MotorcycleLoader: React.FC = () => {
 export const DeliveryHistoryScreen: React.FC = () => {
   const navigation = useNavigation()
   const { getUserDeliveries } = useDelivery()
-  
+
   const [deliveries, setDeliveries] = useState<DeliveryHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<'all' | 'delivered' | 'cancelled'>('all')
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
 
@@ -172,7 +171,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
       setLoading(true)
       const response = await getUserDeliveries()
       setDeliveries(response.data || [])
-      
+
       // Animation d'entrée
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -297,7 +296,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
                   {formatDate(item.created_at)}
                 </Text>
               </View>
-              
+
               <View style={styles.statusSection}>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
                   <Feather 
@@ -322,9 +321,9 @@ export const DeliveryHistoryScreen: React.FC = () => {
                   {item.pickup_address}
                 </Text>
               </View>
-              
+
               <View style={styles.routeLine} />
-              
+
               <View style={styles.addressRow}>
                 <View style={styles.addressIcon}>
                   <Feather name="navigation" size={14} color="#EF4444" />
@@ -344,14 +343,14 @@ export const DeliveryHistoryScreen: React.FC = () => {
                     <Text style={styles.courierName}>{item.courier_name}</Text>
                   </View>
                 )}
-                
+
                 {item.rating && (
                   <View style={styles.ratingInfo}>
                     <Feather name="star" size={12} color="#F59E0B" />
                     <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
                   </View>
                 )}
-                
+
                 {item.estimated_time && (
                   <View style={styles.timeInfo}>
                     <Feather name="clock" size={12} color="#6B7280" />
@@ -373,7 +372,7 @@ export const DeliveryHistoryScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
+
       {/* En-tête */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -382,14 +381,14 @@ export const DeliveryHistoryScreen: React.FC = () => {
         >
           <Feather name="arrow-left" size={24} color="#1F2937" />
         </TouchableOpacity>
-        
+
         <View style={styles.headerTitleSection}>
           <Text style={styles.headerTitle}>Historique</Text>
           <Text style={styles.headerSubtitle}>
             {filteredDeliveries.length} livraison{filteredDeliveries.length !== 1 ? 's' : ''}
           </Text>
         </View>
-        
+
         <TouchableOpacity style={styles.searchButton}>
           <Feather name="search" size={20} color="#6B7280" />
         </TouchableOpacity>
@@ -450,7 +449,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  
+
   // Styles du loader
   loaderContainer: {
     flex: 1,
@@ -558,7 +557,7 @@ const styles = StyleSheet.create({
   searchButton: {
     padding: 8,
   },
-  
+
   filtersContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -583,7 +582,7 @@ const styles = StyleSheet.create({
   filterTextActive: {
     color: '#FFFFFF',
   },
-  
+
   listContainer: {
     padding: 20,
     paddingBottom: 100,
@@ -605,7 +604,7 @@ const styles = StyleSheet.create({
   cardGradient: {
     padding: 20,
   },
-  
+
   deliveryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -642,7 +641,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#059669',
   },
-  
+
   addressesSection: {
     marginBottom: 16,
   },
@@ -670,7 +669,7 @@ const styles = StyleSheet.create({
     marginLeft: 11,
     marginBottom: 8,
   },
-  
+
   extraInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -707,3 +706,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 })
+```
+
+```
+</replit_final_file>
