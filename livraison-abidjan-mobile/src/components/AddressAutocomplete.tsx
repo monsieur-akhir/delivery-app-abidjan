@@ -31,7 +31,7 @@ export interface Address {
   region?: string;
   city?: string;
   postalCode?: string;
-  type?: 'current_location' | 'saved' | 'recent' | 'suggestion';
+  type?: 'current_location' | 'saved' | 'recent' | 'suggestion' | 'search_result';
 }
 
 interface AddressAutocompleteProps {
