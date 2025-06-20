@@ -1058,7 +1058,6 @@ const CreateDeliveryScreen: React.FC = () => {
         time: '25-35 min',
         maxWeight: 5,
         maxSize: 'small',
-        ```text
         suitable: weight <= 5 && ['xs', 'small'].includes(size) && distance <= 50
       },
       {
