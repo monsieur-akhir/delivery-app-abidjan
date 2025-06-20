@@ -8,7 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Modal
+  Modal,
+  TouchableOpacity
 } from 'react-native';
 import {
   Text,
@@ -19,7 +20,8 @@ import {
   Surface,
   IconButton,
   Chip,
-  ProgressBar
+  ProgressBar,
+  Checkbox
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -78,6 +80,12 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [customPrice, setCustomPrice] = useState('');
+  const [description, setDescription] = useState('')
+  const [weight, setWeight] = useState('')
+  const [estimatedValue, setEstimatedValue] = useState('')
+  const [isUrgent, setIsUrgent] = useState(false)
+  const [isFragile, setIsFragile] = useState(false)
+  const [proposedPrice, setProposedPrice] = useState('')
 
   // États pour le loader et la recherche de coursiers
   const [searchingCouriers, setSearchingCouriers] = useState(false);
@@ -372,12 +380,93 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
               />
             </Card.Content>
           </Card>
+          {/* Section des informations du colis */}
+          <Card style={styles.card}>
+            <Card.Content>
+            <Text style={styles.sectionTitle}>Informations du colis</Text>
+
+              <TextInput
+                label="Description du colis"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                numberOfLines={3}
+                style={styles.input}
+                placeholder="Décrivez votre colis..."
+              />
+
+              <View style={styles.row}>
+                <TextInput
+                  label="Poids (kg)"
+                  value={weight}
+                  onChangeText={setWeight}
+                  keyboardType="numeric"
+                  style={[styles.input, styles.halfWidth]}
+                  placeholder="0.0"
+                 left={<TextInput.Icon icon="weight-kilogram" />}
+                />
+                <TextInput
+                  label="Valeur estimée (FCFA)"
+                  value={estimatedValue}
+                  onChangeText={setEstimatedValue}
+                  keyboardType="numeric"
+                  style={[styles.input, styles.halfWidth]}
+                  placeholder="0"
+                  left={<TextInput.Icon icon="currency-usd" />}
+                />
+              </View>
+
+              {/* Options du colis */}
+              <View style={styles.packageOptions}>
+                <View style={styles.optionRow}>
+                  <Checkbox
+                    status={isUrgent ? 'checked' : 'unchecked'}
+                    onPress={() => setIsUrgent(!isUrgent)}
+                    color={COLORS.primary}
+                  />
+                  <TouchableOpacity
+                    style={styles.optionLabel}
+                    onPress={() => setIsUrgent(!isUrgent)}
+                  >
+                    <Text style={styles.optionText}>Livraison urgente</Text>
+                    <Text style={styles.optionSubtext}>Priorité élevée (+20%)</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.optionRow}>
+                  <Checkbox
+                    status={isFragile ? 'checked' : 'unchecked'}
+                    onPress={() => setIsFragile(!isFragile)}
+                    color={COLORS.primary}
+                  />
+                  <TouchableOpacity
+                    style={styles.optionLabel}
+                    onPress={() => setIsFragile(!isFragile)}
+                  >
+                    <Text style={styles.optionText}>Colis fragile</Text>
+                    <Text style={styles.optionSubtext}>Manipulation délicate</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Proposition de prix */}
+              <TextInput
+                label="Votre proposition de prix (FCFA)"
+                value={proposedPrice}
+                onChangeText={setProposedPrice}
+                keyboardType="numeric"
+                style={styles.input}
+                placeholder="Entrez votre budget"
+                left={<TextInput.Icon icon="cash" />}
+              />
+            </Card.Content>
+          </Card>
 
           {/* Proposition de prix personnalisé */}
           <Card style={styles.card}>
             <Card.Content>
               <Text style={styles.sectionTitle}>Votre proposition de prix (optionnel)</Text>
-              
+
               <TextInput
                 label="Prix proposé (FCFA)"
                 value={customPrice}
@@ -387,7 +476,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
                 left={<TextInput.Icon icon="currency-usd" />}
                 placeholder="Ex: 2000"
               />
-              
+
               <Text style={styles.priceHint}>
                 Laissez vide pour recevoir des offres des coursiers
               </Text>
@@ -653,6 +742,47 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 4,
     fontStyle: 'italic',
+  },
+    packageSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+
+  packageOptions: {
+    marginVertical: 16,
+  },
+
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingVertical: 8,
+  },
+
+  optionLabel: {
+    flex: 1,
+    marginLeft: 8,
+  },
+
+  optionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+
+  optionSubtext: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  halfWidth: {
+    width: '48%', // Adjust as needed
   },
 });
 
