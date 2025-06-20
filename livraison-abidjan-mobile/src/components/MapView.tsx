@@ -61,6 +61,8 @@ const CustomMapView: React.FC<MapViewProps> = ({
   const [duration, setDuration] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [mapReady, setMapReady] = useState<boolean>(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [loadingLocation, setLoadingLocation] = useState<boolean>(true);
 
   // Calculer la distance entre deux points
   const calculateDistance = (coord1: any, coord2: any): number => {
@@ -125,24 +127,99 @@ const CustomMapView: React.FC<MapViewProps> = ({
     }
   };
 
-  // Région initiale
+   // Obtenir la position actuelle de l'utilisateur
+   useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    try {
+      setLoadingLocation(true);
+
+      // Demander les permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Permission de localisation refusée');
+        setLoadingLocation(false);
+        return;
+      }
+
+      // Obtenir la position actuelle
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    } catch (error) {
+      console.warn('Erreur lors de la récupération de la position:', error);
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  // Région par défaut (Abidjan ou position utilisateur)
   const initialRegion = useMemo(() => {
-    if (pickupLocation) {
+    if (userLocation) {
       return {
-        latitude: pickupLocation.latitude,
-        longitude: pickupLocation.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
       };
     }
-    // Région par défaut pour Abidjan
     return {
       latitude: 5.3599,
       longitude: -3.9569,
       latitudeDelta: 0.1,
       longitudeDelta: 0.1,
     };
-  }, [pickupLocation]);
+  }, [userLocation]);
+
+  // Calculer la région optimale pour afficher tous les points
+  const getOptimalRegion = useMemo(() => {
+    // Si on a les deux lieux, centrer sur eux
+    if (pickupLocation && deliveryLocation) {
+      const minLat = Math.min(pickupLocation.latitude, deliveryLocation.latitude);
+      const maxLat = Math.max(pickupLocation.latitude, deliveryLocation.latitude);
+      const minLng = Math.min(pickupLocation.longitude, deliveryLocation.longitude);
+      const maxLng = Math.max(pickupLocation.longitude, deliveryLocation.longitude);
+
+      const latDelta = (maxLat - minLat) * 1.5;
+      const lngDelta = (maxLng - minLng) * 1.5;
+
+      return {
+        latitude: (minLat + maxLat) / 2,
+        longitude: (minLng + maxLng) / 2,
+        latitudeDelta: Math.max(latDelta, 0.01),
+        longitudeDelta: Math.max(lngDelta, 0.01),
+      };
+    }
+
+    // Si on a un seul lieu, centrer sur lui
+    if (pickupLocation) {
+      return {
+        latitude: pickupLocation.latitude,
+        longitude: pickupLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+
+    if (deliveryLocation) {
+      return {
+        latitude: deliveryLocation.latitude,
+        longitude: deliveryLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+
+    // Sinon utiliser la région par défaut (position utilisateur ou Abidjan)
+    return initialRegion;
+  }, [pickupLocation, deliveryLocation, initialRegion]);
 
   const handleMapReady = () => {
     setMapReady(true);
@@ -151,6 +228,12 @@ const CustomMapView: React.FC<MapViewProps> = ({
 
   return (
     <View style={[styles.container, style]}>
+      {loadingLocation && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#FF4D4D" />
+          <Text style={styles.loadingText}>Localisation en cours...</Text>
+        </View>
+      )}
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -163,7 +246,21 @@ const CustomMapView: React.FC<MapViewProps> = ({
         toolbarEnabled={false}
         loadingEnabled={true}
         mapType="standard"
+        region={getOptimalRegion}
       >
+        {/* Marqueur de la position actuelle par défaut */}
+        {userLocation && !pickupLocation && !deliveryLocation && (
+          <Marker
+            coordinate={userLocation}
+            title="Votre position"
+            description="Position actuelle"
+          >
+            <View style={[styles.markerContainer, styles.currentLocationMarker]}>
+              <MaterialCommunityIcons name="motorbike" size={28} color="#FFFFFF" />
+            </View>
+          </Marker>
+        )}
+
         {/* Marker de prise en charge */}
         {pickupLocation && (
           <Marker
@@ -402,6 +499,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     marginBottom: 8,
+  },
+  currentLocationMarker: {
+    backgroundColor: '#007AFF',
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
   },
 });
 
