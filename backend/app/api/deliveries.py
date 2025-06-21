@@ -188,7 +188,7 @@ async def smart_matching_endpoint(
 
 @router.get("/address-autocomplete")
 async def address_autocomplete(
-    input: str = Query(..., min_length=1, description="Texte de recherche pour l'autocomplétion"),
+    input: str = Query(..., min_length=2, description="Texte de recherche pour l'autocomplétion (minimum 2 caractères)"),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -198,13 +198,12 @@ async def address_autocomplete(
         # Nettoyer l'input (supprimer les espaces en début/fin)
         clean_input = input.strip()
         
-        # Vérifier la longueur après nettoyage
+        # Vérification supplémentaire de la longueur
         if len(clean_input) < 2:
-            return {
-                "predictions": [],
-                "status": "INVALID_REQUEST",
-                "query": clean_input
-            }
+            raise HTTPException(
+                status_code=422, 
+                detail="Le terme de recherche doit contenir au moins 2 caractères"
+            )
         
         # Appeler le service de géolocalisation
         suggestions = await get_google_places_suggestions(clean_input)
@@ -212,11 +211,15 @@ async def address_autocomplete(
         # Formatter les prédictions selon le format Google Places
         formatted_predictions = []
         for suggestion in suggestions:
+            main_text = suggestion.get("address", suggestion.get("description", ""))
+            if "," in main_text:
+                main_text = main_text.split(",")[0]
+            
             formatted_predictions.append({
                 "description": suggestion.get("address", suggestion.get("description", "")),
                 "place_id": suggestion.get("place_id", f"place_{len(formatted_predictions)}"),
                 "structured_formatting": {
-                    "main_text": suggestion.get("address", "").split(",")[0],
+                    "main_text": main_text,
                     "secondary_text": suggestion.get("commune", "Abidjan")
                 }
             })
@@ -226,12 +229,15 @@ async def address_autocomplete(
             "status": "OK",
             "query": clean_input
         }
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Erreur lors de l'autocomplétion: {str(e)}")
         return {
             "predictions": [],
             "status": "ERROR",
-            "query": clean_input
+            "query": clean_input,
+            "error": str(e)
         }
 
 @router.get("/popular-places")
