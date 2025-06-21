@@ -188,7 +188,7 @@ async def smart_matching_endpoint(
 
 @router.get("/address-autocomplete")
 async def address_autocomplete(
-    input: str = Query(..., min_length=2, description="Texte de recherche pour l'autocomplétion (minimum 2 caractères)"),
+    input: str = Query(..., min_length=1, description="Texte de recherche pour l'autocomplétion"),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -198,12 +198,22 @@ async def address_autocomplete(
         # Nettoyer l'input (supprimer les espaces en début/fin)
         clean_input = input.strip()
         
+        # Vérification de base
+        if not clean_input:
+            return {
+                "predictions": [],
+                "status": "INVALID_REQUEST",
+                "query": clean_input
+            }
+        
         # Vérification supplémentaire de la longueur
         if len(clean_input) < 2:
-            raise HTTPException(
-                status_code=422, 
-                detail="Le terme de recherche doit contenir au moins 2 caractères"
-            )
+            return {
+                "predictions": [],
+                "status": "INVALID_REQUEST", 
+                "query": clean_input,
+                "message": "Le terme de recherche doit contenir au moins 2 caractères"
+            }
         
         # Appeler le service de géolocalisation
         suggestions = await get_google_places_suggestions(clean_input)
