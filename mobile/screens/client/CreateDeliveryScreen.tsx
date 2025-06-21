@@ -199,10 +199,42 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
     if (!validateForm()) return;
 
     try {
-      await searchForCouriers();
+      // Préparer les données de livraison
+      const deliveryData = {
+        pickup_address: pickupAddress,
+        pickup_commune: pickupLocation?.commune || '',
+        pickup_lat: pickupLocation?.latitude,
+        pickup_lng: pickupLocation?.longitude,
+        delivery_address: deliveryAddress,
+        delivery_commune: deliveryLocation?.commune || '',
+        delivery_lat: deliveryLocation?.latitude,
+        delivery_lng: deliveryLocation?.longitude,
+        delivery_contact_name: recipientName,
+        delivery_contact_phone: recipientPhone,
+        package_description: description,
+        package_weight: weight ? parseFloat(weight) : null,
+        is_fragile: isFragile,
+        is_urgent: isUrgent,
+        proposed_price: proposedPrice ? parseFloat(proposedPrice) : (customPrice ? parseFloat(customPrice) : estimatedPrice),
+        delivery_type: urgencyLevel === 'express' ? 'express' : 'standard',
+        special_instructions: specialInstructions,
+        package_type: packageType,
+        urgency_level: urgencyLevel,
+        custom_price: customPrice,
+        estimated_value: estimatedValue
+      };
+
+      console.log('[CreateDelivery] Données envoyées:', deliveryData);
+
+      // Créer la livraison
+      const delivery = await createDelivery(deliveryData);
+      
+      if (delivery) {
+        await searchForCouriers();
+      }
     } catch (error) {
-      console.error('Erreur lors de la recherche de coursiers:', error);
-      Alert.alert('Erreur', 'Impossible de rechercher des coursiers. Veuillez réessayer.');
+      console.error('Erreur lors de la création de livraison:', error);
+      Alert.alert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.');
     }
   };
 
@@ -427,6 +459,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
                   <TouchableOpacity
                     style={styles.optionLabel}
                     onPress={() => setIsUrgent(!isUrgent)}
+                    activeOpacity={0.7}
                   >
                     <Text style={styles.optionText}>Livraison urgente</Text>
                     <Text style={styles.optionSubtext}>Priorité élevée (+20%)</Text>
@@ -442,6 +475,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
                   <TouchableOpacity
                     style={styles.optionLabel}
                     onPress={() => setIsFragile(!isFragile)}
+                    activeOpacity={0.7}
                   >
                     <Text style={styles.optionText}>Colis fragile</Text>
                     <Text style={styles.optionSubtext}>Manipulation délicate</Text>
@@ -458,6 +492,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
                 style={styles.input}
                 placeholder="Entrez votre budget"
                 left={<TextInput.Icon icon="cash" />}
+                mode="outlined"
               />
             </Card.Content>
           </Card>

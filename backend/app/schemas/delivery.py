@@ -63,17 +63,37 @@ class DeliveryCreate(DeliveryBase):
     delivery_speed: Optional[str] = None
     extras: Optional[List[str]] = None
     
+    # Champs du frontend CreateDeliveryScreen
+    description: Optional[str] = None
+    weight: Optional[str] = None
+    estimated_value: Optional[str] = None
+    is_urgent: Optional[bool] = False
+    urgency_level: Optional[str] = "normal"
+    custom_price: Optional[str] = None
+    
     @validator('proposed_price')
     def price_must_be_positive(cls, v):
-        if v <= 0:
+        if v and v > 0:
+            return v
+        elif v is None:
+            return None
+        else:
             raise ValueError('Le prix proposé doit être positif')
-        return v
     
     @validator('pickup_address', 'delivery_address')
     def addresses_must_not_be_empty(cls, v):
         if not v or not v.strip():
             raise ValueError('Les adresses ne peuvent pas être vides')
         return v.strip()
+    
+    @validator('weight', 'estimated_value', 'custom_price', pre=True)
+    def convert_string_to_number(cls, v):
+        if v == '' or v is None:
+            return None
+        try:
+            return float(v) if v else None
+        except (ValueError, TypeError):
+            return None
 
 class DeliveryUpdate(BaseModel):
     pickup_address: Optional[str] = None

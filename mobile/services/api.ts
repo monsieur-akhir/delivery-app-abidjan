@@ -1077,7 +1077,7 @@ export const transcribeVoiceRating = async (audioBase64: string): Promise<{ text
   return response.data
 }
 
-// Traitement des commandes vocalesexport const processVoiceCommand = async (audioBase64: string): Promise<VoiceCommandResponse> => {
+// Traitement des commandes vocalesport const processVoiceCommand = async (audioBase64: string): Promise<VoiceCommandResponse> => {
   const response = await api.post("/api/assistant/voice", { audio: audioBase64 })
   return response.data
 }

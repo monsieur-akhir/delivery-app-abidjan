@@ -46,6 +46,43 @@ async def create_new_delivery(
     """
     if current_user.role not in ["client", "business"]:
         raise HTTPException(status_code=403, detail="Seuls les clients peuvent créer des livraisons")
+    
+    try:
+        from ..services.delivery import create_delivery
+        
+        # Traitement des données supplémentaires du frontend
+        delivery_dict = delivery_data.dict(exclude_unset=True)
+        
+        # Convertir les champs string en float si nécessaire
+        if delivery_dict.get('weight'):
+            try:
+                delivery_dict['package_weight'] = float(delivery_dict['weight'])
+            except (ValueError, TypeError):
+                pass
+                
+        if delivery_dict.get('custom_price'):
+            try:
+                delivery_dict['proposed_price'] = float(delivery_dict['custom_price'])
+            except (ValueError, TypeError):
+                pass
+        
+        # Mapper les champs du frontend vers le backend
+        if delivery_dict.get('description'):
+            delivery_dict['package_description'] = delivery_dict['description']
+            
+        if delivery_dict.get('is_urgent'):
+            delivery_dict['is_fragile'] = delivery_dict.get('is_urgent', False)
+            
+        # Créer l'objet DeliveryCreate avec les données traitées
+        processed_data = delivery_schemas.DeliveryCreate(**delivery_dict)
+        
+        delivery = create_delivery(db, processed_data, current_user.id)
+        
+        return delivery
+        
+    except Exception as e:
+        print(f"Erreur création livraison: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erreur lors de la création: {str(e)}")sons")
 
     try:
         delivery = create_delivery(db, delivery_data, current_user)

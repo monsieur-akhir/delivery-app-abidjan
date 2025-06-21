@@ -69,21 +69,13 @@ class DeliveryService {
 
   static async createDelivery(deliveryData: DeliveryCreateRequest): Promise<Delivery> {
     try {
+      console.log('[DeliveryService] Création livraison avec données:', deliveryData)
       const response = await api.post('/deliveries', deliveryData)
+      console.log('[DeliveryService] Livraison créée avec succès:', response.data)
       return response.data
     } catch (error) {
       console.error('Erreur lors de la création de la livraison:', error)
-      
-      // Mock response pour le développement
-      if (error.response?.status === 404) {
-        return {
-          id: Math.random().toString(36).substr(2, 9),
-          status: 'pending',
-          created_at: new Date().toISOString(),
-          ...deliveryData
-        }
-      }
-      
+      console.error('Détails erreur:', error.response?.data)
       throw error
     }
   }
