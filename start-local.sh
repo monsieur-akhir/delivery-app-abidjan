@@ -83,23 +83,26 @@ start_backend() {
     log_info "Démarrage des services backend (PostgreSQL, Redis, Keycloak)..."
     cd backend
     docker-compose up -d db redis keycloak
-
+    
     log_info "Attente du démarrage des services..."
     sleep 10
-
+    
     log_info "Installation des dépendances Python..."
-    # The below line has been modified to address deployment compatibility
-    cd backend && python3 -m pip install -r requirements.txt
-
+    if [ ! -d "venv" ]; then
+        python3 -m venv venv
+    fi
+    source venv/bin/activate
+    pip install -r requirements.txt
+    
     log_info "Exécution des migrations de base de données..."
     alembic upgrade head
-
+    
     log_info "Création des données de test..."
     python scripts/seed_data.py
-
+    
     log_info "Démarrage de l'API FastAPI..."
     uvicorn main:app --host 0.0.0.0 --port 8000 --reload &
-
+    
     cd ..
     log_success "Backend démarré sur http://localhost:8000"
 }
@@ -108,15 +111,15 @@ start_backend() {
 start_web() {
     log_info "Démarrage de l'application web Vue.js..."
     cd web
-
+    
     if [ ! -d "node_modules" ]; then
         log_info "Installation des dépendances npm..."
         npm install
     fi
-
+    
     log_info "Démarrage du serveur de développement..."
     npm run dev &
-
+    
     cd ..
     log_success "Application web démarrée sur http://localhost:5173"
 }
@@ -125,15 +128,15 @@ start_web() {
 start_mobile() {
     log_info "Préparation de l'application mobile Expo..."
     cd mobile
-
+    
     if [ ! -d "node_modules" ]; then
         log_info "Installation des dépendances npm..."
         npm install
     fi
-
+    
     log_info "Démarrage d'Expo..."
     npx expo start &
-
+    
     cd ..
     log_success "Application mobile démarrée. Scannez le QR code avec Expo Go."
 }
@@ -156,17 +159,17 @@ show_menu() {
 # Fonction pour arrêter les services
 stop_services() {
     log_info "Arrêt de tous les services..."
-
+    
     # Arrêter les processus Node.js et Python
     pkill -f "uvicorn" || true
     pkill -f "vite" || true
     pkill -f "expo" || true
-
+    
     # Arrêter les conteneurs Docker
     cd backend
     docker-compose down
     cd ..
-
+    
     log_success "Tous les services ont été arrêtés."
 }
 
@@ -180,9 +183,9 @@ show_logs() {
     echo "4) Logs Keycloak"
     echo "5) Retour au menu principal"
     echo ""
-
+    
     read -p "Votre choix : " log_choice
-
+    
     case $log_choice in
         1)
             cd backend && docker-compose logs -f api
@@ -209,7 +212,7 @@ show_logs() {
 while true; do
     show_menu
     read -p "Votre choix : " choice
-
+    
     case $choice in
         1)
             start_backend
@@ -243,7 +246,7 @@ while true; do
             log_error "Choix invalide. Veuillez réessayer."
             ;;
     esac
-
+    
     echo ""
     read -p "Appuyez sur Entrée pour continuer..."
 done
