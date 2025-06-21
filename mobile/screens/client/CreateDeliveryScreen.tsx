@@ -235,7 +235,24 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
       }
     } catch (error) {
       console.error('Erreur lors de la création de livraison:', error);
-      Alert.alert('Erreur', 'Impossible de créer la livraison. Veuillez réessayer.');
+      
+      let errorMessage = 'Une erreur inattendue s\'est produite';
+      
+      if (error.response?.status === 400) {
+        errorMessage = 'Informations de livraison incomplètes ou incorrectes';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Session expirée, veuillez vous reconnecter';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Vous n\'êtes pas autorisé à effectuer cette action';
+      } else if (error.response?.status === 422) {
+        errorMessage = 'Données de livraison invalides, vérifiez les informations saisies';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Service temporairement indisponible, réessayez dans quelques instants';
+      } else if (!error.response) {
+        errorMessage = 'Problème de connexion internet, vérifiez votre réseau';
+      }
+      
+      Alert.alert('Erreur de création', errorMessage);
     }
   };
 
