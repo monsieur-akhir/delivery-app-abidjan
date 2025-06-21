@@ -35,7 +35,13 @@ app = FastAPI(
 # Configurer CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://*.repl.co",
+        "https://*.replit.app",
+        "*"  # Pour le développement
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
