@@ -39,39 +39,55 @@ function isTokenExpired(token: string | null): boolean {
     const decoded: any = jwtDecode(token);
     if (!decoded.exp) return true;
     const now = Date.now() / 1000;
-    return decoded.exp < now;
+    // Vérifier si le token expire dans les 5 prochaines minutes
+    return decoded.exp < (now + 300);
   } catch {
     return true;
   }
 }
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, token } = useAuth()
+  const { user, token, logout } = useAuth()
   const [socket, setSocket] = useState<WebSocket | null>(null)
   const [connected, setConnected] = useState<boolean>(false)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
   const [subscriptions, setSubscriptions] = useState<{
     [key: string]: (data: any) => void
   }>({})
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
 
   // Fonction pour rafraîchir le token si besoin
-  const refreshTokenIfNeeded = async (token: string | null): Promise<string | null> => {
-    if (!token || isTokenExpired(token)) {
-      const refreshToken = await AsyncStorage.getItem("refreshToken");
-      if (!refreshToken) return null;
+  const refreshTokenIfNeeded = async (currentToken: string | null): Promise<string | null> => {
+    if (isRefreshing) return currentToken;
+
+    if (!currentToken || isTokenExpired(currentToken)) {
+      setIsRefreshing(true);
       try {
-        const response = await axios.post(`${getApiUrl()}/auth/refresh`, {
+        const refreshToken = await AsyncStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          console.log('[WebSocket] Pas de refresh token, déconnexion nécessaire');
+          await logout();
+          return null;
+        }
+        
+        const response = await axios.post(`${getApiUrl()}/api/auth/refresh`, {
           refresh_token: refreshToken,
         });
-        const { access_token, refresh_token } = response.data;
+        
+        const { access_token, refresh_token: newRefreshToken } = response.data;
         await AsyncStorage.setItem("token", access_token);
-        await AsyncStorage.setItem("refreshToken", refresh_token);
+        await AsyncStorage.setItem("refreshToken", newRefreshToken);
+        console.log('[WebSocket] Token rafraîchi avec succès');
         return access_token;
       } catch (e) {
+        console.log('[WebSocket] Échec du rafraîchissement du token, déconnexion');
+        await logout();
         return null;
+      } finally {
+        setIsRefreshing(false);
       }
     }
-    return token;
+    return currentToken;
   };
 
   const getWsUrl = (validToken: string) => {
@@ -79,13 +95,20 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }
 
   const connectWebSocket = useCallback(async () => {
-    const validToken = await refreshTokenIfNeeded(token);
-    if (!validToken || !user) return;
+    if (isRefreshing) return;
 
+    const validToken = await refreshTokenIfNeeded(token);
+    if (!validToken || !user) {
+      console.log('[WebSocket] Token invalide ou utilisateur absent, arrêt de la connexion');
+      setConnected(false);
+      return;
+    }
+
+    console.log('[WebSocket] Tentative de connexion avec token valide');
     const ws = new WebSocket(getWsUrl(validToken))
 
     ws.onopen = () => {
-      console.log("WebSocket connected")
+      console.log("[WebSocket] Connexion établie avec succès")
       setConnected(true)
     }
 
@@ -99,23 +122,34 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           subscriptions[message.type](message.data)
         }
       } catch (error) {
-        console.error("Error parsing WebSocket message:", error)
+        console.error("[WebSocket] Erreur parsing message:", error)
       }
     }
 
-    ws.onclose = () => {
-      console.log("WebSocket disconnected")
+    ws.onclose = (event) => {
+      console.log(`[WebSocket] Connexion fermée - Code: ${event.code}, Raison: ${event.reason}`)
       setConnected(false)
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        if (token && user) {
-          connectWebSocket()
+      
+      // Si c'est une erreur 403 (token expiré), ne pas reconnecter automatiquement
+      if (event.code === 1008 || event.reason?.includes('Authentication')) {
+        console.log('[WebSocket] Erreur d\'authentification, déconnexion de l\'utilisateur');
+        logout();
+        return;
+      }
+      
+      // Essayer de reconnecter après un délai seulement si l'utilisateur est toujours connecté
+      setTimeout(async () => {
+        const currentToken = await AsyncStorage.getItem("token");
+        if (currentToken && user && !isTokenExpired(currentToken)) {
+          console.log('[WebSocket] Tentative de reconnexion...');
+          connectWebSocket();
         }
       }, 5000)
     }
 
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
+      console.error("[WebSocket] Erreur de connexion:", error)
+      setConnected(false)
       ws.close()
     }
 
@@ -124,19 +158,38 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => {
       ws.close()
     }
-  }, [token, user, subscriptions])
+  }, [token, user, subscriptions, isRefreshing, logout])
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
+    let tokenCheckInterval: NodeJS.Timeout;
+
     (async () => {
       if (token && user) {
         cleanup = await connectWebSocket();
+        
+        // Vérifier le token toutes les 5 minutes
+        tokenCheckInterval = setInterval(async () => {
+          const currentToken = await AsyncStorage.getItem("token");
+          if (currentToken && isTokenExpired(currentToken)) {
+            console.log('[WebSocket] Token expiré détecté, tentative de rafraîchissement...');
+            const newToken = await refreshTokenIfNeeded(currentToken);
+            if (!newToken) {
+              console.log('[WebSocket] Impossible de rafraîchir le token, fermeture WebSocket');
+              if (socket) {
+                socket.close();
+              }
+            }
+          }
+        }, 5 * 60 * 1000); // 5 minutes
       } else {
         setConnected(false);
       }
     })();
+
     return () => {
       if (cleanup) cleanup();
+      if (tokenCheckInterval) clearInterval(tokenCheckInterval);
     };
   }, [token, user, connectWebSocket]);
 

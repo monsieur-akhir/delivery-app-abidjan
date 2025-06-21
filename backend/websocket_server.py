@@ -263,12 +263,21 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, room: Optional[
         
         # Vérifier que l'utilisateur correspond à l'ID fourni
         if str(user.id) != user_id:
-            await websocket.close(code=1008, reason="User ID mismatch")
+            logger.warning(f"WebSocket: User ID mismatch - token: {user.id}, requested: {user_id}")
+            await websocket.close(code=4001, reason="User ID mismatch")
             return
             
+    except HTTPException as e:
+        if e.status_code == 401:
+            logger.warning(f"WebSocket: Token expiré ou invalide pour user_id {user_id}")
+            await websocket.close(code=4001, reason="Token expired or invalid")
+        else:
+            logger.error(f"WebSocket: Erreur d'authentification HTTP {e.status_code}: {e.detail}")
+            await websocket.close(code=4002, reason="Authentication error")
+        return
     except Exception as e:
-        logger.error(f"Erreur d'authentification WebSocket: {str(e)}")
-        await websocket.close(code=1008, reason="Authentication failed")
+        logger.error(f"WebSocket: Erreur d'authentification inattendue: {str(e)}")
+        await websocket.close(code=4003, reason="Authentication failed")
         return
     finally:
         # Fermer la session de base de données proprement
