@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Dict, Any, List
@@ -7,10 +6,11 @@ import yaml
 from datetime import datetime
 
 from ..db.session import get_db
-from ..core.auth import get_current_active_user
-from ..models.user import User, UserRole
-from ..schemas.user import UserResponse
-from ..services.settings import SettingsService
+from app.core.auth import get_current_active_user
+from app.models.user import User, UserRole
+from app.schemas.user import UserResponse
+from app.services.settings import SettingsService
+from ..services.geolocation import get_google_places_suggestions
 
 router = APIRouter()
 
@@ -129,3 +129,9 @@ async def test_connections(
         )
     
     return SettingsService.test_external_connections(db)
+
+@router.get("/test-google-places")
+async def test_google_places(query: str):
+    """Test rapide du proxy Google Places (sans auth)"""
+    suggestions = await get_google_places_suggestions(query)
+    return {"suggestions": suggestions, "query": query}

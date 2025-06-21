@@ -113,6 +113,9 @@ class Settings(BaseSettings):
     EMAIL_SENDER_ADDRESS: str = os.getenv("EMAIL_SENDER_ADDRESS", "")
     EMAIL_SENDER_NAME: str = os.getenv("EMAIL_SENDER_NAME", "")
     
+    # Google Places
+    GOOGLE_PLACES_API_KEY: str = os.getenv("GOOGLE_PLACES_API_KEY", "")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

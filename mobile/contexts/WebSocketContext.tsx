@@ -4,6 +4,10 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { WS_URL } from "../config/environment"
 import { useAuth } from "./AuthContext"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import axios from "axios"
+import jwtDecode from "jwt-decode"
+import { getApiUrl } from "../config/environment"
 
 export interface WebSocketMessage {
   type: string
@@ -28,6 +32,19 @@ const WebSocketContext = createContext<WebSocketContextType>({
 
 export const useWebSocket = () => useContext(WebSocketContext)
 
+// Fonction utilitaire pour vérifier l'expiration du token
+function isTokenExpired(token: string | null): boolean {
+  if (!token) return true;
+  try {
+    const decoded: any = jwtDecode(token);
+    if (!decoded.exp) return true;
+    const now = Date.now() / 1000;
+    return decoded.exp < now;
+  } catch {
+    return true;
+  }
+}
+
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, token } = useAuth()
   const [socket, setSocket] = useState<WebSocket | null>(null)
@@ -37,14 +54,35 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [key: string]: (data: any) => void
   }>({})
 
-  const getWsUrl = () => {
-    return `${WS_URL}/${user?.id}?token=${token}`
+  // Fonction pour rafraîchir le token si besoin
+  const refreshTokenIfNeeded = async (token: string | null): Promise<string | null> => {
+    if (!token || isTokenExpired(token)) {
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      if (!refreshToken) return null;
+      try {
+        const response = await axios.post(`${getApiUrl()}/auth/refresh`, {
+          refresh_token: refreshToken,
+        });
+        const { access_token, refresh_token } = response.data;
+        await AsyncStorage.setItem("token", access_token);
+        await AsyncStorage.setItem("refreshToken", refresh_token);
+        return access_token;
+      } catch (e) {
+        return null;
+      }
+    }
+    return token;
+  };
+
+  const getWsUrl = (validToken: string) => {
+    return `${WS_URL}/${user?.id}?token=${validToken}`
   }
 
-  const connectWebSocket = useCallback(() => {
-    if (!token || !user) return
+  const connectWebSocket = useCallback(async () => {
+    const validToken = await refreshTokenIfNeeded(token);
+    if (!validToken || !user) return;
 
-    const ws = new WebSocket(getWsUrl())
+    const ws = new WebSocket(getWsUrl(validToken))
 
     ws.onopen = () => {
       console.log("WebSocket connected")
@@ -89,11 +127,18 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [token, user, subscriptions])
 
   useEffect(() => {
-    if (token && user) {
-      const cleanup = connectWebSocket()
-      return cleanup
-    }
-  }, [token, user, connectWebSocket])
+    let cleanup: (() => void) | undefined;
+    (async () => {
+      if (token && user) {
+        cleanup = await connectWebSocket();
+      } else {
+        setConnected(false);
+      }
+    })();
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [token, user, connectWebSocket]);
 
   const sendMessage = useCallback(
     (message: WebSocketMessage) => {

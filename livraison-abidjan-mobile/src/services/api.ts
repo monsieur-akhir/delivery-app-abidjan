@@ -49,6 +49,21 @@ export interface GeocodeResult {
   confidence: number
 }
 
+export interface AddressAutocompleteResult {
+  place_id: string
+  description: string
+  structured_formatting: {
+    main_text: string
+    secondary_text: string
+  }
+  types: string[]
+}
+
+export interface AddressAutocompleteResponse {
+  predictions: AddressAutocompleteResult[]
+  status: string
+}
+
 export interface CourierInfo {
   id: string
   full_name: string
@@ -766,6 +781,12 @@ export const registerPushToken = async (token: string, userId: string): Promise<
 // Géocodage d'adresse
 export const geocodeAddress = async (address: string): Promise<GeocodeResult[]> => {
   const response = await api.get(`/api/traffic/geocode?address=${encodeURIComponent(address)}`)
+  return response.data
+}
+
+// Autocomplétion d'adresse Google Places
+export const getAddressAutocomplete = async (input: string): Promise<AddressAutocompleteResponse> => {
+  const response = await api.get(`/api/deliveries/address-autocomplete?input=${encodeURIComponent(input)}`)
   return response.data
 }
 

@@ -38,7 +38,8 @@ import { useDelivery } from '../../hooks/useDelivery'
 import { useUser } from '../../hooks/useUser'
 import { useAlert } from '../../hooks/useAlert'
 import DeliveryService from '../../services/DeliveryService'
-import api from '../../services/api'
+import api, { getAddressAutocomplete } from '../../services/api'
+import { getGoogleMapsApiKey } from '../../config/environment'
 
 import type {
   User,
@@ -1115,37 +1116,48 @@ const CreateDeliveryScreen: React.FC = () => {
 
   const searchAddresses = async (query: string, field: 'pickup' | 'delivery') => {
     console.log(`[Recherche adresse] Champ: ${field}, Saisie:`, query);
-    try {
-      // Simuler une recherche d'adresses (remplacer par votre propre logique)
-      const results = ABIDJAN_PLACES.filter(place =>
-        place.name.toLowerCase().includes(query.toLowerCase()) ||
-        place.description.toLowerCase().includes(query.toLowerCase())
-      )
-
+    if (!query || query.length < 2) {
       if (field === 'pickup') {
-        setPickupSuggestions(results.map(result => ({
-          ...result,
-          commune: result.commune || '',
-          latitude: result.latitude || 0,
-          longitude: result.longitude || 0
-        })))
-        setShowPickupSuggestions(true)
+        setPickupSuggestions([])
+        setShowPickupSuggestions(false)
       } else {
-        setDeliverySuggestions(results.map(result => ({
-          ...result,
-          commune: result.commune || '',
-          latitude: result.latitude || 0,
-          longitude: result.longitude || 0
-        })))
-        setShowDeliverySuggestions(true)
+        setDeliverySuggestions([])
+        setShowDeliverySuggestions(false)
       }
-
-      console.log('[DEBUG] Résultat Google Places:', results)
-    } catch (error) {
-      console.error('Erreur lors de la recherche d\'adresses:', error)
-      showErrorAlert('Erreur', 'Impossible de rechercher les adresses')
+      return;
     }
-  }
+    try {
+      const data = await getAddressAutocomplete(query);
+      console.log('[DEBUG] Réponse backend address-autocomplete:', data);
+      const results = (data.predictions || []).map((pred: any) => {
+        return {
+          id: pred.place_id,
+          name: pred.structured_formatting?.main_text || pred.description,
+          description: pred.description,
+          latitude: 0, // Sera récupéré via Place Details si nécessaire
+          longitude: 0, // Sera récupéré via Place Details si nécessaire
+          commune: extractCommune(pred.description),
+          type: 'google'
+        }
+      });
+      if (field === 'pickup') {
+        setPickupSuggestions(results);
+        setShowPickupSuggestions(true);
+      } else {
+        setDeliverySuggestions(results);
+        setShowDeliverySuggestions(true);
+      }
+    } catch (error) {
+      console.error('[DEBUG] Erreur backend address-autocomplete:', error);
+      if (field === 'pickup') {
+        setPickupSuggestions([])
+        setShowPickupSuggestions(false)
+      } else {
+        setDeliverySuggestions([])
+        setShowDeliverySuggestions(false)
+      }
+    }
+  };
 
   const handleTextChange = (text: string, field: 'pickup' | 'delivery') => {
     console.log(`[Recherche adresse] Champ: ${field}, Saisie:`, text);
@@ -1220,19 +1232,38 @@ const CreateDeliveryScreen: React.FC = () => {
   }
 
   // Gestion de la sélection d'une suggestion
-  const handleSuggestionSelect = useCallback((address: Address, type: 'pickup' | 'delivery') => {
+  const handleSuggestionSelect = useCallback(async (address: Address, type: 'pickup' | 'delivery') => {
+    let finalAddress = address;
+    // Si c'est une suggestion Google, on va chercher les coordonnées
+    if (address.type === 'google' && address.id) {
+      try {
+        const GOOGLE_PLACES_API_KEY = getGoogleMapsApiKey();
+        const detailsResp = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${address.id}&key=${GOOGLE_PLACES_API_KEY}&language=fr`);
+        const detailsData = await detailsResp.json();
+        console.log('[DEBUG] Place Details:', detailsData);
+        const loc = detailsData?.result?.geometry?.location;
+        if (loc) {
+          finalAddress = {
+            ...address,
+            latitude: loc.lat,
+            longitude: loc.lng
+          };
+        }
+      } catch (err) {
+        console.warn('[DEBUG] Erreur Place Details:', err);
+      }
+    }
     if (type === 'pickup') {
-      setPickupAddress(address.description)
-      setPickupQuery(address.description)
-      setPickupLocation(address)
+      setPickupAddress(finalAddress.description)
+      setPickupQuery(finalAddress.description)
+      setPickupLocation(finalAddress)
       setPickupFocused(false)
     } else {
-      setDeliveryAddress(address.description)
-      setDeliveryQuery(address.description)
-      setDeliveryLocation(address)
+      setDeliveryAddress(finalAddress.description)
+      setDeliveryQuery(finalAddress.description)
+      setDeliveryLocation(finalAddress)
       setDeliveryFocused(false)
     }
-
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }, [])
 
