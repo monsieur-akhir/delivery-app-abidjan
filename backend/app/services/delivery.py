@@ -72,101 +72,44 @@ def get_deliveries_by_courier(
 
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
-def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: User) -> Delivery:
+def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) -> Delivery:
     """
-    Créer une nouvelle livraison.
+    Créer une nouvelle livraison avec toutes les données du frontend
     """
     from ..models.delivery import Delivery
-    from ..core.settings import settings
-    
-    # Log des données reçues
-    logger.warning(f"[DEBUG] Données reçues pour création de livraison : {delivery_data.dict()}")
-    # Log des champs attendus
-    expected_fields = [
-        'pickup_address', 'pickup_commune', 'pickup_lat', 'pickup_lng',
-        'pickup_contact_name', 'pickup_contact_phone',
-        'delivery_address', 'delivery_commune', 'delivery_lat', 'delivery_lng',
-        'delivery_contact_name', 'delivery_contact_phone',
-        'package_description', 'package_size', 'package_weight', 'is_fragile',
-        'cargo_category', 'required_vehicle_type', 'proposed_price', 'delivery_type',
-        'package_type', 'recipient_name', 'recipient_phone', 'special_instructions',
-        'distance', 'estimated_duration', 'weather_conditions', 'vehicle_type', 'delivery_speed', 'extras'
-    ]
-    logger.warning(f"[DEBUG] Champs attendus : {expected_fields}")
-    # Log des champs manquants ou vides
-    missing = [field for field in expected_fields if not getattr(delivery_data, field, None)]
-    logger.warning(f"[DEBUG] Champs manquants ou vides : {missing}")
-    
-    # Correction automatique des coordonnées GPS si à zéro ou manquantes
-    if (not delivery_data.pickup_lat or not delivery_data.pickup_lng or delivery_data.pickup_lat == 0.0 or delivery_data.pickup_lng == 0.0) and delivery_data.pickup_address:
-        lat, lng = geocode_address(delivery_data.pickup_address)
-        if lat and lng:
-            delivery_data.pickup_lat = lat
-            delivery_data.pickup_lng = lng
-    if (not delivery_data.delivery_lat or not delivery_data.delivery_lng or delivery_data.delivery_lat == 0.0 or delivery_data.delivery_lng == 0.0) and delivery_data.delivery_address:
-        lat, lng = geocode_address(delivery_data.delivery_address)
-        if lat and lng:
-            delivery_data.delivery_lat = lat
-            delivery_data.delivery_lng = lng
+    from ..schemas.delivery import DeliveryStatus, DeliveryType
 
-    # Correction automatique de la commune si générique ou vide
-    if (not delivery_data.pickup_commune or delivery_data.pickup_commune.lower() in ["côte d'ivoire", "ivory coast"]) and delivery_data.pickup_lat and delivery_data.pickup_lng:
-        delivery_data.pickup_commune = reverse_geocode(delivery_data.pickup_lat, delivery_data.pickup_lng)
-    if (not delivery_data.delivery_commune or delivery_data.delivery_commune.lower() in ["côte d'ivoire", "ivory coast"]) and delivery_data.delivery_lat and delivery_data.delivery_lng:
-        delivery_data.delivery_commune = reverse_geocode(delivery_data.delivery_lat, delivery_data.delivery_lng)
+    # Préparer les données pour la création
+    delivery_dict = delivery_data.dict(exclude_unset=True)
 
-    # Calculer distance/durée/itinéraire si manquant
-    if (not getattr(delivery_data, 'distance', None) or not getattr(delivery_data, 'estimated_duration', None)) and \
-        delivery_data.pickup_lat and delivery_data.pickup_lng and delivery_data.delivery_lat and delivery_data.delivery_lng:
-        route_info = get_route_info(
-            delivery_data.pickup_lat, delivery_data.pickup_lng,
-            delivery_data.delivery_lat, delivery_data.delivery_lng
-        )
-        delivery_data.distance = route_info["distance"]
-        delivery_data.estimated_duration = route_info["duration"]
-        delivery_data.route_polyline = route_info["polyline"]
+    # Traitement des champs optionnels
+    if not delivery_dict.get('proposed_price'):
+        delivery_dict['proposed_price'] = 1000  # Prix par défaut
 
-    # Vérifier si le prix proposé est supérieur au minimum
-    min_price = getattr(settings, 'MIN_DELIVERY_PRICE', 500)
-    if delivery_data.proposed_price < min_price:
-        raise ValueError(f"Le prix proposé doit être d'au moins {min_price} FCFA")
+    # Mapper les types d'urgence
+    if delivery_dict.get('urgency_level') == 'express':
+        delivery_dict['delivery_type'] = DeliveryType.express
+    else:
+        delivery_dict['delivery_type'] = DeliveryType.standard
 
-    # Créer la livraison
-    db_delivery = Delivery(
-        client_id=current_user.id,
-        pickup_address=delivery_data.pickup_address,
-        pickup_commune=delivery_data.pickup_commune,
-        pickup_lat=delivery_data.pickup_lat,
-        pickup_lng=delivery_data.pickup_lng,
-        pickup_contact_name=delivery_data.pickup_contact_name,
-        pickup_contact_phone=delivery_data.pickup_contact_phone,
-        delivery_address=delivery_data.delivery_address,
-        delivery_commune=delivery_data.delivery_commune,
-        delivery_lat=delivery_data.delivery_lat,
-        delivery_lng=delivery_data.delivery_lng,
-        delivery_contact_name=delivery_data.delivery_contact_name or getattr(delivery_data, 'recipient_name', None),
-        delivery_contact_phone=delivery_data.delivery_contact_phone or getattr(delivery_data, 'recipient_phone', None),
-        package_description=delivery_data.package_description,
-        package_size=delivery_data.package_size,
-        package_weight=delivery_data.package_weight,
-        is_fragile=delivery_data.is_fragile or False,
-        cargo_category=delivery_data.cargo_category,
-        required_vehicle_type=delivery_data.required_vehicle_type,
-        proposed_price=delivery_data.proposed_price,
-        delivery_type=delivery_data.delivery_type or "standard",
-        estimated_distance=getattr(delivery_data, 'distance', None),
-        estimated_duration=getattr(delivery_data, 'estimated_duration', None),
-        route_polyline=getattr(delivery_data, 'route_polyline', None)
-    )
-    
-    try:
-        db.add(db_delivery)
-        db.commit()
-        db.refresh(db_delivery)
-        return db_delivery
-    except Exception as e:
-        db.rollback()
-        raise ValueError(f"Erreur lors de la création de la livraison: {str(e)}")
+    # Assurer les champs requis
+    required_fields = {
+        'pickup_commune': delivery_dict.get('pickup_commune', 'Non spécifié'),
+        'delivery_commune': delivery_dict.get('delivery_commune', 'Non spécifié'),
+        'status': DeliveryStatus.pending
+    }
+
+    delivery_dict.update(required_fields)
+    delivery_dict['client_id'] = client_id
+
+    # Créer l'objet Delivery
+    delivery = Delivery(**delivery_dict)
+
+    db.add(delivery)
+    db.commit()
+    db.refresh(delivery)
+
+    return delivery
 
 def update_delivery(db: Session, delivery_id: int, delivery_data: DeliveryUpdate, user_id: int) -> Delivery:
     delivery = get_delivery(db, delivery_id)
@@ -442,16 +385,16 @@ def get_user_deliveries_with_filters(
 ) -> List[Delivery]:
     """Récupérer les livraisons d'un utilisateur avec filtres avancés"""
     query = db.query(Delivery)
-    
+
     # Filtrer par utilisateur (client ou coursier)
     query = query.filter(
         (Delivery.client_id == user_id) | (Delivery.courier_id == user_id)
     )
-    
+
     # Filtrer par statut
     if status:
         query = query.filter(Delivery.status == status)
-    
+
     # Filtrer par date de début
     if date_from:
         try:
@@ -459,7 +402,7 @@ def get_user_deliveries_with_filters(
             query = query.filter(Delivery.created_at >= from_date)
         except ValueError:
             pass  # Ignorer si le format de date est invalide
-    
+
     # Filtrer par date de fin
     if date_to:
         try:
@@ -467,19 +410,19 @@ def get_user_deliveries_with_filters(
             query = query.filter(Delivery.created_at <= to_date)
         except ValueError:
             pass  # Ignorer si le format de date est invalide
-    
+
     # Filtrer par commune (pickup ou delivery)
     if commune:
         query = query.filter(
             (Delivery.pickup_commune == commune) | (Delivery.delivery_commune == commune)
         )
-    
+
     # Trier par date de création (plus récent en premier)
     query = query.order_by(Delivery.created_at.desc())
-    
+
     # Pagination
     query = query.offset(skip).limit(limit)
-    
+
     return query.all()
 
 def get_bids(db: Session, delivery_id: Optional[int] = None, courier_id: Optional[int] = None) -> List[Bid]:
