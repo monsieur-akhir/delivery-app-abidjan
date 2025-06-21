@@ -784,6 +784,22 @@ const styles = StyleSheet.create({
   halfWidth: {
     width: '48%', // Adjust as needed
   },
+  switch: {
+    marginRight: 8,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  switchRow: {
+    marginVertical: 8,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
 });
 
 export default CreateDeliveryScreen;
