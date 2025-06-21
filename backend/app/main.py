@@ -17,6 +17,7 @@ from .api import (
     support, zones, promotions
 )
 from .websockets import tracking
+from .services.geolocation import get_google_places_suggestions
 
 # Créer l'application FastAPI
 app = FastAPI(
@@ -670,3 +671,13 @@ async def log_requests(request, call_next):
     
     print(f"{request.method} {request.url.path} - {response.status_code} - {process_time:.3f}s")
     return response
+
+@app.get("/test-google-places")
+async def test_google_places(query: str):
+    """Test rapide du proxy Google Places (aucune authentification)"""
+    suggestions = await get_google_places_suggestions(query)
+    return {
+        "status": "ok",
+        "query": query,
+        "suggestions": suggestions
+    }

@@ -3,6 +3,8 @@ import requests
 import math
 import json
 from datetime import datetime, timedelta
+import os
+from sqlalchemy.orm import Session
 
 from ..core.config import settings
 
@@ -197,11 +199,6 @@ async def find_nearest_couriers(lat: float, lng: float, max_distance: float = 5.
     couriers.sort(key=lambda x: x["distance"])
     
     return couriers
-import math
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-import asyncio
 
 # Lieux populaires d'Abidjan avec coordonnées précises
 POPULAR_PLACES = [
@@ -558,3 +555,26 @@ def point_in_polygon(point: Tuple[float, float], polygon: List[Tuple[float, floa
         p1x, p1y = p2x, p2y
     
     return inside
+
+async def get_google_places_suggestions(query: str, limit: int = 8) -> list:
+    """Appelle Google Places Autocomplete et retourne les suggestions"""
+    api_key = os.getenv("GOOGLE_PLACES_API_KEY") or getattr(settings, "GOOGLE_PLACES_API_KEY", None)
+    url = (
+        f"https://maps.googleapis.com/maps/api/place/autocomplete/json"
+        f"?input={query}&key={api_key}&language=fr&components=country:ci"
+    )
+    try:
+        response = requests.get(url)
+        data = response.json()
+        results = []
+        for pred in data.get("predictions", []):
+            results.append({
+                "id": pred["place_id"],
+                "address": pred["description"],
+                "name": pred["structured_formatting"].get("main_text", pred["description"]),
+                "type": "google"
+            })
+        return results[:limit]
+    except Exception as e:
+        print(f"Erreur Google Places: {e}")
+        return []

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -11,6 +11,7 @@ from ..schemas import delivery as delivery_schemas
 from ..services import delivery as delivery_service
 from ..services import matching as matching_service
 from ..services import geolocation as geolocation_service
+from ..services.geolocation import get_google_places_suggestions
 
 router = APIRouter()
 
@@ -185,31 +186,30 @@ async def smart_matching_endpoint(
 
     return await matching_service.smart_matching(db, delivery_request, current_user.id)
 
-@router.get("/address-autocomplete")
-async def address_autocomplete_endpoint(
-    query: str = Query(..., min_length=2, description="Texte de recherche"),
-    user_lat: Optional[float] = Query(None, description="Latitude de l'utilisateur"),
-    user_lng: Optional[float] = Query(None, description="Longitude de l'utilisateur"),
-    limit: int = Query(8, ge=1, le=20, description="Nombre maximum de suggestions"),
-    db: Session = Depends(get_db)
+@router.get("/address-autocomplete", response_model=Dict[str, Any])
+async def address_autocomplete(
+    input: str = Query(..., min_length=2, description="Texte de recherche pour l'autocomplétion"),
+    current_user: User = Depends(get_current_user)
 ):
-    """Autocomplétion intelligente d'adresses pour Abidjan"""
+    """
+    Autocomplétion d'adresses avec Google Places API
+    """
     try:
-        user_location = None
-        if user_lat is not None and user_lng is not None:
-            user_location = {"latitude": user_lat, "longitude": user_lng}
-
-        suggestions = await geolocation_service.get_address_suggestions(
-            db, query, user_location, limit
-        )
-
+        # Appeler le service de géolocalisation
+        suggestions = await get_google_places_suggestions(input)
+        
+        # Retourner directement les données sans validation Pydantic stricte
         return {
-            "success": True,
-            "suggestions": suggestions,
-            "query": query
+            "predictions": suggestions,
+            "status": "OK",
+            "query": input
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de l'autocomplétion: {str(e)}")
+        logger.error(f"Erreur lors de l'autocomplétion: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de l'autocomplétion d'adresse"
+        )
 
 @router.get("/popular-places")
 async def popular_places_endpoint(

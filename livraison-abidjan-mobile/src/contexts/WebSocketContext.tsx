@@ -5,6 +5,10 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import { WS_URL } from "../config/environment"
 import { useAuth } from "./AuthContext"
 import { Snackbar } from 'react-native-paper'
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import axios from "axios"
+import jwtDecode from "jwt-decode"
+import { getApiUrl } from "../config/environment"
 
 export interface WebSocketMessage {
   type: string
@@ -28,6 +32,19 @@ const WebSocketContext = createContext<WebSocketContextType>({
 })
 
 export const useWebSocket = () => useContext(WebSocketContext)
+
+// Fonction utilitaire pour vérifier l'expiration du token
+function isTokenExpired(token: string | null): boolean {
+  if (!token) return true;
+  try {
+    const decoded: any = jwtDecode(token);
+    if (!decoded.exp) return true;
+    const now = Date.now() / 1000;
+    return decoded.exp < now;
+  } catch {
+    return true;
+  }
+}
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, token } = useAuth()
@@ -87,14 +104,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     ws.onerror = (error: any) => {
-      if (error?.message?.includes('403')) {
-        if (__DEV__) {
-          console.log('[WebSocket] Refusé (403) : utilisateur non authentifié')
-        }
-        setShowWsError(true)
-        ws.close()
-        return
-      }
       if (__DEV__) console.error('[WebSocket] Erreur :', error)
       setShowWsError(true)
       ws.close()
@@ -108,13 +117,16 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [token, user, subscriptions])
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
     if (token && user && user.id) {
-      const cleanup = connectWebSocket()
-      return cleanup
+      cleanup = connectWebSocket();
     } else {
-      setConnected(false)
+      setConnected(false);
     }
-  }, [token, user, connectWebSocket])
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [token, user, connectWebSocket]);
 
   const sendMessage = useCallback(
     (message: WebSocketMessage) => {
@@ -159,7 +171,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       >
         Connexion temps réel perdue, veuillez vous reconnecter.
       </Snackbar>
-      */}
     </WebSocketContext.Provider>
   )
 }

@@ -24,7 +24,7 @@ import {
   ActivityIndicator
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Feather } from '@expo/vector-icons'
+import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { CustomMapView } from '../../components'
 import { useAuth } from '../../contexts/AuthContext'
@@ -35,6 +35,7 @@ import { formatPrice, formatDate } from '../../utils/formatters'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../types/navigation'
 import type { Delivery, DeliveryStatus } from '../../types/models'
+import { debugWebSocketConnection } from '../../utils/debugWebSocket'
 
 const { width, height } = Dimensions.get('window')
 
@@ -295,6 +296,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     </TouchableOpacity>
   )
 
+  // Fonction de debug WebSocket
+  const handleDebugWebSocket = async () => {
+    console.log('🔍 Debug WebSocket - État actuel:');
+    console.log('- Connected:', connected);
+    console.log('- User:', user);
+    await debugWebSocketConnection();
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -466,6 +475,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <Feather name="settings" size={24} color="#FFFFFF" />
               </Surface>
               <Text style={styles.quickActionText}>Paramètres</Text>
+            </TouchableOpacity>
+
+            {/* Bouton de debug WebSocket temporaire */}
+            <TouchableOpacity 
+              style={styles.quickActionButton}
+              onPress={handleDebugWebSocket}
+            >
+              <Surface style={[styles.quickActionIcon, { backgroundColor: connected ? '#4CAF50' : '#f44336' }]}>
+                <Ionicons name="wifi" size={24} color="#FFFFFF" />
+              </Surface>
+              <Text style={styles.quickActionText}>
+                {connected ? 'WS OK' : 'WS Debug'}
+              </Text>
             </TouchableOpacity>
           </View>
         </Animated.View>

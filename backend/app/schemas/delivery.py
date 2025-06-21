@@ -190,3 +190,22 @@ class SmartMatchingRequest(BaseModel):
 
     class Config:
         from_attributes = True    
+
+# === SCHÉMAS D'AUTOCOMPLÉTION ===
+
+class AddressAutocompleteResult(BaseModel):
+    place_id: str
+    description: str
+    structured_formatting: Optional[Dict[str, str]] = None
+    types: Optional[List[str]] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    commune: Optional[str] = None
+
+class AddressAutocompleteResponse(BaseModel):
+    predictions: List[AddressAutocompleteResult]
+    status: str = "OK"
+    query: Optional[str] = None
+
+    class Config:
+        from_attributes = True    
