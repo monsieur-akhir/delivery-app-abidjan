@@ -53,6 +53,24 @@ async def create_new_delivery(
         # Traitement des données supplémentaires du frontend
         delivery_dict = delivery_data.dict(exclude_unset=True)
         
+        # Informations du créateur (utilisateur connecté)
+        delivery_dict['client_id'] = current_user.id
+        delivery_dict['client_name'] = current_user.name or f"{current_user.first_name} {current_user.last_name}".strip()
+        delivery_dict['client_phone'] = current_user.phone
+        delivery_dict['client_email'] = current_user.email
+        
+        # Auto-remplir les contacts si vides
+        if not delivery_dict.get('pickup_contact_name'):
+            delivery_dict['pickup_contact_name'] = delivery_dict['client_name']
+        if not delivery_dict.get('pickup_contact_phone'):
+            delivery_dict['pickup_contact_phone'] = current_user.phone
+            
+        # Mapper les champs recipient vers delivery_contact
+        if delivery_dict.get('recipient_name'):
+            delivery_dict['delivery_contact_name'] = delivery_dict['recipient_name']
+        if delivery_dict.get('recipient_phone'):
+            delivery_dict['delivery_contact_phone'] = delivery_dict['recipient_phone']
+        
         # Convertir les champs string en float si nécessaire
         if delivery_dict.get('weight'):
             try:
@@ -73,16 +91,80 @@ async def create_new_delivery(
         if delivery_dict.get('is_urgent'):
             delivery_dict['is_fragile'] = delivery_dict.get('is_urgent', False)
             
+        # Gestion du type de véhicule
+        if delivery_dict.get('vehicle_type'):
+            vehicle_mapping = {
+                'camion': 'truck',
+                'moto': 'motorcycle',
+                'voiture': 'car',
+                'vélo': 'bicycle',
+                'scooter': 'scooter',
+                'van': 'van'
+            }
+            delivery_dict['required_vehicle_type'] = vehicle_mapping.get(
+                delivery_dict['vehicle_type'].lower(), 
+                delivery_dict['vehicle_type']
+            )
+        
         # Créer l'objet DeliveryCreate avec les données traitées
         processed_data = delivery_schemas.DeliveryCreate(**delivery_dict)
         
         delivery = create_delivery(db, processed_data, current_user.id)
         
-        return delivery
+        # Retourner la réponse avec les informations du créateur
+        delivery_response = {
+            "id": delivery.id,
+            "client_id": delivery.client_id,
+            "courier_id": delivery.courier_id,
+            "pickup_address": delivery.pickup_address,
+            "pickup_commune": delivery.pickup_commune,
+            "pickup_lat": delivery.pickup_lat,
+            "pickup_lng": delivery.pickup_lng,
+            "pickup_contact_name": delivery.pickup_contact_name,
+            "pickup_contact_phone": delivery.pickup_contact_phone,
+            "delivery_address": delivery.delivery_address,
+            "delivery_commune": delivery.delivery_commune,
+            "delivery_lat": delivery.delivery_lat,
+            "delivery_lng": delivery.delivery_lng,
+            "delivery_contact_name": delivery.delivery_contact_name,
+            "delivery_contact_phone": delivery.delivery_contact_phone,
+            "package_description": delivery.package_description,
+            "package_size": delivery.package_size,
+            "package_weight": delivery.package_weight,
+            "is_fragile": delivery.is_fragile,
+            "cargo_category": delivery.cargo_category,
+            "required_vehicle_type": delivery.required_vehicle_type,
+            "proposed_price": delivery.proposed_price,
+            "delivery_type": delivery.delivery_type,
+            "final_price": delivery.final_price,
+            "status": delivery.status,
+            "estimated_distance": delivery.estimated_distance,
+            "estimated_duration": delivery.estimated_duration,
+            "actual_duration": delivery.actual_duration,
+            "created_at": delivery.created_at,
+            "accepted_at": delivery.accepted_at,
+            "pickup_at": delivery.pickup_at,
+            "delivered_at": delivery.delivered_at,
+            "completed_at": delivery.completed_at,
+            "cancelled_at": delivery.cancelled_at,
+            "vehicle_id": delivery.vehicle_id,
+            # Informations du créateur
+            "client": {
+                "id": current_user.id,
+                "name": delivery_dict['client_name'],
+                "phone": current_user.phone,
+                "email": current_user.email,
+                "role": current_user.role
+            },
+            "courier": None,
+            "vehicle": None
+        }
+        
+        return delivery_response
         
     except Exception as e:
-        print(f"Erreur création livraison: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Erreur lors de la création: {str(e)}")sons")
+        logger.error(f"Erreur création livraison: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=400, detail=f"Erreur lors de la création: {str(e)}")
 
     try:
         delivery = create_delivery(db, delivery_data, current_user)

@@ -71,6 +71,12 @@ class DeliveryCreate(DeliveryBase):
     urgency_level: Optional[str] = "normal"
     custom_price: Optional[str] = None
     
+    # Informations du créateur (auto-remplies par le backend)
+    client_id: Optional[int] = None
+    client_name: Optional[str] = None
+    client_phone: Optional[str] = None
+    client_email: Optional[str] = None
+    
     @validator('proposed_price')
     def price_must_be_positive(cls, v):
         if v and v > 0:

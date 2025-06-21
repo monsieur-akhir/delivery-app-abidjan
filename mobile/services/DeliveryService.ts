@@ -70,12 +70,31 @@ class DeliveryService {
   static async createDelivery(deliveryData: DeliveryCreateRequest): Promise<Delivery> {
     try {
       console.log('[DeliveryService] Création livraison avec données:', deliveryData)
+      
+      // Log des informations pour débugger
+      console.log('[DeliveryService] Champs importants:')
+      console.log('- pickup_address:', deliveryData.pickup_address)
+      console.log('- delivery_address:', deliveryData.delivery_address)
+      console.log('- recipient_name:', deliveryData.recipient_name)
+      console.log('- recipient_phone:', deliveryData.recipient_phone)
+      console.log('- proposed_price:', deliveryData.proposed_price)
+      console.log('- vehicle_type:', deliveryData.vehicle_type)
+      
       const response = await api.post('/deliveries', deliveryData)
       console.log('[DeliveryService] Livraison créée avec succès:', response.data)
+      
+      // Vérifier que les informations du créateur sont présentes
+      if (response.data.client) {
+        console.log('[DeliveryService] Informations du créateur:', response.data.client)
+      } else {
+        console.warn('[DeliveryService] Aucune information du créateur dans la réponse')
+      }
+      
       return response.data
     } catch (error) {
       console.error('Erreur lors de la création de la livraison:', error)
       console.error('Détails erreur:', error.response?.data)
+      console.error('Status:', error.response?.status)
       throw error
     }
   }
