@@ -72,44 +72,54 @@ def get_deliveries_by_courier(
 
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
-def create_delivery(db: Session, delivery_data: DeliveryCreate, client_id: int) -> Delivery:
+def create_delivery(db: Session, delivery_data: DeliveryCreate, user_id: int):
     """
-    Créer une nouvelle livraison avec toutes les données du frontend
+    Créer une nouvelle livraison avec les informations complètes du créateur
     """
-    from ..models.delivery import Delivery
-    from ..schemas.delivery import DeliveryStatus, DeliveryType
+    try:
+        # Récupérer les informations de l'utilisateur
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError("Utilisateur non trouvé")
 
-    # Préparer les données pour la création
-    delivery_dict = delivery_data.dict(exclude_unset=True)
+        # Créer l'objet livraison
+        from ..models.delivery import Delivery
+        from ..schemas.delivery import DeliveryStatus, DeliveryType
 
-    # Traitement des champs optionnels
-    if not delivery_dict.get('proposed_price'):
-        delivery_dict['proposed_price'] = 1000  # Prix par défaut
+        # Préparer les données pour la création
+        delivery_dict = delivery_data.dict(exclude_unset=True)
 
-    # Mapper les types d'urgence
-    if delivery_dict.get('urgency_level') == 'express':
-        delivery_dict['delivery_type'] = DeliveryType.express
-    else:
-        delivery_dict['delivery_type'] = DeliveryType.standard
+        # Traitement des champs optionnels
+        if not delivery_dict.get('proposed_price'):
+            delivery_dict['proposed_price'] = 1000  # Prix par défaut
 
-    # Assurer les champs requis
-    required_fields = {
-        'pickup_commune': delivery_dict.get('pickup_commune', 'Non spécifié'),
-        'delivery_commune': delivery_dict.get('delivery_commune', 'Non spécifié'),
-        'status': DeliveryStatus.pending
-    }
+        # Mapper les types d'urgence
+        if delivery_dict.get('urgency_level') == 'express':
+            delivery_dict['delivery_type'] = DeliveryType.express
+        else:
+            delivery_dict['delivery_type'] = DeliveryType.standard
 
-    delivery_dict.update(required_fields)
-    delivery_dict['client_id'] = client_id
+        # Assurer les champs requis
+        required_fields = {
+            'pickup_commune': delivery_dict.get('pickup_commune', 'Non spécifié'),
+            'delivery_commune': delivery_dict.get('delivery_commune', 'Non spécifié'),
+            'status': DeliveryStatus.pending
+        }
 
-    # Créer l'objet Delivery
-    delivery = Delivery(**delivery_dict)
+        delivery_dict.update(required_fields)
+        delivery_dict['client_id'] = user_id
 
-    db.add(delivery)
-    db.commit()
-    db.refresh(delivery)
+        # Créer l'objet Delivery
+        delivery = Delivery(**delivery_dict)
 
-    return delivery
+        db.add(delivery)
+        db.commit()
+        db.refresh(delivery)
+
+        return delivery
+    except Exception as e:
+        db.rollback()
+        raise e
 
 def update_delivery(db: Session, delivery_id: int, delivery_data: DeliveryUpdate, user_id: int) -> Delivery:
     delivery = get_delivery(db, delivery_id)
