@@ -5,6 +5,14 @@ version = "1.0.0"
 description = "Backend API pour l'application Livraison Abidjan"
 authors = ["Team Livraison Abidjan <tech@livraison-abidjan.com>"]
 
+[tool.poetry.build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry.dependencies]
 python = "^3.11"
 fastapi = "0.103.1"
@@ -17,7 +25,7 @@ python-jose = {extras = ["cryptography"], version = "3.3.0"}
 passlib = {extras = ["bcrypt"], version = "1.7.4"}
 sqlalchemy = "2.0.20"
 alembic = "1.12.0"
-psycopg2-binary = "2.9.7"
+psycopg = "^3.1.0"
 redis = "4.6.0"
 aiofiles = "23.2.1"
 boto3 = "1.28.40"
@@ -37,7 +45,3 @@ httpx = "0.24.1"
 black = "23.7.0"
 isort = "5.12.0"
 flake8 = "6.0.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
