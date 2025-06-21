@@ -557,57 +557,68 @@ def point_in_polygon(point: Tuple[float, float], polygon: List[Tuple[float, floa
 
     return inside
 
-async def get_google_places_suggestions(query: str, max_results: int = 10) -> List[Dict[str, Any]]:
+async def get_google_places_suggestions(query: str, max_results: int = 8) -> List[Dict[str, Any]]:
     """
-    Obtient des suggestions d'adresses depuis Google Places API
+    Obtient des suggestions d'adresses via l'API Google Places Autocomplete.
+
+    Args:
+        query: Terme de recherche
+        max_results: Nombre maximum de résultats
+
+    Returns:
+        Liste des suggestions formatées
     """
+    # Validation de base
+    if not query or len(query.strip()) < 1:
+        return []
+
+    query = query.strip()
+
+    api_key = os.getenv("GOOGLE_PLACES_API_KEY")
+    if not api_key:
+        print("❌ Clé API Google Places manquante, utilisation de données de simulation")
+        return get_simulated_suggestions(query, max_results)
+
+    # URL de l'API Google Places Autocomplete
+    url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+
+    # Paramètres de la requête
+    params = {
+        "input": query,
+        "key": api_key,
+        "language": "fr",
+        "components": "country:ci",  # Limiter à la Côte d'Ivoire
+        "types": "geocode"  # Adresses géographiques uniquement
+    }
+
+    # Faire la requête
     try:
-        # Vérifier si la clé API est configurée
-        api_key = os.getenv("GOOGLE_PLACES_API_KEY")
-        if not api_key or api_key == "dev-google-places-api-key":
-            print("❌ Clé API Google Places non configurée, utilisation de données de simulation")
-            return get_simulated_suggestions(query, max_results)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=5)) as response:
+                if response.status != 200:
+                    print(f"❌ Erreur API Google Places: {response.status}, utilisation de simulation")
+                    return get_simulated_suggestions(query, max_results)
 
-        # URL de l'API Google Places Autocomplete
-        url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+                data = await response.json()
 
-        # Paramètres de la requête
-        params = {
-            "input": query,
-            "key": api_key,
-            "language": "fr",
-            "components": "country:ci",  # Limiter à la Côte d'Ivoire
-            "types": "geocode"  # Adresses géographiques uniquement
-        }
+                if data.get("status") != "OK":
+                    print(f"❌ Erreur Google Places: {data.get('status')}, utilisation de simulation")
+                    return get_simulated_suggestions(query, max_results)
 
-        # Faire la requête
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=5)) as response:
-                    if response.status != 200:
-                        print(f"❌ Erreur API Google Places: {response.status}, utilisation de simulation")
-                        return get_simulated_suggestions(query, max_results)
+                # Traiter les prédictions
+                suggestions = []
+                for prediction in data.get("predictions", [])[:max_results]:
+                    suggestions.append({
+                        "address": prediction["description"],
+                        "place_id": prediction["place_id"],
+                        "commune": extract_commune_from_description(prediction["description"]),
+                        "description": prediction["description"]
+                    })
 
-                    data = await response.json()
-
-                    if data.get("status") != "OK":
-                        print(f"❌ Erreur Google Places: {data.get('status')}, utilisation de simulation")
-                        return get_simulated_suggestions(query, max_results)
-
-                    # Traiter les prédictions
-                    suggestions = []
-                    for prediction in data.get("predictions", [])[:max_results]:
-                        suggestions.append({
-                            "address": prediction["description"],
-                            "place_id": prediction["place_id"],
-                            "commune": extract_commune_from_description(prediction["description"]),
-                            "description": prediction["description"]
-                        })
-
-                    return suggestions
-        except aiohttp.ClientError as e:
-            print(f"❌ Erreur de connexion Google Places: {str(e)}, utilisation de simulation")
-            return get_simulated_suggestions(query, max_results)
+                return suggestions
+    except aiohttp.ClientError as e:
+        print(f"❌ Erreur de connexion Google Places: {str(e)}, utilisation de simulation")
+        return get_simulated_suggestions(query, max_results)
 
     except Exception as e:
         print(f"❌ Erreur lors de la récupération des suggestions Google Places: {str(e)}")
@@ -618,11 +629,11 @@ def extract_commune_from_description(description: str) -> str:
     Extraire la commune d'une description d'adresse
     """
     communes = ["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon"]
-    
+
     for commune in communes:
         if commune.lower() in description.lower():
             return commune
-    
+
     # Si aucune commune trouvée, retourner Abidjan par défaut
     return "Abidjan"
 
