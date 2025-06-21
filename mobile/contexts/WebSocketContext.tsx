@@ -69,11 +69,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           await logout();
           return null;
         }
-        
+
         const response = await axios.post(`${getApiUrl()}/api/auth/refresh`, {
           refresh_token: refreshToken,
         });
-        
+
         const { access_token, refresh_token: newRefreshToken } = response.data;
         await AsyncStorage.setItem("token", access_token);
         await AsyncStorage.setItem("refreshToken", newRefreshToken);
@@ -129,14 +129,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ws.onclose = (event) => {
       console.log(`[WebSocket] Connexion fermée - Code: ${event.code}, Raison: ${event.reason}`)
       setConnected(false)
-      
+
       // Si c'est une erreur 403 (token expiré), ne pas reconnecter automatiquement
       if (event.code === 1008 || event.reason?.includes('Authentication')) {
         console.log('[WebSocket] Erreur d\'authentification, déconnexion de l\'utilisateur');
         logout();
         return;
       }
-      
+
       // Essayer de reconnecter après un délai seulement si l'utilisateur est toujours connecté
       setTimeout(async () => {
         const currentToken = await AsyncStorage.getItem("token");
@@ -167,7 +167,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     (async () => {
       if (token && user) {
         cleanup = await connectWebSocket();
-        
+
         // Vérifier le token toutes les 5 minutes
         tokenCheckInterval = setInterval(async () => {
           const currentToken = await AsyncStorage.getItem("token");

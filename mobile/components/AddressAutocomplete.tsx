@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -223,13 +222,13 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     setLoading(true);
     try {
       console.log('[AddressAutocomplete] Recherche:', cleanQuery);
-      
+
       // Utiliser l'API backend qui gère Google Places
       const { getAddressAutocomplete } = await import('../services/api');
       const response = await getAddressAutocomplete(cleanQuery);
-      
+
       console.log('[AddressAutocomplete] Réponse API:', response);
-      
+
       if (response.predictions && response.predictions.length > 0) {
         // Convertir les prédictions au format attendu
         const convertedResults: Address[] = response.predictions.map((prediction, index) => ({
@@ -247,10 +246,41 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         setSuggestions([]);
       }
     } catch (error) {
-      console.error('[AddressAutocomplete] Error searching addresses:', error);
-      // En cas d'erreur, afficher des suggestions locales
-      const localSuggestions = getLocalSuggestions(cleanQuery);
-      setSuggestions(localSuggestions.slice(0, maxSuggestions));
+      console.error('[DEBUG] Erreur backend address-autocomplete:', error);
+
+      // Message d'erreur compréhensible pour l'utilisateur
+      if (error.response?.status === 422) {
+        setError('Veuillez saisir au moins 3 caractères pour la recherche');
+      } else if (error.response?.status === 500) {
+        setError('Service de géolocalisation temporairement indisponible');
+      } else if (!error.response) {
+        setError('Vérifiez votre connexion internet');
+      } else {
+        setError('Erreur lors de la recherche d\'adresses');
+      }
+
+      // Fallback vers les données simulées en cas d'erreur
+      const mockSuggestions = [
+        { 
+          description: "Cocody, Abidjan", 
+          latitude: 5.3364, 
+          longitude: -4.0267,
+          commune: "Cocody"
+        },
+        { 
+          description: "Plateau, Abidjan", 
+          latitude: 5.32, 
+          longitude: -4.03,
+          commune: "Plateau"
+        },
+        { 
+          description: "Marcory, Abidjan", 
+          latitude: 5.2849, 
+          longitude: -4.0082,
+          commune: "Marcory"
+        }
+      ];
+      setSuggestions(mockSuggestions);
     } finally {
       setLoading(false);
     }
@@ -272,7 +302,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     ];
 
     const queryLower = query.toLowerCase();
-    
+
     return communes
       .filter(commune => commune.name.toLowerCase().includes(queryLower))
       .map((commune, index) => ({
@@ -294,49 +324,49 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       { name: 'Sofitel Abidjan Hôtel Ivoire', commune: 'Cocody', lat: 5.3439, lng: -3.9889, category: 'hotel' },
       { name: 'Pullman Abidjan', commune: 'Cocody', lat: 5.3400, lng: -3.9900, category: 'hotel' },
       { name: 'Radisson Blu Hotel', commune: 'Plateau', lat: 5.3250, lng: -4.0230, category: 'hotel' },
-      
+
       // Centres commerciaux
       { name: 'Cap Sud Shopping Center', commune: 'Marcory', lat: 5.2800, lng: -3.9600, category: 'mall' },
       { name: 'Cosmos Yopougon', commune: 'Yopougon', lat: 5.3200, lng: -4.0700, category: 'mall' },
       { name: 'Abidjan Mall', commune: 'Marcory', lat: 5.2850, lng: -3.9650, category: 'mall' },
-      
+
       // Restaurants populaires
       { name: 'Restaurant Chez Amina', commune: 'Plateau', lat: 5.3300, lng: -4.0100, category: 'restaurant' },
       { name: 'Maquis du Rail', commune: 'Treichville', lat: 5.3100, lng: -4.0300, category: 'restaurant' },
       { name: 'Restaurant Allocodrome', commune: 'Marcory', lat: 5.2900, lng: -3.9750, category: 'restaurant' },
       { name: 'Brasserie Abidjanaise', commune: 'Plateau', lat: 5.3280, lng: -4.0200, category: 'restaurant' },
-      
+
       // Pharmacies
       { name: 'Pharmacie de la Paix', commune: 'Plateau', lat: 5.3200, lng: -4.0200, category: 'pharmacy' },
       { name: 'Pharmacie du Plateau', commune: 'Plateau', lat: 5.3250, lng: -4.0250, category: 'pharmacy' },
       { name: 'Pharmacie Cocody', commune: 'Cocody', lat: 5.3500, lng: -3.9800, category: 'pharmacy' },
       { name: 'Pharmacie Nouvelle', commune: 'Adjamé', lat: 5.3650, lng: -4.0180, category: 'pharmacy' },
-      
+
       // Banques
       { name: 'SGBCI Plateau', commune: 'Plateau', lat: 5.3280, lng: -4.0280, category: 'bank' },
       { name: 'Ecobank Cocody', commune: 'Cocody', lat: 5.3600, lng: -3.9700, category: 'bank' },
       { name: 'BICICI Marcory', commune: 'Marcory', lat: 5.2900, lng: -3.9700, category: 'bank' },
-      
+
       // Universités et écoles
       { name: 'Université Félix Houphouët-Boigny', commune: 'Cocody', lat: 5.3847, lng: -3.9883, category: 'university' },
       { name: 'École Internationale Jean-Mermoz', commune: 'Cocody', lat: 5.3700, lng: -3.9600, category: 'school' },
       { name: 'Institut National Polytechnique', commune: 'Yamoussoukro', lat: 5.3500, lng: -4.0000, category: 'school' },
-      
+
       // Hôpitaux
       { name: 'CHU de Treichville', commune: 'Treichville', lat: 5.2900, lng: -4.0100, category: 'hospital' },
       { name: 'Clinique Farah', commune: 'Cocody', lat: 5.3400, lng: -3.9800, category: 'hospital' },
       { name: 'Hôpital Général de Bingerville', commune: 'Bingerville', lat: 5.3550, lng: -3.8950, category: 'hospital' },
-      
+
       // Centres d'affaires
       { name: 'Tour BCEAO', commune: 'Plateau', lat: 5.3250, lng: -4.0220, category: 'office' },
       { name: 'Immeuble CCIA', commune: 'Plateau', lat: 5.3280, lng: -4.0240, category: 'office' },
       { name: 'Centre des Affaires', commune: 'Plateau', lat: 5.3270, lng: -4.0210, category: 'office' },
-      
+
       // Marchés
       { name: 'Marché de Treichville', commune: 'Treichville', lat: 5.2833, lng: -4.0000, category: 'market' },
       { name: 'Marché d\'Adjamé', commune: 'Adjamé', lat: 5.3667, lng: -4.0167, category: 'market' },
       { name: 'Marché de Cocody', commune: 'Cocody', lat: 5.3500, lng: -3.9850, category: 'market' },
-      
+
       // Transports
       { name: 'Gare de Bassam', commune: 'Plateau', lat: 5.3200, lng: -4.0200, category: 'transport' },
       { name: 'Gare Routière d\'Adjamé', commune: 'Adjamé', lat: 5.3700, lng: -4.0200, category: 'transport' },
@@ -373,13 +403,13 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     ];
 
     const results: Address[] = [];
-    
+
     streetPrefixes.forEach(prefix => {
       streetNames.forEach(streetName => {
         if (streetName.toLowerCase().includes(normalizedQuery) || 
             prefix.toLowerCase().includes(normalizedQuery) ||
             normalizedQuery.length >= 3) {
-          
+
           const randomCommune = abidjanCommunes[Math.floor(Math.random() * abidjanCommunes.length)];
           results.push({
             id: `street_${prefix}_${streetName}_${Date.now()}_${Math.random()}`,
@@ -429,7 +459,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     try {
       const locationService = LocationService.getInstance();
       const result = await locationService.reverseGeocode(latitude, longitude);
-      
+
       if (result) {
         return {
           id: result.id,
@@ -472,7 +502,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const handleTextChange = useCallback((text: string) => {
     onChangeText(text);
     setInputValue(text);
-    
+
     if (text.length >= 2) {
       setShowSuggestionsState(true);
 
@@ -495,7 +525,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     onAddressSelect(address);
     setShowSuggestionsState(false);
     setSuggestions([]);
-    
+
     // Ajouter aux récents (simulation)
     setRecentAddresses(prev => [
       address,
@@ -583,6 +613,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
+  // Added state for error message
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Function to set the error message
+  const setError = (message: string) => {
+    setErrorMessage(message);
+  };
+
   return (
     <View style={[styles.container, style]}>
       <View style={styles.inputContainer}>
@@ -595,7 +633,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={placeholder}
-            error={!!error}
+            error={!!errorMessage} // Use errorMessage here
             disabled={disabled}
             style={[styles.input, isFocused && styles.inputFocused]}
             right={
@@ -607,7 +645,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               ) : null
             }
           />
-          
+
           {/* Bouton position actuelle */}
           <TouchableOpacity
             style={styles.locationButton}
@@ -625,10 +663,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             )}
           </TouchableOpacity>
         </View>
-        
-        {error && (
-          <HelperText type="error" visible={!!error} style={styles.errorText}>
-            {error}
+
+        {errorMessage && (
+          <HelperText type="error" visible={!!errorMessage} style={styles.errorText}>
+            {errorMessage}
           </HelperText>
         )}
       </View>

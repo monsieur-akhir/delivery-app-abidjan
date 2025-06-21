@@ -164,7 +164,20 @@ const BidsScreen: React.FC<BidsScreenProps> = () => {
       setBids(mockBids.sort((a, b) => a.price - b.price));
     } catch (error) {
       console.error('Erreur lors du chargement des offres:', error);
-      Alert.alert('Erreur', 'Impossible de charger les offres. Veuillez réessayer.');
+      
+      let errorMessage = 'Impossible de charger les offres';
+      
+      if (error.response?.status === 404) {
+        errorMessage = 'Aucune livraison trouvée avec cet identifiant';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Session expirée, veuillez vous reconnecter';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Service des enchères temporairement indisponible';
+      } else if (!error.response) {
+        errorMessage = 'Problème de connexion, vérifiez votre réseau';
+      }
+      
+      Alert.alert('Chargement des offres', errorMessage);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -216,7 +229,22 @@ const BidsScreen: React.FC<BidsScreenProps> = () => {
                   });
                 } catch (error) {
                   console.error('[BidsScreen] Erreur lors de l\'acceptation de l\'enchère:', error);
-                  Alert.alert('Erreur', 'Impossible d\'accepter l\'enchère. Veuillez réessayer.');
+                  
+                  let errorMessage = 'Impossible d\'accepter cette offre';
+                  
+                  if (error.response?.status === 400) {
+                    errorMessage = 'Cette offre n\'est plus disponible';
+                  } else if (error.response?.status === 409) {
+                    errorMessage = 'Cette livraison a déjà été attribuée à un autre coursier';
+                  } else if (error.response?.status === 401) {
+                    errorMessage = 'Session expirée, veuillez vous reconnecter';
+                  } else if (error.response?.status === 500) {
+                    errorMessage = 'Service temporairement indisponible';
+                  } else if (!error.response) {
+                    errorMessage = 'Problème de connexion internet';
+                  }
+                  
+                  Alert.alert('Acceptation de l\'offre', errorMessage);
                   return;
                 }
               } else {
@@ -246,7 +274,16 @@ const BidsScreen: React.FC<BidsScreenProps> = () => {
               }
             } catch (error) {
               console.error('Erreur lors de l\'acceptation:', error);
-              Alert.alert('Erreur', 'Impossible d\'accepter l\'offre. Veuillez réessayer.');
+              
+              let errorMessage = 'Impossible d\'accepter cette offre pour le moment';
+              
+              if (error.message?.includes('timeout')) {
+                errorMessage = 'Délai d\'attente dépassé, réessayez';
+              } else if (error.message?.includes('network')) {
+                errorMessage = 'Problème de réseau, vérifiez votre connexion';
+              }
+              
+              Alert.alert('Acceptation de l\'offre', errorMessage);
             } finally {
               setAcceptingBid(null);
             }

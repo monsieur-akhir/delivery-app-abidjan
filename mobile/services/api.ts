@@ -528,53 +528,35 @@ api.interceptors.request.use(
   },
 )
 
-// Intercepteur pour gérer les erreurs de réponse
+// Intercepteur de réponse pour gérer les erreurs globalement
 api.interceptors.response.use(
-  (response) => {
-    return response
-  },
-  async (error) => {
-    const originalRequest = error.config
+  (response) => response,
+  (error) => {
+    console.error('[API Error]', error);
 
-    // Si l'erreur est 401 (non autorisé) et que nous n'avons pas déjà essayé de rafraîchir le token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-
-      try {
-        // Essayer de rafraîchir le token
-        const refreshToken = await AsyncStorage.getItem("refreshToken")
-        if (!refreshToken) {
-          // Si pas de refresh token, rediriger vers la connexion
-          await AsyncStorage.removeItem("token")
-          await AsyncStorage.removeItem("user")
-          return Promise.reject(error)
-        }
-
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
-          refresh_token: refreshToken,
-        })
-
-        const { access_token, refresh_token } = response.data
-
-        // Sauvegarder les nouveaux tokens
-        await AsyncStorage.setItem("token", access_token)
-        await AsyncStorage.setItem("refreshToken", refresh_token)
-
-        // Réessayer la requête originale avec le nouveau token
-        originalRequest.headers.Authorization = `Bearer ${access_token}`
-        return api(originalRequest)
-      } catch (refreshError) {
-        // Si le rafraîchissement échoue, déconnecter l'utilisateur
-        await AsyncStorage.removeItem("token")
-        await AsyncStorage.removeItem("refreshToken")
-        await AsyncStorage.removeItem("user")
-        return Promise.reject(refreshError)
-      }
+    // Améliorer le message d'erreur selon le type
+    if (error.response?.status === 401) {
+      console.log('[API] Token expiré, redirection vers login');
+      error.userMessage = 'Votre session a expiré, veuillez vous reconnecter';
+    } else if (error.response?.status === 403) {
+      error.userMessage = 'Accès non autorisé à cette ressource';
+    } else if (error.response?.status === 404) {
+      error.userMessage = 'Ressource non trouvée';
+    } else if (error.response?.status === 422) {
+      error.userMessage = 'Données invalides, vérifiez les informations saisies';
+    } else if (error.response?.status === 500) {
+      error.userMessage = 'Erreur serveur, réessayez dans quelques instants';
+    } else if (error.response?.status === 503) {
+      error.userMessage = 'Service temporairement indisponible';
+    } else if (!error.response) {
+      error.userMessage = 'Problème de connexion internet';
+    } else {
+      error.userMessage = 'Une erreur inattendue s\'est produite';
     }
 
-    return Promise.reject(error)
-  },
-)
+    return Promise.reject(error);
+  }
+);
 
 // API d'authentification
 
