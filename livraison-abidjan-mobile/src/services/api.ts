@@ -50,18 +50,23 @@ export interface GeocodeResult {
 }
 
 export interface AddressAutocompleteResult {
-  place_id: string
+  id: string
+  name: string
   description: string
-  structured_formatting: {
-    main_text: string
-    secondary_text: string
-  }
+  commune: string
+  latitude: number | null
+  longitude: number | null
+  type: string
+  place_id: string
+  secondary_text: string
   types: string[]
+  formatted_address: string
 }
 
 export interface AddressAutocompleteResponse {
   predictions: AddressAutocompleteResult[]
   status: string
+  query?: string
 }
 
 export interface CourierInfo {
@@ -786,9 +791,39 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult[]> 
 
 // Autocomplétion d'adresse Google Places
 export const getAddressAutocomplete = async (input: string): Promise<AddressAutocompleteResponse> => {
-  const response = await api.get(`/api/deliveries/address-autocomplete?input=${encodeURIComponent(input)}`)
-  return response.data
+  if (!input || input.trim().length < 1) {
+    return {
+      predictions: [],
+      status: "INVALID_INPUT"
+    }
+  }
+
+  try {
+    // Utiliser l'endpoint POST PUBLIC avec le body JSON
+    const response = await api.post('/api/address-autocomplete/public', {
+      input: input.trim()
+    })
+    
+    console.log('[DEBUG] Réponse backend address-autocomplete public:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('[DEBUG] Erreur backend address-autocomplete public:', error)
+    
+    // Fallback: essayer l'endpoint GET PUBLIC si POST échoue
+    try {
+      const response = await api.get(`/api/address-autocomplete/public?input=${encodeURIComponent(input.trim())}`)
+      console.log('[DEBUG] Fallback GET public réussi:', response.data)
+      return response.data
+    } catch (fallbackError) {
+      console.error('[DEBUG] Erreur fallback GET public:', fallbackError)
+      return {
+        predictions: [],
+        status: "ERROR"
+      }
+    }
+  }
 }
+
 
 // Obtenir le prix recommandé
 export const getRecommendedPrice = async (data: PriceEstimateData): Promise<number> => {

@@ -1,14 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, BackgroundTasks, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 
 from .core.config import settings
 from .core.security import get_current_user
-from .db.base import Base
+from .db.base import Base, engine
 from .db.session import get_db
 from .db.init_db import init_db
 from .api import (
@@ -18,6 +19,9 @@ from .api import (
 )
 from .websockets import tracking
 from .services.geolocation import get_google_places_suggestions
+
+# Charger les variables d'environnement depuis le fichier .env
+load_dotenv()
 
 # Créer l'application FastAPI
 app = FastAPI(
@@ -75,7 +79,6 @@ from .models import *
 async def startup_event():
     try:
         # Créer les tables dans la base de données si elles n'existent pas
-        from .db.base import engine
         Base.metadata.create_all(bind=engine)
 
         # Initialiser la base de données avec les données de base
@@ -123,10 +126,14 @@ async def get_active_client_deliveries(
 
         from .services.delivery import get_user_active_deliveries
         deliveries = get_user_active_deliveries(db, current_user.id)
+        
+        # Sérialiser les livraisons
+        serialized_deliveries = [serialize_delivery(delivery) for delivery in deliveries]
+        
         return {
             "success": True,
-            "deliveries": deliveries,
-            "count": len(deliveries)
+            "deliveries": serialized_deliveries,
+            "count": len(serialized_deliveries)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des livraisons: {str(e)}")
@@ -148,13 +155,17 @@ async def get_client_delivery_history(
 
         from .services.delivery import get_deliveries_by_client
         deliveries = get_deliveries_by_client(db, current_user.id, skip, limit, status)
+        
+        # Sérialiser les livraisons
+        serialized_deliveries = [serialize_delivery(delivery) for delivery in deliveries]
+        
         return {
             "success": True,
-            "deliveries": deliveries,
+            "deliveries": serialized_deliveries,
             "pagination": {
                 "skip": skip,
                 "limit": limit,
-                "total": len(deliveries)
+                "total": len(serialized_deliveries)
             }
         }
     except Exception as e:
@@ -177,13 +188,17 @@ async def get_courier_delivery_history(
 
         from .services.delivery import get_courier_deliveries
         deliveries = get_courier_deliveries(db, current_user.id, status, limit, skip)
+        
+        # Sérialiser les livraisons
+        serialized_deliveries = [serialize_delivery(delivery) for delivery in deliveries]
+        
         return {
             "success": True,
-            "deliveries": deliveries,
+            "deliveries": serialized_deliveries,
             "pagination": {
                 "skip": skip,
                 "limit": limit,
-                "total": len(deliveries)
+                "total": len(serialized_deliveries)
             }
         }
     except Exception as e:
@@ -449,7 +464,59 @@ async def estimate_delivery_price_v1_endpoint(
     """Estimer le prix d'une livraison (version v1)"""
     return await estimate_delivery_price_endpoint(request, db)
 
-# Endpoint de création de livraison (compatibilité mobile)
+# Fonction utilitaire pour sérialiser un objet Delivery
+def serialize_delivery(delivery):
+    """Sérialise un objet Delivery en dictionnaire"""
+    if not delivery:
+        return None
+    
+    # Convertir l'objet Delivery en dictionnaire
+    delivery_dict = {
+        "id": delivery.id,
+        "client_id": delivery.client_id,
+        "courier_id": delivery.courier_id,
+        "pickup_address": delivery.pickup_address,
+        "pickup_commune": delivery.pickup_commune,
+        "pickup_lat": delivery.pickup_lat,
+        "pickup_lng": delivery.pickup_lng,
+        "pickup_contact_name": delivery.pickup_contact_name,
+        "pickup_contact_phone": delivery.pickup_contact_phone,
+        "delivery_address": delivery.delivery_address,
+        "delivery_commune": delivery.delivery_commune,
+        "delivery_lat": delivery.delivery_lat,
+        "delivery_lng": delivery.delivery_lng,
+        "delivery_contact_name": delivery.delivery_contact_name,
+        "delivery_contact_phone": delivery.delivery_contact_phone,
+        "package_description": delivery.package_description,
+        "package_size": delivery.package_size,
+        "package_weight": delivery.package_weight,
+        "is_fragile": delivery.is_fragile,
+        "cargo_category": delivery.cargo_category,
+        "required_vehicle_type": delivery.required_vehicle_type,
+        "proposed_price": delivery.proposed_price,
+        "final_price": delivery.final_price,
+        "total_discount": delivery.total_discount,
+        "cashback_earned": delivery.cashback_earned,
+        "applied_promotions": delivery.applied_promotions,
+        "delivery_type": delivery.delivery_type,
+        "status": delivery.status,
+        "created_at": delivery.created_at.isoformat() if delivery.created_at else None,
+        "accepted_at": delivery.accepted_at.isoformat() if delivery.accepted_at else None,
+        "pickup_at": delivery.pickup_at.isoformat() if delivery.pickup_at else None,
+        "delivered_at": delivery.delivered_at.isoformat() if delivery.delivered_at else None,
+        "completed_at": delivery.completed_at.isoformat() if delivery.completed_at else None,
+        "cancelled_at": delivery.cancelled_at.isoformat() if delivery.cancelled_at else None,
+        "estimated_distance": delivery.estimated_distance,
+        "estimated_duration": delivery.estimated_duration,
+        "actual_duration": delivery.actual_duration,
+        "vehicle_id": delivery.vehicle_id,
+        "client": None,  # Ne pas inclure les relations pour éviter les erreurs
+        "courier": None,
+        "vehicle": None
+    }
+    
+    return delivery_dict
+
 @app.post("/api/v1/deliveries/")
 async def create_delivery_v1_endpoint(
     delivery_data: dict,
@@ -477,9 +544,12 @@ async def create_delivery_v1_endpoint(
                 delivery.id
             )
         
+        # Sérialiser l'objet delivery
+        serialized_delivery = serialize_delivery(delivery)
+        
         return {
             "success": True,
-            "delivery": delivery,
+            "delivery": serialized_delivery,
             "message": "Livraison créée avec succès"
         }
     except HTTPException:
@@ -565,34 +635,6 @@ async def smart_matching_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du matching: {str(e)}")
 
-# Endpoint d'autocomplétion d'adresses
-@app.get("/api/deliveries/address-autocomplete")
-async def address_autocomplete_endpoint(
-    query: str = Query(..., min_length=2, description="Terme de recherche"),
-    user_lat: Optional[float] = Query(None, description="Latitude utilisateur"),
-    user_lng: Optional[float] = Query(None, description="Longitude utilisateur"),
-    limit: int = Query(8, ge=1, le=20, description="Nombre de suggestions"),
-    db: Session = Depends(get_db)
-):
-    """Autocomplétion intelligente d'adresses pour Abidjan"""
-    try:
-        from .services.geolocation import get_address_suggestions
-        
-        user_location = None
-        if user_lat is not None and user_lng is not None:
-            user_location = {"latitude": user_lat, "longitude": user_lng}
-
-        suggestions = await get_address_suggestions(db, query, user_location, limit)
-        
-        return {
-            "success": True,
-            "suggestions": suggestions,
-            "query": query,
-            "user_location": user_location
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de l'autocomplétion: {str(e)}")
-
 # Endpoint des lieux populaires
 @app.get("/api/deliveries/popular-places")
 async def popular_places_endpoint(
@@ -662,15 +704,40 @@ async def global_exception_handler(request, exc):
         "message": "Une erreur inattendue s'est produite"
     }
 
-# Middleware de logging
+# Middleware pour gérer les erreurs de connexion
+@app.middleware("http")
+async def connection_error_handler(request, call_next):
+    """Gère les erreurs de connexion HTTP"""
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        # Log l'erreur mais ne la fait pas remonter
+        print(f"⚠️  Erreur de connexion ignorée: {type(e).__name__}: {e}")
+        # Retourner une réponse d'erreur propre
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Erreur de connexion temporaire", "detail": str(e)}
+        )
+
+# Middleware pour logger les requêtes
 @app.middleware("http")
 async def log_requests(request, call_next):
-    start_time = datetime.utcnow()
-    response = await call_next(request)
-    process_time = (datetime.utcnow() - start_time).total_seconds()
-    
-    print(f"{request.method} {request.url.path} - {response.status_code} - {process_time:.3f}s")
-    return response
+    """Log les requêtes avec gestion d'erreur"""
+    try:
+        start_time = datetime.now()
+        response = await call_next(request)
+        process_time = (datetime.now() - start_time).total_seconds()
+        
+        # Log seulement si le temps de traitement est > 1 seconde
+        if process_time > 1.0:
+            print(f"🐌 Requête lente: {request.method} {request.url.path} - {process_time:.2f}s")
+        
+        return response
+    except Exception as e:
+        print(f"❌ Erreur dans log_requests: {e}")
+        raise
 
 @app.get("/test-google-places")
 async def test_google_places(query: str):

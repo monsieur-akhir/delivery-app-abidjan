@@ -116,6 +116,7 @@ class DeliveryResponse(DeliveryBase):
     completed_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     vehicle_id: Optional[int] = None
+    route_polyline: Optional[str] = None
 
     # Relations
     client: Optional[Dict[str, Any]] = None

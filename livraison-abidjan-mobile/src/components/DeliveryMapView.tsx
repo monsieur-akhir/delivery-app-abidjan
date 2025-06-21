@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { Feather } from '@expo/vector-icons';
 import { theme } from '../styles/colors';
 
@@ -13,11 +13,46 @@ interface Location {
 interface DeliveryMapProps {
   pickupLocation: Location;
   deliveryLocation: Location;
+  routePolyline?: string;
 }
+
+const decodePolyline = (t: string): { latitude: number; longitude: number }[] => {
+  let points = [];
+  let index = 0, len = t.length;
+  let lat = 0, lng = 0;
+
+  while (index < len) {
+    let b, shift = 0, result = 0;
+    do {
+      b = t.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = t.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+
+    points.push({
+      latitude: lat / 1e5,
+      longitude: lng / 1e5,
+    });
+  }
+  return points;
+};
 
 const DeliveryMapView: React.FC<DeliveryMapProps> = ({
   pickupLocation,
   deliveryLocation,
+  routePolyline,
 }) => {
   const initialRegion = {
     latitude: (pickupLocation.latitude + deliveryLocation.latitude) / 2,
@@ -25,6 +60,8 @@ const DeliveryMapView: React.FC<DeliveryMapProps> = ({
     latitudeDelta: Math.abs(pickupLocation.latitude - deliveryLocation.latitude) * 1.5,
     longitudeDelta: Math.abs(pickupLocation.longitude - deliveryLocation.longitude) * 1.5,
   };
+
+  const polylineCoords = routePolyline ? decodePolyline(routePolyline) : undefined;
 
   return (
     <View style={styles.container}>
@@ -60,6 +97,14 @@ const DeliveryMapView: React.FC<DeliveryMapProps> = ({
             <Feather name="flag" size={24} color={theme.colors.primary} />
           </View>
         </Marker>
+
+        {polylineCoords && (
+          <Polyline
+            coordinates={polylineCoords}
+            strokeColor="#007AFF"
+            strokeWidth={4}
+          />
+        )}
       </MapView>
     </View>
   );
