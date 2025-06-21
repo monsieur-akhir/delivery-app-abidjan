@@ -9,6 +9,7 @@ packages = ["docker_25", "docker-compose"]
 [deployment]
 build = ["sh", "-c", "make dev"]
 run = ["sh", "-c", "cd backend && python start_replit.py"]
+deploymentTarget = "cloudrun"
 
 [workflows]
 runButton = "FastAPI Backend"
