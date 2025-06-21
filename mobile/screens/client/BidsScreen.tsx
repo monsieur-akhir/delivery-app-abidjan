@@ -63,7 +63,7 @@ interface BidsScreenProps {}
 const BidsScreen: React.FC<BidsScreenProps> = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { deliveryRequest } = route.params as any;
+  const { deliveryRequest, deliveryId } = route.params as any;
 
   const [bids, setBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,11 +82,25 @@ const BidsScreen: React.FC<BidsScreenProps> = () => {
     }
 
     try {
-      // Simulation de chargement des offres de coursiers
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      let mockBids: Bid[] = [];
+
+      // Si nous avons un deliveryId, essayer de charger les vraies enchères
+      if (deliveryId) {
+        try {
+          console.log('[BidsScreen] Chargement des enchères pour livraison:', deliveryId);
+          // Ici on pourrait appeler DeliveryService.getDeliveryBids(deliveryId)
+          // Pour l'instant, on simule toujours mais avec l'ID réel
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.warn('[BidsScreen] Impossible de charger les enchères réelles, utilisation des données simulées');
+        }
+      }
+
+      // Simulation de chargement des offres de coursiers (temporaire)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Données simulées des offres
-      const mockBids: Bid[] = [
+      mockBids = [
         {
           id: '1',
           courierId: 'courier_1',
@@ -172,30 +186,64 @@ const BidsScreen: React.FC<BidsScreenProps> = () => {
             setAcceptingBid(bid.id);
             
             try {
-              // Simulation de l'acceptation de l'offre
-              await new Promise(resolve => setTimeout(resolve, 2000));
-              
-              // Redirection vers l'écran de suivi
-              navigation.replace('EnhancedTrackDeliveryScreen', {
-                deliveryId: 'delivery_' + Date.now(),
-                delivery: {
-                  id: 'delivery_' + Date.now(),
-                  ...deliveryRequest,
-                  courier: {
-                    id: bid.courierId,
-                    name: bid.courierName,
-                    photo: bid.courierPhoto,
-                    rating: bid.courierRating,
-                    phone: '+225 07 00 00 00 00',
-                    vehicleType: bid.vehicleType
-                  },
-                  finalPrice: bid.price,
-                  estimatedDuration: bid.estimatedDuration,
-                  status: 'assigned',
-                  courierArrivalTime: bid.arrivalTime,
-                  createdAt: new Date().toISOString()
+              // Si nous avons un deliveryId réel, accepter l'enchère via l'API
+              if (deliveryId) {
+                try {
+                  console.log('[BidsScreen] Acceptation de l\'enchère:', bid.id, 'pour livraison:', deliveryId);
+                  // Ici on pourrait appeler DeliveryService.acceptBid(deliveryId, bid.id)
+                  await new Promise(resolve => setTimeout(resolve, 1500));
+                  
+                  // Redirection vers l'écran de suivi avec l'ID réel
+                  navigation.replace('EnhancedTrackDeliveryScreen', {
+                    deliveryId: deliveryId,
+                    delivery: {
+                      id: deliveryId,
+                      ...deliveryRequest,
+                      courier: {
+                        id: bid.courierId,
+                        name: bid.courierName,
+                        photo: bid.courierPhoto,
+                        rating: bid.courierRating,
+                        phone: '+225 07 00 00 00 00',
+                        vehicleType: bid.vehicleType
+                      },
+                      finalPrice: bid.price,
+                      estimatedDuration: bid.estimatedDuration,
+                      status: 'assigned',
+                      courierArrivalTime: bid.arrivalTime,
+                      createdAt: new Date().toISOString()
+                    }
+                  });
+                } catch (error) {
+                  console.error('[BidsScreen] Erreur lors de l\'acceptation de l\'enchère:', error);
+                  Alert.alert('Erreur', 'Impossible d\'accepter l\'enchère. Veuillez réessayer.');
+                  return;
                 }
-              });
+              } else {
+                // Mode simulation (fallback)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                navigation.replace('EnhancedTrackDeliveryScreen', {
+                  deliveryId: 'delivery_' + Date.now(),
+                  delivery: {
+                    id: 'delivery_' + Date.now(),
+                    ...deliveryRequest,
+                    courier: {
+                      id: bid.courierId,
+                      name: bid.courierName,
+                      photo: bid.courierPhoto,
+                      rating: bid.courierRating,
+                      phone: '+225 07 00 00 00 00',
+                      vehicleType: bid.vehicleType
+                    },
+                    finalPrice: bid.price,
+                    estimatedDuration: bid.estimatedDuration,
+                    status: 'assigned',
+                    courierArrivalTime: bid.arrivalTime,
+                    createdAt: new Date().toISOString()
+                  }
+                });
+              }
             } catch (error) {
               console.error('Erreur lors de l\'acceptation:', error);
               Alert.alert('Erreur', 'Impossible d\'accepter l\'offre. Veuillez réessayer.');

@@ -155,12 +155,12 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
     return true;
   };
 
-  // Simulation de recherche de coursiers avec loader
-  const searchForCouriers = async (): Promise<void> => {
+  // Redirection vers les enchères de la livraison créée
+  const redirectToBids = async (deliveryId: string): Promise<void> => {
     setSearchingCouriers(true);
     setSearchProgress(0);
 
-    // Simulation du processus de recherche
+    // Simulation du processus de recherche pour l'UX
     const searchSteps = [
       'Analyse de votre demande...',
       'Recherche de coursiers disponibles...',
@@ -169,17 +169,15 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
     ];
 
     for (let i = 0; i < searchSteps.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
       setSearchProgress((i + 1) / searchSteps.length);
     }
 
-    // Attendre un peu plus pour l'effet
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     setSearchingCouriers(false);
 
-    // Redirection vers l'écran des propositions de prix
+    // Redirection vers l'écran des enchères réelles avec l'ID de la livraison
     navigation.navigate('BidsScreen', {
+      deliveryId: deliveryId,
       deliveryRequest: {
         pickup: pickupLocation,
         delivery: deliveryLocation,
@@ -229,8 +227,11 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
       // Créer la livraison
       const delivery = await createDelivery(deliveryData);
       
-      if (delivery) {
-        await searchForCouriers();
+      if (delivery && delivery.id) {
+        console.log('[CreateDelivery] Livraison créée avec ID:', delivery.id);
+        await redirectToBids(delivery.id.toString());
+      } else {
+        Alert.alert('Erreur', 'La livraison a été créée mais l\'ID est manquant');
       }
     } catch (error) {
       console.error('Erreur lors de la création de livraison:', error);
