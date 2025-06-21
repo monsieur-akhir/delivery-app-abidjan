@@ -1268,21 +1268,18 @@ export interface AddressAutocompleteResponse {
 }
 // Corriger la fonction getAddressAutocomplete
 export const getAddressAutocomplete = async (input: string): Promise<AddressAutocompleteResponse> => {
-  // Nettoyer l'input et vérifier la longueur
-  const cleanInput = input.trim();
-  if (cleanInput.length < 2) {
-    return {
-      predictions: [],
-      status: "INVALID_REQUEST"
-    };
-  }
-
   try {
-    const response = await api.get(`/api/deliveries/address-autocomplete?input=${encodeURIComponent(cleanInput)}`);
-    return response.data;
+    if (input.trim().length < 2) {
+      return {
+        predictions: [],
+        status: "INVALID_REQUEST"
+      };
+    }
+
+    const response = await api.get(`/api/deliveries/address-autocomplete?input=${encodeURIComponent(input.trim())}`)
+    return response.data
   } catch (error: any) {
-    console.error('Erreur API autocomplétion:', error.response?.data || error.message);
-    // Retourner une réponse vide en cas d'erreur
+    console.error('[API] Erreur autocomplétion:', error.response?.data || error.message);
     return {
       predictions: [],
       status: "ERROR"

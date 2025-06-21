@@ -1,5 +1,6 @@
 from typing import Tuple, List, Dict, Any, Optional
 import requests
+import aiohttp
 import math
 import json
 from datetime import datetime, timedelta
@@ -563,7 +564,7 @@ async def get_google_places_suggestions(query: str, max_results: int = 10) -> Li
     try:
         # Vérifier si la clé API est configurée
         api_key = os.getenv("GOOGLE_PLACES_API_KEY")
-        if not api_key:
+        if not api_key or api_key == "dev-google-places-api-key":
             print("❌ Clé API Google Places non configurée, utilisation de données de simulation")
             return get_simulated_suggestions(query, max_results)
 
@@ -580,33 +581,50 @@ async def get_google_places_suggestions(query: str, max_results: int = 10) -> Li
         }
 
         # Faire la requête
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as response:
-                if response.status != 200:
-                    print(f"❌ Erreur API Google Places: {response.status}, utilisation de simulation")
-                    return get_simulated_suggestions(query, max_results)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=5)) as response:
+                    if response.status != 200:
+                        print(f"❌ Erreur API Google Places: {response.status}, utilisation de simulation")
+                        return get_simulated_suggestions(query, max_results)
 
-                data = await response.json()
+                    data = await response.json()
 
-                if data.get("status") != "OK":
-                    print(f"❌ Erreur Google Places: {data.get('status')}, utilisation de simulation")
-                    return get_simulated_suggestions(query, max_results)
+                    if data.get("status") != "OK":
+                        print(f"❌ Erreur Google Places: {data.get('status')}, utilisation de simulation")
+                        return get_simulated_suggestions(query, max_results)
 
-                # Traiter les prédictions
-                suggestions = []
-                for prediction in data.get("predictions", [])[:max_results]:
-                    suggestions.append({
-                        "address": prediction["description"],
-                        "place_id": prediction["place_id"],
-                        "commune": extract_commune_from_description(prediction["description"]),
-                        "description": prediction["description"]
-                    })
+                    # Traiter les prédictions
+                    suggestions = []
+                    for prediction in data.get("predictions", [])[:max_results]:
+                        suggestions.append({
+                            "address": prediction["description"],
+                            "place_id": prediction["place_id"],
+                            "commune": extract_commune_from_description(prediction["description"]),
+                            "description": prediction["description"]
+                        })
 
-                return suggestions
+                    return suggestions
+        except aiohttp.ClientError as e:
+            print(f"❌ Erreur de connexion Google Places: {str(e)}, utilisation de simulation")
+            return get_simulated_suggestions(query, max_results)
 
     except Exception as e:
         print(f"❌ Erreur lors de la récupération des suggestions Google Places: {str(e)}")
         return get_simulated_suggestions(query, max_results)
+
+def extract_commune_from_description(description: str) -> str:
+    """
+    Extraire la commune d'une description d'adresse
+    """
+    communes = ["Abobo", "Adjamé", "Attécoubé", "Cocody", "Koumassi", "Marcory", "Plateau", "Port-Bouët", "Treichville", "Yopougon"]
+    
+    for commune in communes:
+        if commune.lower() in description.lower():
+            return commune
+    
+    # Si aucune commune trouvée, retourner Abidjan par défaut
+    return "Abidjan"
 
 def get_simulated_suggestions(query: str, max_results: int = 10) -> List[Dict[str, Any]]:
     """
