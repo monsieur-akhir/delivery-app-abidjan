@@ -33,7 +33,7 @@ async def create_new_delivery(
     """
     if current_user.role not in ["client", "business"]:
         raise HTTPException(status_code=403, detail="Seuls les clients peuvent créer des livraisons")
-    
+
     try:
         delivery = create_delivery(db, delivery_data, current_user)
         return delivery
@@ -60,7 +60,7 @@ async def get_deliveries(
         if user_id and current_user.role not in ["admin", "manager"]:
             if current_user.id != user_id:
                 raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
+
         # Si aucun user_id n'est fourni, utiliser l'utilisateur connecté
         if not user_id:
             user_id = current_user.id
@@ -197,7 +197,7 @@ async def address_autocomplete(
     try:
         # Nettoyer l'input (supprimer les espaces en début/fin)
         clean_input = input.strip()
-        
+
         # Vérification de base
         if not clean_input:
             return {
@@ -205,7 +205,7 @@ async def address_autocomplete(
                 "status": "INVALID_REQUEST",
                 "query": clean_input
             }
-        
+
         # Vérification supplémentaire de la longueur
         if len(clean_input) < 2:
             return {
@@ -214,17 +214,17 @@ async def address_autocomplete(
                 "query": clean_input,
                 "message": "Le terme de recherche doit contenir au moins 2 caractères"
             }
-        
+
         # Appeler le service de géolocalisation
         suggestions = await get_google_places_suggestions(clean_input)
-        
+
         # Formatter les prédictions selon le format Google Places
         formatted_predictions = []
         for suggestion in suggestions:
             main_text = suggestion.get("address", suggestion.get("description", ""))
             if "," in main_text:
                 main_text = main_text.split(",")[0]
-            
+
             formatted_predictions.append({
                 "description": suggestion.get("address", suggestion.get("description", "")),
                 "place_id": suggestion.get("place_id", f"place_{len(formatted_predictions)}"),
@@ -233,7 +233,7 @@ async def address_autocomplete(
                     "secondary_text": suggestion.get("commune", "Abidjan")
                 }
             })
-        
+
         return {
             "predictions": formatted_predictions,
             "status": "OK",
@@ -285,9 +285,9 @@ async def recommend_vehicle_endpoint(
     try:
         from ..services.transport import TransportService
         from ..schemas.transport import VehicleRecommendationRequest
-        
+
         transport_service = TransportService(db)
-        
+
         recommendation_data = VehicleRecommendationRequest(
             cargo_category=request_data.get("cargo_category"),
             distance=request_data.get("distance", 10),
@@ -295,9 +295,9 @@ async def recommend_vehicle_endpoint(
             is_fragile=request_data.get("is_fragile", False),
             is_urgent=request_data.get("is_urgent", False)
         )
-        
+
         recommendation = transport_service.recommend_vehicle(recommendation_data)
-        
+
         return {
             "success": True,
             "recommendation": recommendation
@@ -333,7 +333,7 @@ async def get_delivery_bids(
             raise HTTPException(status_code=403, detail="Accès non autorisé")
 
     bids = delivery_service.get_bids_for_delivery(db, delivery_id)
-    
+
     return {
         "success": True,
         "bids": bids,
@@ -420,7 +420,7 @@ async def decline_bid(
         bid = delivery_service.get_bid(db, bid_id)
         bid.status = "rejected"
         db.commit()
-        
+
         return {
             "success": True,
             "message": "Enchère refusée avec succès"
@@ -471,3 +471,4 @@ async def cancel_delivery(
         pass
     db.commit()
     return {"message": "Livraison annulée avec succès"}
+```This change modifies the minimum length of the input query parameter for the address autocomplete endpoint.
