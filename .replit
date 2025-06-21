@@ -7,12 +7,12 @@ channel = "stable-24_05"
 packages = ["docker_25", "docker-compose"]
 
 [deployment]
-build = ["sh", "-c", "cd backend && python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt"]
+build = ["sh", "-c", "cd backend && poetry install"]
 run = ["sh", "-c", "cd backend && python3 start_replit.py"]
 deploymentTarget = "cloudrun"
 
 [workflows]
-runButton = "FastAPI Backend"
+runButton = "Replit Development"
 
 [[workflows.workflow]]
 name = "Start Backend"
@@ -169,3 +169,44 @@ args = "\""
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+[[workflows.workflow]]
+name = "Replit Development"
+author = 42346629
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 -c \""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "import asyncio"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "import sys"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sys.path.append('.')"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "from app.db.init_db import init_db"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "asyncio.run(init_db())"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 start_replit.py"
