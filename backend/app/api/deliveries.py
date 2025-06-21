@@ -186,9 +186,9 @@ async def smart_matching_endpoint(
 
     return await matching_service.smart_matching(db, delivery_request, current_user.id)
 
-@router.get("/address-autocomplete", response_model=Dict[str, Any])
+@router.get("/address-autocomplete")
 async def address_autocomplete(
-    input: str = Query(..., min_length=2, description="Texte de recherche pour l'autocomplétion"),
+    input: str = Query(..., min_length=1, description="Texte de recherche pour l'autocomplétion"),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -209,18 +209,30 @@ async def address_autocomplete(
         # Appeler le service de géolocalisation
         suggestions = await get_google_places_suggestions(clean_input)
         
-        # Retourner directement les données sans validation Pydantic stricte
+        # Formatter les prédictions selon le format Google Places
+        formatted_predictions = []
+        for suggestion in suggestions:
+            formatted_predictions.append({
+                "description": suggestion.get("address", suggestion.get("description", "")),
+                "place_id": suggestion.get("place_id", f"place_{len(formatted_predictions)}"),
+                "structured_formatting": {
+                    "main_text": suggestion.get("address", "").split(",")[0],
+                    "secondary_text": suggestion.get("commune", "Abidjan")
+                }
+            })
+        
         return {
-            "predictions": suggestions,
+            "predictions": formatted_predictions,
             "status": "OK",
             "query": clean_input
         }
     except Exception as e:
         print(f"Erreur lors de l'autocomplétion: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Erreur lors de l'autocomplétion d'adresse"
-        )
+        return {
+            "predictions": [],
+            "status": "ERROR",
+            "query": clean_input
+        }
 
 @router.get("/popular-places")
 async def popular_places_endpoint(
