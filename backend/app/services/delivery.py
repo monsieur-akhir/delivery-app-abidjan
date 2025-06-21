@@ -12,6 +12,7 @@ from ..services.transport_service import TransportService
 from ..core.exceptions import NotFoundError, BadRequestError, ForbiddenError, ConflictError
 from ..core.config import settings
 import logging
+from app.services.maps import reverse_geocode, get_route_info, geocode_address
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,53 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: Us
     from ..models.delivery import Delivery
     from ..core.settings import settings
     
+    # Log des données reçues
+    logger.warning(f"[DEBUG] Données reçues pour création de livraison : {delivery_data.dict()}")
+    # Log des champs attendus
+    expected_fields = [
+        'pickup_address', 'pickup_commune', 'pickup_lat', 'pickup_lng',
+        'pickup_contact_name', 'pickup_contact_phone',
+        'delivery_address', 'delivery_commune', 'delivery_lat', 'delivery_lng',
+        'delivery_contact_name', 'delivery_contact_phone',
+        'package_description', 'package_size', 'package_weight', 'is_fragile',
+        'cargo_category', 'required_vehicle_type', 'proposed_price', 'delivery_type',
+        'package_type', 'recipient_name', 'recipient_phone', 'special_instructions',
+        'distance', 'estimated_duration', 'weather_conditions', 'vehicle_type', 'delivery_speed', 'extras'
+    ]
+    logger.warning(f"[DEBUG] Champs attendus : {expected_fields}")
+    # Log des champs manquants ou vides
+    missing = [field for field in expected_fields if not getattr(delivery_data, field, None)]
+    logger.warning(f"[DEBUG] Champs manquants ou vides : {missing}")
+    
+    # Correction automatique des coordonnées GPS si à zéro ou manquantes
+    if (not delivery_data.pickup_lat or not delivery_data.pickup_lng or delivery_data.pickup_lat == 0.0 or delivery_data.pickup_lng == 0.0) and delivery_data.pickup_address:
+        lat, lng = geocode_address(delivery_data.pickup_address)
+        if lat and lng:
+            delivery_data.pickup_lat = lat
+            delivery_data.pickup_lng = lng
+    if (not delivery_data.delivery_lat or not delivery_data.delivery_lng or delivery_data.delivery_lat == 0.0 or delivery_data.delivery_lng == 0.0) and delivery_data.delivery_address:
+        lat, lng = geocode_address(delivery_data.delivery_address)
+        if lat and lng:
+            delivery_data.delivery_lat = lat
+            delivery_data.delivery_lng = lng
+
+    # Correction automatique de la commune si générique ou vide
+    if (not delivery_data.pickup_commune or delivery_data.pickup_commune.lower() in ["côte d'ivoire", "ivory coast"]) and delivery_data.pickup_lat and delivery_data.pickup_lng:
+        delivery_data.pickup_commune = reverse_geocode(delivery_data.pickup_lat, delivery_data.pickup_lng)
+    if (not delivery_data.delivery_commune or delivery_data.delivery_commune.lower() in ["côte d'ivoire", "ivory coast"]) and delivery_data.delivery_lat and delivery_data.delivery_lng:
+        delivery_data.delivery_commune = reverse_geocode(delivery_data.delivery_lat, delivery_data.delivery_lng)
+
+    # Calculer distance/durée/itinéraire si manquant
+    if (not getattr(delivery_data, 'distance', None) or not getattr(delivery_data, 'estimated_duration', None)) and \
+        delivery_data.pickup_lat and delivery_data.pickup_lng and delivery_data.delivery_lat and delivery_data.delivery_lng:
+        route_info = get_route_info(
+            delivery_data.pickup_lat, delivery_data.pickup_lng,
+            delivery_data.delivery_lat, delivery_data.delivery_lng
+        )
+        delivery_data.distance = route_info["distance"]
+        delivery_data.estimated_duration = route_info["duration"]
+        delivery_data.route_polyline = route_info["polyline"]
+
     # Vérifier si le prix proposé est supérieur au minimum
     min_price = getattr(settings, 'MIN_DELIVERY_PRICE', 500)
     if delivery_data.proposed_price < min_price:
@@ -107,7 +155,8 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, current_user: Us
         proposed_price=delivery_data.proposed_price,
         delivery_type=delivery_data.delivery_type or "standard",
         estimated_distance=getattr(delivery_data, 'distance', None),
-        estimated_duration=getattr(delivery_data, 'estimated_duration', None)
+        estimated_duration=getattr(delivery_data, 'estimated_duration', None),
+        route_polyline=getattr(delivery_data, 'route_polyline', None)
     )
     
     try:

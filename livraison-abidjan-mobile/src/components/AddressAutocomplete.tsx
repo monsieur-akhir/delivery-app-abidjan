@@ -20,6 +20,7 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { debounce } from "lodash";
 import { getGoogleMapsApiKey } from '../config/environment';
+import { getAddressAutocomplete } from '../services/api';
 
 export interface Address {
   id: string;
@@ -32,6 +33,7 @@ export interface Address {
   city?: string;
   postalCode?: string;
   type?: 'current_location' | 'saved' | 'recent' | 'suggestion' | 'search_result';
+  name?: string;
 }
 
 interface AddressAutocompleteProps {
@@ -68,6 +70,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [noResult, setNoResult] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const loaderTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const inputRef = useRef<any>(null);
 
@@ -300,60 +305,84 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
-  const fetchGooglePlaces = async (query: string): Promise<Address[]> => {
+  // Suggestions locales toujours en haut
+  const getLocalSuggestions = (query: string) => {
+    const defaultSuggestions = popularPlaces.slice(0, maxSuggestions).map(place => ({
+      id: place.id,
+      description: place.description,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      commune: place.commune,
+      city: place.city,
+      region: place.region,
+      type: place.type as any
+    }));
+    return defaultSuggestions;
+  };
+
+  // Nouvelle version de fetchBackendSuggestions avec annulation
+  const fetchBackendSuggestions = async (query: string): Promise<Address[]> => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
     try {
-      const apiKey = getGoogleMapsApiKey();
-      if (!apiKey) return [];
-      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&language=fr&components=country:ci&key=${apiKey}`;
-      const resp = await fetch(url);
-      const data = await resp.json();
-      if (!data.predictions) return [];
-      // Pour chaque prediction, récupérer les coordonnées via Place Details
-      const detailsPromises = data.predictions.slice(0, 5).map(async (prediction: any) => {
-        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,name,formatted_address&language=fr&key=${apiKey}`;
-        const detailsResp = await fetch(detailsUrl);
-        const detailsData = await detailsResp.json();
-        const loc = detailsData.result?.geometry?.location;
-        return loc ? {
-          id: prediction.place_id,
-          description: detailsData.result.formatted_address || prediction.description,
-          latitude: loc.lat,
-          longitude: loc.lng,
-          type: 'search_result',
-        } : null;
-      });
-      const details = await Promise.all(detailsPromises);
-      return details.filter(Boolean) as Address[];
-    } catch (e) {
-      console.warn('Erreur Google Places:', e);
+      const response = await getAddressAutocomplete(query);
+      if (response.status === 'OK' && response.predictions) {
+        return response.predictions.map((prediction: any) => ({
+          id: prediction.id || prediction.place_id || `pred_${Date.now()}`,
+          name: prediction.name || prediction.address || prediction.description || '',
+          description: prediction.address || prediction.description || prediction.name,
+          latitude: prediction.latitude || 5.3599,
+          longitude: prediction.longitude || -3.9569,
+          commune: prediction.commune,
+          city: prediction.city,
+          region: prediction.region || 'Côte d\'Ivoire',
+          type: prediction.type || 'search_result'
+        }));
+      }
+      return [];
+    } catch (error) {
+      let message = 'Erreur lors de la récupération des suggestions.';
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        message = (error as any).message;
+      } else if (typeof error === 'string') {
+        message = error;
+      }
+      setNoResult(false);
+      setLoading(false);
+      setSuggestions([]);
+      setTimeout(() => setNoResult(false), 2000);
+      console.error('Erreur d\'autocomplétion :', message);
       return [];
     }
+  };
+
+  // Loader différé
+  const showLoader = () => {
+    if (loaderTimeout.current) clearTimeout(loaderTimeout.current);
+    loaderTimeout.current = setTimeout(() => setLoading(true), 200);
+  };
+  const hideLoader = () => {
+    if (loaderTimeout.current) clearTimeout(loaderTimeout.current);
+    setLoading(false);
   };
 
   const searchAddresses = useCallback(
     debounce(async (query: string) => {
       if (query.length === 0) {
-        // Suggestions locales par défaut
-        const defaultSuggestions = popularPlaces.slice(0, maxSuggestions).map(place => ({
-          id: place.id,
-          description: place.description,
-          latitude: place.latitude,
-          longitude: place.longitude,
-          commune: place.commune,
-          city: place.city,
-          region: place.region,
-          type: place.type as any
-        }));
-        setSuggestions(defaultSuggestions);
+        setSuggestions(getLocalSuggestions(query));
         setShowSuggestions(true);
+        setNoResult(false);
         return;
       }
-      setLoading(true);
+      showLoader();
       setShowSuggestions(true);
+      setNoResult(false);
       try {
         let results: Address[] = [];
         const normalizedQuery = query.toLowerCase().trim();
-        // Suggestions locales (toujours "Votre position" en premier si activé)
+        // Suggestions locales toujours en haut
         if (showCurrentLocation) {
           results.push({
             id: 'current_location',
@@ -364,41 +393,43 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             type: 'current_location'
           });
         }
-        // Suggestions Google Places
-        if (query.length >= 3) {
-          const googleResults = await fetchGooglePlaces(query);
-          results = results.concat(googleResults);
+        // Suggestions backend API
+        if (query.length >= 2) {
+          const backendResults = await fetchBackendSuggestions(query);
+          results = results.concat(backendResults);
         }
-        // Suggestions locales (populaires, villes)
-        popularPlaces.forEach((place) => {
-          const searchableText = `${place.name} ${place.description} ${place.commune || ''} ${place.city || ''} ${place.region || ''}`.toLowerCase();
-          if (searchableText.includes(normalizedQuery)) {
-            results.push({
-              id: place.id,
-              description: place.description,
-              latitude: place.latitude,
-              longitude: place.longitude,
-              commune: place.commune,
-              city: place.city,
-              region: place.region,
-              type: place.type as any
-            });
-          }
-        });
-        ivoryCoastCities.forEach((city, index) => {
-          const searchableText = `${city.name} ${city.region}`.toLowerCase();
-          if (searchableText.includes(normalizedQuery)) {
-            results.push({
-              id: `city_${index}`,
-              description: `${city.name}, ${city.region}`,
-              latitude: city.latitude,
-              longitude: city.longitude,
-              city: city.name,
-              region: city.region,
-              type: 'suggestion'
-            });
-          }
-        });
+        // Suggestions locales complémentaires
+        if (results.length < maxSuggestions) {
+          popularPlaces.forEach((place) => {
+            const searchableText = `${place.name} ${place.description} ${place.commune || ''} ${place.city || ''} ${place.region || ''}`.toLowerCase();
+            if (searchableText.includes(normalizedQuery)) {
+              results.push({
+                id: place.id,
+                description: place.description,
+                latitude: place.latitude,
+                longitude: place.longitude,
+                commune: place.commune,
+                city: place.city,
+                region: place.region,
+                type: place.type as any
+              });
+            }
+          });
+          ivoryCoastCities.forEach((city, index) => {
+            const searchableText = `${city.name} ${city.region}`.toLowerCase();
+            if (searchableText.includes(normalizedQuery)) {
+              results.push({
+                id: `city_${index}`,
+                description: `${city.name}, ${city.region}`,
+                latitude: city.latitude,
+                longitude: city.longitude,
+                city: city.name,
+                region: city.region,
+                type: 'suggestion'
+              });
+            }
+          });
+        }
         // Générer une suggestion générique si rien trouvé
         if (query.length >= 3 && results.length === 0) {
           results.push({
@@ -417,12 +448,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           index === self.findIndex((t) => t.description.toLowerCase() === item.description.toLowerCase())
         );
         setSuggestions(uniqueResults.slice(0, maxSuggestions));
+        setNoResult(uniqueResults.length === 0);
       } catch (error) {
+        setNoResult(true);
         setSuggestions([]);
       } finally {
-        setLoading(false);
+        hideLoader();
       }
-    }, 400),
+    }, 600),
     [popularPlaces, ivoryCoastCities, maxSuggestions, showCurrentLocation, currentLocation]
   );
 
@@ -433,17 +466,21 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   }, [onChangeText, searchAddresses]);
 
   const handleAddressSelect = useCallback((address: Address) => {
-    // Vérifier que l'adresse est un objet valide avant de l'utiliser
     if (!address || typeof address !== 'object') {
       console.warn('Invalid address object received');
       return;
     }
-
     const description = address.description || '';
     onChangeText(description);
     onAddressSelect(address);
+    if (address.commune) {
+      // Appelle une prop ou un callback pour pré-remplir la commune si besoin
+      // (à adapter selon l'intégration dans le parent)
+      // ex: onCommuneAutoFill && onCommuneAutoFill(address.commune)
+    }
     setShowSuggestions(false);
     setSuggestions([]);
+    setNoResult(false);
     Keyboard.dismiss();
   }, [onChangeText, onAddressSelect]);
 
@@ -470,6 +507,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
       const address: Address = {
         id: 'current_location',
+        name: `Position actuelle (${nearestCity.name}, ${nearestCity.region})`,
         description: `Position actuelle (${nearestCity.name}, ${nearestCity.region})`,
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
@@ -654,6 +692,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             </View>
           )}
         </Surface>
+      )}
+
+      {/* Affichage du message "Aucun résultat" */}
+      {noResult && !loading && (
+        <Text style={{ textAlign: 'center', color: 'gray', marginTop: 8 }}>Aucun résultat</Text>
       )}
     </View>
   );

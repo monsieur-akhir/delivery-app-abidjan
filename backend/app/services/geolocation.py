@@ -557,72 +557,119 @@ def point_in_polygon(point: Tuple[float, float], polygon: List[Tuple[float, floa
 
     return inside
 
-async def get_google_places_suggestions(query: str, max_results: int = 8) -> List[Dict[str, Any]]:
+async def get_google_places_suggestions(
+    query: str, 
+    max_results: int = 8,
+    user_lat: Optional[float] = None,
+    user_lng: Optional[float] = None
+) -> List[Dict[str, Any]]:
     """
-    Obtient des suggestions d'adresses via l'API Google Places Autocomplete.
-
-    Args:
-        query: Terme de recherche
-        max_results: Nombre maximum de résultats
-
-    Returns:
-        Liste des suggestions formatées
+    Obtient des suggestions d'adresses via Google Places SANS AUCUNE RESTRICTION.
+    Les résultats seront globaux, comme sur Google Maps.
+    Retourne des données structurées pour la création de livraison.
     """
-    # Validation de base
     if not query or len(query.strip()) < 1:
         return []
 
     query = query.strip()
-
     api_key = os.getenv("GOOGLE_PLACES_API_KEY")
-    if not api_key:
-        print("❌ Clé API Google Places manquante, utilisation de données de simulation")
-        return get_simulated_suggestions(query, max_results)
 
-    # URL de l'API Google Places Autocomplete
+    if not api_key or "VOTRE" in api_key:
+        print("\n========================= ERREUR CRITIQUE =========================")
+        print("   Clé API Google manquante ou non configurée dans le fichier .env")
+        print("   ACTION: Vérifiez le fichier .env à la racine de /backend")
+        print("===================================================================\n")
+        return []
+
     url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
-
-    # Paramètres de la requête
     params = {
         "input": query,
         "key": api_key,
         "language": "fr",
-        "components": "country:ci",  # Limiter à la Côte d'Ivoire
-        "types": "geocode"  # Adresses géographiques uniquement
+        "components": "country:ci",  # Restriction Côte d'Ivoire
     }
-
-    # Faire la requête
+    
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=5)) as response:
-                if response.status != 200:
-                    print(f"❌ Erreur API Google Places: {response.status}, utilisation de simulation")
-                    return get_simulated_suggestions(query, max_results)
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
-                data = await response.json()
+        if data["status"] == "OK":
+            suggestions = []
+            for prediction in data.get("predictions", [])[:max_results]:
+                # Extraire la commune depuis la description
+                commune = extract_commune_from_description(prediction["description"])
+                
+                # Créer une structure compatible avec le modèle Address du frontend
+                suggestion = {
+                    "id": prediction["place_id"],
+                    "name": prediction.get("structured_formatting", {}).get("main_text", ""),
+                    "description": prediction["description"],
+                    "commune": commune,
+                    "latitude": None,  # Sera rempli par l'appel à get_place_details
+                    "longitude": None,  # Sera rempli par l'appel à get_place_details
+                    "type": "google",
+                    "place_id": prediction["place_id"],
+                    "secondary_text": prediction.get("structured_formatting", {}).get("secondary_text", ""),
+                    "types": prediction.get("types", []),
+                    "formatted_address": prediction["description"]
+                }
+                
+                # Essayer d'obtenir les coordonnées GPS pour cette suggestion
+                try:
+                    coords = await get_place_coordinates(prediction["place_id"], api_key)
+                    if coords:
+                        suggestion["latitude"] = coords["lat"]
+                        suggestion["longitude"] = coords["lng"]
+                except Exception as e:
+                    print(f"⚠️  Impossible d'obtenir les coordonnées pour {prediction['place_id']}: {e}")
+                
+                suggestions.append(suggestion)
+            return suggestions
+        else:
+            print(f"\n--- ERREUR API GOOGLE ('{query}') ---")
+            print(f"Status: {data['status']}")
+            if data.get('error_message'):
+                print(f"Message: {data['error_message']}")
+            print("--------------------------------------\n")
+            return []
 
-                if data.get("status") != "OK":
-                    print(f"❌ Erreur Google Places: {data.get('status')}, utilisation de simulation")
-                    return get_simulated_suggestions(query, max_results)
-
-                # Traiter les prédictions
-                suggestions = []
-                for prediction in data.get("predictions", [])[:max_results]:
-                    suggestions.append({
-                        "address": prediction["description"],
-                        "place_id": prediction["place_id"],
-                        "commune": extract_commune_from_description(prediction["description"]),
-                        "description": prediction["description"]
-                    })
-
-                return suggestions
-    except aiohttp.ClientError as e:
-        print(f"❌ Erreur de connexion Google Places: {str(e)}, utilisation de simulation")
-        return get_simulated_suggestions(query, max_results)
-
+    except requests.RequestException as e:
+        print(f"❌ Erreur de connexion vers Google Places: {e}")
+        return []
     except Exception as e:
-        print(f"❌ Erreur lors de la récupération des suggestions Google Places: {str(e)}")
-        return get_simulated_suggestions(query, max_results)
+        print(f"❌ Erreur inattendue: {e}")
+        return []
+
+async def get_place_coordinates(place_id: str, api_key: str) -> Optional[Dict[str, float]]:
+    """
+    Obtient les coordonnées GPS d'un lieu via son place_id
+    """
+    url = "https://maps.googleapis.com/maps/api/place/details/json"
+    params = {
+        "place_id": place_id,
+        "key": api_key,
+        "fields": "geometry"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data["status"] == "OK" and "result" in data:
+            geometry = data["result"].get("geometry", {})
+            location = geometry.get("location", {})
+            
+            if "lat" in location and "lng" in location:
+                return {
+                    "lat": location["lat"],
+                    "lng": location["lng"]
+                }
+    except Exception as e:
+        print(f"⚠️  Erreur lors de la récupération des coordonnées: {e}")
+    
+    return None
 
 def extract_commune_from_description(description: str) -> str:
     """

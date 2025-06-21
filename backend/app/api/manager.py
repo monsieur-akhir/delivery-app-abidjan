@@ -317,25 +317,6 @@ async def update_user_status_endpoint(
     
     return update_user_status(db, user_id, status_update.status)
 
-@router.put("/users/{user_id}/kyc", response_model=UserResponse)
-async def update_kyc_status_endpoint(
-    user_id: int,
-    kyc_update: KYCUpdate,
-    db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_active_user)
-):
-    """
-    Mettre à jour le statut KYC d'un utilisateur.
-    Seuls les gestionnaires peuvent accéder à cette route.
-    """
-    if current_user.role != UserRole.manager:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Seuls les gestionnaires peuvent accéder à cette route"
-        )
-    
-    return update_kyc_status(db, user_id, kyc_update.kyc_status, kyc_update.kyc_rejection_reason)
-
 # Routes pour les tableaux de bord
 @router.get("/stats")
 async def read_global_stats(

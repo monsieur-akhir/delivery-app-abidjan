@@ -44,8 +44,12 @@ class DeliveryService {
 
       const response = await api.get(`/deliveries?${params.toString()}`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des livraisons:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des livraisons:', String(error))
+      }
       throw error
     }
   }
@@ -69,8 +73,15 @@ class DeliveryService {
           usedEndpoint = endpoint
           console.log('✅ [DEBUG] Succès getDeliveryById avec endpoint:', endpoint)
           break
-        } catch (endpointError) {
-          console.log('❌ [DEBUG] Échec getDeliveryById avec endpoint:', endpoint, endpointError.response?.status)
+        } catch (endpointError: unknown) {
+          if (endpointError instanceof Error) {
+            console.log(endpointError.message)
+          } else if (typeof endpointError === 'object' && endpointError !== null && 'response' in endpointError) {
+            // @ts-expect-error: on sait que response existe ici
+            console.log(endpointError.response?.data)
+          } else {
+            console.log(String(endpointError))
+          }
           continue
         }
       }
@@ -87,18 +98,26 @@ class DeliveryService {
         return response.data.data
       }
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération de la livraison:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération de la livraison:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération de la livraison:', String(error))
+      }
       throw error
     }
   }
 
   static async createDelivery(deliveryData: DeliveryCreateRequest): Promise<Delivery> {
     try {
-      const response = await api.post('/api/v1/deliveries/', deliveryData)
+      const response = await api.post('/api/deliveries/', deliveryData)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la création de la livraison:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la création de la livraison:', error.message)
+      } else {
+        console.error('Erreur lors de la création de la livraison:', String(error))
+      }
       throw error
     }
   }
@@ -110,8 +129,12 @@ class DeliveryService {
     try {
       const response = await api.put(`/deliveries/${id}`, updateData)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour de la livraison:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la mise à jour de la livraison:', error.message)
+      } else {
+        console.error('Erreur lors de la mise à jour de la livraison:', String(error))
+      }
       throw error
     }
   }
@@ -119,8 +142,12 @@ class DeliveryService {
   static async cancelDelivery(id: string, reason?: string): Promise<void> {
     try {
       await api.post(`/deliveries/${id}/cancel`, { reason })
-    } catch (error) {
-      console.error('Erreur lors de l\'annulation de la livraison:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'annulation de la livraison:', error.message)
+      } else {
+        console.error('Erreur lors de l\'annulation de la livraison:', String(error))
+      }
       throw error
     }
   }
@@ -132,7 +159,7 @@ class DeliveryService {
       
       // Essayer plusieurs endpoints possibles
       const endpoints = [
-        `/api/v1/deliveries/${deliveryId}/bids`,
+        `/api/deliveries/${deliveryId}/bids`,
         `/api/deliveries/${deliveryId}/bids`,
         `/deliveries/${deliveryId}/bids`,
         `/api/bids?delivery_id=${deliveryId}`
@@ -148,8 +175,15 @@ class DeliveryService {
           usedEndpoint = endpoint
           console.log('✅ [DEBUG] Succès getDeliveryBids avec endpoint:', endpoint)
           break
-        } catch (endpointError) {
-          console.log('❌ [DEBUG] Échec getDeliveryBids avec endpoint:', endpoint, endpointError.response?.status)
+        } catch (endpointError: unknown) {
+          if (endpointError instanceof Error) {
+            console.log(endpointError.message)
+          } else if (typeof endpointError === 'object' && endpointError !== null && 'response' in endpointError) {
+            // @ts-expect-error: on sait que response existe ici
+            console.log(endpointError.response?.data)
+          } else {
+            console.log(String(endpointError))
+          }
           continue
         }
       }
@@ -171,8 +205,12 @@ class DeliveryService {
 
       console.log('📦 [DEBUG] Enchères récupérées:', bids.length)
       return bids
-    } catch (error) {
-      console.error('Erreur lors de la récupération des enchères:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des enchères:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des enchères:', String(error))
+      }
       return []
     }
   }
@@ -181,8 +219,12 @@ class DeliveryService {
     try {
       const response = await api.post('/bids', bidData)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la soumission de l\'enchère:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la soumission de l\'enchère:', error.message)
+      } else {
+        console.error('Erreur lors de la soumission de l\'enchère:', String(error))
+      }
       throw error
     }
   }
@@ -195,8 +237,12 @@ class DeliveryService {
     try {
       const response = await api.get(`/api/v1/deliveries/${id}`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des détails:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des détails:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des détails:', String(error))
+      }
       throw error
     }
   }
@@ -204,8 +250,12 @@ class DeliveryService {
   static async acceptBid(deliveryId: string, bidId: number): Promise<void> {
     try {
       await api.post(`/deliveries/${deliveryId}/bids/${bidId}/accept`)
-    } catch (error) {
-      console.error('Erreur lors de l\'acceptation de l\'enchère:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'acceptation de l\'enchère:', error.message)
+      } else {
+        console.error('Erreur lors de l\'acceptation de l\'enchère:', String(error))
+      }
       throw error
     }
   }
@@ -213,8 +263,12 @@ class DeliveryService {
   static async declineBid(deliveryId: string, bidId: number, reason?: string): Promise<void> {
     try {
       await api.post(`/deliveries/${deliveryId}/bids/${bidId}/decline`, { reason })
-    } catch (error) {
-      console.error('Erreur lors du refus de l\'enchère:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors du refus de l\'enchère:', error.message)
+      } else {
+        console.error('Erreur lors du refus de l\'enchère:', String(error))
+      }
       throw error
     }
   }
@@ -227,8 +281,12 @@ class DeliveryService {
   ): Promise<void> {
     try {
       await api.post(`/deliveries/${deliveryId}/location`, { lat, lng })
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour de la position:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la mise à jour de la position:', error.message)
+      } else {
+        console.error('Erreur lors de la mise à jour de la position:', String(error))
+      }
       throw error
     }
   }
@@ -237,8 +295,12 @@ class DeliveryService {
     try {
       const response = await api.post('/tracking-points', trackingData)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout du point de suivi:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'ajout du point de suivi:', error.message)
+      } else {
+        console.error('Erreur lors de l\'ajout du point de suivi:', String(error))
+      }
       throw error
     }
   }
@@ -247,8 +309,12 @@ class DeliveryService {
     try {
       const response = await api.get(`/deliveries/${deliveryId}/tracking`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération de l\'historique:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération de l\'historique:', String(error))
+      }
       throw error
     }
   }
@@ -265,8 +331,12 @@ class DeliveryService {
 
       const response = await api.get(`/courier/available-deliveries?${params.toString()}`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons disponibles:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des livraisons disponibles:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des livraisons disponibles:', String(error))
+      }
       throw error
     }
   }
@@ -275,8 +345,12 @@ class DeliveryService {
     try {
       const response = await api.get('/courier/active-deliveries')
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons actives:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des livraisons actives:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des livraisons actives:', String(error))
+      }
       throw error
     }
   }
@@ -285,8 +359,12 @@ class DeliveryService {
     try {
       const response = await api.put(`/deliveries/${deliveryId}/status`, { status })
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la mise à jour du statut:', error.message)
+      } else {
+        console.error('Erreur lors de la mise à jour du statut:', String(error))
+      }
       throw error
     }
   }
@@ -296,8 +374,12 @@ class DeliveryService {
     try {
       const response = await api.post('/api/v1/deliveries/estimate-price/', estimateData)
       return response.data.estimated_price
-    } catch (error) {
-      console.error('Erreur lors de l\'estimation du prix:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'estimation du prix:', error.message)
+      } else {
+        console.error('Erreur lors de l\'estimation du prix:', String(error))
+      }
       throw error
     }
   }
@@ -306,8 +388,12 @@ class DeliveryService {
     try {
       const response = await api.post('/deliveries/recommend-vehicle', data)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la recommandation de véhicule:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la recommandation de véhicule:', error.message)
+      } else {
+        console.error('Erreur lors de la recommandation de véhicule:', String(error))
+      }
       throw error
     }
   }
@@ -317,8 +403,12 @@ class DeliveryService {
     try {
       const response = await api.post('/deliveries/express', data)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la création de la livraison express:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la création de la livraison express:', error.message)
+      } else {
+        console.error('Erreur lors de la création de la livraison express:', String(error))
+      }
       throw error
     }
   }
@@ -331,8 +421,12 @@ class DeliveryService {
 
       const response = await api.get(`/deliveries/express?${params.toString()}`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons express:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des livraisons express:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des livraisons express:', String(error))
+      }
       throw error
     }
   }
@@ -340,8 +434,12 @@ class DeliveryService {
   static async assignCourierToExpress(deliveryId: string, courierId: number): Promise<void> {
     try {
       await api.post(`/deliveries/express/${deliveryId}/assign`, { courier_id: courierId })
-    } catch (error) {
-      console.error('Erreur lors de l\'assignation du coursier:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'assignation du coursier:', error.message)
+      } else {
+        console.error('Erreur lors de l\'assignation du coursier:', String(error))
+      }
       throw error
     }
   }
@@ -349,8 +447,12 @@ class DeliveryService {
   static async completeExpressDelivery(deliveryId: string): Promise<void> {
     try {
       await api.post(`/deliveries/express/${deliveryId}/complete`)
-    } catch (error) {
-      console.error('Erreur lors de la finalisation de la livraison express:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la finalisation de la livraison express:', error.message)
+      } else {
+        console.error('Erreur lors de la finalisation de la livraison express:', String(error))
+      }
       throw error
     }
   }
@@ -360,8 +462,12 @@ class DeliveryService {
     try {
       const response = await api.post('/deliveries/collaborative', data)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la création de la livraison collaborative:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la création de la livraison collaborative:', error.message)
+      } else {
+        console.error('Erreur lors de la création de la livraison collaborative:', String(error))
+      }
       throw error
     }
   }
@@ -374,8 +480,12 @@ class DeliveryService {
 
       const response = await api.get(`/deliveries/collaborative?${params.toString()}`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons collaboratives:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des livraisons collaboratives:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des livraisons collaboratives:', String(error))
+      }
       throw error
     }
   }
@@ -383,8 +493,12 @@ class DeliveryService {
   static async joinCollaborativeDelivery(id: string, message?: string): Promise<void> {
     try {
       await api.post(`/deliveries/collaborative/${id}/join`, { message })
-    } catch (error) {
-      console.error('Erreur lors de la participation à la livraison collaborative:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la participation à la livraison collaborative:', error.message)
+      } else {
+        console.error('Erreur lors de la participation à la livraison collaborative:', String(error))
+      }
       throw error
     }
   }
@@ -392,8 +506,12 @@ class DeliveryService {
   static async leaveCollaborativeDelivery(id: string): Promise<void> {
     try {
       await api.post(`/deliveries/collaborative/${id}/leave`)
-    } catch (error) {
-      console.error('Erreur lors de l\'abandon de la livraison collaborative:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'abandon de la livraison collaborative:', error.message)
+      } else {
+        console.error('Erreur lors de l\'abandon de la livraison collaborative:', String(error))
+      }
       throw error
     }
   }
@@ -428,8 +546,15 @@ class DeliveryService {
           usedEndpoint = endpoint
           console.log('✅ [DEBUG] Succès avec endpoint:', endpoint)
           break
-        } catch (endpointError) {
-          console.log('❌ [DEBUG] Échec avec endpoint:', endpoint, endpointError.response?.status)
+        } catch (endpointError: unknown) {
+          if (endpointError instanceof Error) {
+            console.log(endpointError.message)
+          } else if (typeof endpointError === 'object' && endpointError !== null && 'response' in endpointError) {
+            // @ts-expect-error: on sait que response existe ici
+            console.log(endpointError.response?.data)
+          } else {
+            console.log(String(endpointError))
+          }
           continue
         }
       }
@@ -471,10 +596,13 @@ class DeliveryService {
       }
       
       return deliveries
-    } catch (error) {
-      console.error('❌ [DEBUG] Erreur lors de la récupération de l\'historique client:', error)
-      console.error('❌ [DEBUG] Détails de l\'erreur:', error.response?.data)
-      console.error('❌ [DEBUG] Status de l\'erreur:', error.response?.status)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('❌ [DEBUG] Erreur lors de la récupération de l\'historique client:', error.message)
+      } else {
+        console.error('❌ [DEBUG] Détails de l\'erreur:', String(error))
+      }
+      console.error('❌ [DEBUG] Status de l\'erreur:', (error as any).response?.status ?? 'N/A')
       return []
     }
   }
@@ -488,8 +616,12 @@ class DeliveryService {
 
       const response = await api.get(`/courier/delivery-history?${params.toString()}`)
       return Array.isArray(response.data) ? response.data : []
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique coursier:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération de l\'historique coursier:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération de l\'historique coursier:', String(error))
+      }
       return []
     }
   }
@@ -499,8 +631,12 @@ class DeliveryService {
     try {
       const response = await api.get('/deliveries/active')
       return Array.isArray(response.data) ? response.data : []
-    } catch (error) {
-      console.error('Erreur lors de la récupération des livraisons actives:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des livraisons actives:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des livraisons actives:', String(error))
+      }
       return []
     }
   }
@@ -508,8 +644,12 @@ class DeliveryService {
   static async placeBid(deliveryId: number, bidData: any): Promise<void> {
     try {
       await api.post(`/deliveries/${deliveryId}/bids`, bidData)
-    } catch (error) {
-      console.error('Erreur lors de la soumission de l\'enchère:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la soumission de l\'enchère:', error.message)
+      } else {
+        console.error('Erreur lors de la soumission de l\'enchère:', String(error))
+      }
       throw error
     }
   }
@@ -521,8 +661,12 @@ class DeliveryService {
         comment
       })
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la confirmation de livraison:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la confirmation de livraison:', error.message)
+      } else {
+        console.error('Erreur lors de la confirmation de livraison:', String(error))
+      }
       throw error
     }
   }
@@ -532,8 +676,12 @@ class DeliveryService {
     try {
       const response = await api.get(`/deliveries/${deliveryId}/courier-location`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération de la position du coursier:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération de la position du coursier:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération de la position du coursier:', String(error))
+      }
       throw error
     }
   }
@@ -542,8 +690,12 @@ class DeliveryService {
     try {
       const response = await api.get(`/deliveries/${deliveryId}/eta`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors du calcul de l\'ETA:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors du calcul de l\'ETA:', error.message)
+      } else {
+        console.error('Erreur lors du calcul de l\'ETA:', String(error))
+      }
       throw error
     }
   }
@@ -552,8 +704,12 @@ class DeliveryService {
     try {
       const response = await api.get(`/deliveries/${deliveryId}/route`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération de l\'itinéraire:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération de l\'itinéraire:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération de l\'itinéraire:', String(error))
+      }
       throw error
     }
   }
@@ -562,8 +718,12 @@ class DeliveryService {
   static async acceptDelivery(deliveryId: number | string): Promise<void> {
     try {
       await api.post(`/deliveries/${deliveryId}/accept`)
-    } catch (error) {
-      console.error('Erreur lors de l\'acceptation de la livraison:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'acceptation de la livraison:', error.message)
+      } else {
+        console.error('Erreur lors de l\'acceptation de la livraison:', String(error))
+      }
       throw error
     }
   }
@@ -572,8 +732,12 @@ class DeliveryService {
     try {
       const response = await api.get('/courier/status')
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération du statut coursier:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération du statut coursier:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération du statut coursier:', String(error))
+      }
       throw error
     }
   }
@@ -582,8 +746,12 @@ class DeliveryService {
     try {
       const response = await api.get('/courier/stats')
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des statistiques:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des statistiques:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des statistiques:', String(error))
+      }
       throw error
     }
   }
@@ -591,8 +759,12 @@ class DeliveryService {
   static async updateCourierStatus(status: string): Promise<void> {
     try {
       await api.put('/courier/status', { status })
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la mise à jour du statut:', error.message)
+      } else {
+        console.error('Erreur lors de la mise à jour du statut:', String(error))
+      }
       throw error
     }
   }
@@ -601,8 +773,12 @@ class DeliveryService {
     try {
       const response = await api.get(`/deliveries/${deliveryId}/suggested-couriers`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des coursiers suggérés:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des coursiers suggérés:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des coursiers suggérés:', String(error))
+      }
       throw error
     }
   }
@@ -610,8 +786,12 @@ class DeliveryService {
   static async autoAssignDelivery(deliveryId: string): Promise<void> {
     try {
       await api.post(`/deliveries/${deliveryId}/auto-assign`)
-    } catch (error) {
-      console.error('Erreur lors de l\'assignation automatique:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'assignation automatique:', error.message)
+      } else {
+        console.error('Erreur lors de l\'assignation automatique:', String(error))
+      }
       throw error
     }
   }
@@ -619,8 +799,12 @@ class DeliveryService {
   static async assignCourier(data: { delivery_id: string; courier_id: string }): Promise<void> {
     try {
       await api.post('/deliveries/assign-courier', data)
-    } catch (error) {
-      console.error('Erreur lors de l\'assignation du coursier:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'assignation du coursier:', error.message)
+      } else {
+        console.error('Erreur lors de l\'assignation du coursier:', String(error))
+      }
       throw error
     }
   }
@@ -630,7 +814,7 @@ class DeliveryService {
     return res.data
   }
 
-  static async getWeatherData(lat, lng) {
+  static async getWeatherData(lat: number, lng: number) {
     const res = await api.get(`/api/weather?lat=${lat}&lng=${lng}`)
     return res.data
   }
@@ -642,8 +826,12 @@ class DeliveryService {
     try {
       const response = await api.post('/api/deliveries/smart-matching', deliveryRequest)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors du matching intelligent:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors du matching intelligent:', error.message)
+      } else {
+        console.error('Erreur lors du matching intelligent:', String(error))
+      }
       throw error
     }
   }
@@ -659,8 +847,12 @@ class DeliveryService {
       
       const response = await api.get(`/api/deliveries/address-autocomplete?${params}`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de l\'autocomplétion d\'adresses:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de l\'autocomplétion d\'adresses:', error.message)
+      } else {
+        console.error('Erreur lors de l\'autocomplétion d\'adresses:', String(error))
+      }
       throw error
     }
   }
@@ -677,8 +869,12 @@ class DeliveryService {
       
       const response = await api.get(`/api/deliveries/popular-places?${params}`)
       return response.data
-    } catch (error) {
-      console.error('Erreur lors de la récupération des lieux populaires:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des lieux populaires:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des lieux populaires:', String(error))
+      }
       throw error
     }
   }

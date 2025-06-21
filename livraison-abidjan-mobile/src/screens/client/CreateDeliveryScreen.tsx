@@ -38,7 +38,7 @@ import { useDelivery } from '../../hooks/useDelivery'
 import { useUser } from '../../hooks/useUser'
 import { useAlert } from '../../hooks/useAlert'
 import DeliveryService from '../../services/DeliveryService'
-import api, { getAddressAutocomplete } from '../../services/api'
+import api, { getAddressAutocomplete, getWeatherData } from '../../services/api'
 import { getGoogleMapsApiKey } from '../../config/environment'
 
 import type {
@@ -1042,6 +1042,16 @@ const CreateDeliveryScreen: React.FC = () => {
   const [pickupFocused, setPickupFocused] = useState<boolean>(false)
   const [deliveryFocused, setDeliveryFocused] = useState<boolean>(false)
 
+  // Ajoute ces états :
+  const [pickupCommune, setPickupCommune] = useState<string>('');
+  const [deliveryCommune, setDeliveryCommune] = useState<string>('');
+  const [pickupContactName, setPickupContactName] = useState('');
+  const [pickupContactPhone, setPickupContactPhone] = useState('');
+  const [deliveryContactName, setDeliveryContactName] = useState('');
+  const [deliveryContactPhone, setDeliveryContactPhone] = useState('');
+  const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null);
+  const [deliveryId, setDeliveryId] = useState<string | null>(null);
+
   // Options de livraison dynamiques selon poids, taille et distance
   const modernDeliveryOptions = useMemo(() => {
     const weight = parseFloat(packageWeight) || 1
@@ -1213,13 +1223,31 @@ const CreateDeliveryScreen: React.FC = () => {
       if (field === 'pickup') {
         setPickupAddress(addressName)
         setPickupQuery(addressName)
-        setPickupLocation(currentLocationAddress)
+        setPickupLocation({
+          id: 'current_location',
+          name: currentLocationAddress.name || currentLocationAddress.description || '',
+          description: currentLocationAddress.description || '',
+          commune: currentLocationAddress.commune || '',
+          latitude: currentLocationAddress.latitude,
+          longitude: currentLocationAddress.longitude,
+          type: 'current_location',
+        })
         setShowPickupSuggestions(false)
+        if (currentLocationAddress.commune) setPickupCommune(currentLocationAddress.commune);
       } else if (field === 'delivery') {
         setDeliveryAddress(addressName)
         setDeliveryQuery(addressName)
-        setDeliveryLocation(currentLocationAddress)
+        setDeliveryLocation({
+          id: 'current_location',
+          name: currentLocationAddress.name || currentLocationAddress.description || '',
+          description: currentLocationAddress.description || '',
+          commune: currentLocationAddress.commune || '',
+          latitude: currentLocationAddress.latitude,
+          longitude: currentLocationAddress.longitude,
+          type: 'current_location',
+        })
         setShowDeliverySuggestions(false)
+        if (currentLocationAddress.commune) setDeliveryCommune(currentLocationAddress.commune);
       }
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -1256,13 +1284,31 @@ const CreateDeliveryScreen: React.FC = () => {
     if (type === 'pickup') {
       setPickupAddress(finalAddress.description)
       setPickupQuery(finalAddress.description)
-      setPickupLocation(finalAddress)
+      setPickupLocation({
+        id: finalAddress.id || '',
+        name: finalAddress.name || finalAddress.description || '',
+        description: finalAddress.description || '',
+        commune: finalAddress.commune || '',
+        latitude: finalAddress.latitude,
+        longitude: finalAddress.longitude,
+        type: finalAddress.type || 'search_result',
+      })
       setPickupFocused(false)
+      if (finalAddress.commune) setPickupCommune(finalAddress.commune);
     } else {
       setDeliveryAddress(finalAddress.description)
       setDeliveryQuery(finalAddress.description)
-      setDeliveryLocation(finalAddress)
+      setDeliveryLocation({
+        id: finalAddress.id || '',
+        name: finalAddress.name || finalAddress.description || '',
+        description: finalAddress.description || '',
+        commune: finalAddress.commune || '',
+        latitude: finalAddress.latitude,
+        longitude: finalAddress.longitude,
+        type: finalAddress.type || 'search_result',
+      })
       setDeliveryFocused(false)
+      if (finalAddress.commune) setDeliveryCommune(finalAddress.commune);
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }, [])
@@ -1342,20 +1388,16 @@ const CreateDeliveryScreen: React.FC = () => {
   }
 
   const fetchWeatherData = async () => {
-    if (!pickupLocation || !deliveryLocation) return
-
+    if (!pickupLocation || !deliveryLocation) return;
     try {
-      const response = await fetch(
-        `https://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${pickupLocation.latitude},${pickupLocation.longitude}`
-      )
-      const data = await response.json()
-      console.log('[DEBUG] Réponse API météo:', data)
-      setWeatherData(data)
+      const data = await getWeatherData(pickupLocation.latitude, pickupLocation.longitude, pickupCommune);
+      setWeatherData(data);
     } catch (error) {
-      console.warn('Erreur lors de la récupération des données météo:', error)
-      console.log('[DEBUG] Erreur API météo:', error)
+      console.warn('Erreur lors de la récupération des données météo:', error);
+      showErrorAlert('Erreur météo', "Impossible de récupérer la météo. Veuillez vérifier votre connexion ou réessayer plus tard.");
+      setWeatherData(null);
     }
-  }
+  };
 
   const handleDeliverySelection = (option: any) => {
     setSelectedVehicleType(option.key)
@@ -1375,45 +1417,51 @@ const CreateDeliveryScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }
 
+  const safeString = (v: any) => (typeof v === 'string' ? v : '');
+  const safeNumber = (v: any) => (typeof v === 'number' ? v : null);
+
   const handleSubmit = async () => {
-    if (!validateForm()) return
-
-    // Validation stricte du prix proposé
-    const prixClient = parseFloat(proposedPrice)
-    if (proposedPrice && (isNaN(prixClient) || prixClient <= 0)) {
-      showErrorAlert('Erreur', 'Le prix proposé doit être un nombre positif.')
-      return
-    }
-
-    const payload = {
-      pickup_address: pickupAddress,
-      pickup_commune: extractCommune(pickupAddress),
-      pickup_lat: pickupLocation!.latitude,
-      pickup_lng: pickupLocation!.longitude,
-      delivery_address: deliveryAddress,
-      delivery_commune: extractCommune(deliveryAddress),
-      delivery_lat: deliveryLocation!.latitude,
-      delivery_lng: deliveryLocation!.longitude,
-      package_type: packageType,
-      package_description: packageDescription,
-      package_size: packageSize,
-      package_weight: parseFloat(packageWeight) || 1,
-      is_fragile: isFragile,
-      proposed_price: prixClient > 0 ? prixClient : estimatedPrice,
-      recipient_name: recipientName,
-      recipient_phone: recipientPhone,
-      special_instructions: specialInstructions,
-      distance: calculateDistance(
-        { latitude: pickupLocation!.latitude, longitude: pickupLocation!.longitude },
-        { latitude: deliveryLocation!.latitude, longitude: deliveryLocation!.longitude }
-      ),
-      weather_conditions: weatherData?.current?.condition || 'clear',
-      vehicle_type: selectedVehicleType,
-      delivery_speed: selectedSpeed,
-      extras: selectedExtras
-    }
-
     try {
+      if (!validateForm()) return
+
+      // Validation stricte du prix proposé
+      const prixClient = parseFloat(proposedPrice)
+      if (proposedPrice && (isNaN(prixClient) || prixClient <= 0)) {
+        showErrorAlert('Erreur', 'Le prix proposé doit être un nombre positif.')
+        return
+      }
+
+      const payload = {
+        pickup_address: pickupAddress,
+        pickup_commune: pickupCommune,
+        pickup_lat: pickupLocation?.latitude ?? 0,
+        pickup_lng: pickupLocation?.longitude ?? 0,
+        pickup_contact_name: safeString(pickupContactName),
+        pickup_contact_phone: safeString(pickupContactPhone),
+        delivery_address: deliveryAddress,
+        delivery_commune: deliveryCommune,
+        delivery_lat: deliveryLocation?.latitude ?? 0,
+        delivery_lng: deliveryLocation?.longitude ?? 0,
+        delivery_contact_name: safeString(deliveryContactName),
+        delivery_contact_phone: safeString(deliveryContactPhone),
+        package_description: safeString(packageDescription),
+        package_size: packageSize,
+        package_weight: parseFloat(packageWeight) || 1.0,
+        is_fragile: !!isFragile,
+        proposed_price: parseFloat(proposedPrice) || 500,
+        delivery_type: 'standard',
+        package_type: packageType,
+        recipient_name: safeString(recipientName),
+        recipient_phone: safeString(recipientPhone),
+        special_instructions: safeString(specialInstructions),
+        distance: currentDistance || null,
+        estimated_duration: safeNumber(estimatedDuration),
+        weather_conditions: safeString(weatherData?.condition),
+        vehicle_type: safeString(selectedVehicleType),
+        delivery_speed: safeString(selectedSpeed),
+        extras: Array.isArray(selectedExtras) ? selectedExtras : [],
+      }
+
       if (!isConnected) {
         addPendingUpload({
           type: 'delivery',
@@ -1424,19 +1472,30 @@ const CreateDeliveryScreen: React.FC = () => {
         navigation.navigate('Home')
         return
       }
-      const result = await createDelivery(payload)
-      console.log('[DEBUG] Résultat création livraison:', result)
-      // Extraction robuste de l'identifiant
-      const anyResult = result as any
-      const deliveryId = anyResult?.id || anyResult?.delivery?.id || anyResult?.data?.id
-      if (!deliveryId) {
-        showErrorAlert('Erreur', "La livraison a été créée mais l'identifiant est manquant. Veuillez contacter le support.")
-        return
-      }
+      await createDelivery(payload)
       showSuccessAlert('Succès', 'Votre livraison a été créée avec succès!')
       navigation.navigate('BidScreen', { deliveryId: String(deliveryId) })
-    } catch (error) {
-      // L'erreur sera captée par le hook et showErrorAlert via useEffect
+    } catch (error: any) {
+      // Extraction du message d'erreur backend
+      let message = "Une erreur est survenue lors de la création de la livraison.";
+      if (error?.response?.data?.detail) {
+        message = error.response.data.detail;
+      } else if (typeof error === "string") {
+        message = error;
+      } else if (error?.message) {
+        message = error.message;
+      }
+      // Traduction des erreurs courantes
+      if (message.includes("prix proposé doit être d'au moins")) {
+        message = "Le prix proposé est trop bas. Veuillez proposer au moins 500 FCFA.";
+      }
+      if (message.includes("field required") || message.includes("champ obligatoire")) {
+        message = "Merci de remplir tous les champs obligatoires.";
+      }
+      if (message.includes("None is not an allowed value")) {
+        message = "Certains champs sont manquants ou mal remplis. Veuillez vérifier le formulaire.";
+      }
+      showErrorAlert("Erreur de création", message);
     }
   }
 
@@ -1594,6 +1653,22 @@ const CreateDeliveryScreen: React.FC = () => {
           <View style={styles.priceIndicator}>
             <Text style={styles.priceText}>F {estimatedPrice}</Text>
           </View>
+
+          {/* Après la MapView, afficher la météo si disponible */}
+          {weatherData && (
+            <View style={{ marginHorizontal: 16, marginTop: 8, marginBottom: 8 }}>
+              <WeatherInfo weather={{
+                current: {
+                  temperature: weatherData.current?.temperature || weatherData.temperature || 0,
+                  condition: weatherData.current?.condition || weatherData.condition || 'clear',
+                  humidity: weatherData.current?.humidity || weatherData.humidity || 0,
+                  wind_speed: weatherData.current?.wind_speed || weatherData.wind_speed || 0,
+                },
+                forecast: weatherData.forecast || [],
+                alerts: weatherData.alerts || []
+              }} />
+            </View>
+          )}
         </View>
 
         {/* Bottom Sheet */}
@@ -1614,19 +1689,22 @@ const CreateDeliveryScreen: React.FC = () => {
               </View>
               <View style={styles.addressInputWrapper}>
                 <Text style={styles.addressLabel}>Adresse de ramassage</Text>
-                <TextInput
-                  style={styles.modernAddressInput}
-                  placeholder="Entrez l'adresse"
+                <AddressAutocomplete
+                  label="Adresse de ramassage"
                   value={pickupQuery}
-                  onChangeText={(text) => handleTextChange(text, 'pickup')}
-                  onFocus={() => {
-                    setActiveField('pickup')
-                    setPickupFocused(true)
-                    setShowPickupSuggestions(true)
-                  }}
-                  onBlur={() => {
-                    setPickupFocused(false)
-                    setTimeout(() => setShowPickupSuggestions(false), 200)
+                  onChangeText={text => handleTextChange(text, 'pickup')}
+                  onAddressSelect={address => {
+                    setPickupAddress(address.description);
+                    setPickupLocation({
+                      id: address.id || '',
+                      name: address.name || address.description || '',
+                      description: address.description || '',
+                      commune: address.commune || '',
+                      latitude: address.latitude,
+                      longitude: address.longitude,
+                      type: address.type || 'search_result',
+                    });
+                    if (address.commune) setPickupCommune(address.commune);
                   }}
                 />
                 {showPickupSuggestions && pickupFocused && (
@@ -1657,19 +1735,22 @@ const CreateDeliveryScreen: React.FC = () => {
               </View>
               <View style={styles.addressInputWrapper}>
                 <Text style={styles.addressLabel}>Adresse de destination</Text>
-                <TextInput
-                  style={styles.modernAddressInput}
-                  placeholder="Entrez l'adresse"
+                <AddressAutocomplete
+                  label="Adresse de livraison"
                   value={deliveryQuery}
-                  onChangeText={(text) => handleTextChange(text, 'delivery')}
-                  onFocus={() => {
-                    setActiveField('delivery')
-                    setDeliveryFocused(true)
-                    setShowDeliverySuggestions(true)
-                  }}
-                  onBlur={() => {
-                    setDeliveryFocused(false)
-                    setTimeout(() => setShowDeliverySuggestions(false), 200)
+                  onChangeText={text => handleTextChange(text, 'delivery')}
+                  onAddressSelect={address => {
+                    setDeliveryAddress(address.description);
+                    setDeliveryLocation({
+                      id: address.id || '',
+                      name: address.name || address.description || '',
+                      description: address.description || '',
+                      commune: address.commune || '',
+                      latitude: address.latitude,
+                      longitude: address.longitude,
+                      type: address.type || 'search_result',
+                    });
+                    if (address.commune) setDeliveryCommune(address.commune);
                   }}
                 />
                 {showDeliverySuggestions && deliveryFocused && (

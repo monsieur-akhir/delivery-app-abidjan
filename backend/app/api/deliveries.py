@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
+import logging
 
 from ..db.session import get_db
 from ..core.security import get_current_user
@@ -13,10 +14,22 @@ from ..services import matching as matching_service
 from ..services import geolocation as geolocation_service
 from ..services.geolocation import get_google_places_suggestions
 
+# Configuration du logger
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 from ..services.delivery import get_delivery, get_courier_deliveries, get_user_deliveries_with_filters, create_delivery
 from ..services.matching import MatchingService
+
+# Schéma flexible pour l'autocomplétion
+class FlexibleAutocompleteResponse(BaseModel):
+    predictions: List[Dict[str, Any]]
+    status: str = "OK"
+    query: Optional[str] = None
+
+    class Config:
+        extra = "allow"  # Accepte des champs supplémentaires
 
 class CancelReason(BaseModel):
     reason: str = None
@@ -36,7 +49,51 @@ async def create_new_delivery(
 
     try:
         delivery = create_delivery(db, delivery_data, current_user)
-        return delivery
+        
+        # Sérialiser l'objet Delivery pour éviter les erreurs Pydantic
+        delivery_dict = {
+            "id": delivery.id,
+            "client_id": delivery.client_id,
+            "courier_id": delivery.courier_id,
+            "pickup_address": delivery.pickup_address,
+            "pickup_commune": delivery.pickup_commune,
+            "pickup_lat": delivery.pickup_lat,
+            "pickup_lng": delivery.pickup_lng,
+            "pickup_contact_name": delivery.pickup_contact_name,
+            "pickup_contact_phone": delivery.pickup_contact_phone,
+            "delivery_address": delivery.delivery_address,
+            "delivery_commune": delivery.delivery_commune,
+            "delivery_lat": delivery.delivery_lat,
+            "delivery_lng": delivery.delivery_lng,
+            "delivery_contact_name": delivery.delivery_contact_name,
+            "delivery_contact_phone": delivery.delivery_contact_phone,
+            "package_description": delivery.package_description,
+            "package_size": delivery.package_size,
+            "package_weight": delivery.package_weight,
+            "is_fragile": delivery.is_fragile,
+            "cargo_category": delivery.cargo_category,
+            "required_vehicle_type": delivery.required_vehicle_type,
+            "proposed_price": delivery.proposed_price,
+            "delivery_type": delivery.delivery_type,
+            "final_price": delivery.final_price,
+            "status": delivery.status,
+            "estimated_distance": delivery.estimated_distance,
+            "estimated_duration": delivery.estimated_duration,
+            "actual_duration": delivery.actual_duration,
+            "created_at": delivery.created_at,
+            "accepted_at": delivery.accepted_at,
+            "pickup_at": delivery.pickup_at,
+            "delivered_at": delivery.delivered_at,
+            "completed_at": delivery.completed_at,
+            "cancelled_at": delivery.cancelled_at,
+            "vehicle_id": delivery.vehicle_id,
+            # Relations sérialisées en dictionnaires
+            "client": None,  # Pas de relation chargée par défaut
+            "courier": None,  # Pas de relation chargée par défaut
+            "vehicle": None   # Pas de relation chargée par défaut
+        }
+        
+        return delivery_dict
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -102,9 +159,52 @@ async def get_delivery_by_id(
         if delivery.client_id != current_user.id and delivery.courier_id != current_user.id:
             raise HTTPException(status_code=403, detail="Accès non autorisé")
 
+    # Sérialiser l'objet Delivery pour éviter les erreurs Pydantic
+    delivery_dict = {
+        "id": delivery.id,
+        "client_id": delivery.client_id,
+        "courier_id": delivery.courier_id,
+        "pickup_address": delivery.pickup_address,
+        "pickup_commune": delivery.pickup_commune,
+        "pickup_lat": delivery.pickup_lat,
+        "pickup_lng": delivery.pickup_lng,
+        "pickup_contact_name": delivery.pickup_contact_name,
+        "pickup_contact_phone": delivery.pickup_contact_phone,
+        "delivery_address": delivery.delivery_address,
+        "delivery_commune": delivery.delivery_commune,
+        "delivery_lat": delivery.delivery_lat,
+        "delivery_lng": delivery.delivery_lng,
+        "delivery_contact_name": delivery.delivery_contact_name,
+        "delivery_contact_phone": delivery.delivery_contact_phone,
+        "package_description": delivery.package_description,
+        "package_size": delivery.package_size,
+        "package_weight": delivery.package_weight,
+        "is_fragile": delivery.is_fragile,
+        "cargo_category": delivery.cargo_category,
+        "required_vehicle_type": delivery.required_vehicle_type,
+        "proposed_price": delivery.proposed_price,
+        "delivery_type": delivery.delivery_type,
+        "final_price": delivery.final_price,
+        "status": delivery.status,
+        "estimated_distance": delivery.estimated_distance,
+        "estimated_duration": delivery.estimated_duration,
+        "actual_duration": delivery.actual_duration,
+        "created_at": delivery.created_at,
+        "accepted_at": delivery.accepted_at,
+        "pickup_at": delivery.pickup_at,
+        "delivered_at": delivery.delivered_at,
+        "completed_at": delivery.completed_at,
+        "cancelled_at": delivery.cancelled_at,
+        "vehicle_id": delivery.vehicle_id,
+        # Relations sérialisées en dictionnaires
+        "client": None,  # Pas de relation chargée par défaut
+        "courier": None,  # Pas de relation chargée par défaut
+        "vehicle": None   # Pas de relation chargée par défaut
+    }
+
     return {
         "success": True,
-        "delivery": delivery
+        "delivery": delivery_dict
     }
 
 @router.get("/deliveries/{delivery_id}/suggested-couriers")
@@ -186,69 +286,157 @@ async def smart_matching_endpoint(
 
     return await matching_service.smart_matching(db, delivery_request, current_user.id)
 
-@router.get("/address-autocomplete")
-async def address_autocomplete(
-    input: str = Query(..., min_length=1, description="Texte de recherche pour l'autocomplétion"),
+@router.get("/test-autocomplete")
+async def test_autocomplete_endpoint(
+    input: str = Query(..., description="Test simple"),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Autocomplétion d'adresses avec Google Places API
+    Endpoint de test pour diagnostiquer l'autocomplétion
+    """
+    return {
+        "message": "Test réussi",
+        "input_received": input,
+        "user_id": current_user.id,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@router.get("/address-autocomplete")
+async def address_autocomplete_get(
+    input: str = Query(..., min_length=2, description="Texte de recherche pour l'autocomplétion"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Autocomplétion d'adresses avec Google Places API (GET)
+    """
+    logger.info(f"[DEBUG] Appel GET /address-autocomplete avec input='{input}' (type: {type(input)})")
+    try:
+        logger.info(f"[DEBUG] Utilisateur courant: {current_user}")
+        # Appeler le service de géolocalisation
+        suggestions = await get_google_places_suggestions(input)
+        logger.info(f"[DEBUG] Suggestions retournées: {suggestions}")
+        # Retourner directement les données sans validation Pydantic stricte
+        return {
+            "predictions": suggestions,
+            "status": "OK",
+            "query": input
+        }
+    except Exception as e:
+        logger.error(f"[ERROR] Exception dans /address-autocomplete: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de l'autocomplétion d'adresse"
+        )
+
+@router.get("/address-autocomplete/public")
+async def address_autocomplete_public(
+    input: str = Query(..., min_length=1, description="Texte de recherche pour l'autocomplétion")
+):
+    """
+    Autocomplétion d'adresses PUBLIC - Pas d'authentification requise
+    """
+    logger.info(f"[DEBUG] Appel GET /address-autocomplete/public avec input='{input}'")
+    try:
+        # Appeler le service de géolocalisation
+        suggestions = await get_google_places_suggestions(input)
+        logger.info(f"[DEBUG] Suggestions publiques retournées: {len(suggestions)} résultats")
+        
+        # Retourner directement les données
+        return {
+            "predictions": suggestions,
+            "status": "OK",
+            "query": input
+        }
+    except Exception as e:
+        logger.error(f"[ERROR] Exception dans /address-autocomplete/public: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de l'autocomplétion d'adresse"
+        )
+
+@router.post("/address-autocomplete/public")
+async def address_autocomplete_public_post(
+    search_data: dict = Body(..., description="Données de recherche")
+):
+    """
+    Autocomplétion d'adresses PUBLIC (POST) - Pas d'authentification requise
     """
     try:
-        # Nettoyer l'input (supprimer les espaces en début/fin)
-        clean_input = input.strip()
-
-        # Vérification de base
-        if not clean_input:
+        # Extraire le terme de recherche
+        input_text = search_data.get("input", "").strip()
+        
+        # Validation de base
+        if len(input_text) < 1:
             return {
                 "predictions": [],
                 "status": "INVALID_REQUEST",
-                "query": clean_input
+                "query": input_text,
+                "message": "Le terme de recherche ne peut pas être vide"
             }
+        
+        logger.info(f"[DEBUG] Appel POST /address-autocomplete/public avec input='{input_text}'")
+        
+        # Appeler le service de géolocalisation
+        suggestions = await get_google_places_suggestions(input_text)
+        
+        logger.info(f"[DEBUG] Suggestions publiques POST retournées: {len(suggestions)} résultats")
+        
+        # Retourner les suggestions
+        return {
+            "predictions": suggestions,
+            "status": "OK",
+            "query": input_text
+        }
+    except Exception as e:
+        logger.error(f"Erreur lors de l'autocomplétion publique: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de l'autocomplétion d'adresse"
+        )
 
-        # Vérification supplémentaire de la longueur
-        if len(clean_input) < 2:
+@router.post("/address-autocomplete", response_model=FlexibleAutocompleteResponse)
+async def address_autocomplete(
+    search_data: dict = Body(..., description="Données de recherche"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Autocomplétion d'adresses avec Google Places API (POST).
+    Prend en compte la localisation de l'utilisateur pour des résultats plus pertinents.
+    """
+    try:
+        # Extraire le terme de recherche et la localisation
+        input_text = search_data.get("input", "").strip()
+        user_lat = search_data.get("lat")
+        user_lng = search_data.get("lng")
+        
+        # Validation de base
+        if len(input_text) < 2:
             return {
                 "predictions": [],
-                "status": "INVALID_REQUEST", 
-                "query": clean_input,
+                "status": "INVALID_REQUEST",
+                "query": input_text,
                 "message": "Le terme de recherche doit contenir au moins 2 caractères"
             }
-
-        # Appeler le service de géolocalisation
-        suggestions = await get_google_places_suggestions(clean_input)
-
-        # Formatter les prédictions selon le format Google Places
-        formatted_predictions = []
-        for suggestion in suggestions:
-            main_text = suggestion.get("address", suggestion.get("description", ""))
-            if "," in main_text:
-                main_text = main_text.split(",")[0]
-
-            formatted_predictions.append({
-                "description": suggestion.get("address", suggestion.get("description", "")),
-                "place_id": suggestion.get("place_id", f"place_{len(formatted_predictions)}"),
-                "structured_formatting": {
-                    "main_text": main_text,
-                    "secondary_text": suggestion.get("commune", "Abidjan")
-                }
-            })
-
+        
+        # Appeler le service de géolocalisation avec la localisation
+        suggestions = await get_google_places_suggestions(
+            input_text,
+            user_lat=user_lat,
+            user_lng=user_lng
+        )
+        
+        # Retourner les suggestions
         return {
-            "predictions": formatted_predictions,
+            "predictions": suggestions,
             "status": "OK",
-            "query": clean_input
+            "query": input_text
         }
-    except HTTPException:
-        raise
     except Exception as e:
-        print(f"Erreur lors de l'autocomplétion: {str(e)}")
-        return {
-            "predictions": [],
-            "status": "ERROR",
-            "query": clean_input,
-            "error": str(e)
-        }
+        logger.error(f"Erreur lors de l'autocomplétion: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de l'autocomplétion d'adresse"
+        )
 
 @router.get("/popular-places")
 async def popular_places_endpoint(
@@ -471,4 +659,3 @@ async def cancel_delivery(
         pass
     db.commit()
     return {"message": "Livraison annulée avec succès"}
-```This change modifies the minimum length of the input query parameter for the address autocomplete endpoint.
