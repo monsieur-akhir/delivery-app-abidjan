@@ -24,7 +24,7 @@ help: ## Affiche l'aide
 install: ## Installe toutes les dépendances
 	@echo "$(BLUE)Installation des dépendances...$(NC)"
 	@echo "$(YELLOW)Backend...$(NC)"
-	cd $(BACKEND_DIR) && python3 -m venv venv && python3 -m pip install -r requirements.txt
+	cd $(BACKEND_DIR) && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
 	@echo "$(YELLOW)Web...$(NC)"
 	cd $(WEB_DIR) && npm install
 	@echo "$(YELLOW)Mobile...$(NC)"
