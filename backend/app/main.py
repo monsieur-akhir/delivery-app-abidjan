@@ -90,11 +90,11 @@ async def startup_event():
         # Initialiser la base de données avec les données de base
         db = next(get_db())
         init_db(db)
-        
+
         # Démarrer le nettoyage automatique des WebSockets
         from .websockets.tracking import start_cleanup_task
         await start_cleanup_task()
-        
+
         print(f"✅ Application {settings.APP_NAME} démarrée avec succès")
     except Exception as e:
         print(f"❌ Erreur lors du démarrage: {str(e)}")
@@ -132,10 +132,10 @@ async def get_active_client_deliveries(
 
         from .services.delivery import get_user_active_deliveries
         deliveries = get_user_active_deliveries(db, current_user.id)
-        
+
         # Sérialiser les livraisons
         serialized_deliveries = [serialize_delivery(delivery) for delivery in deliveries]
-        
+
         return {
             "success": True,
             "deliveries": serialized_deliveries,
@@ -161,10 +161,10 @@ async def get_client_delivery_history(
 
         from .services.delivery import get_deliveries_by_client
         deliveries = get_deliveries_by_client(db, current_user.id, skip, limit, status)
-        
+
         # Sérialiser les livraisons
         serialized_deliveries = [serialize_delivery(delivery) for delivery in deliveries]
-        
+
         return {
             "success": True,
             "deliveries": serialized_deliveries,
@@ -194,10 +194,10 @@ async def get_courier_delivery_history(
 
         from .services.delivery import get_courier_deliveries
         deliveries = get_courier_deliveries(db, current_user.id, status, limit, skip)
-        
+
         # Sérialiser les livraisons
         serialized_deliveries = [serialize_delivery(delivery) for delivery in deliveries]
-        
+
         return {
             "success": True,
             "deliveries": serialized_deliveries,
@@ -274,7 +274,7 @@ async def get_merchant_details(
         merchant = get_merchant(db, merchant_id)
         if not merchant:
             raise HTTPException(status_code=404, detail="Marchand non trouvé")
-        
+
         return {
             "success": True,
             "merchant": merchant
@@ -475,7 +475,7 @@ def serialize_delivery(delivery):
     """Sérialise un objet Delivery en dictionnaire"""
     if not delivery:
         return None
-    
+
     # Convertir l'objet Delivery en dictionnaire
     delivery_dict = {
         "id": delivery.id,
@@ -520,7 +520,7 @@ def serialize_delivery(delivery):
         "courier": None,
         "vehicle": None
     }
-    
+
     return delivery_dict
 
 @app.post("/api/v1/deliveries/")
@@ -537,11 +537,11 @@ async def create_delivery_v1_endpoint(
 
         from .services.delivery import create_delivery
         from .schemas.delivery import DeliveryCreate
-        
+
         # Convertir le dict en DeliveryCreate
         delivery_create = DeliveryCreate(**delivery_data)
         delivery = create_delivery(db, delivery_create, current_user)
-        
+
         # Notifier les coursiers disponibles
         if delivery:
             background_tasks.add_task(
@@ -549,10 +549,10 @@ async def create_delivery_v1_endpoint(
                 db,
                 delivery.id
             )
-        
+
         # Sérialiser l'objet delivery
         serialized_delivery = serialize_delivery(delivery)
-        
+
         return {
             "success": True,
             "delivery": serialized_delivery,
@@ -578,19 +578,19 @@ async def client_confirm_delivery_endpoint(
 
         from .services.delivery import get_delivery
         from .services.rating import create_rating
-        
+
         delivery = get_delivery(db, delivery_id)
         if not delivery:
             raise HTTPException(status_code=404, detail="Livraison non trouvée")
-            
+
         if delivery.client_id != current_user.id:
             raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
+
         # Confirmer la livraison
         delivery.status = "completed"
         delivery.completed_at = datetime.utcnow()
         db.commit()
-        
+
         # Créer une évaluation si fournie
         if confirm_data.get("rating") and confirm_data.get("comment"):
             try:
@@ -604,7 +604,7 @@ async def client_confirm_delivery_endpoint(
                 create_rating(db, rating_data, current_user.id)
             except Exception as e:
                 print(f"Erreur lors de la création de l'évaluation: {e}")
-        
+
         return {
             "success": True,
             "message": "Livraison confirmée avec succès",
@@ -630,7 +630,7 @@ async def smart_matching_endpoint(
 
         from .services.matching import MatchingService
         matches = await MatchingService.smart_matching(db, delivery_request, current_user.id)
-        
+
         return {
             "success": True,
             "matches": matches,
@@ -653,13 +653,13 @@ async def popular_places_endpoint(
     """Récupérer les lieux populaires d'Abidjan"""
     try:
         from .services.geolocation import get_popular_places
-        
+
         user_location = None
         if user_lat is not None and user_lng is not None:
             user_location = {"latitude": user_lat, "longitude": user_lng}
 
         places = await get_popular_places(db, user_location, category, limit)
-        
+
         return {
             "success": True,
             "places": places,
@@ -678,17 +678,17 @@ async def notify_available_couriers(db: Session, delivery_id: int):
         from .services.notification import send_delivery_notification
         from .services.delivery import get_delivery
         from .models.user import User
-        
+
         delivery = get_delivery(db, delivery_id)
         if not delivery:
             return
-        
+
         # Récupérer les coursiers actifs dans la zone
         available_couriers = db.query(User).filter(
             User.role == "courier",
             User.status == "active"
         ).all()
-        
+
         # Envoyer notification à chaque coursier
         for courier in available_couriers:
             await send_delivery_notification(
@@ -735,11 +735,11 @@ async def log_requests(request, call_next):
         start_time = datetime.now()
         response = await call_next(request)
         process_time = (datetime.now() - start_time).total_seconds()
-        
+
         # Log seulement si le temps de traitement est > 1 seconde
         if process_time > 1.0:
             print(f"🐌 Requête lente: {request.method} {request.url.path} - {process_time:.2f}s")
-        
+
         return response
     except Exception as e:
         print(f"❌ Erreur dans log_requests: {e}")
@@ -754,3 +754,19 @@ async def test_google_places(query: str):
         "query": query,
         "suggestions": suggestions
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", 8000))
+    debug = os.getenv("DEBUG", "false").lower() == "true"
+
+    uvicorn.run(
+        app, 
+        host=host, 
+        port=port, 
+        reload=debug,
+        log_level="info"
+    )
