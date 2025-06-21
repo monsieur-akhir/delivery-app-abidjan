@@ -214,13 +214,16 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Recherche avec Google Places API réelle
   const searchAddresses = useCallback(async (query: string) => {
-    if (query.length < 2) {
+    const cleanQuery = query.trim();
+    if (cleanQuery.length < 2) {
       setSuggestions([]);
       return;
     }
 
     setLoading(true);
     try {
+      console.log('[AddressAutocomplete] Recherche:', cleanQuery);
+      
       const locationService = LocationService.getInstance();
       
       // Obtenir la position de l'utilisateur pour améliorer les résultats
@@ -232,11 +235,12 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           longitude: currentPos.longitude
         };
       } catch (error) {
-        console.warn('Could not get user location for search optimization:', error);
+        console.warn('[AddressAutocomplete] Could not get user location for search optimization:', error);
       }
 
       // Recherche avec l'API Google Places réelle
-      const googleResults = await locationService.searchAddresses(query, userLocation);
+      const googleResults = await locationService.searchAddresses(cleanQuery, userLocation);
+      console.log('[AddressAutocomplete] Résultats Google Places:', googleResults);
       
       // Convertir les résultats au format attendu par le composant
       const convertedResults: Address[] = googleResults.map(result => ({
@@ -251,7 +255,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
       setSuggestions(convertedResults.slice(0, maxSuggestions));
     } catch (error) {
-      console.error('Error searching addresses with Google API:', error);
+      console.error('[AddressAutocomplete] Error searching addresses with Google API:', error);
       setSuggestions([]);
     } finally {
       setLoading(false);
