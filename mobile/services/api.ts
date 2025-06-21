@@ -591,14 +591,14 @@ export const loginWithOTP = async (phone: string, otp: string): Promise<{ token:
         'Content-Type': 'application/json'
       }
     })
-    
+
     if (response.data.success && response.data.token) {
       // Token directement disponible dans la réponse
       const access_token = response.data.token;
-      
+
       // Set authorization header for future requests
       api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
+
       return {
         token: access_token,
         user: response.data.user
@@ -626,13 +626,13 @@ export const login = async (phone: string, password: string): Promise<{ token: s
         'Content-Type': 'application/json'
       }
     })
-    
+
     const access_token = response.data.access_token;
-    
+
     // Get user profile with the token
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
     const userResponse = await api.get("/api/users/me");
-    
+
     return {
       token: access_token,
       user: userResponse.data
@@ -1077,8 +1077,7 @@ export const transcribeVoiceRating = async (audioBase64: string): Promise<{ text
   return response.data
 }
 
-// Traitement des commandes vocales
-export const processVoiceCommand = async (audioBase64: string): Promise<VoiceCommandResponse> => {
+// Traitement des commandes vocalesexport const processVoiceCommand = async (audioBase64: string): Promise<VoiceCommandResponse> => {
   const response = await api.post("/api/assistant/voice", { audio: audioBase64 })
   return response.data
 }
@@ -1260,6 +1259,37 @@ export const getWeatherData = async (latitude: number, longitude: number, commun
   }
 }
 
+export interface AddressAutocompleteResponse {
+  predictions: Array<{
+    description: string
+    place_id: string
+  }>;
+  status: string;
+}
+// Corriger la fonction getAddressAutocomplete
+export const getAddressAutocomplete = async (input: string): Promise<AddressAutocompleteResponse> => {
+  // Nettoyer l'input et vérifier la longueur
+  const cleanInput = input.trim();
+  if (cleanInput.length < 2) {
+    return {
+      predictions: [],
+      status: "INVALID_REQUEST"
+    };
+  }
+
+  try {
+    const response = await api.get(`/api/deliveries/address-autocomplete?input=${encodeURIComponent(cleanInput)}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Erreur API autocomplétion:', error.response?.data || error.message);
+    // Retourner une réponse vide en cas d'erreur
+    return {
+      predictions: [],
+      status: "ERROR"
+    };
+  }
+}
+
 
 // Fonction pour vider le cache API
 export const clearApiCache = async (): Promise<boolean> => {
@@ -1283,7 +1313,7 @@ export const getActivePromotions = async (): Promise<any[]> => {
 export const getApplicablePromotions = async (orderValue: number, zoneId?: number): Promise<any[]> => {
   const params = { order_value: orderValue }
   if (zoneId) (params as any).zone_id = zoneId
-  
+
   const response = await api.get("/api/v1/promotions/applicable", { params })
   return response.data
 }

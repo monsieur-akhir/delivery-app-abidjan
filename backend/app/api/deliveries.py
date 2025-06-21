@@ -195,17 +195,28 @@ async def address_autocomplete(
     Autocomplétion d'adresses avec Google Places API
     """
     try:
+        # Nettoyer l'input (supprimer les espaces en début/fin)
+        clean_input = input.strip()
+        
+        # Vérifier la longueur après nettoyage
+        if len(clean_input) < 2:
+            return {
+                "predictions": [],
+                "status": "INVALID_REQUEST",
+                "query": clean_input
+            }
+        
         # Appeler le service de géolocalisation
-        suggestions = await get_google_places_suggestions(input)
+        suggestions = await get_google_places_suggestions(clean_input)
         
         # Retourner directement les données sans validation Pydantic stricte
         return {
             "predictions": suggestions,
             "status": "OK",
-            "query": input
+            "query": clean_input
         }
     except Exception as e:
-        logger.error(f"Erreur lors de l'autocomplétion: {str(e)}")
+        print(f"Erreur lors de l'autocomplétion: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail="Erreur lors de l'autocomplétion d'adresse"
