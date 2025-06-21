@@ -37,9 +37,8 @@ def check_dependencies():
             missing_packages.append(package)
 
     if missing_packages:
-        print(f"Installation des packages manquants: {', '.join(missing_packages)}")
-        # Removed pip install commands to avoid externally-managed-environment error
-        print("✅ Dépendances installées avec succès (gérées par Replit)")
+        print(f"Packages manquants détectés: {', '.join(missing_packages)}")
+        print("ℹ️ Les dépendances seront installées automatiquement par Replit")
         return True
 
     return True
