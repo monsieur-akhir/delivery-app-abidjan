@@ -117,6 +117,13 @@ class Settings(BaseSettings):
     OTP_LENGTH: int = int(os.getenv("OTP_LENGTH", "6"))
     OTP_MAX_ATTEMPTS: int = int(os.getenv("OTP_MAX_ATTEMPTS", "3"))
 
+    # Configuration Email SMTP (fallback)
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")AX_ATTEMPTS", "3"))
+
     # SMTP/Mail générique (fallback)
     MAIL_HOST: str = os.getenv("MAIL_HOST", "smtp-relay.brevo.com")
     MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
