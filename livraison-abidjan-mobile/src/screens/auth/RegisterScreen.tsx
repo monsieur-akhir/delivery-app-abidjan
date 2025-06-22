@@ -61,6 +61,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
   // Étapes d'inscription
   const steps = [
+    "introduction", // Introduction et philosophie
     "profile", // Choix de profil (client ou coursier)
     "personal", // Informations personnelles
     "security", // Informations de sécurité
@@ -336,6 +337,62 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         onMomentumScrollEnd={handleScroll}
         contentContainerStyle={styles.slidesContainer}
       >
+        {/* Étape 0 : Introduction et philosophie */}
+        <View style={[styles.slide, { width: screenWidth }]}>
+          <Card style={styles.card} elevation={5}>
+            <Animatable.View 
+              animation="fadeInUp" 
+              duration={800} 
+              style={styles.formContainer}
+            >
+              <View style={styles.headerContainer}>
+                <Text style={styles.welcomeTitle}>Rejoignez Notre Famille</Text>
+                <Text style={styles.welcomeSubtitle}>Livraison Abidjan</Text>
+              </View>
+
+              <View style={styles.philosophyContainer}>
+                <View style={styles.missionCard}>
+                  <Text style={styles.missionIcon}>🚀</Text>
+                  <Text style={styles.missionTitle}>Notre Mission</Text>
+                  <Text style={styles.missionText}>
+                    Démocratiser l'accès aux services de livraison en Côte d'Ivoire
+                  </Text>
+                </View>
+
+                <View style={styles.valuesContainer}>
+                  <View style={styles.valueItem}>
+                    <Text style={styles.valueIcon}>⚡</Text>
+                    <Text style={styles.valueText}>Rapidité</Text>
+                  </View>
+                  <View style={styles.valueItem}>
+                    <Text style={styles.valueIcon}>🤝</Text>
+                    <Text style={styles.valueText}>Confiance</Text>
+                  </View>
+                  <View style={styles.valueItem}>
+                    <Text style={styles.valueIcon}>🌟</Text>
+                    <Text style={styles.valueText}>Excellence</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.invitationText}>
+                  Que vous soyez client ou coursier, vous faites partie de notre communauté.
+                  Ensemble, construisons l'avenir de la livraison urbaine à Abidjan.
+                </Text>
+              </View>
+            </Animatable.View>
+          </Card>
+          <View style={styles.buttonContainer}>
+            <Button 
+              mode="contained" 
+              onPress={goToNextStep}
+              style={styles.button} 
+              labelStyle={styles.buttonLabel}
+            >
+              Commencer l'inscription
+            </Button>
+          </View>
+        </View>
+
         {/* Étape 1 : Choix du profil */}
         <View style={[styles.slide, { width: screenWidth }]}>
           <Card style={styles.card} elevation={5}>
@@ -346,8 +403,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               ref={formRef}
             >
               <View style={styles.headerContainer}>
-                <Text style={styles.title}>{t("register.title")}</Text>
-                <Text style={styles.subtitle}>{t("register.subtitle")}</Text>
+                <Text style={styles.title}>Choisissez votre profil</Text>
+                <Text style={styles.subtitle}>Comment souhaitez-vous utiliser notre plateforme ?</Text>
               </View>
 
               <View style={styles.section}>
@@ -1020,6 +1077,75 @@ const styles = StyleSheet.create({
   },
   snackbar: {
     marginBottom: 16,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#FF6B00",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  welcomeSubtitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#FF6B00",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  philosophyContainer: {
+    paddingVertical: 10,
+  },
+  missionCard: {
+    backgroundColor: "#FFF9F5",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FFE8D6",
+  },
+  missionIcon: {
+    fontSize: 40,
+    marginBottom: 10,
+  },
+  missionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FF6B00",
+    marginBottom: 8,
+  },
+  missionText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  valuesContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
+  },
+  valueItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  valueIcon: {
+    fontSize: 30,
+    marginBottom: 8,
+  },
+  valueText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FF6B00",
+    textAlign: "center",
+  },
+  invitationText: {
+    fontSize: 14,
+    color: "#555",
+    textAlign: "center",
+    lineHeight: 22,
+    fontStyle: "italic",
+    paddingHorizontal: 10,
   }
 })
 
