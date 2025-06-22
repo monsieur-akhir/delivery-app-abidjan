@@ -1,3 +1,4 @@
+# Adding multi_destination_deliveries to the imports from .api
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, BackgroundTasks, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -13,9 +14,11 @@ from .db.base import Base, engine
 from .db.session import get_db
 from .db.init_db import init_db
 from .api import (
-    auth, users, deliveries, ratings, gamification, market, wallet, traffic, 
+    auth, users, deliveries, ratings, gamification,
+    wallet, traffic,
     manager, transport, assistant, courier, complaints, business, business_analytics,
-    support, zones, promotions, scheduled_deliveries, negotiations
+    support, zones, promotions, scheduled_deliveries, negotiations,
+    multi_destination_deliveries
 )
 from .websockets import tracking
 from .services.geolocation import get_google_places_suggestions
@@ -67,6 +70,7 @@ app.include_router(zones.router, prefix=f"{settings.API_V1_STR}/zones", tags=["Z
 app.include_router(promotions.router, prefix=f"{settings.API_V1_STR}/promotions", tags=["Promotions"])
 app.include_router(scheduled_deliveries.router, prefix="/api", tags=["scheduled-deliveries"])
 app.include_router(negotiations.router, prefix="/api", tags=["negotiations"])
+app.include_router(multi_destination_deliveries.router, prefix="/api", tags=["Multi-Destination Deliveries"])
 
 # Endpoint WebSocket pour le tracking en temps réel
 @app.websocket("/ws/tracking/{delivery_id}")
@@ -414,24 +418,24 @@ async def estimate_delivery_price_endpoint(
 
         # Extraire les paramètres de la requête
         pickup_lat = request.get("pickup_lat")
-        pickup_lng = request.get("pickup_lng") 
+        pickup_lng = request.get("pickup_lng")
         delivery_lat = request.get("delivery_lat")
         delivery_lng = request.get("delivery_lng")
         package_weight = request.get("package_weight", 1.0)
-        cargo_category = request.get("cargo_category", "standard") 
+        cargo_category = request.get("cargo_category", "standard")
         is_fragile = request.get("is_fragile", False)
         is_express = request.get("is_express", False)
 
         # Vérifier les paramètres obligatoires
         if not all([pickup_lat, pickup_lng, delivery_lat, delivery_lng]):
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="Coordonnées de pickup et delivery requises"
             )
 
         estimate = estimate_delivery_price(
             pickup_lat,
-            pickup_lng, 
+            pickup_lng,
             delivery_lat,
             delivery_lng,
             package_weight,
