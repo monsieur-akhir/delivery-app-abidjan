@@ -1,473 +1,383 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { 
-  View, 
-  StyleSheet, 
-  ScrollView, 
-  RefreshControl, 
-  TouchableOpacity, 
-  Animated,
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
   Dimensions,
   StatusBar,
-  Platform
-} from 'react-native'
-import { 
-  Text, 
-  Card, 
-  Surface, 
-  Avatar, 
-  Chip,
-  FAB,
-  Searchbar,
-  Badge,
-  ActivityIndicator,
-  IconButton,
-  Divider
-} from 'react-native-paper'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons'
-import { useAuth } from '../../contexts/AuthContext'
-import { useNotification } from '../../contexts/NotificationContext'
-import { useWebSocket } from '../../contexts/WebSocketContext'
-import { useDelivery } from '../../hooks/useDelivery'
-import { formatPrice, formatDate } from '../../utils/formatters'
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import type { RootStackParamList } from '../../types/navigation'
-import type { Delivery, DeliveryStatus } from '../../types/models'
+  Alert,
+  Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Card, Button, Avatar, Badge, Chip, FAB } from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
-const { width, height } = Dimensions.get('window')
+import { useAuth } from '../../hooks/useAuth';
+import { useDelivery } from '../../hooks/useDelivery';
+import { DeliveryService } from '../../services/DeliveryService';
+import { LocationService } from '../../services/LocationService';
+import { WeatherInfo } from '../../components/WeatherInfo';
+import { OfflineIndicator } from '../../components/OfflineIndicator';
 
-type HomeScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>
-}
+const { width } = Dimensions.get('window');
+const CARD_MARGIN = 16;
+const CARD_WIDTH = width - (CARD_MARGIN * 2);
 
-interface QuickAction {
-  id: string
-  title: string
-  subtitle: string
-  icon: string
-  iconFamily: 'Feather' | 'MaterialIcons' | 'Ionicons'
-  color: string
-  route: string
-  params?: any
-}
+export default function HomeScreen() {
+  const navigation = useNavigation();
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { recentDeliveries, loading: deliveriesLoading, refreshDeliveries } = useDelivery();
 
-const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { user } = useAuth()
-  const { unreadCount } = useNotification()
-  const { connected } = useWebSocket()
-  const { getActiveDeliveries, getClientDeliveryHistory } = useDelivery()
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
 
-  const [activeDeliveries, setActiveDeliveries] = useState<Delivery[]>([])
-  const [recentDeliveries, setRecentDeliveries] = useState<Delivery[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [greeting, setGreeting] = useState('')
-
-  const fadeAnim = useRef(new Animated.Value(0)).current
-
-  // Actions rapides avec design épuré
-  const quickActions: QuickAction[] = [
+  // Données des dernières courses avec états
+  const [recentOrders, setRecentOrders] = useState([
     {
-      id: 'standard',
-      title: 'Livraison',
-      subtitle: 'Économique',
-      icon: 'package',
-      iconFamily: 'Feather',
-      color: '#2E7D32',
-      route: 'CreateDelivery',
-      params: { serviceType: 'standard' }
+      id: 1,
+      status: 'completed',
+      pickup: 'Cocody Riviera',
+      delivery: 'Marcory Zone 4',
+      date: '2025-01-19',
+      amount: 2500,
+      rating: 4.8
     },
     {
+      id: 2,
+      status: 'in_progress',
+      pickup: 'Plateau Centre',
+      delivery: 'Yopougon Niangon',
+      date: '2025-01-19',
+      amount: 3200,
+      courier: 'Jean-Baptiste K.'
+    },
+    {
+      id: 3,
+      status: 'cancelled',
+      pickup: 'Adjamé Commerce',
+      delivery: 'Abobo Pk18',
+      date: '2025-01-18',
+      amount: 1800,
+      reason: 'Coursier indisponible'
+    }
+  ]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshDeliveries();
+      // Rafraîchir d'autres données si nécessaire
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshDeliveries]);
+
+  useEffect(() => {
+    getCurrentLocation();
+    getWeatherData();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    try {
+      const location = await LocationService.getCurrentLocation();
+      setCurrentLocation(location);
+    } catch (error) {
+      console.error('Erreur localisation:', error);
+    }
+  };
+
+  const getWeatherData = async () => {
+    // Simuler des données météo pour Abidjan
+    setWeatherData({
+      temperature: 28,
+      condition: 'sunny',
+      humidity: 75,
+      description: 'Ensoleillé'
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return '#4CAF50';
+      case 'in_progress': return '#FF9800';
+      case 'cancelled': return '#F44336';
+      case 'pending': return '#2196F3';
+      default: return '#757575';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'completed': return 'Terminée';
+      case 'in_progress': return 'En cours';
+      case 'cancelled': return 'Annulée';
+      case 'pending': return 'En attente';
+      default: return 'Inconnue';
+    }
+  };
+
+  const quickActions = [
+    {
       id: 'express',
-      title: 'Express',
-      subtitle: 'Rapide',
-      icon: 'zap',
-      iconFamily: 'Feather',
-      color: '#F57C00',
-      route: 'CreateDelivery',
-      params: { serviceType: 'express' }
+      title: 'Livraison Express',
+      subtitle: 'Urgente • 30min',
+      icon: 'flash',
+      color: '#FF6B00',
+      screen: 'CreateDelivery',
+      params: { type: 'express' }
+    },
+    {
+      id: 'standard',
+      title: 'Livraison Standard',
+      subtitle: 'Économique • 2-4h',
+      icon: 'package-variant',
+      color: '#2196F3',
+      screen: 'CreateDelivery',
+      params: { type: 'standard' }
     },
     {
       id: 'scheduled',
-      title: 'Planifier',
-      subtitle: 'Plus tard',
-      icon: 'clock',
-      iconFamily: 'Feather',
-      color: '#7B1FA2',
-      route: 'ScheduledDeliveries'
+      title: 'Programmer',
+      subtitle: 'Plus tard • À l\'heure',
+      icon: 'calendar-clock',
+      color: '#9C27B0',
+      screen: 'ScheduledDeliveries'
     },
     {
-      id: 'multiple',
-      title: 'Multi-stops',
-      subtitle: 'Plusieurs',
-      icon: 'map-pin',
-      iconFamily: 'Feather',
-      color: '#1976D2',
-      route: 'MultiDestinationDeliveries'
+      id: 'multi',
+      title: 'Multi-destinations',
+      subtitle: 'Plusieurs arrêts',
+      icon: 'map-marker-multiple',
+      color: '#4CAF50',
+      screen: 'MultiDestinationDeliveries'
     }
-  ]
+  ];
 
-  useEffect(() => {
-    loadData()
-    setGreetingMessage()
-    startAnimations()
-  }, [])
+  const serviceCategories = [
+    { id: 'food', name: 'Restaurant', icon: 'food', color: '#FF5722' },
+    { id: 'pharmacy', name: 'Pharmacie', icon: 'medical-bag', color: '#4CAF50' },
+    { id: 'grocery', name: 'Épicerie', icon: 'cart', color: '#FF9800' },
+    { id: 'electronics', name: 'Tech', icon: 'cellphone', color: '#3F51B5' },
+    { id: 'fashion', name: 'Mode', icon: 'tshirt-crew', color: '#E91E63' },
+    { id: 'other', name: 'Autre', icon: 'dots-horizontal', color: '#607D8B' }
+  ];
 
-  const setGreetingMessage = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) setGreeting('Bonjour')
-    else if (hour < 17) setGreeting('Bon après-midi')
-    else setGreeting('Bonsoir')
-  }
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.headerTop}>
+        <View style={styles.welcomeSection}>
+          <Avatar.Image 
+            size={48} 
+            source={user?.profile_picture ? { uri: user.profile_picture } : require('../../assets/default-avatar.png')}
+            style={styles.avatar}
+          />
+          <View style={styles.welcomeText}>
+            <Text style={styles.welcomeTitle}>Bonjour</Text>
+            <Text style={styles.userName}>{user?.first_name || 'Utilisateur'}</Text>
+          </View>
+        </View>
 
-  const startAnimations = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start()
-  }
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('NotificationsScreen')}
+          >
+            <MaterialCommunityIcons name="bell-outline" size={24} color="#333" />
+            <Badge style={styles.notificationBadge} size={8} />
+          </TouchableOpacity>
 
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const deliveries = await getClientDeliveryHistory({})
-      const active = (deliveries || []).filter((d: any) => 
-        ['pending', 'accepted', 'in_progress', 'picked_up'].includes(d.status)
-      )
-      const recent = (deliveries || [])
-        .filter((d: any) => !['pending', 'accepted', 'in_progress', 'picked_up'].includes(d.status))
-        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 3)
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('WalletScreen')}
+          >
+            <MaterialCommunityIcons name="wallet-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-      setActiveDeliveries(active)
-      setRecentDeliveries(recent)
-    } catch (error) {
-      console.error('Error loading data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+      {currentLocation && (
+        <View style={styles.locationSection}>
+          <MaterialCommunityIcons name="map-marker" size={16} color="#666" />
+          <Text style={styles.locationText} numberOfLines={1}>
+            {currentLocation.address || 'Abidjan, Côte d\'Ivoire'}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
 
-  const onRefresh = async () => {
-    setRefreshing(true)
-    await loadData()
-    setRefreshing(false)
-  }
+  const renderQuickActions = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Services rapides</Text>
+      <View style={styles.quickActionsGrid}>
+        {quickActions.map((action) => (
+          <TouchableOpacity
+            key={action.id}
+            style={styles.quickActionCard}
+            onPress={() => navigation.navigate(action.screen, action.params)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
+              <MaterialCommunityIcons 
+                name={action.icon} 
+                size={28} 
+                color={action.color} 
+              />
+            </View>
+            <Text style={styles.quickActionTitle}>{action.title}</Text>
+            <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
 
-  const getStatusInfo = (status: DeliveryStatus) => {
-    const statusMap = {
-      pending: { color: '#FF9800', text: 'En attente', icon: 'clock' },
-      accepted: { color: '#2196F3', text: 'Acceptée', icon: 'check-circle' },
-      in_progress: { color: '#4CAF50', text: 'En cours', icon: 'truck' },
-      picked_up: { color: '#9C27B0', text: 'Collectée', icon: 'package' },
-      delivered: { color: '#4CAF50', text: 'Livrée', icon: 'check' },
-      completed: { color: '#4CAF50', text: 'Terminée', icon: 'check-circle' },
-      cancelled: { color: '#f44336', text: 'Annulée', icon: 'x-circle' }
-    }
-    return statusMap[status] || { color: '#757575', text: 'Inconnu', icon: 'help-circle' }
-  }
+  const renderCategories = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Catégories</Text>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoriesContainer}
+      >
+        {serviceCategories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
+            style={styles.categoryChip}
+            onPress={() => navigation.navigate('MarketplaceScreen', { category: category.id })}
+          >
+            <View style={[styles.categoryIcon, { backgroundColor: category.color + '15' }]}>
+              <MaterialCommunityIcons 
+                name={category.icon} 
+                size={20} 
+                color={category.color} 
+              />
+            </View>
+            <Text style={styles.categoryName}>{category.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
 
-  const renderActiveDelivery = (delivery: Delivery, index: number) => {
-    const statusInfo = getStatusInfo(delivery.status)
+  const renderRecentOrders = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Vos dernières courses</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('DeliveryHistoryScreen')}>
+          <Text style={styles.seeAllText}>Tout voir</Text>
+        </TouchableOpacity>
+      </View>
 
-    return (
-      <Animated.View key={delivery.id} style={[styles.activeDeliveryCard, { opacity: fadeAnim }]}>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('TrackDelivery', { deliveryId: Number(delivery.id) })}
-          activeOpacity={0.8}
-          style={styles.activeDeliveryContent}
-        >
-          <View style={styles.activeDeliveryHeader}>
-            <View style={styles.deliveryInfoContainer}>
-              <Text style={styles.deliveryNumber}>#{delivery.id}</Text>
-              <View style={[styles.statusIndicator, { backgroundColor: statusInfo.color }]}>
-                <Text style={styles.statusText}>{statusInfo.text}</Text>
+      {recentOrders.map((order) => (
+        <Card key={order.id} style={styles.orderCard}>
+          <Card.Content style={styles.orderContent}>
+            <View style={styles.orderHeader}>
+              <View style={styles.orderInfo}>
+                <View style={styles.routeInfo}>
+                  <MaterialCommunityIcons name="circle-outline" size={12} color="#4CAF50" />
+                  <Text style={styles.locationText} numberOfLines={1}>{order.pickup}</Text>
+                </View>
+                <View style={styles.routeLine} />
+                <View style={styles.routeInfo}>
+                  <MaterialCommunityIcons name="map-marker" size={12} color="#F44336" />
+                  <Text style={styles.locationText} numberOfLines={1}>{order.delivery}</Text>
+                </View>
+              </View>
+
+              <View style={styles.orderMeta}>
+                <Chip 
+                  style={[styles.statusChip, { backgroundColor: getStatusColor(order.status) + '15' }]}
+                  textStyle={[styles.statusText, { color: getStatusColor(order.status) }]}
+                  compact
+                >
+                  {getStatusText(order.status)}
+                </Chip>
+                <Text style={styles.orderAmount}>{order.amount} FCFA</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.trackIconButton}>
-              <Feather name="eye" size={18} color="#666" />
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.routeSection}>
-            <View style={styles.locationRow}>
-              <View style={styles.locationDot} />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {delivery.pickup_address}
-              </Text>
+            <View style={styles.orderFooter}>
+              <Text style={styles.orderDate}>{order.date}</Text>
+              {order.status === 'completed' && order.rating && (
+                <View style={styles.ratingSection}>
+                  <MaterialCommunityIcons name="star" size={14} color="#FFD700" />
+                  <Text style={styles.ratingText}>{order.rating}</Text>
+                </View>
+              )}
+              {order.status === 'in_progress' && order.courier && (
+                <Text style={styles.courierText}>Coursier: {order.courier}</Text>
+              )}
+              {order.status === 'cancelled' && order.reason && (
+                <Text style={styles.reasonText}>{order.reason}</Text>
+              )}
             </View>
+          </Card.Content>
+        </Card>
+      ))}
+    </View>
+  );
 
-            <View style={styles.routeLine} />
-
-            <View style={styles.locationRow}>
-              <View style={[styles.locationDot, styles.destinationDot]} />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {delivery.delivery_address}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.deliveryFooter}>
-            <Text style={styles.priceText}>
-              {formatPrice(delivery.price || delivery.final_price || 0)} F CFA
-            </Text>
-            <Text style={styles.timeText}>
-              {formatDate(delivery.created_at)}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-    )
-  }
-
-  const renderQuickAction = (action: QuickAction, index: number) => (
-    <Animated.View key={action.id} style={[styles.quickActionContainer, { opacity: fadeAnim }]}>
-      <TouchableOpacity
-        style={styles.quickActionButton}
-        onPress={() => navigation.navigate(action.route as any, action.params)}
-        activeOpacity={0.8}
-      >
-        <View style={[styles.actionIconContainer, { backgroundColor: action.color }]}>
-          {action.iconFamily === 'Feather' && (
-            <Feather name={action.icon as any} size={20} color="#FFFFFF" />
-          )}
-          {action.iconFamily === 'MaterialIcons' && (
-            <MaterialIcons name={action.icon as any} size={20} color="#FFFFFF" />
-          )}
-          {action.iconFamily === 'Ionicons' && (
-            <Ionicons name={action.icon as any} size={20} color="#FFFFFF" />
-          )}
-        </View>
-        <Text style={styles.actionTitle}>{action.title}</Text>
-        <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-      </TouchableOpacity>
-    </Animated.View>
-  )
-
-  const renderRecentDelivery = (delivery: Delivery, index: number) => {
-    const statusInfo = getStatusInfo(delivery.status)
+  const renderWeatherInfo = () => {
+    if (!weatherData) return null;
 
     return (
-      <TouchableOpacity 
-        key={delivery.id}
-        style={styles.recentDeliveryItem}
-        onPress={() => navigation.navigate('DeliveryDetails', { deliveryId: delivery.id.toString() })}
-        activeOpacity={0.8}
-      >
-        <View style={styles.recentDeliveryLeft}>
-          <View style={styles.recentDeliveryHeader}>
-            <Text style={styles.recentDeliveryId}>#{delivery.id}</Text>
-            <View style={[styles.miniStatusBadge, { backgroundColor: statusInfo.color }]} />
-          </View>
-          <Text style={styles.recentDeliveryRoute} numberOfLines={1}>
-            {delivery.pickup_commune} → {delivery.delivery_commune}
+      <Card style={styles.weatherCard}>
+        <Card.Content style={styles.weatherContent}>
+          <MaterialCommunityIcons 
+            name="weather-sunny" 
+            size={24} 
+            color="#FF9800" 
+          />
+          <Text style={styles.weatherText}>
+            {weatherData.temperature}°C • {weatherData.description}
           </Text>
-          <Text style={styles.recentDeliveryDate}>
-            {formatDate(delivery.created_at)}
+          <Text style={styles.weatherHumidity}>
+            Humidité {weatherData.humidity}%
           </Text>
-        </View>
-        <View style={styles.recentDeliveryRight}>
-          <Text style={styles.recentDeliveryPrice}>
-            {formatPrice(delivery.price || delivery.final_price || 0)} F
-          </Text>
-          <Feather name="chevron-right" size={16} color="#999" />
-        </View>
-      </TouchableOpacity>
-    )
-  }
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1976D2" />
-          <Text style={styles.loadingText}>Chargement...</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
+        </Card.Content>
+      </Card>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <OfflineIndicator />
 
-      {/* Header épuré */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-              <Avatar.Text 
-                size={42} 
-                label={
-                  user?.full_name
-                    ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2)
-                    : user?.first_name
-                      ? user.first_name.charAt(0).toUpperCase()
-                      : 'U'
-                }
-                style={styles.avatar}
-                labelStyle={styles.avatarLabel}
-              />
-            </TouchableOpacity>
-            <View style={styles.greetingContainer}>
-              <Text style={styles.greetingText}>
-                {greeting}, {user?.first_name || 'Utilisateur'}
-              </Text>
-              <Text style={styles.locationText}>Abidjan, Côte d'Ivoire</Text>
-            </View>
-          </View>
-
-          <View style={styles.headerRight}>
-            {!connected && (
-              <View style={styles.offlineIndicator}>
-                <Feather name="wifi-off" size={16} color="#f44336" />
-              </View>
-            )}
-            <TouchableOpacity 
-              style={styles.notificationButton}
-              onPress={() => navigation.navigate('Notifications')}
-            >
-              <Feather name="bell" size={22} color="#333" />
-              {unreadCount > 0 && (
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.badgeText}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      <ScrollView
+      <ScrollView 
         style={styles.scrollView}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            colors={['#1976D2']}
-            tintColor="#1976D2"
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Barre de recherche moderne */}
-        <View style={styles.searchSection}>
-          <Searchbar
-            placeholder="Où livrer ?"
-            onChangeText={setSearchQuery}
-            value={searchQuery}
-            style={styles.searchBar}
-            inputStyle={styles.searchInput}
-            iconColor="#666"
-            placeholderTextColor="#999"
-            onSubmitEditing={() => navigation.navigate('CreateDelivery', { searchQuery })}
-          />
-        </View>
+        {renderHeader()}
+        {renderWeatherInfo()}
+        {renderQuickActions()}
+        {renderCategories()}
+        {renderRecentOrders()}
 
-        {/* Livraisons actives */}
-        {activeDeliveries.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>En cours</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalScrollContainer}
-            >
-              {activeDeliveries.map(renderActiveDelivery)}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Actions rapides avec design épuré */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Services</Text>
-          <View style={styles.quickActionsGrid}>
-            {quickActions.map(renderQuickAction)}
-          </View>
-        </View>
-
-        {/* Livraisons récentes */}
-        {recentDeliveries.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Activité récente</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('DeliveryHistory')}>
-                <Text style={styles.seeAllText}>Voir tout</Text>
-              </TouchableOpacity>
-            </View>
-            <Surface style={styles.recentDeliveriesCard} elevation={1}>
-              {recentDeliveries.map((delivery, index) => (
-                <View key={delivery.id}>
-                  {renderRecentDelivery(delivery, index)}
-                  {index < recentDeliveries.length - 1 && <Divider style={styles.divider} />}
-                </View>
-              ))}
-            </Surface>
-          </View>
-        )}
-
-        {/* Raccourcis additionnels */}
-        <View style={styles.section}>
-          <View style={styles.additionalServicesGrid}>
-            <TouchableOpacity 
-              style={styles.serviceCard}
-              onPress={() => navigation.navigate('Wallet')}
-            >
-              <View style={[styles.serviceIcon, { backgroundColor: '#E8F5E8' }]}>
-                <Feather name="credit-card" size={20} color="#2E7D32" />
-              </View>
-              <Text style={styles.serviceTitle}>Portefeuille</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.serviceCard}
-              onPress={() => navigation.navigate('Support')}
-            >
-              <View style={[styles.serviceIcon, { backgroundColor: '#E3F2FD' }]}>
-                <Feather name="help-circle" size={20} color="#1976D2" />
-              </View>
-              <Text style={styles.serviceTitle}>Aide</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.serviceCard}
-              onPress={() => navigation.navigate('Marketplace')}
-            >
-              <View style={[styles.serviceIcon, { backgroundColor: '#FFF3E0' }]}>
-                <Feather name="shopping-bag" size={20} color="#F57C00" />
-              </View>
-              <Text style={styles.serviceTitle}>Boutique</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.serviceCard}
-              onPress={() => navigation.navigate('Settings')}
-            >
-              <View style={[styles.serviceIcon, { backgroundColor: '#F3E5F5' }]}>
-                <Feather name="settings" size={20} color="#7B1FA2" />
-              </View>
-              <Text style={styles.serviceTitle}>Paramètres</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={{ height: 120 }} />
+        <View style={styles.bottomPadding} />
       </ScrollView>
 
-      {/* FAB moderne */}
       <FAB
-        style={styles.fab}
         icon="plus"
+        style={styles.fab}
+        onPress={() => navigation.navigate('CreateDeliveryScreen')}
         color="#FFFFFF"
-        onPress={() => navigation.navigate('CreateDelivery')}
-        customSize={56}
       />
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -475,115 +385,98 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  loadingContainer: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
   },
   header: {
     backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? 0 : 10,
-    paddingBottom: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  headerContent: {
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    marginBottom: 12,
   },
-  headerLeft: {
+  welcomeSection: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
   avatar: {
-    backgroundColor: '#1976D2',
     marginRight: 12,
   },
-  avatarLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  greetingContainer: {
+  welcomeText: {
     flex: 1,
   },
-  greetingText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  locationText: {
-    fontSize: 13,
+  welcomeTitle: {
+    fontSize: 14,
     color: '#666',
+    fontWeight: '400',
   },
-  headerRight: {
+  userName: {
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  offlineIndicator: {
-    marginRight: 12,
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: '#FFEBEE',
-  },
-  notificationButton: {
+  headerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
     position: 'relative',
-    padding: 8,
   },
   notificationBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#f44336',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
+    top: 8,
+    right: 8,
+    backgroundColor: '#FF6B00',
+  },
+  locationSection: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  scrollView: {
+  locationText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 4,
     flex: 1,
   },
-  searchSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+  weatherCard: {
+    margin: 16,
     backgroundColor: '#FFFFFF',
-    marginBottom: 8,
-  },
-  searchBar: {
-    backgroundColor: '#F5F5F5',
-    elevation: 0,
+    elevation: 2,
     borderRadius: 12,
-    height: 48,
   },
-  searchInput: {
+  weatherContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  weatherText: {
     fontSize: 16,
     color: '#333',
+    fontWeight: '500',
+    marginLeft: 8,
+    flex: 1,
+  },
+  weatherHumidity: {
+    fontSize: 12,
+    color: '#666',
   },
   section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 16,
+    marginTop: 8,
     paddingHorizontal: 20,
   },
   sectionHeader: {
@@ -591,216 +484,175 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
   },
   seeAllText: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#FF6B00',
     fontWeight: '600',
   },
-  horizontalScrollContainer: {
-    paddingLeft: 20,
-    paddingRight: 10,
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  activeDeliveryCard: {
-    marginRight: 16,
-    borderRadius: 16,
+  quickActionCard: {
+    width: (width - 52) / 2,
     backgroundColor: '#FFFFFF',
-    width: width * 0.85,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  activeDeliveryContent: {
-    padding: 20,
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  activeDeliveryHeader: {
+  quickActionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  quickActionSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  categoriesContainer: {
+    paddingRight: 20,
+  },
+  categoryChip: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginRight: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  categoryIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+  },
+  orderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  orderContent: {
+    padding: 16,
+  },
+  orderHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  deliveryInfoContainer: {
+  orderInfo: {
     flex: 1,
+    marginRight: 16,
   },
-  deliveryNumber: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 6,
+  routeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  statusIndicator: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
+  routeLine: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#E0E0E0',
+    marginLeft: 6,
+    marginVertical: 2,
+  },
+  orderMeta: {
+    alignItems: 'flex-end',
+  },
+  statusChip: {
+    marginBottom: 8,
   },
   statusText: {
     fontSize: 12,
-    color: '#FFFFFF',
     fontWeight: '600',
   },
-  trackIconButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F5',
-  },
-  routeSection: {
-    marginBottom: 16,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  locationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#4CAF50',
-    marginRight: 12,
-  },
-  destinationDot: {
-    backgroundColor: '#f44336',
-  },
-  routeLine: {
-    width: 2,
-    height: 16,
-    backgroundColor: '#E0E0E0',
-    marginLeft: 3,
-    marginBottom: 8,
-  },
-  deliveryFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  priceText: {
+  orderAmount: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1976D2',
+    color: '#333',
   },
-  timeText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  quickActionsGrid: {
+  orderFooter: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
     justifyContent: 'space-between',
-  },
-  quickActionContainer: {
-    width: (width - 80) / 4,
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    paddingTop: 12,
   },
-  quickActionButton: {
-    alignItems: 'center',
-    padding: 12,
-  },
-  actionIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  actionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  actionSubtitle: {
-    fontSize: 10,
-    color: '#666',
-    textAlign: 'center',
-  },
-  recentDeliveriesCard: {
-    marginHorizontal: 20,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  recentDeliveryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  recentDeliveryLeft: {
-    flex: 1,
-  },
-  recentDeliveryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  recentDeliveryId: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginRight: 8,
-  },
-  miniStatusBadge: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  recentDeliveryRoute: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
-  },
-  recentDeliveryDate: {
+  orderDate: {
     fontSize: 12,
     color: '#666',
   },
-  recentDeliveryRight: {
+  ratingSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  recentDeliveryPrice: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1976D2',
-    marginRight: 8,
-  },
-  divider: {
-    marginHorizontal: 16,
-    backgroundColor: '#F0F0F0',
-  },
-  additionalServicesGrid: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    justifyContent: 'space-between',
-  },
-  serviceCard: {
-    alignItems: 'center',
-    width: (width - 80) / 4,
-  },
-  serviceIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  serviceTitle: {
+  ratingText: {
     fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+  },
+  courierText: {
+    fontSize: 12,
+    color: '#4CAF50',
     fontWeight: '500',
-    color: '#333',
-    textAlign: 'center',
+  },
+  reasonText: {
+    fontSize: 12,
+    color: '#F44336',
+    fontStyle: 'italic',
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
-    right: 20,
-    backgroundColor: '#1976D2',
-    borderRadius: 28,
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FF6B00',
   },
-})
-
-export default ClientHomeScreen
+  bottomPadding: {
+    height: 80,
+  },
+});
