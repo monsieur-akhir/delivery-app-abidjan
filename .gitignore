@@ -207,3 +207,4 @@ mobile/dist/
 ./delivery-app-abidjan/backend/.env.*
 ./delivery-app-abidjan/backend/.env.dev
 
+*.dev
