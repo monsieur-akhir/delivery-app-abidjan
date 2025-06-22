@@ -9,7 +9,7 @@ import asyncio
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import os
 
-from ..core.config import settings
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

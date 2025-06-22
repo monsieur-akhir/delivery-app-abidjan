@@ -64,12 +64,7 @@ class Settings(BaseSettings):
     # Rasa
     RASA_URL: str = os.getenv("RASA_URL", "http://localhost:5005")
 
-    # SMS
-    SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "brevo")
-    SMS_API_KEY: str = os.getenv("SMS_API_KEY", "")
-    SMS_SENDER_NUMBER: str = os.getenv("SMS_SENDER_NUMBER", "")
-    SMS_DAILY_LIMIT: int = int(os.getenv("SMS_DAILY_LIMIT", "1000"))
-    SMS_ENABLED: bool = os.getenv("SMS_ENABLED", "True").lower() == "true"
+    
 
     # Africa's Talking
     AFRICAS_TALKING_USERNAME: str = os.getenv("AFRICAS_TALKING_USERNAME", "")
@@ -92,26 +87,43 @@ class Settings(BaseSettings):
     # Langues supportées
     SUPPORTED_LANGUAGES: List[str] = ["fr", "dioula", "baoulé"]
 
-    # Brevo (Sendinblue)
+    # Brevo (Sendinblue) Configuration
     BREVO_API_KEY: str = os.getenv("BREVO_API_KEY", "")
     BREVO_API_KEY_MAIL: str = os.getenv("BREVO_API_KEY_MAIL", "")
     BREVO_API_KEY_SMS: str = os.getenv("BREVO_API_KEY_SMS", "")
     BREVO_MAIL_API_URL: str = os.getenv("BREVO_MAIL_API_URL", "https://api.brevo.com/v3/smtp/email")
     BREVO_SMS_API_URL: str = os.getenv("BREVO_SMS_API_URL", "https://api.brevo.com/v3/transactionalSMS/sms")
     BREVO_ENABLED: bool = os.getenv("BREVO_ENABLED", "True").lower() == "true"
-    BREVO_FROM_EMAIL: str = os.getenv("MAIL_FROM", "")
-    BREVO_FROM_NAME: str = os.getenv("EMAIL_SENDER_NAME", "")
-    SMS_SENDER: str = os.getenv("SMS_SENDER", "")
+    BREVO_FROM_EMAIL: str = os.getenv("BREVO_FROM_EMAIL", "noreply@livraison-abidjan.com")
+    BREVO_FROM_NAME: str = os.getenv("BREVO_FROM_NAME", "Livraison Abidjan")
+    
+    # Email Configuration avancée
+    EMAIL_ENABLED: bool = os.getenv("EMAIL_ENABLED", "True").lower() == "true"
+    EMAIL_PROVIDER: str = os.getenv("EMAIL_PROVIDER", "brevo")
+    EMAIL_SENDER_ADDRESS: str = os.getenv("EMAIL_SENDER_ADDRESS", "noreply@livraison-abidjan.com")
+    EMAIL_SENDER_NAME: str = os.getenv("EMAIL_SENDER_NAME", "Livraison Abidjan")
+    
+    # SMS Configuration avancée
+    SMS_ENABLED: bool = os.getenv("SMS_ENABLED", "True").lower() == "true"
+    SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "brevo")
+    SMS_SENDER: str = os.getenv("SMS_SENDER", "LiverCI")
+    SMS_SENDER_ID: str = os.getenv("SMS_SENDER_ID", "LiverCI")
+    SMS_API_KEY: str = os.getenv("SMS_API_KEY", "")
+    SMS_SENDER_NUMBER: str = os.getenv("SMS_SENDER_NUMBER", "")
+    SMS_DAILY_LIMIT: int = int(os.getenv("SMS_DAILY_LIMIT", "1000"))
+    
+    # Configuration OTP
+    OTP_EXPIRY_MINUTES: int = int(os.getenv("OTP_EXPIRY_MINUTES", "10"))
+    OTP_LENGTH: int = int(os.getenv("OTP_LENGTH", "6"))
+    OTP_MAX_ATTEMPTS: int = int(os.getenv("OTP_MAX_ATTEMPTS", "3"))
 
-    # SMTP/Mail générique
-    MAIL_HOST: str = os.getenv("MAIL_HOST", "")
+    # SMTP/Mail générique (fallback)
+    MAIL_HOST: str = os.getenv("MAIL_HOST", "smtp-relay.brevo.com")
     MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
     MAIL_USER: str = os.getenv("MAIL_USER", "")
     MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
-    MAIL_FROM: str = os.getenv("MAIL_FROM", "")
-    MAIL_TRANSPORT: str = os.getenv("MAIL_TRANSPORT", "")
-    EMAIL_SENDER_ADDRESS: str = os.getenv("EMAIL_SENDER_ADDRESS", "")
-    EMAIL_SENDER_NAME: str = os.getenv("EMAIL_SENDER_NAME", "")
+    MAIL_FROM: str = os.getenv("MAIL_FROM", "noreply@livraison-abidjan.com")
+    MAIL_TRANSPORT: str = os.getenv("MAIL_TRANSPORT", "smtp")
 
     # Google Places
     GOOGLE_PLACES_API_KEY: str = os.getenv("GOOGLE_PLACES_API_KEY", "")
