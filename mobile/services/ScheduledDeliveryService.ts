@@ -426,6 +426,140 @@ class ScheduledDeliveryService {
   }
 
   /**
+   * Négocier le prix d'une livraison planifiée
+   */
+  async negotiateScheduledDelivery(
+    scheduleId: number,
+    proposedPrice: number,
+    message?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    try {
+      const response = await apiClient.post(`${this.baseURL}/${scheduleId}/negotiate`, {
+        proposed_price: proposedPrice,
+        message: message
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Erreur lors de la négociation:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la négociation');
+    }
+  }
+
+  /**
+   * Refuser une livraison planifiée (côté coursier)
+   */
+  async rejectScheduledDelivery(
+    scheduleId: number,
+    reason?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    try {
+      const response = await apiClient.post(`${this.baseURL}/${scheduleId}/reject-courier`, {
+        reason: reason
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Erreur lors du refus:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors du refus');
+    }
+  }
+
+  /**
+   * Récupérer les négociations en attente
+   */
+  async getPendingNegotiations(): Promise<{
+    success: boolean;
+    negotiations: any[];
+  }> {
+    try {
+      const response = await apiClient.get('/negotiations/pending');
+      return {
+        success: true,
+        negotiations: response.data
+      };
+    } catch (error: any) {
+      console.error('Erreur lors de la récupération des négociations:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération');
+    }
+  }
+
+  /**
+   * Répondre à une négociation
+   */
+  async respondToNegotiation(
+    negotiationId: number,
+    accept: boolean,
+    message?: string
+  ): Promise<{
+    success: boolean;
+    negotiation: any;
+  }> {
+    try {
+      const response = await apiClient.post(`/negotiations/${negotiationId}/respond`, {
+        accept: accept,
+        message: message
+      });
+      return {
+        success: true,
+        negotiation: response.data
+      };
+    } catch (error: any) {
+      console.error('Erreur lors de la réponse à la négociation:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la réponse');
+    }
+  }
+
+  /**
+   * Faire une contre-offre
+   */
+  async createCounterOffer(
+    negotiationId: number,
+    proposedPrice: number,
+    message?: string
+  ): Promise<{
+    success: boolean;
+    counterOffer: any;
+  }> {
+    try {
+      const response = await apiClient.post(`/negotiations/${negotiationId}/counter-offer`, {
+        proposed_price: proposedPrice,
+        message: message
+      });
+      return {
+        success: true,
+        counterOffer: response.data
+      };
+    } catch (error: any) {
+      console.error('Erreur lors de la contre-offre:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la contre-offre');
+    }
+  }
+
+  /**
+   * Récupérer l'historique des négociations
+   */
+  async getNegotiationHistory(scheduleId: number): Promise<{
+    success: boolean;
+    negotiations: any[];
+  }> {
+    try {
+      const response = await apiClient.get(`/negotiations/history/${scheduleId}`);
+      return {
+        success: true,
+        negotiations: response.data
+      };
+    } catch (error: any) {
+      console.error('Erreur lors de la récupération de l\'historique:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération');
+    }
+  }
+
+  /**
    * Récupérer le statut de coordination
    */
   async getCoordinationStatus(executionId: number): Promise<{

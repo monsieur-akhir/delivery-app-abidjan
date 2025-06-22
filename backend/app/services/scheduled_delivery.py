@@ -411,7 +411,7 @@ class ScheduledDeliveryService:
 
     @staticmethod
     def notify_couriers_for_scheduling(db: Session, schedule: ScheduledDelivery, available_couriers: list):
-        """Notifier les coursiers qu'une nouvelle planification est disponible pour acceptation"""
+        """Notifier les coursiers qu'une nouvelle planification est disponible pour acceptation ou négociation"""
         
         from ..services.notification import send_notification
         
@@ -424,9 +424,9 @@ class ScheduledDeliveryService:
                 message += f"📍 De {schedule.pickup_commune} vers {schedule.delivery_commune}\n"
                 message += f"📅 Prévue pour le {schedule.scheduled_date.strftime('%d/%m/%Y à %H:%M')}\n"
                 message += f"📏 Distance: {distance:.1f}km\n"
-                message += f"💰 Prix: {schedule.proposed_price}€\n"
+                message += f"💰 Prix proposé: {schedule.proposed_price}€\n"
                 message += f"📦 {schedule.package_description or 'Colis standard'}\n"
-                message += "⚡ Acceptez rapidement pour réserver cette livraison !"
+                message += "⚡ Vous pouvez accepter, refuser ou négocier le prix !"
                 
                 send_notification(
                     db,
@@ -438,12 +438,40 @@ class ScheduledDeliveryService:
                         "schedule_id": schedule.id,
                         "scheduled_date": schedule.scheduled_date.isoformat(),
                         "distance": distance,
-                        "price": schedule.proposed_price
+                        "price": schedule.proposed_price,
+                        "actions": ["accept", "negotiate", "reject"]
                     }
                 )
                 
         except Exception as e:
             logger.error(f"Erreur lors de la notification des coursiers pour planification: {e}")
+
+    @staticmethod
+    def start_negotiation_with_courier(db: Session, schedule_id: int, courier_id: int, 
+                                     proposed_price: float, message: str = None) -> bool:
+        """Démarrer une négociation entre client et coursier"""
+        
+        from ..services.negotiation import NegotiationService
+        from ..schemas.negotiation import NegotiationCreate
+        
+        try:
+            negotiation_data = NegotiationCreate(
+                scheduled_delivery_id=schedule_id,
+                proposed_price=proposed_price,
+                message=message
+            )
+            
+            # Le coursier fait une offre au client
+            negotiation = NegotiationService.create_initial_negotiation(
+                db, 0, courier_id, negotiation_data  # client_id sera pris de la schedule
+            )
+            
+            logger.info(f"Négociation démarrée entre client et coursier {courier_id} pour la planification {schedule_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Erreur lors du démarrage de la négociation: {e}")
+            return False
 
     @staticmethod
     def assign_courier_to_schedule(db: Session, schedule_id: int, courier_id: int) -> bool:

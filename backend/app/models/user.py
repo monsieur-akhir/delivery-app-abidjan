@@ -48,7 +48,16 @@ class User(Base):
     # Relations avec les livraisons
     client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="[Delivery.client_id]")
     courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="[Delivery.courier_id]")
+    # Relations pour les livraisons planifiées
     scheduled_deliveries = relationship("ScheduledDelivery", back_populates="client")
+
+    # Relations pour les négociations
+    client_negotiations = relationship("ScheduledDeliveryNegotiation", 
+                                     foreign_keys="ScheduledDeliveryNegotiation.client_id",
+                                     back_populates="client")
+    courier_negotiations = relationship("ScheduledDeliveryNegotiation", 
+                                      foreign_keys="ScheduledDeliveryNegotiation.courier_id",
+                                      back_populates="courier")
     complaints = relationship("Complaint", back_populates="user", foreign_keys="[Complaint.user_id]")
     assigned_complaints = relationship("Complaint", back_populates="assigned_manager", foreign_keys="[Complaint.assigned_to]")
     assigned_tickets = relationship("SupportTicket", back_populates="assigned_agent", foreign_keys="[SupportTicket.assigned_agent_id]")

@@ -501,7 +501,7 @@ async def accept_scheduled_delivery_by_courier(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Un coursier accepte une livraison planifiée"""
+    """Un coursier accepte une livraison planifiée au prix proposé"""
     
     if current_user.role != "courier":
         raise HTTPException(status_code=403, detail="Seuls les coursiers peuvent accepter")
@@ -521,7 +521,7 @@ async def accept_scheduled_delivery_by_courier(
             # Notifier le client que sa planification est confirmée
             from ..services.notification import send_notification
             
-            message = f"Votre livraison planifiée '{schedule.title}' pour le {schedule.scheduled_date.strftime('%d/%m/%Y à %H:%M')} a été confirmée ! Le coursier {current_user.full_name} s'en chargera."
+            message = f"Votre livraison planifiée '{schedule.title}' pour le {schedule.scheduled_date.strftime('%d/%m/%Y à %H:%M')} a été confirmée ! Le coursier {current_user.full_name} s'en chargera au prix de {schedule.proposed_price}€."
             
             send_notification(
                 db,
@@ -539,6 +539,85 @@ async def accept_scheduled_delivery_by_courier(
     except Exception as e:
         logger.error(f"Erreur acceptation planification: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erreur lors de l'acceptation: {str(e)}")
+
+@router.post("/scheduled-deliveries/{schedule_id}/negotiate")
+async def negotiate_scheduled_delivery(
+    schedule_id: int,
+    negotiation_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Démarrer une négociation pour une livraison planifiée"""
+    
+    schedule = ScheduledDeliveryService.get_scheduled_delivery(db, schedule_id)
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Planification non trouvée")
+    
+    if schedule.status != "pending":
+        raise HTTPException(status_code=400, detail="Cette planification n'est plus disponible pour négociation")
+    
+    try:
+        proposed_price = negotiation_data.get('proposed_price')
+        message = negotiation_data.get('message', '')
+        
+        if not proposed_price:
+            raise HTTPException(status_code=400, detail="Prix proposé requis")
+        
+        # Démarrer la négociation
+        success = ScheduledDeliveryService.start_negotiation_with_courier(
+            db, schedule_id, current_user.id, proposed_price, message
+        )
+        
+        if success:
+            return {"success": True, "message": "Négociation démarrée avec succès"}
+        else:
+            raise HTTPException(status_code=500, detail="Erreur lors du démarrage de la négociation")
+            
+    except Exception as e:
+        logger.error(f"Erreur négociation: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erreur lors de la négociation: {str(e)}")
+
+@router.post("/scheduled-deliveries/{schedule_id}/reject-courier")
+async def reject_scheduled_delivery_by_courier(
+    schedule_id: int,
+    rejection_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Un coursier refuse une livraison planifiée"""
+    
+    if current_user.role != "courier":
+        raise HTTPException(status_code=403, detail="Seuls les coursiers peuvent refuser")
+    
+    schedule = ScheduledDeliveryService.get_scheduled_delivery(db, schedule_id)
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Planification non trouvée")
+    
+    try:
+        reason = rejection_data.get('reason', 'Non spécifiée')
+        
+        # Notifier le client du refus
+        from ..services.notification import send_notification
+        
+        message = f"Le coursier {current_user.full_name} a refusé votre livraison planifiée '{schedule.title}'."
+        if reason:
+            message += f"\nRaison: {reason}"
+        message += "\nVous pouvez modifier votre offre ou attendre d'autres propositions."
+        
+        send_notification(
+            db,
+            schedule.client_id,
+            "Livraison Planifiée Refusée",
+            message,
+            notification_type="schedule_rejected",
+            data={"schedule_id": schedule_id, "courier_id": current_user.id, "reason": reason}
+        )
+        
+        return {"success": True, "message": "Refus enregistré avec succès"}
+        
+    except Exception as e:
+        logger.error(f"Erreur refus planification: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erreur lors du refus: {str(e)}")
 
 @router.get("/scheduled-deliveries/{execution_id}/coordination-status")
 async def get_coordination_status(
