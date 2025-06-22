@@ -34,6 +34,9 @@ import CourierEarningsScreen from '../screens/courier/CourierEarningsScreen';
 import CollaborativeDeliveriesScreen from '../screens/courier/CollaborativeDeliveriesScreen';
 import GamificationScreen from '../screens/courier/GamificationScreen';
 import CommunityWalletScreen from '../screens/courier/CommunityWalletScreen';
+import ExpressDeliveriesScreen from '../screens/courier/ExpressDeliveriesScreen';
+import CourierScheduledDeliveriesScreen from '../screens/courier/CourierScheduledDeliveriesScreen';
+import CourierMultiDestinationScreen from '../screens/courier/CourierMultiDestinationScreen';
 
 // Profile Screens
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -183,6 +186,9 @@ export default function AppNavigator() {
           <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />
           <Stack.Screen name="Gamification" component={GamificationScreen} />
           <Stack.Screen name="CommunityWallet" component={CommunityWalletScreen} />
+          <Stack.Screen name="ExpressDeliveries" component={ExpressDeliveriesScreen} />
+          <Stack.Screen name="CourierScheduledDeliveries" component={CourierScheduledDeliveriesScreen} />
+          <Stack.Screen name="CourierMultiDestination" component={CourierMultiDestinationScreen} />
         </Stack.Group>
       )}
     </Stack.Navigator>

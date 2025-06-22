@@ -114,6 +114,18 @@ export type RootStackParamList = {
   MultiDestinationDeliveries: undefined
   CreateMultiDestinationDelivery: undefined
   MultiDestinationDeliveryDetails: { deliveryId: number }
+
+  // Courier routes
+  CourierDashboard: undefined;
+  AvailableDeliveries: undefined;
+  CourierTrackDelivery: { deliveryId: string };
+  CourierEarnings: undefined;
+  CollaborativeDeliveries: undefined;
+  CourierScheduledDeliveries: undefined;
+  CourierMultiDestination: undefined;
+  ExpressDeliveries: undefined;
+  Gamification: undefined;
+  CommunityWallet: undefined;
 };
 
 // Tab Parameter Lists
