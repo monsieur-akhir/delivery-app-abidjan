@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react'
 import { 
   View, 
@@ -6,17 +5,14 @@ import {
   ScrollView, 
   RefreshControl, 
   TouchableOpacity, 
-  Alert,
   Animated,
   Dimensions,
   StatusBar,
-  ImageBackground,
   Platform
 } from 'react-native'
 import { 
   Text, 
   Card, 
-  Button, 
   Surface, 
   Avatar, 
   Chip,
@@ -29,9 +25,6 @@ import {
 } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
-import { BlurView } from 'expo-blur'
-import { CustomMapView } from '../../components'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useWebSocket } from '../../contexts/WebSocketContext'
@@ -54,7 +47,6 @@ interface QuickAction {
   icon: string
   iconFamily: 'Feather' | 'MaterialIcons' | 'Ionicons'
   color: string
-  gradient: string[]
   route: string
   params?: any
 }
@@ -73,51 +65,45 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [greeting, setGreeting] = useState('')
 
   const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(50)).current
-  const scaleAnim = useRef(new Animated.Value(0.9)).current
 
-  // Actions rapides pour les clients
+  // Actions rapides avec design épuré
   const quickActions: QuickAction[] = [
     {
       id: 'standard',
-      title: 'Livraison Standard',
-      subtitle: 'Économique et fiable',
+      title: 'Livraison',
+      subtitle: 'Économique',
       icon: 'package',
       iconFamily: 'Feather',
-      color: '#4CAF50',
-      gradient: ['#4CAF50', '#66BB6A'],
+      color: '#2E7D32',
       route: 'CreateDelivery',
       params: { serviceType: 'standard' }
     },
     {
       id: 'express',
-      title: 'Livraison Express',
-      subtitle: 'Rapide et prioritaire',
-      icon: 'flash',
-      iconFamily: 'Ionicons',
-      color: '#FF6B00',
-      gradient: ['#FF6B00', '#FF8F00'],
+      title: 'Express',
+      subtitle: 'Rapide',
+      icon: 'zap',
+      iconFamily: 'Feather',
+      color: '#F57C00',
       route: 'CreateDelivery',
       params: { serviceType: 'express' }
     },
     {
       id: 'scheduled',
       title: 'Planifier',
-      subtitle: 'Programmer une livraison',
-      icon: 'schedule',
-      iconFamily: 'MaterialIcons',
-      color: '#9C27B0',
-      gradient: ['#9C27B0', '#BA68C8'],
+      subtitle: 'Plus tard',
+      icon: 'clock',
+      iconFamily: 'Feather',
+      color: '#7B1FA2',
       route: 'ScheduledDeliveries'
     },
     {
       id: 'multiple',
-      title: 'Multi-destinations',
-      subtitle: 'Plusieurs arrêts',
-      icon: 'map',
-      iconFamily: 'Ionicons',
-      color: '#2196F3',
-      gradient: ['#2196F3', '#42A5F5'],
+      title: 'Multi-stops',
+      subtitle: 'Plusieurs',
+      icon: 'map-pin',
+      iconFamily: 'Feather',
+      color: '#1976D2',
       route: 'MultiDestinationDeliveries'
     }
   ]
@@ -136,24 +122,11 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }
 
   const startAnimations = () => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      })
-    ]).start()
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start()
   }
 
   const loadData = async () => {
@@ -163,12 +136,11 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       const active = (deliveries || []).filter((d: any) => 
         ['pending', 'accepted', 'in_progress', 'picked_up'].includes(d.status)
       )
-      // Récupérer les 3 dernières livraisons (tous statuts confondus sauf en cours)
       const recent = (deliveries || [])
         .filter((d: any) => !['pending', 'accepted', 'in_progress', 'picked_up'].includes(d.status))
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 3)
-      
+
       setActiveDeliveries(active)
       setRecentDeliveries(recent)
     } catch (error) {
@@ -199,127 +171,84 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const renderActiveDelivery = (delivery: Delivery, index: number) => {
     const statusInfo = getStatusInfo(delivery.status)
-    
+
     return (
-      <Animated.View 
-        key={delivery.id}
-        style={[
-          styles.activeDeliveryCard,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateX: slideAnim }]
-          }
-        ]}
-      >
+      <Animated.View key={delivery.id} style={[styles.activeDeliveryCard, { opacity: fadeAnim }]}>
         <TouchableOpacity 
           onPress={() => navigation.navigate('TrackDelivery', { deliveryId: Number(delivery.id) })}
-          activeOpacity={0.9}
+          activeOpacity={0.8}
+          style={styles.activeDeliveryContent}
         >
-          <LinearGradient
-            colors={['#FF6B00', '#FF8F00']}
-            style={styles.activeDeliveryGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.activeDeliveryHeader}>
-              <View style={styles.activeDeliveryInfo}>
-                <Text style={styles.activeDeliveryTitle}>Livraison #{delivery.id}</Text>
-                <View style={styles.statusContainer}>
-                  <Feather name={statusInfo.icon as any} size={14} color="#FFFFFF" />
-                  <Text style={styles.statusText}>{statusInfo.text}</Text>
-                </View>
-              </View>
-              <IconButton
-                icon="eye"
-                iconColor="#FFFFFF"
-                size={20}
-                style={styles.trackButton}
-                onPress={() => navigation.navigate('TrackDelivery', { deliveryId: Number(delivery.id) })}
-              />
-            </View>
-
-            <View style={styles.routeContainer}>
-              <View style={styles.routePoint}>
-                <View style={styles.routeIcon}>
-                  <Feather name="map-pin" size={12} color="#FF6B00" />
-                </View>
-                <Text style={styles.routeText} numberOfLines={1}>
-                  {delivery.pickup_address}
-                </Text>
-              </View>
-              
-              <View style={styles.routeLine} />
-              
-              <View style={styles.routePoint}>
-                <View style={styles.routeIcon}>
-                  <Feather name="target" size={12} color="#FF6B00" />
-                </View>
-                <Text style={styles.routeText} numberOfLines={1}>
-                  {delivery.delivery_address}
-                </Text>
+          <View style={styles.activeDeliveryHeader}>
+            <View style={styles.deliveryInfoContainer}>
+              <Text style={styles.deliveryNumber}>#{delivery.id}</Text>
+              <View style={[styles.statusIndicator, { backgroundColor: statusInfo.color }]}>
+                <Text style={styles.statusText}>{statusInfo.text}</Text>
               </View>
             </View>
+            <TouchableOpacity style={styles.trackIconButton}>
+              <Feather name="eye" size={18} color="#666" />
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.deliveryFooter}>
-              <Text style={styles.priceText}>
-                {formatPrice(delivery.price || delivery.final_price || 0)} F
-              </Text>
-              <Text style={styles.timeText}>
-                {formatDate(delivery.created_at)}
+          <View style={styles.routeSection}>
+            <View style={styles.locationRow}>
+              <View style={styles.locationDot} />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {delivery.pickup_address}
               </Text>
             </View>
-          </LinearGradient>
+
+            <View style={styles.routeLine} />
+
+            <View style={styles.locationRow}>
+              <View style={[styles.locationDot, styles.destinationDot]} />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {delivery.delivery_address}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.deliveryFooter}>
+            <Text style={styles.priceText}>
+              {formatPrice(delivery.price || delivery.final_price || 0)} F CFA
+            </Text>
+            <Text style={styles.timeText}>
+              {formatDate(delivery.created_at)}
+            </Text>
+          </View>
         </TouchableOpacity>
       </Animated.View>
     )
   }
 
   const renderQuickAction = (action: QuickAction, index: number) => (
-    <Animated.View
-      key={action.id}
-      style={[
-        styles.quickActionWrapper,
-        {
-          opacity: fadeAnim,
-          transform: [
-            { scale: scaleAnim },
-            { translateY: slideAnim }
-          ]
-        }
-      ]}
-    >
+    <Animated.View key={action.id} style={[styles.quickActionContainer, { opacity: fadeAnim }]}>
       <TouchableOpacity
-        style={styles.quickActionCard}
+        style={styles.quickActionButton}
         onPress={() => navigation.navigate(action.route as any, action.params)}
         activeOpacity={0.8}
       >
-        <LinearGradient
-          colors={action.gradient}
-          style={styles.quickActionGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <View style={styles.quickActionIcon}>
-            {action.iconFamily === 'Feather' && (
-              <Feather name={action.icon as any} size={24} color="#FFFFFF" />
-            )}
-            {action.iconFamily === 'MaterialIcons' && (
-              <MaterialIcons name={action.icon as any} size={24} color="#FFFFFF" />
-            )}
-            {action.iconFamily === 'Ionicons' && (
-              <Ionicons name={action.icon as any} size={24} color="#FFFFFF" />
-            )}
-          </View>
-          <Text style={styles.quickActionTitle}>{action.title}</Text>
-          <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
-        </LinearGradient>
+        <View style={[styles.actionIconContainer, { backgroundColor: action.color }]}>
+          {action.iconFamily === 'Feather' && (
+            <Feather name={action.icon as any} size={20} color="#FFFFFF" />
+          )}
+          {action.iconFamily === 'MaterialIcons' && (
+            <MaterialIcons name={action.icon as any} size={20} color="#FFFFFF" />
+          )}
+          {action.iconFamily === 'Ionicons' && (
+            <Ionicons name={action.icon as any} size={20} color="#FFFFFF" />
+          )}
+        </View>
+        <Text style={styles.actionTitle}>{action.title}</Text>
+        <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
       </TouchableOpacity>
     </Animated.View>
   )
 
-  const renderRecentDelivery = (delivery: Delivery) => {
+  const renderRecentDelivery = (delivery: Delivery, index: number) => {
     const statusInfo = getStatusInfo(delivery.status)
-    
+
     return (
       <TouchableOpacity 
         key={delivery.id}
@@ -327,8 +256,11 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         onPress={() => navigation.navigate('DeliveryDetails', { deliveryId: delivery.id.toString() })}
         activeOpacity={0.8}
       >
-        <View style={[styles.statusDot, { backgroundColor: statusInfo.color }]} />
-        <View style={styles.recentDeliveryContent}>
+        <View style={styles.recentDeliveryLeft}>
+          <View style={styles.recentDeliveryHeader}>
+            <Text style={styles.recentDeliveryId}>#{delivery.id}</Text>
+            <View style={[styles.miniStatusBadge, { backgroundColor: statusInfo.color }]} />
+          </View>
           <Text style={styles.recentDeliveryRoute} numberOfLines={1}>
             {delivery.pickup_commune} → {delivery.delivery_commune}
           </Text>
@@ -336,74 +268,11 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             {formatDate(delivery.created_at)}
           </Text>
         </View>
-        <Text style={styles.recentDeliveryPrice}>
-          {formatPrice(delivery.price || delivery.final_price || 0)} F
-        </Text>
-        <Feather name="chevron-right" size={16} color="#757575" />
-      </TouchableOpacity>
-    )
-  }
-
-  const renderRecentDeliveryWithState = (delivery: Delivery) => {
-    const statusInfo = getStatusInfo(delivery.status)
-    
-    return (
-      <TouchableOpacity 
-        key={delivery.id}
-        style={styles.enhancedRecentDeliveryItem}
-        onPress={() => navigation.navigate('DeliveryDetails', { deliveryId: delivery.id.toString() })}
-        activeOpacity={0.8}
-      >
-        <View style={styles.deliveryItemHeader}>
-          <View style={styles.deliveryIdContainer}>
-            <Text style={styles.deliveryIdText}>#{delivery.id}</Text>
-            <Chip 
-              style={[styles.statusChip, { backgroundColor: statusInfo.color }]}
-              textStyle={styles.statusChipText}
-              compact
-            >
-              {statusInfo.text}
-            </Chip>
-          </View>
-          <Text style={styles.deliveryDate}>
-            {formatDate(delivery.created_at)}
+        <View style={styles.recentDeliveryRight}>
+          <Text style={styles.recentDeliveryPrice}>
+            {formatPrice(delivery.price || delivery.final_price || 0)} F
           </Text>
-        </View>
-
-        <View style={styles.deliveryRouteContainer}>
-          <View style={styles.routePoint}>
-            <View style={[styles.routeIconSmall, { backgroundColor: '#4CAF50' }]}>
-              <Feather name="map-pin" size={10} color="#FFFFFF" />
-            </View>
-            <Text style={styles.routeAddressText} numberOfLines={1}>
-              {delivery.pickup_address || delivery.pickup_commune}
-            </Text>
-          </View>
-          
-          <View style={styles.routeLineSmall} />
-          
-          <View style={styles.routePoint}>
-            <View style={[styles.routeIconSmall, { backgroundColor: '#FF6B00' }]}>
-              <Feather name="target" size={10} color="#FFFFFF" />
-            </View>
-            <Text style={styles.routeAddressText} numberOfLines={1}>
-              {delivery.delivery_address || delivery.delivery_commune}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.deliveryFooterInfo}>
-          <View style={styles.priceContainer}>
-            <Text style={styles.enhancedDeliveryPrice}>
-              {formatPrice(delivery.price || delivery.final_price || 0)} F
-            </Text>
-            {delivery.delivery_type && (
-              <Text style={styles.deliveryType}>
-                {delivery.delivery_type === 'express' ? '⚡ Express' : '📦 Standard'}
-              </Text>
-            )}
-          </View>
-          <Feather name="chevron-right" size={16} color="#757575" />
+          <Feather name="chevron-right" size={16} color="#999" />
         </View>
       </TouchableOpacity>
     )
@@ -413,7 +282,7 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B00" />
+          <ActivityIndicator size="large" color="#1976D2" />
           <Text style={styles.loadingText}>Chargement...</Text>
         </View>
       </SafeAreaView>
@@ -422,18 +291,15 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#FF6B00" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header avec gradient */}
-      <LinearGradient
-        colors={['#FF6B00', '#FF8F00']}
-        style={styles.header}
-      >
-        <Animated.View style={[styles.headerContent, { opacity: fadeAnim }]}>
+      {/* Header épuré */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
               <Avatar.Text 
-                size={45} 
+                size={42} 
                 label={
                   user?.full_name
                     ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2)
@@ -442,41 +308,39 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       : 'U'
                 }
                 style={styles.avatar}
+                labelStyle={styles.avatarLabel}
               />
             </TouchableOpacity>
             <View style={styles.greetingContainer}>
-              <Text style={styles.greetingText}>{greeting}</Text>
-              <Text style={styles.userName}>
-                {user?.full_name || user?.first_name || 'Utilisateur'}
+              <Text style={styles.greetingText}>
+                {greeting}, {user?.first_name || 'Utilisateur'}
               </Text>
+              <Text style={styles.locationText}>Abidjan, Côte d'Ivoire</Text>
             </View>
           </View>
 
           <View style={styles.headerRight}>
             {!connected && (
-              <Chip 
-                icon="wifi-off" 
-                style={styles.offlineChip}
-                textStyle={styles.offlineText}
-                compact
-              >
-                Hors ligne
-              </Chip>
+              <View style={styles.offlineIndicator}>
+                <Feather name="wifi-off" size={16} color="#f44336" />
+              </View>
             )}
             <TouchableOpacity 
               style={styles.notificationButton}
               onPress={() => navigation.navigate('Notifications')}
             >
-              <Feather name="bell" size={24} color="#FFFFFF" />
+              <Feather name="bell" size={22} color="#333" />
               {unreadCount > 0 && (
-                <Badge style={styles.notificationBadge} size={18}>
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </Badge>
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
           </View>
-        </Animated.View>
-      </LinearGradient>
+        </View>
+      </View>
 
       <ScrollView
         style={styles.scrollView}
@@ -484,125 +348,123 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            colors={['#FF6B00']}
-            tintColor="#FF6B00"
+            colors={['#1976D2']}
+            tintColor="#1976D2"
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Barre de recherche */}
-        <Animated.View style={[styles.searchSection, { transform: [{ translateY: slideAnim }] }]}>
+        {/* Barre de recherche moderne */}
+        <View style={styles.searchSection}>
           <Searchbar
-            placeholder="Où souhaitez-vous envoyer ?"
+            placeholder="Où livrer ?"
             onChangeText={setSearchQuery}
             value={searchQuery}
             style={styles.searchBar}
             inputStyle={styles.searchInput}
-            iconColor="#FF6B00"
-            placeholderTextColor="#9E9E9E"
+            iconColor="#666"
+            placeholderTextColor="#999"
             onSubmitEditing={() => navigation.navigate('CreateDelivery', { searchQuery })}
           />
-        </Animated.View>
+        </View>
 
         {/* Livraisons actives */}
         {activeDeliveries.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🚚 Livraisons en cours</Text>
+            <Text style={styles.sectionTitle}>En cours</Text>
             <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.activeDeliveriesContainer}
+              contentContainerStyle={styles.horizontalScrollContainer}
             >
               {activeDeliveries.map(renderActiveDelivery)}
             </ScrollView>
           </View>
         )}
 
-        {/* Actions rapides */}
+        {/* Actions rapides avec design épuré */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚡ Actions rapides</Text>
+          <Text style={styles.sectionTitle}>Services</Text>
           <View style={styles.quickActionsGrid}>
             {quickActions.map(renderQuickAction)}
           </View>
         </View>
 
-        {/* Livraisons récentes - Les 3 dernières courses */}
+        {/* Livraisons récentes */}
         {recentDeliveries.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>📋 Mes 3 dernières courses</Text>
+              <Text style={styles.sectionTitle}>Activité récente</Text>
               <TouchableOpacity onPress={() => navigation.navigate('DeliveryHistory')}>
                 <Text style={styles.seeAllText}>Voir tout</Text>
               </TouchableOpacity>
             </View>
-            <Surface style={styles.recentDeliveriesCard} elevation={2}>
-              {recentDeliveries.slice(0, 3).map((delivery, index) => (
+            <Surface style={styles.recentDeliveriesCard} elevation={1}>
+              {recentDeliveries.map((delivery, index) => (
                 <View key={delivery.id}>
-                  {renderRecentDeliveryWithState(delivery)}
-                  {index < recentDeliveries.slice(0, 3).length - 1 && <Divider />}
+                  {renderRecentDelivery(delivery, index)}
+                  {index < recentDeliveries.length - 1 && <Divider style={styles.divider} />}
                 </View>
               ))}
             </Surface>
           </View>
         )}
 
-        {/* Services supplémentaires */}
+        {/* Raccourcis additionnels */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎯 Services</Text>
-          <View style={styles.servicesGrid}>
+          <View style={styles.additionalServicesGrid}>
             <TouchableOpacity 
-              style={styles.serviceItem}
+              style={styles.serviceCard}
               onPress={() => navigation.navigate('Wallet')}
             >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#4CAF50' }]} elevation={2}>
-                <Feather name="credit-card" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Portefeuille</Text>
+              <View style={[styles.serviceIcon, { backgroundColor: '#E8F5E8' }]}>
+                <Feather name="credit-card" size={20} color="#2E7D32" />
+              </View>
+              <Text style={styles.serviceTitle}>Portefeuille</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.serviceItem}
+              style={styles.serviceCard}
               onPress={() => navigation.navigate('Support')}
             >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#2196F3' }]} elevation={2}>
-                <Feather name="help-circle" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Support</Text>
+              <View style={[styles.serviceIcon, { backgroundColor: '#E3F2FD' }]}>
+                <Feather name="help-circle" size={20} color="#1976D2" />
+              </View>
+              <Text style={styles.serviceTitle}>Aide</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.serviceItem}
-              onPress={() => navigation.navigate('Settings')}
-            >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#9C27B0' }]} elevation={2}>
-                <Feather name="settings" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Paramètres</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.serviceItem}
+              style={styles.serviceCard}
               onPress={() => navigation.navigate('Marketplace')}
             >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#FF9800' }]} elevation={2}>
-                <Feather name="shopping-bag" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Marketplace</Text>
+              <View style={[styles.serviceIcon, { backgroundColor: '#FFF3E0' }]}>
+                <Feather name="shopping-bag" size={20} color="#F57C00" />
+              </View>
+              <Text style={styles.serviceTitle}>Boutique</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.serviceCard}
+              onPress={() => navigation.navigate('Settings')}
+            >
+              <View style={[styles.serviceIcon, { backgroundColor: '#F3E5F5' }]}>
+                <Feather name="settings" size={20} color="#7B1FA2" />
+              </View>
+              <Text style={styles.serviceTitle}>Paramètres</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* FAB pour nouvelle livraison */}
+      {/* FAB moderne */}
       <FAB
         style={styles.fab}
         icon="plus"
         color="#FFFFFF"
         onPress={() => navigation.navigate('CreateDelivery')}
-        label="Nouvelle livraison"
-        variant="extended"
+        customSize={56}
       />
     </SafeAreaView>
   )
@@ -622,24 +484,22 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#757575',
+    color: '#666',
     fontWeight: '500',
   },
   header: {
+    backgroundColor: '#FFFFFF',
     paddingTop: Platform.OS === 'ios' ? 0 : 10,
-    paddingBottom: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -647,36 +507,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginRight: 15,
+    backgroundColor: '#1976D2',
+    marginRight: 12,
+  },
+  avatarLabel: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   greetingContainer: {
     flex: 1,
   },
   greetingText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '400',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
   },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 2,
+  locationText: {
+    fontSize: 13,
+    color: '#666',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  offlineChip: {
-    marginRight: 10,
-    backgroundColor: 'rgba(244, 67, 54, 0.9)',
-    height: 28,
-  },
-  offlineText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
+  offlineIndicator: {
+    marginRight: 12,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: '#FFEBEE',
   },
   notificationButton: {
     position: 'relative',
@@ -687,117 +546,130 @@ const styles = StyleSheet.create({
     top: 4,
     right: 4,
     backgroundColor: '#f44336',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
     color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
   },
   searchSection: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   searchBar: {
     backgroundColor: '#F5F5F5',
     elevation: 0,
-    borderRadius: 25,
-    height: 50,
+    borderRadius: 12,
+    height: 48,
   },
   searchInput: {
     fontSize: 16,
+    color: '#333',
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 15,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
     paddingHorizontal: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
     paddingHorizontal: 20,
   },
   seeAllText: {
     fontSize: 14,
-    color: '#FF6B00',
+    color: '#1976D2',
     fontWeight: '600',
   },
-  activeDeliveriesContainer: {
+  horizontalScrollContainer: {
     paddingLeft: 20,
+    paddingRight: 10,
   },
   activeDeliveryCard: {
-    marginRight: 15,
+    marginRight: 16,
     borderRadius: 16,
-    overflow: 'hidden',
-    width: width * 0.8,
+    backgroundColor: '#FFFFFF',
+    width: width * 0.85,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  activeDeliveryGradient: {
+  activeDeliveryContent: {
     padding: 20,
   },
   activeDeliveryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 15,
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  activeDeliveryInfo: {
+  deliveryInfoContainer: {
     flex: 1,
   },
-  activeDeliveryTitle: {
+  deliveryNumber: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 5,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 6,
   },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  statusIndicator: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
   },
   statusText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#FFFFFF',
-    marginLeft: 5,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  trackButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    margin: 0,
+  trackIconButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
   },
-  routeContainer: {
-    marginBottom: 15,
+  routeSection: {
+    marginBottom: 16,
   },
-  routePoint: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  routeIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
+  locationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
+    marginRight: 12,
   },
-  routeText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '500',
+  destinationDot: {
+    backgroundColor: '#f44336',
   },
   routeLine: {
     width: 2,
-    height: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    marginLeft: 11,
+    height: 16,
+    backgroundColor: '#E0E0E0',
+    marginLeft: 3,
     marginBottom: 8,
   },
   deliveryFooter: {
@@ -806,52 +678,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1976D2',
   },
   timeText: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#666',
   },
   quickActionsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     justifyContent: 'space-between',
   },
-  quickActionWrapper: {
-    width: '48%',
-    marginBottom: 15,
-  },
-  quickActionCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  quickActionGradient: {
-    padding: 20,
+  quickActionContainer: {
+    width: (width - 80) / 4,
     alignItems: 'center',
-    minHeight: 120,
+  },
+  quickActionButton: {
+    alignItems: 'center',
+    padding: 12,
+  },
+  actionIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  quickActionIcon: {
-    marginBottom: 10,
-  },
-  quickActionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  quickActionSubtitle: {
+  actionTitle: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  actionSubtitle: {
+    fontSize: 10,
+    color: '#666',
     textAlign: 'center',
   },
   recentDeliveriesCard: {
     marginHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
   },
   recentDeliveryItem: {
@@ -859,143 +729,77 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
   },
-  statusDot: {
+  recentDeliveryLeft: {
+    flex: 1,
+  },
+  recentDeliveryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  recentDeliveryId: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginRight: 8,
+  },
+  miniStatusBadge: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 12,
-  },
-  recentDeliveryContent: {
-    flex: 1,
   },
   recentDeliveryRoute: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#212121',
+    color: '#333',
     marginBottom: 4,
   },
   recentDeliveryDate: {
     fontSize: 12,
-    color: '#757575',
+    color: '#666',
+  },
+  recentDeliveryRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   recentDeliveryPrice: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FF6B00',
-    marginRight: 10,
+    fontWeight: '600',
+    color: '#1976D2',
+    marginRight: 8,
   },
-  servicesGrid: {
+  divider: {
+    marginHorizontal: 16,
+    backgroundColor: '#F0F0F0',
+  },
+  additionalServicesGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     paddingHorizontal: 20,
     justifyContent: 'space-between',
   },
-  serviceItem: {
-    width: '22%',
+  serviceCard: {
     alignItems: 'center',
-    marginBottom: 15,
+    width: (width - 80) / 4,
   },
   serviceIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
-  serviceText: {
-    fontSize: 11,
-    textAlign: 'center',
-    color: '#212121',
+  serviceTitle: {
+    fontSize: 12,
     fontWeight: '500',
+    color: '#333',
+    textAlign: 'center',
   },
   fab: {
     position: 'absolute',
-    bottom: 25,
+    bottom: 24,
     right: 20,
-    backgroundColor: '#FF6B00',
-    borderRadius: 25,
-  },
-  // Styles pour l'affichage amélioré des livraisons récentes
-  enhancedRecentDeliveryItem: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  deliveryItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  deliveryIdContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  deliveryIdText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginRight: 8,
-  },
-  statusChip: {
-    height: 24,
-  },
-  statusChipText: {
-    fontSize: 11,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  deliveryDate: {
-    fontSize: 12,
-    color: '#757575',
-  },
-  deliveryRouteContainer: {
-    marginBottom: 12,
-  },
-  routePoint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  routeIconSmall: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  routeAddressText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#424242',
-    fontWeight: '500',
-  },
-  routeLineSmall: {
-    width: 2,
-    height: 10,
-    backgroundColor: '#E0E0E0',
-    marginLeft: 7,
-    marginBottom: 6,
-  },
-  deliveryFooterInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  priceContainer: {
-    flex: 1,
-  },
-  enhancedDeliveryPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FF6B00',
-    marginBottom: 2,
-  },
-  deliveryType: {
-    fontSize: 11,
-    color: '#757575',
-    fontWeight: '500',
+    backgroundColor: '#1976D2',
+    borderRadius: 28,
   },
 })
 
