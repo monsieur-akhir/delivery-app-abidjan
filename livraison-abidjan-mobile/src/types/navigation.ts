@@ -115,6 +115,9 @@ export type RootStackParamList = {
   CreateMultiDestinationDelivery: undefined
   MultiDestinationDeliveryDetails: { deliveryId: number }
 
+  // Continuation du type RootStackParamList
+  } }
+
   // Courier routes
   CourierDashboard: undefined;
   AvailableDeliveries: undefined;

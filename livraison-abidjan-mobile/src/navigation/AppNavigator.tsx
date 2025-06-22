@@ -26,6 +26,9 @@ import WalletScreen from '../screens/client/WalletScreen';
 import PaymentScreen from '../screens/client/PaymentScreen';
 import PaymentMethodsScreen from '../screens/client/PaymentMethodsScreen';
 import BidScreen from '../screens/client/BidScreen';
+import MultiDestinationDeliveriesScreen from '../screens/client/MultiDestinationDeliveriesScreen';
+import ScheduledDeliveriesScreen from '../screens/client/ScheduledDeliveriesScreen';
+import CreateScheduledDeliveryScreen from '../screens/client/CreateScheduledDeliveryScreen';
 
 // Courier Screens
 import CourierDashboardScreen from '../screens/courier/CourierDashboardScreen';
@@ -182,6 +185,9 @@ export default function AppNavigator() {
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
           <Stack.Screen name="BidScreen" component={BidScreen} />
+          <Stack.Screen name="MultiDestinationDeliveries" component={MultiDestinationDeliveriesScreen} />
+          <Stack.Screen name="ScheduledDeliveries" component={ScheduledDeliveriesScreen} />
+          <Stack.Screen name="CreateScheduledDelivery" component={CreateScheduledDeliveryScreen} />
 
           {/* Courier Specific Screens */}
           <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />
