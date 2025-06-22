@@ -17,4 +17,35 @@ if (!config.resolver.sourceExts.includes('tsx')) config.resolver.sourceExts.push
 // Configuration pour React Native Vector Icons
 if (!config.resolver.assetExts.includes('ttf')) config.resolver.assetExts.push('ttf');
 
+// Configuration pour résoudre les problèmes MIME avec Jimp et autres bibliothèques
+config.resolver.assetExts.push('bin', 'dat', 'db', 'mp3', 'ttl', 'obj', 'png', 'jpg', 'jpeg', 'gif', 'webp');
+
+// Configuration pour les modules qui utilisent des assets binaires
+config.resolver.platforms = ['ios', 'android', 'native', 'web'];
+
+// Configuration pour éviter les problèmes avec les modules Node.js
+config.resolver.alias = {
+  ...config.resolver.alias,
+  'crypto': 'react-native-get-random-values',
+  'stream': 'readable-stream',
+  'buffer': '@craftzdog/react-native-buffer',
+  'process': 'process',
+  'util': 'util',
+  'events': 'events',
+  'path': 'path-browserify',
+  'fs': false,
+  'net': false,
+  'tls': false,
+  'child_process': false,
+  'os': 'react-native-os',
+};
+
+// Configuration pour les modules qui causent des problèmes
+config.resolver.blockList = [
+  /.*\/node_modules\/.*\/node_modules\/react-native\/.*/,
+];
+
+// Configuration pour améliorer la résolution des modules
+config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
+
 module.exports = config;

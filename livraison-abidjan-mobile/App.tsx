@@ -1,4 +1,5 @@
 import 'react-native-get-random-values';
+import './src/utils/polyfills';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
