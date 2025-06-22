@@ -1,1026 +1,622 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Image, Dimensions, StatusBar } from "react-native"
-import { Text, TextInput, Button, HelperText, Snackbar, Card, IconButton, useTheme } from "react-native-paper"
-import { Picker } from "@react-native-picker/picker"
-import * as Animatable from "react-native-animatable"
-import { useTranslation } from "react-i18next"
-import { useAuth } from "../../contexts/AuthContext"
-import { useNetwork } from "../../contexts/NetworkContext"
-import { validatePhone, validateEmail, validatePassword } from "../../utils/validators"
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import type { RootStackParamList } from "../../types/navigation"
-import type { UserRole, VehicleType } from "../../types/models"
-import i18n from "../../i18n"
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { Button, Snackbar } from 'react-native-paper';
+import * as Animatable from 'react-native-animatable';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation';
+import { useAuth } from '../../hooks/useAuth';
+import { useNetwork } from '../../contexts/NetworkContext';
+import { colors } from '../../styles/colors';
+import i18n from '../../i18n';
 
 type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Register">
 }
 
-type LanguageCode = "fr" | "dioula" | "baoulé"
-
-interface Language {
-  code: LanguageCode
-  name: string
-}
-
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
-  const { t, i18n } = useTranslation()
-  const { signUp } = useAuth()
-  const { isConnected, addPendingUpload } = useNetwork()
-  const theme = useTheme()
-  // Get screen dimensions for responsive layouts
-  const { width: screenWidth } = Dimensions.get('window')
+  const { t } = useTranslation();
+  const { register } = useAuth();
+  const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork();
 
-  // Animation refs
-  const formRef = useRef(null)
-  const courierSectionRef = useRef(null)
-  const scrollViewRef = useRef<ScrollView>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    userType: 'client' as 'client' | 'courier',
+  });
 
-  const [fullName, setFullName] = useState<string>("")
-  const [phone, setPhone] = useState<string>("")
-  const [email, setEmail] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
-  const [confirmPassword, setConfirmPassword] = useState<string>("")
-  const [role, setRole] = useState<UserRole>("client")
-  const [commune, setCommune] = useState<string>("")
-  const [language, setLanguage] = useState<LanguageCode>((i18n.language as LanguageCode) || "fr")
-  const [secureTextEntry, setSecureTextEntry] = useState<boolean>(true)
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
-  const [visible, setVisible] = useState<boolean>(false)
-  const [vehicleType, setVehicleType] = useState<VehicleType>("motorcycle" as VehicleType)
-  const [licensePlate, setLicensePlate] = useState<string>("")
-  const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
-  const [currentStep, setCurrentStep] = useState<number>(0)
-
-  // Focus state for input fields
-  const [focusedField, setFocusedField] = useState<string | null>(null)
-
-  // Étapes d'inscription
-  const steps = [
-    "profile", // Choix de profil (client ou coursier)
-    "personal", // Informations personnelles
-    "security", // Informations de sécurité
-    "location", // Commune
-    "vehicle", // Véhicule (uniquement pour les coursiers)
-  ]
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [showOfflineWarning, setShowOfflineWarning] = useState(false);
+  const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized);
 
   useEffect(() => {
     if (!i18n.isInitialized) {
-      i18n.on("initialized", () => setIsI18nReady(true))
+      i18n.on("initialized", () => setIsI18nReady(true));
     }
-  }, [i18n])
+  }, []);
 
-  // Navigation entre les slides
-  const goToNextStep = () => {
-    // Si l'utilisateur est un client et on passe à l'étape "vehicle", on saute cette étape
-    if (role === "client" && steps[currentStep + 1] === "vehicle") {
-      handleRegister()
-      return
-    }
-
-    // Validation par étape
-    if (!validateCurrentStep()) {
-      return
-    }
-
-    if (currentStep < steps.length - 1) {
-      const nextStep = currentStep + 1
-      setCurrentStep(nextStep)
-      scrollViewRef.current?.scrollTo({ x: screenWidth * nextStep, animated: true })
+  useEffect(() => {
+    if (!isConnected && !isOfflineMode) {
+      setShowOfflineWarning(true);
     } else {
-      handleRegister()
+      setShowOfflineWarning(false);
     }
-  }
-
-  const goToPreviousStep = () => {
-    // Si l'utilisateur est un client et on revient de l'étape après "vehicle", on saute cette étape
-    if (role === "client" && steps[currentStep - 1] === "vehicle") {
-      setCurrentStep(currentStep - 2)
-      scrollViewRef.current?.scrollTo({ x: screenWidth * (currentStep - 2), animated: true })
-      return
-    }
-
-    if (currentStep > 0) {
-      const prevStep = currentStep - 1
-      setCurrentStep(prevStep)
-      scrollViewRef.current?.scrollTo({ x: screenWidth * prevStep, animated: true })
-    }
-  }
-
-  // Validation par étape
-  const validateCurrentStep = (): boolean => {
-    const currentStepName = steps[currentStep]
-
-    switch (currentStepName) {
-      case "profile":
-        // Aucune validation nécessaire, le choix est déjà fait
-        return true
-      case "personal":
-        if (!fullName || !phone) {
-          setError(t("register.errorRequiredFields"))
-          setVisible(true)
-          return false
-        }
-        if (!validatePhone(phone)) {
-          setError(t("register.errorInvalidPhone"))
-          setVisible(true)
-          return false
-        }
-        if (email && !validateEmail(email)) {
-          setError(t("register.errorInvalidEmail"))
-          setVisible(true)
-          return false
-        }
-        return true
-      case "security":
-        if (!password || !confirmPassword) {
-          setError(t("register.errorRequiredFields"))
-          setVisible(true)
-          return false
-        }
-        if (!validatePassword(password)) {
-          setError(t("register.errorWeakPassword"))
-          setVisible(true)
-          return false
-        }
-        if (password !== confirmPassword) {
-          setError(t("register.errorPasswordMismatch"))
-          setVisible(true)
-          return false
-        }
-        return true
-      case "vehicle":
-        if (role === 'courier' && !licensePlate) {
-          setError(t("register.errorLicensePlateRequired"))
-          setVisible(true)
-          return false
-        }
-        return true
-      default:
-        return true
-    }
-  }
-
-  // Gestion du swipe entre les slides
-  const handleScroll = (event: any) => {
-    const offsetX = event.nativeEvent.contentOffset.x
-    const newStep = Math.round(offsetX / screenWidth)
-    if (newStep !== currentStep) {
-      setCurrentStep(newStep)
-    }
-  }
+  }, [isConnected, isOfflineMode]);
 
   if (!isI18nReady) {
-    return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.orange} />
+        <Text style={styles.loadingText}>Chargement...</Text>
+      </View>
+    );
   }
 
-  const communes: string[] = [
-    "Abobo",
-    "Adjamé",
-    "Attécoubé",
-    "Cocody",
-    "Koumassi",
-    "Marcory",
-    "Plateau",
-    "Port-Bouët",
-    "Treichville",
-    "Yopougon",
-  ]
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
 
-  const languages: Language[] = [
-    { code: "fr", name: "Français" },
-    { code: "dioula", name: "Dioula" },
-    { code: "baoulé", name: "Baoulé" },
-  ]
-
-  const handleRegister = async (): Promise<void> => {
-    // Validate fields
-    if (!fullName || !phone || !password || !confirmPassword) {
-      setError(t("register.errorRequiredFields"))
-      setVisible(true)
-      return
+    if (!formData.name.trim()) {
+      errors.name = t('register.errors.nameRequired');
+    } else if (formData.name.length < 2) {
+      errors.name = t('register.errors.nameMinLength');
     }
 
-    // If user is a courier, check license plate
-    if (role === 'courier' && !licensePlate) {
-      setError(t("register.errorLicensePlateRequired"))
-      setVisible(true)
-      return
+    if (!formData.email.trim()) {
+      errors.email = t('register.errors.emailRequired');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = t('register.errors.emailInvalid');
     }
 
-    if (!validatePhone(phone)) {
-      setError(t("register.errorInvalidPhone"))
-      setVisible(true)
-      return
+    if (!formData.phone.trim()) {
+      errors.phone = t('register.errors.phoneRequired');
+    } else if (!/^[\+]?[0-9\-\(\)\s]+$/.test(formData.phone)) {
+      errors.phone = t('register.errors.phoneInvalid');
     }
 
-    if (email && !validateEmail(email)) {
-      setError(t("register.errorInvalidEmail"))
-      setVisible(true)
-      return
+    if (!formData.password) {
+      errors.password = t('register.errors.passwordRequired');
+    } else if (formData.password.length < 6) {
+      errors.password = t('register.errors.passwordMinLength');
     }
 
-    if (!validatePassword(password)) {
-      setError(t("register.errorWeakPassword"))
-      setVisible(true)
-      return
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = t('register.errors.confirmPasswordRequired');
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = t('register.errors.passwordMismatch');
     }
 
-    if (password !== confirmPassword) {
-      setError(t("register.errorPasswordMismatch"))
-      setVisible(true)
-      return
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleRegister = async () => {
+    if (!validateForm()) {
+      return;
     }
 
-    setLoading(true)
+    if (!isConnected && !isOfflineMode) {
+      setSnackbarMessage(t('register.errors.noConnection'));
+      setSnackbarVisible(true);
+      return;
+    }
 
+    setLoading(true);
     try {
-      const userData: {
-        full_name: string;
-        phone: string;
-        email?: string;
-        password: string;
-        role: UserRole;
-        commune?: string;
-        language_preference: LanguageCode;
-        vehicle_type?: VehicleType;
-        license_plate?: string;
-      } = {
-        full_name: fullName,
-        phone,
-        email: email || undefined,
-        password,
-        role,
-        commune: commune || undefined,
-        language_preference: language,
-      }
+      await register({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        user_type: formData.userType,
+      });
 
-      // Add vehicle information for couriers
-      if (role === 'courier') {
-        userData.vehicle_type = vehicleType
-        userData.license_plate = licensePlate
-      }
-
-      if (isConnected) {
-        // Online registration
-        await signUp(userData)
-        navigation.navigate("VerifyOTP", { phoneNumber: phone })
-      } else {
-        // Offline mode: store for later synchronization
-        addPendingUpload({
-          type: "register",
-          data: userData,
-          retries: 0,
-        })
-        setError(t("register.offlineRegistration"))
-        setVisible(true)
-      }
-    } catch (error) {
-      console.error("Registration error:", error)
-      setError(error instanceof Error ? error.message : t("register.errorGeneric"))
-      setVisible(true)
+      setSnackbarMessage(t('register.success'));
+      setSnackbarVisible(true);
+      setTimeout(() => {
+        navigation.navigate('Login');
+      }, 2000);
+    } catch (error: any) {
+      setSnackbarMessage(error.message || t('register.errors.generic'));
+      setSnackbarVisible(true);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  const handleOfflineMode = () => {
+    toggleOfflineMode(true);
+    setShowOfflineWarning(false);
+  };
+
+  const updateFormData = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
-      <StatusBar backgroundColor="#FF6B00" barStyle="light-content" />
-
-      {/* Header Background */}
-      <View style={styles.headerBackground}>
-        <Animatable.View animation="fadeIn" duration={1000} style={styles.logoContainer}>
-          <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
-        </Animatable.View>
-      </View>
-
-      {/* Progress Steps */}
-      <View style={styles.progressContainer}>
-        {steps.map((step, index) => {
-          // Skip vehicle step for client
-          if (role === "client" && step === "vehicle") {
-            return null
-          }
-          return (
-            <View key={index} style={styles.progressStepContainer}>
-              <View 
-                style={[
-                  styles.progressStep,
-                  currentStep >= index ? styles.activeStep : styles.inactiveStep
-                ]}
-              />
-              {index < steps.length - 1 && (
-                <View 
-                  style={[
-                    styles.progressLine,
-                    currentStep > index ? styles.activeStep : styles.inactiveStep
-                  ]}
-                />
-              )}
-            </View>
-          )
-        })}
-      </View>
-
-      <ScrollView 
-        ref={scrollViewRef}
-        horizontal 
-        pagingEnabled 
-        scrollEnabled={false}
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-        contentContainerStyle={styles.slidesContainer}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        {/* Étape 1 : Choix du profil */}
-        <View style={[styles.slide, { width: screenWidth }]}>
-          <Card style={styles.card} elevation={5}>
-            <Animatable.View 
-              animation="fadeInUp" 
-              duration={800} 
-              style={styles.formContainer}
-              ref={formRef}
-            >
-              <View style={styles.headerContainer}>
-                <Text style={styles.title}>{t("register.title")}</Text>
-                <Text style={styles.subtitle}>{t("register.subtitle")}</Text>
-              </View>
-
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t("register.profileInfo")}</Text>
-                <Text style={styles.sectionSubtitle}>{t("register.role")}</Text>
-
-                <View style={styles.roleButtonsContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.roleButton,
-                      role === "client" && styles.roleButtonActive
-                    ]}
-                    onPress={() => setRole("client")}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.roleIconContainer}>
-                      <IconButton 
-                        icon="account" 
-                        size={30} 
-                        iconColor={role === "client" ? "#FFFFFF" : "#FF6B00"}
-                      />
-                    </View>
-                    <Text style={[
-                      styles.roleButtonText,
-                      role === "client" && styles.roleButtonTextActive
-                    ]}>
-                      {t("roles.client")}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.roleButton,
-                      role === 'courier' && styles.roleButtonActive
-                    ]}
-                    onPress={() => setRole('courier')}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.roleIconContainer}>
-                      <IconButton 
-                        icon="truck-delivery" 
-                        size={30}
-                        iconColor={role === 'courier' ? "#FFFFFF" : "#FF6B00"}
-                      />
-                    </View>
-                    <Text style={[
-                      styles.roleButtonText,
-                      role === 'courier' && styles.roleButtonTextActive
-                    ]}>
-                      {t("roles.courier")}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Animatable.View>
-          </Card>
-          <View style={styles.buttonContainer}>
-            <Button 
-              mode="contained" 
-              onPress={goToNextStep}
-              style={styles.button} 
-              labelStyle={styles.buttonLabel}
-            >
-              {t("common.next") || "Suivant"}
-            </Button>
-          </View>
-        </View>
-
-        {/* Étape 2 : Informations personnelles */}
-        <View style={[styles.slide, { width: screenWidth }]}>
-          <Card style={styles.card} elevation={5}>
-            <Animatable.View animation="fadeIn" style={styles.formContainer}>
-              <View style={styles.headerContainer}>
-                <Text style={styles.title}>{t("register.personalInfo")}</Text>
-              </View>
-
-              <View style={styles.section}>
-                <Animatable.View animation={focusedField === 'fullName' ? 'pulse' : undefined}>
-                  <TextInput
-                    label={t("register.fullName")}
-                    value={fullName}
-                    onChangeText={setFullName}
-                    style={[styles.input, focusedField === 'fullName' && styles.focusedInput]}
-                    mode="outlined"
-                    outlineColor={focusedField === 'fullName' ? theme.colors.primary : '#CCCCCC'}
-                    activeOutlineColor={theme.colors.primary}
-                    left={<TextInput.Icon icon="account" />}
-                    onFocus={() => setFocusedField('fullName')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                </Animatable.View>
-
-                <Animatable.View animation={focusedField === 'phone' ? 'pulse' : undefined}>
-                  <TextInput
-                    label={t("register.phone")}
-                    value={phone}
-                    onChangeText={setPhone}
-                    style={[styles.input, focusedField === 'phone' && styles.focusedInput]}
-                    keyboardType="phone-pad"
-                    mode="outlined"
-                    outlineColor={focusedField === 'phone' ? theme.colors.primary : '#CCCCCC'}
-                    activeOutlineColor={theme.colors.primary}
-                    left={<TextInput.Icon icon="phone" />}
-                    onFocus={() => setFocusedField('phone')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                  <HelperText type="info">{t("register.phoneHelp")}</HelperText>
-                </Animatable.View>
-
-                <Animatable.View animation={focusedField === 'email' ? 'pulse' : undefined}>
-                  <TextInput
-                    label={t("register.email")}
-                    value={email}
-                    onChangeText={setEmail}
-                    style={[styles.input, focusedField === 'email' && styles.focusedInput]}
-                    keyboardType="email-address"
-                    mode="outlined"
-                    outlineColor={focusedField === 'email' ? theme.colors.primary : '#CCCCCC'}
-                    activeOutlineColor={theme.colors.primary}
-                    left={<TextInput.Icon icon="email" />}
-                    onFocus={() => setFocusedField('email')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                  <HelperText type="info">{t("register.emailOptional")}</HelperText>
-                </Animatable.View>
-              </View>
-            </Animatable.View>
-          </Card>
-
-          <View style={styles.buttonContainer}>
-            <Button 
-              mode="outlined" 
-              onPress={goToPreviousStep}
-              style={styles.buttonBack} 
-              labelStyle={styles.buttonBackLabel}
-            >
-              {t("common.back") || "Retour"}
-            </Button>
-
-            <Button 
-              mode="contained" 
-              onPress={goToNextStep}
-              style={styles.button} 
-              labelStyle={styles.buttonLabel}
-            >
-              {t("common.next") || "Suivant"}
-            </Button>
-          </View>
-        </View>
-
-        {/* Étape 3 : Sécurité */}
-        <View style={[styles.slide, { width: screenWidth }]}>
-          <Card style={styles.card} elevation={5}>
-            <Animatable.View animation="fadeIn" style={styles.formContainer}>
-              <View style={styles.headerContainer}>
-                <Text style={styles.title}>{t("register.security")}</Text>
-              </View>
-
-              <View style={styles.section}>
-                <Animatable.View animation={focusedField === 'password' ? 'pulse' : undefined}>
-                  <TextInput
-                    label={t("register.password")}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={secureTextEntry}
-                    style={[styles.input, focusedField === 'password' && styles.focusedInput]}
-                    mode="outlined"
-                    outlineColor={focusedField === 'password' ? theme.colors.primary : '#CCCCCC'}
-                    activeOutlineColor={theme.colors.primary}
-                    left={<TextInput.Icon icon="lock" />}
-                    right={
-                      <TextInput.Icon
-                        icon={secureTextEntry ? "eye-off" : "eye"}
-                        onPress={() => setSecureTextEntry(!secureTextEntry)}
-                      />
-                    }
-                    onFocus={() => setFocusedField('password')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                </Animatable.View>
-
-                <Animatable.View animation={focusedField === 'confirmPassword' ? 'pulse' : undefined}>
-                  <TextInput
-                    label={t("register.confirmPassword")}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={secureTextEntry}
-                    style={[styles.input, focusedField === 'confirmPassword' && styles.focusedInput]}
-                    mode="outlined"
-                    outlineColor={focusedField === 'confirmPassword' ? theme.colors.primary : '#CCCCCC'}
-                    activeOutlineColor={theme.colors.primary}
-                    left={<TextInput.Icon icon="lock-check" />}
-                    onFocus={() => setFocusedField('confirmPassword')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                </Animatable.View>
-              </View>
-            </Animatable.View>
-          </Card>
-
-          <View style={styles.buttonContainer}>
-            <Button 
-              mode="outlined" 
-              onPress={goToPreviousStep}
-              style={styles.buttonBack} 
-              labelStyle={styles.buttonBackLabel}
-            >
-              {t("common.back") || "Retour"}
-            </Button>
-
-            <Button 
-              mode="contained" 
-              onPress={goToNextStep}
-              style={styles.button} 
-              labelStyle={styles.buttonLabel}
-            >
-              {t("common.next") || "Suivant"}
-            </Button>
-          </View>
-        </View>
-
-        {/* Étape 4 : Commune */}
-        <View style={[styles.slide, { width: screenWidth }]}>
-          <Card style={styles.card} elevation={5}>
-            <Animatable.View animation="fadeIn" style={styles.formContainer}>
-              <View style={styles.headerContainer}>
-                <Text style={styles.title}>{t("register.commune")}</Text>
-              </View>
-
-              <View style={styles.communeSelectionContainer}>
-                {communes.map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.communeButton,
-                      commune === item && styles.communeButtonActive
-                    ]}
-                    onPress={() => setCommune(item)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[
-                      styles.communeButtonText,
-                      commune === item && styles.communeButtonTextActive
-                    ]}>
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </Animatable.View>
-          </Card>
-
-          <View style={styles.buttonContainer}>
-            <Button 
-              mode="outlined" 
-              onPress={goToPreviousStep}
-              style={styles.buttonBack} 
-              labelStyle={styles.buttonBackLabel}
-            >
-              {t("common.back") || "Retour"}
-            </Button>
-
-            <Button 
-              mode="contained" 
-              onPress={goToNextStep}
-              style={styles.button} 
-              labelStyle={styles.buttonLabel}
-            >
-              {role === "client" ? (t("register.submit") || "S'inscrire") : (t("common.next") || "Suivant")}
-            </Button>
-          </View>
-        </View>
-
-        {/* Étape 5 : Véhicule (uniquement pour les coursiers) */}
-        {role === 'courier' && (
-          <View style={[styles.slide, { width: screenWidth }]}>
-            <Card style={styles.card} elevation={5}>
-              <Animatable.View 
-                animation="fadeIn"
-                style={styles.formContainer}
-                ref={courierSectionRef}
-              >
-                <View style={styles.headerContainer}>
-                  <Text style={styles.title}>{t("register.vehicleType")}</Text>
-                </View>
-
-                <View style={styles.vehicleContainer}>
-                  <View style={styles.vehicleTypeContainer}>
-                    {[
-                      { value: "bicycle", icon: "bike" },
-                      { value: "motorcycle", icon: "motorcycle" },
-                      { value: "scooter", icon: "scooter" },
-                      { value: "van", icon: "truck-delivery" },
-                    ].map((item) => (
-                      <TouchableOpacity
-                        key={item.value}
-                        style={[
-                          styles.vehicleButton,
-                          vehicleType === item.value && styles.vehicleButtonActive
-                        ]}
-                        onPress={() => setVehicleType(item.value as VehicleType)}
-                        activeOpacity={0.7}
-                      >
-                        <IconButton
-                          icon={item.icon}
-                          size={30}
-                          iconColor={vehicleType === item.value ? "#FFFFFF" : "#666666"}
-                        />
-                        <Text style={[
-                          styles.vehicleButtonText,
-                          vehicleType === item.value && styles.vehicleButtonTextActive
-                        ]}>
-                          {t(`vehicleTypes.${item.value}`)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  <Animatable.View animation={focusedField === 'licensePlate' ? 'pulse' : undefined}>
-                    <TextInput
-                      label={t("register.licensePlate")}
-                      value={licensePlate}
-                      onChangeText={setLicensePlate}
-                      style={[styles.input, focusedField === 'licensePlate' && styles.focusedInput]}
-                      mode="outlined"
-                      outlineColor={focusedField === 'licensePlate' ? theme.colors.primary : '#CCCCCC'}
-                      activeOutlineColor={theme.colors.primary}
-                      left={<TextInput.Icon icon="car" />}
-                      onFocus={() => setFocusedField('licensePlate')}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                    <HelperText type="info">{t("register.licensePlateHelp")}</HelperText>
-                  </Animatable.View>
-                </View>
-              </Animatable.View>
-            </Card>
-
-            <View style={styles.buttonContainer}>
-              <Button 
-                mode="outlined" 
-                onPress={goToPreviousStep}
-                style={styles.buttonBack} 
-                labelStyle={styles.buttonBackLabel}
-              >
-                {t("common.back") || "Retour"}
-              </Button>
-
-              <Button 
-                mode="contained" 
-                onPress={handleRegister}
-                style={styles.button} 
-                labelStyle={styles.buttonLabel}
-                loading={loading}
-                disabled={loading}
-              >
-                {t("register.submit") || "S'inscrire"}
-              </Button>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      <Animatable.View animation="fadeIn" delay={700} style={styles.loginContainer}>
-        <Text style={styles.loginText}>{t("register.alreadyHaveAccount")}</Text>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate("Login")}
-          activeOpacity={0.7}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.loginLink}>{t("register.login")}</Text>
-        </TouchableOpacity>
-      </Animatable.View>
+          {/* Header */}
+          <Animatable.View animation="fadeInDown" duration={800} style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <MaterialCommunityIcons name="arrow-left" size={24} color={colors.darkGray} />
+            </TouchableOpacity>
+            <View style={styles.headerContent}>
+              <Text style={styles.title}>{t('register.title')}</Text>
+              <Text style={styles.subtitle}>{t('register.subtitle')}</Text>
+            </View>
+          </Animatable.View>
+
+          {/* Offline Warning */}
+          {showOfflineWarning && (
+            <Animatable.View animation="slideInDown" duration={500} style={styles.offlineWarning}>
+              <MaterialCommunityIcons name="wifi-off" size={20} color="#E65100" />
+              <View style={styles.offlineTextContainer}>
+                <Text style={styles.offlineTitle}>{t('register.offline.title')}</Text>
+                <Text style={styles.offlineText}>{t('register.offline.message')}</Text>
+              </View>
+              <TouchableOpacity style={styles.offlineButton} onPress={handleOfflineMode}>
+                <Text style={styles.offlineButtonText}>{t('register.offline.continue')}</Text>
+              </TouchableOpacity>
+            </Animatable.View>
+          )}
+
+          {/* User Type Selection */}
+          <Animatable.View animation="fadeInUp" duration={800} delay={200} style={styles.userTypeContainer}>
+            <Text style={styles.sectionTitle}>{t('register.userType.title')}</Text>
+            <View style={styles.userTypeButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  formData.userType === 'client' && styles.userTypeButtonActive
+                ]}
+                onPress={() => updateFormData('userType', 'client')}
+              >
+                <MaterialCommunityIcons 
+                  name="account" 
+                  size={24} 
+                  color={formData.userType === 'client' ? colors.white : colors.gray} 
+                />
+                <Text style={[
+                  styles.userTypeButtonText,
+                  formData.userType === 'client' && styles.userTypeButtonTextActive
+                ]}>
+                  {t('register.userType.client')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  formData.userType === 'courier' && styles.userTypeButtonActive
+                ]}
+                onPress={() => updateFormData('userType', 'courier')}
+              >
+                <MaterialCommunityIcons 
+                  name="motorbike" 
+                  size={24} 
+                  color={formData.userType === 'courier' ? colors.white : colors.gray} 
+                />
+                <Text style={[
+                  styles.userTypeButtonText,
+                  formData.userType === 'courier' && styles.userTypeButtonTextActive
+                ]}>
+                  {t('register.userType.courier')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animatable.View>
+
+          {/* Form Fields */}
+          <Animatable.View animation="fadeInUp" duration={800} delay={400} style={styles.formContainer}>
+            {/* Name Field */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('register.fields.name')}</Text>
+              <View style={[styles.inputWrapper, formErrors.name && styles.inputError]}>
+                <MaterialCommunityIcons name="account-outline" size={20} color={colors.gray} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  value={formData.name}
+                  onChangeText={(value) => updateFormData('name', value)}
+                  placeholder={t('register.placeholders.name')}
+                  placeholderTextColor={colors.gray}
+                  autoCapitalize="words"
+                  returnKeyType="next"
+                />
+              </View>
+              {formErrors.name && <Text style={styles.errorText}>{formErrors.name}</Text>}
+            </View>
+
+            {/* Email Field */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('register.fields.email')}</Text>
+              <View style={[styles.inputWrapper, formErrors.email && styles.inputError]}>
+                <MaterialCommunityIcons name="email-outline" size={20} color={colors.gray} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  value={formData.email}
+                  onChangeText={(value) => updateFormData('email', value)}
+                  placeholder={t('register.placeholders.email')}
+                  placeholderTextColor={colors.gray}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  returnKeyType="next"
+                />
+              </View>
+              {formErrors.email && <Text style={styles.errorText}>{formErrors.email}</Text>}
+            </View>
+
+            {/* Phone Field */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('register.fields.phone')}</Text>
+              <View style={[styles.inputWrapper, formErrors.phone && styles.inputError]}>
+                <MaterialCommunityIcons name="phone-outline" size={20} color={colors.gray} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  value={formData.phone}
+                  onChangeText={(value) => updateFormData('phone', value)}
+                  placeholder={t('register.placeholders.phone')}
+                  placeholderTextColor={colors.gray}
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                />
+              </View>
+              {formErrors.phone && <Text style={styles.errorText}>{formErrors.phone}</Text>}
+            </View>
+
+            {/* Password Field */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('register.fields.password')}</Text>
+              <View style={[styles.inputWrapper, formErrors.password && styles.inputError]}>
+                <MaterialCommunityIcons name="lock-outline" size={20} color={colors.gray} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  value={formData.password}
+                  onChangeText={(value) => updateFormData('password', value)}
+                  placeholder={t('register.placeholders.password')}
+                  placeholderTextColor={colors.gray}
+                  secureTextEntry={!showPassword}
+                  returnKeyType="next"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <MaterialCommunityIcons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={colors.gray}
+                  />
+                </TouchableOpacity>
+              </View>
+              {formErrors.password && <Text style={styles.errorText}>{formErrors.password}</Text>}
+            </View>
+
+            {/* Confirm Password Field */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('register.fields.confirmPassword')}</Text>
+              <View style={[styles.inputWrapper, formErrors.confirmPassword && styles.inputError]}>
+                <MaterialCommunityIcons name="lock-outline" size={20} color={colors.gray} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  value={formData.confirmPassword}
+                  onChangeText={(value) => updateFormData('confirmPassword', value)}
+                  placeholder={t('register.placeholders.confirmPassword')}
+                  placeholderTextColor={colors.gray}
+                  secureTextEntry={!showConfirmPassword}
+                  returnKeyType="done"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <MaterialCommunityIcons
+                    name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={colors.gray}
+                  />
+                </TouchableOpacity>
+              </View>
+              {formErrors.confirmPassword && <Text style={styles.errorText}>{formErrors.confirmPassword}</Text>}
+            </View>
+          </Animatable.View>
+
+          {/* Register Button */}
+          <Animatable.View animation="fadeInUp" duration={800} delay={600} style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.registerButton, loading && styles.registerButtonDisabled]}
+              onPress={handleRegister}
+              disabled={loading || (!isConnected && !isOfflineMode)}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color={colors.white} size="small" />
+              ) : (
+                <Text style={styles.registerButtonText}>{t('register.submit')}</Text>
+              )}
+            </TouchableOpacity>
+          </Animatable.View>
+
+          {/* Login Link */}
+          <Animatable.View animation="fadeIn" duration={800} delay={800} style={styles.loginContainer}>
+            <Text style={styles.loginText}>{t('register.haveAccount')}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.loginLink}>{t('register.loginLink')}</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <Snackbar
-        visible={visible}
-        onDismiss={() => setVisible(false)}
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
         duration={3000}
         style={styles.snackbar}
         action={{
-          label: "OK",
-          onPress: () => setVisible(false),
+          label: 'OK',
+          onPress: () => setSnackbarVisible(false),
         }}
       >
-        {error}
+        {snackbarMessage}
       </Snackbar>
-    </KeyboardAvoidingView>
-  )
-}
+    </SafeAreaView>
+  );
+};
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: colors.white,
   },
-  headerBackground: {
-    backgroundColor: "#FF6B00",
-    height: 120,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    zIndex: 1,
-  },
-  logoContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-  },
-  progressContainer: {
-    flexDirection: 'row',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 130,
-    paddingHorizontal: 20,
-    zIndex: 2,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    backgroundColor: colors.white,
   },
-  progressStepContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.gray,
   },
-  progressStep: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#CCCCCC',
-    marginHorizontal: 5,
+  keyboardView: {
+    flex: 1,
   },
-  progressLine: {
-    height: 2,
-    width: 15,
-    backgroundColor: '#CCCCCC',
+  scrollView: {
+    flex: 1,
   },
-  activeStep: {
-    backgroundColor: '#FF6B00',
-  },
-  inactiveStep: {
-    backgroundColor: '#CCCCCC',
-  },
-  slidesContainer: {
+  scrollContent: {
     flexGrow: 1,
+    paddingBottom: 32,
   },
-  slide: {
-    paddingTop: 160,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 32,
   },
-  card: {
+  backButton: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    marginBottom: 20,
-    paddingVertical: 16,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  formContainer: {
-    width: "100%",
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  headerContainer: {
-    alignItems: "center",
+    backgroundColor: colors.lightGray,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 24,
   },
+  headerContent: {
+    alignItems: 'center',
+  },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#FF6B00",
-    textAlign: "center",
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.darkGray,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#757575",
-    textAlign: "center",
-    marginTop: 8,
+    color: colors.gray,
+    textAlign: 'center',
+    lineHeight: 24,
   },
-  sectionSubtitle: {
-    fontSize: 16,
-    color: "#555555",
-    marginBottom: 16,
+  offlineWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    marginHorizontal: 24,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
   },
-  section: {
-    marginBottom: 20,
+  offlineTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  offlineTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#E65100',
+    marginBottom: 4,
+  },
+  offlineText: {
+    fontSize: 12,
+    color: '#E65100',
+    opacity: 0.8,
+  },
+  offlineButton: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  offlineButtonText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  userTypeContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: '600',
+    color: colors.darkGray,
     marginBottom: 16,
   },
-  input: {
-    marginBottom: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+  userTypeButtons: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  focusedInput: {
-    backgroundColor: "#FFF9F5",
-  },
-  roleButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: 20,
-  },
-  roleButton: {
-    alignItems: "center",
-    borderRadius: 12,
-    padding: 16,
-    width: '45%',
-    backgroundColor: "#F5F5F5",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  roleButtonActive: {
-    backgroundColor: "#FF6B00",
-    borderColor: "#FF6B00",
-  },
-  roleIconContainer: {
-    marginBottom: 8,
-  },
-  roleButtonText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333333",
-    marginTop: 8,
-  },
-  roleButtonTextActive: {
-    color: "#FFFFFF",
-  },
-  communeSelectionContainer: {
-    flexWrap: "wrap",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  communeButton: {
-    borderRadius: 12,
-    padding: 14,
-    margin: 6,
-    width: "45%",
-    backgroundColor: "#F5F5F5",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    elevation: 1,
-  },
-  communeButtonActive: {
-    backgroundColor: "#FFF9F5",
-    borderColor: "#FF6B00",
-    elevation: 2,
-  },
-  communeButtonText: {
-    fontSize: 14,
-    color: "#333333",
-  },
-  communeButtonTextActive: {
-    color: "#FF6B00",
-    fontWeight: "bold",
-  },
-  vehicleContainer: {
-    marginVertical: 16,
-  },
-  vehicleTypeContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  vehicleButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    padding: 10,
-    margin: 5,
-    width: "45%",
-    backgroundColor: "#F5F5F5",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    elevation: 1,
-    marginBottom: 12,
-  },
-  vehicleButtonActive: {
-    backgroundColor: "#FF6B00",
-    borderColor: "#FF6B00",
-  },
-  vehicleButtonText: {
-    fontSize: 14,
-    color: "#333333",
-    marginTop: 4,
-  },
-  vehicleButtonTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    marginBottom: 20,
-  },
-  button: {
-    height: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: "#FF6B00",
-    elevation: 6,
-    shadowColor: "#FF6B00",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+  userTypeButton: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.lightGray,
+    backgroundColor: colors.white,
+  },
+  userTypeButtonActive: {
+    borderColor: colors.orange,
+    backgroundColor: colors.orange,
+  },
+  userTypeButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.gray,
     marginLeft: 8,
   },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFFFFF",
+  userTypeButtonTextActive: {
+    color: colors.white,
   },
-  buttonBack: {
-    height: 54,
+  formContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.darkGray,
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.lightGray,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    paddingHorizontal: 16,
+    height: 52,
+  },
+  inputError: {
+    borderColor: colors.error,
+    backgroundColor: '#FFF5F5',
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.darkGray,
+    paddingVertical: 0,
+  },
+  eyeButton: {
+    padding: 4,
+  },
+  errorText: {
+    fontSize: 12,
+    color: colors.error,
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  buttonContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  registerButton: {
+    backgroundColor: colors.orange,
+    borderRadius: 12,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
-    borderColor: "#FF6B00",
-    borderWidth: 1,
-    flex: 1,
-    marginRight: 8,
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  buttonBackLabel: {
+  registerButtonDisabled: {
+    opacity: 0.6,
+  },
+  registerButtonText: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#FF6B00",
+    fontWeight: '600',
+    color: colors.white,
+    letterSpacing: 0.5,
   },
   loginContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingVertical: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderTopWidth: 1,
-    borderTopColor: "#EEEEEE",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
   },
   loginText: {
-    color: "#757575",
-    fontSize: 15,
+    fontSize: 14,
+    color: colors.gray,
   },
   loginLink: {
-    color: "#FF6B00",
-    fontWeight: "bold",
-    marginLeft: 5,
-    fontSize: 15,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.orange,
+    marginLeft: 4,
   },
   snackbar: {
-    marginBottom: 16,
-  }
-})
+    backgroundColor: colors.darkGray,
+  },
+};
 
-export default RegisterScreen
+export default RegisterScreen;
