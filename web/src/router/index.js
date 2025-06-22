@@ -420,3 +420,15 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+import MultiDestinationDeliveriesView from '@/views/business/MultiDestinationDeliveriesView.vue'
+
+// Ajout dans les routes business
+{
+  path: '/business/multi-destination-deliveries',
+  name: 'BusinessMultiDestinationDeliveries',
+  component: MultiDestinationDeliveriesView,
+  meta: { 
+    requiresAuth: true, 
+    roles: ['business'] 
+  }
+},
