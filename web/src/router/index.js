@@ -421,14 +421,26 @@ router.beforeEach((to, from, next) => {
 
 export default router
 import MultiDestinationDeliveriesView from '@/views/business/MultiDestinationDeliveriesView.vue'
+import ScheduledDeliveriesView from '@/views/business/ScheduledDeliveriesView.vue'
 
-// Ajout dans les routes business
-{
-  path: '/business/multi-destination-deliveries',
-  name: 'BusinessMultiDestinationDeliveries',
-  component: MultiDestinationDeliveriesView,
-  meta: { 
-    requiresAuth: true, 
-    roles: ['business'] 
-  }
-},
+const businessRoutes = [
+  // Ajout dans les routes business
+  {
+    path: '/business/multi-destination-deliveries',
+    name: 'BusinessMultiDestinationDeliveries',
+    component: MultiDestinationDeliveriesView,
+    meta: { 
+      requiresAuth: true, 
+      role: 'business'
+    }
+  },
+  {
+    path: '/business/scheduled-deliveries',
+    name: 'BusinessScheduledDeliveries',
+    component: ScheduledDeliveriesView,
+    meta: {
+      requiresAuth: true,
+      role: 'business'
+    }
+  },
+]

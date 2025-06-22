@@ -132,6 +132,18 @@ export default {
             icon: 'shipping-fast',
           },
           {
+            name: 'business-scheduled-deliveries',
+            path: '/scheduled-deliveries',
+            label: 'Livraisons planifiées',
+            icon: 'calendar-alt',
+          },
+          {
+            name: 'business-multi-destination-deliveries',
+            path: '/multi-destination-deliveries',
+            label: 'Livraisons multiples',
+            icon: 'route',
+          },
+          {
             name: 'business-couriers',
             path: '/business/couriers',
             label: 'Coursiers',

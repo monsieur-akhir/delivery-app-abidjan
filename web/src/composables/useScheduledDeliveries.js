@@ -1,11 +1,10 @@
-
 import { ref, computed } from 'vue'
 import scheduledDeliveryService from '../api/scheduled-deliveries'
 import { useToast } from './useToast'
 
 export function useScheduledDeliveries() {
   const { toast } = useToast()
-  
+
   const schedules = ref([])
   const stats = ref(null)
   const loading = ref(false)
@@ -15,10 +14,10 @@ export function useScheduledDeliveries() {
   const loadSchedules = async (filters = {}) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await scheduledDeliveryService.getScheduledDeliveries(filters)
-      
+
       if (response.success) {
         schedules.value = response.schedules || []
         return response
@@ -52,7 +51,7 @@ export function useScheduledDeliveries() {
   const createSchedule = async (data) => {
     loading.value = true
     error.value = null
-    
+
     try {
       // Validation
       const errors = scheduledDeliveryService.validateScheduleData(data)
@@ -62,7 +61,7 @@ export function useScheduledDeliveries() {
 
       const apiData = scheduledDeliveryService.formatScheduleDataForAPI(data)
       const response = await scheduledDeliveryService.createScheduledDelivery(apiData)
-      
+
       if (response) {
         toast.success('Planification créée avec succès')
         return response
@@ -80,7 +79,7 @@ export function useScheduledDeliveries() {
   const updateSchedule = async (scheduleId, data) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const errors = scheduledDeliveryService.validateScheduleData(data)
       if (errors.length > 0) {
@@ -89,7 +88,7 @@ export function useScheduledDeliveries() {
 
       const apiData = scheduledDeliveryService.formatScheduleDataForAPI(data)
       const response = await scheduledDeliveryService.updateScheduledDelivery(scheduleId, apiData)
-      
+
       if (response.success) {
         toast.success('Planification mise à jour avec succès')
         return response
@@ -107,10 +106,10 @@ export function useScheduledDeliveries() {
   const deleteSchedule = async (scheduleId) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await scheduledDeliveryService.deleteScheduledDelivery(scheduleId)
-      
+
       if (response.success) {
         toast.success('Planification supprimée avec succès')
         // Retirer de la liste locale
@@ -130,7 +129,7 @@ export function useScheduledDeliveries() {
   const pauseSchedule = async (scheduleId) => {
     try {
       const response = await scheduledDeliveryService.pauseScheduledDelivery(scheduleId)
-      
+
       if (response.success) {
         toast.success('Planification mise en pause')
         // Mettre à jour localement
@@ -150,7 +149,7 @@ export function useScheduledDeliveries() {
   const resumeSchedule = async (scheduleId) => {
     try {
       const response = await scheduledDeliveryService.resumeScheduledDelivery(scheduleId)
-      
+
       if (response.success) {
         toast.success('Planification reprise')
         // Mettre à jour localement
@@ -170,7 +169,7 @@ export function useScheduledDeliveries() {
   const executeSchedule = async (scheduleId) => {
     try {
       const response = await scheduledDeliveryService.executeScheduledDelivery(scheduleId)
-      
+
       if (response.success) {
         toast.success(`Livraison créée avec succès (ID: ${response.delivery_id})`)
         // Mettre à jour le nombre d'exécutions
@@ -190,7 +189,7 @@ export function useScheduledDeliveries() {
   // Statistiques calculées
   const computedStats = computed(() => {
     if (!stats.value) return null
-    
+
     return {
       ...stats.value,
       successRateFormatted: `${(stats.value.success_rate || 0).toFixed(1)}%`,
@@ -221,7 +220,7 @@ export function useScheduledDeliveries() {
   const upcomingExecutions = computed(() => {
     const now = new Date()
     const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-    
+
     return schedules.value
       .filter(s => s.next_execution_at && s.status === 'active')
       .filter(s => {
@@ -237,7 +236,7 @@ export function useScheduledDeliveries() {
     stats,
     loading,
     error,
-    
+
     // Actions
     loadSchedules,
     loadStats,
@@ -247,7 +246,7 @@ export function useScheduledDeliveries() {
     pauseSchedule,
     resumeSchedule,
     executeSchedule,
-    
+
     // Computed
     computedStats,
     schedulesByStatus,
@@ -255,3 +254,11 @@ export function useScheduledDeliveries() {
     upcomingExecutions
   }
 }
+import { ref, reactive } from 'vue'
+import { scheduledDeliveriesAPI } from '@/api/scheduled-deliveries'
+
+const state = reactive({
+  deliveries: [],
+  isLoading: false,
+  error: null
+})
