@@ -56,6 +56,11 @@ class DeliveryService {
 
   static async getDeliveryById(id: string): Promise<Delivery> {
     try {
+      // Validation de l'ID
+      if (!id || id === 'null' || id === 'undefined' || id.trim() === '') {
+        throw new Error('ID de livraison invalide ou manquant')
+      }
+
       console.log('🔍 [DEBUG] getDeliveryById appelé avec ID:', id)
       // Essayer plusieurs endpoints possibles
       const endpoints = [
@@ -141,7 +146,14 @@ class DeliveryService {
 
   static async cancelDelivery(id: string, reason?: string): Promise<void> {
     try {
-      await api.post(`/deliveries/${id}/cancel`, { reason })
+      // Essayer d'abord avec /api/deliveries/{id}/cancel
+      try {
+        await api.post(`/api/deliveries/${id}/cancel`, { reason })
+        return
+      } catch (err) {
+        // Si 404 ou autre, essayer sans le préfixe /api
+        await api.post(`/deliveries/${id}/cancel`, { reason })
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error('Erreur lors de l\'annulation de la livraison:', error.message)
@@ -235,6 +247,11 @@ class DeliveryService {
 
   static async getDeliveryDetails(id: string): Promise<Delivery> {
     try {
+      // Validation de l'ID
+      if (!id || id === 'null' || id === 'undefined' || id.trim() === '') {
+        throw new Error('ID de livraison invalide ou manquant')
+      }
+
       const response = await api.get(`/api/v1/deliveries/${id}`)
       return response.data
     } catch (error: unknown) {
@@ -874,6 +891,89 @@ class DeliveryService {
         console.error('Erreur lors de la récupération des lieux populaires:', error.message)
       } else {
         console.error('Erreur lors de la récupération des lieux populaires:', String(error))
+      }
+      throw error
+    }
+  }
+
+  // Méthodes pour les contre-offres
+  static async createCounterOffer(
+    deliveryId: string,
+    bidId: number,
+    counterOfferData: {
+      proposed_price: number
+      message?: string
+    }
+  ): Promise<any> {
+    try {
+      const response = await api.post(
+        `/deliveries/${deliveryId}/bids/${bidId}/counter-offer`,
+        counterOfferData
+      )
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la création de la contre-offre:', error.message)
+      } else {
+        console.error('Erreur lors de la création de la contre-offre:', String(error))
+      }
+      throw error
+    }
+  }
+
+  static async respondToCounterOffer(
+    deliveryId: string,
+    bidId: number,
+    counterOfferId: number,
+    responseData: {
+      response_type: 'accept' | 'decline' | 'counter'
+      new_price?: number
+      message?: string
+    }
+  ): Promise<any> {
+    try {
+      const response = await api.post(
+        `/deliveries/${deliveryId}/bids/${bidId}/counter-offer/${counterOfferId}/respond`,
+        responseData
+      )
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la réponse à la contre-offre:', error.message)
+      } else {
+        console.error('Erreur lors de la réponse à la contre-offre:', String(error))
+      }
+      throw error
+    }
+  }
+
+  static async getCounterOffers(deliveryId: string): Promise<any[]> {
+    try {
+      const response = await api.get(`/deliveries/${deliveryId}/counter-offers`)
+      return response.data.counter_offers || []
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des contre-offres:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des contre-offres:', String(error))
+      }
+      throw error
+    }
+  }
+
+  // Méthode pour modifier une livraison existante
+  static async modifyDelivery(
+    deliveryId: string,
+    updateData: DeliveryUpdateRequest
+  ): Promise<Delivery> {
+    try {
+      const response = await api.put(`/deliveries/${deliveryId}`, updateData)
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la modification de la livraison:', error.message)
+      } else {
+        console.error('Erreur lors de la modification de la livraison:', String(error))
       }
       throw error
     }

@@ -851,12 +851,22 @@ export const createDelivery = async (deliveryData: DeliveryData): Promise<Delive
 
 // Obtenir les détails d'une livraison
 export const fetchDeliveryDetails = async (deliveryId: string): Promise<Delivery> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
   const response = await api.get(`/api/deliveries/${deliveryId}`)
   return response.data
 }
 
 // Obtenir les enchères pour une livraison
 export const getBidsForDelivery = async (deliveryId: string): Promise<BidResponse[]> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
   const response = await api.get(`/api/deliveries/${deliveryId}/bids`)
   return response.data
 }
@@ -885,6 +895,11 @@ export const rejectBid = async (bidId: string, deliveryId?: string): Promise<voi
 
 // Obtenir les offres pour une livraison
 export const fetchDeliveryBids = async (deliveryId: string): Promise<BidWithCourier[]> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
   const response = await api.get(`/api/deliveries/${deliveryId}/bids`)
   const bidsWithCourierPromises = response.data.map(async (bid: BidResponse) => {
     try {
@@ -910,6 +925,28 @@ export const fetchDeliveryBids = async (deliveryId: string): Promise<BidWithCour
   return bidsWithCourier
 }
 
+// Obtenir les consultations de coursiers pour une livraison
+export const getDeliveryConsultations = async (deliveryId: string): Promise<any[]> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
+  const response = await api.get(`/api/deliveries/${deliveryId}/consultations`)
+  return response.data.consultations || []
+}
+
+// Enregistrer une consultation de coursier
+export const recordCourierConsultation = async (deliveryId: string, consultationData: any): Promise<any> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
+  const response = await api.post(`/api/deliveries/${deliveryId}/consultations`, consultationData)
+  return response.data
+}
+
 // Créer une enchère
 export const createBid = async (bidData: BidData): Promise<BidResponse> => {
   const response = await api.post("/api/bids", bidData)
@@ -918,24 +955,44 @@ export const createBid = async (bidData: BidData): Promise<BidResponse> => {
 
 // Enchérir pour une livraison
 export const bidForDelivery = async (deliveryId: string, amount: number): Promise<BidResponse> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
   const response = await api.post(`/api/deliveries/${deliveryId}/bid`, { amount })
   return response.data
 }
 
 // Obtenir la position du coursier
 export const getCourierLocation = async (deliveryId: string): Promise<CourierLocation> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
   const response = await api.get(`/api/deliveries/${deliveryId}/courier-location`)
   return response.data
 }
 
 // Mettre à jour le statut de la livraison
 export const updateDeliveryStatus = async (deliveryId: string, status: DeliveryStatus): Promise<void> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
   const response = await api.put(`/api/deliveries/${deliveryId}/status`, { status })
   return response.data
 }
 
 // Annuler une livraison
 export const cancelDelivery = async (deliveryId: string): Promise<void> => {
+  // Validation de l'ID
+  if (!deliveryId || deliveryId === 'null' || deliveryId === 'undefined' || deliveryId.trim() === '') {
+    throw new Error('ID de livraison invalide ou manquant')
+  }
+
   const response = await api.post(`/api/deliveries/${deliveryId}/cancel`)
   return response.data
 }
@@ -1386,6 +1443,63 @@ export const calculateZonePrice = async (
     is_express: isExpress
   })
   return response.data
+}
+
+// Obtenir les options de livraison en fonction des caractéristiques du colis
+export const getDeliveryOptions = async (
+  packageType: string,
+  packageSize: string,
+  packageWeight: number,
+  distance: number,
+  isFragile: boolean = false,
+  isUrgent: boolean = false,
+  weatherCondition?: number
+): Promise<{
+  package_info: {
+    type: string
+    size: string
+    weight: number
+    estimated_volume: number
+    category: string
+    is_fragile: boolean
+    is_urgent: boolean
+  }
+  delivery_info: {
+    distance: number
+    weather_condition?: number
+  }
+  options: Array<{
+    vehicle_type: string
+    name: string
+    compatibility_score: number
+    price: number
+    price_multiplier: number
+    estimated_duration: number
+    eco_friendly: boolean
+    max_weight: number
+    max_volume: number
+    max_distance: number
+    suitable_for: string[]
+    reasons: string[]
+  }>
+  recommended: any
+  total_options: number
+}> => {
+  const params = new URLSearchParams({
+    package_type: packageType,
+    package_size: packageSize,
+    package_weight: packageWeight.toString(),
+    distance: distance.toString(),
+    is_fragile: isFragile.toString(),
+    is_urgent: isUrgent.toString()
+  })
+
+  if (weatherCondition !== undefined) {
+    params.append('weather_condition', weatherCondition.toString())
+  }
+
+  const response = await api.get(`/api/deliveries/delivery-options?${params.toString()}`)
+  return response.data.data
 }
 
 // Exporter d'autres fonctions d'API au besoin

@@ -109,6 +109,15 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, user_id: int):
         delivery_dict.update(required_fields)
         delivery_dict['client_id'] = user_id
 
+        # Supprimer les champs invalides pour le modèle Delivery
+        invalid_fields = ['package_type', 'recipient_name', 'recipient_phone', 'special_instructions', 
+                         'distance', 'weather_conditions', 'vehicle_type', 'delivery_speed', 'extras',
+                         'description', 'weight', 'estimated_value', 'is_urgent', 'urgency_level', 
+                         'custom_price', 'client_name', 'client_phone', 'client_email']
+        
+        for field in invalid_fields:
+            delivery_dict.pop(field, None)
+
         # Créer l'objet Delivery
         delivery = Delivery(**delivery_dict)
 
@@ -133,8 +142,17 @@ def update_delivery(db: Session, delivery_id: int, delivery_data: DeliveryUpdate
         raise BadRequestError("Cette livraison ne peut plus être modifiée")
 
     # Mettre à jour les champs fournis
+    allowed_fields = [
+        'pickup_address', 'pickup_commune', 'pickup_lat', 'pickup_lng',
+        'delivery_address', 'delivery_commune', 'delivery_lat', 'delivery_lng',
+        'package_description', 'package_size', 'package_weight', 'is_fragile',
+        'proposed_price', 'special_instructions',
+        'delivery_contact_name', 'delivery_contact_phone'
+    ]
+
     for key, value in delivery_data.dict(exclude_unset=True).items():
-        setattr(delivery, key, value)
+        if key in allowed_fields:
+            setattr(delivery, key, value)
 
     db.commit()
     db.refresh(delivery)

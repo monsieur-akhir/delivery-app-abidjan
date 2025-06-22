@@ -725,6 +725,234 @@ def get_vehicle_environmental_stats(
     
     return stats
 
+
+def get_delivery_options(
+    db: Session, 
+    package_type: str,
+    package_size: str,
+    package_weight: float,
+    distance: float,
+    is_fragile: bool = False,
+    is_urgent: bool = False,
+    weather_condition: Optional[int] = None
+) -> Dict[str, Any]:
+    """
+    Get delivery options based on package characteristics
+    Returns multiple vehicle options with suitability scores and pricing
+    """
+    
+    # Définir les capacités des véhicules
+    vehicle_capabilities = {
+        'bicycle': {
+            'max_weight': 5.0,  # 5kg
+            'max_volume': 0.05,  # 50L
+            'max_distance': 10.0,  # 10km
+            'suitable_for': ['documents', 'small_packages', 'food'],
+            'base_price_multiplier': 1.0,
+            'eco_friendly': True,
+            'speed': 'slow'
+        },
+        'scooter': {
+            'max_weight': 15.0,  # 15kg
+            'max_volume': 0.15,  # 150L
+            'max_distance': 25.0,  # 25km
+            'suitable_for': ['documents', 'small_packages', 'medium_packages', 'food', 'electronics'],
+            'base_price_multiplier': 1.1,
+            'eco_friendly': True,
+            'speed': 'medium'
+        },
+        'motorcycle': {
+            'max_weight': 25.0,  # 25kg
+            'max_volume': 0.25,  # 250L
+            'max_distance': 50.0,  # 50km
+            'suitable_for': ['documents', 'small_packages', 'medium_packages', 'food', 'electronics', 'fragile'],
+            'base_price_multiplier': 1.2,
+            'eco_friendly': False,
+            'speed': 'fast'
+        },
+        'van': {
+            'max_weight': 500.0,  # 500kg
+            'max_volume': 5.0,  # 5m³
+            'max_distance': 100.0,  # 100km
+            'suitable_for': ['large_packages', 'furniture', 'appliances', 'construction'],
+            'base_price_multiplier': 1.5,
+            'eco_friendly': False,
+            'speed': 'medium'
+        },
+        'pickup': {
+            'max_weight': 1000.0,  # 1000kg
+            'max_volume': 10.0,  # 10m³
+            'max_distance': 150.0,  # 150km
+            'suitable_for': ['large_packages', 'furniture', 'appliances', 'construction'],
+            'base_price_multiplier': 1.8,
+            'eco_friendly': False,
+            'speed': 'medium'
+        },
+        'kia_truck': {
+            'max_weight': 2000.0,  # 2000kg
+            'max_volume': 20.0,  # 20m³
+            'max_distance': 200.0,  # 200km
+            'suitable_for': ['large_packages', 'furniture', 'appliances', 'construction'],
+            'base_price_multiplier': 2.2,
+            'eco_friendly': False,
+            'speed': 'slow'
+        },
+        'moving_truck': {
+            'max_weight': 5000.0,  # 5000kg
+            'max_volume': 50.0,  # 50m³
+            'max_distance': 300.0,  # 300km
+            'suitable_for': ['furniture', 'appliances', 'construction'],
+            'base_price_multiplier': 3.0,
+            'eco_friendly': False,
+            'speed': 'slow'
+        }
+    }
+    
+    # Mapping des tailles de colis vers des volumes approximatifs
+    size_to_volume = {
+        'small': 0.01,    # 10L
+        'medium': 0.05,   # 50L
+        'large': 0.2,     # 200L
+        'extra_large': 1.0  # 1m³
+    }
+    
+    # Mapping des types de colis vers des catégories
+    type_to_category = {
+        'documents': 'documents',
+        'clothing': 'small_packages',
+        'electronics': 'electronics',
+        'food': 'food',
+        'furniture': 'furniture',
+        'appliances': 'appliances',
+        'construction': 'construction',
+        'fragile': 'fragile'
+    }
+    
+    # Calculer le volume approximatif
+    estimated_volume = size_to_volume.get(package_size.lower(), 0.05)
+    package_category = type_to_category.get(package_type.lower(), 'small_packages')
+    
+    # Évaluer chaque véhicule
+    vehicle_options = []
+    
+    for vehicle_type, capabilities in vehicle_capabilities.items():
+        # Vérifier si le véhicule peut transporter ce colis
+        can_carry = True
+        reasons = []
+        
+        # Vérifier le poids
+        if package_weight > capabilities['max_weight']:
+            can_carry = False
+            reasons.append(f"Poids trop élevé ({package_weight}kg > {capabilities['max_weight']}kg)")
+        
+        # Vérifier le volume
+        if estimated_volume > capabilities['max_volume']:
+            can_carry = False
+            reasons.append(f"Volume trop élevé ({estimated_volume}m³ > {capabilities['max_volume']}m³)")
+        
+        # Vérifier la distance
+        if distance > capabilities['max_distance']:
+            can_carry = False
+            reasons.append(f"Distance trop élevée ({distance}km > {capabilities['max_distance']}km)")
+        
+        # Vérifier la compatibilité avec le type de colis
+        if package_category not in capabilities['suitable_for']:
+            if package_category == 'fragile' and 'fragile' not in capabilities['suitable_for']:
+                reasons.append("Non recommandé pour les colis fragiles")
+            elif package_category == 'electronics' and 'electronics' not in capabilities['suitable_for']:
+                reasons.append("Non recommandé pour l'électronique")
+        
+        if can_carry:
+            # Calculer le score de compatibilité (0-100)
+            compatibility_score = 100
+            
+            # Réduire le score si le véhicule n'est pas optimal
+            if package_category not in capabilities['suitable_for']:
+                compatibility_score -= 20
+            
+            # Réduire le score si le véhicule est surdimensionné
+            weight_utilization = package_weight / capabilities['max_weight']
+            if weight_utilization < 0.1:  # Moins de 10% d'utilisation
+                compatibility_score -= 15
+            
+            volume_utilization = estimated_volume / capabilities['max_volume']
+            if volume_utilization < 0.1:  # Moins de 10% d'utilisation
+                compatibility_score -= 15
+            
+            # Augmenter le score pour les véhicules écologiques
+            if capabilities['eco_friendly']:
+                compatibility_score += 10
+            
+            # Calculer le prix
+            base_price = distance * 100  # Prix de base: 100 FCFA/km
+            price_multiplier = capabilities['base_price_multiplier']
+            
+            # Ajustements pour les conditions spéciales
+            if is_fragile:
+                price_multiplier *= 1.2
+            if is_urgent:
+                price_multiplier *= 1.3
+            if weather_condition and weather_condition >= 200 and weather_condition < 800:
+                price_multiplier *= 1.15
+            
+            final_price = base_price * price_multiplier
+            
+            vehicle_options.append({
+                'vehicle_type': vehicle_type,
+                'name': f"{vehicle_type.replace('_', ' ').title()}",
+                'compatibility_score': max(0, compatibility_score),
+                'price': round(final_price, 0),
+                'price_multiplier': price_multiplier,
+                'estimated_duration': calculate_estimated_duration(distance, capabilities['speed']),
+                'eco_friendly': capabilities['eco_friendly'],
+                'max_weight': capabilities['max_weight'],
+                'max_volume': capabilities['max_volume'],
+                'max_distance': capabilities['max_distance'],
+                'suitable_for': capabilities['suitable_for'],
+                'reasons': reasons if reasons else ["Véhicule compatible"]
+            })
+    
+    # Trier par score de compatibilité (décroissant)
+    vehicle_options.sort(key=lambda x: x['compatibility_score'], reverse=True)
+    
+    # Ajouter des informations générales
+    return {
+        'package_info': {
+            'type': package_type,
+            'size': package_size,
+            'weight': package_weight,
+            'estimated_volume': estimated_volume,
+            'category': package_category,
+            'is_fragile': is_fragile,
+            'is_urgent': is_urgent
+        },
+        'delivery_info': {
+            'distance': distance,
+            'weather_condition': weather_condition
+        },
+        'options': vehicle_options,
+        'recommended': vehicle_options[0] if vehicle_options else None,
+        'total_options': len(vehicle_options)
+    }
+
+
+def calculate_estimated_duration(distance: float, speed: str) -> int:
+    """Calculate estimated delivery duration in minutes"""
+    # Vitesses moyennes en km/h
+    speeds = {
+        'slow': 15,      # 15 km/h
+        'medium': 25,    # 25 km/h
+        'fast': 35       # 35 km/h
+    }
+    
+    avg_speed = speeds.get(speed, 25)
+    duration_hours = distance / avg_speed
+    duration_minutes = int(duration_hours * 60)
+    
+    # Ajouter 15 minutes pour le ramassage et la livraison
+    return duration_minutes + 15
+
+
 class TransportService:
     @staticmethod
     def create_vehicle(db, vehicle):

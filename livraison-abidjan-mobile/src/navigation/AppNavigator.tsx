@@ -24,11 +24,11 @@ import NotificationsScreen from '../screens/client/NotificationsScreen';
 import WalletScreen from '../screens/client/WalletScreen';
 import PaymentScreen from '../screens/client/PaymentScreen';
 import PaymentMethodsScreen from '../screens/client/PaymentMethodsScreen';
+import BidScreen from '../screens/client/BidScreen';
 
 // Courier Screens
 import CourierDashboardScreen from '../screens/courier/CourierDashboardScreen';
 import AvailableDeliveriesScreen from '../screens/courier/AvailableDeliveriesScreen';
-import BidScreen from '../screens/courier/BidScreen';
 import CourierTrackDeliveryScreen from '../screens/courier/CourierTrackDeliveryScreen';
 import CourierEarningsScreen from '../screens/courier/CourierEarningsScreen';
 import CollaborativeDeliveriesScreen from '../screens/courier/CollaborativeDeliveriesScreen';
@@ -177,9 +177,9 @@ export default function AppNavigator() {
           <Stack.Screen name="DeliveryDetails" component={DeliveryDetailsScreen} />
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+          <Stack.Screen name="BidScreen" component={BidScreen} />
 
           {/* Courier Specific Screens */}
-          <Stack.Screen name="BidScreen" component={BidScreen} />
           <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />
           <Stack.Screen name="Gamification" component={GamificationScreen} />
           <Stack.Screen name="CommunityWallet" component={CommunityWalletScreen} />

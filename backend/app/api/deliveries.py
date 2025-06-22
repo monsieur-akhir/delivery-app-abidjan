@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
 import logging
+import asyncio
 
 from ..db.session import get_db
 from ..core.security import get_current_user
@@ -13,6 +14,7 @@ from ..services import delivery as delivery_service
 from ..services import matching as matching_service
 from ..services import geolocation as geolocation_service
 from ..services.geolocation import get_google_places_suggestions
+from ..services.transport_service import get_delivery_options
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
@@ -55,7 +57,7 @@ async def create_new_delivery(
         
         # Informations du créateur (utilisateur connecté)
         delivery_dict['client_id'] = current_user.id
-        delivery_dict['client_name'] = current_user.name or f"{current_user.first_name} {current_user.last_name}".strip()
+        delivery_dict['client_name'] = current_user.full_name or "Utilisateur"
         delivery_dict['client_phone'] = current_user.phone
         delivery_dict['client_email'] = current_user.email
         
@@ -166,58 +168,6 @@ async def create_new_delivery(
         logger.error(f"Erreur création livraison: {str(e)}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Erreur lors de la création: {str(e)}")
 
-    try:
-        delivery = create_delivery(db, delivery_data, current_user)
-        
-        # Sérialiser l'objet Delivery pour éviter les erreurs Pydantic
-        delivery_dict = {
-            "id": delivery.id,
-            "client_id": delivery.client_id,
-            "courier_id": delivery.courier_id,
-            "pickup_address": delivery.pickup_address,
-            "pickup_commune": delivery.pickup_commune,
-            "pickup_lat": delivery.pickup_lat,
-            "pickup_lng": delivery.pickup_lng,
-            "pickup_contact_name": delivery.pickup_contact_name,
-            "pickup_contact_phone": delivery.pickup_contact_phone,
-            "delivery_address": delivery.delivery_address,
-            "delivery_commune": delivery.delivery_commune,
-            "delivery_lat": delivery.delivery_lat,
-            "delivery_lng": delivery.delivery_lng,
-            "delivery_contact_name": delivery.delivery_contact_name,
-            "delivery_contact_phone": delivery.delivery_contact_phone,
-            "package_description": delivery.package_description,
-            "package_size": delivery.package_size,
-            "package_weight": delivery.package_weight,
-            "is_fragile": delivery.is_fragile,
-            "cargo_category": delivery.cargo_category,
-            "required_vehicle_type": delivery.required_vehicle_type,
-            "proposed_price": delivery.proposed_price,
-            "delivery_type": delivery.delivery_type,
-            "final_price": delivery.final_price,
-            "status": delivery.status,
-            "estimated_distance": delivery.estimated_distance,
-            "estimated_duration": delivery.estimated_duration,
-            "actual_duration": delivery.actual_duration,
-            "created_at": delivery.created_at,
-            "accepted_at": delivery.accepted_at,
-            "pickup_at": delivery.pickup_at,
-            "delivered_at": delivery.delivered_at,
-            "completed_at": delivery.completed_at,
-            "cancelled_at": delivery.cancelled_at,
-            "vehicle_id": delivery.vehicle_id,
-            # Relations sérialisées en dictionnaires
-            "client": None,  # Pas de relation chargée par défaut
-            "courier": None,  # Pas de relation chargée par défaut
-            "vehicle": None   # Pas de relation chargée par défaut
-        }
-        
-        return delivery_dict
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la création de la livraison: {str(e)}")
-
 @router.get("/deliveries")
 async def get_deliveries(
     user_id: Optional[int] = Query(None, description="ID de l'utilisateur"),
@@ -293,8 +243,8 @@ async def get_delivery_by_id(
         "delivery_commune": delivery.delivery_commune,
         "delivery_lat": delivery.delivery_lat,
         "delivery_lng": delivery.delivery_lng,
-        "delivery_contact_name": delivery.delivery_contact_name,
-        "delivery_contact_phone": delivery.delivery_contact_phone,
+        "delivery_contact_name": delivery.delivery_contact_name or '',
+        "delivery_contact_phone": delivery.delivery_contact_phone or '',
         "package_description": delivery.package_description,
         "package_size": delivery.package_size,
         "package_weight": delivery.package_weight,
@@ -316,9 +266,9 @@ async def get_delivery_by_id(
         "cancelled_at": delivery.cancelled_at,
         "vehicle_id": delivery.vehicle_id,
         # Relations sérialisées en dictionnaires
-        "client": None,  # Pas de relation chargée par défaut
-        "courier": None,  # Pas de relation chargée par défaut
-        "vehicle": None   # Pas de relation chargée par défaut
+        "client": None,
+        "courier": None,
+        "vehicle": None
     }
 
     return {
@@ -451,16 +401,22 @@ async def address_autocomplete_get(
 async def address_autocomplete_public(
     input: str = Query(..., min_length=1, description="Texte de recherche pour l'autocomplétion")
 ):
-    """
-    Autocomplétion d'adresses PUBLIC - Pas d'authentification requise
-    """
     logger.info(f"[DEBUG] Appel GET /address-autocomplete/public avec input='{input}'")
     try:
-        # Appeler le service de géolocalisation
-        suggestions = await get_google_places_suggestions(input)
-        logger.info(f"[DEBUG] Suggestions publiques retournées: {len(suggestions)} résultats")
-        
-        # Retourner directement les données
+        start = datetime.now()
+        try:
+            suggestions = await asyncio.wait_for(get_google_places_suggestions(input), timeout=8)
+        except asyncio.TimeoutError:
+            logger.warning(f"[TIMEOUT] L'appel à Google Places a dépassé 8s pour input='{input}'")
+            return {
+                "predictions": [],
+                "status": "TIMEOUT",
+                "query": input,
+                "message": "Le service d'autocomplétion est temporairement lent. Veuillez réessayer."
+            }
+        elapsed = (datetime.now() - start).total_seconds()
+        if elapsed > 5:
+            logger.warning(f"[LENT] L'appel à Google Places a pris {elapsed:.2f}s pour input='{input}'")
         return {
             "predictions": suggestions,
             "status": "OK",
@@ -468,23 +424,19 @@ async def address_autocomplete_public(
         }
     except Exception as e:
         logger.error(f"[ERROR] Exception dans /address-autocomplete/public: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Erreur lors de l'autocomplétion d'adresse"
-        )
+        return {
+            "predictions": [],
+            "status": "ERROR",
+            "query": input,
+            "message": "Erreur lors de l'autocomplétion d'adresse. Veuillez réessayer plus tard."
+        }
 
 @router.post("/address-autocomplete/public")
 async def address_autocomplete_public_post(
     search_data: dict = Body(..., description="Données de recherche")
 ):
-    """
-    Autocomplétion d'adresses PUBLIC (POST) - Pas d'authentification requise
-    """
     try:
-        # Extraire le terme de recherche
         input_text = search_data.get("input", "").strip()
-        
-        # Validation de base
         if len(input_text) < 1:
             return {
                 "predictions": [],
@@ -492,15 +444,20 @@ async def address_autocomplete_public_post(
                 "query": input_text,
                 "message": "Le terme de recherche ne peut pas être vide"
             }
-        
-        logger.info(f"[DEBUG] Appel POST /address-autocomplete/public avec input='{input_text}'")
-        
-        # Appeler le service de géolocalisation
-        suggestions = await get_google_places_suggestions(input_text)
-        
-        logger.info(f"[DEBUG] Suggestions publiques POST retournées: {len(suggestions)} résultats")
-        
-        # Retourner les suggestions
+        start = datetime.now()
+        try:
+            suggestions = await asyncio.wait_for(get_google_places_suggestions(input_text), timeout=8)
+        except asyncio.TimeoutError:
+            logger.warning(f"[TIMEOUT] L'appel à Google Places a dépassé 8s pour input='{input_text}'")
+            return {
+                "predictions": [],
+                "status": "TIMEOUT",
+                "query": input_text,
+                "message": "Le service d'autocomplétion est temporairement lent. Veuillez réessayer."
+            }
+        elapsed = (datetime.now() - start).total_seconds()
+        if elapsed > 5:
+            logger.warning(f"[LENT] L'appel à Google Places a pris {elapsed:.2f}s pour input='{input_text}'")
         return {
             "predictions": suggestions,
             "status": "OK",
@@ -508,27 +465,22 @@ async def address_autocomplete_public_post(
         }
     except Exception as e:
         logger.error(f"Erreur lors de l'autocomplétion publique: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Erreur lors de l'autocomplétion d'adresse"
-        )
+        return {
+            "predictions": [],
+            "status": "ERROR",
+            "query": search_data.get("input", ""),
+            "message": "Erreur lors de l'autocomplétion d'adresse. Veuillez réessayer plus tard."
+        }
 
 @router.post("/address-autocomplete", response_model=FlexibleAutocompleteResponse)
 async def address_autocomplete(
     search_data: dict = Body(..., description="Données de recherche"),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Autocomplétion d'adresses avec Google Places API (POST).
-    Prend en compte la localisation de l'utilisateur pour des résultats plus pertinents.
-    """
     try:
-        # Extraire le terme de recherche et la localisation
         input_text = search_data.get("input", "").strip()
         user_lat = search_data.get("lat")
         user_lng = search_data.get("lng")
-        
-        # Validation de base
         if len(input_text) < 2:
             return {
                 "predictions": [],
@@ -536,15 +488,24 @@ async def address_autocomplete(
                 "query": input_text,
                 "message": "Le terme de recherche doit contenir au moins 2 caractères"
             }
-        
-        # Appeler le service de géolocalisation avec la localisation
-        suggestions = await get_google_places_suggestions(
-            input_text,
-            user_lat=user_lat,
-            user_lng=user_lng
-        )
-        
-        # Retourner les suggestions
+        start = datetime.now()
+        try:
+            suggestions = await asyncio.wait_for(get_google_places_suggestions(
+                input_text,
+                user_lat=user_lat,
+                user_lng=user_lng
+            ), timeout=8)
+        except asyncio.TimeoutError:
+            logger.warning(f"[TIMEOUT] L'appel à Google Places a dépassé 8s pour input='{input_text}'")
+            return {
+                "predictions": [],
+                "status": "TIMEOUT",
+                "query": input_text,
+                "message": "Le service d'autocomplétion est temporairement lent. Veuillez réessayer."
+            }
+        elapsed = (datetime.now() - start).total_seconds()
+        if elapsed > 5:
+            logger.warning(f"[LENT] L'appel à Google Places a pris {elapsed:.2f}s pour input='{input_text}'")
         return {
             "predictions": suggestions,
             "status": "OK",
@@ -552,10 +513,12 @@ async def address_autocomplete(
         }
     except Exception as e:
         logger.error(f"Erreur lors de l'autocomplétion: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Erreur lors de l'autocomplétion d'adresse"
-        )
+        return {
+            "predictions": [],
+            "status": "ERROR",
+            "query": search_data.get("input", ""),
+            "message": "Erreur lors de l'autocomplétion d'adresse. Veuillez réessayer plus tard."
+        }
 
 @router.get("/popular-places")
 async def popular_places_endpoint(
@@ -621,6 +584,82 @@ async def get_delivery_options():
         "cargo_categories": ["electronics", "clothing", "food", "fragile", "documents", "other"],
         "vehicle_types": ["bicycle", "motorcycle", "car", "van", "truck"]
     }
+
+# Endpoints pour le suivi des consultations de coursiers
+@router.get("/deliveries/{delivery_id}/consultations")
+async def get_delivery_consultations(
+    delivery_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Récupérer les consultations de coursiers pour une livraison
+    """
+    try:
+        # Vérifier que la livraison existe et appartient à l'utilisateur
+        delivery = get_delivery(db, delivery_id)
+        if delivery.client_id != current_user.id and current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+        
+        # Simuler les consultations (à remplacer par une vraie implémentation)
+        consultations = [
+            {
+                "id": "1",
+                "courier_id": "101",
+                "courier_name": "Kouassi Jean",
+                "courier_rating": 4.8,
+                "consultation_time": datetime.now().isoformat(),
+                "status": "viewing"
+            },
+            {
+                "id": "2", 
+                "courier_id": "102",
+                "courier_name": "Traoré Fatou",
+                "courier_rating": 4.6,
+                "consultation_time": datetime.now().isoformat(),
+                "status": "interested"
+            }
+        ]
+        
+        return {"consultations": consultations}
+        
+    except Exception as e:
+        logger.error(f"Erreur récupération consultations: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erreur: {str(e)}")
+
+@router.post("/deliveries/{delivery_id}/consultations")
+async def record_courier_consultation(
+    delivery_id: int,
+    consultation_data: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Enregistrer une consultation de coursier
+    """
+    try:
+        # Vérifier que l'utilisateur est un coursier
+        if current_user.role != "courier":
+            raise HTTPException(status_code=403, detail="Seuls les coursiers peuvent consulter")
+        
+        # Vérifier que la livraison existe
+        delivery = get_delivery(db, delivery_id)
+        
+        # Enregistrer la consultation (simulation)
+        consultation = {
+            "id": f"{delivery_id}_{current_user.id}",
+            "courier_id": str(current_user.id),
+            "courier_name": current_user.full_name,
+            "courier_rating": 4.5,  # À récupérer depuis le profil
+            "consultation_time": datetime.now().isoformat(),
+            "status": consultation_data.get("status", "viewing")
+        }
+        
+        return consultation
+        
+    except Exception as e:
+        logger.error(f"Erreur enregistrement consultation: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erreur: {str(e)}")
 
 # Endpoints pour les enchères (bids)
 @router.get("/deliveries/{delivery_id}/bids")
@@ -778,3 +817,280 @@ async def cancel_delivery(
         pass
     db.commit()
     return {"message": "Livraison annulée avec succès"}
+
+@router.get("/delivery-options")
+async def get_delivery_options_endpoint(
+    package_type: str,
+    package_size: str,
+    package_weight: float,
+    distance: float,
+    is_fragile: bool = False,
+    is_urgent: bool = False,
+    weather_condition: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Obtenir les options de livraison en fonction des caractéristiques du colis
+    """
+    try:
+        options = get_delivery_options(
+            db=db,
+            package_type=package_type,
+            package_size=package_size,
+            package_weight=package_weight,
+            distance=distance,
+            is_fragile=is_fragile,
+            is_urgent=is_urgent,
+            weather_condition=weather_condition
+        )
+        
+        return {
+            "success": True,
+            "data": options
+        }
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des options de livraison: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=400, detail=f"Erreur lors de la récupération des options: {str(e)}")
+
+@router.post("/deliveries/{delivery_id}/bids/{bid_id}/counter-offer")
+async def create_counter_offer(
+    delivery_id: int,
+    bid_id: int,
+    counter_offer_data: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Créer une contre-offre pour une enchère existante.
+    Le client peut proposer un nouveau prix en réponse à une enchère.
+    """
+    try:
+        from ..services.delivery import get_delivery
+        from ..services.bid import get_bid, create_counter_offer
+        
+        # Vérifier que la livraison existe et appartient au client
+        delivery = get_delivery(db, delivery_id)
+        if not delivery:
+            raise HTTPException(status_code=404, detail="Livraison non trouvée")
+        
+        if delivery.client_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+        
+        # Vérifier que l'enchère existe
+        bid = get_bid(db, bid_id)
+        if not bid or bid.delivery_id != delivery_id:
+            raise HTTPException(status_code=404, detail="Enchère non trouvée")
+        
+        # Vérifier que la livraison n'est pas déjà acceptée
+        if delivery.status in ['accepted', 'confirmed', 'picked_up', 'in_progress']:
+            raise HTTPException(status_code=400, detail="La livraison a déjà été acceptée")
+        
+        # Extraire les données de la contre-offre
+        new_price = counter_offer_data.get('proposed_price')
+        message = counter_offer_data.get('message', '')
+        
+        if not new_price or new_price <= 0:
+            raise HTTPException(status_code=400, detail="Prix invalide")
+        
+        # Créer la contre-offre
+        counter_offer = create_counter_offer(
+            db=db,
+            original_bid_id=bid_id,
+            new_price=new_price,
+            message=message,
+            client_id=current_user.id
+        )
+        
+        return {
+            "id": counter_offer.id,
+            "original_bid_id": bid_id,
+            "new_price": new_price,
+            "message": message,
+            "status": counter_offer.status,
+            "created_at": counter_offer.created_at,
+            "client_id": current_user.id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur création contre-offre: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+@router.post("/deliveries/{delivery_id}/bids/{bid_id}/counter-offer/{counter_offer_id}/respond")
+async def respond_to_counter_offer(
+    delivery_id: int,
+    bid_id: int,
+    counter_offer_id: int,
+    response_data: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Répondre à une contre-offre (accepter, refuser, ou faire une nouvelle contre-offre).
+    Le coursier peut accepter, refuser, ou faire une nouvelle proposition.
+    """
+    try:
+        from ..services.delivery import get_delivery
+        from ..services.bid import get_bid, get_counter_offer, respond_to_counter_offer
+        
+        # Vérifier que la livraison existe
+        delivery = get_delivery(db, delivery_id)
+        if not delivery:
+            raise HTTPException(status_code=404, detail="Livraison non trouvée")
+        
+        # Vérifier que l'enchère existe et appartient au coursier
+        bid = get_bid(db, bid_id)
+        if not bid or bid.delivery_id != delivery_id:
+            raise HTTPException(status_code=404, detail="Enchère non trouvée")
+        
+        if bid.courier_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+        
+        # Vérifier que la contre-offre existe
+        counter_offer = get_counter_offer(db, counter_offer_id)
+        if not counter_offer or counter_offer.original_bid_id != bid_id:
+            raise HTTPException(status_code=404, detail="Contre-offre non trouvée")
+        
+        # Extraire la réponse
+        response_type = response_data.get('response_type')  # 'accept', 'decline', 'counter'
+        new_price = response_data.get('new_price')
+        message = response_data.get('message', '')
+        
+        if response_type not in ['accept', 'decline', 'counter']:
+            raise HTTPException(status_code=400, detail="Type de réponse invalide")
+        
+        if response_type == 'counter' and (not new_price or new_price <= 0):
+            raise HTTPException(status_code=400, detail="Prix invalide pour la contre-offre")
+        
+        # Traiter la réponse
+        result = respond_to_counter_offer(
+            db=db,
+            counter_offer_id=counter_offer_id,
+            response_type=response_type,
+            new_price=new_price,
+            message=message,
+            courier_id=current_user.id
+        )
+        
+        return {
+            "success": True,
+            "response_type": response_type,
+            "counter_offer_id": counter_offer_id,
+            "new_price": new_price if response_type == 'counter' else None,
+            "message": message
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur réponse contre-offre: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+@router.put("/deliveries/{delivery_id}")
+async def update_delivery(
+    delivery_id: int,
+    update_data: dict,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Modifier une livraison existante.
+    Seul le client qui a créé la livraison peut la modifier.
+    """
+    try:
+        from ..services.delivery import get_delivery, update_delivery_service
+        
+        # Vérifier que la livraison existe et appartient au client
+        delivery = get_delivery(db, delivery_id)
+        if not delivery:
+            raise HTTPException(status_code=404, detail="Livraison non trouvée")
+        
+        if delivery.client_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+        
+        # Vérifier que la livraison peut être modifiée
+        if delivery.status not in ['pending', 'bidding']:
+            raise HTTPException(status_code=400, detail="La livraison ne peut plus être modifiée")
+        
+        # Vérifier qu'aucune enchère n'a été acceptée
+        from ..services.bid import get_accepted_bid
+        accepted_bid = get_accepted_bid(db, delivery_id)
+        if accepted_bid:
+            raise HTTPException(status_code=400, detail="Une enchère a déjà été acceptée")
+        
+        # Mettre à jour la livraison
+        updated_delivery = update_delivery_service(
+            db=db,
+            delivery_id=delivery_id,
+            update_data=update_data,
+            user_id=current_user.id
+        )
+        
+        return {
+            "id": updated_delivery.id,
+            "pickup_address": updated_delivery.pickup_address,
+            "delivery_address": updated_delivery.delivery_address,
+            "package_description": updated_delivery.package_description,
+            "package_size": updated_delivery.package_size,
+            "package_weight": updated_delivery.package_weight,
+            "is_fragile": updated_delivery.is_fragile,
+            "proposed_price": updated_delivery.proposed_price,
+            "status": updated_delivery.status,
+            "updated_at": updated_delivery.updated_at
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur modification livraison: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+@router.get("/deliveries/{delivery_id}/counter-offers")
+async def get_counter_offers(
+    delivery_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Récupérer toutes les contre-offres pour une livraison.
+    """
+    try:
+        from ..services.delivery import get_delivery
+        from ..services.bid import get_counter_offers_for_delivery
+        
+        # Vérifier que la livraison existe et appartient au client
+        delivery = get_delivery(db, delivery_id)
+        if not delivery:
+            raise HTTPException(status_code=404, detail="Livraison non trouvée")
+        
+        if delivery.client_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+        
+        # Récupérer les contre-offres
+        counter_offers = get_counter_offers_for_delivery(db, delivery_id)
+        
+        return {
+            "delivery_id": delivery_id,
+            "counter_offers": [
+                {
+                    "id": co.id,
+                    "original_bid_id": co.original_bid_id,
+                    "new_price": co.new_price,
+                    "message": co.message,
+                    "status": co.status,
+                    "created_at": co.created_at,
+                    "responded_at": co.responded_at,
+                    "response_type": co.response_type,
+                    "courier_response_price": co.courier_response_price,
+                    "courier_response_message": co.courier_response_message
+                }
+                for co in counter_offers
+            ]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur récupération contre-offres: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")

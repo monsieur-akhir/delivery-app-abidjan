@@ -22,6 +22,8 @@ import { debounce } from "lodash";
 import { getGoogleMapsApiKey } from '../config/environment';
 import { getAddressAutocomplete } from '../services/api';
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export interface Address {
   id: string;
   description: string;
@@ -61,7 +63,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   style,
   disabled = false,
   showCurrentLocation = true,
-  maxSuggestions = 6,
+  maxSuggestions = 15,
   onFocus,
   icon = "location-outline"
 }) => {
@@ -75,6 +77,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const loaderTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const inputRef = useRef<any>(null);
+  const [pendingQuery, setPendingQuery] = useState(value);
+
+  useEffect(() => {
+    setPendingQuery(value);
+  }, [value]);
 
   // Villes et lieux populaires de Côte d'Ivoire avec coordonnées précises
   const popularPlaces = useMemo(() => [
@@ -445,7 +452,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         }
         // Retirer les doublons et limiter
         const uniqueResults = results.filter((item, index, self) =>
-          index === self.findIndex((t) => t.description.toLowerCase() === item.description.toLowerCase())
+          index === self.findIndex((t) => t.id === item.id)
         );
         setSuggestions(uniqueResults.slice(0, maxSuggestions));
         setNoResult(uniqueResults.length === 0);
@@ -459,11 +466,11 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     [popularPlaces, ivoryCoastCities, maxSuggestions, showCurrentLocation, currentLocation]
   );
 
-  const handleTextChange = useCallback((text: string) => {
-    onChangeText(text);
-    // Recherche libre sans contrainte de longueur
-    searchAddresses(text);
-  }, [onChangeText, searchAddresses]);
+  const handleValidateSearch = () => {
+    onChangeText(pendingQuery);
+    searchAddresses(pendingQuery);
+    setShowSuggestions(true);
+  };
 
   const handleAddressSelect = useCallback((address: Address) => {
     if (!address || typeof address !== 'object') {
@@ -629,47 +636,63 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.labelText}>{label}</Text>
-            <TextInput
-              ref={inputRef}
-              value={value}
-              onChangeText={handleTextChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              placeholder={placeholder}
-              disabled={disabled}
-              style={styles.textInput}
-              mode="flat"
-              underlineColor="transparent"
-              activeUnderlineColor="transparent"
-              contentStyle={styles.inputContent}
-              right={
-                <View style={styles.inputActions}>
-                  {showCurrentLocation && (
-                    <TouchableOpacity
-                      onPress={handleCurrentLocationSelect}
-                      style={styles.locationButton}
-                      disabled={loading}
-                    >
-                      <Ionicons 
-                        name="locate" 
-                        size={18} 
-                        color={loading ? "#999" : "#666"} 
-                      />
-                    </TouchableOpacity>
-                  )}
-                  {value ? (
-                    <TouchableOpacity
-                      onPress={clearInput}
-                      style={styles.clearButton}
-                    >
-                      <Ionicons name="close" size={18} color="#666" />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              }
-            />
+            <View style={styles.inputRow}>
+              <TextInput
+                ref={inputRef}
+                value={pendingQuery}
+                onChangeText={setPendingQuery}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                placeholder={placeholder}
+                disabled={disabled}
+                style={styles.textInput}
+                mode="flat"
+                underlineColor="transparent"
+                activeUnderlineColor="transparent"
+                contentStyle={styles.inputContent}
+              />
+              <View style={styles.inputActions}>
+                {showCurrentLocation && (
+                  <TouchableOpacity
+                    onPress={handleCurrentLocationSelect}
+                    style={styles.actionButton}
+                    disabled={loading}
+                  >
+                    <Ionicons 
+                      name="locate" 
+                      size={18} 
+                      color={loading ? "#999" : "#666"} 
+                    />
+                  </TouchableOpacity>
+                )}
+                {pendingQuery ? (
+                  <TouchableOpacity
+                    onPress={() => setPendingQuery('')}
+                    style={styles.actionButton}
+                  >
+                    <Ionicons name="close" size={18} color="#666" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
           </View>
         </View>
+
+        <TouchableOpacity
+          onPress={handleValidateSearch}
+          style={[styles.searchButton, (loading || !pendingQuery.trim()) && styles.searchButtonDisabled]}
+          disabled={loading || !pendingQuery.trim()}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <>
+              <Ionicons name="search" size={20} color={'#FFF'} />
+              <Text style={styles.searchButtonText}>Rechercher une adresse</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         {error && <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>}
       </View>
 
@@ -682,14 +705,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               <Text style={styles.loadingText}>Recherche...</Text>
             </View>
           ) : (
-            <View style={styles.suggestionsList}>
+            <ScrollView style={{ maxHeight: SCREEN_HEIGHT * 0.4 }} keyboardShouldPersistTaps="handled">
               {suggestions.map((item, index) => (
                 <View key={item.id}>
                   {renderSuggestion(item, index)}
                   {index < suggestions.length - 1 && <Divider />}
                 </View>
               ))}
-            </View>
+            </ScrollView>
           )}
         </Surface>
       )}
@@ -706,6 +729,7 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     zIndex: 1000,
+    overflow: 'visible',
   },
   inputContainer: {
     position: 'relative',
@@ -716,68 +740,93 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 60,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E8E8E8',
-    justifyContent: 'center',
-    alignItems: 'center',
     marginRight: 12,
   },
   textContainer: {
     flex: 1,
   },
   labelText: {
-    fontSize: 14,
-    fontWeight: '500',
     color: '#666',
-    marginBottom: 4,
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   textInput: {
+    flex: 1,
     backgroundColor: 'transparent',
     paddingHorizontal: 0,
-    paddingVertical: 0,
+    height: 28,
     fontSize: 16,
-    fontWeight: '400',
-    color: '#1A1A1A',
-    height: 24,
   },
   inputContent: {
-    paddingHorizontal: 0,
     paddingVertical: 0,
+    paddingLeft: 0,
+  },
+  inputActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  actionButton: {
+    padding: 4,
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 14,
+    marginTop: 12,
+  },
+  searchButtonDisabled: {
+    backgroundColor: '#AAB8C2',
+  },
+  searchButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   errorText: {
-    marginTop: 4,
     marginLeft: 16,
+    marginTop: 4,
   },
   suggestionsContainer: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    maxHeight: 300,
-    zIndex: 1001,
     marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    maxHeight: SCREEN_HEIGHT * 0.4,
+    overflow: 'hidden'
   },
-  suggestionsList: {
-    maxHeight: 300,
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 10,
+    fontWeight: '500',
   },
   suggestionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
     backgroundColor: 'transparent',
   },
   suggestionIcon: {
@@ -804,31 +853,12 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 18,
   },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 10,
-    fontWeight: '500',
-  },
-  inputActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   locationButton: {
-    padding: 4,
-    borderRadius: 12,
-    backgroundColor: '#F0F0F0',
+    padding: 8,
   },
   clearButton: {
-    padding: 4,
+    padding: 8,
+    marginLeft: 4,
   },
 });
 

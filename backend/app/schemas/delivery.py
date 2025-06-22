@@ -101,6 +101,43 @@ class DeliveryCreate(DeliveryBase):
         except (ValueError, TypeError):
             return None
 
+    @validator('required_vehicle_type', pre=True)
+    def handle_express_vehicle_type(cls, v):
+        if not v:
+            return None
+            
+        # Mapping des types de véhicules du frontend vers le backend
+        vehicle_type_mapping = {
+            'express': None,  # Pour les livraisons express, laisser le système choisir
+            'car': 'van',     # 'car' du frontend -> 'van' du backend
+            'truck': 'kia_truck',  # 'truck' du frontend -> 'kia_truck' du backend
+            'pickup': 'pickup',
+            'motorcycle': 'motorcycle',
+            'bicycle': 'bicycle',
+            'scooter': 'scooter',
+            'van': 'van',
+            'kia_truck': 'kia_truck',
+            'moving_truck': 'moving_truck',
+            'custom': 'custom'
+        }
+        
+        mapped_type = vehicle_type_mapping.get(v)
+        if mapped_type is None and v != 'express':
+            # Si le type n'est pas dans le mapping et n'est pas 'express', 
+            # on peut soit lever une erreur soit utiliser un type par défaut
+            return 'motorcycle'  # Type par défaut pour les types inconnus
+            
+        return mapped_type
+
+    @validator('delivery_type')
+    def validate_delivery_type(cls, v, values):
+        # Si c'est une livraison express et qu'aucun véhicule n'est spécifié,
+        # on peut laisser le système choisir automatiquement
+        if v == DeliveryType.express and not values.get('required_vehicle_type'):
+            # Pas besoin de faire quoi que ce soit, le système choisira
+            pass
+        return v
+
 class DeliveryUpdate(BaseModel):
     pickup_address: Optional[str] = None
     pickup_commune: Optional[str] = None
@@ -122,6 +159,34 @@ class DeliveryUpdate(BaseModel):
     required_vehicle_type: Optional[VehicleType] = None
     proposed_price: Optional[float] = None
     delivery_type: Optional[DeliveryType] = None
+
+    @validator('required_vehicle_type', pre=True)
+    def handle_express_vehicle_type(cls, v):
+        if not v:
+            return None
+            
+        # Mapping des types de véhicules du frontend vers le backend
+        vehicle_type_mapping = {
+            'express': None,  # Pour les livraisons express, laisser le système choisir
+            'car': 'van',     # 'car' du frontend -> 'van' du backend
+            'truck': 'kia_truck',  # 'truck' du frontend -> 'kia_truck' du backend
+            'pickup': 'pickup',
+            'motorcycle': 'motorcycle',
+            'bicycle': 'bicycle',
+            'scooter': 'scooter',
+            'van': 'van',
+            'kia_truck': 'kia_truck',
+            'moving_truck': 'moving_truck',
+            'custom': 'custom'
+        }
+        
+        mapped_type = vehicle_type_mapping.get(v)
+        if mapped_type is None and v != 'express':
+            # Si le type n'est pas dans le mapping et n'est pas 'express', 
+            # on peut soit lever une erreur soit utiliser un type par défaut
+            return 'motorcycle'  # Type par défaut pour les types inconnus
+            
+        return mapped_type
 
 
 # === RESPONSE ===

@@ -22,7 +22,28 @@ export type RootStackParamList = {
 
   // Shared Screens
   Settings: undefined;
-  CreateDelivery: { serviceType?: string; searchQuery?: string } | undefined;
+  CreateDelivery: { 
+    serviceType?: string; 
+    searchQuery?: string;
+    isModification?: boolean;
+    deliveryData?: {
+      id: number;
+      pickup_address: string;
+      delivery_address: string;
+      pickup_commune: string;
+      delivery_commune: string;
+      pickup_lat: number;
+      pickup_lng: number;
+      delivery_lat: number;
+      delivery_lng: number;
+      package_description: string;
+      package_size: string;
+      package_weight: number;
+      is_fragile: boolean;
+      proposed_price: number;
+      delivery_type: string;
+    };
+  } | undefined;
   TrackDelivery: { deliveryId: string | number };
   Payment: { deliveryId?: string; amount?: number } | undefined;
   PaymentMethods: undefined;
