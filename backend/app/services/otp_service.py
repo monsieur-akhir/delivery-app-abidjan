@@ -64,17 +64,11 @@ class OTPService:
     def send_otp_via_sms(self, phone: str, code: str, otp_type: OTPType) -> bool:
         """Send OTP via SMS."""
         try:
-            type_messages = {
-                OTPType.REGISTRATION: f"Votre code de vérification pour l'inscription: {code}. Valide 5 minutes.",
-                OTPType.LOGIN: f"Votre code de vérification pour la connexion: {code}. Valide 5 minutes.",
-                OTPType.PASSWORD_RESET: f"Votre code de réinitialisation: {code}. Valide 5 minutes.",
-                OTPType.TWO_FACTOR: f"Votre code d'authentification à deux facteurs: {code}. Valide 5 minutes."
-            }
-            
-            message = type_messages.get(otp_type, f"Votre code de vérification: {code}")
-            return self.sms_service.send_sms(phone, message)
+            # Convertir l'enum en string pour le service SMS
+            otp_type_str = otp_type.value.lower()
+            return self.sms_service.send_otp_sms(phone, code, otp_type_str)
         except Exception as e:
-            print(f"Error sending SMS OTP: {e}")
+            logger.error(f"❌ Erreur envoi SMS OTP: {e}")
             return False
     
     def send_otp_via_email(self, email: str, code: str, otp_type: OTPType) -> bool:
