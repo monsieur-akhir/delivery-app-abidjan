@@ -11,6 +11,7 @@ from ..core.security import get_current_user
 from ..models.user import User
 from ..schemas import delivery as delivery_schemas
 from ..services import delivery as delivery_service
+from ..services.otp_delivery_service import OTPDeliveryService
 from ..services import matching as matching_service
 from ..services import geolocation as geolocation_service
 from ..services.geolocation import get_google_places_suggestions
@@ -48,51 +49,51 @@ async def create_new_delivery(
     """
     if current_user.role not in ["client", "business"]:
         raise HTTPException(status_code=403, detail="Seuls les clients peuvent créer des livraisons")
-    
+
     try:
         from ..services.delivery import create_delivery
-        
+
         # Traitement des données supplémentaires du frontend
         delivery_dict = delivery_data.dict(exclude_unset=True)
-        
+
         # Informations du créateur (utilisateur connecté)
         delivery_dict['client_id'] = current_user.id
         delivery_dict['client_name'] = current_user.full_name or "Utilisateur"
         delivery_dict['client_phone'] = current_user.phone
         delivery_dict['client_email'] = current_user.email
-        
+
         # Auto-remplir les contacts si vides
         if not delivery_dict.get('pickup_contact_name'):
             delivery_dict['pickup_contact_name'] = delivery_dict['client_name']
         if not delivery_dict.get('pickup_contact_phone'):
             delivery_dict['pickup_contact_phone'] = current_user.phone
-            
+
         # Mapper les champs recipient vers delivery_contact
         if delivery_dict.get('recipient_name'):
             delivery_dict['delivery_contact_name'] = delivery_dict['recipient_name']
         if delivery_dict.get('recipient_phone'):
             delivery_dict['delivery_contact_phone'] = delivery_dict['recipient_phone']
-        
+
         # Convertir les champs string en float si nécessaire
         if delivery_dict.get('weight'):
             try:
                 delivery_dict['package_weight'] = float(delivery_dict['weight'])
             except (ValueError, TypeError):
                 pass
-                
+
         if delivery_dict.get('custom_price'):
             try:
                 delivery_dict['proposed_price'] = float(delivery_dict['custom_price'])
             except (ValueError, TypeError):
                 pass
-        
+
         # Mapper les champs du frontend vers le backend
         if delivery_dict.get('description'):
             delivery_dict['package_description'] = delivery_dict['description']
-            
+
         if delivery_dict.get('is_urgent'):
             delivery_dict['is_fragile'] = delivery_dict.get('is_urgent', False)
-            
+
         # Gestion du type de véhicule
         if delivery_dict.get('vehicle_type'):
             vehicle_mapping = {
@@ -107,12 +108,12 @@ async def create_new_delivery(
                 delivery_dict['vehicle_type'].lower(), 
                 delivery_dict['vehicle_type']
             )
-        
+
         # Créer l'objet DeliveryCreate avec les données traitées
         processed_data = delivery_schemas.DeliveryCreate(**delivery_dict)
-        
+
         delivery = create_delivery(db, processed_data, current_user.id)
-        
+
         # Retourner la réponse avec les informations du créateur
         delivery_response = {
             "id": delivery.id,
@@ -161,9 +162,9 @@ async def create_new_delivery(
             "courier": None,
             "vehicle": None
         }
-        
+
         return delivery_response
-        
+
     except Exception as e:
         logger.error(f"Erreur création livraison: {str(e)}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Erreur lors de la création: {str(e)}")
@@ -600,7 +601,7 @@ async def get_delivery_consultations(
         delivery = get_delivery(db, delivery_id)
         if delivery.client_id != current_user.id and current_user.role not in ["admin", "manager"]:
             raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
+
         # Simuler les consultations (à remplacer par une vraie implémentation)
         consultations = [
             {
@@ -620,9 +621,9 @@ async def get_delivery_consultations(
                 "status": "interested"
             }
         ]
-        
+
         return {"consultations": consultations}
-        
+
     except Exception as e:
         logger.error(f"Erreur récupération consultations: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erreur: {str(e)}")
@@ -641,10 +642,10 @@ async def record_courier_consultation(
         # Vérifier que l'utilisateur est un coursier
         if current_user.role != "courier":
             raise HTTPException(status_code=403, detail="Seuls les coursiers peuvent consulter")
-        
+
         # Vérifier que la livraison existe
         delivery = get_delivery(db, delivery_id)
-        
+
         # Enregistrer la consultation (simulation)
         consultation = {
             "id": f"{delivery_id}_{current_user.id}",
@@ -654,9 +655,9 @@ async def record_courier_consultation(
             "consultation_time": datetime.now().isoformat(),
             "status": consultation_data.get("status", "viewing")
         }
-        
+
         return consultation
-        
+
     except Exception as e:
         logger.error(f"Erreur enregistrement consultation: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erreur: {str(e)}")
@@ -843,7 +844,7 @@ async def get_delivery_options_endpoint(
             is_urgent=is_urgent,
             weather_condition=weather_condition
         )
-        
+
         return {
             "success": True,
             "data": options
@@ -867,31 +868,31 @@ async def create_counter_offer(
     try:
         from ..services.delivery import get_delivery
         from ..services.bid import get_bid, create_counter_offer
-        
+
         # Vérifier que la livraison existe et appartient au client
         delivery = get_delivery(db, delivery_id)
         if not delivery:
             raise HTTPException(status_code=404, detail="Livraison non trouvée")
-        
+
         if delivery.client_id != current_user.id:
             raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
+
         # Vérifier que l'enchère existe
         bid = get_bid(db, bid_id)
         if not bid or bid.delivery_id != delivery_id:
             raise HTTPException(status_code=404, detail="Enchère non trouvée")
-        
+
         # Vérifier que la livraison n'est pas déjà acceptée
         if delivery.status in ['accepted', 'confirmed', 'picked_up', 'in_progress']:
             raise HTTPException(status_code=400, detail="La livraison a déjà été acceptée")
-        
+
         # Extraire les données de la contre-offre
         new_price = counter_offer_data.get('proposed_price')
         message = counter_offer_data.get('message', '')
-        
+
         if not new_price or new_price <= 0:
             raise HTTPException(status_code=400, detail="Prix invalide")
-        
+
         # Créer la contre-offre
         counter_offer = create_counter_offer(
             db=db,
@@ -900,7 +901,7 @@ async def create_counter_offer(
             message=message,
             client_id=current_user.id
         )
-        
+
         return {
             "id": counter_offer.id,
             "original_bid_id": bid_id,
@@ -910,7 +911,7 @@ async def create_counter_offer(
             "created_at": counter_offer.created_at,
             "client_id": current_user.id
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -933,36 +934,36 @@ async def respond_to_counter_offer(
     try:
         from ..services.delivery import get_delivery
         from ..services.bid import get_bid, get_counter_offer, respond_to_counter_offer
-        
+
         # Vérifier que la livraison existe
         delivery = get_delivery(db, delivery_id)
         if not delivery:
             raise HTTPException(status_code=404, detail="Livraison non trouvée")
-        
+
         # Vérifier que l'enchère existe et appartient au coursier
         bid = get_bid(db, bid_id)
         if not bid or bid.delivery_id != delivery_id:
             raise HTTPException(status_code=404, detail="Enchère non trouvée")
-        
+
         if bid.courier_id != current_user.id:
             raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
+
         # Vérifier que la contre-offre existe
         counter_offer = get_counter_offer(db, counter_offer_id)
         if not counter_offer or counter_offer.original_bid_id != bid_id:
             raise HTTPException(status_code=404, detail="Contre-offre non trouvée")
-        
+
         # Extraire la réponse
         response_type = response_data.get('response_type')  # 'accept', 'decline', 'counter'
         new_price = response_data.get('new_price')
         message = response_data.get('message', '')
-        
+
         if response_type not in ['accept', 'decline', 'counter']:
             raise HTTPException(status_code=400, detail="Type de réponse invalide")
-        
+
         if response_type == 'counter' and (not new_price or new_price <= 0):
             raise HTTPException(status_code=400, detail="Prix invalide pour la contre-offre")
-        
+
         # Traiter la réponse
         result = respond_to_counter_offer(
             db=db,
@@ -972,7 +973,7 @@ async def respond_to_counter_offer(
             message=message,
             courier_id=current_user.id
         )
-        
+
         return {
             "success": True,
             "response_type": response_type,
@@ -980,7 +981,7 @@ async def respond_to_counter_offer(
             "new_price": new_price if response_type == 'counter' else None,
             "message": message
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1000,25 +1001,25 @@ async def update_delivery(
     """
     try:
         from ..services.delivery import get_delivery, update_delivery_service
-        
+
         # Vérifier que la livraison existe et appartient au client
         delivery = get_delivery(db, delivery_id)
         if not delivery:
             raise HTTPException(status_code=404, detail="Livraison non trouvée")
-        
+
         if delivery.client_id != current_user.id:
             raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
+
         # Vérifier que la livraison peut être modifiée
         if delivery.status not in ['pending', 'bidding']:
             raise HTTPException(status_code=400, detail="La livraison ne peut plus être modifiée")
-        
+
         # Vérifier qu'aucune enchère n'a été acceptée
         from ..services.bid import get_accepted_bid
         accepted_bid = get_accepted_bid(db, delivery_id)
         if accepted_bid:
             raise HTTPException(status_code=400, detail="Une enchère a déjà été acceptée")
-        
+
         # Mettre à jour la livraison
         updated_delivery = update_delivery_service(
             db=db,
@@ -1026,7 +1027,7 @@ async def update_delivery(
             update_data=update_data,
             user_id=current_user.id
         )
-        
+
         return {
             "id": updated_delivery.id,
             "pickup_address": updated_delivery.pickup_address,
@@ -1039,7 +1040,7 @@ async def update_delivery(
             "status": updated_delivery.status,
             "updated_at": updated_delivery.updated_at
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1058,18 +1059,18 @@ async def get_counter_offers(
     try:
         from ..services.delivery import get_delivery
         from ..services.bid import get_counter_offers_for_delivery
-        
+
         # Vérifier que la livraison existe et appartient au client
         delivery = get_delivery(db, delivery_id)
         if not delivery:
             raise HTTPException(status_code=404, detail="Livraison non trouvée")
-        
+
         if delivery.client_id != current_user.id:
             raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
+
         # Récupérer les contre-offres
         counter_offers = get_counter_offers_for_delivery(db, delivery_id)
-        
+
         return {
             "delivery_id": delivery_id,
             "counter_offers": [
@@ -1088,9 +1089,95 @@ async def get_counter_offers(
                 for co in counter_offers
             ]
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Erreur récupération contre-offres: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+# ===============================
+# ROUTES OTP POUR LES LIVRAISONS
+# ===============================
+
+@router.post("/{delivery_id}/otp/generate")
+def generate_delivery_otp(
+    delivery_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Générer et envoyer un code OTP pour la livraison
+    """
+    try:
+        otp_service = OTPDeliveryService(db)
+        result = otp_service.generate_and_send_otp(delivery_id)
+        return result
+    except Exception as e:
+        logger.error(f"Erreur lors de la génération OTP: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/{delivery_id}/otp/verify")
+def verify_delivery_otp(
+    delivery_id: int,
+    otp_data: Dict[str, str],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Vérifier le code OTP pour la livraison
+    """
+    try:
+        otp_code = otp_data.get("otp_code")
+        if not otp_code:
+            raise HTTPException(status_code=400, detail="Code OTP requis")
+
+        otp_service = OTPDeliveryService(db)
+        result = otp_service.verify_otp(delivery_id, otp_code, current_user.id)
+        return result
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification OTP: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/{delivery_id}/otp/resend")
+def resend_delivery_otp(
+    delivery_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Renvoyer le code OTP pour la livraison
+    """
+    try:
+        otp_service = OTPDeliveryService(db)
+        result = otp_service.resend_otp(delivery_id)
+        return result
+    except Exception as e:
+        logger.error(f"Erreur lors du renvoi OTP: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/{delivery_id}/otp/fallback")
+def save_fallback_validation(
+    delivery_id: int,
+    validation_data: Dict[str, str],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Sauvegarder une validation alternative (signature ou photo)
+    """
+    try:
+        validation_type = validation_data.get("type")
+        validation_content = validation_data.get("data")
+
+        if not validation_type or not validation_content:
+            raise HTTPException(status_code=400, detail="Type et données de validation requis")
+
+        otp_service = OTPDeliveryService(db)
+        result = otp_service.save_fallback_validation(
+            delivery_id, validation_type, validation_content, current_user.id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Erreur lors de la sauvegarde de validation alternative: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))

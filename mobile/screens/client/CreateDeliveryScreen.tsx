@@ -85,6 +85,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
   const [estimatedValue, setEstimatedValue] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
   const [isFragile, setIsFragile] = useState(false)
+  const [requiresOTP, setRequiresOTP] = useState(false)
   const [proposedPrice, setProposedPrice] = useState('')
 
   // États pour le loader et la recherche de coursiers
@@ -219,14 +220,15 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
         package_type: packageType,
         urgency_level: urgencyLevel,
         custom_price: customPrice,
-        estimated_value: estimatedValue
+        estimated_value: estimatedValue,
+        requires_otp: requiresOTP
       };
 
       console.log('[CreateDelivery] Données envoyées:', deliveryData);
 
       // Créer la livraison
       const delivery = await createDelivery(deliveryData);
-      
+
       if (delivery && delivery.id) {
         console.log('[CreateDelivery] Livraison créée avec ID:', delivery.id);
         await redirectToBids(delivery.id.toString());
@@ -235,9 +237,9 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
       }
     } catch (error) {
       console.error('Erreur lors de la création de livraison:', error);
-      
+
       let errorMessage = 'Une erreur inattendue s\'est produite';
-      
+
       if (error.response?.status === 400) {
         errorMessage = 'Informations de livraison incomplètes ou incorrectes';
       } else if (error.response?.status === 401) {
@@ -251,7 +253,7 @@ const CreateDeliveryScreen: React.FC<CreateDeliveryScreenProps> = () => {
       } else if (!error.response) {
         errorMessage = 'Problème de connexion internet, vérifiez votre réseau';
       }
-      
+
       Alert.alert('Erreur de création', errorMessage);
     }
   };
@@ -852,6 +854,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
+  },
+  optionLabelContainer: {
+    flexDirection: 'column',
+  },
+  optionDescription: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
   },
 });
 

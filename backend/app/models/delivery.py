@@ -1,3 +1,4 @@
+
 # Ajouter ces imports si nécessaire
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, Enum, Table, JSON
 from sqlalchemy.orm import relationship
@@ -27,6 +28,12 @@ class DeliveryType(str, enum.Enum):
     standard = "standard"
     express = "express"
     collaborative = "collaborative"
+
+class OTPValidationType(str, enum.Enum):
+    sms = "sms"
+    whatsapp = "whatsapp"
+    signature = "signature"
+    photo = "photo"
 
 class Delivery(Base):
     __tablename__ = "deliveries"
@@ -74,6 +81,15 @@ class Delivery(Base):
     delivery_type = Column(Enum(DeliveryType), default=DeliveryType.standard)
     status = Column(Enum(DeliveryStatus), default=DeliveryStatus.pending)
 
+    # Validation OTP
+    requires_otp = Column(Boolean, default=False)
+    otp_code = Column(String(6), nullable=True)
+    otp_sent_at = Column(DateTime(timezone=True), nullable=True)
+    otp_verified_at = Column(DateTime(timezone=True), nullable=True)
+    otp_attempts = Column(Integer, default=0)
+    otp_validation_type = Column(Enum(OTPValidationType), nullable=True)
+    fallback_validation_data = Column(JSON, nullable=True)  # Signature ou photo en base64
+
     # Dates importantes
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     accepted_at = Column(DateTime(timezone=True), nullable=True)
@@ -97,6 +113,25 @@ class Delivery(Base):
     # Nouveau champ pour le véhicule utilisé
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=True)
     vehicle = relationship("Vehicle")
+
+    def generate_otp(self):
+        """Génère un code OTP à 6 chiffres"""
+        import random
+        self.otp_code = str(random.randint(100000, 999999))
+        self.otp_sent_at = func.now()
+        self.otp_attempts = 0
+        return self.otp_code
+
+    def is_otp_valid(self):
+        """Vérifie si l'OTP est encore valide (15 minutes)"""
+        if not self.otp_sent_at:
+            return False
+        from datetime import datetime, timedelta
+        return datetime.utcnow() - self.otp_sent_at < timedelta(minutes=15)
+
+    def can_attempt_otp(self):
+        """Vérifie si on peut encore tenter l'OTP (max 3 tentatives)"""
+        return self.otp_attempts < 3 and self.is_otp_valid()
 
 class Bid(Base):
     __tablename__ = "bids"

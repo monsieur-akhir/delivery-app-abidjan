@@ -89,6 +89,8 @@ export type RootStackParamList = {
   ClientHome: undefined;
   Main: undefined;
   OfflineManagerScreen: undefined;
+  OTPValidation: { deliveryId: string; recipientPhone: string };
+  FallbackValidation: { deliveryId: string; recipientPhone: string };
 };
 
 // Tab Parameter Lists

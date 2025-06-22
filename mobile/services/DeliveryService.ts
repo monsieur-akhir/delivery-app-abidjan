@@ -70,7 +70,7 @@ class DeliveryService {
   static async createDelivery(deliveryData: DeliveryCreateRequest): Promise<Delivery> {
     try {
       console.log('[DeliveryService] Création livraison avec données:', deliveryData)
-      
+
       // Log des informations pour débugger
       console.log('[DeliveryService] Champs importants:')
       console.log('- pickup_address:', deliveryData.pickup_address)
@@ -79,17 +79,17 @@ class DeliveryService {
       console.log('- recipient_phone:', deliveryData.recipient_phone)
       console.log('- proposed_price:', deliveryData.proposed_price)
       console.log('- vehicle_type:', deliveryData.vehicle_type)
-      
+
       const response = await api.post('/deliveries', deliveryData)
       console.log('[DeliveryService] Livraison créée avec succès:', response.data)
-      
+
       // Vérifier que les informations du créateur sont présentes
       if (response.data.client) {
         console.log('[DeliveryService] Informations du créateur:', response.data.client)
       } else {
         console.warn('[DeliveryService] Aucune information du créateur dans la réponse')
       }
-      
+
       return response.data
     } catch (error) {
       console.error('Erreur lors de la création de la livraison:', error)
@@ -152,7 +152,7 @@ class DeliveryService {
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération des détails:', error)
-      
+
       // Mock response pour le développement
       if (error.response?.status === 404) {
         return {
@@ -176,7 +176,7 @@ class DeliveryService {
           }
         }
       }
-      
+
       throw error
     }
   }
@@ -278,17 +278,17 @@ class DeliveryService {
       return response.data.estimated_price
     } catch (error) {
       console.error('Erreur lors de l\'estimation du prix:', error)
-      
+
       // Mock response pour le développement
       if (error.response?.status === 404) {
         const distance = estimateData.distance || 5
         const basePrice = 1000
         const pricePerKm = 200
         const estimatedPrice = basePrice + (distance * pricePerKm)
-        
+
         return estimatedPrice
       }
-      
+
       throw error
     }
   }
@@ -299,32 +299,32 @@ class DeliveryService {
       return response.data
     } catch (error) {
       console.error('Erreur lors de la recommandation de véhicule:', error)
-      
+
       // Mock response pour le développement
       if (error.response?.status === 404) {
         const distance = data.distance || 5
         const packageWeight = data.package_weight || 1
-        
+
         let recommendedVehicle = 'motorcycle'
         let reason = 'Idéal pour les livraisons rapides en ville'
-        
+
         if (distance > 10) {
           recommendedVehicle = 'car'
           reason = 'Distance importante, véhicule plus confortable'
         }
-        
+
         if (packageWeight > 5) {
           recommendedVehicle = 'van'
           reason = 'Colis lourd, nécessite un véhicule adapté'
         }
-        
+
         return {
           recommended_vehicle: recommendedVehicle,
           reason: reason,
           price_multiplier: 1.0
         }
       }
-      
+
       throw error
     }
   }
@@ -427,7 +427,7 @@ class DeliveryService {
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique client:', error)
-      
+
       // Mock response pour le développement
       if (error.response?.status === 404) {
         return [
@@ -450,7 +450,7 @@ class DeliveryService {
           }
         ]
       }
-      
+
       throw error
     }
   }
@@ -601,6 +601,83 @@ class DeliveryService {
     }
   }
 
+  static async getCounterOffers(deliveryId: string): Promise<any[]> {
+    try {
+      const response = await api.get(`/deliveries/${deliveryId}/counter-offers`)
+      return response.data.counter_offers || []
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des contre-offres:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des contre-offres:', String(error))
+      }
+      throw error
+    }
+  }
+
+  // ===============================
+  // MÉTHODES OTP POUR LES LIVRAISONS
+  // ===============================
+
+  static async generateDeliveryOTP(deliveryId: string): Promise<any> {
+    try {
+      const response = await api.post(`/deliveries/${deliveryId}/otp/generate`)
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la génération OTP:', error.message)
+      } else {
+        console.error('Erreur lors de la génération OTP:', String(error))
+      }
+      throw error
+    }
+  }
+
+  static async verifyDeliveryOTP(deliveryId: string, otpData: { otp_code: string }): Promise<any> {
+    try {
+      const response = await api.post(`/deliveries/${deliveryId}/otp/verify`, otpData)
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la vérification OTP:', error.message)
+      } else {
+        console.error('Erreur lors de la vérification OTP:', String(error))
+      }
+      throw error
+    }
+  }
+
+  static async resendDeliveryOTP(deliveryId: string): Promise<any> {
+    try {
+      const response = await api.post(`/deliveries/${deliveryId}/otp/resend`)
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors du renvoi OTP:', error.message)
+      } else {
+        console.error('Erreur lors du renvoi OTP:', String(error))
+      }
+      throw error
+    }
+  }
+
+  static async saveFallbackValidation(
+    deliveryId: string, 
+    validationData: { type: string; data: string }
+  ): Promise<any> {
+    try {
+      const response = await api.post(`/deliveries/${deliveryId}/otp/fallback`, validationData)
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la sauvegarde validation alternative:', error.message)
+      } else {
+        console.error('Erreur lors de la sauvegarde validation alternative:', String(error))
+      }
+      throw error
+    }
+  }
+
   /**
    * Matching intelligent des coursiers pour une livraison
    */
@@ -622,7 +699,7 @@ class DeliveryService {
       const params = new URLSearchParams({ query, limit: limit.toString() })
       if (lat !== undefined) params.append('user_lat', lat.toString())
       if (lng !== undefined) params.append('user_lng', lng.toString())
-      
+
       const response = await api.get(`/api/deliveries/address-autocomplete?${params}`)
       return response.data
     } catch (error) {
@@ -640,7 +717,7 @@ class DeliveryService {
       if (lat !== undefined) params.append('user_lat', lat.toString())
       if (lng !== undefined) params.append('user_lng', lng.toString())
       if (category) params.append('category', category)
-      
+
       const response = await api.get(`/api/deliveries/popular-places?${params}`)
       return response.data
     } catch (error) {
