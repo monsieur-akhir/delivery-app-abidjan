@@ -44,27 +44,28 @@ class User(Base):
     keycloak_id = Column(String, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Relations
+
+    # Relations avec les livraisons
     client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="[Delivery.client_id]")
     courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="[Delivery.courier_id]")
+    scheduled_deliveries = relationship("ScheduledDelivery", back_populates="client")
     complaints = relationship("Complaint", back_populates="user", foreign_keys="[Complaint.user_id]")
     assigned_complaints = relationship("Complaint", back_populates="assigned_manager", foreign_keys="[Complaint.assigned_to]")
     assigned_tickets = relationship("SupportTicket", back_populates="assigned_agent", foreign_keys="[SupportTicket.assigned_agent_id]")
     tickets = relationship("SupportTicket", back_populates="user", foreign_keys="[SupportTicket.user_id]")
-    
+
     # Relations spécifiques au rôle business
     business_profile = relationship("BusinessProfile", back_populates="user", uselist=False)
-    
+
     # Relations spécifiques au rôle courier
     courier_profile = relationship("CourierProfile", back_populates="user", uselist=False)
-    
+
     # Relations spécifiques aux véhicules des courriers
     courier_vehicles = relationship("CourierVehicle", back_populates="courier")
 
 class BusinessProfile(Base):
     __tablename__ = "business_profiles"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True)
     business_name = Column(String, nullable=False)
@@ -80,14 +81,14 @@ class BusinessProfile(Base):
     commission_rate = Column(Float, default=0.10)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+
     user = relationship("User", back_populates="business_profile")
     vehicles = relationship("Vehicle", back_populates="business")
     products = relationship("Product", back_populates="business")
 
 class CourierProfile(Base):
     __tablename__ = "courier_profiles"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True)
     id_card_number = Column(String, nullable=True)
@@ -102,5 +103,5 @@ class CourierProfile(Base):
     last_location_updated = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+
     user = relationship("User", back_populates="courier_profile")
