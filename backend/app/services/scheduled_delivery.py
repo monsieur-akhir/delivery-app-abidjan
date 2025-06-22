@@ -410,6 +410,81 @@ class ScheduledDeliveryService:
                 logger.error(f"Erreur lors de l'auto-exécution {execution.id}: {e}")
 
     @staticmethod
+    def notify_couriers_for_scheduling(db: Session, schedule: ScheduledDelivery, available_couriers: list):
+        """Notifier les coursiers qu'une nouvelle planification est disponible pour acceptation"""
+        
+        from ..services.notification import send_notification
+        
+        try:
+            for courier_info in available_couriers:
+                courier_id = courier_info['courier_id']
+                distance = courier_info['distance']
+                
+                message = f"🕐 Nouvelle livraison à planifier !\n"
+                message += f"📍 De {schedule.pickup_commune} vers {schedule.delivery_commune}\n"
+                message += f"📅 Prévue pour le {schedule.scheduled_date.strftime('%d/%m/%Y à %H:%M')}\n"
+                message += f"📏 Distance: {distance:.1f}km\n"
+                message += f"💰 Prix: {schedule.proposed_price}€\n"
+                message += f"📦 {schedule.package_description or 'Colis standard'}\n"
+                message += "⚡ Acceptez rapidement pour réserver cette livraison !"
+                
+                send_notification(
+                    db,
+                    courier_id,
+                    "Livraison à Planifier - Action Requise",
+                    message,
+                    notification_type="schedule_proposal",
+                    data={
+                        "schedule_id": schedule.id,
+                        "scheduled_date": schedule.scheduled_date.isoformat(),
+                        "distance": distance,
+                        "price": schedule.proposed_price
+                    }
+                )
+                
+        except Exception as e:
+            logger.error(f"Erreur lors de la notification des coursiers pour planification: {e}")
+
+    @staticmethod
+    def assign_courier_to_schedule(db: Session, schedule_id: int, courier_id: int) -> bool:
+        """Assigner un coursier à une planification et la confirmer"""
+        
+        try:
+            schedule = db.query(ScheduledDelivery).filter(ScheduledDelivery.id == schedule_id).first()
+            if not schedule:
+                return False
+            
+            # Vérifier que la planification est encore en attente
+            if schedule.status != "pending":
+                return False
+            
+            # Assigner le coursier et confirmer
+            schedule.assigned_courier_id = courier_id
+            schedule.status = ScheduledDeliveryStatus.confirmed
+            schedule.confirmed_at = datetime.now()
+            
+            # Mettre à jour les exécutions
+            from ..models.scheduled_delivery import ScheduledDeliveryExecution
+            executions = db.query(ScheduledDeliveryExecution).filter(
+                ScheduledDeliveryExecution.scheduled_delivery_id == schedule_id,
+                ScheduledDeliveryExecution.status == "pending"
+            ).all()
+            
+            for execution in executions:
+                execution.assigned_courier_id = courier_id
+                execution.status = "confirmed"
+            
+            db.commit()
+            
+            logger.info(f"Coursier {courier_id} assigné à la planification {schedule_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de l'assignation du coursier: {e}")
+            db.rollback()
+            return False
+
+    @staticmethod
     def _notify_available_couriers(db: Session, delivery):
         """Notifier les coursiers disponibles qu'une nouvelle livraison planifiée est disponible"""
         

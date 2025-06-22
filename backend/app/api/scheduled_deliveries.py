@@ -21,14 +21,39 @@ async def create_scheduled_delivery(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Créer une nouvelle livraison planifiée"""
+    """Créer une nouvelle livraison planifiée et chercher un coursier immédiatement"""
     
     if current_user.role not in ["client", "business"]:
         raise HTTPException(status_code=403, detail="Seuls les clients et entreprises peuvent planifier des livraisons")
     
     try:
+        # Créer la planification
         schedule = ScheduledDeliveryService.create_scheduled_delivery(db, schedule_data, current_user.id)
         
+        # Chercher un coursier disponible immédiatement
+        from ..services.matching import MatchingService
+        from ..models.delivery import Delivery
+        
+        # Créer un objet delivery temporaire pour le matching
+        temp_delivery = Delivery(
+            pickup_lat=schedule.pickup_lat,
+            pickup_lng=schedule.pickup_lng,
+            delivery_lat=schedule.delivery_lat,
+            delivery_lng=schedule.delivery_lng,
+            proposed_price=schedule.proposed_price,
+            required_vehicle_type=schedule.required_vehicle_type,
+            package_description=schedule.package_description,
+            package_size=schedule.package_size,
+            delivery_type=schedule.delivery_type
+        )
+        
+        # Trouver les meilleurs coursiers disponibles
+        available_couriers = MatchingService.find_best_couriers(db, temp_delivery, limit=5)
+        
+        if available_couriers:
+            # Notifier les coursiers de cette nouvelle planification
+            ScheduledDeliveryService.notify_couriers_for_scheduling(db, schedule, available_couriers)
+            
         return {
             "id": schedule.id,
             "client_id": schedule.client_id,
@@ -76,7 +101,8 @@ async def create_scheduled_delivery(
                 "name": current_user.full_name,
                 "email": current_user.email,
                 "phone": current_user.phone
-            }
+            },
+            "available_couriers_count": len(available_couriers)
         }
         
     except Exception as e:
@@ -468,6 +494,51 @@ async def coordinate_scheduled_delivery(
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur lors de la coordination: {str(e)}")
+
+@router.post("/scheduled-deliveries/{schedule_id}/accept-courier")
+async def accept_scheduled_delivery_by_courier(
+    schedule_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Un coursier accepte une livraison planifiée"""
+    
+    if current_user.role != "courier":
+        raise HTTPException(status_code=403, detail="Seuls les coursiers peuvent accepter")
+    
+    schedule = ScheduledDeliveryService.get_scheduled_delivery(db, schedule_id)
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Planification non trouvée")
+    
+    if schedule.status != "pending":
+        raise HTTPException(status_code=400, detail="Cette planification n'est plus disponible")
+    
+    try:
+        # Assigner le coursier et confirmer la planification
+        success = ScheduledDeliveryService.assign_courier_to_schedule(db, schedule_id, current_user.id)
+        
+        if success:
+            # Notifier le client que sa planification est confirmée
+            from ..services.notification import send_notification
+            
+            message = f"Votre livraison planifiée '{schedule.title}' pour le {schedule.scheduled_date.strftime('%d/%m/%Y à %H:%M')} a été confirmée ! Le coursier {current_user.full_name} s'en chargera."
+            
+            send_notification(
+                db,
+                schedule.client_id,
+                "Livraison Planifiée Confirmée",
+                message,
+                notification_type="schedule_confirmed",
+                data={"schedule_id": schedule_id, "courier_id": current_user.id}
+            )
+            
+            return {"success": True, "message": "Livraison planifiée acceptée avec succès"}
+        else:
+            raise HTTPException(status_code=500, detail="Erreur lors de l'acceptation")
+            
+    except Exception as e:
+        logger.error(f"Erreur acceptation planification: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erreur lors de l'acceptation: {str(e)}")
 
 @router.get("/scheduled-deliveries/{execution_id}/coordination-status")
 async def get_coordination_status(

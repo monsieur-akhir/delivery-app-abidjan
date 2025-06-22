@@ -1,4 +1,3 @@
-
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, Enum, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -15,7 +14,9 @@ class RecurrenceType(str, enum.Enum):
     custom = "custom"  # Personnalisée
 
 class ScheduledDeliveryStatus(str, enum.Enum):
-    active = "active"  # Planification active
+    pending = "pending"      # En attente d'acceptation par un coursier
+    confirmed = "confirmed"  # Confirmée par un coursier
+    active = "active"        # Active et en cours d'exécution
     paused = "paused"  # Mise en pause
     completed = "completed"  # Terminée
     cancelled = "cancelled"  # Annulée
@@ -32,7 +33,9 @@ class RecurrenceType(PyEnum):
     monthly = "monthly"
 
 class ScheduledDeliveryStatus(PyEnum):
-    active = "active"
+    pending = "pending"      # En attente d'acceptation par un coursier
+    confirmed = "confirmed"  # Confirmée par un coursier
+    active = "active"        # Active et en cours d'exécution
     paused = "paused"
     completed = "completed"
     cancelled = "cancelled"
@@ -48,11 +51,11 @@ class ScheduledDelivery(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("users.id"))
-    
+
     # Informations de base de la livraison
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    
+
     # Informations de ramassage
     pickup_address = Column(String, nullable=False)
     pickup_commune = Column(String, nullable=False)
@@ -90,7 +93,7 @@ class ScheduledDelivery(Base):
     # Configuration des notifications
     notification_advance_hours = Column(Integer, default=24)  # Heures avant notification
     auto_create_delivery = Column(Boolean, default=True)  # Créer automatiquement la livraison
-    
+
     # Prix et conditions
     proposed_price = Column(Float, nullable=True)
     delivery_type = Column(String, default="standard")
@@ -116,34 +119,12 @@ class ScheduledDeliveryExecution(Base):
     planned_date = Column(DateTime(timezone=True), nullable=False)
     executed_date = Column(DateTime(timezone=True), nullable=True)
     delivery_id = Column(Integer, ForeignKey("deliveries.id"), nullable=True)
-    status = Column(Enum(ExecutionStatus), default=ExecutionStatus.pending)
+    assigned_courier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    status = Column(String, default="pending")  # pending, confirmed, created, failed
     error_message = Column(Text, nullable=True)
-    notification_sent_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relations
-    scheduled_delivery = relationship("ScheduledDelivery", back_populates="executions")
-    delivery = relationship("Delivery")
-
-class ScheduledDeliveryExecution(Base):
-    __tablename__ = "scheduled_delivery_executions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    scheduled_delivery_id = Column(Integer, ForeignKey("scheduled_deliveries.id"))
-    delivery_id = Column(Integer, ForeignKey("deliveries.id"), nullable=True)
-    
-    # Planification de cette exécution
-    planned_date = Column(DateTime(timezone=True), nullable=False)
-    executed_date = Column(DateTime(timezone=True), nullable=True)
-    
-    # Statut de l'exécution
-    status = Column(String, default="pending")  # pending, created, completed, failed, skipped
-    error_message = Column(Text, nullable=True)
-    
-    # Métadonnées
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
     notification_sent_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relations
     scheduled_delivery = relationship("ScheduledDelivery", back_populates="executions")
     delivery = relationship("Delivery")
+    assigned_courier = relationship("User", foreign_keys=[assigned_courier_id])

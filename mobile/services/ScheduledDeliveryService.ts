@@ -410,6 +410,22 @@ class ScheduledDeliveryService {
   }
 
   /**
+   * Accepter une livraison planifiée (côté coursier)
+   */
+  async acceptScheduledDelivery(scheduleId: number): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    try {
+      const response = await apiClient.post(`${this.baseURL}/${scheduleId}/accept-courier`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erreur lors de l\'acceptation de la planification:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de l\'acceptation');
+    }
+  }
+
+  /**
    * Récupérer le statut de coordination
    */
   async getCoordinationStatus(executionId: number): Promise<{
