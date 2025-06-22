@@ -45,7 +45,6 @@ import SettingsScreen from '../screens/SettingsScreen';
 
 // Other Screens
 import OnboardingScreen from '../screens/OnboardingScreen';
-import WelcomeScreen from '../screens/WelcomeScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -159,13 +158,12 @@ export default function AppNavigator() {
       {!user ? (
         // Auth Stack
         <Stack.Group>
-          <Stack.Screen name="Welcome" component={WelcomeScreen} />
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
           <Stack.Screen name="OTPLogin" component={OTPLoginScreen} />
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         </Stack.Group>
       ) : (
         // Main App Stack

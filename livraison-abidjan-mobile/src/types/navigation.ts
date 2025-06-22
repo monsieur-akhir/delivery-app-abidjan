@@ -8,7 +8,6 @@ export type CourierStatsScreenNavigationProp = NativeStackNavigationProp<RootSta
 
 export type RootStackParamList = {
   // Auth Stack
-  Welcome: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
@@ -43,7 +42,6 @@ export type RootStackParamList = {
       is_fragile: boolean;
       proposed_price: number;
       delivery_type: string;
-      proposed_price: number;
     };
   } | undefined;
   TrackDelivery: { deliveryId: string | number };

@@ -1,4 +1,4 @@
-modules = ["vue-node-18", "nodejs-18", "python-3.12", "bash", "postgresql-16"]
+modules = ["vue-node-18", "nodejs-18", "python-3.12", "bash"]
 compile = "make dev"
 run = "chmod +x start-local.sh && ./start-local.sh"
 
