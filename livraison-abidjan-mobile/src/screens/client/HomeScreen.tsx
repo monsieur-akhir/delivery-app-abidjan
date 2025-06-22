@@ -163,9 +163,11 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       const active = (deliveries || []).filter((d: any) => 
         ['pending', 'accepted', 'in_progress', 'picked_up'].includes(d.status)
       )
-      const recent = (deliveries || []).filter((d: any) => 
-        ['completed', 'delivered'].includes(d.status)
-      ).slice(0, 3)
+      // Récupérer les 3 dernières livraisons (tous statuts confondus sauf en cours)
+      const recent = (deliveries || [])
+        .filter((d: any) => !['pending', 'accepted', 'in_progress', 'picked_up'].includes(d.status))
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 3)
       
       setActiveDeliveries(active)
       setRecentDeliveries(recent)
@@ -342,6 +344,71 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     )
   }
 
+  const renderRecentDeliveryWithState = (delivery: Delivery) => {
+    const statusInfo = getStatusInfo(delivery.status)
+    
+    return (
+      <TouchableOpacity 
+        key={delivery.id}
+        style={styles.enhancedRecentDeliveryItem}
+        onPress={() => navigation.navigate('DeliveryDetails', { deliveryId: delivery.id.toString() })}
+        activeOpacity={0.8}
+      >
+        <View style={styles.deliveryItemHeader}>
+          <View style={styles.deliveryIdContainer}>
+            <Text style={styles.deliveryIdText}>#{delivery.id}</Text>
+            <Chip 
+              style={[styles.statusChip, { backgroundColor: statusInfo.color }]}
+              textStyle={styles.statusChipText}
+              compact
+            >
+              {statusInfo.text}
+            </Chip>
+          </View>
+          <Text style={styles.deliveryDate}>
+            {formatDate(delivery.created_at)}
+          </Text>
+        </View>
+
+        <View style={styles.deliveryRouteContainer}>
+          <View style={styles.routePoint}>
+            <View style={[styles.routeIconSmall, { backgroundColor: '#4CAF50' }]}>
+              <Feather name="map-pin" size={10} color="#FFFFFF" />
+            </View>
+            <Text style={styles.routeAddressText} numberOfLines={1}>
+              {delivery.pickup_address || delivery.pickup_commune}
+            </Text>
+          </View>
+          
+          <View style={styles.routeLineSmall} />
+          
+          <View style={styles.routePoint}>
+            <View style={[styles.routeIconSmall, { backgroundColor: '#FF6B00' }]}>
+              <Feather name="target" size={10} color="#FFFFFF" />
+            </View>
+            <Text style={styles.routeAddressText} numberOfLines={1}>
+              {delivery.delivery_address || delivery.delivery_commune}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.deliveryFooterInfo}>
+          <View style={styles.priceContainer}>
+            <Text style={styles.enhancedDeliveryPrice}>
+              {formatPrice(delivery.price || delivery.final_price || 0)} F
+            </Text>
+            {delivery.delivery_type && (
+              <Text style={styles.deliveryType}>
+                {delivery.delivery_type === 'express' ? '⚡ Express' : '📦 Standard'}
+              </Text>
+            )}
+          </View>
+          <Feather name="chevron-right" size={16} color="#757575" />
+        </View>
+      </TouchableOpacity>
+    )
+  }
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -459,20 +526,20 @@ const ClientHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Livraisons récentes */}
+        {/* Livraisons récentes - Les 3 dernières courses */}
         {recentDeliveries.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>📋 Historique récent</Text>
+              <Text style={styles.sectionTitle}>📋 Mes 3 dernières courses</Text>
               <TouchableOpacity onPress={() => navigation.navigate('DeliveryHistory')}>
                 <Text style={styles.seeAllText}>Voir tout</Text>
               </TouchableOpacity>
             </View>
             <Surface style={styles.recentDeliveriesCard} elevation={2}>
-              {recentDeliveries.map((delivery, index) => (
+              {recentDeliveries.slice(0, 3).map((delivery, index) => (
                 <View key={delivery.id}>
-                  {renderRecentDelivery(delivery)}
-                  {index < recentDeliveries.length - 1 && <Divider />}
+                  {renderRecentDeliveryWithState(delivery)}
+                  {index < recentDeliveries.slice(0, 3).length - 1 && <Divider />}
                 </View>
               ))}
             </Surface>
@@ -848,6 +915,87 @@ const styles = StyleSheet.create({
     right: 20,
     backgroundColor: '#FF6B00',
     borderRadius: 25,
+  },
+  // Styles pour l'affichage amélioré des livraisons récentes
+  enhancedRecentDeliveryItem: {
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  deliveryItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  deliveryIdContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  deliveryIdText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#212121',
+    marginRight: 8,
+  },
+  statusChip: {
+    height: 24,
+  },
+  statusChipText: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  deliveryDate: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  deliveryRouteContainer: {
+    marginBottom: 12,
+  },
+  routePoint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  routeIconSmall: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  routeAddressText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#424242',
+    fontWeight: '500',
+  },
+  routeLineSmall: {
+    width: 2,
+    height: 10,
+    backgroundColor: '#E0E0E0',
+    marginLeft: 7,
+    marginBottom: 6,
+  },
+  deliveryFooterInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  priceContainer: {
+    flex: 1,
+  },
+  enhancedDeliveryPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FF6B00',
+    marginBottom: 2,
+  },
+  deliveryType: {
+    fontSize: 11,
+    color: '#757575',
+    fontWeight: '500',
   },
 })
 
