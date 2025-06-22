@@ -165,6 +165,12 @@ const routes = [
     component: BusinessLanguageSettingsView,
     meta: { requiresAuth: true, role: 'business' },
   },
+  {
+    path: '/business/scheduled-deliveries',
+    name: 'BusinessScheduledDeliveries',
+    component: () => import('../views/business/ScheduledDeliveriesView.vue'),
+    meta: { requiresAuth: true, role: 'business' },
+  },
 
   // Routes manager
   {
@@ -303,6 +309,18 @@ const routes = [
     path: '/manager/transport-rules',
     name: 'TransportRules',
     component: TransportRulesView,
+    meta: { requiresAuth: true, role: 'manager' },
+  },
+  {
+    path: '/manager/scheduled-deliveries',
+    name: 'ManagerScheduledDeliveries',
+    component: () => import('../views/business/ScheduledDeliveriesView.vue'),
+    meta: { requiresAuth: true, role: 'manager' },
+  },
+  {
+    path: '/manager/scheduled-deliveries/calendar',
+    name: 'ManagerScheduledDeliveriesCalendar',
+    component: () => import('../views/manager/ScheduledDeliveriesCalendarView.vue'),
     meta: { requiresAuth: true, role: 'manager' },
   },
 
