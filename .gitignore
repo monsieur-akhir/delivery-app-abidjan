@@ -204,12 +204,6 @@ mobile/dist/
 # Fichiers à ignorer
 *.log
 *.env
-backend/.env.dev
-*.env.dev
+./delivery-app-abidjan/backend/.env.*
+./delivery-app-abidjan/backend/.env.dev
 
-# Fichiers d'environnement de développement
-*.env*
-*.env.*
-*.dev
-
-backend/.env.dev
