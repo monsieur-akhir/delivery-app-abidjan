@@ -398,6 +398,56 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
           <Text style={styles.sectionTitle}>Services de livraison</Text>
           <View style={styles.servicesGrid}>
+            {/* Ajouter les boutons d'accès aux livraisons planifiées et multiples */}
+            
+            <TouchableOpacity 
+              key="createDelivery"
+              style={styles.serviceCard}
+              onPress={() => navigation.navigate('CreateDelivery')}
+              activeOpacity={0.8}
+            >
+              <Surface style={[styles.serviceIcon, { backgroundColor: '#4CAF50' }]}>
+                <Feather name="plus" size={24} color="#FFFFFF" />
+              </Surface>
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceTitle}>Nouvelle livraison</Text>
+                <Text style={styles.serviceSubtitle}>Créer une demande</Text>
+                
+              </View>
+              <Feather name="chevron-right" size={20} color="#757575" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              key="scheduledDeliveries"
+              style={styles.serviceCard}
+              onPress={() => navigation.navigate('ScheduledDeliveries')}
+              activeOpacity={0.8}
+            >
+              <Surface style={[styles.serviceIcon, { backgroundColor: '#FF9800' }]}>
+                <Feather name="calendar" size={24} color="#FFFFFF" />
+              </Surface>
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceTitle}>Livraisons planifiées</Text>
+                <Text style={styles.serviceSubtitle}>Programmer vos livraisons</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#757575" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              key="multiDestinationDeliveries"
+              style={styles.serviceCard}
+              onPress={() => navigation.navigate('MultiDestinationDeliveries')}
+              activeOpacity={0.8}
+            >
+              <Surface style={[styles.serviceIcon, { backgroundColor: '#9C27B0' }]}>
+                <Feather name="map-pin" size={24} color="#FFFFFF" />
+              </Surface>
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceTitle}>Destinations multiples</Text>
+                <Text style={styles.serviceSubtitle}>Une livraison, plusieurs arrêts</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#757575" />
+            </TouchableOpacity>
             {quickServices.map(renderQuickService)}
           </View>
         </Animated.View>

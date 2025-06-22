@@ -104,6 +104,16 @@ export type RootStackParamList = {
   ClientHome: undefined;
   Main: undefined;
   OfflineManagerScreen: undefined;
+
+  // Livraisons planifiées
+  ScheduledDeliveries: undefined
+  CreateScheduledDelivery: undefined
+  EditScheduledDelivery: { deliveryId: number }
+
+  // Livraisons multiples destinations
+  MultiDestinationDeliveries: undefined
+  CreateMultiDestinationDelivery: undefined
+  MultiDestinationDeliveryDetails: { deliveryId: number }
 };
 
 // Tab Parameter Lists
