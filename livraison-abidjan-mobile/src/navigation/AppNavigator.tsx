@@ -15,7 +15,8 @@ import VerifyOTPScreen from '../screens/auth/VerifyOTPScreen';
 import OTPLoginScreen from '../screens/auth/OTPLoginScreen';
 
 // Client Screens
-import HomeScreen from '../screens/client/HomeScreen';
+import ClientHomeScreen from '../screens/client/HomeScreen';
+import CourierHomeScreen from '../screens/courier/HomeScreen';
 import CreateDeliveryScreen from '../screens/client/CreateDeliveryScreen';
 import TrackDeliveryScreen from '../screens/client/TrackDeliveryScreen';
 import DeliveryHistoryScreen from '../screens/client/DeliveryHistoryScreen';
@@ -89,7 +90,7 @@ function ClientTabs() {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={ClientHomeScreen} />
       <Tab.Screen name="Orders" component={DeliveryHistoryScreen} />
       <Tab.Screen name="Wallet" component={WalletScreen} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} />
