@@ -12,6 +12,13 @@ import { WebSocketProvider } from './src/contexts/WebSocketContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import './src/i18n';
+import { useTokenSync } from './src/hooks/useTokenSync';
+
+// Composant pour gérer la synchronisation des tokens
+const TokenSyncWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  useTokenSync();
+  return <>{children}</>;
+};
 
 function AuthGate() {
   const { user, token, loading } = useAuth();
@@ -26,14 +33,16 @@ export default function App() {
         <ThemeProvider>
           <NetworkProvider>
             <AuthProvider>
-              <NotificationProvider>
+              <TokenSyncWrapper>
                 <WebSocketProvider>
-                  <NavigationContainer>
-                    <AuthGate />
-                    <StatusBar style="auto" />
-                  </NavigationContainer>
+                  <NotificationProvider>
+                    <NavigationContainer>
+                      <AuthGate />
+                      <StatusBar style="auto" />
+                    </NavigationContainer>
+                  </NotificationProvider>
                 </WebSocketProvider>
-              </NotificationProvider>
+              </TokenSyncWrapper>
             </AuthProvider>
           </NetworkProvider>
         </ThemeProvider>

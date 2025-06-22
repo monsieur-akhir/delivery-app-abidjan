@@ -66,6 +66,10 @@ class AuthService {
   private tokenKey = '@livraison_abidjan:auth_token'
   private refreshTokenKey = '@livraison_abidjan:refresh_token'
   private userKey = '@livraison_abidjan:user_data'
+  
+  // Callbacks pour notifier les contexts
+  public notifyTokenExpired?: () => void
+  public notifyTokenRefresh?: (newToken: string) => void
 
   constructor() {
     this.api = axios.create({
@@ -102,11 +106,17 @@ class AuthService {
               const response = await this.refreshAccessToken(refreshToken)
               await this.saveTokens(response.access_token, response.refresh_token)
               
+              // Notifier les autres composants du nouveau token
+              this.notifyTokenRefresh?.(response.access_token);
+              
               // Retry original request with new token
               originalRequest.headers.Authorization = `Bearer ${response.access_token}`
               return this.api(originalRequest)
             }
           } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError)
+            // Notifier les autres composants de l'expiration
+            this.notifyTokenExpired?.();
             await this.logout()
             throw refreshError
           }
@@ -390,6 +400,29 @@ class AuthService {
     } catch (error) {
       console.error('Authentication check error:', error)
       return false
+    }
+  }
+
+  /**
+   * Configuration des callbacks de notification
+   */
+  setTokenCallbacks(onTokenExpired: () => void, onTokenRefresh: (token: string) => void) {
+    this.notifyTokenExpired = onTokenExpired;
+    this.notifyTokenRefresh = onTokenRefresh;
+  }
+
+  /**
+   * Vérification si le token est expiré
+   */
+  isTokenExpired(token: string | null): boolean {
+    if (!token) return true;
+    try {
+      const decoded: any = JSON.parse(atob(token.split('.')[1]));
+      if (!decoded.exp) return true;
+      const now = Date.now() / 1000;
+      return decoded.exp < now;
+    } catch {
+      return true;
     }
   }
 

@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import jwtDecode from 'jwt-decode';
 import type { User } from '../types/models';
 import type { RegisterUserData } from '../services/api';
 import { login, register, verifyOTP, getApiUrl } from '../services/api';
@@ -11,6 +12,19 @@ import { login, register, verifyOTP, getApiUrl } from '../services/api';
 // Fonction utilitaire pour vérifier la validité des objets
 const isValidObject = (obj: any): boolean => {
   return obj !== null && obj !== undefined && typeof obj === 'object';
+};
+
+// Fonction utilitaire pour vérifier l'expiration du token
+const isTokenExpired = (token: string | null): boolean => {
+  if (!token) return true;
+  try {
+    const decoded: any = jwtDecode(token);
+    if (!decoded.exp) return true;
+    const now = Date.now() / 1000;
+    return decoded.exp < now;
+  } catch {
+    return true;
+  }
 };
 
 interface AuthContextType {
@@ -26,6 +40,8 @@ interface AuthContextType {
   signOut: (expired?: boolean) => Promise<void>
   updateUserData: (data: Partial<User>) => void
   setAuthData: (user: User, token: string) => void
+  checkTokenValidity: () => Promise<boolean>
+  isTokenValid: () => boolean
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -41,6 +57,8 @@ export const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   updateUserData: () => {},
   setAuthData: () => {},
+  checkTokenValidity: async () => false,
+  isTokenValid: () => false,
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -52,6 +70,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null)
   const [sessionExpired, setSessionExpired] = useState(false)
 
+  // Vérifier si le token est valide
+  const isTokenValid = (): boolean => {
+    return !isTokenExpired(token);
+  };
+
+  // Vérifier la validité du token et déconnecter si nécessaire
+  const checkTokenValidity = async (): Promise<boolean> => {
+    if (!token || isTokenExpired(token)) {
+      console.log('[Auth] Token expiré, déconnexion automatique');
+      await signOut(true);
+      return false;
+    }
+    return true;
+  };
+
   useEffect(() => {
     // Check if user is already logged in
     const loadUserData = async () => {
@@ -60,6 +93,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = await AsyncStorage.getItem("token")
 
         if (storedUser && storedToken) {
+          // Vérifier si le token stocké est encore valide
+          if (isTokenExpired(storedToken)) {
+            console.log('[Auth] Token stocké expiré, nettoyage');
+            await signOut(true);
+            return;
+          }
+
           setUser(JSON.parse(storedUser))
           setToken(storedToken)
 
@@ -72,11 +112,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (refreshError) {
             console.error("Error refreshing token:", refreshError)
-            // If refresh fails, we'll keep using the old token
+            // Si le refresh échoue et le token est expiré, déconnecter
+            if (isTokenExpired(storedToken)) {
+              await signOut(true);
+            }
           }
         }
       } catch (e) {
         console.error("Error loading user data:", e)
+        await signOut();
       } finally {
         setLoading(false)
       }
@@ -84,6 +128,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     loadUserData()
   }, [])
+
+  // Vérification périodique du token toutes les 30 secondes
+  useEffect(() => {
+    if (!token || !user) return;
+
+    const interval = setInterval(async () => {
+      const isValid = await checkTokenValidity();
+      if (!isValid) {
+        console.log('[Auth] Token invalide détecté lors de la vérification périodique');
+      }
+    }, 30000); // Vérifier toutes les 30 secondes
+
+    return () => clearInterval(interval);
+  }, [token, user])
 
   // Fonction utilitaire locale pour rafraîchir le token
   const tryRefreshToken = async (): Promise<string | null> => {
@@ -174,7 +232,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, error, sessionExpired, setSessionExpired, signIn, signUp, verify, signOut, updateUserData, setAuthData }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      loading, 
+      error, 
+      sessionExpired, 
+      setSessionExpired, 
+      signIn, 
+      signUp, 
+      verify, 
+      signOut, 
+      updateUserData, 
+      setAuthData,
+      checkTokenValidity,
+      isTokenValid
+    }}>
       {children}
     </AuthContext.Provider>
   )

@@ -47,7 +47,7 @@ function isTokenExpired(token: string | null): boolean {
 }
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, token } = useAuth()
+  const { user, token, checkTokenValidity, sessionExpired } = useAuth()
   const [socket, setSocket] = useState<WebSocket | null>(null)
   const [connected, setConnected] = useState<boolean>(false)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
@@ -64,21 +64,33 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return url
   }
 
-  const connectWebSocket = useCallback(() => {
-    if (!token || !user || !user.id) {
+  const connectWebSocket = useCallback(async () => {
+    // Vérifier la validité du token avant de se connecter
+    const isTokenStillValid = await checkTokenValidity();
+    if (!isTokenStillValid || !token || !user || !user.id) {
       if (__DEV__) {
-        console.log('[WebSocket] Connexion refusée : user ou token manquant', { user, token })
+        console.log('[WebSocket] Connexion refusée : token invalide ou user manquant', { 
+          tokenValid: isTokenStillValid,
+          hasUser: !!user, 
+          hasToken: !!token 
+        })
       }
-      setShowWsError(true)
       setConnected(false)
       return
+    }
+
+    // Fermer la connexion existante si elle existe
+    if (socket) {
+      socket.close()
+      setSocket(null)
     }
 
     const ws = new WebSocket(getWsUrl())
 
     ws.onopen = () => {
-      if (__DEV__) console.log('[WebSocket] Connecté')
+      if (__DEV__) console.log('[WebSocket] Connecté avec token valide')
       setConnected(true)
+      setShowWsError(false)
     }
 
     ws.onmessage = (event) => {
@@ -93,12 +105,24 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     }
 
-    ws.onclose = () => {
-      if (__DEV__) console.log('[WebSocket] Déconnecté')
+    ws.onclose = (event) => {
+      if (__DEV__) console.log('[WebSocket] Déconnecté, code:', event.code, 'raison:', event.reason)
       setConnected(false)
-      setTimeout(() => {
-        if (token && user && user.id) {
+      
+      // Ne pas reconnecter si l'utilisateur est déconnecté ou le token expiré
+      if (sessionExpired) {
+        if (__DEV__) console.log('[WebSocket] Session expirée, pas de reconnexion')
+        return
+      }
+      
+      // Reconnexion automatique avec vérification du token
+      setTimeout(async () => {
+        const stillValid = await checkTokenValidity();
+        if (stillValid && token && user && user.id) {
+          if (__DEV__) console.log('[WebSocket] Tentative de reconnexion...')
           connectWebSocket()
+        } else {
+          if (__DEV__) console.log('[WebSocket] Token invalide, pas de reconnexion')
         }
       }, 5000)
     }
@@ -114,19 +138,35 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => {
       ws.close()
     }
-  }, [token, user, subscriptions])
+  }, [token, user, subscriptions, checkTokenValidity, sessionExpired])
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
+    
+    // Si la session a expiré, fermer le WebSocket
+    if (sessionExpired) {
+      if (socket) {
+        socket.close()
+        setSocket(null)
+      }
+      setConnected(false)
+      return
+    }
+    
     if (token && user && user.id) {
       cleanup = connectWebSocket();
     } else {
       setConnected(false);
+      if (socket) {
+        socket.close()
+        setSocket(null)
+      }
     }
+    
     return () => {
       if (cleanup) cleanup();
     };
-  }, [token, user, connectWebSocket]);
+  }, [token, user, connectWebSocket, sessionExpired]);
 
   const sendMessage = useCallback(
     (message: WebSocketMessage) => {
@@ -164,12 +204,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     >
       {children}
       <Snackbar
-        visible={showWsError}
+        visible={showWsError && !sessionExpired}
         onDismiss={() => setShowWsError(false)}
         duration={4000}
         style={{ backgroundColor: '#FF6B00', borderRadius: 8 }}
       >
-        Connexion temps réel perdue, veuillez vous reconnecter.
+        {sessionExpired 
+          ? "Session expirée, veuillez vous reconnecter." 
+          : "Connexion temps réel perdue, tentative de reconnexion..."}
       </Snackbar>
     </WebSocketContext.Provider>
   )

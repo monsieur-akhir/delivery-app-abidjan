@@ -1,9 +1,16 @@
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getApiUrl, getWsUrl } from '../config/environment';
+import { getApiUrl } from '../config/environment';
+
+// Fonction utilitaire pour obtenir l'URL WebSocket
+const getWsUrl = () => {
+  const apiUrl = getApiUrl();
+  return apiUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+};
 
 export const debugWebSocketConnection = async () => {
   console.log('🔍 Debug WebSocket Connection');
-  console.log('=' * 50);
+  console.log('='.repeat(50));
   
   try {
     // Vérifier les données stockées
@@ -30,14 +37,14 @@ export const debugWebSocketConnection = async () => {
     // Construire l'URL WebSocket
     if (storedUser && storedToken) {
       const user = JSON.parse(storedUser);
-      const wsUrl = `${getWsUrl()}/${user.id}?token=${storedToken}`;
+      const wsUrl = `${getWsUrl()}/ws/${user.id}?token=${storedToken}`;
       console.log('- URL WebSocket complète:', wsUrl);
     }
     
     // Vérifier si le token est valide
     if (storedToken) {
       try {
-        const response = await fetch(`${getApiUrl()}/auth/verify`, {
+        const response = await fetch(`${getApiUrl()}/api/auth/verify-token`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${storedToken}`,
@@ -68,12 +75,12 @@ export const debugWebSocketConnection = async () => {
     console.error('❌ Erreur lors du debug:', error);
   }
   
-  console.log('=' * 50);
+  console.log('='.repeat(50));
 };
 
 export const testWebSocketConnection = async () => {
   console.log('🧪 Test WebSocket Connection');
-  console.log('=' * 50);
+  console.log('='.repeat(50));
   
   try {
     const storedUser = await AsyncStorage.getItem("user");
@@ -85,7 +92,7 @@ export const testWebSocketConnection = async () => {
     }
     
     const user = JSON.parse(storedUser);
-    const wsUrl = `${getWsUrl()}/${user.id}?token=${storedToken}`;
+    const wsUrl = `${getWsUrl()}/ws/${user.id}?token=${storedToken}`;
     
     console.log('🔗 Tentative de connexion WebSocket...');
     console.log('URL:', wsUrl);
@@ -99,5 +106,5 @@ export const testWebSocketConnection = async () => {
     console.error('❌ Erreur lors du test:', error);
   }
   
-  console.log('=' * 50);
-}; 
+  console.log('='.repeat(50));
+};
