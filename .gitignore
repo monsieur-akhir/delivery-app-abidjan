@@ -212,3 +212,4 @@ backend/.env.dev
 *.env.*
 *.dev
 
+backend/.env.dev
