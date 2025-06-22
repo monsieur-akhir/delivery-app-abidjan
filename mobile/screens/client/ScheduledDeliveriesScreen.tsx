@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -77,7 +76,7 @@ const ScheduledDeliveriesScreen: React.FC<ScheduledDeliveriesScreenProps> = () =
       setLoading(true);
       // TODO: Appeler l'API pour récupérer les livraisons planifiées
       // const response = await ScheduledDeliveryService.getScheduledDeliveries();
-      
+
       // Mock data pour le développement
       const mockSchedules: ScheduledDelivery[] = [
         {
@@ -181,7 +180,7 @@ const ScheduledDeliveriesScreen: React.FC<ScheduledDeliveriesScreenProps> = () =
 
   const handleScheduleAction = (schedule: ScheduledDelivery, action: string) => {
     setSelectedSchedule(schedule);
-    
+
     switch (action) {
       case 'edit':
         navigation.navigate('EditScheduledDelivery', { scheduleId: schedule.id });
@@ -262,7 +261,7 @@ const ScheduledDeliveriesScreen: React.FC<ScheduledDeliveriesScreenProps> = () =
                 </Chip>
               </View>
             </View>
-            
+
             <Menu
               visible={showMenu && selectedSchedule?.id === item.id}
               onDismiss={() => setShowMenu(false)}

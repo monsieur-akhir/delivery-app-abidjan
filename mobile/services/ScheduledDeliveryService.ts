@@ -385,6 +385,49 @@ class ScheduledDeliveryService {
       throw new Error(error.response?.data?.detail || 'Erreur lors de l\'auto-exécution');
     }
   }
+
+  /**
+   * Coordonner une livraison planifiée (J-1)
+   */
+  async coordinateScheduledDelivery(
+    executionId: number,
+    coordinationData: {
+      notes?: string;
+      confirmed_time?: string;
+    }
+  ): Promise<{
+    success: boolean;
+    message: string;
+    execution: any;
+  }> {
+    try {
+      const response = await apiClient.post(`${this.baseURL}/${executionId}/coordinate`, coordinationData);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erreur lors de la coordination:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la coordination');
+    }
+  }
+
+  /**
+   * Récupérer le statut de coordination
+   */
+  async getCoordinationStatus(executionId: number): Promise<{
+    success: boolean;
+    execution: any;
+    schedule: ScheduledDelivery;
+    is_j_minus_1: boolean;
+    coordination_window_open: boolean;
+    special_instructions?: string;
+  }> {
+    try {
+      const response = await apiClient.get(`${this.baseURL}/${executionId}/coordination-status`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erreur lors de la récupération du statut:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération');
+    }
+  }
 }
 
 export default new ScheduledDeliveryService();

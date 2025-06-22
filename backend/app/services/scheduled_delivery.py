@@ -293,37 +293,145 @@ class ScheduledDeliveryService:
 
     @staticmethod
     def send_execution_notifications(db: Session):
-        """Envoyer les notifications pour les exécutions à venir"""
+        """Envoyer les notifications de rappel J-1 pour coordination"""
         
-        pending_executions = ScheduledDeliveryService.get_pending_executions(db)
+        tomorrow = datetime.now() + timedelta(days=1)
+        tomorrow_date = tomorrow.date()
         
-        for execution in pending_executions:
+        # Récupérer les exécutions prévues pour demain
+        executions_tomorrow = db.query(ScheduledDeliveryExecution).join(ScheduledDelivery).filter(
+            ScheduledDeliveryExecution.status == "pending",
+            func.date(ScheduledDeliveryExecution.planned_date) == tomorrow_date,
+            ScheduledDeliveryExecution.notification_sent_at.is_(None),
+            ScheduledDelivery.status == ScheduledDeliveryStatus.active
+        ).all()
+        
+        for execution in executions_tomorrow:
             schedule = execution.scheduled_delivery
             
             try:
-                # Envoyer notification au client
-                message = f"Votre livraison planifiée '{schedule.title}' est prévue pour {execution.planned_date.strftime('%d/%m/%Y à %H:%M')}"
-                send_notification(db, schedule.client_id, "Livraison planifiée", message)
+                # Notification au client
+                client_message = f"Rappel : Votre livraison planifiée '{schedule.title}' aura lieu demain {execution.planned_date.strftime('%d/%m/%Y à %H:%M')}. Assurez-vous que le colis soit prêt."
+                send_notification(
+                    db, 
+                    schedule.client_id, 
+                    "Rappel Livraison Planifiée - J-1", 
+                    client_message,
+                    notification_type="scheduled_reminder",
+                    data={"execution_id": execution.id, "schedule_id": schedule.id}
+                )
+                
+                # Trouver et notifier les coursiers potentiels
+                ScheduledDeliveryService._notify_potential_couriers_j1(db, execution, schedule)
                 
                 # Marquer la notification comme envoyée
                 execution.notification_sent_at = datetime.now()
                 db.commit()
                 
-                logger.info(f"Notification envoyée pour l'exécution {execution.id}")
+                logger.info(f"Notifications J-1 envoyées pour l'exécution {execution.id}")
                 
             except Exception as e:
-                logger.error(f"Erreur lors de l'envoi de notification pour l'exécution {execution.id}: {e}")
+                logger.error(f"Erreur lors de l'envoi de notification J-1 pour l'exécution {execution.id}: {e}")
+
+    @staticmethod
+    def _notify_potential_couriers_j1(db: Session, execution, schedule):
+        """Notifier les coursiers potentiels J-1 pour coordination"""
+        
+        from ..services.matching import MatchingService
+        from ..services.notification import send_notification
+        from ..models.delivery import Delivery
+        
+        try:
+            # Créer un objet delivery temporaire pour le matching
+            temp_delivery = Delivery(
+                pickup_lat=schedule.pickup_lat,
+                pickup_lng=schedule.pickup_lng,
+                delivery_lat=schedule.delivery_lat,
+                delivery_lng=schedule.delivery_lng,
+                proposed_price=schedule.proposed_price,
+                required_vehicle_type=schedule.required_vehicle_type
+            )
+            
+            # Trouver les meilleurs coursiers
+            best_couriers = MatchingService.find_best_couriers(db, temp_delivery, limit=5)
+            
+            for courier_info in best_couriers:
+                courier_id = courier_info['courier_id']
+                distance = courier_info['distance']
+                
+                courier_message = f"Livraison planifiée disponible demain {execution.planned_date.strftime('%d/%m/%Y à %H:%M')} !\n"
+                courier_message += f"📍 De {schedule.pickup_commune} vers {schedule.delivery_commune}\n"
+                courier_message += f"📏 Distance: {distance:.1f}km\n"
+                courier_message += f"💰 Prix: {schedule.proposed_price}€\n"
+                courier_message += f"📦 {schedule.package_description}"
+                
+                send_notification(
+                    db,
+                    courier_id,
+                    "Livraison Planifiée Demain - Coordination",
+                    courier_message,
+                    notification_type="scheduled_j1_alert",
+                    data={
+                        "execution_id": execution.id,
+                        "schedule_id": schedule.id,
+                        "planned_date": execution.planned_date.isoformat(),
+                        "distance": distance
+                    }
+                )
+                
+        except Exception as e:
+            logger.error(f"Erreur lors de la notification des coursiers J-1: {e}")
 
     @staticmethod
     def auto_execute_deliveries(db: Session):
-        """Auto-exécuter les livraisons planifiées (si activé)"""
+        """Auto-exécuter les livraisons planifiées le jour J"""
         
         now = datetime.now()
+        today = now.date()
+        
+        # Récupérer toutes les exécutions prévues pour aujourd'hui
         executions_to_execute = db.query(ScheduledDeliveryExecution).join(ScheduledDelivery).filter(
             ScheduledDeliveryExecution.status == "pending",
-            ScheduledDeliveryExecution.planned_date <= now,
-            ScheduledDelivery.auto_create_delivery == True
+            func.date(ScheduledDeliveryExecution.planned_date) == today,
+            ScheduledDelivery.status == ScheduledDeliveryStatus.active
         ).all()
         
         for execution in executions_to_execute:
-            ScheduledDeliveryService.execute_scheduled_delivery(db, execution.id)
+            try:
+                # Créer la livraison réelle automatiquement le jour J
+                delivery = ScheduledDeliveryService.execute_scheduled_delivery(db, execution.id)
+                if delivery:
+                    logger.info(f"Livraison automatiquement créée pour l'exécution {execution.id}: livraison {delivery.id}")
+                    
+                    # Notifier les coursiers disponibles qu'une nouvelle livraison est disponible
+                    ScheduledDeliveryService._notify_available_couriers(db, delivery)
+                    
+            except Exception as e:
+                logger.error(f"Erreur lors de l'auto-exécution {execution.id}: {e}")
+
+    @staticmethod
+    def _notify_available_couriers(db: Session, delivery):
+        """Notifier les coursiers disponibles qu'une nouvelle livraison planifiée est disponible"""
+        
+        from ..services.matching import MatchingService
+        from ..services.notification import send_notification
+        
+        try:
+            # Trouver les meilleurs coursiers pour cette livraison
+            best_couriers = MatchingService.find_best_couriers(db, delivery, limit=10)
+            
+            for courier_info in best_couriers:
+                courier_id = courier_info['courier_id']
+                message = f"Nouvelle livraison planifiée disponible ! Distance: {courier_info['distance']:.1f}km, Prix: {delivery.proposed_price}€"
+                
+                send_notification(
+                    db, 
+                    courier_id, 
+                    "Livraison Planifiée Disponible", 
+                    message,
+                    notification_type="delivery_available",
+                    data={"delivery_id": delivery.id, "is_scheduled": True}
+                )
+                
+        except Exception as e:
+            logger.error(f"Erreur lors de la notification des coursiers: {e}")

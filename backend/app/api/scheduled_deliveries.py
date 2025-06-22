@@ -390,10 +390,116 @@ async def auto_execute_scheduled_deliveries(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Auto-exécuter les livraisons planifiées (admin seulement)"""
+    """Auto-exécuter les livraisons planifiées le jour J (admin seulement)"""
     
     if current_user.role not in ["admin", "manager"]:
         raise HTTPException(status_code=403, detail="Seuls les administrateurs peuvent déclencher l'auto-exécution")
     
     background_tasks.add_task(ScheduledDeliveryService.auto_execute_deliveries, db)
-    return {"success": True, "message": "Auto-exécution en cours"}
+    return {"success": True, "message": "Création automatique des livraisons du jour en cours"}
+
+@router.post("/scheduled-deliveries/{execution_id}/coordinate")
+async def coordinate_scheduled_delivery(
+    execution_id: int,
+    coordination_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Coordination entre client et coursier pour une livraison planifiée"""
+    
+    execution = db.query(ScheduledDeliveryExecution).filter(
+        ScheduledDeliveryExecution.id == execution_id
+    ).first()
+    
+    if not execution:
+        raise HTTPException(status_code=404, detail="Exécution non trouvée")
+    
+    schedule = execution.scheduled_delivery
+    
+    # Vérifier les permissions
+    if current_user.role not in ["admin", "manager", "courier"] and schedule.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    try:
+        # Enregistrer les détails de coordination
+        coordination_notes = coordination_data.get('notes', '')
+        confirmed_time = coordination_data.get('confirmed_time')
+        
+        # Mettre à jour les instructions si nécessaires
+        if coordination_notes:
+            if current_user.role == "courier":
+                schedule.special_instructions = f"{schedule.special_instructions or ''}\n[Coursier J-1]: {coordination_notes}".strip()
+            else:
+                schedule.special_instructions = f"{schedule.special_instructions or ''}\n[Client J-1]: {coordination_notes}".strip()
+        
+        # Confirmer l'heure si fournie
+        if confirmed_time:
+            from datetime import datetime
+            new_time = datetime.fromisoformat(confirmed_time.replace('Z', '+00:00'))
+            execution.planned_date = new_time
+        
+        db.commit()
+        
+        # Notifier l'autre partie de la coordination
+        if current_user.role == "courier":
+            # Notifier le client
+            message = f"Le coursier a confirmé la livraison planifiée pour {execution.planned_date.strftime('%d/%m/%Y à %H:%M')}"
+            if coordination_notes:
+                message += f"\nNote du coursier: {coordination_notes}"
+                
+            send_notification(
+                db,
+                schedule.client_id,
+                "Coordination Livraison Planifiée",
+                message,
+                notification_type="coordination_update"
+            )
+        else:
+            # Notifier les coursiers intéressés (récupérer depuis les notifications précédentes)
+            message = f"Le client a mis à jour les détails de la livraison planifiée pour {execution.planned_date.strftime('%d/%m/%Y à %H:%M')}"
+            if coordination_notes:
+                message += f"\nNote du client: {coordination_notes}"
+        
+        return {
+            "success": True,
+            "message": "Coordination enregistrée avec succès",
+            "execution": execution
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur lors de la coordination: {str(e)}")
+
+@router.get("/scheduled-deliveries/{execution_id}/coordination-status")
+async def get_coordination_status(
+    execution_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer le statut de coordination d'une exécution"""
+    
+    execution = db.query(ScheduledDeliveryExecution).filter(
+        ScheduledDeliveryExecution.id == execution_id
+    ).first()
+    
+    if not execution:
+        raise HTTPException(status_code=404, detail="Exécution non trouvée")
+    
+    schedule = execution.scheduled_delivery
+    
+    # Vérifier les permissions
+    if current_user.role not in ["admin", "manager", "courier"] and schedule.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    # Calculer si c'est J-1
+    today = datetime.now().date()
+    execution_date = execution.planned_date.date()
+    is_j_minus_1 = (execution_date - today).days == 1
+    
+    return {
+        "success": True,
+        "execution": execution,
+        "schedule": schedule,
+        "is_j_minus_1": is_j_minus_1,
+        "coordination_window_open": is_j_minus_1,
+        "special_instructions": schedule.special_instructions
+    }
