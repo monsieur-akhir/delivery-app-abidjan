@@ -1,7 +1,7 @@
 """merge_heads
 
 Revision ID: 251709e76da3
-Revises: 2888a65bd591, 2b84e36b1f70
+Revises: 5b4ad1ee1534, 5ab642752a6f
 Create Date: 2025-06-16 11:27:38.330878
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '251709e76da3'
-down_revision = ('2888a65bd591', '2b84e36b1f70')
+down_revision = ('5b4ad1ee1534', '5ab642752a6f')
 branch_labels = None
 depends_on = None
 

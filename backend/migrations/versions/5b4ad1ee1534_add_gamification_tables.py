@@ -1,7 +1,7 @@
 """add_gamification_tables
 
 Revision ID: 5b4ad1ee1534
-Revises: 5ab642752a6f
+Revises: 2888a65bd591
 Create Date: 2024-03-19 10:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = '5b4ad1ee1534'
-down_revision: Union[str, None] = '5ab642752a6f'
+down_revision: Union[str, None] = '2888a65bd591'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

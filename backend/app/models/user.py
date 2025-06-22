@@ -49,7 +49,16 @@ class User(Base):
     client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="[Delivery.client_id]")
     courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="[Delivery.courier_id]")
     # Relations pour les livraisons planifiées
-    scheduled_deliveries = relationship("ScheduledDelivery", back_populates="client")
+    scheduled_deliveries_as_client = relationship(
+        "ScheduledDelivery",
+        back_populates="client",
+        foreign_keys="ScheduledDelivery.client_id"
+    )
+    scheduled_deliveries_as_courier = relationship(
+        "ScheduledDelivery",
+        back_populates="courier",
+        foreign_keys="ScheduledDelivery.courier_id"
+    )
 
     # Relations pour les négociations
     client_negotiations = relationship("ScheduledDeliveryNegotiation", 
@@ -80,8 +89,6 @@ class User(Base):
     #gamification_profile = relationship("GamificationProfile", back_populates="user", uselist=False)
     #wallet = relationship("Wallet", back_populates="user", uselist=False)
     business_profile = relationship("BusinessProfile", back_populates="user", uselist=False)
-    scheduled_deliveries_as_client = relationship("ScheduledDelivery", back_populates="client", foreign_keys="ScheduledDelivery.client_id")
-    scheduled_deliveries_as_courier = relationship("ScheduledDelivery", back_populates="courier", foreign_keys="ScheduledDelivery.courier_id")
     multi_destination_deliveries_as_client = relationship("MultiDestinationDelivery", back_populates="client", foreign_keys="MultiDestinationDelivery.client_id")
     multi_destination_deliveries_as_courier = relationship("MultiDestinationDelivery", back_populates="courier", foreign_keys="MultiDestinationDelivery.courier_id")
 
@@ -127,39 +134,3 @@ class CourierProfile(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     user = relationship("User", back_populates="courier_profile")
-```# Relations spécifiques aux véhicules des courriers
-    courier_vehicles = relationship("CourierVehicle", back_populates="courier")
-
-class MultiDestinationDelivery(Base):
-    __tablename__ = "multi_destination_deliveries"
-
-    id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(Integer, ForeignKey("users.id"))
-    courier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    start_location_lat = Column(Float, nullable=False)
-    start_location_lng = Column(Float, nullable=False)
-    start_address = Column(String, nullable=False)
-    delivery_fee = Column(Float, nullable=False)
-    status = Column(String, default="pending")
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    client = relationship("User", back_populates="multi_destination_deliveries_as_client", foreign_keys=[client_id])
-    courier = relationship("User", back_populates="multi_destination_deliveries_as_courier", foreign_keys=[courier_id])
-    destinations = relationship("DeliveryDestination", back_populates="multi_destination_delivery")
-
-class DeliveryDestination(Base):
-    __tablename__ = "delivery_destinations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    multi_destination_delivery_id = Column(Integer, ForeignKey("multi_destination_deliveries.id"))
-    destination_location_lat = Column(Float, nullable=False)
-    destination_location_lng = Column(Float, nullable=False)
-    destination_address = Column(String, nullable=False)
-    recipient_name = Column(String, nullable=False)
-    recipient_phone = Column(String, nullable=False)
-    package_description = Column(String, nullable=True)
-    arrival_time = Column(DateTime(timezone=True), nullable=True)
-    delivery_confirmation_code = Column(String, nullable=True)
-
-    multi_destination_delivery = relationship("MultiDestinationDelivery", back_populates="destinations")

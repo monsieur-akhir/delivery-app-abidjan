@@ -204,3 +204,14 @@ mobile/dist/
 # Fichiers à ignorer
 *.log
 *.env
+backend/.env.dev
+*.env.dev
+
+# Fichiers d'environnement de développement
+*.env*
+*.env.*
+*.env.dev
+*.env.dev.*
+*.dev
+/backend
+backend/.env.dev

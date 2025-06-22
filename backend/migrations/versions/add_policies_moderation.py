@@ -1,4 +1,3 @@
-
 """add policies and moderation
 
 Revision ID: 4d5e6f7g8h9i
@@ -9,6 +8,9 @@ Create Date: 2024-01-20 13:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import inspect
+from sqlalchemy import text
+from migrations.alembic_utils import safe_create_table, safe_create_index, safe_add_column
 
 # revision identifiers, used by Alembic.
 revision = '4d5e6f7g8h9i'
@@ -17,45 +19,74 @@ branch_labels = None
 depends_on = None
 
 def upgrade():
-    # Create policies table
-    op.create_table('policies',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(255), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('category', sa.String(100), nullable=False),
-        sa.Column('config', postgresql.JSON(), nullable=False),
-        sa.Column('status', sa.String(50), nullable=False, server_default='draft'),
-        sa.Column('version', sa.Integer(), nullable=False, server_default='1'),
-        sa.Column('effective_date', sa.DateTime(), nullable=True),
-        sa.Column('expiry_date', sa.DateTime(), nullable=True),
-        sa.Column('created_by_id', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['created_by_id'], ['users.id'], ),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_policies_id'), 'policies', ['id'], unique=False)
-    op.create_index(op.f('ix_policies_category'), 'policies', ['category'], unique=False)
-    op.create_index(op.f('ix_policies_status'), 'policies', ['status'], unique=False)
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    tables = inspector.get_table_names()
+    if 'policies' not in tables:
+        safe_create_table(
+            op,
+            'policies',
+            sa.Column('id', sa.Integer(), primary_key=True),
+            sa.Column('name', sa.String(255), nullable=False),
+            sa.Column('description', sa.Text(), nullable=True),
+            sa.Column('category', sa.String(100), nullable=False),
+            sa.Column('config', sa.JSON(), nullable=False),
+            sa.Column('status', sa.String(50), nullable=False, server_default='draft'),
+            sa.Column('version', sa.Integer(), nullable=False, server_default='1'),
+            sa.Column('effective_date', sa.DateTime(), nullable=True),
+            sa.Column('expiry_date', sa.DateTime(), nullable=True),
+            sa.Column('created_by_id', sa.Integer(), sa.ForeignKey('users.id'), nullable=False),
+            sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
+            sa.Column('updated_at', sa.DateTime(), nullable=True)
+        )
+    conn = op.get_bind()
+    index_exists = conn.execute(text("""
+        SELECT 1 FROM pg_indexes WHERE tablename = 'policies' AND indexname = 'ix_policies_id'
+    """)).fetchone()
+    if not index_exists:
+        safe_create_index(op, 'ix_policies_id', 'policies', ['id'], unique=False)
+    conn = op.get_bind()
+    # Vérifie que la colonne 'category' existe dans la table 'policies' avant de créer l'index
+    col_exists = conn.execute(text("""
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='policies' AND column_name='category'
+    """)).fetchone()
+    if col_exists:
+        index_exists = conn.execute(text("""
+            SELECT 1 FROM pg_indexes WHERE tablename = 'policies' AND indexname = 'ix_policies_category'
+        """)).fetchone()
+        if not index_exists:
+            safe_create_index(op, 'ix_policies_category', 'policies', ['category'], unique=False)
+    safe_create_index(op, op.f('ix_policies_status'), 'policies', ['status'], unique=False)
 
     # Create policy_history table
-    op.create_table('policy_history',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('policy_id', sa.Integer(), nullable=False),
-        sa.Column('version', sa.Integer(), nullable=False),
-        sa.Column('config', postgresql.JSON(), nullable=False),
-        sa.Column('status', sa.String(50), nullable=False),
-        sa.Column('changed_by_id', sa.Integer(), nullable=False),
-        sa.Column('change_reason', sa.Text(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
-        sa.ForeignKeyConstraint(['policy_id'], ['policies.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['changed_by_id'], ['users.id'], ),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_policy_history_id'), 'policy_history', ['id'], unique=False)
+    if 'policy_history' not in tables:
+        safe_create_table(
+            op,
+            'policy_history',
+            sa.Column('id', sa.Integer(), primary_key=True),
+            sa.Column('policy_id', sa.Integer(), nullable=False),
+            sa.Column('version', sa.Integer(), nullable=False),
+            sa.Column('config', sa.JSON(), nullable=False),
+            sa.Column('status', sa.String(50), nullable=False),
+            sa.Column('changed_by_id', sa.Integer(), nullable=False),
+            sa.Column('change_reason', sa.Text(), nullable=True),
+            sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
+            sa.ForeignKeyConstraint(['policy_id'], ['policies.id'], ondelete='CASCADE'),
+            sa.ForeignKeyConstraint(['changed_by_id'], ['users.id'])
+        )
+    conn = op.get_bind()
+    index_exists = conn.execute(text("""
+        SELECT 1 FROM pg_indexes WHERE tablename = 'policy_history' AND indexname = 'ix_policy_history_id'
+    """)).fetchone()
+    if not index_exists:
+        safe_create_index(op, 'ix_policy_history_id', 'policy_history', ['id'], unique=False)
+    safe_create_index(op, op.f('ix_policy_history_id'), 'policy_history', ['id'], unique=False)
 
     # Create moderation_rules table
-    op.create_table('moderation_rules',
+    safe_create_table(
+        op,
+        'moderation_rules',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(255), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
@@ -70,11 +101,20 @@ def upgrade():
         sa.ForeignKeyConstraint(['created_by_id'], ['users.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_moderation_rules_id'), 'moderation_rules', ['id'], unique=False)
-    op.create_index(op.f('ix_moderation_rules_rule_type'), 'moderation_rules', ['rule_type'], unique=False)
+    safe_create_index(op, op.f('ix_moderation_rules_id'), 'moderation_rules', ['id'], unique=False)
+    # Vérification de l'existence de la colonne 'rule_type' avant de créer l'index
+    conn = op.get_bind()
+    col_exists = conn.execute(text("""
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='moderation_rules' AND column_name='rule_type'
+    """)).fetchone()
+    if col_exists:
+        safe_create_index(op, op.f('ix_moderation_rules_rule_type'), 'moderation_rules', ['rule_type'], unique=False)
 
     # Create moderation_actions table
-    op.create_table('moderation_actions',
+    safe_create_table(
+        op,
+        'moderation_actions',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('rule_id', sa.Integer(), nullable=False),
         sa.Column('target_user_id', sa.Integer(), nullable=False),
@@ -93,8 +133,8 @@ def upgrade():
         sa.ForeignKeyConstraint(['performed_by_id'], ['users.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_moderation_actions_id'), 'moderation_actions', ['id'], unique=False)
-    op.create_index(op.f('ix_moderation_actions_target_user_id'), 'moderation_actions', ['target_user_id'], unique=False)
+    safe_create_index(op, op.f('ix_moderation_actions_id'), 'moderation_actions', ['id'], unique=False)
+    safe_create_index(op, op.f('ix_moderation_actions_target_user_id'), 'moderation_actions', ['target_user_id'], unique=False)
 
 def downgrade():
     op.drop_index(op.f('ix_moderation_actions_target_user_id'), table_name='moderation_actions')

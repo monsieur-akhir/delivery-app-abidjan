@@ -1,4 +1,3 @@
-
 """enhance deliveries fields
 
 Revision ID: 6f7g8h9i0j1k
@@ -9,6 +8,7 @@ Create Date: 2024-01-20 15:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from migrations.alembic_utils import safe_add_column
 
 # revision identifiers, used by Alembic.
 revision = '6f7g8h9i0j1k'
@@ -19,28 +19,28 @@ depends_on = None
 def upgrade():
     # Add missing fields to deliveries table
     try:
-        op.add_column('deliveries', sa.Column('recipient_name', sa.String(255), nullable=True))
-        op.add_column('deliveries', sa.Column('recipient_phone', sa.String(20), nullable=True))
-        op.add_column('deliveries', sa.Column('package_value', sa.Float(), nullable=True))
-        op.add_column('deliveries', sa.Column('package_weight', sa.Float(), nullable=True))
-        op.add_column('deliveries', sa.Column('package_dimensions', sa.String(100), nullable=True))
-        op.add_column('deliveries', sa.Column('delivery_latitude', sa.Float(), nullable=True))
-        op.add_column('deliveries', sa.Column('delivery_longitude', sa.Float(), nullable=True))
-        op.add_column('deliveries', sa.Column('pickup_latitude', sa.Float(), nullable=True))
-        op.add_column('deliveries', sa.Column('pickup_longitude', sa.Float(), nullable=True))
-        op.add_column('deliveries', sa.Column('distance_km', sa.Float(), nullable=True))
-        op.add_column('deliveries', sa.Column('estimated_duration_minutes', sa.Integer(), nullable=True))
-        op.add_column('deliveries', sa.Column('actual_duration_minutes', sa.Integer(), nullable=True))
-        op.add_column('deliveries', sa.Column('priority_level', sa.String(20), nullable=False, server_default='normal'))
-        op.add_column('deliveries', sa.Column('delivery_type', sa.String(50), nullable=False, server_default='standard'))
-        op.add_column('deliveries', sa.Column('payment_status', sa.String(50), nullable=False, server_default='pending'))
-        op.add_column('deliveries', sa.Column('proof_of_delivery', sa.Text(), nullable=True))
-        op.add_column('deliveries', sa.Column('delivery_notes', sa.Text(), nullable=True))
-        op.add_column('deliveries', sa.Column('tracking_number', sa.String(100), nullable=True))
-        op.add_column('deliveries', sa.Column('is_fragile', sa.Boolean(), nullable=False, server_default='false'))
-        op.add_column('deliveries', sa.Column('requires_signature', sa.Boolean(), nullable=False, server_default='false'))
-        op.add_column('deliveries', sa.Column('weather_conditions', sa.String(100), nullable=True))
-        op.add_column('deliveries', sa.Column('traffic_conditions', sa.String(100), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('recipient_name', sa.String(255), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('recipient_phone', sa.String(20), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('package_value', sa.Float(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('package_weight', sa.Float(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('package_dimensions', sa.String(100), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('delivery_latitude', sa.Float(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('delivery_longitude', sa.Float(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('pickup_latitude', sa.Float(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('pickup_longitude', sa.Float(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('distance_km', sa.Float(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('estimated_duration_minutes', sa.Integer(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('actual_duration_minutes', sa.Integer(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('priority_level', sa.String(20), nullable=False, server_default='normal'))
+        safe_add_column(op, 'deliveries', sa.Column('delivery_type', sa.String(50), nullable=False, server_default='standard'))
+        safe_add_column(op, 'deliveries', sa.Column('payment_status', sa.String(50), nullable=False, server_default='pending'))
+        safe_add_column(op, 'deliveries', sa.Column('proof_of_delivery', sa.Text(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('delivery_notes', sa.Text(), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('tracking_number', sa.String(100), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('is_fragile', sa.Boolean(), nullable=False, server_default='false'))
+        safe_add_column(op, 'deliveries', sa.Column('requires_signature', sa.Boolean(), nullable=False, server_default='false'))
+        safe_add_column(op, 'deliveries', sa.Column('weather_conditions', sa.String(100), nullable=True))
+        safe_add_column(op, 'deliveries', sa.Column('traffic_conditions', sa.String(100), nullable=True))
     except Exception as e:
         print(f"Some columns might already exist: {e}")
 

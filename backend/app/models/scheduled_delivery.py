@@ -51,6 +51,7 @@ class ScheduledDelivery(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("users.id"))
+    courier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     # Informations de base de la livraison
     title = Column(String, nullable=False)
@@ -108,7 +109,8 @@ class ScheduledDelivery(Base):
     total_executions = Column(Integer, default=0)
 
     # Relations
-    client = relationship("User", back_populates="scheduled_deliveries")
+    client = relationship("User", back_populates="scheduled_deliveries_as_client", foreign_keys=[client_id])
+    courier = relationship("User", back_populates="scheduled_deliveries_as_courier", foreign_keys=[courier_id])
     executions = relationship("ScheduledDeliveryExecution", back_populates="scheduled_delivery")
 
 class ScheduledDeliveryExecution(Base):

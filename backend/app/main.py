@@ -18,7 +18,8 @@ from .api import (
     wallet, traffic,
     manager, transport, assistant, courier, complaints, business, business_analytics,
     support, zones, promotions, scheduled_deliveries, negotiations,
-    multi_destination_deliveries
+    multi_destination_deliveries,
+    market
 )
 from .websockets import tracking
 from .services.geolocation import get_google_places_suggestions

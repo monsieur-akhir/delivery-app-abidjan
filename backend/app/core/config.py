@@ -122,7 +122,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")AX_ATTEMPTS", "3"))
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")
 
     # SMTP/Mail générique (fallback)
     MAIL_HOST: str = os.getenv("MAIL_HOST", "smtp-relay.brevo.com")
@@ -140,7 +140,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "noreply@livraison-abidjan.com")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")
 
     class Config:
         env_file = ".env"
