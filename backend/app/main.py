@@ -65,7 +65,7 @@ app.include_router(business_analytics.router, prefix=f"{settings.API_V1_STR}/bus
 app.include_router(support.router, prefix=f"{settings.API_V1_STR}/support", tags=["Support"])
 app.include_router(zones.router, prefix=f"{settings.API_V1_STR}/zones", tags=["Zones"])
 app.include_router(promotions.router, prefix=f"{settings.API_V1_STR}/promotions", tags=["Promotions"])
-app.include_router(scheduled_deliveries.router, prefix="/api/scheduled-deliveries", tags=["scheduled-deliveries"])
+app.include_router(scheduled_deliveries.router, prefix=f"{settings.API_V1_STR}/scheduled-deliveries", tags=["scheduled-deliveries"])
 
 # Endpoint WebSocket pour le tracking en temps réel
 @app.websocket("/ws/tracking/{delivery_id}")

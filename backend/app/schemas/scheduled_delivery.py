@@ -1,29 +1,29 @@
 
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, validator
+from typing import Optional, List
 from datetime import datetime
-import enum
-
-from .user import UserResponse
-from .delivery import DeliveryResponse
+from enum import Enum
 
 # === ENUMS ===
-
-class RecurrenceType(str, enum.Enum):
+class RecurrenceType(str, Enum):
     none = "none"
     daily = "daily"
     weekly = "weekly"
     monthly = "monthly"
-    custom = "custom"
 
-class ScheduledDeliveryStatus(str, enum.Enum):
+class ScheduledDeliveryStatus(str, Enum):
     active = "active"
     paused = "paused"
     completed = "completed"
     cancelled = "cancelled"
 
-# === BASE SCHEMAS ===
+class ExecutionStatus(str, Enum):
+    pending = "pending"
+    created = "created"
+    failed = "failed"
+    skipped = "skipped"
 
+# === BASE ===
 class ScheduledDeliveryBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -52,12 +52,11 @@ class ScheduledDeliveryBase(BaseModel):
     special_instructions: Optional[str] = None
 
 # === CREATE / UPDATE ===
-
 class ScheduledDeliveryCreate(ScheduledDeliveryBase):
     scheduled_date: datetime
     recurrence_type: RecurrenceType = RecurrenceType.none
     recurrence_interval: Optional[int] = 1
-    recurrence_days: Optional[List[int]] = None  # [1,2,3,4,5] pour lun-ven
+    recurrence_days: Optional[List[int]] = None  # Jours de la semaine [1-7]
     end_date: Optional[datetime] = None
     max_occurrences: Optional[int] = None
     notification_advance_hours: Optional[int] = 24
@@ -65,21 +64,21 @@ class ScheduledDeliveryCreate(ScheduledDeliveryBase):
 
     @validator('recurrence_days')
     def validate_recurrence_days(cls, v, values):
-        if v and values.get('recurrence_type') == RecurrenceType.weekly:
+        if v is not None:
             if not all(1 <= day <= 7 for day in v):
                 raise ValueError('Les jours de la semaine doivent être entre 1 et 7')
         return v
 
-    @validator('scheduled_date')
-    def validate_scheduled_date(cls, v):
-        if v <= datetime.now():
-            raise ValueError('La date de planification doit être dans le futur')
+    @validator('recurrence_interval')
+    def validate_recurrence_interval(cls, v):
+        if v is not None and v < 1:
+            raise ValueError('L\'intervalle de récurrence doit être supérieur à 0')
         return v
 
-    @validator('end_date')
-    def validate_end_date(cls, v, values):
-        if v and values.get('scheduled_date') and v <= values['scheduled_date']:
-            raise ValueError('La date de fin doit être après la date de début')
+    @validator('max_occurrences')
+    def validate_max_occurrences(cls, v):
+        if v is not None and v < 1:
+            raise ValueError('Le nombre maximum d\'occurrences doit être supérieur à 0')
         return v
 
 class ScheduledDeliveryUpdate(BaseModel):
@@ -119,13 +118,18 @@ class ScheduledDeliveryUpdate(BaseModel):
     status: Optional[ScheduledDeliveryStatus] = None
 
 # === RESPONSE ===
+class ClientInfo(BaseModel):
+    id: int
+    name: str
+    email: str
+    phone: Optional[str] = None
 
 class ScheduledDeliveryResponse(ScheduledDeliveryBase):
     id: int
     client_id: int
     scheduled_date: datetime
     recurrence_type: RecurrenceType
-    recurrence_interval: int
+    recurrence_interval: Optional[int] = None
     recurrence_days: Optional[List[int]] = None
     end_date: Optional[datetime] = None
     max_occurrences: Optional[int] = None
@@ -137,44 +141,43 @@ class ScheduledDeliveryResponse(ScheduledDeliveryBase):
     last_executed_at: Optional[datetime] = None
     next_execution_at: Optional[datetime] = None
     total_executions: int
-
-    # Relations
-    client: Optional[Dict[str, Any]] = None
-    upcoming_executions: Optional[List[Dict[str, Any]]] = None
+    client: ClientInfo
 
     class Config:
         from_attributes = True
 
-class ScheduledDeliveryExecutionResponse(BaseModel):
-    id: int
-    scheduled_delivery_id: int
-    delivery_id: Optional[int] = None
-    planned_date: datetime
-    executed_date: Optional[datetime] = None
-    status: str
-    error_message: Optional[str] = None
-    created_at: datetime
-    notification_sent_at: Optional[datetime] = None
-    delivery: Optional[DeliveryResponse] = None
-
-    class Config:
-        from_attributes = True
-
-# === AUTRES SCHÉMAS ===
-
+# === CALENDAR ===
 class CalendarEvent(BaseModel):
     id: int
     title: str
     start: datetime
     end: datetime
-    type: str = "scheduled_delivery"
     status: str
     client_name: str
     pickup_address: str
     delivery_address: str
     recurrence_type: str
-    next_occurrences: Optional[List[datetime]] = None
 
+# === BULK OPERATIONS ===
+class BulkScheduleCreate(BaseModel):
+    schedules: List[ScheduledDeliveryCreate]
+    apply_to_all: Optional[dict] = None
+
+# === EXECUTION ===
+class ScheduledDeliveryExecutionResponse(BaseModel):
+    id: int
+    scheduled_delivery_id: int
+    planned_date: datetime
+    executed_date: Optional[datetime] = None
+    delivery_id: Optional[int] = None
+    status: ExecutionStatus
+    error_message: Optional[str] = None
+    notification_sent_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+# === STATISTICS ===
 class ScheduledDeliveryStats(BaseModel):
     total_scheduled: int
     active_schedules: int
@@ -184,7 +187,3 @@ class ScheduledDeliveryStats(BaseModel):
     upcoming_executions_this_week: int
     success_rate: float
     most_common_recurrence: str
-
-class BulkScheduleCreate(BaseModel):
-    schedules: List[ScheduledDeliveryCreate]
-    apply_to_all: Optional[Dict[str, Any]] = None  # Paramètres à appliquer à tous

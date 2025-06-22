@@ -20,6 +20,29 @@ class ScheduledDeliveryStatus(str, enum.Enum):
     completed = "completed"  # Terminée
     cancelled = "cancelled"  # Annulée
 
+from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey, Enum, JSON, func
+from sqlalchemy.orm import relationship
+from enum import Enum as PyEnum
+from ..db.base import Base
+
+class RecurrenceType(PyEnum):
+    none = "none"
+    daily = "daily"
+    weekly = "weekly"
+    monthly = "monthly"
+
+class ScheduledDeliveryStatus(PyEnum):
+    active = "active"
+    paused = "paused"
+    completed = "completed"
+    cancelled = "cancelled"
+
+class ExecutionStatus(PyEnum):
+    pending = "pending"
+    created = "created"
+    failed = "failed"
+    skipped = "skipped"
+
 class ScheduledDelivery(Base):
     __tablename__ = "scheduled_deliveries"
 
@@ -84,6 +107,23 @@ class ScheduledDelivery(Base):
     # Relations
     client = relationship("User", back_populates="scheduled_deliveries")
     executions = relationship("ScheduledDeliveryExecution", back_populates="scheduled_delivery")
+
+class ScheduledDeliveryExecution(Base):
+    __tablename__ = "scheduled_delivery_executions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    scheduled_delivery_id = Column(Integer, ForeignKey("scheduled_deliveries.id"))
+    planned_date = Column(DateTime(timezone=True), nullable=False)
+    executed_date = Column(DateTime(timezone=True), nullable=True)
+    delivery_id = Column(Integer, ForeignKey("deliveries.id"), nullable=True)
+    status = Column(Enum(ExecutionStatus), default=ExecutionStatus.pending)
+    error_message = Column(Text, nullable=True)
+    notification_sent_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relations
+    scheduled_delivery = relationship("ScheduledDelivery", back_populates="executions")
+    delivery = relationship("Delivery")
 
 class ScheduledDeliveryExecution(Base):
     __tablename__ = "scheduled_delivery_executions"
