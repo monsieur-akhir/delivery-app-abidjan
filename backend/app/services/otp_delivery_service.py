@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from ..models.delivery import Delivery, OTPValidationType
 from ..models.user import User
 from ..services.sms_service import SMSService
+from ..services.email_service import EmailService
 from ..core.exceptions import BadRequestError, NotFoundError
 from ..core.config import settings
 
@@ -17,6 +18,7 @@ class OTPDeliveryService:
     def __init__(self, db: Session):
         self.db = db
         self.sms_service = SMSService()
+        self.email_service = EmailService()
 
     def generate_and_send_otp(self, delivery_id: int) -> Dict[str, Any]:
         """
@@ -49,19 +51,57 @@ class OTPDeliveryService:
                 message=message
             )
 
-            if sms_sent:
-                delivery.otp_validation_type = OTPValidationType.sms
+            # Envoyer par email si disponible
+            email_sent = False
+            client_email = None
+            if delivery.client and delivery.client.email:
+                client_email = delivery.client.email
+                try:
+                    email_content = f"""
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color: #2E86AB;">Code de réception de livraison</h2>
+                        <p>Votre livraison #{delivery.id} est prête à être récupérée.</p>
+                        <p>Code de réception :</p>
+                        <div style="background: #f8f9fa; padding: 20px; text-align: center; margin: 20px 0;">
+                            <h1 style="color: #2E86AB; font-size: 32px; margin: 0; letter-spacing: 8px;">{otp_code}</h1>
+                        </div>
+                        <p>Ce code expire dans 15 minutes.</p>
+                        <p><strong>Adresse de livraison:</strong> {delivery.delivery_address}</p>
+                        <p style="color: #666;">Communiquez ce code au livreur pour confirmer la réception.</p>
+                    </div>
+                    """
+                    
+                    email_sent = self.email_service.send_email(
+                        to_email=client_email,
+                        subject=f"Code de réception - Livraison #{delivery.id}",
+                        html_content=email_content
+                    )
+                except Exception as e:
+                    logger.error(f"Erreur envoi email OTP livraison: {str(e)}")
+                    email_sent = False
+
+            # Au moins un canal doit fonctionner
+            if sms_sent or email_sent:
+                delivery.otp_validation_type = OTPValidationType.sms if sms_sent else OTPValidationType.whatsapp
                 self.db.commit()
                 
-                logger.info(f"OTP envoyé pour la livraison {delivery_id}")
+                channels_used = []
+                if sms_sent:
+                    channels_used.append("SMS")
+                if email_sent:
+                    channels_used.append("Email")
+                
+                logger.info(f"OTP envoyé pour la livraison {delivery_id} via: {', '.join(channels_used)}")
                 return {
                     "success": True,
-                    "message": "Code OTP envoyé avec succès",
+                    "message": f"Code OTP envoyé via {' et '.join(channels_used)}",
                     "phone_masked": self._mask_phone_number(delivery.delivery_contact_phone),
+                    "email_masked": self._mask_email(client_email) if client_email else None,
+                    "channels_used": channels_used,
                     "expires_at": delivery.otp_sent_at + timedelta(minutes=15)
                 }
             else:
-                raise BadRequestError("Impossible d'envoyer le SMS")
+                raise BadRequestError("Impossible d'envoyer l'OTP par SMS ou email")
 
         except Exception as e:
             self.db.rollback()
@@ -210,3 +250,13 @@ class OTPDeliveryService:
         if len(phone) < 4:
             return phone
         return phone[:2] + "*" * (len(phone) - 4) + phone[-2:]
+
+    def _mask_email(self, email: str) -> str:
+        """Masque un email pour l'affichage"""
+        if not email or "@" not in email:
+            return email
+        username, domain = email.split("@", 1)
+        if len(username) <= 2:
+            return email
+        masked_username = username[:2] + "*" * (len(username) - 2)
+        return f"{masked_username}@{domain}"

@@ -33,6 +33,9 @@ class OTPResponse(BaseModel):
     success: bool = Field(..., description="Operation success status")
     message: str = Field(..., description="Response message")
     expires_at: Optional[datetime] = Field(None, description="OTP expiry time")
+    otp_id: Optional[int] = Field(None, description="OTP ID")
+    channels_used: Optional[list] = Field(default=[], description="Channels used to send OTP")
+    dev_otp_code: Optional[str] = Field(None, description="OTP code for development")
 
 class OTPVerificationResponse(BaseModel):
     success: bool = Field(..., description="Verification success status")

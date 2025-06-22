@@ -149,12 +149,42 @@ class OTPService:
         # Send OTP via email if provided (secondary method)
         email_sent = True
         if request.email:
-            if settings.ENVIRONMENT == "development":
-                logger.info(f"📧 Email envoyé: {'✅ Succès' if email_sent else '❌ Échec'}")
+            try:
+                email_sent = self.send_otp_via_email(request.email, otp.code, request.otp_type)
+                if settings.ENVIRONMENT == "development":
+                    logger.info(f"📧 Email envoyé: {'✅ Succès' if email_sent else '❌ Échec'}")
+            except Exception as e:
+                email_sent = False
+                if settings.ENVIRONMENT == "development":
+                    logger.error(f"📧 Erreur envoi email: {str(e)}")
         
+        # Au moins un canal doit fonctionner
         if not sms_sent and not email_sent:
             if settings.ENVIRONMENT == "development":
-                logger.error(f"❌ ÉCHEC TOTAL - Impossible d'envoyer OTP pour: {request.phone}")
+                logger.error("❌ ERREUR - Aucun canal de communication disponible")
+            raise BadRequestError("Impossible d'envoyer l'OTP. Veuillez vérifier votre numéro de téléphone et email.")
+        
+        self.db.commit()
+        
+        # Préparer la réponse
+        response_data = {
+            "success": True,
+            "message": "Code OTP envoyé avec succès",
+            "otp_id": otp.id,
+            "expires_at": otp.expires_at,
+            "channels_used": []
+        }
+        
+        if sms_sent:
+            response_data["channels_used"].append("sms")
+        if email_sent and request.email:
+            response_data["channels_used"].append("email")
+            
+        if settings.ENVIRONMENT == "development":
+            response_data["dev_otp_code"] = otp.code
+            logger.info(f"🎯 SUCCÈS - OTP envoyé via: {', '.join(response_data['channels_used'])}")
+        
+        return OTPResponse(**response_data)ror(f"❌ ÉCHEC TOTAL - Impossible d'envoyer OTP pour: {request.phone}")
             raise BadRequestError("Erreur lors de l'envoi du code OTP")
         
         if settings.ENVIRONMENT == "development":
