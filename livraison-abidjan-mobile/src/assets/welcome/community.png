@@ -1,2 +1,35 @@
 
-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFx0lEQVR4nO2da2wUVRTHf7u0tLQUpFQeQhEVFYyKCgoiPuKjiQ8SH/FFfMQYY4wxxhjjI8b4iDHGGGN8xBhjjDHGGGN8xBhjjDHGGGN8xBhjjDHGGGN8xBhjjDHGGGN8xBhjjA==
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="communityGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#66BB6A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="300" height="200" fill="#f8f9fa"/>
+  
+  <!-- Community of people -->
+  <g transform="translate(50, 50)">
+    <!-- Person 1 -->
+    <circle cx="40" cy="30" r="15" fill="url(#communityGradient)"/>
+    <rect x="30" y="45" width="20" height="30" fill="url(#communityGradient)" rx="10"/>
+    
+    <!-- Person 2 -->
+    <circle cx="100" cy="30" r="15" fill="#2196F3"/>
+    <rect x="90" y="45" width="20" height="30" fill="#2196F3" rx="10"/>
+    
+    <!-- Person 3 -->
+    <circle cx="160" cy="30" r="15" fill="#9C27B0"/>
+    <rect x="150" y="45" width="20" height="30" fill="#9C27B0" rx="10"/>
+    
+    <!-- Connection lines -->
+    <line x1="55" y1="60" x2="85" y2="60" stroke="#ddd" stroke-width="3"/>
+    <line x1="115" y1="60" x2="145" y2="60" stroke="#ddd" stroke-width="3"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="150" y="150" text-anchor="middle" fill="#333" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Communauté Unie</text>
+  <text x="150" y="175" text-anchor="middle" fill="#666" font-family="Arial, sans-serif" font-size="12">Ensemble vers le succès</text>
+</svg>
