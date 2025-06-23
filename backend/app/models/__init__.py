@@ -33,7 +33,7 @@ from .support import SupportTicket, TicketMessage, TicketAttachment, SupportKnow
 # 4. Import scheduled delivery and negotiation models
 from .scheduled_delivery import ScheduledDelivery, ScheduledDeliveryExecution
 from .negotiation import ScheduledDeliveryNegotiation
-from .multi_destination_delivery import MultiDestinationDelivery
+from .multi_destination_delivery import MultiDestinationDelivery, MultiDestinationStop, MultiDestinationBid
 
 # 5. Import models with more complex relationships (User must come after negotiation models)
 from .notification import Notification
