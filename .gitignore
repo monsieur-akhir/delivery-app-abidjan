@@ -210,3 +210,4 @@ mobile/dist/
 *.dev
 attached_assets_private/
 attached_assets/
+.env.dev
