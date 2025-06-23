@@ -52,20 +52,20 @@ class User(Base):
     scheduled_deliveries_as_client = relationship(
         "ScheduledDelivery",
         back_populates="client",
-        foreign_keys="ScheduledDelivery.client_id"
+        foreign_keys="[ScheduledDelivery.client_id]"
     )
     scheduled_deliveries_as_courier = relationship(
         "ScheduledDelivery",
         back_populates="courier",
-        foreign_keys="ScheduledDelivery.courier_id"
+        foreign_keys="[ScheduledDelivery.courier_id]"
     )
 
     # Relations pour les négociations
     client_negotiations = relationship("ScheduledDeliveryNegotiation", 
-                                     foreign_keys="ScheduledDeliveryNegotiation.client_id",
+                                     foreign_keys="[ScheduledDeliveryNegotiation.client_id]",
                                      back_populates="client")
     courier_negotiations = relationship("ScheduledDeliveryNegotiation", 
-                                      foreign_keys="ScheduledDeliveryNegotiation.courier_id",
+                                      foreign_keys="[ScheduledDeliveryNegotiation.courier_id]",
                                       back_populates="courier")
     complaints = relationship("Complaint", back_populates="user", foreign_keys="[Complaint.user_id]")
     assigned_complaints = relationship("Complaint", back_populates="assigned_manager", foreign_keys="[Complaint.assigned_to]")
@@ -80,17 +80,16 @@ class User(Base):
 
     # Relations spécifiques aux véhicules des courriers
     courier_vehicles = relationship("CourierVehicle", back_populates="courier")
-    # Relations
-    client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="Delivery.client_id")
-    courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="Delivery.courier_id")
-    sent_ratings = relationship("Rating", back_populates="rater", foreign_keys="Rating.rater_id")
-    received_ratings = relationship("Rating", back_populates="rated_user", foreign_keys="Rating.rated_user_id")
-    courier_vehicles = relationship("CourierVehicle", back_populates="courier")
+    
+    # Relations pour les évaluations
+    sent_ratings = relationship("Rating", back_populates="rater", foreign_keys="[Rating.rater_id]")
+    received_ratings = relationship("Rating", back_populates="rated_user", foreign_keys="[Rating.rated_user_id]")
+    
+    # Relations optionnelles (commentées pour éviter les erreurs)
     #gamification_profile = relationship("GamificationProfile", back_populates="user", uselist=False)
     #wallet = relationship("Wallet", back_populates="user", uselist=False)
-    business_profile = relationship("BusinessProfile", back_populates="user", uselist=False)
-    multi_destination_deliveries_as_client = relationship("MultiDestinationDelivery", back_populates="client", foreign_keys="MultiDestinationDelivery.client_id")
-    multi_destination_deliveries_as_courier = relationship("MultiDestinationDelivery", back_populates="courier", foreign_keys="MultiDestinationDelivery.courier_id")
+    multi_destination_deliveries_as_client = relationship("MultiDestinationDelivery", back_populates="client", foreign_keys="[MultiDestinationDelivery.client_id]")
+    multi_destination_deliveries_as_courier = relationship("MultiDestinationDelivery", back_populates="courier", foreign_keys="[MultiDestinationDelivery.courier_id]")
 
 class BusinessProfile(Base):
     __tablename__ = "business_profiles"

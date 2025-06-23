@@ -109,9 +109,9 @@ class ScheduledDelivery(Base):
     total_executions = Column(Integer, default=0)
 
     # Relations
-    client = relationship("User", back_populates="scheduled_deliveries_as_client", foreign_keys=[client_id])
-    courier = relationship("User", back_populates="scheduled_deliveries_as_courier", foreign_keys=[courier_id])
-    executions = relationship("ScheduledDeliveryExecution", back_populates="scheduled_delivery")
+    client = relationship("User", foreign_keys=[client_id], back_populates="scheduled_deliveries_as_client")
+    courier = relationship("User", foreign_keys=[courier_id], back_populates="scheduled_deliveries_as_courier")
+    negotiations = relationship("ScheduledDeliveryNegotiation", back_populates="scheduled_delivery")
 
 class ScheduledDeliveryExecution(Base):
     __tablename__ = "scheduled_delivery_executions"

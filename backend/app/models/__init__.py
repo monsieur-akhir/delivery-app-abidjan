@@ -17,7 +17,11 @@ from .collaborative_delivery import CollaborativeStatus, CollaborativeRole
 from .complaint import ComplaintType, ComplaintStatus, ComplaintPriority
 from .support import TicketStatus, TicketPriority, TicketCategory
 
-# 2. Then import models with simple relationships
+# 2. Import enums for negotiation and multi-destination
+from .negotiation import NegotiationType, NegotiationStatus
+from .multi_destination_delivery import MultiDestinationStatus
+
+# 3. Then import models with simple relationships
 from .market import ProductCategory, Product
 from .traffic import TrafficReport, WeatherAlert
 from .transport import Vehicle
@@ -26,14 +30,18 @@ from .gamification import CourierPoints, Reward
 from .collaborative_delivery import CollaborativeDelivery
 from .support import SupportTicket, TicketMessage, TicketAttachment, SupportKnowledgeBase
 
-# 3. Import models with more complex relationships
+# 4. Import scheduled delivery and negotiation models
+from .scheduled_delivery import ScheduledDelivery, ScheduledDeliveryExecution
+from .negotiation import ScheduledDeliveryNegotiation
+from .multi_destination_delivery import MultiDestinationDelivery
+
+# 5. Import models with more complex relationships (User must come after negotiation models)
 from .notification import Notification
 from .user import User, BusinessProfile, CourierProfile
 from .delivery import Delivery, Bid, TrackingPoint
 from .rating import Rating
 from .wallet import Wallet, Transaction, Loan
 from .complaint import Complaint
-from .scheduled_delivery import ScheduledDelivery, ScheduledDeliveryExecution
 
 # Export all models for easy access 
 __all__ = [
@@ -52,5 +60,7 @@ __all__ = [
     'Complaint', 'ComplaintType', 'ComplaintStatus', 'ComplaintPriority',
     'SupportTicket', 'TicketMessage', 'TicketAttachment', 'SupportKnowledgeBase',
     'TicketStatus', 'TicketPriority', 'TicketCategory',
-    'ScheduledDelivery', 'ScheduledDeliveryExecution'
+    'ScheduledDelivery', 'ScheduledDeliveryExecution',
+    'ScheduledDeliveryNegotiation', 'NegotiationType', 'NegotiationStatus',
+    'MultiDestinationDelivery', 'MultiDestinationStatus'
 ]

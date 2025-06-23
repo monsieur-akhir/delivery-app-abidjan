@@ -1,22 +1,23 @@
 
-from sqlalchemy import Column, Integer, Float, String, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from enum import Enum as PyEnum
+import enum
+from datetime import datetime
 
 from ..db.base import Base
 
-class NegotiationStatus(PyEnum):
-    pending = "pending"
-    accepted = "accepted"
-    rejected = "rejected"
-    counter_offered = "counter_offered"
-    expired = "expired"
-
-class NegotiationType(PyEnum):
+class NegotiationType(str, enum.Enum):
     initial_offer = "initial_offer"
     client_counter = "client_counter"
     courier_counter = "courier_counter"
+
+class NegotiationStatus(str, enum.Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+    expired = "expired"
+    cancelled = "cancelled"
 
 class ScheduledDeliveryNegotiation(Base):
     __tablename__ = "scheduled_delivery_negotiations"
@@ -50,9 +51,9 @@ class ScheduledDeliveryNegotiation(Base):
     expires_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relations
-    scheduled_delivery = relationship("ScheduledDelivery")
-    client = relationship("User", foreign_keys=[client_id])
-    courier = relationship("User", foreign_keys=[courier_id])
+    scheduled_delivery = relationship("ScheduledDelivery", back_populates="negotiations")
+    client = relationship("User", foreign_keys=[client_id], back_populates="client_negotiations")
+    courier = relationship("User", foreign_keys=[courier_id], back_populates="courier_negotiations")
     
     # Référence à la négociation parent (pour les contre-offres)
     parent_negotiation_id = Column(Integer, ForeignKey("scheduled_delivery_negotiations.id"), nullable=True)
