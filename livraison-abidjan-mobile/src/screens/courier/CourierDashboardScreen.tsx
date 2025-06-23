@@ -10,12 +10,13 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
+import { useNotification } from "../../contexts/NotificationContext"
 import { Dimensions } from "react-native"
 import { formatPrice } from "../../utils/formatters"
 import OfflineIndicator from "../../components/OfflineIndicator"
 import WeatherInfo from "../../components/WeatherInfo"
 import { fetchCourierStats, fetchCourierEarnings, fetchAvailableDeliveries } from "../../services/api"
-import type { Delivery } from "../../types/models"
+import type { Delivery, Notification } from "../../types/models"
 import { LineChart } from "react-native-chart-kit";
 
 // Define the missing types for the chart components
@@ -57,6 +58,7 @@ const CourierDashboardScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { user } = useAuth()
   const { isConnected } = useNetwork()
+  const { notifications, unreadCount } = useNotification()
 
   const [stats, setStats] = useState({
     deliveries_completed: 0,
@@ -79,6 +81,8 @@ const CourierDashboardScreen = () => {
   const [availableDeliveries, setAvailableDeliveries] = useState<Delivery[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [deliveryAlerts, setDeliveryAlerts] = useState<Notification[]>([])
+  const [showAlerts, setShowAlerts] = useState(false)
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -112,6 +116,20 @@ const CourierDashboardScreen = () => {
       setRefreshing(false)
     }
   }, [])
+
+  // Filtrer les notifications pour les alertes de demande de course
+  useEffect(() => {
+    const courseAlerts = notifications.filter(
+      (notification) => 
+        notification.type === 'delivery' && 
+        !notification.read &&
+        (notification.title.toLowerCase().includes('nouvelle livraison') ||
+         notification.title.toLowerCase().includes('demande de course') ||
+         notification.title.toLowerCase().includes('livraison disponible'))
+    )
+    setDeliveryAlerts(courseAlerts)
+    setShowAlerts(courseAlerts.length > 0)
+  }, [notifications])
 
   // Add loading state to component rendering
   useEffect(() => {
@@ -151,6 +169,23 @@ const CourierDashboardScreen = () => {
     navigation.navigate("AvailableDeliveries");
   }
 
+  const handleAlertPress = (alert: Notification) => {
+    if (alert.data && alert.data.delivery_id) {
+      navigation.navigate("DeliveryDetails", { deliveryId: alert.data.delivery_id.toString() })
+    } else {
+      navigation.navigate("AvailableDeliveries")
+    }
+    // Marquer l'alerte comme lue
+    // markNotificationAsRead(alert.id.toString())
+  }
+
+  const dismissAlert = (alertId: string) => {
+    setDeliveryAlerts(prev => prev.filter(alert => alert.id.toString() !== alertId))
+    if (deliveryAlerts.length <= 1) {
+      setShowAlerts(false)
+    }
+  }
+
   const chartConfig = {
     backgroundGradientFrom: "#ffffff",
     backgroundGradientTo: "#ffffff",
@@ -181,6 +216,60 @@ const CourierDashboardScreen = () => {
       </View>
 
       {!isConnected && <OfflineIndicator />}
+
+      {/* Alertes de demande de course */}
+      {showAlerts && deliveryAlerts.length > 0 && (
+        <View style={styles.alertsContainer}>
+          {deliveryAlerts.slice(0, 3).map((alert, index) => (
+            <TouchableOpacity
+              key={alert.id}
+              style={styles.alertCard}
+              onPress={() => handleAlertPress(alert)}
+            >
+              <View style={styles.alertHeader}>
+                <View style={styles.alertIndicator} />
+                <Text style={styles.alertTitle}>{alert.title}</Text>
+                <TouchableOpacity
+                  onPress={() => dismissAlert(alert.id.toString())}
+                  style={styles.dismissButton}
+                >
+                  <IconButton icon="close" size={16} iconColor="#757575" />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.alertMessage} numberOfLines={2}>
+                {alert.message}
+              </Text>
+              <View style={styles.alertFooter}>
+                <Text style={styles.alertTime}>
+                  {new Date(alert.created_at).toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Text>
+                <Button
+                  mode="contained"
+                  compact
+                  style={styles.alertButton}
+                  onPress={() => handleAlertPress(alert)}
+                >
+                  {t("dashboard.viewDetails")}
+                </Button>
+              </View>
+            </TouchableOpacity>
+          ))}
+          
+          {deliveryAlerts.length > 3 && (
+            <TouchableOpacity
+              style={styles.moreAlertsButton}
+              onPress={() => navigation.navigate("Notifications")}
+            >
+              <Text style={styles.moreAlertsText}>
+                +{deliveryAlerts.length - 3} {t("dashboard.moreAlerts")}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -551,6 +640,76 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: 8,
+  },
+  alertsContainer: {
+    padding: 16,
+    paddingBottom: 0,
+  },
+  alertCard: {
+    backgroundColor: "#FFF3E0",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6B00",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  alertHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  alertIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF6B00",
+    marginRight: 8,
+  },
+  alertTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#212121",
+  },
+  dismissButton: {
+    margin: 0,
+    padding: 0,
+  },
+  alertMessage: {
+    fontSize: 12,
+    color: "#757575",
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  alertFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  alertTime: {
+    fontSize: 10,
+    color: "#9E9E9E",
+  },
+  alertButton: {
+    height: 28,
+    backgroundColor: "#FF6B00",
+  },
+  moreAlertsButton: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 6,
+    padding: 8,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  moreAlertsText: {
+    fontSize: 12,
+    color: "#FF6B00",
+    fontWeight: "bold",
   },
 })
 

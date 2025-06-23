@@ -282,7 +282,7 @@ class NotificationService:
                 user_id=user_id,
                 title="Mise à jour de livraison",
                 message=message or f"Mise à jour de la livraison #{delivery_id}",
-                notification_type="delivery_status",
+                notification_type="delivery",
                 data={"delivery_id": delivery_id},
                 channel="push"
             )
@@ -290,15 +290,34 @@ class NotificationService:
         else:
             # Envoyer aux coursiers à proximité
             # Dans un environnement réel, on filtrerait les coursiers par proximité
-            couriers = self.db.query(User).filter(User.role == UserRole.courier).all()
+            couriers_query = self.db.query(User).filter(User.role == UserRole.courier)
+            
+            if active_only:
+                # Filtrer les coursiers actifs (en ligne)
+                couriers_query = couriers_query.filter(User.is_online == True)
+            
+            if commune:
+                # Filtrer par commune si spécifiée
+                couriers_query = couriers_query.filter(User.commune == commune)
+            
+            couriers = couriers_query.all()
             
             for courier in couriers:
+                # Titre plus attractif pour les nouvelles demandes
+                title = "🚀 Nouvelle demande de course!"
+                notification_message = message or f"Nouvelle course disponible dans {commune or 'votre zone'} - Livraison #{delivery_id}"
+                
                 notification = await self.create_notification(
                     user_id=courier.id,
-                    title="Nouvelle livraison disponible",
-                    message=message or f"Nouvelle livraison disponible #{delivery_id}",
-                    notification_type="delivery_status",
-                    data={"delivery_id": delivery_id},
+                    title=title,
+                    message=notification_message,
+                    notification_type="delivery",
+                    data={
+                        "delivery_id": delivery_id,
+                        "commune": commune,
+                        "type": "new_delivery_request",
+                        "priority": "high"
+                    },
                     channel="push"
                 )
                 notifications.append(notification)

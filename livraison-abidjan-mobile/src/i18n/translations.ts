@@ -770,7 +770,8 @@ export const translations = {
           clientInfo: "Informations client",
           pickupAddress: "Adresse de ramassage",
           deliveryAddress: "Adresse de livraison",
-          packageInfo: "Informations du colis",
+```text
+packageInfo: "Informations du colis",
           estimatedEarnings: "Gains estimés",
           estimatedTime: "Temps estimé",
           distance: "Distance",
@@ -895,6 +896,22 @@ export const translations = {
           topCouriers: "Meilleurs coursiers",
           exportReport: "Exporter le rapport",
           shareStats: "Partager les statistiques",
+        },
+        dashboard: {
+          welcome: "Bienvenue",
+          deliveries: "Livraisons",
+          earnings: "Gains",
+          rating: "Note",
+          level: "Niveau",
+          levelValue: "Niveau {{level}}",
+          weeklyEarnings: "Gains hebdomadaires",
+          availableDeliveries: "Livraisons disponibles",
+          noAvailableDeliveries: "Aucune livraison disponible",
+          seeAll: "Voir tout",
+          goOnline: "Passer en ligne",
+          findDeliveries: "Trouver des livraisons",
+          viewDetails: "Voir détails",
+          moreAlerts: "autres alertes",
         },
       },
     }
@@ -1192,6 +1209,22 @@ export const translations = {
         leaveReview: "Fa i nsien",
         help: "Dɛmɛ"
       },
+       dashboard: {
+          welcome: "Bienvenue",
+          deliveries: "Livraisons",
+          earnings: "Gains",
+          rating: "Note",
+          level: "Niveau",
+          levelValue: "Niveau {{level}}",
+          weeklyEarnings: "Gains hebdomadaires",
+          availableDeliveries: "Livraisons disponibles",
+          noAvailableDeliveries: "Aucune livraison disponible",
+          seeAll: "Voir tout",
+          goOnline: "Passer en ligne",
+          findDeliveries: "Trouver des livraisons",
+          viewDetails: "Voir détails",
+          moreAlerts: "autres alertes",
+        },
     }
   },
 
@@ -1492,7 +1525,7 @@ export const translations = {
         packageType: "Nuan nglo yi",
         packageSize: "Nuan nglo",
         estimatedTime: "Waati lajɛ",
-        distance: "Janya",
+        distance: "Janya",```text
         price: "Kɔɔ",
         cancelDelivery: "Yi ci ban",
         contactCourier: "Fere cibafuɛ",
@@ -1503,6 +1536,22 @@ export const translations = {
         leaveReview: "Fa i nsien",
         help: "Ayre"
       },
+      dashboard: {
+          welcome: "Welcome",
+          deliveries: "Deliveries",
+          earnings: "Earnings",
+          rating: "Rating",
+          level: "Level",
+          levelValue: "Level {{level}}",
+          weeklyEarnings: "Weekly Earnings",
+          availableDeliveries: "Available Deliveries",
+          noAvailableDeliveries: "No available deliveries",
+          seeAll: "See All",
+          goOnline: "Go Online",
+          findDeliveries: "Find Deliveries",
+          viewDetails: "View Details",
+          moreAlerts: "more alerts",
+        },
     }
   },
 }
