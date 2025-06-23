@@ -27,6 +27,8 @@ import PaymentScreen from '../screens/client/PaymentScreen';
 import PaymentMethodsScreen from '../screens/client/PaymentMethodsScreen';
 import BidScreen from '../screens/client/BidScreen';
 import MultiDestinationDeliveriesScreen from '../screens/client/MultiDestinationDeliveriesScreen';
+import CreateMultiDestinationDeliveryScreen from '../screens/client/CreateMultiDestinationDeliveryScreen';
+import MultiDestinationDeliveryDetailsScreen from '../screens/client/MultiDestinationDeliveryDetailsScreen';
 import ScheduledDeliveriesScreen from '../screens/client/ScheduledDeliveriesScreen';
 import CreateScheduledDeliveryScreen from '../screens/client/CreateScheduledDeliveryScreen';
 
@@ -193,6 +195,8 @@ export default function AppNavigator() {
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
           <Stack.Screen name="BidScreen" component={BidScreen} />
           <Stack.Screen name="MultiDestinationDeliveries" component={MultiDestinationDeliveriesScreen} />
+          <Stack.Screen name="CreateMultiDestinationDelivery" component={CreateMultiDestinationDeliveryScreen} />
+          <Stack.Screen name="MultiDestinationDeliveryDetails" component={MultiDestinationDeliveryDetailsScreen} />
           <Stack.Screen name="ScheduledDeliveries" component={ScheduledDeliveriesScreen} />
           <Stack.Screen name="CreateScheduledDelivery" component={CreateScheduledDeliveryScreen} />
 

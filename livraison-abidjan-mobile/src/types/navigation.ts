@@ -113,7 +113,7 @@ export type RootStackParamList = {
   // Livraisons multiples destinations
   MultiDestinationDeliveries: undefined
   CreateMultiDestinationDelivery: undefined
-  MultiDestinationDeliveryDetails: { deliveryId: number }
+  MultiDestinationDeliveryDetails: { deliveryId: number } }
 
   // Continuation du type RootStackParamList
   CourierDashboard: undefined;
