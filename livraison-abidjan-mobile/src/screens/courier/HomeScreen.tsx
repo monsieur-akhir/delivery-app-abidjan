@@ -41,6 +41,22 @@ const CARD_MARGIN = 16;
 
 type CourierHomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
+// Types pour les demandes de livraison
+interface DeliveryRequest {
+  delivery_id: string
+  pickup_address: string
+  delivery_address: string
+  pickup_commune: string
+  delivery_commune: string
+  proposed_price: number
+  distance: string
+  estimated_duration: number
+  package_type: string
+  client_name: string
+  urgency: string
+  created_at: string
+}
+
 export default function CourierHomeScreen() {
   const navigation = useNavigation<CourierHomeScreenNavigationProp>();
   const { t } = useTranslation();
@@ -63,9 +79,9 @@ export default function CourierHomeScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [showAlert, setShowAlert] = useState(false);
   const [currentAlert, setCurrentAlert] = useState(null);
-  const [alertsList, setAlertsList] = useState([]);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [alertsList, setAlertsList] = useState<DeliveryRequest[]>([]);
+  const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
+  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryRequest | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -89,7 +105,7 @@ export default function CourierHomeScreen() {
         urgency: Math.random() > 0.7 ? 'urgent' : 'normal',
         created_at: new Date().toISOString(),
       };
-      
+
       setAlertsList(prev => [newDelivery, ...prev.slice(0, 4)]); // Garder max 5 alertes
     };
 
@@ -157,7 +173,7 @@ export default function CourierHomeScreen() {
     setShowDetailModal(false);
   };
 
-  const handleViewDetails = (delivery: any) => {
+  const handleViewDetails = (delivery: DeliveryRequest) => {
     setSelectedDelivery(delivery);
     setShowDetailModal(true);
   };
@@ -582,7 +598,7 @@ export default function CourierHomeScreen() {
           <View style={styles.bottomPadding} />
         </ScrollView>
       </Animated.View>
-      
+
       <TouchableOpacity 
         style={styles.fab}
         onPress={() => navigation.navigate('AvailableDeliveries')}
@@ -592,7 +608,7 @@ export default function CourierHomeScreen() {
 
       {/* Modal de détails de livraison */}
       <Modal
-        visible={showDetailModal && selectedDelivery}
+        visible={showDetailModal && selectedDelivery !== null}
         transparent={true}
         animationType="slide"
         onRequestClose={() => setShowDetailModal(false)}
