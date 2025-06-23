@@ -63,6 +63,9 @@ export default function CourierHomeScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [showAlert, setShowAlert] = useState(false);
   const [currentAlert, setCurrentAlert] = useState(null);
+  const [alertsList, setAlertsList] = useState([]);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -70,24 +73,33 @@ export default function CourierHomeScreen() {
   }, []);
 
   useEffect(() => {
-    // Simuler la réception d'une nouvelle demande de course
+    // Simuler la réception de nouvelles demandes de course
     const simulateNewDelivery = () => {
       const newDelivery = {
         delivery_id: Math.random().toString(36).substring(7),
-        pickup_address: '123 Main St',
-        delivery_address: '456 Elm St',
-        pickup_commune: 'Anytown',
-        delivery_commune: 'Othertown',
-        proposed_price: 12000,
-        distance: '10',
-        estimated_duration: '20',
-        package_type: 'Standard',
+        pickup_address: '123 Main St, Plateau',
+        delivery_address: '456 Elm St, Cocody',
+        pickup_commune: 'Plateau',
+        delivery_commune: 'Cocody',
+        proposed_price: Math.floor(Math.random() * 10000) + 5000,
+        distance: (Math.random() * 20 + 2).toFixed(1),
+        estimated_duration: Math.floor(Math.random() * 30 + 10),
+        package_type: ['Standard', 'Fragile', 'Express'][Math.floor(Math.random() * 3)],
+        client_name: 'Client ' + Math.floor(Math.random() * 100),
+        urgency: Math.random() > 0.7 ? 'urgent' : 'normal',
+        created_at: new Date().toISOString(),
       };
-      setCurrentAlert(newDelivery);
-      setShowAlert(true);
+      
+      setAlertsList(prev => [newDelivery, ...prev.slice(0, 4)]); // Garder max 5 alertes
     };
 
-    const intervalId = setInterval(simulateNewDelivery, 15000);
+    // Ajouter quelques alertes initiales
+    setTimeout(() => {
+      simulateNewDelivery();
+      simulateNewDelivery();
+    }, 2000);
+
+    const intervalId = setInterval(simulateNewDelivery, 20000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -124,18 +136,34 @@ export default function CourierHomeScreen() {
   };
 
   const handleAcceptDelivery = async (deliveryId: string) => {
-    Alert.alert('Accept Delivery', `Delivery ID: ${deliveryId}`);
-    setShowAlert(false);
+    try {
+      await DeliveryService.acceptDelivery(deliveryId);
+      Alert.alert('Succès', 'Livraison acceptée avec succès');
+      setAlertsList(prev => prev.filter(alert => alert.delivery_id !== deliveryId));
+      setShowDetailModal(false);
+    } catch (error) {
+      Alert.alert('Erreur', 'Erreur lors de l\'acceptation de la livraison');
+    }
   };
 
   const handleRejectDelivery = async (deliveryId: string) => {
-    Alert.alert('Reject Delivery', `Delivery ID: ${deliveryId}`);
-    setShowAlert(false);
+    Alert.alert('Ignorer', 'Demande ignorée');
+    setAlertsList(prev => prev.filter(alert => alert.delivery_id !== deliveryId));
+    setShowDetailModal(false);
   };
 
-    const handleCounterOffer = async (deliveryId: string) => {
-    Alert.alert('Counter Offer', `Delivery ID: ${deliveryId}`);
-    setShowAlert(false);
+  const handleCounterOffer = async (deliveryId: string) => {
+    Alert.alert('Contre-offre', 'Fonctionnalité de contre-offre bientôt disponible');
+    setShowDetailModal(false);
+  };
+
+  const handleViewDetails = (delivery: any) => {
+    setSelectedDelivery(delivery);
+    setShowDetailModal(true);
+  };
+
+  const removeAlert = (deliveryId: string) => {
+    setAlertsList(prev => prev.filter(alert => alert.delivery_id !== deliveryId));
   };
 
 
@@ -405,6 +433,96 @@ export default function CourierHomeScreen() {
     );
   };
 
+  const renderDeliveryAlerts = () => {
+    if (alertsList.length === 0) {
+      return null;
+    }
+
+    return (
+      <View style={styles.section}>
+        <View style={styles.alertsHeader}>
+          <Text style={styles.sectionTitle}>Nouvelles demandes ({alertsList.length})</Text>
+          <TouchableOpacity 
+            onPress={() => setAlertsList([])}
+            style={styles.clearAllButton}
+          >
+            <Text style={styles.clearAllText}>Tout effacer</Text>
+          </TouchableOpacity>
+        </View>
+
+        {alertsList.map((alert, index) => (
+          <Surface key={alert.delivery_id} style={styles.alertItem} elevation={2}>
+            <View style={styles.alertContent}>
+              <View style={styles.alertHeader}>
+                <View style={styles.alertInfo}>
+                  <Text style={styles.alertPrice}>{alert.proposed_price?.toLocaleString()} FCFA</Text>
+                  <View style={styles.alertMeta}>
+                    <Text style={styles.alertDistance}>{alert.distance} km</Text>
+                    <Text style={styles.alertDuration}>• {alert.estimated_duration} min</Text>
+                    {alert.urgency === 'urgent' && (
+                      <Chip 
+                        style={styles.urgentChip} 
+                        textStyle={styles.urgentChipText}
+                        compact
+                      >
+                        Urgent
+                      </Chip>
+                    )}
+                  </View>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => removeAlert(alert.delivery_id)}
+                  style={styles.closeButton}
+                >
+                  <MaterialCommunityIcons name="close" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.routeInfo}>
+                <View style={styles.locationRow}>
+                  <MaterialCommunityIcons name="circle-outline" size={12} color="#4CAF50" />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {alert.pickup_commune}
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="arrow-right" size={12} color="#666" />
+                <View style={styles.locationRow}>
+                  <MaterialCommunityIcons name="map-marker" size={12} color="#F44336" />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {alert.delivery_commune}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.alertActions}>
+                <TouchableOpacity
+                  style={styles.rejectButton}
+                  onPress={() => handleRejectDelivery(alert.delivery_id)}
+                >
+                  <Text style={styles.rejectButtonText}>{t('alerts.ignore')}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.detailsButton}
+                  onPress={() => handleViewDetails(alert)}
+                >
+                  <Text style={styles.detailsButtonText}>Détails</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.acceptButton}
+                  onPress={() => handleAcceptDelivery(alert.delivery_id)}
+                >
+                  <Text style={styles.acceptButtonText}>{t('alerts.accept')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Surface>
+        ))}
+      </View>
+    );
+  };
+
   const renderRecentDeliveries = () => {
     if (isLoading) {
       return (
@@ -456,6 +574,7 @@ export default function CourierHomeScreen() {
           {renderEarningsCard()}
           {renderStatsCards()}
           {renderQuickActions()}
+          {renderDeliveryAlerts()}
           {renderServices()}
           {renderSummaryCard()}
           {renderRecentDeliveries()}
@@ -463,91 +582,122 @@ export default function CourierHomeScreen() {
           <View style={styles.bottomPadding} />
         </ScrollView>
       </Animated.View>
-      <FAB
-        icon="plus"
+      
+      <TouchableOpacity 
         style={styles.fab}
         onPress={() => navigation.navigate('AvailableDeliveries')}
-        color="#FFFFFF"
-      />
+      >
+        <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
 
-      {/* Modal d'alerte de demande de course */}
+      {/* Modal de détails de livraison */}
       <Modal
-        visible={showAlert && currentAlert}
+        visible={showDetailModal && selectedDelivery}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowAlert(false)}
+        onRequestClose={() => setShowDetailModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.alertModal}>
-            <View style={styles.alertHeader}>
-              <MaterialCommunityIcons name="motorcycle" size={32} color="#FF6B00" />
-              <Text style={styles.alertTitle}>{t('alerts.newDeliveryRequest')}</Text>
+          <View style={styles.detailModal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Détails de la livraison</Text>
+              <TouchableOpacity 
+                onPress={() => setShowDetailModal(false)}
+                style={styles.closeModalButton}
+              >
+                <MaterialCommunityIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
             </View>
 
-            {currentAlert && (
-              <View style={styles.alertContent}>
-                <View style={styles.routeInfo}>
-                  <View style={styles.locationRow}>
-                    <MaterialCommunityIcons name="circle-outline" size={16} color="#4CAF50" />
-                    <Text style={styles.locationText} numberOfLines={2}>
-                      {currentAlert.pickup_address || currentAlert.pickup_commune}
-                    </Text>
-                  </View>
-                  <View style={styles.routeLine} />
-                  <View style={styles.locationRow}>
-                    <MaterialCommunityIcons name="map-marker" size={16} color="#F44336" />
-                    <Text style={styles.locationText} numberOfLines={2}>
-                      {currentAlert.delivery_address || currentAlert.delivery_commune}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.deliveryDetails}>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>{t('alerts.price')}:</Text>
-                    <Text style={styles.detailValue}>
-                      {currentAlert.proposed_price?.toLocaleString() || 0} FCFA
-                    </Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>{t('alerts.distance')}:</Text>
-                    <Text style={styles.detailValue}>{currentAlert.distance || 'N/A'} km</Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>{t('alerts.estimatedTime')}:</Text>
-                    <Text style={styles.detailValue}>{currentAlert.estimated_duration || 'N/A'} min</Text>
-                  </View>
-                  {currentAlert.package_type && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>{t('alerts.packageType')}:</Text>
-                      <Text style={styles.detailValue}>{currentAlert.package_type}</Text>
-                    </View>
+            {selectedDelivery && (
+              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                <View style={styles.priceSection}>
+                  <Text style={styles.modalPrice}>
+                    {selectedDelivery.proposed_price?.toLocaleString()} FCFA
+                  </Text>
+                  {selectedDelivery.urgency === 'urgent' && (
+                    <Chip style={styles.urgentChip} textStyle={styles.urgentChipText}>
+                      Urgent
+                    </Chip>
                   )}
                 </View>
 
-                <View style={styles.alertActions}>
+                <View style={styles.routeSection}>
+                  <Text style={styles.sectionTitle}>Itinéraire</Text>
+                  <View style={styles.routeInfo}>
+                    <View style={styles.locationRow}>
+                      <MaterialCommunityIcons name="circle-outline" size={16} color="#4CAF50" />
+                      <View style={styles.locationDetails}>
+                        <Text style={styles.locationLabel}>Ramassage</Text>
+                        <Text style={styles.locationText}>
+                          {selectedDelivery.pickup_address || selectedDelivery.pickup_commune}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.routeLine} />
+                    <View style={styles.locationRow}>
+                      <MaterialCommunityIcons name="map-marker" size={16} color="#F44336" />
+                      <View style={styles.locationDetails}>
+                        <Text style={styles.locationLabel}>Livraison</Text>
+                        <Text style={styles.locationText}>
+                          {selectedDelivery.delivery_address || selectedDelivery.delivery_commune}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.detailsSection}>
+                  <Text style={styles.sectionTitle}>Informations</Text>
+                  <View style={styles.detailsGrid}>
+                    <View style={styles.detailItem}>
+                      <MaterialCommunityIcons name="map-marker-distance" size={20} color="#2196F3" />
+                      <Text style={styles.detailLabel}>Distance</Text>
+                      <Text style={styles.detailValue}>{selectedDelivery.distance} km</Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <MaterialCommunityIcons name="clock-outline" size={20} color="#FF9800" />
+                      <Text style={styles.detailLabel}>Durée estimée</Text>
+                      <Text style={styles.detailValue}>{selectedDelivery.estimated_duration} min</Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <MaterialCommunityIcons name="package-variant" size={20} color="#9C27B0" />
+                      <Text style={styles.detailLabel}>Type de colis</Text>
+                      <Text style={styles.detailValue}>{selectedDelivery.package_type}</Text>
+                    </View>
+                    {selectedDelivery.client_name && (
+                      <View style={styles.detailItem}>
+                        <MaterialCommunityIcons name="account" size={20} color="#4CAF50" />
+                        <Text style={styles.detailLabel}>Client</Text>
+                        <Text style={styles.detailValue}>{selectedDelivery.client_name}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+                <View style={styles.modalActions}>
                   <TouchableOpacity
-                    style={[styles.alertButton, styles.rejectButton]}
-                    onPress={() => handleRejectDelivery(currentAlert.delivery_id)}
+                    style={[styles.modalButton, styles.rejectButton]}
+                    onPress={() => handleRejectDelivery(selectedDelivery.delivery_id)}
                   >
                     <Text style={styles.rejectButtonText}>{t('alerts.ignore')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.alertButton, styles.counterOfferButton]}
-                    onPress={() => handleCounterOffer(currentAlert.delivery_id)}
+                    style={[styles.modalButton, styles.counterOfferButton]}
+                    onPress={() => handleCounterOffer(selectedDelivery.delivery_id)}
                   >
-                    <Text style={styles.counterOfferButtonText}>{t('alerts.counterOffer')}</Text>
+                    <Text style={styles.counterOfferButtonText}>Contre-offre</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.alertButton, styles.acceptButton]}
-                    onPress={() => handleAcceptDelivery(currentAlert.delivery_id)}
+                    style={[styles.modalButton, styles.acceptButton]}
+                    onPress={() => handleAcceptDelivery(selectedDelivery.delivery_id)}
                   >
                     <Text style={styles.acceptButtonText}>{t('alerts.accept')}</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </ScrollView>
             )}
           </View>
         </View>
@@ -917,8 +1067,160 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: '#FF6B00',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
-  // Styles pour le modal d'alerte
+  // Styles pour les alertes
+  alertsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  clearAllButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#F5F5F5',
+  },
+  clearAllText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  alertItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 8,
+    overflow: 'hidden',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6B00',
+  },
+  alertContent: {
+    padding: 16,
+  },
+  alertHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  alertInfo: {
+    flex: 1,
+  },
+  alertPrice: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FF6B00',
+    marginBottom: 4,
+  },
+  alertMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  alertDistance: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  alertDuration: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  urgentChip: {
+    backgroundColor: '#FF5722',
+    marginLeft: 8,
+    height: 20,
+  },
+  urgentChipText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  routeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    backgroundColor: '#F8F9FA',
+    padding: 8,
+    borderRadius: 8,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  locationText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 6,
+    flex: 1,
+  },
+  alertActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  rejectButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 6,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+  },
+  rejectButtonText: {
+    color: '#666',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  detailsButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 6,
+    backgroundColor: '#E3F2FD',
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    alignItems: 'center',
+  },
+  detailsButtonText: {
+    color: '#2196F3',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  acceptButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 6,
+    backgroundColor: '#FF6B00',
+    alignItems: 'center',
+  },
+  acceptButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  // Styles pour le modal de détails
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -926,95 +1228,114 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  alertModal: {
+  detailModal: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 20,
     width: '100%',
     maxWidth: 400,
+    maxHeight: '80%',
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
-  alertHeader: {
+  modalHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  alertTitle: {
-    fontSize: 20,
+  modalTitle: {
+    fontSize: 18,
     fontWeight: '700',
     color: '#333',
+  },
+  closeModalButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  priceSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+  },
+  modalPrice: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FF6B00',
+  },
+  routeSection: {
+    marginBottom: 24,
+  },
+  locationDetails: {
     marginLeft: 12,
     flex: 1,
   },
-  alertContent: {
-    marginBottom: 20,
-  },
-  routeInfo: {
-    marginBottom: 16,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  locationText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-    flex: 1,
+  locationLabel: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '500',
+    marginBottom: 2,
   },
   routeLine: {
     width: 2,
-    height: 20,
+    height: 30,
     backgroundColor: '#E0E0E0',
     marginLeft: 8,
-    marginVertical: 4,
+    marginVertical: 8,
   },
-  deliveryDetails: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+  detailsSection: {
+    marginBottom: 24,
   },
-  detailRow: {
+  detailsGrid: {
+    gap: 16,
+  },
+  detailItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    padding: 12,
+    borderRadius: 8,
   },
   detailLabel: {
     fontSize: 14,
     color: '#666',
     fontWeight: '500',
+    marginLeft: 12,
+    flex: 1,
   },
   detailValue: {
     fontSize: 14,
     color: '#333',
     fontWeight: '600',
   },
-  alertActions: {
+  modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 12,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
-  alertButton: {
+  modalButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
-  },
-  rejectButton: {
-    backgroundColor: '#F5F5F5',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  rejectButtonText: {
-    color: '#666',
-    fontWeight: '600',
-    fontSize: 14,
   },
   counterOfferButton: {
     backgroundColor: '#FFF3E0',
@@ -1023,14 +1344,6 @@ const styles = StyleSheet.create({
   },
   counterOfferButtonText: {
     color: '#FF9800',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  acceptButton: {
-    backgroundColor: '#FF6B00',
-  },
-  acceptButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 14,
   },
