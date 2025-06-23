@@ -21,26 +21,7 @@ class ScheduledDeliveryStatus(str, enum.Enum):
     completed = "completed"  # Terminée
     cancelled = "cancelled"  # Annulée
 
-from sqlalchemy import Column, Integer, String, Text, Float, Boolean, DateTime, ForeignKey, Enum, JSON, func
-from sqlalchemy.orm import relationship
-from enum import Enum as PyEnum
-from ..db.base import Base
-
-class RecurrenceType(PyEnum):
-    none = "none"
-    daily = "daily"
-    weekly = "weekly"
-    monthly = "monthly"
-
-class ScheduledDeliveryStatus(PyEnum):
-    pending = "pending"      # En attente d'acceptation par un coursier
-    confirmed = "confirmed"  # Confirmée par un coursier
-    active = "active"        # Active et en cours d'exécution
-    paused = "paused"
-    completed = "completed"
-    cancelled = "cancelled"
-
-class ExecutionStatus(PyEnum):
+class ExecutionStatus(str, enum.Enum):
     pending = "pending"
     created = "created"
     failed = "failed"
@@ -109,8 +90,8 @@ class ScheduledDelivery(Base):
     total_executions = Column(Integer, default=0)
 
     # Relations
-    client = relationship("User", foreign_keys=[client_id])
-    courier = relationship("User", foreign_keys=[courier_id])
+    client = relationship("User", foreign_keys=[client_id], overlaps="scheduled_deliveries_as_client")
+    courier = relationship("User", foreign_keys=[courier_id], overlaps="scheduled_deliveries_as_courier")
     executions = relationship("ScheduledDeliveryExecution", back_populates="scheduled_delivery", cascade="all, delete-orphan")
     negotiations = relationship("ScheduledDeliveryNegotiation", back_populates="scheduled_delivery", cascade="all, delete-orphan")
 
@@ -123,7 +104,7 @@ class ScheduledDeliveryExecution(Base):
     executed_date = Column(DateTime(timezone=True), nullable=True)
     delivery_id = Column(Integer, ForeignKey("deliveries.id"), nullable=True)
     assigned_courier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    status = Column(String, default="pending")  # pending, confirmed, created, failed
+    status = Column(Enum(ExecutionStatus), default=ExecutionStatus.pending)
     error_message = Column(Text, nullable=True)
     notification_sent_at = Column(DateTime(timezone=True), nullable=True)
 
