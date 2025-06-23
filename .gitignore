@@ -208,3 +208,5 @@ mobile/dist/
 ./delivery-app-abidjan/backend/.env.dev
 
 *.dev
+attached_assets_private/
+attached_assets/
