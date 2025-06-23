@@ -1,269 +1,371 @@
 
-import React, { useState, useEffect, useRef } from 'react'
-import { 
-  View, 
-  StyleSheet, 
-  ScrollView, 
-  RefreshControl, 
-  TouchableOpacity, 
-  Alert,
-  Animated,
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
   Dimensions,
   StatusBar,
-  Platform
-} from 'react-native'
+  Platform,
+  Alert,
+  Animated,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
-  Text, 
   Card, 
-  Button, 
-  Surface, 
   Avatar, 
-  Chip,
-  Switch,
-  ActivityIndicator,
-  IconButton,
-  Divider,
-  ProgressBar
-} from 'react-native-paper'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useAuth } from '../../contexts/AuthContext'
-import { useNotification } from '../../contexts/NotificationContext'
-import { useWebSocket } from '../../contexts/WebSocketContext'
-import { useDelivery } from '../../hooks/useDelivery'
-import { formatPrice, formatDate } from '../../utils/formatters'
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import type { RootStackParamList } from '../../types/navigation'
+  Badge, 
+  Switch, 
+  Chip, 
+  ActivityIndicator, 
+  ProgressBar,
+  Button,
+  Surface
+} from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
-const { width, height } = Dimensions.get('window')
+import { useAuth } from '../../hooks/useAuth';
+import { useDelivery } from '../../hooks/useDelivery';
+import { useWebSocket } from '../../contexts/WebSocketContext';
+import { formatPrice, formatDate } from '../../utils/formatters';
 
-type HomeScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'CourierHome'>
-}
+const { width } = Dimensions.get('window');
+const CARD_MARGIN = 16;
 
-interface EarningsStat {
-  title: string
-  value: string
-  subtitle: string
-  icon: string
-  color: string
-  trend?: 'up' | 'down' | 'stable'
-}
+export default function CourierHomeScreen() {
+  const navigation = useNavigation();
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { connected } = useWebSocket();
+  const { recentDeliveries, loading: deliveriesLoading } = useDelivery();
 
-interface QuickStat {
-  label: string
-  value: number
-  total: number
-  color: string
-  icon: string
-}
-
-const CourierHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { user } = useAuth()
-  const { unreadCount } = useNotification()
-  const { connected } = useWebSocket()
-
-  const [isOnline, setIsOnline] = useState(false)
-  const [availableDeliveries, setAvailableDeliveries] = useState([])
-  const [activeDeliveries, setActiveDeliveries] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const [refreshing, setRefreshing] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [todayStats, setTodayStats] = useState({
-    earnings: 0,
-    deliveries: 0,
-    distance: 0,
-    rating: 4.5
-  })
+    earnings: 15000,
+    deliveries: 8,
+    distance: 65,
+    rating: 4.7,
+    hours: 6,
+    targetEarnings: 25000
+  });
 
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(50)).current
-  const scaleAnim = useRef(new Animated.Value(0.9)).current
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const earningsStats: EarningsStat[] = [
-    {
-      title: "Aujourd'hui",
-      value: formatPrice(todayStats.earnings) + ' F',
-      subtitle: '+12% vs hier',
-      icon: 'trending-up',
-      color: '#4CAF50',
-      trend: 'up'
-    },
-    {
-      title: 'Cette semaine',
-      value: formatPrice(todayStats.earnings * 7) + ' F',
-      subtitle: 'Objectif: 50k F',
-      icon: 'calendar',
-      color: '#2196F3'
-    },
-    {
-      title: 'Note moyenne',
-      value: todayStats.rating.toString(),
-      subtitle: 'Excellente!',
-      icon: 'star',
-      color: '#FF9800'
+  useEffect(() => {
+    loadDashboardData();
+    startAnimations();
+  }, []);
+
+  const startAnimations = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      // Simuler le chargement des données
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error('Erreur lors du chargement:', error);
+    } finally {
+      setLoading(false);
     }
-  ]
+  };
 
-  const quickStats: QuickStat[] = [
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
+  }, []);
+
+  const toggleOnlineStatus = () => {
+    setIsOnline(!isOnline);
+    // Implémentation de la logique de statut en ligne
+  };
+
+  const quickActions = [
+    {
+      id: 'available',
+      title: 'Livraisons disponibles',
+      subtitle: '12 nouvelles',
+      icon: 'package-variant-closed',
+      color: '#4CAF50',
+      screen: 'AvailableDeliveries'
+    },
+    {
+      id: 'express',
+      title: 'Express',
+      subtitle: 'Gains élevés',
+      icon: 'flash',
+      color: '#FF6B00',
+      screen: 'ExpressDeliveries'
+    },
+    {
+      id: 'collaborative',
+      title: 'Collaboratives',
+      subtitle: 'Partagées',
+      icon: 'account-group',
+      color: '#9C27B0',
+      screen: 'CollaborativeDeliveries'
+    },
+    {
+      id: 'scheduled',
+      title: 'Planifiées',
+      subtitle: 'Programmées',
+      icon: 'calendar-clock',
+      color: '#2196F3',
+      screen: 'CourierScheduledDeliveries'
+    }
+  ];
+
+  const statsData = [
     {
       label: 'Livraisons',
       value: todayStats.deliveries,
-      total: 10,
-      color: '#4CAF50',
-      icon: 'package'
+      target: 15,
+      icon: 'package-variant',
+      color: '#4CAF50'
     },
     {
       label: 'Distance',
       value: todayStats.distance,
-      total: 100,
+      target: 100,
+      icon: 'map-marker-distance',
       color: '#2196F3',
-      icon: 'navigation'
+      unit: 'km'
     },
     {
       label: 'Temps actif',
-      value: 6,
-      total: 8,
+      value: todayStats.hours,
+      target: 8,
+      icon: 'clock',
       color: '#FF9800',
-      icon: 'clock'
+      unit: 'h'
     }
-  ]
+  ];
 
-  useEffect(() => {
-    loadData()
-    startAnimations()
-  }, [])
+  const serviceItems = [
+    { title: 'Revenus', icon: 'cash', color: '#4CAF50', screen: 'CourierEarnings' },
+    { title: 'Véhicules', icon: 'car', color: '#2196F3', screen: 'VehicleManagement' },
+    { title: 'Statistiques', icon: 'chart-line', color: '#9C27B0', screen: 'CourierStats' },
+    { title: 'Récompenses', icon: 'trophy', color: '#FF9800', screen: 'Gamification' }
+  ];
 
-  const startAnimations = () => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      })
-    ]).start()
-  }
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      // Simuler des données pour l'exemple
-      setTodayStats({
-        earnings: 15000,
-        deliveries: 8,
-        distance: 65,
-        rating: 4.7
-      })
-      setAvailableDeliveries([])
-      setActiveDeliveries([])
-    } catch (error) {
-      console.error('Error loading data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const onRefresh = async () => {
-    setRefreshing(true)
-    await loadData()
-    setRefreshing(false)
-  }
-
-  const toggleOnlineStatus = () => {
-    setIsOnline(!isOnline)
-    // Implémenter la logique de mise en ligne/hors ligne
-  }
-
-  const renderEarningsStat = (stat: EarningsStat, index: number) => (
-    <Animated.View
-      key={stat.title}
-      style={[
-        styles.earningsCard,
-        {
-          opacity: fadeAnim,
-          transform: [
-            { scale: scaleAnim },
-            { translateY: slideAnim }
-          ]
-        }
-      ]}
-    >
-      <Surface style={styles.earningsCardSurface} elevation={3}>
-        <View style={styles.earningsHeader}>
-          <View style={[styles.earningsIcon, { backgroundColor: stat.color }]}>
-            <Feather name={stat.icon as any} size={20} color="#FFFFFF" />
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.headerTop}>
+        <View style={styles.profileSection}>
+          <TouchableOpacity onPress={() => navigation.navigate('CourierProfile')}>
+            <Avatar.Text 
+              size={48} 
+              label={
+                user?.full_name
+                  ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2)
+                  : 'C'
+              }
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
+          <View style={styles.welcomeText}>
+            <Text style={styles.greetingText}>Bonjour coursier</Text>
+            <Text style={styles.userName}>
+              {user?.full_name || user?.first_name || 'Coursier'}
+            </Text>
+            <View style={styles.statusRow}>
+              <View style={[styles.statusDot, { backgroundColor: connected ? '#4CAF50' : '#F44336' }]} />
+              <Text style={styles.statusText}>
+                {connected ? 'Connecté' : 'Déconnecté'}
+              </Text>
+            </View>
           </View>
-          {stat.trend && (
-            <Chip 
-              mode="flat" 
-              style={[styles.trendChip, { backgroundColor: `${stat.color}20` }]}
-              textStyle={{ color: stat.color, fontSize: 10 }}
-              compact
-            >
-              {stat.trend === 'up' ? '↗' : stat.trend === 'down' ? '↘' : '→'} {stat.subtitle}
-            </Chip>
-          )}
         </View>
-        <Text style={styles.earningsValue}>{stat.value}</Text>
-        <Text style={styles.earningsTitle}>{stat.title}</Text>
-        {!stat.trend && (
-          <Text style={styles.earningsSubtitle}>{stat.subtitle}</Text>
-        )}
-      </Surface>
-    </Animated.View>
-  )
 
-  const renderQuickStat = (stat: QuickStat) => {
-    const progress = stat.total > 0 ? stat.value / stat.total : 0
+        <View style={styles.headerActions}>
+          <View style={styles.onlineToggle}>
+            <Text style={[styles.onlineText, { color: isOnline ? '#4CAF50' : '#666' }]}>
+              {isOnline ? 'En ligne' : 'Hors ligne'}
+            </Text>
+            <Switch
+              value={isOnline}
+              onValueChange={toggleOnlineStatus}
+              thumbColor={isOnline ? '#4CAF50' : '#f4f3f4'}
+              trackColor={{ false: '#767577', true: '#4CAF5081' }}
+            />
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <MaterialCommunityIcons name="bell-outline" size={24} color="#333" />
+            <Badge style={styles.notificationBadge} size={8} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderEarningsCard = () => {
+    const progress = todayStats.targetEarnings > 0 ? todayStats.earnings / todayStats.targetEarnings : 0;
     
     return (
-      <View key={stat.label} style={styles.quickStatItem}>
-        <View style={styles.quickStatHeader}>
-          <View style={[styles.quickStatIcon, { backgroundColor: stat.color }]}>
-            <Feather name={stat.icon as any} size={16} color="#FFFFFF" />
+      <Card style={styles.earningsCard}>
+        <Card.Content style={styles.earningsContent}>
+          <View style={styles.earningsHeader}>
+            <View>
+              <Text style={styles.earningsLabel}>Revenus aujourd'hui</Text>
+              <Text style={styles.earningsValue}>{formatPrice(todayStats.earnings)} FCFA</Text>
+            </View>
+            <View style={styles.ratingSection}>
+              <MaterialCommunityIcons name="star" size={20} color="#FFD700" />
+              <Text style={styles.ratingText}>{todayStats.rating}</Text>
+            </View>
           </View>
-          <Text style={styles.quickStatValue}>{stat.value}</Text>
-        </View>
-        <Text style={styles.quickStatLabel}>{stat.label}</Text>
-        <ProgressBar 
-          progress={progress} 
-          color={stat.color} 
-          style={styles.quickStatProgress}
-        />
-        <Text style={styles.quickStatTotal}>/{stat.total}</Text>
-      </View>
-    )
-  }
+          
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>Objectif: {formatPrice(todayStats.targetEarnings)} FCFA</Text>
+              <Text style={styles.progressPercent}>{Math.round(progress * 100)}%</Text>
+            </View>
+            <ProgressBar 
+              progress={progress} 
+              color="#4CAF50" 
+              style={styles.progressBar}
+            />
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  };
 
-  const renderQuickAction = (title: string, subtitle: string, icon: string, color: string, onPress: () => void) => (
-    <TouchableOpacity 
-      style={styles.quickActionButton}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <LinearGradient
-        colors={[color, `${color}CC`]}
-        style={styles.quickActionGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <Feather name={icon as any} size={24} color="#FFFFFF" />
-        <Text style={styles.quickActionTitle}>{title}</Text>
-        <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  )
+  const renderStatsCards = () => (
+    <View style={styles.statsGrid}>
+      {statsData.map((stat, index) => {
+        const progress = stat.target > 0 ? stat.value / stat.target : 0;
+        
+        return (
+          <Card key={index} style={styles.statCard}>
+            <Card.Content style={styles.statContent}>
+              <View style={styles.statHeader}>
+                <View style={[styles.statIcon, { backgroundColor: stat.color + '15' }]}>
+                  <MaterialCommunityIcons 
+                    name={stat.icon} 
+                    size={20} 
+                    color={stat.color} 
+                  />
+                </View>
+                <Text style={styles.statValue}>
+                  {stat.value}{stat.unit || ''}
+                </Text>
+              </View>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+              <ProgressBar 
+                progress={progress} 
+                color={stat.color} 
+                style={styles.statProgress}
+              />
+              <Text style={styles.statTarget}>/{stat.target}{stat.unit || ''}</Text>
+            </Card.Content>
+          </Card>
+        );
+      })}
+    </View>
+  );
+
+  const renderQuickActions = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Actions rapides</Text>
+      <View style={styles.quickActionsGrid}>
+        {quickActions.map((action) => (
+          <TouchableOpacity
+            key={action.id}
+            style={styles.quickActionCard}
+            onPress={() => navigation.navigate(action.screen)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
+              <MaterialCommunityIcons 
+                name={action.icon} 
+                size={28} 
+                color={action.color} 
+              />
+            </View>
+            <Text style={styles.quickActionTitle}>{action.title}</Text>
+            <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderServices = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Mes services</Text>
+      <View style={styles.servicesGrid}>
+        {serviceItems.map((service, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.serviceItem}
+            onPress={() => navigation.navigate(service.screen)}
+          >
+            <Surface style={[styles.serviceIcon, { backgroundColor: service.color + '15' }]} elevation={0}>
+              <MaterialCommunityIcons 
+                name={service.icon} 
+                size={24} 
+                color={service.color} 
+              />
+            </Surface>
+            <Text style={styles.serviceText}>{service.title}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderSummaryCard = () => {
+    const commission = todayStats.earnings * 0.1;
+    const netEarnings = todayStats.earnings - commission;
+
+    return (
+      <Card style={styles.summaryCard}>
+        <Card.Content>
+          <Text style={styles.sectionTitle}>Résumé financier</Text>
+          
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Revenus bruts</Text>
+              <Text style={styles.summaryValue}>{formatPrice(todayStats.earnings)} FCFA</Text>
+            </View>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Commission (10%)</Text>
+              <Text style={[styles.summaryValue, { color: '#F44336' }]}>
+                -{formatPrice(commission)} FCFA
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.summaryTotal}>
+            <Text style={styles.summaryTotalLabel}>Net à recevoir</Text>
+            <Text style={styles.summaryTotalValue}>
+              {formatPrice(netEarnings)} FCFA
+            </Text>
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  };
 
   if (loading) {
     return (
@@ -273,215 +375,47 @@ const CourierHomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Text style={styles.loadingText}>Chargement du tableau de bord...</Text>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header coursier */}
-      <LinearGradient
-        colors={['#4CAF50', '#66BB6A']}
-        style={styles.header}
-      >
-        <Animated.View style={[styles.headerContent, { opacity: fadeAnim }]}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => navigation.navigate('CourierProfile')}>
-              <Avatar.Text 
-                size={45} 
-                label={
-                  user?.full_name
-                    ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2)
-                    : 'C'
-                }
-                style={styles.avatar}
-              />
-            </TouchableOpacity>
-            <View style={styles.greetingContainer}>
-              <Text style={styles.greetingText}>Bonjour coursier</Text>
-              <Text style={styles.userName}>
-                {user?.full_name || user?.first_name || 'Coursier'}
-              </Text>
-            </View>
-          </View>
+      <Animated.View style={[styles.animatedContainer, { opacity: fadeAnim }]}>
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh}
+              colors={['#4CAF50']}
+              tintColor="#4CAF50"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        >
+          {renderHeader()}
+          {renderEarningsCard()}
+          {renderStatsCards()}
+          {renderQuickActions()}
+          {renderServices()}
+          {renderSummaryCard()}
 
-          <View style={styles.headerRight}>
-            <View style={styles.onlineToggle}>
-              <Text style={styles.onlineText}>
-                {isOnline ? 'En ligne' : 'Hors ligne'}
-              </Text>
-              <Switch
-                value={isOnline}
-                onValueChange={toggleOnlineStatus}
-                color="#FFFFFF"
-                style={styles.switch}
-              />
-            </View>
-            <TouchableOpacity 
-              style={styles.notificationButton}
-              onPress={() => navigation.navigate('Notifications')}
-            >
-              <Feather name="bell" size={24} color="#FFFFFF" />
-              {unreadCount > 0 && (
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Statut et statut rapides */}
-        <Animated.View style={[styles.statusContainer, { opacity: fadeAnim }]}>
-          <View style={styles.quickStatsContainer}>
-            {quickStats.map(renderQuickStat)}
-          </View>
-        </Animated.View>
-      </LinearGradient>
-
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            colors={['#4CAF50']}
-            tintColor="#4CAF50"
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Statistiques de gains */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💰 Revenus & Performance</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.earningsContainer}
-          >
-            {earningsStats.map(renderEarningsStat)}
-          </ScrollView>
-        </View>
-
-        {/* Actions rapides */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚡ Actions rapides</Text>
-          <View style={styles.quickActionsGrid}>
-            {renderQuickAction(
-              'Livraisons disponibles',
-              `${availableDeliveries.length} nouvelles`,
-              'package',
-              '#2196F3',
-              () => navigation.navigate('AvailableDeliveries')
-            )}
-            {renderQuickAction(
-              'Livraisons express',
-              'Gains élevés',
-              'zap',
-              '#FF6B00',
-              () => navigation.navigate('ExpressDeliveries')
-            )}
-            {renderQuickAction(
-              'Collaboratives',
-              'Partagées',
-              'users',
-              '#9C27B0',
-              () => navigation.navigate('CollaborativeDeliveries')
-            )}
-            {renderQuickAction(
-              'Planifiées',
-              'Programmées',
-              'calendar',
-              '#FF9800',
-              () => navigation.navigate('CourierScheduledDeliveries')
-            )}
-          </View>
-        </View>
-
-        {/* Résumé des gains */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📊 Résumé de la journée</Text>
-          <Surface style={styles.summaryCard} elevation={2}>
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Revenus bruts</Text>
-                <Text style={styles.summaryValue}>{formatPrice(todayStats.earnings)} F</Text>
-              </View>
-              <Divider style={styles.summaryDivider} />
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Commission plateforme</Text>
-                <Text style={styles.summaryValue}>-{formatPrice(todayStats.earnings * 0.1)} F</Text>
-              </View>
-            </View>
-            <Divider />
-            <View style={styles.summaryTotal}>
-              <Text style={styles.summaryTotalLabel}>Net à recevoir</Text>
-              <Text style={styles.summaryTotalValue}>
-                {formatPrice(todayStats.earnings * 0.9)} F
-              </Text>
-            </View>
-          </Surface>
-        </View>
-
-        {/* Services coursier */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🛠️ Mes services</Text>
-          <View style={styles.servicesGrid}>
-            <TouchableOpacity 
-              style={styles.serviceItem}
-              onPress={() => navigation.navigate('CourierEarnings')}
-            >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#4CAF50' }]} elevation={2}>
-                <Feather name="dollar-sign" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Revenus</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.serviceItem}
-              onPress={() => navigation.navigate('VehicleManagement')}
-            >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#2196F3' }]} elevation={2}>
-                <Feather name="truck" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Véhicules</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.serviceItem}
-              onPress={() => navigation.navigate('CourierStats')}
-            >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#9C27B0' }]} elevation={2}>
-                <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Statistiques</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.serviceItem}
-              onPress={() => navigation.navigate('Gamification')}
-            >
-              <Surface style={[styles.serviceIcon, { backgroundColor: '#FF9800' }]} elevation={2}>
-                <Feather name="award" size={20} color="#FFFFFF" />
-              </Surface>
-              <Text style={styles.serviceText}>Récompenses</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+      </Animated.View>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+  animatedContainer: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -492,231 +426,298 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#757575',
+    color: '#666',
     fontWeight: '500',
   },
-  header: {
-    paddingTop: Platform.OS === 'ios' ? 0 : 10,
-    paddingBottom: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+  scrollView: {
+    flex: 1,
   },
-  headerContent: {
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
   },
-  headerLeft: {
+  profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
   avatar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginRight: 15,
+    backgroundColor: '#4CAF50',
+    marginRight: 12,
   },
-  greetingContainer: {
+  welcomeText: {
     flex: 1,
   },
   greetingText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#666',
     fontWeight: '400',
   },
   userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '700',
     marginTop: 2,
   },
-  headerRight: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 4,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  headerActions: {
+    alignItems: 'flex-end',
   },
   onlineToggle: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 15,
+    marginBottom: 8,
   },
   onlineText: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '600',
-    marginRight: 8,
-  },
-  switch: {
-    transform: [{ scale: 0.8 }],
+    marginBottom: 4,
   },
   notificationButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
     position: 'relative',
-    padding: 8,
   },
   notificationBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#f44336',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notificationBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  statusContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  quickStatsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickStatItem: {
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  quickStatHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  quickStatIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 5,
-  },
-  quickStatValue: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  quickStatLabel: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 10,
-    marginBottom: 5,
-  },
-  quickStatProgress: {
-    height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 2,
-    width: '100%',
-    marginBottom: 2,
-  },
-  quickStatTotal: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 8,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  section: {
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 15,
-    paddingHorizontal: 20,
-  },
-  earningsContainer: {
-    paddingLeft: 20,
+    top: 8,
+    right: 8,
+    backgroundColor: '#FF6B00',
   },
   earningsCard: {
-    marginRight: 15,
-    width: width * 0.7,
-  },
-  earningsCardSurface: {
-    borderRadius: 16,
-    padding: 20,
+    margin: 16,
     backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  earningsContent: {
+    padding: 20,
   },
   earningsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  earningsIcon: {
+  earningsLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  earningsValue: {
+    fontSize: 28,
+    color: '#333',
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  ratingSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8E1',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#F57F17',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  progressSection: {
+    marginTop: 8,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  progressPercent: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#E8F5E8',
+    borderRadius: 3,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    flex: 1,
+    marginHorizontal: 4,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  statContent: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  statHeader: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  trendChip: {
-    height: 24,
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
   },
-  earningsValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#212121',
-    marginBottom: 5,
-  },
-  earningsTitle: {
-    fontSize: 14,
-    color: '#757575',
-    fontWeight: '500',
-  },
-  earningsSubtitle: {
+  statLabel: {
     fontSize: 12,
-    color: '#9E9E9E',
-    marginTop: 2,
+    color: '#666',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  statProgress: {
+    height: 4,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 2,
+    width: '100%',
+    marginBottom: 4,
+  },
+  statTarget: {
+    fontSize: 10,
+    color: '#999',
+  },
+  section: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
   },
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 15,
     justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  quickActionButton: {
-    width: '48%',
-    marginBottom: 15,
+  quickActionCard: {
+    width: (width - 52) / 2,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    overflow: 'hidden',
-  },
-  quickActionGradient: {
     padding: 20,
+    marginBottom: 12,
     alignItems: 'center',
-    minHeight: 100,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   quickActionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
     textAlign: 'center',
-    marginTop: 10,
     marginBottom: 4,
   },
   quickActionSubtitle: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#666',
+    textAlign: 'center',
+  },
+  servicesGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  serviceItem: {
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  serviceIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  serviceText: {
+    fontSize: 12,
+    color: '#333',
+    fontWeight: '500',
     textAlign: 'center',
   },
   summaryCard: {
-    marginHorizontal: 20,
-    borderRadius: 12,
+    margin: 16,
     backgroundColor: '#FFFFFF',
-    padding: 20,
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   summaryItem: {
     flex: 1,
@@ -726,59 +727,37 @@ const styles = StyleSheet.create({
     width: 1,
     height: '100%',
     backgroundColor: '#E0E0E0',
-    marginHorizontal: 15,
+    marginHorizontal: 16,
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#757575',
-    marginBottom: 5,
+    color: '#666',
+    marginBottom: 4,
   },
   summaryValue: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212121',
+    fontWeight: '600',
+    color: '#333',
   },
   summaryTotal: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 15,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   summaryTotalLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212121',
+    color: '#333',
   },
   summaryTotalValue: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#4CAF50',
   },
-  servicesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    justifyContent: 'space-between',
+  bottomPadding: {
+    height: 80,
   },
-  serviceItem: {
-    width: '22%',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  serviceIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  serviceText: {
-    fontSize: 11,
-    textAlign: 'center',
-    color: '#212121',
-    fontWeight: '500',
-  },
-})
-
-export default CourierHomeScreen
+});
