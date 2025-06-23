@@ -62,5 +62,5 @@ __all__ = [
     'TicketStatus', 'TicketPriority', 'TicketCategory',
     'ScheduledDelivery', 'ScheduledDeliveryExecution',
     'ScheduledDeliveryNegotiation', 'NegotiationType', 'NegotiationStatus',
-    'MultiDestinationDelivery', 'MultiDestinationStatus'
+    'MultiDestinationDelivery', 'MultiDestinationStop', 'MultiDestinationBid', 'MultiDestinationStatus'
 ]

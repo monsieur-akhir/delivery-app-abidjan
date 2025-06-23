@@ -49,16 +49,6 @@ class User(Base):
     client_deliveries = relationship("Delivery", back_populates="client", foreign_keys="[Delivery.client_id]")
     courier_deliveries = relationship("Delivery", back_populates="courier", foreign_keys="[Delivery.courier_id]")
     # Relations pour les livraisons planifiées
-    scheduled_deliveries_as_client = relationship(
-        "ScheduledDelivery",
-        back_populates="client",
-        foreign_keys="[ScheduledDelivery.client_id]"
-    )
-    scheduled_deliveries_as_courier = relationship(
-        "ScheduledDelivery",
-        back_populates="courier",
-        foreign_keys="[ScheduledDelivery.courier_id]"
-    )
 
     # Relations pour les négociations
     client_negotiations = relationship("ScheduledDeliveryNegotiation", 
@@ -80,16 +70,20 @@ class User(Base):
 
     # Relations spécifiques aux véhicules des courriers
     courier_vehicles = relationship("CourierVehicle", back_populates="courier")
-    
+
     # Relations pour les évaluations
     sent_ratings = relationship("Rating", back_populates="rater", foreign_keys="[Rating.rater_id]")
     received_ratings = relationship("Rating", back_populates="rated_user", foreign_keys="[Rating.rated_user_id]")
-    
+
     # Relations optionnelles (commentées pour éviter les erreurs)
     #gamification_profile = relationship("GamificationProfile", back_populates="user", uselist=False)
     #wallet = relationship("Wallet", back_populates="user", uselist=False)
-    multi_destination_deliveries_as_client = relationship("MultiDestinationDelivery", back_populates="client", foreign_keys="[MultiDestinationDelivery.client_id]")
-    multi_destination_deliveries_as_courier = relationship("MultiDestinationDelivery", back_populates="courier", foreign_keys="[MultiDestinationDelivery.courier_id]")
+    multi_destination_deliveries_as_client = relationship("MultiDestinationDelivery", foreign_keys="MultiDestinationDelivery.client_id", back_populates="client")
+    multi_destination_deliveries_as_courier = relationship("MultiDestinationDelivery", foreign_keys="MultiDestinationDelivery.courier_id", back_populates="courier")
+
+    # Scheduled delivery relationships
+    scheduled_deliveries_as_client = relationship("ScheduledDelivery", foreign_keys="ScheduledDelivery.client_id")
+    scheduled_deliveries_as_courier = relationship("ScheduledDelivery", foreign_keys="ScheduledDelivery.courier_id")
 
 class BusinessProfile(Base):
     __tablename__ = "business_profiles"
