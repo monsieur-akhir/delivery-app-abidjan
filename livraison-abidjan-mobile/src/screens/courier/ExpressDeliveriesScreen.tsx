@@ -65,12 +65,67 @@ const ExpressDeliveriesScreen: React.FC = () => {
   }
   const handleAcceptDelivery = async (deliveryId: number) => {
     try {
-      await acceptDelivery(deliveryId)
+      await DeliveryService.acceptDelivery(deliveryId)
       Alert.alert(t("success"), t("delivery.acceptedSuccessfully"))
       await loadExpressDeliveries()
     } catch (err) {
       Alert.alert(t("error"), t("delivery.acceptError"))
     }
+  }
+
+  const handleIgnoreDelivery = (deliveryId: number) => {
+    Alert.alert(
+      t("delivery.ignoreTitle"),
+      t("delivery.ignoreConfirmation"),
+      [
+        { text: t("common.cancel"), style: 'cancel' },
+        {
+          text: t("delivery.ignore"),
+          onPress: () => {
+            // Retirer temporairement de la liste (peut revenir après actualisation)
+            //setDeliveries(prev => prev.filter(d => d.id !== deliveryId))
+            Alert.alert(t("delivery.ignored"), t("delivery.ignoredMessage"))
+          }
+        }
+      ]
+    )
+  }
+
+  const handleCounterOffer = (delivery: any) => {
+    Alert.prompt(
+      t("delivery.counterOfferTitle"),
+      t("delivery.counterOfferPrompt", { originalPrice: delivery.proposed_price }),
+      [
+        { text: t("common.cancel"), style: 'cancel' },
+        {
+          text: t("delivery.sendOffer"),
+          onPress: async (price) => {
+            if (price && !isNaN(Number(price))) {
+              try {
+                //await DeliveryService.createBid(delivery.id, {
+                //  price: Number(price),
+                //  estimated_time: delivery.estimated_duration || 30,
+                //  message: t("delivery.counterOfferMessage")
+                //})
+                Alert.alert(t("delivery.counterOfferSent"), t("delivery.counterOfferSentMessage"))
+                // Optionnel: retirer de la liste ou marquer comme ayant fait une offre
+                //setDeliveries(prev => prev.map(d =>
+                //  d.id === delivery.id
+                //    ? { ...d, hasCounterOffer: true }
+                //    : d
+                //))
+              } catch (error) {
+                Alert.alert(t("error.title"), t("error.counterOffer"))
+              }
+            } else {
+              Alert.alert(t("error.title"), t("error.invalidPrice"))
+            }
+          }
+        }
+      ],
+      'plain-text',
+      delivery.proposed_price.toString()
+    )
   }
   const handleStartDelivery = async (deliveryId: number) => {
     try {
@@ -456,11 +511,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   actionContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 8,
+    marginTop: 12,
   },
   actionButton: {
     flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   fab: {
     position: "absolute",

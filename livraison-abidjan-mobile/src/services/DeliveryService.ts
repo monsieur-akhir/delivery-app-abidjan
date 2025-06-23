@@ -983,6 +983,27 @@ class DeliveryService {
     }
   }
 
+  static async createBid(
+    deliveryId: string | number,
+    bidData: {
+      price: number
+      estimated_time?: number
+      message?: string
+    }
+  ): Promise<any> {
+    try {
+      const response = await api.post(`/deliveries/${deliveryId}/bids`, bidData)
+      return response.data
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la création de l\'offre:', error.message)
+      } else {
+        console.error('Erreur lors de la création de l\'offre:', String(error))
+      }
+      throw error
+    }
+  }
+
   static async respondToCounterOffer(
     deliveryId: string,
     bidId: number,
