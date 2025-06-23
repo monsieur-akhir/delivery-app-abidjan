@@ -23,13 +23,13 @@ def get_clients(
     Récupère la liste des clients avec filtrage optionnel.
     """
     query = db.query(User).filter(User.role == UserRole.client)
-    
+
     if status:
         query = query.filter(User.status == status)
-    
+
     if commune:
         query = query.filter(User.commune == commune)
-    
+
     if search:
         search_filter = or_(
             User.full_name.ilike(f"%{search}%"),
@@ -37,7 +37,7 @@ def get_clients(
             User.email.ilike(f"%{search}%")
         )
         query = query.filter(search_filter)
-    
+
     return query.order_by(desc(User.created_at)).offset(skip).limit(limit).all()
 
 
@@ -53,13 +53,13 @@ def get_couriers(
     Récupère la liste des coursiers avec filtrage optionnel.
     """
     query = db.query(User).filter(User.role == UserRole.courier)
-    
+
     if status:
         query = query.filter(User.status == status)
-    
+
     if commune:
         query = query.filter(User.commune == commune)
-    
+
     if search:
         search_filter = or_(
             User.full_name.ilike(f"%{search}%"),
@@ -67,7 +67,7 @@ def get_couriers(
             User.email.ilike(f"%{search}%")
         )
         query = query.filter(search_filter)
-    
+
     return query.order_by(desc(User.created_at)).offset(skip).limit(limit).all()
 
 
@@ -83,13 +83,13 @@ def get_businesses(
     Récupère la liste des entreprises avec filtrage optionnel.
     """
     query = db.query(User).filter(User.role == UserRole.business)
-    
+
     if status:
         query = query.filter(User.status == status)
-    
+
     if commune:
         query = query.filter(User.commune == commune)
-    
+
     if search:
         search_filter = or_(
             User.full_name.ilike(f"%{search}%"),
@@ -97,13 +97,13 @@ def get_businesses(
             User.email.ilike(f"%{search}%")
         )
         query = query.filter(search_filter)
-        
+
         # Recherche également dans les profils d'entreprise
         business_search = query.join(BusinessProfile).filter(
             BusinessProfile.business_name.ilike(f"%{search}%")
         )
         query = query.union(business_search)
-    
+
     return query.order_by(desc(User.created_at)).offset(skip).limit(limit).all()
 
 
@@ -125,10 +125,10 @@ def update_kyc_status(
     """
     user = get_user(db, user_id)
     user.kyc_status = kyc_status
-    
+
     if rejection_reason:
         user.kyc_rejection_reason = rejection_reason
-    
+
     db.commit()
     db.refresh(user)
     return user
@@ -146,7 +146,7 @@ def get_filtered_users(
     Récupère les utilisateurs avec filtres
     """
     query = db.query(User)
-    
+
     if role:
         query = query.filter(User.role == role)
     if status:
@@ -161,7 +161,7 @@ def get_filtered_users(
                 User.email.ilike(f"%{search}%")
             )
         )
-    
+
     return query.offset(skip).limit(limit).all()
 
 def create_new_user(db: Session, user_data: dict) -> User:
@@ -169,11 +169,11 @@ def create_new_user(db: Session, user_data: dict) -> User:
     Crée un nouvel utilisateur
     """
     from ..core.security import get_password_hash
-    
+
     # Hasher le mot de passe
     if 'password' in user_data:
         user_data['hashed_password'] = get_password_hash(user_data.pop('password'))
-    
+
     user = User(**user_data)
     db.add(user)
     db.commit()
@@ -185,11 +185,11 @@ def update_user_data(db: Session, user_id: int, user_data: dict) -> User:
     Met à jour les données d'un utilisateur
     """
     user = get_user(db, user_id)
-    
+
     for key, value in user_data.items():
         if hasattr(user, key):
             setattr(user, key, value)
-    
+
     db.commit()
     db.refresh(user)
     return user
@@ -201,10 +201,10 @@ def get_user_statistics(db: Session, user_id: int) -> Dict[str, Any]:
     from ..models.delivery import Delivery
     from ..models.rating import Rating
     from sqlalchemy import func
-    
+
     user = get_user(db, user_id)
     stats = {}
-    
+
     if user.role == 'client':
         # Statistiques client
         deliveries = db.query(Delivery).filter(Delivery.client_id == user_id)
@@ -213,23 +213,23 @@ def get_user_statistics(db: Session, user_id: int) -> Dict[str, Any]:
             'completed_deliveries': deliveries.filter(Delivery.status == 'completed').count(),
             'total_spent': deliveries.filter(Delivery.status == 'completed').with_entities(func.sum(Delivery.final_price)).scalar() or 0
         })
-        
+
     elif user.role == 'courier':
         # Statistiques coursier
         deliveries = db.query(Delivery).filter(Delivery.courier_id == user_id)
         completed_deliveries = deliveries.filter(Delivery.status == 'completed')
-        
+
         stats.update({
             'total_deliveries': deliveries.count(),
             'completed_deliveries': completed_deliveries.count(),
             'total_earnings': completed_deliveries.with_entities(func.sum(Delivery.final_price)).scalar() or 0,
             'distance_covered': 0  # À calculer selon la logique métier
         })
-        
+
     # Ratings moyens
     avg_rating = db.query(func.avg(Rating.score)).filter(Rating.rated_user_id == user_id).scalar()
     stats['average_rating'] = round(avg_rating, 2) if avg_rating else 0
-    
+
     return stats
 
 def get_user_activity_history(db: Session, user_id: int, limit: int = 20) -> List[Dict]:
@@ -239,14 +239,14 @@ def get_user_activity_history(db: Session, user_id: int, limit: int = 20) -> Lis
     # Cette fonction nécessiterait un modèle ActivityLog
     # Pour l'instant, on retourne les dernières livraisons
     from ..models.delivery import Delivery
-    
+
     activities = []
-    
+
     # Livraisons en tant que client
     client_deliveries = db.query(Delivery).filter(
         Delivery.client_id == user_id
     ).order_by(Delivery.created_at.desc()).limit(10).all()
-    
+
     for delivery in client_deliveries:
         activities.append({
             'id': f"delivery_client_{delivery.id}",
@@ -254,12 +254,12 @@ def get_user_activity_history(db: Session, user_id: int, limit: int = 20) -> Lis
             'description': f"Commande créée vers {delivery.delivery_commune}",
             'created_at': delivery.created_at
         })
-    
+
     # Livraisons en tant que coursier
     courier_deliveries = db.query(Delivery).filter(
         Delivery.courier_id == user_id
     ).order_by(Delivery.created_at.desc()).limit(10).all()
-    
+
     for delivery in courier_deliveries:
         activities.append({
             'id': f"delivery_courier_{delivery.id}",
@@ -267,7 +267,7 @@ def get_user_activity_history(db: Session, user_id: int, limit: int = 20) -> Lis
             'description': f"Livraison {'terminée' if delivery.status == 'completed' else 'acceptée'} - {delivery.pickup_commune} vers {delivery.delivery_commune}",
             'created_at': delivery.updated_at or delivery.created_at
         })
-    
+
     # Trier par date et limiter
     activities.sort(key=lambda x: x['created_at'], reverse=True)
     return activities[:limit]
@@ -309,15 +309,15 @@ def export_users_to_csv(db: Session) -> bytes:
     """
     import csv
     import io
-    
+
     users = db.query(User).all()
-    
+
     output = io.StringIO()
     writer = csv.writer(output)
-    
+
     # En-têtes
     writer.writerow(['ID', 'Nom complet', 'Téléphone', 'Email', 'Rôle', 'Statut', 'KYC', 'Date création'])
-    
+
     # Données
     for user in users:
         writer.writerow([
@@ -330,7 +330,7 @@ def export_users_to_csv(db: Session) -> bytes:
             user.kyc_status,
             user.created_at.strftime('%Y-%m-%d %H:%M:%S')
         ])
-    
+
     output.seek(0)
     return output.getvalue().encode('utf-8')
 
@@ -341,7 +341,7 @@ def get_advanced_statistics(db: Session, period: str = "month") -> Dict[str, Any
     from datetime import datetime, timedelta
     from ..models.delivery import Delivery
     from sqlalchemy import func, extract
-    
+
     # Calculer la période
     now = datetime.utcnow()
     if period == "day":
@@ -352,25 +352,25 @@ def get_advanced_statistics(db: Session, period: str = "month") -> Dict[str, Any
         start_date = now - timedelta(days=30)
     else:
         start_date = now - timedelta(days=365)
-    
+
     # Statistiques utilisateurs
     total_users = db.query(User).count()
     new_users = db.query(User).filter(User.created_at >= start_date).count()
-    
+
     # Statistiques livraisons
     total_deliveries = db.query(Delivery).count()
     period_deliveries = db.query(Delivery).filter(Delivery.created_at >= start_date).count()
-    
+
     # Revenus
     total_revenue = db.query(func.sum(Delivery.final_price)).filter(
         Delivery.status == 'completed'
     ).scalar() or 0
-    
+
     period_revenue = db.query(func.sum(Delivery.final_price)).filter(
         Delivery.status == 'completed',
         Delivery.completed_at >= start_date
     ).scalar() or 0
-    
+
     return {
         'users': {
             'total': total_users,
@@ -392,20 +392,20 @@ def get_kyc_statistics(db: Session) -> Dict[str, Any]:
     Récupère les statistiques KYC
     """
     from sqlalchemy import func
-    
+
     kyc_stats = db.query(
         User.kyc_status,
         func.count(User.id).label('count')
     ).group_by(User.kyc_status).all()
-    
+
     stats = {status: 0 for status in ['pending', 'verified', 'rejected']}
-    
+
     for stat in kyc_stats:
         if stat.kyc_status in stats:
             stats[stat.kyc_status] = stat.count
-    
+
     stats['total'] = sum(stats.values())
-    
+
     return stats
 
 
@@ -421,28 +421,28 @@ def get_courier_performance(
     courier = get_user(db, courier_id)
     if courier.role != UserRole.courier:
         raise ForbiddenError("L'utilisateur n'est pas un coursier")
-    
+
     # Date par défaut: dernier mois
     if not end_date:
         end_date = datetime.utcnow()
     if not start_date:
         start_date = end_date - timedelta(days=30)
-    
+
     # Requête de base pour les livraisons du coursier
     base_query = db.query(Delivery).filter(
         Delivery.courier_id == courier_id,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     )
-    
+
     # Statistiques générales
     total_deliveries = base_query.count()
     completed_deliveries = base_query.filter(Delivery.status == DeliveryStatus.completed).count()
     cancelled_deliveries = base_query.filter(Delivery.status == DeliveryStatus.cancelled).count()
-    
+
     # Calcul du taux de réussite
     success_rate = (completed_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0
-    
+
     # Revenus totaux
     total_earnings = db.query(func.sum(Delivery.courier_fee)).filter(
         Delivery.courier_id == courier_id,
@@ -450,10 +450,10 @@ def get_courier_performance(
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     # Points de gamification
     courier_points = db.query(CourierPoints).filter(CourierPoints.courier_id == courier_id).first()
-    
+
     # Temps de livraison moyen
     avg_delivery_time = db.query(func.avg(Delivery.actual_duration)).filter(
         Delivery.courier_id == courier_id,
@@ -462,7 +462,7 @@ def get_courier_performance(
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     return {
         "courier_id": courier_id,
         "courier_name": courier.full_name,
@@ -500,23 +500,23 @@ def get_business_finances(
     business = get_user(db, business_id)
     if business.role != UserRole.business:
         raise ForbiddenError("L'utilisateur n'est pas une entreprise")
-    
+
     # Date par défaut: dernier mois
     if not end_date:
         end_date = datetime.utcnow()
     if not start_date:
         start_date = end_date - timedelta(days=30)
-    
+
     # Livraisons de l'entreprise
     deliveries_query = db.query(Delivery).filter(
         Delivery.client_id == business_id,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     )
-    
+
     total_deliveries = deliveries_query.count()
     completed_deliveries = deliveries_query.filter(Delivery.status == DeliveryStatus.completed).count()
-    
+
     # Revenus et coûts
     total_revenue = db.query(func.sum(Delivery.price)).filter(
         Delivery.client_id == business_id,
@@ -524,18 +524,18 @@ def get_business_finances(
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     total_courier_fees = db.query(func.sum(Delivery.courier_fee)).filter(
         Delivery.client_id == business_id,
         Delivery.status == DeliveryStatus.completed,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     # Commission (supposée être 10% du prix)
     commission_rate = 0.10
     total_commission = total_revenue * commission_rate
-    
+
     return {
         "business_id": business_id,
         "business_name": business.full_name,
@@ -570,40 +570,40 @@ def get_global_stats(
         end_date = datetime.utcnow()
     if not start_date:
         start_date = end_date - timedelta(days=30)
-    
+
     # Requête de base pour les utilisateurs
     users_query = db.query(User)
     if commune:
         users_query = users_query.filter(User.commune == commune)
-    
+
     # Statistiques des utilisateurs
     total_users = users_query.count()
     total_clients = users_query.filter(User.role == UserRole.client).count()
     total_couriers = users_query.filter(User.role == UserRole.courier).count()
     total_businesses = users_query.filter(User.role == UserRole.business).count()
-    
+
     # Requête de base pour les livraisons
     deliveries_query = db.query(Delivery).filter(
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     )
-    
+
     if commune:
         deliveries_query = deliveries_query.join(User).filter(User.commune == commune)
-    
+
     # Statistiques des livraisons
     total_deliveries = deliveries_query.count()
     completed_deliveries = deliveries_query.filter(Delivery.status == DeliveryStatus.completed).count()
     cancelled_deliveries = deliveries_query.filter(Delivery.status == DeliveryStatus.cancelled).count()
     pending_deliveries = deliveries_query.filter(Delivery.status == DeliveryStatus.pending).count()
-    
+
     # Revenus totaux
     total_revenue = db.query(func.sum(Delivery.price)).filter(
         Delivery.status == DeliveryStatus.completed,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     return {
         "period": {
             "start_date": start_date.isoformat(),
@@ -644,7 +644,7 @@ def get_chart_data(
         end_date = datetime.utcnow()
     if not start_date:
         start_date = end_date - timedelta(days=30)
-    
+
     if chart_type == "deliveries_per_day":
         # Livraisons par jour
         query = db.query(
@@ -654,13 +654,13 @@ def get_chart_data(
             Delivery.created_at >= start_date,
             Delivery.created_at <= end_date
         ).group_by(func.date(Delivery.created_at)).order_by(func.date(Delivery.created_at))
-        
+
         results = query.all()
         return {
             "labels": [str(result.date) for result in results],
             "data": [result.count for result in results]
         }
-    
+
     elif chart_type == "revenue_per_day":
         # Revenus par jour
         query = db.query(
@@ -671,29 +671,29 @@ def get_chart_data(
             Delivery.created_at <= end_date,
             Delivery.status == DeliveryStatus.completed
         ).group_by(func.date(Delivery.created_at)).order_by(func.date(Delivery.created_at))
-        
+
         results = query.all()
         return {
             "labels": [str(result.date) for result in results],
             "data": [float(result.revenue or 0) for result in results]
         }
-    
+
     elif chart_type == "users_per_role":
         # Utilisateurs par rôle
         query = db.query(
             User.role,
             func.count(User.id).label('count')
         ).group_by(User.role)
-        
+
         if commune:
             query = query.filter(User.commune == commune)
-        
+
         results = query.all()
         return {
             "labels": [result.role.value for result in results],
             "data": [result.count for result in results]
         }
-    
+
     else:
         raise NotFoundError(f"Type de graphique '{chart_type}' non supporté")
 
@@ -711,24 +711,24 @@ def get_revenues(
         end_date = datetime.utcnow()
     if not start_date:
         start_date = end_date - timedelta(days=30)
-    
+
     # Revenus totaux
     total_revenue = db.query(func.sum(Delivery.price)).filter(
         Delivery.status == DeliveryStatus.completed,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     # Frais de coursiers
     total_courier_fees = db.query(func.sum(Delivery.courier_fee)).filter(
         Delivery.status == DeliveryStatus.completed,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     # Commission de la plateforme (10%)
     platform_commission = total_revenue * 0.10
-    
+
     return {
         "period": {
             "start_date": start_date.isoformat(),
@@ -756,23 +756,23 @@ def get_expenses(
         end_date = datetime.utcnow()
     if not start_date:
         start_date = end_date - timedelta(days=30)
-    
+
     # Pour l'instant, les principales dépenses sont les frais de coursiers
     total_courier_fees = db.query(func.sum(Delivery.courier_fee)).filter(
         Delivery.status == DeliveryStatus.completed,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     # Estimation des coûts opérationnels (5% du CA)
     total_revenue = db.query(func.sum(Delivery.price)).filter(
         Delivery.status == DeliveryStatus.completed,
         Delivery.created_at >= start_date,
         Delivery.created_at <= end_date
     ).scalar() or 0
-    
+
     operational_costs = total_revenue * 0.05
-    
+
     return {
         "period": {
             "start_date": start_date.isoformat(),
@@ -796,9 +796,9 @@ def generate_financial_report(
     """
     revenues = get_revenues(db, start_date, end_date)
     expenses = get_expenses(db, start_date, end_date)
-    
+
     net_profit = revenues["revenue"]["net_revenue"] - expenses["expenses"]["total"]
-    
+
     return {
         "period": revenues["period"],
         "summary": {

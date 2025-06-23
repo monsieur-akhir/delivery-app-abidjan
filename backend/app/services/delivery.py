@@ -1,7 +1,7 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, and_, or_
 
 from ..models.delivery import Delivery, DeliveryStatus, DeliveryType, Bid, TrackingPoint
 from ..models.collaborative_delivery import CollaborativeDelivery
@@ -114,7 +114,7 @@ def create_delivery(db: Session, delivery_data: DeliveryCreate, user_id: int):
                          'distance', 'weather_conditions', 'vehicle_type', 'delivery_speed', 'extras',
                          'description', 'weight', 'estimated_value', 'is_urgent', 'urgency_level', 
                          'custom_price', 'client_name', 'client_phone', 'client_email']
-        
+
         for field in invalid_fields:
             delivery_dict.pop(field, None)
 
@@ -784,3 +784,28 @@ def get_delivery_analytics(
         }
     except Exception as e:
         raise Exception(f"Erreur lors de la récupération des analyses: {str(e)}")
+
+def get_courier_deliveries(db: Session, courier_id: int, skip: int = 0, limit: int = 100) -> List[Delivery]:
+    return db.query(Delivery).filter(
+        Delivery.courier_id == courier_id
+    ).order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
+
+def get_available_deliveries(db: Session, courier_id: int, commune: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[Delivery]:
+    """
+    Obtenir les livraisons disponibles (sans coursier assigné) pour un coursier.
+    """
+    query = db.query(Delivery).filter(
+        Delivery.courier_id.is_(None),
+        Delivery.status == DeliveryStatus.pending
+    )
+
+    # Filtrer par commune si spécifié
+    if commune:
+        query = query.filter(
+            or_(
+                Delivery.pickup_address.contains(commune),
+                Delivery.delivery_address.contains(commune)
+            )
+        )
+
+    return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()

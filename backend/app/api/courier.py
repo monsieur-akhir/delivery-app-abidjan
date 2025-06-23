@@ -14,7 +14,7 @@ from ..schemas.collaborative import (
     CollaborativeDeliveryCreate, CollaborativeMessageCreate,
     JoinDeliveryRequest
 )
-from ..services.delivery import get_delivery, get_courier_deliveries
+from ..services.delivery import get_courier_deliveries, update_delivery_status, get_available_deliveries
 from ..services.collaborative_service import (
     get_collaborative_deliveries, get_collaborative_delivery_details,
     join_collaborative_delivery, send_collaborative_message,
@@ -352,3 +352,16 @@ async def get_courier_earnings(
         "average_per_delivery": total_earnings / total_deliveries if total_deliveries > 0 else 0,
         "daily_breakdown": daily_earnings
     }
+
+@router.get("/available-deliveries", response_model=List[DeliveryResponse])
+async def get_available_deliveries_route(
+    commune: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtenir les livraisons disponibles pour le coursier.
+    """
+    return get_available_deliveries(db, current_user.id, commune, skip, limit)
