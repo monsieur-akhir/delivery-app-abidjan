@@ -1,6 +1,5 @@
-
 import { API_BASE_URL } from '../config'
-import { getToken } from '../utils/storage'
+import { getToken } from '../utils'
 
 export interface ScheduledDelivery {
   id: number

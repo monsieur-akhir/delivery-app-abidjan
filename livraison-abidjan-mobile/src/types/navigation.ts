@@ -45,7 +45,7 @@ export type RootStackParamList = {
     };
   } | undefined;
   TrackDelivery: { deliveryId: string | number };
-  Payment: { deliveryId?: string; amount?: number } | undefined;
+  Payment: { deliveryId?: string; amount?: number; description?: string } | undefined;
   PaymentMethods: undefined;
   Notifications: undefined;
   DeliveryDetails: { deliveryId: string | number };
@@ -116,9 +116,6 @@ export type RootStackParamList = {
   MultiDestinationDeliveryDetails: { deliveryId: number }
 
   // Continuation du type RootStackParamList
-  } }
-
-  // Courier routes
   CourierDashboard: undefined;
   AvailableDeliveries: undefined;
   CourierTrackDelivery: { deliveryId: string };

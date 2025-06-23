@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native"
-import { TextInput, Button, Text, Snackbar } from "react-native-paper"
+import { TextInput, Button, Text } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
 import { useTranslation } from "react-i18next"
 import AsyncStorage from "@react-native-async-storage/async-storage"
@@ -29,13 +29,11 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
   const [otp, setOTP] = useState<string>("")
   const [step, setStep] = useState<'phone' | 'otp'>('phone')
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
-  const [visible, setVisible] = useState<boolean>(false)
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
   const [countdown, setCountdown] = useState<number>(0)
   const [alertVisible, setAlertVisible] = useState(false)
-  const [alertConfig, setAlertConfig] = useState({ title: '', message: '', type: 'error' })
+  const [alertConfig, setAlertConfig] = useState({ title: '', message: '', type: 'error' as 'error' | 'success' | 'info' })
 
   // Charger le téléphone sauvegardé
   useEffect(() => {
@@ -98,18 +96,22 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
         // Envoyer l'OTP
       const response = await sendOTP(phone, 'login')
       
-      // Ne passer à l'étape OTP que si la requête a réussi
       if (response.success) {
         setStep('otp')
-        setCountdown(60) // 60 secondes avant de pouvoir renvoyer
-        setError("")
-        // Afficher le message de succès
-        setError(response.message || t("otpLogin.otpSent"))
-        setVisible(true)
-        setTimeout(() => setVisible(false), 2000) // Masquer après 2 secondes
+        setCountdown(60)
+        setAlertConfig({
+          title: 'OTP Envoyé',
+          message: response.message || t("otpLogin.otpSent"),
+          type: 'success'
+        })
+        setAlertVisible(true)
       } else {
-        setError(response.message || t("otpLogin.errorSendingOtp"))
-        setVisible(true)
+        setAlertConfig({
+          title: 'Erreur',
+          message: response.message || t("otpLogin.errorSendingOtp"),
+          type: 'error'
+        })
+        setAlertVisible(true)
       }
     } catch (error) {
       console.error("Send OTP error:", error)
@@ -124,46 +126,35 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
     }
   }
   const handleVerifyOTP = async (): Promise<void> => {
-    if (otp.trim() === "") {
-      setAlertConfig({ title: 'Erreur', message: t("otpLogin.errorOtpRequired"), type: 'error' })
-      setAlertVisible(true)
-      return
+    if (otp.trim() === "" || otp.length !== 6) {
+      setAlertConfig({ title: 'Erreur', message: t("otpLogin.errorOtpInvalid"), type: 'error' });
+      setAlertVisible(true);
+      return;
     }
 
-    if (otp.length !== 6) {
-      setAlertConfig({ title: 'Erreur', message: t("otpLogin.errorOtpInvalid"), type: 'error' })
-      setAlertVisible(true)
-      return
-    }
-
-    setLoading(true)
+    setLoading(true);
     try {
-      // Connexion avec OTP
-      const result = await loginWithOTP(phone, otp)
+      const result = await loginWithOTP(phone, otp);
       
-      // Sauvegarder les informations d'authentification
-      await AsyncStorage.setItem("token", result.token)
-      await AsyncStorage.setItem("user", JSON.stringify(result.user))
+      // Mettre à jour le contexte d'authentification, qui gère maintenant le stockage
+      await setAuthData(result.user, result.token, result.refreshToken);
       
-      // Mettre à jour le contexte d'authentification
-      setAuthData(result.user, result.token)
-      
-      // Navigate to appropriate screen
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "ClientMain" }],
-      })
+      // La navigation est maintenant gérée par le AppNavigator/AuthGate
+      // donc plus besoin de la ligne ci-dessous. Le changement de contexte
+      // va automatiquement déclencher la redirection.
+      // navigation.reset({ ... });
+
     } catch (err: unknown) {
       const error = err as Error;
-      console.error("OTP Login error:", error)
+      console.error("OTP Login error:", error);
       setAlertConfig({
         title: 'Erreur',
-        message: error instanceof Error ? error.message : t("otpLogin.errorVerifyingOtp"),
+        message: error.message || t("otpLogin.errorVerifyingOtp"),
         type: 'error'
-      })
-      setAlertVisible(true)
+      });
+      setAlertVisible(true);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -174,7 +165,6 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
     try {
       await sendOTP(phone, 'login')
       setCountdown(60)
-      setError("")
     } catch (error) {
       console.error("Resend OTP error:", error)
       setAlertConfig({

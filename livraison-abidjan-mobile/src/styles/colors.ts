@@ -33,17 +33,18 @@ export const theme = {
 // Couleurs supplémentaires pour l'application
 export const colors = {
   orange: '#FF6B00',
-  lightOrange: '#FF8C42',
-  darkOrange: '#E55A00',
-  gray: '#666666',
-  lightGray: '#F5F5F5',
+  lightOrange: '#FFD6B0',
+  darkOrange: '#C85000',
+  gray: '#757575',
+  lightGray: '#E0E0E0',
   darkGray: '#333333',
   white: '#FFFFFF',
   black: '#000000',
   success: '#4CAF50',
-  warning: '#FF9800',
+  warning: '#FFC107',
   error: '#F44336',
   info: '#2196F3',
+  surface: '#FFFFFF',
 };
 
 export default colors

@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Button, Snackbar } from 'react-native-paper';
+import { Button } from 'react-native-paper';
 import * as Animatable from 'react-native-animatable';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useNetwork } from '../../contexts/NetworkContext';
 import { colors } from '../../styles/colors';
 import i18n from '../../i18n';
+import CustomAlert from '../../components/CustomAlert';
 
 type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Register">
@@ -44,10 +45,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [showOfflineWarning, setShowOfflineWarning] = useState(false);
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ title: '', message: '', type: 'info' as 'info' | 'error' | 'success' });
 
   useEffect(() => {
     if (!i18n.isInitialized) {
@@ -115,29 +116,31 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     }
 
     if (!isConnected && !isOfflineMode) {
-      setSnackbarMessage(t('register.errors.noConnection'));
-      setSnackbarVisible(true);
+      setAlertConfig({ title: 'Erreur de connexion', message: t('register.errors.noConnection'), type: 'error' });
+      setAlertVisible(true);
       return;
     }
 
     setLoading(true);
     try {
       await register({
-        name: formData.name,
+        full_name: formData.name,
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
-        user_type: formData.userType,
+        role: formData.userType,
       });
 
-      setSnackbarMessage(t('register.success'));
-      setSnackbarVisible(true);
+      setAlertConfig({ title: 'Succès', message: t('register.success'), type: 'success' });
+      setAlertVisible(true);
+
       setTimeout(() => {
+        setAlertVisible(false);
         navigation.navigate('Login');
       }, 2000);
     } catch (error: any) {
-      setSnackbarMessage(error.message || t('register.errors.generic'));
-      setSnackbarVisible(true);
+      setAlertConfig({ title: 'Erreur', message: error.message || t('register.errors.generic'), type: 'error' });
+      setAlertVisible(true);
     } finally {
       setLoading(false);
     }
@@ -381,18 +384,13 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        style={styles.snackbar}
-        action={{
-          label: 'OK',
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {snackbarMessage}
-      </Snackbar>
+      <CustomAlert
+        visible={alertVisible}
+        onDismiss={() => setAlertVisible(false)}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+      />
     </SafeAreaView>
   );
 };
@@ -613,9 +611,6 @@ const styles = {
     fontWeight: '600',
     color: colors.orange,
     marginLeft: 4,
-  },
-  snackbar: {
-    backgroundColor: colors.darkGray,
   },
 };
 

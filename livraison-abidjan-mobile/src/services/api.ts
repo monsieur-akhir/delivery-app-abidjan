@@ -351,6 +351,7 @@ export interface FAQ {
 // Types pour les réponses de l'API
 export interface LoginResponse {
   token: string
+  refreshToken?: string
   user: User
 }
 
@@ -599,41 +600,38 @@ api.interceptors.response.use(
 // API d'authentification
 
 // Nouvelle fonction de connexion par OTP uniquement
-export const loginWithOTP = async (phone: string, otp: string): Promise<{ token: string; user: User }> => {
+export const loginWithOTP = async (phone: string, otp: string): Promise<LoginResponse> => {
   try {
     const response = await api.post("/api/auth/verify-otp", { 
-      phone: phone,
-      code: otp,
-      otp_type: "login"
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000 // Timeout de 10 secondes
-    })
+      phone,
+      code: otp, // Le backend attend probablement 'code'
+      otp_type: 'login' // et un type
+    });
     
-    if (response.data.success && response.data.token) {
-      // Token directement disponible dans la réponse
-      const access_token = response.data.token;
-      
-      // Set authorization header for future requests
-      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+    const { success, token, refresh_token, user } = response.data;
+
+    if (success && token) {
+      // Mettre à jour le header pour les requêtes futures
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       return {
-        token: access_token,
-        user: response.data.user
+        token,
+        refreshToken: refresh_token,
+        user,
       };
     } else {
-      throw new Error("Échec de la vérification OTP");
+      throw new Error(response.data.message || "La vérification OTP a échoué.");
     }
-  } catch (error: unknown) {
-    console.error("OTP Login error:", error);
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      throw new Error("Code OTP invalide ou expiré");
+  } catch (error: any) {
+    if (axios.isAxiosError(error) && error.response) {
+      if (error.response.status === 401) {
+        throw new Error("Code OTP invalide ou expiré.");
+      }
+      throw new Error(error.response.data.detail || 'Erreur de vérification OTP');
     }
-    throw new Error("Erreur de connexion avec OTP");
+    throw new Error('Erreur réseau ou serveur indisponible.');
   }
-}
+};
 
 export const login = async (phone: string, password: string): Promise<{ token: string; user: User }> => {
   try {
@@ -1159,21 +1157,60 @@ export const fetchActiveDeliveries = async (): Promise<Delivery[]> => {
 }
 
 // Récupérer les prévisions météo
-export const fetchWeatherForecast = async (latitude: number, longitude: number, commune?: string): Promise<Weather> => {
-  let url = `/api/weather?lat=${latitude}&lng=${longitude}`
-  if (commune) {
-    url += `&commune=${encodeURIComponent(commune)}`
+export const getWeatherData = async (latitude: number, longitude: number, commune?: string): Promise<Weather> => {
+  try {
+    // Générer une clé unique pour le cache
+    const cacheKey = `weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`
+    const cachedData = await AsyncStorage.getItem(cacheKey)
+    const cacheTimestamp = await AsyncStorage.getItem(`${cacheKey}_timestamp`)
+
+    // Vérifier si les données en cache sont récentes (moins de 10 minutes)
+    const cacheDuration = 10 * 60 * 1000 // 10 minutes en millisecondes
+    if (cachedData && cacheTimestamp && Date.now() - Number.parseInt(cacheTimestamp) < cacheDuration) {
+      return JSON.parse(cachedData) as Weather
+    }
+
+    // Construire l'URL de la requête
+    const params = new URLSearchParams({
+      lat: latitude.toString(),
+      lng: longitude.toString(),
+    })
+    if (commune) {
+      params.append("commune", commune)
+    }
+    const url = `/api/weather?${params.toString()}`
+
+    // Effectuer la requête API
+    const response = await api.get(url)
+    if (!response.data || !response.data.weather) {
+      throw new Error("Format de données météo inattendu")
+    }
+    let weatherData = response.data.weather
+
+    // Transformer condition si nécessaire
+    if (weatherData.current && weatherData.current.condition && typeof weatherData.current.condition === "object") {
+      weatherData.current.condition = weatherData.current.condition.text || "unknown"
+    }
+
+    // Valider la structure des données
+    if (!weatherData.current || typeof weatherData.current.temperature !== "number" || typeof weatherData.current.condition !== "string") {
+      throw new Error("Invalid weather data format")
+    }
+
+    // Mettre en cache les données
+    await AsyncStorage.setItem(cacheKey, JSON.stringify(weatherData))
+    await AsyncStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
+
+    return weatherData as Weather
+  } catch (error: unknown) {
+    // Gestion des erreurs
+    console.error("Error fetching weather data:", error) // eslint-disable-next-line no-console
+    const cachedData = await AsyncStorage.getItem(`weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`)
+    if (cachedData) {
+      return JSON.parse(cachedData) as Weather
+    }
+    throw new Error("Failed to fetch weather data and no cached data available")
   }
-  const response = await api.get(url)
-  if (!response.data || !response.data.weather) {
-    throw new Error("Format de données météo inattendu")
-  }
-  let weatherData = response.data.weather
-  // Transformer condition si nécessaire
-  if (weatherData.current && weatherData.current.condition && typeof weatherData.current.condition === "object") {
-    weatherData.current.condition = weatherData.current.condition.text || "unknown"
-  }
-  return weatherData
 }
 
 // Récupérer les alertes météo
@@ -1315,77 +1352,6 @@ export const fetchFAQs = async (): Promise<FAQ[]> => {
   } catch (error) {
     console.error("Error fetching FAQs:", error)
     return []
-  }
-}
-
-// Nouvelle fonction pour remplacer fetchWeatherForecast
-export const getWeatherData = async (latitude: number, longitude: number, commune?: string): Promise<Weather> => {
-  try {
-    // Générer une clé unique pour le cache
-    const cacheKey = `weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`
-    const cachedData = await AsyncStorage.getItem(cacheKey)
-    const cacheTimestamp = await AsyncStorage.getItem(`${cacheKey}_timestamp`)
-
-    // Vérifier si les données en cache sont récentes (moins de 10 minutes)
-    const cacheDuration = 10 * 60 * 1000 // 10 minutes en millisecondes
-    if (cachedData && cacheTimestamp && Date.now() - Number.parseInt(cacheTimestamp) < cacheDuration) {
-      return JSON.parse(cachedData) as Weather
-    }
-
-    // Construire l'URL de la requête
-    const params = new URLSearchParams({
-      lat: latitude.toString(),
-      lng: longitude.toString(),
-    })
-    if (commune) {
-      params.append("commune", commune)
-    }
-    const url = `/api/weather?${params.toString()}`
-
-    // Effectuer la requête API
-    const response = await api.get(url)
-    if (!response.data || !response.data.weather) {
-      throw new Error("Format de données météo inattendu")
-    }
-    let weatherData = response.data.weather
-
-    // Transformer condition si nécessaire
-    if (weatherData.current && weatherData.current.condition && typeof weatherData.current.condition === "object") {
-      weatherData.current.condition = weatherData.current.condition.text || "unknown"
-    }
-
-    // Valider la structure des données
-    if (!weatherData.current || typeof weatherData.current.temperature !== "number" || typeof weatherData.current.condition !== "string") {
-      throw new Error("Invalid weather data format")
-    }
-
-    // Mettre en cache les données
-    await AsyncStorage.setItem(cacheKey, JSON.stringify(weatherData))
-    await AsyncStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString())
-
-    return weatherData as Weather
-  } catch (error: unknown) {
-    // Gestion des erreurs
-    console.error("Error fetching weather data:", error) // eslint-disable-next-line no-console
-    const cachedData = await AsyncStorage.getItem(`weather_${latitude}_${longitude}${commune ? `_${commune}` : ""}`)
-    if (cachedData) {
-      return JSON.parse(cachedData) as Weather
-    }
-    throw new Error("Failed to fetch weather data and no cached data available")
-  }
-}
-
-
-// Fonction pour vider le cache API
-export const clearApiCache = async (): Promise<boolean> => {
-  try {
-    const keys = await AsyncStorage.getAllKeys()
-    const cacheKeys = keys.filter((key) => key.startsWith("api_cache_"))
-    await AsyncStorage.multiRemove(cacheKeys)
-    return true
-  } catch (error: unknown) {
-    console.error("Error clearing API cache:", error)
-    return false
   }
 }
 

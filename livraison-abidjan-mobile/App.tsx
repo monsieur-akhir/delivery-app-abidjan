@@ -27,6 +27,11 @@ function AuthGate() {
 }
 
 export default function App() {
+  // Gestion d'erreur globale
+  const handleError = (error: any) => {
+    console.warn('Erreur globale de l\'application:', error);
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -34,14 +39,18 @@ export default function App() {
           <NetworkProvider>
             <AuthProvider>
               <TokenSyncWrapper>
-                <WebSocketProvider>
-                  <NotificationProvider>
-                    <NavigationContainer>
+                <NotificationProvider>
+                  <WebSocketProvider>
+                    <NavigationContainer
+                      onStateChange={(state) => {
+                        console.log('Navigation state:', state);
+                      }}
+                    >
                       <AuthGate />
                       <StatusBar style="auto" />
                     </NavigationContainer>
-                  </NotificationProvider>
-                </WebSocketProvider>
+                  </WebSocketProvider>
+                </NotificationProvider>
               </TokenSyncWrapper>
             </AuthProvider>
           </NetworkProvider>

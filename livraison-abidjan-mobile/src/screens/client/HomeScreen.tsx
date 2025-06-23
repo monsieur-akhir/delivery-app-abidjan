@@ -16,58 +16,47 @@ import { Card, Button, Avatar, Badge, Chip, FAB } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { RootStackParamList } from '../../types/navigation';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useAuth } from '../../hooks/useAuth';
-import { useDelivery } from '../../hooks/useDelivery';
-import { DeliveryService } from '../../services/DeliveryService';
-import { LocationService } from '../../services/LocationService';
-import { WeatherInfo } from '../../components/WeatherInfo';
-import { OfflineIndicator } from '../../components/OfflineIndicator';
+import DeliveryService from '../../services/DeliveryService';
+import LocationService from '../../services/LocationService';
+import WeatherService from '../../services/CommuneWeatherService';
+import OfflineIndicator from '../../components/OfflineIndicator';
+import type { Delivery, Weather } from '../../types/models';
 
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
 const CARD_WIDTH = width - (CARD_MARGIN * 2);
 
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { recentDeliveries, loading: deliveriesLoading, refreshDeliveries } = useDelivery();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState(null);
-  const [weatherData, setWeatherData] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState<{ address?: string } | null>(null);
+  const [weatherData, setWeatherData] = useState<Weather | null>(null);
+  const [recentDeliveries, setRecentDeliveries] = useState<Delivery[]>([]);
+  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  // Données des dernières courses avec états
-  const [recentOrders, setRecentOrders] = useState([
-    {
-      id: 1,
-      status: 'completed',
-      pickup: 'Cocody Riviera',
-      delivery: 'Marcory Zone 4',
-      date: '2025-01-19',
-      amount: 2500,
-      rating: 4.8
-    },
-    {
-      id: 2,
-      status: 'in_progress',
-      pickup: 'Plateau Centre',
-      delivery: 'Yopougon Niangon',
-      date: '2025-01-19',
-      amount: 3200,
-      courier: 'Jean-Baptiste K.'
-    },
-    {
-      id: 3,
-      status: 'cancelled',
-      pickup: 'Adjamé Commerce',
-      delivery: 'Abobo Pk18',
-      date: '2025-01-18',
-      amount: 1800,
-      reason: 'Coursier indisponible'
+  const refreshDeliveries = useCallback(async () => {
+    try {
+      setDeliveriesLoading(true);
+      // Charger les vraies livraisons récentes
+      const deliveries = await DeliveryService.getUserDeliveries();
+      setRecentDeliveries(deliveries);
+    } catch (error) {
+      console.error('Erreur lors du chargement des livraisons:', error);
+    } finally {
+      setDeliveriesLoading(false);
     }
-  ]);
+  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -82,30 +71,45 @@ export default function HomeScreen() {
   }, [refreshDeliveries]);
 
   useEffect(() => {
-    getCurrentLocation();
-    getWeatherData();
+    handleGetLocation();
+    refreshDeliveries();
   }, []);
 
-  const getCurrentLocation = async () => {
+  const handleGetLocation = async () => {
     try {
-      const location = await LocationService.getCurrentLocation();
-      setCurrentLocation(location);
+      setLocationLoading(true)
+      const locationService = LocationService.getInstance()
+      const position = await locationService.getCurrentPosition()
+      setUserLocation({
+        latitude: position.latitude,
+        longitude: position.longitude
+      })
+      const commune = await locationService.getCommuneFromCoords(position.latitude, position.longitude)
+      getWeatherData(commune || 'Cocody')
+      console.log('Position obtenue:', position, 'Commune:', commune)
     } catch (error) {
-      console.error('Erreur localisation:', error);
+      console.error('Erreur localisation:', error)
+      Alert.alert(
+        'Erreur de localisation',
+        'Impossible d\'obtenir votre position. Vérifiez que la localisation est activée.'
+      )
+    } finally {
+      setLocationLoading(false)
+    }
+  }
+
+  const getWeatherData = async (commune: string) => {
+    try {
+      const weather = await WeatherService.getWeatherForCommune(commune);
+      if (weather && weather.current) {
+        setWeatherData(weather.current);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la météo:', error);
     }
   };
 
-  const getWeatherData = async () => {
-    // Simuler des données météo pour Abidjan
-    setWeatherData({
-      temperature: 28,
-      condition: 'sunny',
-      humidity: 75,
-      description: 'Ensoleillé'
-    });
-  };
-
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return '#4CAF50';
       case 'in_progress': return '#FF9800';
@@ -115,7 +119,7 @@ export default function HomeScreen() {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case 'completed': return 'Terminée';
       case 'in_progress': return 'En cours';
@@ -189,7 +193,7 @@ export default function HomeScreen() {
         <View style={styles.headerActions}>
           <TouchableOpacity 
             style={styles.headerButton}
-            onPress={() => navigation.navigate('NotificationsScreen')}
+            onPress={() => navigation.navigate('Notifications')}
           >
             <MaterialCommunityIcons name="bell-outline" size={24} color="#333" />
             <Badge style={styles.notificationBadge} size={8} />
@@ -197,7 +201,7 @@ export default function HomeScreen() {
 
           <TouchableOpacity 
             style={styles.headerButton}
-            onPress={() => navigation.navigate('WalletScreen')}
+            onPress={() => navigation.navigate('Wallet')}
           >
             <MaterialCommunityIcons name="wallet-outline" size={24} color="#333" />
           </TouchableOpacity>
@@ -223,7 +227,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={action.id}
             style={styles.quickActionCard}
-            onPress={() => navigation.navigate(action.screen, action.params)}
+            onPress={() => navigation.navigate(action.screen as any, action.params)}
             activeOpacity={0.7}
           >
             <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
@@ -253,7 +257,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={category.id}
             style={styles.categoryChip}
-            onPress={() => navigation.navigate('MarketplaceScreen', { category: category.id })}
+            // onPress={() => navigation.navigate('Marketplace', { category: category.id })}
           >
             <View style={[styles.categoryIcon, { backgroundColor: category.color + '15' }]}>
               <MaterialCommunityIcons 
@@ -269,63 +273,82 @@ export default function HomeScreen() {
     </View>
   );
 
-  const renderRecentOrders = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Vos dernières courses</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('DeliveryHistoryScreen')}>
-          <Text style={styles.seeAllText}>Tout voir</Text>
-        </TouchableOpacity>
-      </View>
+  const renderRecentOrders = () => {
+    if (deliveriesLoading) {
+      return (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Commandes récentes</Text>
+          <View style={styles.loadingContainer}>
+            <Text>Chargement...</Text>
+          </View>
+        </View>
+      );
+    }
 
-      {recentOrders.map((order) => (
-        <Card key={order.id} style={styles.orderCard}>
-          <Card.Content style={styles.orderContent}>
-            <View style={styles.orderHeader}>
-              <View style={styles.orderInfo}>
+    if (recentDeliveries.length === 0) {
+      return (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Commandes récentes</Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Aucune commande récente</Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Commandes récentes</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('DeliveryHistory')}>
+            <Text style={styles.seeAllText}>Voir tout</Text>
+          </TouchableOpacity>
+        </View>
+
+        {recentDeliveries.slice(0, 3).map((delivery) => (
+          <Card key={delivery.id} style={styles.orderCard}>
+            <Card.Content style={styles.orderContent}>
+              <View style={styles.orderHeader}>
+                <Text style={styles.orderTitle}>Livraison #{delivery.id}</Text>
+                <Chip 
+                  style={[styles.statusChip, { backgroundColor: getStatusColor(delivery.status) + '15' }]}
+                  textStyle={[styles.statusText, { color: getStatusColor(delivery.status) }]}
+                  compact
+                >
+                  {getStatusText(delivery.status)}
+                </Chip>
+              </View>
+
+              <View style={styles.routeContainer}>
                 <View style={styles.routeInfo}>
                   <MaterialCommunityIcons name="circle-outline" size={12} color="#4CAF50" />
-                  <Text style={styles.locationText} numberOfLines={1}>{order.pickup}</Text>
+                  <Text style={styles.routeLocationText} numberOfLines={1}>
+                    {delivery.pickup_address || delivery.pickup_commune}
+                  </Text>
                 </View>
                 <View style={styles.routeLine} />
                 <View style={styles.routeInfo}>
                   <MaterialCommunityIcons name="map-marker" size={12} color="#F44336" />
-                  <Text style={styles.locationText} numberOfLines={1}>{order.delivery}</Text>
+                  <Text style={styles.routeLocationText} numberOfLines={1}>
+                    {delivery.delivery_address || delivery.delivery_commune}
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.orderMeta}>
-                <Chip 
-                  style={[styles.statusChip, { backgroundColor: getStatusColor(order.status) + '15' }]}
-                  textStyle={[styles.statusText, { color: getStatusColor(order.status) }]}
-                  compact
-                >
-                  {getStatusText(order.status)}
-                </Chip>
-                <Text style={styles.orderAmount}>{order.amount} FCFA</Text>
+                <Text style={styles.orderAmount}>
+                  {(delivery.final_price || delivery.proposed_price || 0).toLocaleString()} FCFA
+                </Text>
+                <Text style={styles.orderDate}>
+                  {new Date(delivery.created_at).toLocaleDateString('fr-FR')}
+                </Text>
               </View>
-            </View>
-
-            <View style={styles.orderFooter}>
-              <Text style={styles.orderDate}>{order.date}</Text>
-              {order.status === 'completed' && order.rating && (
-                <View style={styles.ratingSection}>
-                  <MaterialCommunityIcons name="star" size={14} color="#FFD700" />
-                  <Text style={styles.ratingText}>{order.rating}</Text>
-                </View>
-              )}
-              {order.status === 'in_progress' && order.courier && (
-                <Text style={styles.courierText}>Coursier: {order.courier}</Text>
-              )}
-              {order.status === 'cancelled' && order.reason && (
-                <Text style={styles.reasonText}>{order.reason}</Text>
-              )}
-            </View>
-          </Card.Content>
-        </Card>
-      ))}
-    </View>
-  );
+            </Card.Content>
+          </Card>
+        ))}
+      </View>
+    );
+  };
 
   const renderWeatherInfo = () => {
     if (!weatherData) return null;
@@ -339,7 +362,7 @@ export default function HomeScreen() {
             color="#FF9800" 
           />
           <Text style={styles.weatherText}>
-            {weatherData.temperature}°C • {weatherData.description}
+            {weatherData.temperature}°C • {weatherData.condition}
           </Text>
           <Text style={styles.weatherHumidity}>
             Humidité {weatherData.humidity}%
@@ -373,7 +396,7 @@ export default function HomeScreen() {
       <FAB
         icon="plus"
         style={styles.fab}
-        onPress={() => navigation.navigate('CreateDeliveryScreen')}
+        onPress={() => navigation.navigate('CreateDelivery')}
         color="#FFFFFF"
       />
     </SafeAreaView>
@@ -581,11 +604,16 @@ const styles = StyleSheet.create({
   orderHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  orderInfo: {
-    flex: 1,
-    marginRight: 16,
+  orderTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  routeContainer: {
+    marginBottom: 12,
   },
   routeInfo: {
     flexDirection: 'row',
@@ -594,56 +622,52 @@ const styles = StyleSheet.create({
   },
   routeLine: {
     width: 1,
-    height: 16,
+    height: 20,
     backgroundColor: '#E0E0E0',
     marginLeft: 6,
     marginVertical: 2,
   },
+  routeLocationText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+    flex: 1,
+  },
   orderMeta: {
-    alignItems: 'flex-end',
-  },
-  statusChip: {
-    marginBottom: 8,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  orderAmount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-  },
-  orderFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 12,
+  },
+  orderAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
   orderDate: {
     fontSize: 12,
     color: '#666',
   },
-  ratingSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  statusChip: {
+    height: 24,
   },
-  ratingText: {
+  statusText: {
     fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-  },
-  courierText: {
-    fontSize: 12,
-    color: '#4CAF50',
     fontWeight: '500',
   },
-  reasonText: {
-    fontSize: 12,
-    color: '#F44336',
-    fontStyle: 'italic',
+  loadingContainer: {
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   fab: {
     position: 'absolute',

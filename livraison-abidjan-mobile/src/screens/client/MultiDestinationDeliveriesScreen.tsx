@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react'
 import {
   View,
@@ -17,7 +16,7 @@ import { RootStackParamList } from '../../types/navigation'
 import { EmptyState, Card } from '../../components'
 import { useTheme } from '../../contexts/ThemeContext'
 import { API_BASE_URL } from '../../config'
-import { getToken } from '../../utils/storage'
+import { getToken } from '../../utils'
 
 type ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MultiDestinationDeliveries'>
 

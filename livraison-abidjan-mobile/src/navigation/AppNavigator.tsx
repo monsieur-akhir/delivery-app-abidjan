@@ -152,6 +152,11 @@ export default function AppNavigator() {
     return null; // Or a loading screen
   }
 
+  // Gestion d'erreur pour éviter les problèmes de navigation
+  const handleNavigationError = (error: any) => {
+    console.warn('Erreur de navigation:', error);
+  };
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -182,7 +187,9 @@ export default function AppNavigator() {
           <Stack.Screen name="CreateDelivery" component={CreateDeliveryScreen} />
           <Stack.Screen name="TrackDelivery" component={TrackDeliveryScreen} />
           <Stack.Screen name="DeliveryDetails" component={DeliveryDetailsScreen} />
-          <Stack.Screen name="Payment" component={PaymentScreen} />
+          <Stack.Screen name="Payment">
+            {props => <PaymentScreen {...props} />}
+          </Stack.Screen>
           <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
           <Stack.Screen name="BidScreen" component={BidScreen} />
           <Stack.Screen name="MultiDestinationDeliveries" component={MultiDestinationDeliveriesScreen} />

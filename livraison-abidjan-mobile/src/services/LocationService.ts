@@ -621,6 +621,23 @@ class LocationService {
         return { latitude: 5.3500, longitude: -4.0000 }
     }
   }
+
+  /**
+   * Retourne la commune à partir de coordonnées GPS (reverse geocoding)
+   */
+  async getCommuneFromCoords(latitude: number, longitude: number): Promise<string | null> {
+    try {
+      const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+      if (results && results.length > 0) {
+        // Selon la structure, la commune peut être dans 'district', 'suburb' ou 'city'
+        return results[0].district || results[0].suburb || results[0].city || null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Erreur lors du reverse geocoding:', error);
+      return null;
+    }
+  }
 }
 
 export default LocationService

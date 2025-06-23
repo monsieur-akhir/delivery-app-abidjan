@@ -1,13 +1,13 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import type { User } from '../types/models';
 import type { RegisterUserData } from '../services/api';
-import { login, register, verifyOTP, getApiUrl } from '../services/api';
+import { login, register, verifyOTP } from '../services/api';
+import { API_BASE_URL } from '../config';
 
 // Fonction utilitaire pour vérifier la validité des objets
 const isValidObject = (obj: any): boolean => {
@@ -39,7 +39,7 @@ interface AuthContextType {
   verify: (phone: string, otp: string) => Promise<void>
   signOut: (expired?: boolean) => Promise<void>
   updateUserData: (data: Partial<User>) => void
-  setAuthData: (user: User, token: string) => void
+  setAuthData: (user: User, token: string, refreshToken?: string) => Promise<void>
   checkTokenValidity: () => Promise<boolean>
   isTokenValid: () => boolean
 }
@@ -56,7 +56,7 @@ export const AuthContext = createContext<AuthContextType>({
   verify: async () => {},
   signOut: async () => {},
   updateUserData: () => {},
-  setAuthData: () => {},
+  setAuthData: async () => {},
   checkTokenValidity: async () => false,
   isTokenValid: () => false,
 })
@@ -86,36 +86,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Check if user is already logged in
     const loadUserData = async () => {
       try {
         const storedUser = await AsyncStorage.getItem("user")
         const storedToken = await AsyncStorage.getItem("token")
 
         if (storedUser && storedToken) {
-          // Vérifier si le token stocké est encore valide
           if (isTokenExpired(storedToken)) {
             console.log('[Auth] Token stocké expiré, nettoyage');
             await signOut(true);
-            return;
-          }
-
-          setUser(JSON.parse(storedUser))
-          setToken(storedToken)
-
-          // Refresh token if needed
-          try {
-            const refreshedToken = await tryRefreshToken()
-            if (refreshedToken) {
-              setToken(refreshedToken)
-              await AsyncStorage.setItem("token", refreshedToken)
-            }
-          } catch (refreshError) {
-            console.error("Error refreshing token:", refreshError)
-            // Si le refresh échoue et le token est expiré, déconnecter
-            if (isTokenExpired(storedToken)) {
-              await signOut(true);
-            }
+          } else {
+            setUser(JSON.parse(storedUser))
+            setToken(storedToken)
           }
         }
       } catch (e) {
@@ -143,30 +125,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(interval);
   }, [token, user])
 
-  // Fonction utilitaire locale pour rafraîchir le token
-  const tryRefreshToken = async (): Promise<string | null> => {
-    try {
-      const refreshToken = await AsyncStorage.getItem("refreshToken")
-      if (!refreshToken) return null
-
-      const response = await axios.post(`${getApiUrl()}/auth/refresh`, {
-        refresh_token: refreshToken,
-      })
-      const { access_token, refresh_token } = response.data
-      await AsyncStorage.setItem("token", access_token) // Standardize token key
-      await AsyncStorage.setItem("refreshToken", refresh_token)
-      return access_token
-    } catch (error) {
-      console.error("Error refreshing token:", error)
-      return null
-    }
-  }
+  const fetchUserFromAPI = async (token: string) => {
+    const response = await fetch(`${API_BASE_URL}/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Erreur lors de la récupération du profil utilisateur');
+    return await response.json();
+  };
 
   const signIn = async (phone: string, password: string) => {
     setLoading(true)
     setError(null)
     try {
-      const { user: userData, token: authToken } = await login(phone, password)
+      const { token: authToken } = await login(phone, password)
+      const userData = await fetchUserFromAPI(authToken)
       setUser(userData)
       setToken(authToken)
       await AsyncStorage.setItem("user", JSON.stringify(userData))
@@ -226,9 +198,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const setAuthData = (user: User, token: string) => {
-    setUser(user)
-    setToken(token)
+  const setAuthData = async (user: User, token: string, refreshToken?: string) => {
+    try {
+      setUser(user)
+      setToken(token)
+      await AsyncStorage.setItem("user", JSON.stringify(user))
+      await AsyncStorage.setItem("token", token)
+      if (refreshToken) {
+        await AsyncStorage.setItem("refreshToken", refreshToken)
+      }
+    } catch (error) {
+      console.error("Failed to save auth data to storage", error)
+    }
   }
 
   return (

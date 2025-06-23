@@ -1,16 +1,14 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react"
 import { WS_URL } from "../config/environment"
 import { useAuth } from "./AuthContext"
-import { Snackbar } from 'react-native-paper'
+import { useNotification } from "./NotificationContext"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
-import jwtDecode from "jwt-decode"
-import { getApiUrl } from "../config/environment"
-
-export interface WebSocketMessage {
+import { jwtDecode } from 'jwt-decode'
+// Correction du type WebSocketMessage
+type WebSocketMessage = {
   type: string
   data?: Record<string, unknown>
 }
@@ -21,6 +19,8 @@ export interface WebSocketContextType {
   lastMessage: WebSocketMessage | null
   subscribe: (channel: string, callback: (data: Record<string, unknown>) => void) => () => void
   unsubscribe: (channel: string) => void
+  connect: () => void
+  disconnect: () => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -29,6 +29,8 @@ const WebSocketContext = createContext<WebSocketContextType>({
   lastMessage: null,
   subscribe: () => () => {},
   unsubscribe: () => {},
+  connect: () => {},
+  disconnect: () => {},
 })
 
 export const useWebSocket = () => useContext(WebSocketContext)
@@ -48,49 +50,44 @@ function isTokenExpired(token: string | null): boolean {
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, token, checkTokenValidity, sessionExpired } = useAuth()
-  const [socket, setSocket] = useState<WebSocket | null>(null)
+  const { sendLocalNotification } = useNotification()
+  const socketRef = useRef<WebSocket | null>(null)
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const [connected, setConnected] = useState<boolean>(false)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
-  const [subscriptions, setSubscriptions] = useState<{
-    [key: string]: (data: any) => void
-  }>({})
-  const [showWsError, setShowWsError] = useState(false)
+  const [subscriptions, setSubscriptions] = useState<{ [key: string]: (data: any) => void }>({})
 
-  const getWsUrl = () => {
-    const url = `${WS_URL}/${user?.id}?token=${token}`
-    if (__DEV__) {
-      console.log('[WebSocket] URL:', url, 'user:', user, 'token:', token?.slice(0, 10) + '...')
+  const disconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
     }
-    return url
-  }
+    if (socketRef.current) {
+      socketRef.current.close(1000, "Déconnexion manuelle")
+      socketRef.current = null
+    }
+    setConnected(false)
+  }, [])
 
-  const connectWebSocket = useCallback(async () => {
-    // Vérifier la validité du token avant de se connecter
-    const isTokenStillValid = await checkTokenValidity();
-    if (!isTokenStillValid || !token || !user || !user.id) {
-      if (__DEV__) {
-        console.log('[WebSocket] Connexion refusée : token invalide ou user manquant', { 
-          tokenValid: isTokenStillValid,
-          hasUser: !!user, 
-          hasToken: !!token 
-        })
-      }
-      setConnected(false)
+  const connect = useCallback(() => {
+    if (!token || !user || sessionExpired || socketRef.current) {
       return
     }
 
-    // Fermer la connexion existante si elle existe
-    if (socket) {
-      socket.close()
-      setSocket(null)
-    }
-
-    const ws = new WebSocket(getWsUrl())
+    const wsUrl = `${WS_URL}/${user.id}?token=${token}`
+    console.log("[WebSocket] Tentative de connexion à", wsUrl)
+    
+    const ws = new WebSocket(wsUrl)
+    socketRef.current = ws
 
     ws.onopen = () => {
-      if (__DEV__) console.log('[WebSocket] Connecté avec token valide')
+      console.log("[WebSocket] Connexion établie.")
       setConnected(true)
-      setShowWsError(false)
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
     }
 
     ws.onmessage = (event) => {
@@ -105,76 +102,42 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     }
 
+    ws.onerror = (error) => {
+      console.error("[WebSocket] Erreur:", error)
+      sendLocalNotification("Erreur de Connexion", "La connexion temps réel a été perdue. Tentative de reconnexion...")
+    }
+
     ws.onclose = (event) => {
-      if (__DEV__) console.log('[WebSocket] Déconnecté, code:', event.code, 'raison:', event.reason)
+      console.log(`[WebSocket] Connexion fermée (code: ${event.code}).`)
       setConnected(false)
+      socketRef.current = null
       
-      // Ne pas reconnecter si l'utilisateur est déconnecté ou le token expiré
-      if (sessionExpired) {
-        if (__DEV__) console.log('[WebSocket] Session expirée, pas de reconnexion')
-        return
+      if (!sessionExpired && event.code !== 1000) {
+        sendLocalNotification("Connexion Perdue", "Tentative de reconnexion en cours...")
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = setTimeout(connect, 5000)
       }
-      
-      // Reconnexion automatique avec vérification du token
-      setTimeout(async () => {
-        const stillValid = await checkTokenValidity();
-        if (stillValid && token && user && user.id) {
-          if (__DEV__) console.log('[WebSocket] Tentative de reconnexion...')
-          connectWebSocket()
-        } else {
-          if (__DEV__) console.log('[WebSocket] Token invalide, pas de reconnexion')
-        }
-      }, 5000)
     }
-
-    ws.onerror = (error: any) => {
-      if (__DEV__) console.error('[WebSocket] Erreur :', error)
-      setShowWsError(true)
-      ws.close()
-    }
-
-    setSocket(ws)
-
-    return () => {
-      ws.close()
-    }
-  }, [token, user, subscriptions, checkTokenValidity, sessionExpired])
+  }, [token, user, sessionExpired, sendLocalNotification])
 
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    
-    // Si la session a expiré, fermer le WebSocket
-    if (sessionExpired) {
-      if (socket) {
-        socket.close()
-        setSocket(null)
-      }
-      setConnected(false)
-      return
+    // À chaque changement de token ou d'utilisateur, on ferme et on rouvre la connexion WebSocket
+    disconnect();
+    if (token && user && !sessionExpired) {
+      connect();
     }
-    
-    if (token && user && user.id) {
-      cleanup = connectWebSocket();
-    } else {
-      setConnected(false);
-      if (socket) {
-        socket.close()
-        setSocket(null)
-      }
-    }
-    
     return () => {
-      if (cleanup) cleanup();
-    };
-  }, [token, user, connectWebSocket, sessionExpired]);
+      disconnect();
+    }
+  }, [token, user, sessionExpired]);
 
   const sendMessage = useCallback(
     (message: WebSocketMessage) => {
-      if (socket && connected) {
-        socket.send(JSON.stringify(message))
+      if (socketRef.current && connected) {
+        socketRef.current.send(JSON.stringify(message))
       }
     },
-    [socket, connected],
+    [connected],
   )
 
   const subscribe = useCallback(
@@ -198,21 +161,19 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [],
   )
 
+  const contextValue: WebSocketContextType = {
+    connected,
+    sendMessage,
+    lastMessage,
+    subscribe,
+    unsubscribe,
+    connect,
+    disconnect,
+  }
+
   return (
-    <WebSocketContext.Provider
-      value={{ connected, sendMessage, lastMessage, subscribe, unsubscribe }}
-    >
+    <WebSocketContext.Provider value={contextValue}>
       {children}
-      <Snackbar
-        visible={showWsError && !sessionExpired}
-        onDismiss={() => setShowWsError(false)}
-        duration={4000}
-        style={{ backgroundColor: '#FF6B00', borderRadius: 8 }}
-      >
-        {sessionExpired 
-          ? "Session expirée, veuillez vous reconnecter." 
-          : "Connexion temps réel perdue, tentative de reconnexion..."}
-      </Snackbar>
     </WebSocketContext.Provider>
   )
 }

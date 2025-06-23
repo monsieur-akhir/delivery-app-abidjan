@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import {
   View,
@@ -12,7 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import DateTimePicker from '@react-native-community/datetimepicker'
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
 import { RootStackParamList } from '../../types/navigation'
 import { Card } from '../../components'
@@ -244,7 +243,7 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
           value={formData.scheduled_date}
           mode="datetime"
           display="default"
-          onChange={(event, selectedDate) => {
+          onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
             setShowDatePicker(false)
             if (selectedDate) {
               setFormData(prev => ({ ...prev, scheduled_date: selectedDate }))

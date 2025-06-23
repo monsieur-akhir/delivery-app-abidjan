@@ -26,9 +26,9 @@ interface PaymentMethod {
 
 interface PaymentScreenProps {
   route: {
-    params: {
-      deliveryId: number
-      amount: number
+    params?: {
+      deliveryId?: number | string
+      amount?: number
       description?: string
     }
   }
@@ -36,7 +36,7 @@ interface PaymentScreenProps {
 }
 
 const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
-  const { deliveryId, amount, description } = route.params
+  const { deliveryId, amount, description } = route.params ?? {};
   const [selectedMethod, setSelectedMethod] = useState<string>('')
   const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [processing, setProcessing] = useState(false)

@@ -70,7 +70,8 @@
     "util": "^0.12.5",
     "events": "^3.3.0",
     "path-browserify": "^1.0.1",
-    "react-native-os": "^1.2.6"
+    "react-native-os": "^1.2.6",
+    "@react-native-community/datetimepicker": "^8.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

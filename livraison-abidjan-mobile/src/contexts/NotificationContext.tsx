@@ -57,7 +57,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         id: notification.request.identifier,
         title: notification.request.content.title || '',
         message: notification.request.content.body || '',
-        type: notification.request.content.data?.type || 'default',
+        type: typeof notification.request.content.data?.type === 'string' ? notification.request.content.data.type : '',
         data: notification.request.content.data,
         created_at: new Date().toISOString(),
         date: new Date().toISOString(),

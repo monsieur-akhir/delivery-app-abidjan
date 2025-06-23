@@ -5,6 +5,7 @@ export interface ThemeColors {
   surface: string
   card: string
   text: string
+  textSecondary: string
   border: string
   notification: string
   muted: string

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native"
-import { Button, Text, Snackbar } from "react-native-paper"
+import { Button, Text } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../../contexts/NetworkContext"
@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import i18n from "../../i18n"
 import { useAuth } from '../../contexts/AuthContext'
+import CustomAlert from "../../components/CustomAlert"
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">
@@ -21,12 +22,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
   const { sessionExpired, setSessionExpired } = useAuth()
-  const [showSessionExpired, setShowSessionExpired] = useState(sessionExpired)
-
-  const [error] = useState<string>("")
-  const [visible, setVisible] = useState<boolean>(false)
+  
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
+  const [alertVisible, setAlertVisible] = useState(false)
+  const [alertConfig, setAlertConfig] = useState({ title: '', message: '', type: 'info' as 'info' | 'error' | 'success' | 'warning' })
 
   // No need for saved credentials in transition screen
 
@@ -47,12 +47,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     if (sessionExpired) {
-      setShowSessionExpired(true)
+      setAlertConfig({
+        title: 'Session Expirée',
+        message: 'Votre session a expiré, veuillez vous reconnecter.',
+        type: 'warning'
+      })
+      setAlertVisible(true)
       setSessionExpired(false)
     }
-  }, [sessionExpired])
-
-  const handleDismissSessionExpired = () => setShowSessionExpired(false)
+  }, [sessionExpired, setSessionExpired])
 
   if (!isI18nReady) {
     return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
@@ -66,15 +69,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Snackbar
-          visible={showSessionExpired}
-          onDismiss={handleDismissSessionExpired}
-          duration={4000}
-          style={{ backgroundColor: '#FF6B00', borderRadius: 8, marginBottom: 16 }}
-          action={{ label: 'OK', onPress: handleDismissSessionExpired, textColor: '#fff' }}
-        >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Votre session a expiré, veuillez vous reconnecter.</Text>
-        </Snackbar>
         {/* Image d'illustration de connexion */}
         <Animatable.View animation="fadeIn" duration={1000} style={styles.illustrationContainer}>
           <View style={styles.illustrationPlaceholder}>
@@ -92,7 +86,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <View style={styles.offlineWarning}>
               <Text style={styles.offlineText}>{t("login.offlineWarning")}</Text>
               <Button mode="contained" onPress={handleOfflineMode} style={styles.offlineButton}>
-                {t("login.useOfflineMode")}
+                <Text>{t("login.useOfflineMode")}</Text>
               </Button>
             </View>
           )}
@@ -166,18 +160,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
           </Animatable.View>
         </Animatable.View>
-
-        <Snackbar
-          visible={visible}
-          onDismiss={() => setVisible(false)}
-          duration={3000}
-          action={{
-            label: "OK",
-            onPress: () => setVisible(false),
-          }}
-        >
-          {error}
-        </Snackbar>
+        
+        <CustomAlert
+          visible={alertVisible}
+          onDismiss={() => setAlertVisible(false)}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          type={alertConfig.type}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   )

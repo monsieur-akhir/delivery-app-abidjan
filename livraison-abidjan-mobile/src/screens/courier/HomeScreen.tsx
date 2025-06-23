@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
@@ -28,6 +27,8 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useDelivery } from '../../hooks/useDelivery';
@@ -37,12 +38,14 @@ import { formatPrice, formatDate } from '../../utils/formatters';
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
 
+type CourierHomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+
 export default function CourierHomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<CourierHomeScreenNavigationProp>();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { connected } = useWebSocket();
-  const { recentDeliveries, loading: deliveriesLoading } = useDelivery();
+  const { deliveries, isLoading } = useDelivery();
 
   const [refreshing, setRefreshing] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
@@ -109,7 +112,7 @@ export default function CourierHomeScreen() {
       subtitle: 'Gains élevés',
       icon: 'flash',
       color: '#FF6B00',
-      screen: 'ExpressDeliveries'
+      screen: 'ExpressDeliveries' as const
     },
     {
       id: 'collaborative',
@@ -127,7 +130,7 @@ export default function CourierHomeScreen() {
       color: '#2196F3',
       screen: 'CourierScheduledDeliveries'
     }
-  ];
+  ] as const;
 
   const statsData = [
     {
@@ -284,28 +287,21 @@ export default function CourierHomeScreen() {
   );
 
   const renderQuickActions = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Actions rapides</Text>
-      <View style={styles.quickActionsGrid}>
-        {quickActions.map((action) => (
-          <TouchableOpacity
-            key={action.id}
-            style={styles.quickActionCard}
-            onPress={() => navigation.navigate(action.screen)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
-              <MaterialCommunityIcons 
-                name={action.icon} 
-                size={28} 
-                color={action.color} 
-              />
-            </View>
-            <Text style={styles.quickActionTitle}>{action.title}</Text>
-            <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+    <View style={styles.quickActionsGrid}>
+      {quickActions.map((action) => (
+        <TouchableOpacity
+          key={action.id}
+          style={styles.quickActionCard}
+          onPress={() => navigation.navigate(action.screen as any)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
+            <MaterialCommunityIcons name={action.icon} size={28} color={action.color} />
+          </View>
+          <Text style={styles.quickActionTitle}>{action.title}</Text>
+          <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 
@@ -317,7 +313,7 @@ export default function CourierHomeScreen() {
           <TouchableOpacity
             key={index}
             style={styles.serviceItem}
-            onPress={() => navigation.navigate(service.screen)}
+            onPress={() => navigation.navigate(service.screen as any)}
           >
             <Surface style={[styles.serviceIcon, { backgroundColor: service.color + '15' }]} elevation={0}>
               <MaterialCommunityIcons 
@@ -367,6 +363,25 @@ export default function CourierHomeScreen() {
     );
   };
 
+  const renderRecentDeliveries = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B00" />
+        </View>
+      );
+    }
+
+    if (!deliveries || deliveries.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Aucune livraison récente</Text>
+        </View>
+      );
+    }
+    // ... existing code ...
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -401,6 +416,7 @@ export default function CourierHomeScreen() {
           {renderQuickActions()}
           {renderServices()}
           {renderSummaryCard()}
+          {renderRecentDeliveries()}
 
           <View style={styles.bottomPadding} />
         </ScrollView>
@@ -645,40 +661,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    padding: 16,
   },
   quickActionCard: {
-    width: (width - 52) / 2,
+    width: (width - 48) / 2,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-    alignItems: 'center',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   quickActionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    textAlign: 'center',
     marginBottom: 4,
   },
   quickActionSubtitle: {
     fontSize: 12,
     color: '#666',
-    textAlign: 'center',
   },
   servicesGrid: {
     flexDirection: 'row',
@@ -759,5 +768,16 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 80,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
   },
 });
