@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,9 @@ import {
   RefreshControl,
   Dimensions,
   StatusBar,
-  Platform,
   Alert,
   Animated,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -29,6 +29,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/navigation';
+import DeliveryService from '../../services/DeliveryService';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useDelivery } from '../../hooks/useDelivery';
@@ -60,10 +61,35 @@ export default function CourierHomeScreen() {
   });
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [showAlert, setShowAlert] = useState(false);
+  const [currentAlert, setCurrentAlert] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
     startAnimations();
+  }, []);
+
+  useEffect(() => {
+    // Simuler la réception d'une nouvelle demande de course
+    const simulateNewDelivery = () => {
+      const newDelivery = {
+        delivery_id: Math.random().toString(36).substring(7),
+        pickup_address: '123 Main St',
+        delivery_address: '456 Elm St',
+        pickup_commune: 'Anytown',
+        delivery_commune: 'Othertown',
+        proposed_price: 12000,
+        distance: '10',
+        estimated_duration: '20',
+        package_type: 'Standard',
+      };
+      setCurrentAlert(newDelivery);
+      setShowAlert(true);
+    };
+
+    const intervalId = setInterval(simulateNewDelivery, 15000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const startAnimations = () => {
@@ -96,6 +122,22 @@ export default function CourierHomeScreen() {
     setIsOnline(!isOnline);
     // Implémentation de la logique de statut en ligne
   };
+
+  const handleAcceptDelivery = async (deliveryId: string) => {
+    Alert.alert('Accept Delivery', `Delivery ID: ${deliveryId}`);
+    setShowAlert(false);
+  };
+
+  const handleRejectDelivery = async (deliveryId: string) => {
+    Alert.alert('Reject Delivery', `Delivery ID: ${deliveryId}`);
+    setShowAlert(false);
+  };
+
+    const handleCounterOffer = async (deliveryId: string) => {
+    Alert.alert('Counter Offer', `Delivery ID: ${deliveryId}`);
+    setShowAlert(false);
+  };
+
 
   const quickActions = [
     {
@@ -206,7 +248,7 @@ export default function CourierHomeScreen() {
               trackColor={{ false: '#767577', true: '#4CAF5081' }}
             />
           </View>
-          
+
           <TouchableOpacity 
             style={styles.notificationButton}
             onPress={() => navigation.navigate('Notifications')}
@@ -221,7 +263,7 @@ export default function CourierHomeScreen() {
 
   const renderEarningsCard = () => {
     const progress = todayStats.targetEarnings > 0 ? todayStats.earnings / todayStats.targetEarnings : 0;
-    
+
     return (
       <Card style={styles.earningsCard}>
         <Card.Content style={styles.earningsContent}>
@@ -235,7 +277,7 @@ export default function CourierHomeScreen() {
               <Text style={styles.ratingText}>{todayStats.rating}</Text>
             </View>
           </View>
-          
+
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressLabel}>Objectif: {formatPrice(todayStats.targetEarnings)} FCFA</Text>
@@ -256,7 +298,7 @@ export default function CourierHomeScreen() {
     <View style={styles.statsGrid}>
       {statsData.map((stat, index) => {
         const progress = stat.target > 0 ? stat.value / stat.target : 0;
-        
+
         return (
           <Card key={index} style={styles.statCard}>
             <Card.Content style={styles.statContent}>
@@ -337,7 +379,7 @@ export default function CourierHomeScreen() {
       <Card style={styles.summaryCard}>
         <Card.Content>
           <Text style={styles.sectionTitle}>Résumé financier</Text>
-          
+
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Revenus bruts</Text>
@@ -351,7 +393,7 @@ export default function CourierHomeScreen() {
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.summaryTotal}>
             <Text style={styles.summaryTotalLabel}>Net à recevoir</Text>
             <Text style={styles.summaryTotalValue}>
@@ -421,6 +463,95 @@ export default function CourierHomeScreen() {
           <View style={styles.bottomPadding} />
         </ScrollView>
       </Animated.View>
+      <FAB
+        icon="plus"
+        style={styles.fab}
+        onPress={() => navigation.navigate('AvailableDeliveries')}
+        color="#FFFFFF"
+      />
+
+      {/* Modal d'alerte de demande de course */}
+      <Modal
+        visible={showAlert && currentAlert}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAlert(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.alertModal}>
+            <View style={styles.alertHeader}>
+              <MaterialCommunityIcons name="motorcycle" size={32} color="#FF6B00" />
+              <Text style={styles.alertTitle}>{t('alerts.newDeliveryRequest')}</Text>
+            </View>
+
+            {currentAlert && (
+              <View style={styles.alertContent}>
+                <View style={styles.routeInfo}>
+                  <View style={styles.locationRow}>
+                    <MaterialCommunityIcons name="circle-outline" size={16} color="#4CAF50" />
+                    <Text style={styles.locationText} numberOfLines={2}>
+                      {currentAlert.pickup_address || currentAlert.pickup_commune}
+                    </Text>
+                  </View>
+                  <View style={styles.routeLine} />
+                  <View style={styles.locationRow}>
+                    <MaterialCommunityIcons name="map-marker" size={16} color="#F44336" />
+                    <Text style={styles.locationText} numberOfLines={2}>
+                      {currentAlert.delivery_address || currentAlert.delivery_commune}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.deliveryDetails}>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>{t('alerts.price')}:</Text>
+                    <Text style={styles.detailValue}>
+                      {currentAlert.proposed_price?.toLocaleString() || 0} FCFA
+                    </Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>{t('alerts.distance')}:</Text>
+                    <Text style={styles.detailValue}>{currentAlert.distance || 'N/A'} km</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>{t('alerts.estimatedTime')}:</Text>
+                    <Text style={styles.detailValue}>{currentAlert.estimated_duration || 'N/A'} min</Text>
+                  </View>
+                  {currentAlert.package_type && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>{t('alerts.packageType')}:</Text>
+                      <Text style={styles.detailValue}>{currentAlert.package_type}</Text>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.alertActions}>
+                  <TouchableOpacity
+                    style={[styles.alertButton, styles.rejectButton]}
+                    onPress={() => handleRejectDelivery(currentAlert.delivery_id)}
+                  >
+                    <Text style={styles.rejectButtonText}>{t('alerts.ignore')}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.alertButton, styles.counterOfferButton]}
+                    onPress={() => handleCounterOffer(currentAlert.delivery_id)}
+                  >
+                    <Text style={styles.counterOfferButtonText}>{t('alerts.counterOffer')}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.alertButton, styles.acceptButton]}
+                    onPress={() => handleAcceptDelivery(currentAlert.delivery_id)}
+                  >
+                    <Text style={styles.acceptButtonText}>{t('alerts.accept')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -779,5 +910,128 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     fontWeight: '500',
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FF6B00',
+  },
+  // Styles pour le modal d'alerte
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  alertModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  alertHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  alertTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginLeft: 12,
+    flex: 1,
+  },
+  alertContent: {
+    marginBottom: 20,
+  },
+  routeInfo: {
+    marginBottom: 16,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+    flex: 1,
+  },
+  routeLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#E0E0E0',
+    marginLeft: 8,
+    marginVertical: 4,
+  },
+  deliveryDetails: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '600',
+  },
+  alertActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  alertButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  rejectButton: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  rejectButtonText: {
+    color: '#666',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  counterOfferButton: {
+    backgroundColor: '#FFF3E0',
+    borderWidth: 1,
+    borderColor: '#FF9800',
+  },
+  counterOfferButtonText: {
+    color: '#FF9800',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  acceptButton: {
+    backgroundColor: '#FF6B00',
+  },
+  acceptButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
