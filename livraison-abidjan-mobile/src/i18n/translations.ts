@@ -769,9 +769,8 @@ export const translations = {
           deliveryDetails: "Détails de la livraison",
           clientInfo: "Informations client",
           pickupAddress: "Adresse de ramassage",
-```text
           deliveryAddress: "Adresse de livraison",
-          packageInfo: "Informations du colis",
+          packageInfo: "Informations ducolis",
           estimatedEarnings: "Gains estimés",
           estimatedTime: "Temps estimé",
           distance: "Distance",
@@ -1523,7 +1522,7 @@ export const translations = {
         online: "En ligne",
         offline: "Hors ligne",
         available: "Disponible",
-        ```text
+```text
 unavailable: "Indisponible",
         active: "Actif",
         inactive: "Inactif",
