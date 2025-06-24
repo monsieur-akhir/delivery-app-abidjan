@@ -9,7 +9,6 @@ from ..schemas.multi_destination_delivery import (
     MultiDestinationDeliveryCreate, MultiDestinationStopCreate,
     RouteOptimizationResponse, StopStatusUpdate, MultiDestinationDeliveryResponse, MultiDestinationStopResponse
 )
-from ..schemas.user import UserResponse
 
 class MultiDestinationDeliveryService:
     def __init__(self, db: Session):
@@ -91,6 +90,7 @@ class MultiDestinationDeliveryService:
 
     def _optimize_route(self, delivery: MultiDestinationDelivery) -> Dict[str, Any]:
         """Optimiser l'ordre des destinations"""
+        destinations = []
         try:
             # Récupérer les destinations
             destinations = self.db.query(MultiDestinationStop).filter(
@@ -334,25 +334,75 @@ class MultiDestinationDeliveryService:
 
     def serialize_delivery(self, delivery: MultiDestinationDelivery) -> MultiDestinationDeliveryResponse:
         """Sérialise une livraison multi-destinataires pour la réponse API"""
+        # Récupérer les stops depuis la base de données
         stops = self.db.query(MultiDestinationStop).filter_by(delivery_id=delivery.id).order_by(MultiDestinationStop.original_order).all()
-        print('DEBUG STOPS:', [stop.__dict__ for stop in stops])  # LOG DEBUG
-        destinations = [MultiDestinationStopResponse.model_validate(stop, from_attributes=True) for stop in stops]
-        client = None
-        if hasattr(delivery, 'client') and delivery.client:
-            client = UserResponse.model_validate(delivery.client, from_attributes=True)
-        # Fallback si client non chargé
-        if not client and getattr(delivery, 'client_id', None):
+        
+        # Convertir les stops en MultiDestinationStopResponse
+        destinations = []
+        for stop in stops:
+            destinations.append(MultiDestinationStopResponse.model_validate(stop, from_attributes=True))
+        
+        # Récupérer les informations du client
+        client_data = None
+        if getattr(delivery, 'client_id', None):
+            from ..schemas.user import UserResponse
             client_obj = self.db.query(User).filter_by(id=delivery.client_id).first()
             if client_obj:
-                client = UserResponse.model_validate(client_obj, from_attributes=True)
-        courier = None
-        if hasattr(delivery, 'courier') and delivery.courier:
-            courier = UserResponse.model_validate(delivery.courier, from_attributes=True)
-        data = MultiDestinationDeliveryResponse.model_validate(
-            delivery,
-            from_attributes=True
-        )
-        data.destinations = destinations
-        data.client = client
-        data.courier = courier
-        return data
+                client_data = {
+                    "id": client_obj.id,
+                    "first_name": getattr(client_obj, 'first_name', ''),
+                    "last_name": getattr(client_obj, 'last_name', ''),
+                    "email": getattr(client_obj, 'email', ''),
+                    "phone": getattr(client_obj, 'phone', ''),
+                    "role": getattr(client_obj, 'role', '')
+                }
+        
+        # Récupérer les informations du coursier
+        courier_data = None
+        if getattr(delivery, 'courier_id', None):
+            courier_obj = self.db.query(User).filter_by(id=delivery.courier_id).first()
+            if courier_obj:
+                courier_data = {
+                    "id": courier_obj.id,
+                    "first_name": getattr(courier_obj, 'first_name', ''),
+                    "last_name": getattr(courier_obj, 'last_name', ''),
+                    "email": getattr(courier_obj, 'email', ''),
+                    "phone": getattr(courier_obj, 'phone', ''),
+                    "role": getattr(courier_obj, 'role', '')
+                }
+        
+        # Créer la réponse
+        delivery_dict = {
+            "id": delivery.id,
+            "client_id": delivery.client_id,
+            "courier_id": delivery.courier_id,
+            "pickup_address": delivery.pickup_address,
+            "pickup_commune": delivery.pickup_commune,
+            "pickup_lat": delivery.pickup_lat,
+            "pickup_lng": delivery.pickup_lng,
+            "pickup_contact_name": delivery.pickup_contact_name,
+            "pickup_contact_phone": delivery.pickup_contact_phone,
+            "pickup_instructions": delivery.pickup_instructions,
+            "total_destinations": delivery.total_destinations,
+            "optimized_route": delivery.optimized_route,
+            "estimated_total_distance": delivery.estimated_total_distance,
+            "estimated_total_duration": delivery.estimated_total_duration,
+            "actual_total_duration": delivery.actual_total_duration,
+            "total_proposed_price": delivery.total_proposed_price,
+            "total_final_price": delivery.total_final_price,
+            "status": delivery.status,
+            "created_at": delivery.created_at,
+            "accepted_at": delivery.accepted_at,
+            "started_at": delivery.started_at,
+            "completed_at": delivery.completed_at,
+            "cancelled_at": delivery.cancelled_at,
+            "special_instructions": delivery.special_instructions,
+            "vehicle_type_required": delivery.vehicle_type_required,
+            "is_fragile": delivery.is_fragile,
+            "is_urgent": delivery.is_urgent,
+            "destinations": destinations,
+            "client": client_data,
+            "courier": courier_data
+        }
+        
+        return MultiDestinationDeliveryResponse(**delivery_dict)

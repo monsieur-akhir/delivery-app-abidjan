@@ -126,9 +126,10 @@ class MultiDestinationBid(Base):
     id = Column(Integer, primary_key=True, index=True)
     delivery_id = Column(Integer, ForeignKey("multi_destination_deliveries.id"), nullable=False)
     courier_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    total_price = Column(Float, nullable=False)
+    proposed_price = Column(Float, nullable=False)
     estimated_duration = Column(Integer)  # en minutes
     message = Column(Text)
+    alternative_route = Column(JSON, nullable=True)
     status = Column(String(50), default="pending")  # pending, accepted, rejected, cancelled
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -139,4 +140,4 @@ class MultiDestinationBid(Base):
     courier = relationship("User", foreign_keys=[courier_id])
 
     def __repr__(self):
-        return f"<MultiDestinationBid(id={self.id}, delivery_id={self.delivery_id}, courier_id={self.courier_id}, price={self.total_price})>"
+        return f"<MultiDestinationBid(id={self.id}, delivery_id={self.delivery_id}, courier_id={self.courier_id}, price={self.proposed_price})>"
