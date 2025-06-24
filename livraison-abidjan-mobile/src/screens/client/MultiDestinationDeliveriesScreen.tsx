@@ -39,7 +39,7 @@ interface MultiDestinationDelivery {
 const MultiDestinationDeliveriesScreen: React.FC = () => {
   const navigation = useNavigation<ScreenNavigationProp>()
   const { colors } = useTheme()
-  
+
   const [deliveries, setDeliveries] = useState<MultiDestinationDelivery[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -50,18 +50,18 @@ const MultiDestinationDeliveriesScreen: React.FC = () => {
       setIsLoading(true)
       const token = await getToken()
       const queryParams = filter !== 'all' ? `?status=${filter}` : ''
-      
+
       const response = await fetch(`${API_BASE_URL}/multi-destination-deliveries${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       })
-      
+
       if (!response.ok) {
         throw new Error('Erreur lors du chargement')
       }
-      
+
       const data = await response.json()
       setDeliveries(data)
     } catch (error) {

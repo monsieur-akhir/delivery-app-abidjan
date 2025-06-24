@@ -1,86 +1,99 @@
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
+  Alert,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native'
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { RootStackParamList } from '../../types/navigation'
-import { Card } from '../../components'
+import { useNavigation, useRoute } from '@react-navigation/native'
+import Icon from 'react-native-vector-icons/Ionicons'
 import { useTheme } from '../../contexts/ThemeContext'
-import { useAlert } from '../../hooks/useAlert'
-import { API_BASE_URL } from '../../config'
-import { getToken } from '../../utils'
+import { colors } from '../../styles/colors'
+import MultiDestinationService, { MultiDestinationDelivery, MultiDestinationBid } from '../../services/MultiDestinationService'
 
-type ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MultiDestinationDeliveryDetails'>
-type ScreenRouteProp = RouteProp<RootStackParamList, 'MultiDestinationDeliveryDetails'>
+const MultiDestinationDeliveryDetailsScreen = () => {
+  const navigation = useNavigation()
+  const route = useRoute()
+  const { theme } = useTheme()
+  const { deliveryId } = route.params as { deliveryId: number }
 
-interface MultiDestinationDeliveryDetails {
-  id: number
-  title: string
-  pickup_address: string
-  pickup_commune: string
-  destinations: {
-    id: number
-    address: string
-    commune: string
-    contact_name?: string
-    contact_phone?: string
-    delivery_order: number
-    status: 'pending' | 'in_progress' | 'completed'
-  }[]
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-  total_price: number
-  package_description?: string
-  created_at: string
-  updated_at: string
-}
-
-const MultiDestinationDeliveryDetailsScreen: React.FC = () => {
-  const navigation = useNavigation<ScreenNavigationProp>()
-  const route = useRoute<ScreenRouteProp>()
-  const { colors } = useTheme()
-  const { showErrorAlert } = useAlert()
-
-  const [delivery, setDelivery] = useState<MultiDestinationDeliveryDetails | null>(null)
+  const [delivery, setDelivery] = useState<MultiDestinationDelivery | null>(null)
+  const [bids, setBids] = useState<MultiDestinationBid[]>([])
   const [loading, setLoading] = useState(true)
-
-  const { deliveryId } = route.params
+  const [bidsLoading, setBidsLoading] = useState(false)
 
   useEffect(() => {
     loadDeliveryDetails()
+    if (delivery?.status === 'pending') {
+      loadBids()
+    }
   }, [deliveryId])
 
   const loadDeliveryDetails = async () => {
     try {
       setLoading(true)
-      const token = await getToken()
-      
-      const response = await fetch(`${API_BASE_URL}/multi-destination-deliveries/${deliveryId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement')
-      }
-      
-      const data = await response.json()
+      const data = await MultiDestinationService.getDeliveryById(deliveryId)
       setDelivery(data)
     } catch (error) {
-      console.error('Erreur chargement détails:', error)
-      showErrorAlert('Erreur', 'Impossible de charger les détails de la livraison')
+      console.error('Erreur lors du chargement des détails:', error)
+      Alert.alert('Erreur', 'Impossible de charger les détails de la livraison')
+      navigation.goBack()
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadBids = async () => {
+    try {
+      setBidsLoading(true)
+      const bidsData = await MultiDestinationService.getDeliveryBids(deliveryId)
+      setBids(bidsData)
+    } catch (error) {
+      console.error('Erreur lors du chargement des enchères:', error)
+    } finally {
+      setBidsLoading(false)
+    }
+  }
+
+const handleAcceptBid = async (bidId: number) => {
+    try {
+      Alert.alert(
+        'Accepter cette enchère',
+        'Êtes-vous sûr de vouloir accepter cette enchère ? Cette action est irréversible.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Accepter',
+            onPress: async () => {
+              try {
+                await MultiDestinationService.acceptBid(deliveryId, bidId)
+                Alert.alert('Succès', 'Enchère acceptée avec succès')
+                loadDeliveryDetails() // Recharger les détails
+              } catch (error) {
+                console.error('Erreur lors de l\'acceptation:', error)
+                Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
+              }
+            }
+          }
+        ]
+      )
+    } catch (error) {
+      console.error('Erreur:', error)
+    }
+  }
+
+  if (loading || !delivery) {
+    return (
+      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text }]}>
+          Chargement des détails...
+        </Text>
+      </View>
+    )
   }
 
   const getStatusColor = (status: string) => {
@@ -103,132 +116,244 @@ const MultiDestinationDeliveryDetailsScreen: React.FC = () => {
     }
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
-        <Text style={[styles.loadingText, { color: colors.text }]}>Chargement...</Text>
-      </View>
-    )
+  const getDestinationStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return '#FF9800'
+      case 'in_progress': return '#2196F3'
+      case 'delivered': return '#4CAF50'
+      case 'failed': return '#F44336'
+      default: return colors.text
+    }
   }
 
-  if (!delivery) {
-    return (
-      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>Livraison introuvable</Text>
-      </View>
-    )
+  const getDestinationStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'En attente'
+      case 'in_progress': return 'En cours'
+      case 'delivered': return 'Livrée'
+      case 'failed': return 'Échouée'
+      default: return status
+    }
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Détails de la livraison
-        </Text>
-      </View>
+      <ScrollView>
+        {/* Informations de base */}
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {delivery.package_type} - {delivery.destinations.length} destination(s)
+          </Text>
 
-      <ScrollView style={styles.content}>
-        {/* Informations générales */}
-        <Card style={styles.section}>
-          <View style={styles.deliveryHeader}>
-            <Text style={[styles.deliveryTitle, { color: colors.text }]}>
-              {delivery.title}
-            </Text>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(delivery.status) }]}>
-              <Text style={styles.statusText}>
-                {getStatusText(delivery.status)}
+          <View style={styles.infoRow}>
+            <Icon name="cube-outline" size={20} color={colors.primary} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                Statut
+              </Text>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(delivery.status) }]}>
+                <Text style={styles.statusText}>
+                  {getStatusText(delivery.status)}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Icon name="location-outline" size={20} color={colors.primary} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                Point de ramassage
+              </Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>
+                {delivery.pickup_address}
               </Text>
             </View>
           </View>
 
-          {delivery.package_description && (
-            <Text style={[styles.description, { color: colors.textSecondary }]}>
-              {delivery.package_description}
-            </Text>
+          <View style={styles.infoRow}>
+            <Icon name="document-text-outline" size={20} color={colors.primary} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                Description du colis
+              </Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>
+                {delivery.package_description}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Icon name="cash-outline" size={20} color={colors.primary} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                Prix total
+              </Text>
+              <Text style={[styles.priceText, { color: colors.primary }]}>
+                {(delivery.total_final_price || delivery.total_proposed_price || 0).toLocaleString()} FCFA
+              </Text>
+            </View>
+          </View>
+
+          {delivery.special_instructions && (
+            <View style={styles.infoRow}>
+              <Icon name="information-circle-outline" size={20} color={colors.primary} />
+              <View style={styles.infoContent}>
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                  Instructions spéciales
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.text }]}>
+                  {delivery.special_instructions}
+                </Text>
+              </View>
+            </View>
           )}
 
           <View style={styles.infoRow}>
-            <Icon name="attach-money" size={20} color={colors.primary} />
-            <Text style={[styles.infoText, { color: colors.text }]}>
-              Prix total: {delivery.total_price.toLocaleString()} FCFA
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Icon name="access-time" size={20} color={colors.textSecondary} />
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              Créée le {new Date(delivery.created_at).toLocaleDateString('fr-FR')}
-            </Text>
-          </View>
-        </Card>
-
-        {/* Point de ramassage */}
-        <Card style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Point de ramassage
-          </Text>
-          <View style={styles.addressContainer}>
-            <Icon name="place" size={20} color={colors.primary} />
-            <View style={styles.addressInfo}>
-              <Text style={[styles.addressText, { color: colors.text }]}>
-                {delivery.pickup_address}
+            <Icon name="time-outline" size={20} color={colors.primary} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
+                Date de création
               </Text>
-              <Text style={[styles.communeText, { color: colors.textSecondary }]}>
-                {delivery.pickup_commune}
+              <Text style={[styles.infoValue, { color: colors.text }]}>
+                {new Date(delivery.created_at).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
               </Text>
             </View>
           </View>
-        </Card>
+        </View>
 
         {/* Destinations */}
-        <Card style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Destinations ({delivery.destinations.length})
           </Text>
-          
-          {delivery.destinations
-            .sort((a, b) => a.delivery_order - b.delivery_order)
-            .map((destination, index) => (
-            <View key={destination.id} style={styles.destinationCard}>
+
+          {delivery.destinations.map((destination, index) => (
+            <View key={destination.id || index} style={styles.destinationItem}>
               <View style={styles.destinationHeader}>
-                <View style={styles.destinationNumber}>
-                  <Text style={[styles.numberText, { color: 'white' }]}>
+                <View style={[styles.orderBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.orderText}>
                     {destination.delivery_order}
                   </Text>
                 </View>
-                <View style={styles.destinationInfo}>
-                  <Text style={[styles.destinationAddress, { color: colors.text }]}>
-                    {destination.address}
-                  </Text>
-                  <Text style={[styles.destinationCommune, { color: colors.textSecondary }]}>
-                    {destination.commune}
-                  </Text>
-                  {destination.contact_name && (
-                    <Text style={[styles.contactInfo, { color: colors.textSecondary }]}>
-                      Contact: {destination.contact_name}
-                      {destination.contact_phone && ` - ${destination.contact_phone}`}
-                    </Text>
-                  )}
-                </View>
-                <View style={[
-                  styles.destinationStatus,
-                  { backgroundColor: getStatusColor(destination.status) }
-                ]}>
+                <View style={[styles.destinationStatusBadge, { backgroundColor: getDestinationStatusColor(destination.status) }]}>
                   <Text style={styles.destinationStatusText}>
-                    {getStatusText(destination.status)}
+                    {getDestinationStatusText(destination.status)}
                   </Text>
                 </View>
               </View>
+
+              <View style={styles.destinationInfo}>
+                <Text style={[styles.destinationAddress, { color: colors.text }]}>
+                  {destination.delivery_address}
+                </Text>
+                <Text style={[styles.contactName, { color: colors.textSecondary }]}>
+                  Contact: {destination.recipient_name}
+                </Text>
+                <Text style={[styles.contactPhone, { color: colors.textSecondary }]}>
+                  Téléphone: {destination.recipient_phone}
+                </Text>
+                {destination.delivery_notes && (
+                  <Text style={[styles.deliveryNotes, { color: colors.textSecondary }]}>
+                    Notes: {destination.delivery_notes}
+                  </Text>
+                )}
+              </View>
             </View>
           ))}
-        </Card>
+        </View>
+
+        {/* Enchères */}
+        {delivery.status === 'pending' && bids.length > 0 && (
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Enchères reçues ({bids.length})
+            </Text>
+
+            {bidsLoading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              bids.map((bid) => (
+                <View key={bid.id} style={styles.bidItem}>
+                  <View style={styles.bidHeader}>
+                    <Text style={[styles.courierName, { color: colors.text }]}>
+                      {bid.courier.first_name} {bid.courier.last_name}
+                    </Text>
+                    <View style={styles.ratingContainer}>
+                      <Icon name="star" size={16} color="#FFD700" />
+                      <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
+                        {bid.courier.rating}/5
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.bidDetails}>
+                    <Text style={[styles.bidPrice, { color: colors.primary }]}>
+                      {bid.proposed_price.toLocaleString()} FCFA
+                    </Text>
+                    <Text style={[styles.bidTime, { color: colors.textSecondary }]}>
+                      Temps estimé: {bid.estimated_total_time} min
+                    </Text>
+                    {bid.message && (
+                      <Text style={[styles.bidMessage, { color: colors.textSecondary }]}>
+                        Message: {bid.message}
+                      </Text>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.acceptBidButton, { backgroundColor: colors.primary }]}
+                    onPress={() => handleAcceptBid(bid.id)}
+                  >
+                    <Text style={styles.acceptBidText}>Accepter</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </View>
+        )}
+
+        {/* Informations du coursier */}
+        {delivery.courier && (
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Coursier assigné
+            </Text>
+
+            <View style={styles.courierInfo}>
+              <View style={styles.courierDetails}>
+                <Text style={[styles.courierName, { color: colors.text }]}>
+                  {delivery.courier.first_name} {delivery.courier.last_name}
+                </Text>
+                <Text style={[styles.courierPhone, { color: colors.textSecondary }]}>
+                  {delivery.courier.phone}
+                </Text>
+                <View style={styles.ratingContainer}>
+                  <Icon name="star" size={16} color="#FFD700" />
+                  <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
+                    {delivery.courier.rating}/5
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={[styles.callButton, { backgroundColor: colors.primary }]}
+                onPress={() => {
+                  // TODO: Implémenter l'appel
+                  Alert.alert('Appel', `Appeler ${delivery.courier.phone}`)
+                }}
+              >
+                <Icon name="call" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   )
@@ -238,50 +363,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    elevation: 2,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
   section: {
-    marginBottom: 16,
+    margin: 16,
     padding: 16,
+    borderRadius: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
   },
-  deliveryHeader: {
+  infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  deliveryTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: 12,
+  infoContent: {
+    marginLeft: 8,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  infoValue: {
+    fontSize: 16,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -289,42 +394,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '600',
   },
-  description: {
-    fontSize: 14,
+  priceText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  destinationItem: {
     marginBottom: 16,
-    fontStyle: 'italic',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  addressContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  addressInfo: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  addressText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  communeText: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  destinationCard: {
-    marginBottom: 12,
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
@@ -332,52 +410,125 @@ const styles = StyleSheet.create({
   },
   destinationHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  destinationNumber: {
+  orderBadge: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#2196F3',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
-  numberText: {
+  orderText: {
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: 'bold',
   },
-  destinationInfo: {
-    flex: 1,
-  },
-  destinationAddress: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  destinationCommune: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  contactInfo: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  destinationStatus: {
+  destinationStatusBadge: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   destinationStatusText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '500',
+  },
+  destinationInfo: {
+    marginLeft: 32,
+  },
+  destinationAddress: {
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  contactName: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  courierInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  courierDetails: {
+    flex: 1,
+  },
+  courierName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  courierPhone: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#757575',
+    marginLeft: 4,
+  },
+  callButton: {
+    padding: 12,
+    borderRadius: 8,
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     fontSize: 16,
+    marginTop: 16,
   },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
+  bidItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  bidHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bidDetails: {
+    marginBottom: 12,
+  },
+  bidPrice: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  bidTime: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  bidMessage: {
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+  acceptBidButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  acceptBidText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  contactPhone: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  deliveryNotes: {
+    fontSize: 14,
+    fontStyle: 'italic',
   },
 })
 

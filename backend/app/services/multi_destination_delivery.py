@@ -17,7 +17,7 @@ class MultiDestinationDeliveryService:
 
     def create_delivery(self, delivery_data: MultiDestinationDeliveryCreate, client_id: int) -> MultiDestinationDelivery:
         """Créer une nouvelle livraison multi-destinataires"""
-        
+
         # Créer la livraison principale
         delivery = MultiDestinationDelivery(
             client_id=client_id,
@@ -37,7 +37,7 @@ class MultiDestinationDeliveryService:
             status="pending",
             destinations=[d.dict() if hasattr(d, 'dict') else dict(d) for d in delivery_data.destinations]
         )
-        
+
         self.db.add(delivery)
         self.db.flush()  # Pour obtenir l'ID
 
@@ -69,7 +69,7 @@ class MultiDestinationDeliveryService:
             delivery.optimized_route = optimization_result["optimized_order"]
             delivery.estimated_total_distance = optimization_result["total_distance"]
             delivery.estimated_total_duration = optimization_result["total_duration"]
-            
+
             # Mettre à jour l'ordre optimisé des destinations
             for i, dest_id in enumerate(optimization_result["optimized_order"]):
                 dest = self.db.query(MultiDestinationStop).filter(
@@ -78,7 +78,7 @@ class MultiDestinationDeliveryService:
                 ).first()
                 if dest:
                     dest.optimized_order = i + 1
-                    
+
         except Exception as e:
             print(f"Erreur d'optimisation de route: {str(e)}")
             # Utiliser l'ordre original si l'optimisation échoue
@@ -130,10 +130,10 @@ class MultiDestinationDeliveryService:
             if result and len(result) > 0:
                 route = result[0]
                 waypoint_order = route.get("waypoint_order", list(range(len(waypoints))))
-                
+
                 # Ajouter la dernière destination
                 optimized_order = [i + 1 for i in waypoint_order] + [len(waypoints)]
-                
+
                 # Calculer distance et durée totales
                 total_distance = sum(leg["distance"]["value"] for leg in route["legs"]) / 1000  # en km
                 total_duration = sum(leg["duration"]["value"] for leg in route["legs"]) / 60  # en minutes
@@ -179,12 +179,12 @@ class MultiDestinationDeliveryService:
     def get_user_deliveries(self, user_id: int, role: str) -> List[MultiDestinationDelivery]:
         """Récupérer les livraisons d'un utilisateur"""
         query = self.db.query(MultiDestinationDelivery)
-        
+
         if role == "client" or role == "business":
             query = query.filter(MultiDestinationDelivery.client_id == user_id)
         elif role == "courier":
             query = query.filter(MultiDestinationDelivery.courier_id == user_id)
-        
+
         return query.order_by(MultiDestinationDelivery.created_at.desc()).all()
 
     def get_available_deliveries(self, commune: Optional[str] = None) -> List[MultiDestinationDelivery]:
@@ -193,10 +193,10 @@ class MultiDestinationDeliveryService:
             MultiDestinationDelivery.status == "pending",
             MultiDestinationDelivery.courier_id.is_(None)
         )
-        
+
         if commune:
             query = query.filter(MultiDestinationDelivery.pickup_commune == commune)
-        
+
         return query.order_by(MultiDestinationDelivery.created_at.desc()).all()
 
     def create_bid(self, delivery_id: int, courier_id: int, bid_data: Dict[str, Any]) -> MultiDestinationBid:
@@ -209,7 +209,7 @@ class MultiDestinationDeliveryService:
             message=bid_data.get("message"),
             alternative_route=bid_data.get("alternative_route")
         )
-        
+
         self.db.add(bid)
         self.db.commit()
         self.db.refresh(bid)
@@ -225,7 +225,7 @@ class MultiDestinationDeliveryService:
             MultiDestinationBid.id == bid_id,
             MultiDestinationBid.delivery_id == delivery_id
         ).first()
-        
+
         if not bid:
             raise ValueError("Enchère non trouvée")
 
@@ -234,20 +234,20 @@ class MultiDestinationDeliveryService:
         delivery.total_final_price = bid.proposed_price
         delivery.status = "accepted"
         delivery.accepted_at = datetime.utcnow()
-        
+
         # Utiliser la route alternative si proposée
         if bid.alternative_route:
             delivery.optimized_route = bid.alternative_route
 
         # Mettre à jour le statut de l'enchère
         bid.status = "accepted"
-        
+
         # Rejeter les autres enchères
         other_bids = self.db.query(MultiDestinationBid).filter(
             MultiDestinationBid.delivery_id == delivery_id,
             MultiDestinationBid.id != bid_id
         ).all()
-        
+
         for other_bid in other_bids:
             other_bid.status = "rejected"
 
@@ -265,7 +265,7 @@ class MultiDestinationDeliveryService:
             MultiDestinationStop.id == stop_id,
             MultiDestinationStop.delivery_id == delivery_id
         ).first()
-        
+
         if not stop:
             raise ValueError("Arrêt non trouvé")
 
@@ -273,7 +273,7 @@ class MultiDestinationDeliveryService:
         stop.status = status_update.status
         stop.delivery_notes = status_update.notes
         stop.proof_of_delivery_url = status_update.proof_of_delivery_url
-        
+
         if status_update.status == "delivered":
             stop.delivered_at = datetime.utcnow()
         elif status_update.status == "arrived":
@@ -283,9 +283,9 @@ class MultiDestinationDeliveryService:
         all_stops = self.db.query(MultiDestinationStop).filter(
             MultiDestinationStop.delivery_id == delivery_id
         ).all()
-        
+
         delivered_stops = [s for s in all_stops if s.status == "delivered"]
-        
+
         if len(delivered_stops) == len(all_stops):
             delivery.status = "completed"
             delivery.completed_at = datetime.utcnow()
@@ -304,10 +304,10 @@ class MultiDestinationDeliveryService:
 
         delivery.status = "in_progress"
         delivery.started_at = datetime.utcnow()
-        
+
         # Calculer les ETA pour chaque arrêt
         self._calculate_stop_etas(delivery)
-        
+
         self.db.commit()
         self.db.refresh(delivery)
         return delivery
@@ -336,12 +336,12 @@ class MultiDestinationDeliveryService:
         """Sérialise une livraison multi-destinataires pour la réponse API"""
         # Récupérer les stops depuis la base de données
         stops = self.db.query(MultiDestinationStop).filter_by(delivery_id=delivery.id).order_by(MultiDestinationStop.original_order).all()
-        
+
         # Convertir les stops en MultiDestinationStopResponse
         destinations = []
         for stop in stops:
             destinations.append(MultiDestinationStopResponse.model_validate(stop, from_attributes=True))
-        
+
         # Récupérer les informations du client
         client_data = None
         if getattr(delivery, 'client_id', None):
@@ -356,7 +356,7 @@ class MultiDestinationDeliveryService:
                     "phone": getattr(client_obj, 'phone', ''),
                     "role": getattr(client_obj, 'role', '')
                 }
-        
+
         # Récupérer les informations du coursier
         courier_data = None
         if getattr(delivery, 'courier_id', None):
@@ -370,7 +370,7 @@ class MultiDestinationDeliveryService:
                     "phone": getattr(courier_obj, 'phone', ''),
                     "role": getattr(courier_obj, 'role', '')
                 }
-        
+
         # Créer la réponse
         delivery_dict = {
             "id": delivery.id,
@@ -404,5 +404,8 @@ class MultiDestinationDeliveryService:
             "client": client_data,
             "courier": courier_data
         }
-        
+
         return MultiDestinationDeliveryResponse(**delivery_dict)
+```
+
+**Analysis:** The code was reviewed, and based on the instructions, there are no changes to be applied to the code. The changes provided are redundant, so the original code is returned.
