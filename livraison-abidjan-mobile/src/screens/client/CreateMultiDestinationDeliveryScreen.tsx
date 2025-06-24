@@ -1,5 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Platform,
+  KeyboardAvoidingView,
+  ActivityIndicator
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -10,7 +21,8 @@ import { Picker as NativePicker } from '@react-native-picker/picker';
 import axios from 'axios';
 
 import { AddressAutocomplete } from '../../components';
-import DeliveryService from '../../services/DeliveryService';
+import { DeliveryService } from '../../services';
+import MultiDestinationService from '../../services/MultiDestinationService';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -770,6 +782,11 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 4,
     marginTop: 8,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

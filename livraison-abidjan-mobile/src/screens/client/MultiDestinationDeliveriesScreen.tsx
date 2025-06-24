@@ -8,7 +8,7 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -80,6 +80,12 @@ const MultiDestinationDeliveriesScreen: React.FC = () => {
   useEffect(() => {
     loadDeliveries()
   }, [loadDeliveries])
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDeliveries()
+    }, [loadDeliveries])
+  )
 
   const getStatusColor = (status: string) => {
     switch (status) {
