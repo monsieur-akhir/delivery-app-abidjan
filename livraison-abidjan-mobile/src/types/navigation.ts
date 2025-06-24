@@ -106,26 +106,21 @@ export type RootStackParamList = {
   OfflineManagerScreen: undefined;
 
   // Livraisons planifiées
-  ScheduledDeliveries: undefined
-  CreateScheduledDelivery: undefined
-  EditScheduledDelivery: { deliveryId: number }
+  ScheduledDeliveries: undefined;
+  CreateScheduledDelivery: undefined;
+  EditScheduledDelivery: { deliveryId: number };
 
   // Livraisons multiples destinations
-  MultiDestinationDeliveries: undefined
-  CreateMultiDestinationDelivery: undefined
-  MultiDestinationDeliveryDetails: { deliveryId: number } }
+  MultiDestinationDeliveries: undefined;
+  CreateMultiDestinationDelivery: undefined;
+  MultiDestinationDeliveryDetails: { deliveryId: number };
 
-  // Continuation du type RootStackParamList
-  CourierDashboard: undefined;
-  AvailableDeliveries: undefined;
-  CourierTrackDelivery: { deliveryId: string };
-  CourierEarnings: undefined;
-  CollaborativeDeliveries: undefined;
+  // Livraisons express
+  ExpressDeliveries: undefined;
+
+  // Écrans spécifiques au livreur
   CourierScheduledDeliveries: undefined;
   CourierMultiDestination: undefined;
-  ExpressDeliveries: undefined;
-  Gamification: undefined;
-  CommunityWallet: undefined;
 };
 
 // Tab Parameter Lists

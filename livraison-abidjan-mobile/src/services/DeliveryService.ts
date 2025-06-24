@@ -18,6 +18,7 @@ import type {
   CollaborativeDeliveryRequest,
   CourierStats
 } from '../types'
+import { getToken } from '../utils'
 
 interface VehicleType {
   bicycle: 'bicycle'
@@ -26,6 +27,25 @@ interface VehicleType {
   car: 'car'
   van: 'van'
   truck: 'truck'
+}
+
+interface MultiDestinationDeliveryData {
+  pickup_address: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  destinations: Array<{
+    address: string;
+    latitude: number;
+    longitude: number;
+    recipient_name: string;
+    recipient_phone: string;
+    delivery_notes?: string;
+    order: number;
+  }>;
+  package_type: string;
+  package_description: string;
+  is_fragile: boolean;
+  client_id: string | number;
 }
 
 class DeliveryService {
@@ -175,17 +195,22 @@ class DeliveryService {
     }
   }
 
-  static async createDelivery(deliveryData: DeliveryCreateRequest): Promise<Delivery> {
+  /**
+   * Création d'une livraison simple (1 point de collecte, 1 destination)
+   */
+  static async createDelivery(deliveryData: any) {
     try {
-      const response = await api.post('/api/deliveries/', deliveryData)
-      return response.data
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Erreur lors de la création de la livraison:', error.message)
-      } else {
-        console.error('Erreur lors de la création de la livraison:', String(error))
-      }
-      throw error
+      const token = await getToken();
+      const response = await api.post('/deliveries', deliveryData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la création de la livraison:', error);
+      throw error;
     }
   }
 
@@ -289,22 +314,8 @@ class DeliveryService {
     }
   }
 
-  static async createBid(bidData: BidCreateRequest): Promise<Bid> {
-    try {
-      const response = await api.post('/bids', bidData)
-      return response.data
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Erreur lors de la soumission de l\'enchère:', error.message)
-      } else {
-        console.error('Erreur lors de la soumission de l\'enchère:', String(error))
-      }
-      throw error
-    }
-  }
-
-  static async submitBid(bidData: BidCreateRequest): Promise<Bid> {
-    return this.createBid(bidData)
+  static async submitBid(deliveryId: string | number, bidData: { price: number; estimated_time?: number; message?: string }): Promise<any> {
+    return this.createBid(deliveryId, bidData);
   }
 
   static async getDeliveryDetails(id: string): Promise<Delivery> {
@@ -1059,6 +1070,25 @@ class DeliveryService {
         console.error('Erreur lors de la modification de la livraison:', String(error))
       }
       throw error
+    }
+  }
+
+  /**
+   * Création d'une livraison multi-destinations (1 collecte, plusieurs arrêts)
+   */
+  static async createMultiDestinationDelivery(deliveryData: any) {
+    try {
+      const token = await getToken();
+      const response = await api.post('/api/multi-destination-deliveries', deliveryData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la création de la livraison multi-destinations:', error);
+      throw error;
     }
   }
 }

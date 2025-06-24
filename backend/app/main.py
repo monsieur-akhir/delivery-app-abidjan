@@ -120,7 +120,7 @@ async def health():
         "version": settings.VERSION
     }
 
-# Endpoints supplémentaires pour les clients
+# Endpoints supplémentaires pour les clients 
 @app.get("/api/client/deliveries/active")
 async def get_active_client_deliveries(
     current_user = Depends(get_current_user),

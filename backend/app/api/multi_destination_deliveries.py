@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -30,9 +29,7 @@ async def create_multi_destination_delivery(
     try:
         service = MultiDestinationDeliveryService(db)
         delivery = service.create_delivery(delivery_data, current_user.id)
-        
-        return MultiDestinationDeliveryResponse.from_orm(delivery)
-        
+        return service.serialize_delivery(delivery)
     except Exception as e:
         logger.error(f"Erreur création livraison multi-destinataires: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Erreur lors de la création: {str(e)}")
@@ -47,12 +44,9 @@ async def get_multi_destination_deliveries(
     try:
         service = MultiDestinationDeliveryService(db)
         deliveries = service.get_user_deliveries(current_user.id, current_user.role)
-        
         if status:
             deliveries = [d for d in deliveries if d.status == status]
-        
-        return [MultiDestinationDeliveryResponse.from_orm(d) for d in deliveries]
-        
+        return [service.serialize_delivery(d) for d in deliveries]
     except Exception as e:
         logger.error(f"Erreur récupération livraisons: {str(e)}")
         raise HTTPException(status_code=500, detail="Erreur lors de la récupération")
@@ -67,17 +61,13 @@ async def get_multi_destination_delivery(
     try:
         service = MultiDestinationDeliveryService(db)
         delivery = service.get_delivery(delivery_id)
-        
         if not delivery:
             raise HTTPException(status_code=404, detail="Livraison non trouvée")
-        
         # Vérifier les permissions
         if current_user.role not in ["admin", "manager"]:
             if delivery.client_id != current_user.id and delivery.courier_id != current_user.id:
                 raise HTTPException(status_code=403, detail="Accès non autorisé")
-        
-        return MultiDestinationDeliveryResponse.from_orm(delivery)
-        
+        return service.serialize_delivery(delivery)
     except HTTPException:
         raise
     except Exception as e:
@@ -93,13 +83,10 @@ async def get_available_multi_destination_deliveries(
     """Récupérer les livraisons multi-destinataires disponibles pour les coursiers"""
     if current_user.role != "courier":
         raise HTTPException(status_code=403, detail="Seuls les coursiers peuvent voir les livraisons disponibles")
-    
     try:
         service = MultiDestinationDeliveryService(db)
         deliveries = service.get_available_deliveries(commune)
-        
-        return [MultiDestinationDeliveryResponse.from_orm(d) for d in deliveries]
-        
+        return [service.serialize_delivery(d) for d in deliveries]
     except Exception as e:
         logger.error(f"Erreur récupération livraisons disponibles: {str(e)}")
         raise HTTPException(status_code=500, detail="Erreur lors de la récupération")

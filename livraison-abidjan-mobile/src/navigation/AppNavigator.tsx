@@ -41,7 +41,6 @@ import CollaborativeDeliveriesScreen from '../screens/courier/CollaborativeDeliv
 import GamificationScreen from '../screens/courier/GamificationScreen';
 import CommunityWalletScreen from '../screens/courier/CommunityWalletScreen';
 import ExpressDeliveriesScreen from '../screens/courier/ExpressDeliveriesScreen';
-import CourierScheduledDeliveriesScreen from '../screens/courier/CourierScheduledDeliveriesScreen';
 import CourierMultiDestinationScreen from '../screens/courier/CourierMultiDestinationScreen';
 
 // Profile Screens
@@ -205,8 +204,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Gamification" component={GamificationScreen} />
           <Stack.Screen name="CommunityWallet" component={CommunityWalletScreen} />
           <Stack.Screen name="ExpressDeliveries" component={ExpressDeliveriesScreen} />
-          <Stack.Screen name="CourierScheduledDeliveries" component={CourierScheduledDeliveriesScreen} />
-          <Stack.Screen name="CourierMultiDestination" component={CourierMultiDestinationScreen} />
+          {/* <Stack.Screen name="MultiDestinationDeliveries" component={CourierMultiDestinationScreen} /> */}
         </Stack.Group>
       )}
     </Stack.Navigator>

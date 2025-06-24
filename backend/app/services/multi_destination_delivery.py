@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
@@ -8,8 +7,9 @@ from ..models.multi_destination_delivery import MultiDestinationDelivery, MultiD
 from ..models.user import User
 from ..schemas.multi_destination_delivery import (
     MultiDestinationDeliveryCreate, MultiDestinationStopCreate,
-    RouteOptimizationResponse, StopStatusUpdate
+    RouteOptimizationResponse, StopStatusUpdate, MultiDestinationDeliveryResponse, MultiDestinationStopResponse
 )
+from ..schemas.user import UserResponse
 
 class MultiDestinationDeliveryService:
     def __init__(self, db: Session):
@@ -34,7 +34,9 @@ class MultiDestinationDeliveryService:
             special_instructions=delivery_data.special_instructions,
             vehicle_type_required=delivery_data.vehicle_type_required,
             is_fragile=delivery_data.is_fragile,
-            is_urgent=delivery_data.is_urgent
+            is_urgent=delivery_data.is_urgent,
+            status="pending",
+            destinations=[d.dict() if hasattr(d, 'dict') else dict(d) for d in delivery_data.destinations]
         )
         
         self.db.add(delivery)
@@ -44,21 +46,23 @@ class MultiDestinationDeliveryService:
         for index, dest_data in enumerate(delivery_data.destinations):
             destination = MultiDestinationStop(
                 delivery_id=delivery.id,
+                original_order=index + 1,
                 delivery_address=dest_data.delivery_address,
                 delivery_commune=dest_data.delivery_commune,
                 delivery_lat=dest_data.delivery_lat,
                 delivery_lng=dest_data.delivery_lng,
-                delivery_contact_name=dest_data.delivery_contact_name,
-                delivery_contact_phone=dest_data.delivery_contact_phone,
-                package_description=dest_data.package_description,
-                package_size=dest_data.package_size,
-                package_weight=dest_data.package_weight,
+                delivery_contact_name=getattr(dest_data, 'delivery_contact_name', None),
+                delivery_contact_phone=getattr(dest_data, 'delivery_contact_phone', None),
+                package_description=getattr(dest_data, 'package_description', None),
+                package_size=getattr(dest_data, 'package_size', None),
+                package_weight=getattr(dest_data, 'package_weight', None),
                 recipient_name=dest_data.recipient_name,
                 recipient_phone=dest_data.recipient_phone,
-                special_instructions=dest_data.special_instructions,
-                original_order=index + 1
+                special_instructions=getattr(dest_data, 'special_instructions', None),
+                status="pending"
             )
             self.db.add(destination)
+        self.db.flush()  # <-- Ajout ici pour forcer l'écriture des stops et générer les IDs
 
         # Optimiser la route
         try:
@@ -275,7 +279,7 @@ class MultiDestinationDeliveryService:
         elif status_update.status == "arrived":
             stop.actual_arrival_time = datetime.utcnow()
 
-        # Vérifier si toutes les destinations sont livrées
+        # Vérifier si toutes les destinations sont livrées 
         all_stops = self.db.query(MultiDestinationStop).filter(
             MultiDestinationStop.delivery_id == delivery_id
         ).all()
@@ -285,7 +289,8 @@ class MultiDestinationDeliveryService:
         if len(delivered_stops) == len(all_stops):
             delivery.status = "completed"
             delivery.completed_at = datetime.utcnow()
-            delivery.actual_total_duration = int((datetime.utcnow() - delivery.started_at).total_seconds() / 60) if delivery.started_at else None
+            if delivery.started_at:
+                delivery.actual_total_duration = int((datetime.utcnow() - delivery.started_at).total_seconds() / 60)
 
         self.db.commit()
         self.db.refresh(stop)
@@ -326,3 +331,28 @@ class MultiDestinationDeliveryService:
                 dest.estimated_arrival_time = current_time + timedelta(minutes=(i + 1) * time_per_stop)
 
         self.db.commit()
+
+    def serialize_delivery(self, delivery: MultiDestinationDelivery) -> MultiDestinationDeliveryResponse:
+        """Sérialise une livraison multi-destinataires pour la réponse API"""
+        stops = self.db.query(MultiDestinationStop).filter_by(delivery_id=delivery.id).order_by(MultiDestinationStop.original_order).all()
+        print('DEBUG STOPS:', [stop.__dict__ for stop in stops])  # LOG DEBUG
+        destinations = [MultiDestinationStopResponse.model_validate(stop, from_attributes=True) for stop in stops]
+        client = None
+        if hasattr(delivery, 'client') and delivery.client:
+            client = UserResponse.model_validate(delivery.client, from_attributes=True)
+        # Fallback si client non chargé
+        if not client and getattr(delivery, 'client_id', None):
+            client_obj = self.db.query(User).filter_by(id=delivery.client_id).first()
+            if client_obj:
+                client = UserResponse.model_validate(client_obj, from_attributes=True)
+        courier = None
+        if hasattr(delivery, 'courier') and delivery.courier:
+            courier = UserResponse.model_validate(delivery.courier, from_attributes=True)
+        data = MultiDestinationDeliveryResponse.model_validate(
+            delivery,
+            from_attributes=True
+        )
+        data.destinations = destinations
+        data.client = client
+        data.courier = courier
+        return data
