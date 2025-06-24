@@ -20,7 +20,7 @@ import Toast from 'react-native-root-toast';
 import { Picker as NativePicker } from '@react-native-picker/picker';
 import axios from 'axios';
 
-import { AddressAutocomplete } from '../../components';
+import { AddressAutocomplete, CustomLoaderModal } from '../../components';
 import { DeliveryService } from '../../services';
 import MultiDestinationService from '../../services/MultiDestinationService';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -259,9 +259,9 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
         is_urgent: isUrgent,
       };
       console.log('Payload envoyé:', JSON.stringify(deliveryData, null, 2));
-      await DeliveryService.createMultiDestinationDelivery(deliveryData);
+      await MultiDestinationService.createDelivery(deliveryData);
       Toast.show('Livraison créée avec succès !', { backgroundColor: '#4CAF50', textColor: '#fff', duration: 2000 });
-      navigation.goBack();
+      navigation.navigate('MultiDestinationDeliveries' as never);
     } catch (error: any) {
       if (error.response && error.response.data) {
         console.log('Erreur détaillée:', error.response.data);
@@ -642,9 +642,24 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
             accessibilityLabel="Créer la livraison"
             hitSlop={{top:10, bottom:10, left:10, right:10}}
           >
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Créer la livraison</Text>}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#fff" />
+                <Text style={[styles.submitButtonText, { marginLeft: 8 }]}>Création en cours...</Text>
+              </View>
+            ) : (
+              <Text style={styles.submitButtonText}>Créer la livraison</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Loader personnalisé */}
+        <CustomLoaderModal
+          visible={loading}
+          title="Création en cours..."
+          message="Votre livraison multi-destinations est en cours de création"
+          type="loading"
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

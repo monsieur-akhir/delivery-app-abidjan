@@ -12,6 +12,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/Ionicons'
 import { useTheme } from '../../contexts/ThemeContext'
 import { colors } from '../../styles/colors'
+import { CustomLoaderModal, MultiDestinationActions } from '../../components'
 import MultiDestinationService, { MultiDestinationDelivery, MultiDestinationBid } from '../../services/MultiDestinationService'
 
 const MultiDestinationDeliveryDetailsScreen = () => {
@@ -24,6 +25,8 @@ const MultiDestinationDeliveryDetailsScreen = () => {
   const [bids, setBids] = useState<MultiDestinationBid[]>([])
   const [loading, setLoading] = useState(true)
   const [bidsLoading, setBidsLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [currentAction, setCurrentAction] = useState('')
 
   useEffect(() => {
     loadDeliveryDetails()
@@ -69,12 +72,16 @@ const handleAcceptBid = async (bidId: number) => {
             text: 'Accepter',
             onPress: async () => {
               try {
+                setCurrentAction('Acceptation de l\'enchère...')
+                setActionLoading(true)
                 await MultiDestinationService.acceptBid(deliveryId, bidId)
                 Alert.alert('Succès', 'Enchère acceptée avec succès')
                 loadDeliveryDetails() // Recharger les détails
               } catch (error) {
                 console.error('Erreur lors de l\'acceptation:', error)
                 Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
+              } finally {
+                setActionLoading(false)
               }
             }
           }
@@ -82,6 +89,48 @@ const handleAcceptBid = async (bidId: number) => {
       )
     } catch (error) {
       console.error('Erreur:', error)
+    }
+  }
+
+  const handleEditDelivery = () => {
+    // Naviguer vers l'écran de modification
+    navigation.navigate('CreateMultiDestinationDelivery', {
+      editMode: true,
+      deliveryId: deliveryId,
+      existingData: delivery
+    })
+  }
+
+  const handleCancelDelivery = async () => {
+    try {
+      setCurrentAction('Annulation de la livraison...')
+      setActionLoading(true)
+      await MultiDestinationService.cancelDelivery(deliveryId, 'Annulation par le client')
+      Alert.alert('Succès', 'Livraison annulée avec succès')
+      navigation.goBack()
+    } catch (error) {
+      console.error('Erreur lors de l\'annulation:', error)
+      Alert.alert('Erreur', 'Impossible d\'annuler cette livraison')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleCounterOffer = async (bidId: number, price: number, message?: string) => {
+    try {
+      setCurrentAction('Envoi de la contre-offre...')
+      setActionLoading(true)
+      await MultiDestinationService.createCounterOffer(deliveryId, bidId, {
+        proposed_price: price,
+        message: message
+      })
+      Alert.alert('Succès', 'Contre-offre envoyée avec succès')
+      loadBids() // Recharger les enchères
+    } catch (error) {
+      console.error('Erreur lors de la contre-offre:', error)
+      Alert.alert('Erreur', 'Impossible d\'envoyer la contre-offre')
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -354,7 +403,26 @@ const handleAcceptBid = async (bidId: number) => {
             </View>
           </View>
         )}
+
+        {/* Actions disponibles */}
+        <MultiDestinationActions
+          deliveryId={deliveryId}
+          currentStatus={delivery.status}
+          canEdit={delivery.status === 'pending'}
+          canCancel={['pending', 'in_progress'].includes(delivery.status)}
+          onEdit={handleEditDelivery}
+          onCancel={handleCancelDelivery}
+          loading={loading || actionLoading}
+        />
       </ScrollView>
+
+      {/* Loader personnalisé pour les actions */}
+      <CustomLoaderModal
+        visible={actionLoading}
+        title={currentAction}
+        message="Veuillez patienter..."
+        type="loading"
+      />
     </View>
   )
 }

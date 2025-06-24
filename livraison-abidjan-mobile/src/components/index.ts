@@ -2,8 +2,10 @@ export { default as FeatherIcon } from './FeatherIcon';
 export { default as StarRating } from './StarRating';
 export { default as VoiceAssistant } from './VoiceAssistant';
 export { default as VoiceRecorder } from './VoiceRecorder';
-export { default as WeatherInfo } from './WeatherInfo'
-export { default as CustomMapView } from './CustomMapView'
+export { default as WeatherInfo } from './WeatherInfo';
+export { default as CustomLoaderModal } from './CustomLoaderModal';
+export { default as MultiDestinationActions } from './MultiDestinationActions';
+export { default as CustomMapView } from './CustomMapView';
 export type { CustomMapRoute as Route } from './CustomMapView';
 export { default as EnhancedWeatherInfo } from './EnhancedWeatherInfo';
 export { default as WeatherAlertModal } from './WeatherAlertModal';

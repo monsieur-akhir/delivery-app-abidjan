@@ -304,6 +304,96 @@ class MultiDestinationService {
       return [];
     }
   }
+
+  /**
+   * Modifier une livraison multi-destinations
+   */
+  static async updateDelivery(deliveryId: number, updateData: Partial<MultiDestinationDeliveryCreate>): Promise<MultiDestinationDelivery> {
+    try {
+      const token = await getToken();
+      const response = await api.put(`/api/multi-destination-deliveries/${deliveryId}`, updateData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la modification de la livraison:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Annuler une livraison multi-destinations
+   */
+  static async cancelDelivery(deliveryId: number, reason?: string): Promise<void> {
+    try {
+      const token = await getToken();
+      await api.post(`/api/multi-destination-deliveries/${deliveryId}/cancel`, 
+        { reason },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Erreur lors de l\'annulation de la livraison:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Faire une contre-offre sur une enchère
+   */
+  static async createCounterOffer(
+    deliveryId: number, 
+    bidId: number, 
+    counterOfferData: {
+      proposed_price: number;
+      message?: string;
+    }
+  ): Promise<void> {
+    try {
+      const token = await getToken();
+      await api.post(
+        `/api/multi-destination-deliveries/${deliveryId}/bids/${bidId}/counter-offer`,
+        counterOfferData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Erreur lors de la création de la contre-offre:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Rejeter une enchère
+   */
+  static async rejectBid(deliveryId: number, bidId: number, reason?: string): Promise<void> {
+    try {
+      const token = await getToken();
+      await api.post(`/api/multi-destination-deliveries/${deliveryId}/bids/${bidId}/reject`, 
+        { reason },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Erreur lors du rejet de l\'enchère:', error);
+      throw error;
+    }
+  }
 }
 
 export default MultiDestinationService;
