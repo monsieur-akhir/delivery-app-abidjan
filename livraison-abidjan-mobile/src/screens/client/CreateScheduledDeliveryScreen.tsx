@@ -244,16 +244,20 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
           mode="datetime"
           display={Platform.OS === 'android' ? 'calendar' : 'default'}
           onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-            if (!event || typeof event !== 'object' || !('type' in event)) {
-              setShowDatePicker(false)
-              return
-            }
-            if (event.type === 'dismissed') {
-              setShowDatePicker(false)
-              return
-            }
             setShowDatePicker(false)
-            if (selectedDate) {
+            
+            // Vérification robuste de l'événement
+            if (!event) {
+              return
+            }
+            
+            // Si l'événement est dismissed ou annulé, on ne fait rien
+            if (event.type === 'dismissed' || event.type === 'neutralButtonPressed') {
+              return
+            }
+            
+            // Si une date est sélectionnée et l'événement est 'set'
+            if (event.type === 'set' && selectedDate) {
               setFormData(prev => ({ ...prev, scheduled_date: selectedDate }))
             }
           }}
