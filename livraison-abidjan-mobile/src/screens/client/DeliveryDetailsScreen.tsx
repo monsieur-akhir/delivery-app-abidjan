@@ -481,9 +481,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 2
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1
   },
   statusHeader: {
     flexDirection: 'row',
@@ -548,9 +548,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 2
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1
   },
   cardTitle: {
     fontSize: 18,
@@ -619,9 +619,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 2
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1
   },
   priceInfo: {
     marginTop: 8

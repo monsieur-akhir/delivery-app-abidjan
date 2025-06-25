@@ -17,6 +17,7 @@ import type { RootStackParamList } from "../../types/navigation"
 import type { UserProfile, User, UserProfileExtended } from "../../types/models"
 import { useAlert } from '../../hooks/useAlert'
 import { useLoader } from '../../contexts/LoaderContext'
+import CustomLoaderModal from '../../components/CustomLoaderModal'
 
 const { width } = Dimensions.get('window')
 
@@ -253,15 +254,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <LinearGradient
-          colors={['#FF6B00', '#FF8E53']}
-          style={styles.loadingGradient}
-        >
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text style={styles.loadingText}>{t("profile.loading")}</Text>
-          </View>
-        </LinearGradient>
+        <CustomLoaderModal
+          visible={loading}
+          title="Chargement du profil..."
+          message="Veuillez patienter"
+          type="loading"
+        />
       </SafeAreaView>
     )
   }
@@ -440,39 +438,104 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
-  },
-  headerGradient: {
-    paddingTop: 10,
-    paddingBottom: 20,
+    backgroundColor: '#F6F7FB'
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0'
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000'
   },
-  editButton: {
+  scrollView: {
+    flex: 1,
+    padding: 16
+  },
+  statusCard: {
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  addressCard: {
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  priceCard: {
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 12
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  statusInfo: {
+    flex: 1
+  },
+  deliveryId: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 0
+  },
+  statusChip: {
+    alignSelf: 'flex-start',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    backgroundColor: '#EF5350'
+  },
+  statusChipText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14
+  },
+  deliveryDate: {
+    fontSize: 14,
+    color: '#757575'
+  },
+  addressIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#F6F7FB',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12
   },
   loadingGradient: {
     flex: 1,
@@ -486,9 +549,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: "#FFFFFF",
     fontSize: 16,
-  },
-  scrollView: {
-    flex: 1,
   },
   scrollContainer: {
     paddingBottom: 40,
