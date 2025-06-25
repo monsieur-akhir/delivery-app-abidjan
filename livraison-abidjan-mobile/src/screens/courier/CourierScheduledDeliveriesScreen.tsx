@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -15,32 +14,21 @@ import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-import { DeliveryService } from '../../services/DeliveryService';
+import DeliveryService from '../../services/DeliveryService';
 import { EmptyState } from '../../components/EmptyState';
-import { Card } from '../../components/Card';
+import Card from '../../components/Card';
 import { DeliveryStatusBadge } from '../../components/DeliveryStatusBadge';
-
-interface ScheduledDelivery {
-  id: string;
-  title: string;
-  pickup_address: string;
-  delivery_address: string;
-  scheduled_date: string;
-  scheduled_time: string;
-  price: number;
-  status: string;
-  client_name: string;
-  vehicle_type: string;
-  package_type: string;
-  estimated_duration: number;
-  distance: number;
-}
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
+import { useAlert } from '../../hooks/useAlert'
+import type { AvailableDelivery } from '../../types/models';
 
 const CourierScheduledDeliveriesScreen: React.FC = () => {
-  const [deliveries, setDeliveries] = useState<ScheduledDelivery[]>([]);
+  const [deliveries, setDeliveries] = useState<AvailableDelivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
+  const { showErrorAlert, showSuccessAlert } = useAlert();
 
   useEffect(() => {
     loadScheduledDeliveries();
@@ -51,13 +39,18 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
       setLoading(true);
       // Récupérer les livraisons planifiées disponibles pour le coursier
       const response = await DeliveryService.getAvailableDeliveries({
-        delivery_type: 'scheduled',
-        status: 'pending'
+        limit: 50
       });
-      setDeliveries(response);
+      // Filtrer les livraisons planifiées côté client
+      const scheduledDeliveries = response.filter((delivery: any) => 
+        delivery.delivery_type === 'scheduled' || 
+        delivery.scheduled_date || 
+        delivery.scheduled_time
+      );
+      setDeliveries(scheduledDeliveries);
     } catch (error) {
       console.error('Erreur lors du chargement des livraisons planifiées:', error);
-      Alert.alert('Erreur', 'Impossible de charger les livraisons planifiées');
+      showErrorAlert('Erreur', 'Impossible de charger les livraisons planifiées');
     } finally {
       setLoading(false);
     }
@@ -80,7 +73,7 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
             text: 'Accepter',
             onPress: async () => {
               await DeliveryService.acceptDelivery(deliveryId);
-              Alert.alert('Succès', 'Livraison acceptée avec succès');
+              showSuccessAlert('Succès', 'Livraison acceptée avec succès');
               loadScheduledDeliveries();
             }
           }
@@ -97,12 +90,12 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
     return format(dateTime, 'dd MMMM yyyy à HH:mm', { locale: fr });
   };
 
-  const renderDeliveryItem = ({ item }: { item: ScheduledDelivery }) => (
+  const renderDeliveryItem = ({ item }: { item: AvailableDelivery }) => (
     <Card style={styles.deliveryCard}>
       <View style={styles.cardHeader}>
         <View style={styles.headerLeft}>
-          <Text style={styles.deliveryTitle}>{item.title}</Text>
-          <Text style={styles.clientName}>Client: {item.client_name}</Text>
+          <Text style={styles.deliveryTitle}>{item.package_description || 'Livraison'}</Text>
+          <Text style={styles.clientName}>Client: {item.client?.full_name || 'Client'}</Text>
         </View>
         <DeliveryStatusBadge status={item.status} />
       </View>
@@ -111,7 +104,10 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
         <View style={styles.scheduleRow}>
           <Ionicons name="calendar-outline" size={16} color="#666" />
           <Text style={styles.scheduleText}>
-            {formatDateTime(item.scheduled_date, item.scheduled_time)}
+            {(item as any).scheduled_date && (item as any).scheduled_time ? 
+              formatDateTime((item as any).scheduled_date, (item as any).scheduled_time) :
+              'Date à confirmer'
+            }
           </Text>
         </View>
         <View style={styles.scheduleRow}>
@@ -144,7 +140,7 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="car-outline" size={16} color="#666" />
-          <Text style={styles.detailText}>{item.vehicle_type}</Text>
+          <Text style={styles.detailText}>{(item as any).vehicle_type || 'Tous véhicules'}</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="speedometer-outline" size={16} color="#666" />
@@ -153,10 +149,10 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
       </View>
 
       <View style={styles.cardFooter}>
-        <Text style={styles.priceText}>{item.price} FCFA</Text>
+        <Text style={styles.priceText}>{item.estimated_price || item.proposed_price} FCFA</Text>
         <TouchableOpacity
           style={styles.acceptButton}
-          onPress={() => acceptScheduledDelivery(item.id)}
+          onPress={() => acceptScheduledDelivery(item.id.toString())}
         >
           <Text style={styles.acceptButtonText}>Accepter</Text>
         </TouchableOpacity>
@@ -188,7 +184,7 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
 
       {deliveries.length === 0 ? (
         <EmptyState
-          icon="calendar-outline"
+          icon="calendar"
           title="Aucune livraison planifiée"
           message="Il n'y a pas de livraisons planifiées disponibles pour le moment"
         />
@@ -196,12 +192,11 @@ const CourierScheduledDeliveriesScreen: React.FC = () => {
         <FlatList
           data={deliveries}
           renderItem={renderDeliveryItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          showsVerticalScrollIndicator={false}
         />
       )}
     </SafeAreaView>

@@ -16,15 +16,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
-import Toast from 'react-native-root-toast';
 import { Picker as NativePicker } from '@react-native-picker/picker';
 import axios from 'axios';
 
 import { AddressAutocomplete, CustomLoaderModal } from '../../components';
-import { DeliveryService } from '../../services';
 import MultiDestinationService from '../../services/MultiDestinationService';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 
 interface Destination {
   id: string;
@@ -52,6 +52,21 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
   const navigation = useNavigation();
   const { colors } = useTheme();
   const { user } = useAuth();
+
+  const { 
+    alertVisible,
+    alertConfig,
+    toastVisible,
+    toastConfig,
+    showSuccessAlert, 
+    showErrorAlert, 
+    showWarningAlert, 
+    showInfoAlert, 
+    showConfirmationAlert,
+    showDeleteConfirmationAlert,
+    hideAlert,
+    hideToast
+  } = useAlert()
   const mapRef = useRef<MapView | null>(null);
 
   // États pour le point de collecte
@@ -102,6 +117,8 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+
+  const { showLoader, hideLoader } = useLoader();
 
   useEffect(() => {
     requestLocationPermission();
@@ -182,7 +199,7 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
 
   const addDestination = () => {
     if (!currentDestination.address || !currentDestination.recipient_name || !currentDestination.recipient_phone || !currentDestination.commune) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires de la destination');
+      showErrorAlert('Erreur', 'Veuillez remplir tous les champs obligatoires de la destination');
       return;
     }
     const newDestination: Destination = {
@@ -230,10 +247,12 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      Toast.show('Veuillez corriger les erreurs du formulaire.', { backgroundColor: '#E53935', textColor: '#fff', duration: 2000 });
+      showErrorAlert('Erreur', 'Veuillez corriger les erreurs du formulaire.');
       return;
     }
     setLoading(true);
+    showLoader('Création de la livraison...');
+    
     try {
       const deliveryData = {
         pickup_address: pickupAddress,
@@ -260,15 +279,17 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
       };
       console.log('Payload envoyé:', JSON.stringify(deliveryData, null, 2));
       await MultiDestinationService.createDelivery(deliveryData);
-      Toast.show('Livraison créée avec succès !', { backgroundColor: '#4CAF50', textColor: '#fff', duration: 2000 });
+      hideLoader();
+      showSuccessAlert('Succès', 'Livraison créée avec succès !');
       navigation.navigate('MultiDestinationDeliveries' as never);
     } catch (error: any) {
+      hideLoader();
       if (error.response && error.response.data) {
         console.log('Erreur détaillée:', error.response.data);
-        Toast.show('Erreur : ' + JSON.stringify(error.response.data), { backgroundColor: '#E53935', textColor: '#fff', duration: 3000 });
+        showErrorAlert('Erreur', 'Erreur lors de la création : ' + JSON.stringify(error.response.data));
       } else {
         console.error('Erreur lors de la création:', error);
-        Toast.show('Erreur inconnue lors de la création', { backgroundColor: '#E53935', textColor: '#fff', duration: 3000 });
+        showErrorAlert('Erreur', 'Erreur inconnue lors de la création');
       }
     } finally {
       setLoading(false);

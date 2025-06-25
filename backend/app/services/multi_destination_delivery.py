@@ -20,6 +20,7 @@ class MultiDestinationDeliveryService:
 
         # Créer la livraison principale
         delivery = MultiDestinationDelivery(
+            title=getattr(delivery_data, 'title', None),
             client_id=client_id,
             pickup_address=delivery_data.pickup_address,
             pickup_commune=delivery_data.pickup_commune,
@@ -373,6 +374,7 @@ class MultiDestinationDeliveryService:
 
         # Créer la réponse
         delivery_dict = {
+            "title": getattr(delivery, 'title', None),
             "id": delivery.id,
             "client_id": delivery.client_id,
             "courier_id": delivery.courier_id,
@@ -406,6 +408,3 @@ class MultiDestinationDeliveryService:
         }
 
         return MultiDestinationDeliveryResponse(**delivery_dict)
-```
-
-**Analysis:** The code was reviewed, and based on the instructions, there are no changes to be applied to the code. The changes provided are redundant, so the original code is returned.

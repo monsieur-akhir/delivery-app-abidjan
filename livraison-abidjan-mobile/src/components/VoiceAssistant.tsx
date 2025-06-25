@@ -6,6 +6,10 @@ import { Audio } from 'expo-av'
 import { useNetwork } from '../contexts/NetworkContext'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../types/navigation'
+import CustomAlert from '../components/CustomAlert'
+import CustomToast from '../components/CustomToast'
+import { useAlert } from '../hooks/useAlert'
+import { useLoader } from '../contexts/LoaderContext'
 
 interface VoiceAssistantProps {
   navigation?: NativeStackNavigationProp<RootStackParamList>
@@ -17,6 +21,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
   const [lastCommand, setLastCommand] = useState<string>('')
   const [recording, setRecording] = useState<Audio.Recording | null>(null)
   const { isConnected } = useNetwork()
+  const { hideLoader } = useLoader()
 
   useEffect(() => {
     return () => {
@@ -95,6 +100,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ navigation }) => {
     } catch (error) {
       console.error('Erreur lors de l\'arrêt de l\'enregistrement:', error)
     } finally {
+      hideLoader()
       setIsListening(false)
       setIsVisible(false)
     }

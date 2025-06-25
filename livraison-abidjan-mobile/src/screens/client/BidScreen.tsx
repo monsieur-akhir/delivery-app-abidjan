@@ -21,10 +21,12 @@ import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '../../contexts/AuthContext'
 import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 import DeliveryService from '../../services/DeliveryService'
 import { formatPrice, formatDate, formatDistance } from '../../utils/formatters'
 import { getDeliveryConsultations } from '../../services/api'
 import type { RootStackParamList, Delivery, Bid } from '../../types'
+
 
 const { width, height } = Dimensions.get('window')
 
@@ -73,8 +75,9 @@ const BidScreen: React.FC = () => {
   const route = useRoute()
   const params = route.params as RouteParams
   const { user } = useAuth()
+  const { showSuccessAlert, showErrorAlert, showInfoAlert, showConfirmationAlert, showDeleteConfirmationAlert } = useAlert()
+  const { showLoader, hideLoader } = useLoader()
   const { t } = useTranslation()
-  const { showSuccessAlert, showErrorAlert, showInfoAlert } = useAlert()
 
   // State
   const [delivery, setDelivery] = useState<Delivery | null>(null)
@@ -278,6 +281,7 @@ const BidScreen: React.FC = () => {
       simulateCourierConsultations()
       simulateBids()
     } finally {
+    hideLoader()
       setLoading(false)
     }
   }
@@ -615,6 +619,7 @@ const BidScreen: React.FC = () => {
     } catch (error) {
       showErrorAlert('Erreur', 'Impossible de rafraîchir les données')
     } finally {
+    hideLoader()
       setRefreshing(false)
     }
   }
@@ -1119,7 +1124,12 @@ const BidScreen: React.FC = () => {
           </View>
         </Modal>
       </Animated.View>
-    </SafeAreaView>
+    
+      {/* Composants d'alerte modernes */}
+      
+
+      
+</SafeAreaView>
   )
 }
 

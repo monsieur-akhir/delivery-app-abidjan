@@ -12,7 +12,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import i18n from "../../i18n"
 import { useAuth } from '../../contexts/AuthContext'
-import CustomAlert from "../../components/CustomAlert"
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">
@@ -22,13 +23,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
   const { sessionExpired, setSessionExpired } = useAuth()
+  const { showWarningAlert, showErrorAlert, showSuccessAlert } = useAlert()
+  const { showLoader, hideLoader } = useLoader()
   
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
-  const [alertVisible, setAlertVisible] = useState(false)
-  const [alertConfig, setAlertConfig] = useState({ title: '', message: '', type: 'info' as 'info' | 'error' | 'success' | 'warning' })
-
-  // No need for saved credentials in transition screen
 
   // Vérifier la connectivité
   useEffect(() => {
@@ -47,15 +46,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     if (sessionExpired) {
-      setAlertConfig({
-        title: 'Session Expirée',
-        message: 'Votre session a expiré, veuillez vous reconnecter.',
-        type: 'warning'
-      })
-      setAlertVisible(true)
+      showWarningAlert(
+        'Session Expirée', 
+        'Votre session a expiré, veuillez vous reconnecter.'
+      )
       setSessionExpired(false)
     }
-  }, [sessionExpired, setSessionExpired])
+  }, [sessionExpired, setSessionExpired, showWarningAlert])
 
   if (!isI18nReady) {
     return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>Chargement...</Text></View>;
@@ -160,14 +157,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
           </Animatable.View>
         </Animatable.View>
-        
-        <CustomAlert
-          visible={alertVisible}
-          onDismiss={() => setAlertVisible(false)}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          type={alertConfig.type}
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   )

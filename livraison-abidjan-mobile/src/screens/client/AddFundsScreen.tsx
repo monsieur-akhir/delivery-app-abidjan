@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native'
 import { Text, TextInput, Button, Card, RadioButton, Surface, IconButton } from 'react-native-paper'
@@ -8,6 +7,9 @@ import { useAuth } from '../../contexts/AuthContext'
 import { formatPrice } from '../../utils/formatters'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../types/navigation'
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
+import { useAlert } from '../../hooks/useAlert'
 
 type AddFundsScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'AddFunds'>
@@ -25,6 +27,7 @@ interface PaymentMethod {
 
 const AddFundsScreen: React.FC<AddFundsScreenProps> = ({ navigation }) => {
   const { user } = useAuth()
+  const { showErrorAlert, showConfirmationAlert } = useAlert()
   const [amount, setAmount] = useState('')
   const [selectedMethod, setSelectedMethod] = useState<string>('')
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
@@ -56,12 +59,12 @@ const AddFundsScreen: React.FC<AddFundsScreenProps> = ({ navigation }) => {
 
   const handleAddFunds = async () => {
     if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un montant valide')
+      showErrorAlert('Erreur', 'Veuillez saisir un montant valide')
       return
     }
 
     if (!selectedMethod) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une méthode de paiement')
+      showErrorAlert('Erreur', 'Veuillez sélectionner une méthode de paiement')
       return
     }
 
@@ -102,18 +105,22 @@ const AddFundsScreen: React.FC<AddFundsScreenProps> = ({ navigation }) => {
             transactionId: data.transaction_id,
             onComplete: (success: boolean) => {
               if (success) {
-                Alert.alert('Succès', 'Fonds ajoutés avec succès', [
-                  { text: 'OK', onPress: () => navigation.goBack() }
-                ])
+                showConfirmationAlert(
+                  'Succès', 
+                  'Fonds ajoutés avec succès',
+                  () => navigation.goBack()
+                )
               } else {
-                Alert.alert('Erreur', 'Le paiement a échoué')
+                showErrorAlert('Erreur', 'Le paiement a échoué')
               }
             }
           })
         } else {
-          Alert.alert('Succès', 'Fonds ajoutés avec succès', [
-            { text: 'OK', onPress: () => navigation.goBack() }
-          ])
+          showConfirmationAlert(
+            'Succès', 
+            'Fonds ajoutés avec succès',
+            () => navigation.goBack()
+          )
         }
       } else {
         throw new Error('Erreur lors de l\'ajout de fonds')

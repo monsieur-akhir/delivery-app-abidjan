@@ -26,6 +26,9 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNotifications } from '../../contexts/NotificationContext'
 import { Notification, NotificationType } from '../../types/models'
 import { EmptyState } from '../../components/EmptyState'
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
+import { useAlert } from '../../hooks/useAlert'
 
 const { width, height } = Dimensions.get('window')
 
@@ -456,7 +459,11 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
           scrollEventThrottle={16}
         />
       )}
-    </SafeAreaView>
+    
+      {/* Composants d'alerte modernes */}
+      
+
+</SafeAreaView>
   )
 }
 

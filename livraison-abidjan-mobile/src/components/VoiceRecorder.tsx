@@ -9,6 +9,10 @@ import * as FileSystem from "expo-file-system"
 import * as Permissions from "expo-permissions"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../contexts/NetworkContext"
+import CustomAlert from '../components/CustomAlert'
+import CustomToast from '../components/CustomToast'
+import { useAlert } from '../hooks/useAlert'
+import { useLoader } from '../contexts/LoaderContext'
 
 interface VoiceRecorderProps {
   onRecordingComplete: (base64Audio: string) => void
@@ -37,6 +41,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 }) => {
   const { t } = useTranslation()
   const { isConnected } = useNetwork()
+  const { hideLoader } = useLoader()
 
   const [isRecording, setIsRecording] = useState<boolean>(false)
   const [recording, setRecording] = useState<Audio.Recording | null>(null)
@@ -158,6 +163,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       console.error("Error stopping recording:", error)
       Alert.alert(t("rateDelivery.recordingError"), t("rateDelivery.couldNotStopRecording"))
     } finally {
+      hideLoader()
       setIsProcessing(false)
     }
   }

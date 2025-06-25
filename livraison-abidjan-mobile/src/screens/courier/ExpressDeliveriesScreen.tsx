@@ -8,6 +8,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../contexts/ThemeContext"
 import { useDelivery } from "../../hooks"
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 import DeliveryService from "../../services/DeliveryService"
 import type { Delivery } from "../../types/models"
 import type { RootStackParamList } from "../../types/navigation"
@@ -15,10 +17,13 @@ import DeliveryStatusBadge from "../../components/DeliveryStatusBadge"
 import EmptyState from "../../components/EmptyState"
 import ErrorView from "../../components/ErrorView"
 import { formatCurrency, formatDate, formatDistance } from "../../utils/formatters"
+
 const ExpressDeliveriesScreen: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { colors } = useTheme()
+  const { showSuccessAlert, showErrorAlert, showInfoAlert, showConfirmationAlert } = useAlert()
+  const { showLoader, hideLoader } = useLoader()
 
   const {
     deliveries,
@@ -63,77 +68,67 @@ const ExpressDeliveriesScreen: React.FC = () => {
     await loadExpressDeliveries()
     setRefreshing(false)
   }
+
   const handleAcceptDelivery = async (deliveryId: number) => {
     try {
+      showLoader('Acceptation de la livraison...')
       await DeliveryService.acceptDelivery(deliveryId)
-      Alert.alert(t("success"), t("delivery.acceptedSuccessfully"))
+      hideLoader()
+      showSuccessAlert(t("success"), t("delivery.acceptedSuccessfully"))
       await loadExpressDeliveries()
     } catch (err) {
-      Alert.alert(t("error"), t("delivery.acceptError"))
+      hideLoader()
+      showErrorAlert(t("error"), t("delivery.acceptError"))
     }
   }
 
   const handleIgnoreDelivery = (deliveryId: number) => {
-    Alert.alert(
+    showConfirmationAlert(
       t("delivery.ignoreTitle"),
       t("delivery.ignoreConfirmation"),
-      [
-        { text: t("common.cancel"), style: 'cancel' },
-        {
-          text: t("delivery.ignore"),
-          onPress: () => {
-            // Retirer temporairement de la liste (peut revenir après actualisation)
-            //setDeliveries(prev => prev.filter(d => d.id !== deliveryId))
-            Alert.alert(t("delivery.ignored"), t("delivery.ignoredMessage"))
-          }
-        }
-      ]
+      () => {
+        // Retirer temporairement de la liste (peut revenir après actualisation)
+        //setDeliveries(prev => prev.filter(d => d.id !== deliveryId))
+        showInfoAlert(t("delivery.ignored"), t("delivery.ignoredMessage"))
+      }
     )
   }
 
   const handleCounterOffer = (delivery: any) => {
-    Alert.prompt(
+    showConfirmationAlert(
       t("delivery.counterOfferTitle"),
       t("delivery.counterOfferPrompt", { originalPrice: delivery.proposed_price }),
-      [
-        { text: t("common.cancel"), style: 'cancel' },
-        {
-          text: t("delivery.sendOffer"),
-          onPress: async (price) => {
-            if (price && !isNaN(Number(price))) {
-              try {
-                //await DeliveryService.createBid(delivery.id, {
-                //  price: Number(price),
-                //  estimated_time: delivery.estimated_duration || 30,
-                //  message: t("delivery.counterOfferMessage")
-                //})
-                Alert.alert(t("delivery.counterOfferSent"), t("delivery.counterOfferSentMessage"))
-                // Optionnel: retirer de la liste ou marquer comme ayant fait une offre
-                //setDeliveries(prev => prev.map(d =>
-                //  d.id === delivery.id
-                //    ? { ...d, hasCounterOffer: true }
-                //    : d
-                //))
-              } catch (error) {
-                Alert.alert(t("error.title"), t("error.counterOffer"))
-              }
-            } else {
-              Alert.alert(t("error.title"), t("error.invalidPrice"))
-            }
-          }
+      async () => {
+        try {
+          //await DeliveryService.createBid(delivery.id, {
+          //  price: Number(price),
+          //  estimated_time: delivery.estimated_duration || 30,
+          //  message: t("delivery.counterOfferMessage")
+          //})
+          showSuccessAlert(t("delivery.counterOfferSent"), t("delivery.counterOfferSentMessage"))
+          // Optionnel: retirer de la liste ou marquer comme ayant fait une offre
+          //setDeliveries(prev => prev.map(d =>
+          //  d.id === delivery.id
+          //    ? { ...d, hasCounterOffer: true }
+          //    : d
+          //))
+        } catch (error) {
+          showErrorAlert(t("error.title"), t("error.counterOffer"))
         }
-      ],
-      'plain-text',
-      delivery.proposed_price.toString()
+      }
     )
   }
+
   const handleStartDelivery = async (deliveryId: number) => {
     try {
+      showLoader('Démarrage de la livraison...')
       await startDelivery(deliveryId)
-      Alert.alert(t("success"), t("delivery.startedSuccessfully"))
+      hideLoader()
+      showSuccessAlert(t("success"), t("delivery.startedSuccessfully"))
       navigation.navigate("CourierTrackDelivery", { deliveryId: deliveryId.toString() })
     } catch (err) {
-      Alert.alert(t("error"), t("delivery.startError"))
+      hideLoader()
+      showErrorAlert(t("error"), t("delivery.startError"))
     }
   }
 
@@ -203,7 +198,7 @@ const ExpressDeliveriesScreen: React.FC = () => {
             <View style={styles.addressLine} />
 
             <View style={styles.addressRow}>
-              <Ionicons name="location" size={12} color="#4CAF50" />
+              <Ionicons name="location" size={12} color={colors.primary} />
               <View style={styles.addressText}>
                 <Text style={[styles.addressLabel, { color: colors.text }]}>
                   {t("delivery.delivery")}
@@ -218,34 +213,33 @@ const ExpressDeliveriesScreen: React.FC = () => {
           {/* Details */}
           <View style={styles.detailsContainer}>
             <View style={styles.detailItem}>
-              <Ionicons name="time" size={16} color={colors.text} />
+              <Ionicons name="time-outline" size={14} color={colors.text} />
               <Text style={[styles.detailText, { color: colors.text }]}>
                 {formatDate(item.created_at)}
               </Text>
             </View>
-
-            {item.estimated_distance && (
-              <View style={styles.detailItem}>
-                <Ionicons name="map" size={16} color={colors.text} />
-                <Text style={[styles.detailText, { color: colors.text }]}>
-                  {formatDistance(item.estimated_distance)}
-                </Text>
-              </View>
-            )}
-
             <View style={styles.detailItem}>
-              <DeliveryStatusBadge status={item.status} />
+              <Ionicons name="navigate-outline" size={14} color={colors.text} />
+              <Text style={[styles.detailText, { color: colors.text }]}>
+                {formatDistance(item.estimated_distance || 0)}
+              </Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="car-outline" size={14} color={colors.text} />
+              <Text style={[styles.detailText, { color: colors.text }]}>
+                {item.estimated_duration || 30} min
+              </Text>
             </View>
           </View>
 
           {/* Package Info */}
-          {item.description && (
+          {item.package_description && (
             <View style={styles.packageInfo}>
               <Text style={[styles.packageLabel, { color: colors.text }]}>
-                {t("delivery.package")}:
+                {t("delivery.package")}
               </Text>
-              <Text style={[styles.packageText, { color: colors.text }]} numberOfLines={2}>
-                {item.description}
+              <Text style={[styles.packageText, { color: colors.text }]}>
+                {item.package_description}
               </Text>
             </View>
           )}
@@ -253,10 +247,11 @@ const ExpressDeliveriesScreen: React.FC = () => {
           {/* Action Buttons */}
           <View style={styles.actionContainer}>
             {canAccept && (
-              <>                <Button
+              <>
+                <Button
                   mode="outlined"
                   onPress={() => {
-                    if (item.id !== undefined && item.id !== null && item.id !== "") {
+                    if (item.id !== undefined && item.id !== null) {
                       navigation.navigate("DeliveryDetails", { deliveryId: item.id.toString() })
                     } else {
                       console.error('Tentative de navigation vers DeliveryDetails sans deliveryId', item)
@@ -277,10 +272,11 @@ const ExpressDeliveriesScreen: React.FC = () => {
             )}
 
             {canStart && (
-              <>                <Button
+              <>
+                <Button
                   mode="outlined"
                   onPress={() => {
-                    if (item.id !== undefined && item.id !== null && item.id !== "") {
+                    if (item.id !== undefined && item.id !== null) {
                       navigation.navigate("DeliveryDetails", { deliveryId: item.id.toString() })
                     } else {
                       console.error('Tentative de navigation vers DeliveryDetails sans deliveryId', item)
@@ -329,7 +325,9 @@ const ExpressDeliveriesScreen: React.FC = () => {
           {t("express.title")}
         </Text>
         <View style={{ width: 24 }} />
-      </View>      {/* Filter Tabs */}
+      </View>
+
+      {/* Filter Tabs */}
       <View style={styles.filterContainer}>
         <Chip
           selected={filter === 'pending'}
@@ -392,7 +390,8 @@ const ExpressDeliveriesScreen: React.FC = () => {
             t("express.emergencyMode"),
             t("express.emergencyModeDescription"),
             [
-              { text: t("common.cancel"), style: "cancel" },              { text: t("common.activate"), onPress: () => {
+              { text: t("common.cancel"), style: "cancel" },
+              { text: t("common.activate"), onPress: () => {
                 // Activate emergency mode
                 setFilter('pending')
                 loadExpressDeliveries()

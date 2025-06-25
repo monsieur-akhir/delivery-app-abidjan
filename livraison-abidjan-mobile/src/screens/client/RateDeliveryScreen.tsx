@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -90,7 +89,7 @@ const RateDeliveryScreen: React.FC = () => {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
       // Confirmer la livraison et noter le coursier
-      await DeliveryService.clientConfirmDelivery(Number(deliveryId), rating, comment || undefined)
+      await DeliveryService.clientConfirmDelivery(Number(deliveryId), rating, comment || '')
 
       Alert.alert(
         'Merci !',

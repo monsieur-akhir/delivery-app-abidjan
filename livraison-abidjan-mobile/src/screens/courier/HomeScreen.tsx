@@ -8,7 +8,6 @@ import {
   RefreshControl,
   Dimensions,
   StatusBar,
-  Alert,
   Animated,
   Modal,
 } from 'react-native';
@@ -34,6 +33,8 @@ import DeliveryService from '../../services/DeliveryService';
 import { useAuth } from '../../hooks/useAuth';
 import { useDelivery } from '../../hooks/useDelivery';
 import { useWebSocket } from '../../contexts/WebSocketContext';
+import { useAlert } from '../../hooks/useAlert';
+import { useLoader } from '../../contexts/LoaderContext';
 import { formatPrice, formatDate } from '../../utils/formatters';
 
 const { width } = Dimensions.get('window');
@@ -63,6 +64,8 @@ export default function CourierHomeScreen() {
   const { user } = useAuth();
   const { connected } = useWebSocket();
   const { deliveries, isLoading } = useDelivery();
+  const { showSuccessAlert, showErrorAlert, showInfoAlert } = useAlert();
+  const { showLoader, hideLoader } = useLoader();
 
   const [refreshing, setRefreshing] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
@@ -131,10 +134,14 @@ export default function CourierHomeScreen() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      showLoader('Chargement des données...');
       // Simuler le chargement des données
       await new Promise(resolve => setTimeout(resolve, 1000));
+      hideLoader();
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
+      hideLoader();
+      showErrorAlert('Erreur', 'Impossible de charger les données du tableau de bord');
     } finally {
       setLoading(false);
     }
@@ -153,23 +160,26 @@ export default function CourierHomeScreen() {
 
   const handleAcceptDelivery = async (deliveryId: string) => {
     try {
+      showLoader('Acceptation de la livraison...');
       await DeliveryService.acceptDelivery(deliveryId);
-      Alert.alert('Succès', 'Livraison acceptée avec succès');
+      hideLoader();
+      showSuccessAlert('Succès', 'Livraison acceptée avec succès');
       setAlertsList(prev => prev.filter(alert => alert.delivery_id !== deliveryId));
       setShowDetailModal(false);
     } catch (error) {
-      Alert.alert('Erreur', 'Erreur lors de l\'acceptation de la livraison');
+      hideLoader();
+      showErrorAlert('Erreur', 'Erreur lors de l\'acceptation de la livraison');
     }
   };
 
   const handleRejectDelivery = async (deliveryId: string) => {
-    Alert.alert('Ignorer', 'Demande ignorée');
+    showInfoAlert('Ignorer', 'Demande ignorée');
     setAlertsList(prev => prev.filter(alert => alert.delivery_id !== deliveryId));
     setShowDetailModal(false);
   };
 
   const handleCounterOffer = async (deliveryId: string) => {
-    Alert.alert('Contre-offre', 'Fonctionnalité de contre-offre bientôt disponible');
+    showInfoAlert('Contre-offre', 'Fonctionnalité de contre-offre bientôt disponible');
     setShowDetailModal(false);
   };
 
@@ -181,7 +191,6 @@ export default function CourierHomeScreen() {
   const removeAlert = (deliveryId: string) => {
     setAlertsList(prev => prev.filter(alert => alert.delivery_id !== deliveryId));
   };
-
 
   const quickActions = [
     {

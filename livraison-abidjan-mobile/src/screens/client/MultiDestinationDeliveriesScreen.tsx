@@ -11,34 +11,44 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { RootStackParamList } from '../../types/navigation'
 import { EmptyState, Card } from '../../components'
 import { useTheme } from '../../contexts/ThemeContext'
 import { API_BASE_URL } from '../../config'
 import { getToken } from '../../utils'
+import { fetchMultiDestinationDeliveries } from '../../services/api'
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 
 type ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MultiDestinationDeliveries'>
 
 interface MultiDestinationDelivery {
   id: number
-  title: string
+  title?: string
   pickup_address: string
   pickup_commune: string
   destinations: {
-    address: string
-    commune: string
-    contact_name?: string
     delivery_order: number
+    commune: string
+    // autres champs si besoin
   }[]
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
   total_price: number
   created_at: string
 }
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 const MultiDestinationDeliveriesScreen: React.FC = () => {
   const navigation = useNavigation<ScreenNavigationProp>()
   const { colors } = useTheme()
+  const { showErrorAlert } = useAlert()
+  const { hideLoader } = useLoader()
 
   const [deliveries, setDeliveries] = useState<MultiDestinationDelivery[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -48,25 +58,28 @@ const MultiDestinationDeliveriesScreen: React.FC = () => {
   const loadDeliveries = useCallback(async () => {
     try {
       setIsLoading(true)
-      const token = await getToken()
-      const queryParams = filter !== 'all' ? `?status=${filter}` : ''
-
-      const response = await fetch(`${API_BASE_URL}/multi-destination-deliveries${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement')
-      }
-
-      const data = await response.json()
-      setDeliveries(data)
+      const data = await fetchMultiDestinationDeliveries(filter)
+      setDeliveries(
+        (data || []).map((item: any) => ({
+          id: item.id,
+          title: item.title || `Livraison du ${new Date(item.created_at).toLocaleDateString('fr-FR')}`,
+          pickup_address: item.pickup_address,
+          pickup_commune: item.pickup_commune,
+          destinations: (item.destinations || []).map((dest: any) => ({
+            delivery_order: dest.original_order,
+            commune: dest.delivery_commune,
+            // autres champs si besoin
+          })),
+          status: item.status,
+          total_price: item.total_final_price ?? item.total_proposed_price ?? 0,
+          created_at: item.created_at,
+        }))
+      )
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les livraisons')
+      console.log('[DEBUG] Erreur dans loadDeliveries:', error)
+      showErrorAlert('Erreur', 'Impossible de charger les livraisons')
     } finally {
+      hideLoader()
       setIsLoading(false)
     }
   }, [filter])
@@ -177,67 +190,58 @@ const MultiDestinationDeliveriesScreen: React.FC = () => {
           />
         ) : (
           filteredDeliveries.map(delivery => (
-            <Card key={delivery.id} style={styles.deliveryCard}>
-              <View style={styles.deliveryHeader}>
-                <Text style={[styles.deliveryTitle, { color: colors.text }]}>
-                  {delivery.title}
-                </Text>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(delivery.status) }]}>
-                  <Text style={styles.statusText}>
-                    {getStatusText(delivery.status)}
-                  </Text>
+            <TouchableOpacity
+              key={delivery.id}
+              activeOpacity={0.93}
+              style={styles.cardTouchable}
+              onPress={() => navigation.navigate('MultiDestinationDeliveryDetails', { deliveryId: delivery.id })}
+            >
+              <View style={[styles.deliveryCard, { backgroundColor: colors.surface, shadowColor: colors.text }]}>
+                {/* Ligne date + statut */}
+                <View style={styles.headerRow}>
+                  <View style={styles.dateStatus}>
+                    <MaterialCommunityIcons name="calendar" size={18} color={colors.primary} style={{ marginRight: 4 }} />
+                    <Text style={styles.dateText}>{formatDate(delivery.created_at)}</Text>
+                  </View>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(delivery.status) }]}>
+                    <Text style={styles.statusText}>{getStatusText(delivery.status)}</Text>
+                  </View>
                 </View>
-              </View>
-
-              <View style={styles.deliveryInfo}>
+                {/* Titre */}
+                <Text style={styles.title}>Livraison multiple</Text>
+                {/* Départ + nb destinations */}
                 <View style={styles.infoRow}>
-                  <Icon name="place" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                    Départ: {delivery.pickup_commune}
-                  </Text>
+                  <MaterialCommunityIcons name="flag-checkered" size={16} color={colors.textSecondary} />
+                  <Text style={styles.infoText}>Départ : {delivery.pickup_commune}</Text>
+                  <View style={styles.destBadge}>
+                    <MaterialCommunityIcons name="map-marker-multiple" size={14} color="#fff" />
+                    <Text style={styles.destBadgeText}>{delivery.destinations.length} dest.</Text>
+                  </View>
                 </View>
-
+                {/* Prix */}
                 <View style={styles.infoRow}>
-                  <Icon name="my-location" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                    {delivery.destinations.length} destination{delivery.destinations.length > 1 ? 's' : ''}
-                  </Text>
+                  <MaterialCommunityIcons name="cash" size={16} color={colors.textSecondary} />
+                  <Text style={styles.priceText}>{delivery.total_price.toLocaleString()} FCFA</Text>
                 </View>
-
-                <View style={styles.infoRow}>
-                  <Icon name="attach-money" size={16} color={colors.textSecondary} />
-                  <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                    {delivery.total_price.toLocaleString()} FCFA
-                  </Text>
+                {/* Destinations */}
+                <View style={styles.destinationsContainer}>
+                  <Text style={styles.destinationsTitle}>Destinations :</Text>
+                  {delivery.destinations.slice(0, 2).map((dest, idx) => (
+                    <Text key={idx} style={styles.destinationText}>
+                      {idx + 1}. {dest.commune}
+                    </Text>
+                  ))}
+                  {delivery.destinations.length > 2 && (
+                    <Text style={styles.moreDestinations}>+{delivery.destinations.length - 2} autres...</Text>
+                  )}
                 </View>
+                {/* Bouton voir les détails */}
+                <TouchableOpacity style={styles.detailsButton} onPress={() => navigation.navigate('MultiDestinationDeliveryDetails', { deliveryId: delivery.id })}>
+                  <Text style={styles.detailsButtonText}>Voir les détails</Text>
+                  <MaterialCommunityIcons name="chevron-right" size={18} color="#fff" />
+                </TouchableOpacity>
               </View>
-
-              {/* Destinations */}
-              <View style={styles.destinationsContainer}>
-                <Text style={[styles.destinationsTitle, { color: colors.text }]}>
-                  Destinations:
-                </Text>
-                {delivery.destinations.slice(0, 3).map((dest, index) => (
-                  <Text key={index} style={[styles.destinationText, { color: colors.textSecondary }]}>
-                    {dest.delivery_order}. {dest.commune}
-                  </Text>
-                ))}
-                {delivery.destinations.length > 3 && (
-                  <Text style={[styles.moreDestinations, { color: colors.primary }]}>
-                    +{delivery.destinations.length - 3} autres...
-                  </Text>
-                )}
-              </View>
-
-              <TouchableOpacity
-                style={[styles.viewButton, { borderColor: colors.primary }]}
-                onPress={() => navigation.navigate('MultiDestinationDeliveryDetails', { deliveryId: delivery.id })}
-              >
-                <Text style={[styles.viewButtonText, { color: colors.primary }]}>
-                  Voir les détails
-                </Text>
-              </TouchableOpacity>
-            </Card>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
@@ -288,71 +292,122 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  deliveryCard: {
-    marginBottom: 16,
-    padding: 16,
+  cardTouchable: {
+    marginBottom: 20,
+    borderRadius: 18,
+    // Pour effet d'élévation au toucher
   },
-  deliveryHeader: {
+  deliveryCard: {
+    borderRadius: 18,
+    padding: 18,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 6,
   },
-  deliveryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: 8,
+  dateStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 15,
+    color: '#888',
+    fontWeight: '500',
   },
   statusBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    minWidth: 80,
+    alignItems: 'center',
   },
   statusText: {
     color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
   },
-  deliveryInfo: {
-    marginBottom: 12,
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#222',
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
+    gap: 8,
   },
   infoText: {
-    fontSize: 14,
-    marginLeft: 8,
+    fontSize: 15,
+    marginLeft: 6,
+    color: '#555',
+    fontWeight: '500',
+  },
+  destBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF9800',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    marginLeft: 10,
+    height: 22,
+  },
+  destBadgeText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#222',
+    marginLeft: 6,
   },
   destinationsContainer: {
     marginBottom: 16,
+    marginTop: 8,
   },
   destinationsTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 4,
+    color: '#222',
   },
   destinationText: {
-    fontSize: 12,
+    fontSize: 13,
     marginLeft: 16,
     marginBottom: 2,
+    color: '#555',
   },
   moreDestinations: {
-    fontSize: 12,
+    fontSize: 13,
     marginLeft: 16,
     fontStyle: 'italic',
+    color: '#FF9800',
+    fontWeight: '500',
   },
-  viewButton: {
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderRadius: 8,
+  detailsButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF9800',
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginTop: 8,
   },
-  viewButtonText: {
-    fontSize: 14,
+  detailsButtonText: {
+    color: '#fff',
+    fontSize: 15,
     fontWeight: '600',
+    marginRight: 6,
   },
 })
 

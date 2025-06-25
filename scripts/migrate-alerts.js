@@ -15,40 +15,75 @@ const LIVRAISON_DIR = './livraison-abidjan-mobile/src';
 const SCREEN_PATTERN = '**/*.tsx';
 
 // Patterns de remplacement
-const REPLACEMENTS = [
-  // Alert.alert simple
-  {
-    pattern: /Alert\.alert\s*\(\s*['"`]([^'"`]+)['"`]\s*,\s*['"`]([^'"`]+)['"`]\s*\)/g,
-    replacement: (match, title, message) => {
-      if (title.toLowerCase().includes('erreur') || title.toLowerCase().includes('error')) {
-        return `showErrorAlert('${title}', '${message}')`;
-      } else if (title.toLowerCase().includes('succès') || title.toLowerCase().includes('success')) {
-        return `showSuccessAlert('${title}', '${message}')`;
-      } else if (title.toLowerCase().includes('avertissement') || title.toLowerCase().includes('warning')) {
-        return `showWarningAlert('${title}', '${message}')`;
-      } else {
-        return `showInfoAlert('${title}', '${message}')`;
-      }
-    }
+const REPLACEMENTS = {
+  // Imports
+  imports: {
+    add: [
+      "import { useAlert } from '../../hooks/useAlert'",
+      "import { useLoader } from '../../contexts/LoaderContext'"
+    ],
+    remove: [
+      "import { Alert } from 'react-native'",
+      "import CustomAlert from '../../components/CustomAlert'"
+    ]
   },
-  
-  // Alert.alert avec boutons
-  {
-    pattern: /Alert\.alert\s*\(\s*['"`]([^'"`]+)['"`]\s*,\s*['"`]([^'"`]+)['"`]\s*,\s*\[([^\]]+)\]\s*\)/g,
-    replacement: (match, title, message, buttons) => {
-      // Analyser les boutons pour déterminer le type d'alerte
-      const buttonText = buttons.toLowerCase();
-      
-      if (buttonText.includes('supprimer') || buttonText.includes('delete') || buttonText.includes('remove')) {
-        return `showDeleteConfirmationAlert('${title}', '${message}', () => handleDelete())`;
-      } else if (buttonText.includes('confirmer') || buttonText.includes('confirm')) {
-        return `showConfirmationAlert('${title}', '${message}', () => handleConfirm(), () => handleCancel())`;
-      } else {
-        return `showInfoAlert('${title}', '${message}')`;
-      }
+
+  // Hooks
+  hooks: {
+    add: [
+      "const { showSuccessAlert, showErrorAlert, showWarningAlert, showInfoAlert, showConfirmationAlert, showDeleteConfirmationAlert } = useAlert()",
+      "const { showLoader, hideLoader, showSuccessLoader, showErrorLoader } = useLoader()"
+    ]
+  },
+
+  // États à supprimer
+  states: {
+    remove: [
+      "const [alertVisible, setAlertVisible] = useState(false)",
+      "const [alertConfig, setAlertConfig] = useState({})",
+      "const [alertVisible, setAlertVisible] = useState<boolean>(false)",
+      "const [alertConfig, setAlertConfig] = useState({ title: '', message: '', type: 'info' })"
+    ]
+  },
+
+  // Alert.alert remplacements
+  alertReplacements: [
+    {
+      pattern: /Alert\.alert\('Succès',\s*'([^']+)'\)/g,
+      replacement: "showSuccessAlert('Succès', '$1')"
+    },
+    {
+      pattern: /Alert\.alert\('Erreur',\s*'([^']+)'\)/g,
+      replacement: "showErrorAlert('Erreur', '$1')"
+    },
+    {
+      pattern: /Alert\.alert\('([^']+)',\s*'([^']+)'\)/g,
+      replacement: "showInfoAlert('$1', '$2')"
+    },
+    {
+      pattern: /Alert\.alert\('([^']+)',\s*'([^']+)',\s*\[/g,
+      replacement: "showConfirmationAlert('$1', '$2',"
     }
-  }
-];
+  ],
+
+  // CustomAlert JSX à supprimer
+  customAlertJSX: {
+    pattern: /<CustomAlert[\s\S]*?\/>/g,
+    replacement: ""
+  },
+
+  // Patterns de loader à ajouter
+  loaderPatterns: [
+    {
+      pattern: /(const handleSubmit = async \(\) => \{[\s\S]*?)(try \{)/g,
+      replacement: "$1try {\n    showLoader('Chargement en cours...')"
+    },
+    {
+      pattern: /(} catch \(error\) \{[\s\S]*?)(} finally \{)/g,
+      replacement: "$1} finally {\n    hideLoader()"
+    }
+  ]
+};
 
 // Imports à ajouter
 const REQUIRED_IMPORTS = [
@@ -139,7 +174,7 @@ function migrateFile(filePath) {
   }
   
   // Remplacer les Alert.alert
-  REPLACEMENTS.forEach(({ pattern, replacement }) => {
+  REPLACEMENTS.alertReplacements.forEach(({ pattern, replacement }) => {
     const newContent = content.replace(pattern, replacement);
     if (newContent !== content) {
       content = newContent;
@@ -169,6 +204,22 @@ function migrateFile(filePath) {
     hasChanges = true;
   }
   
+  // Supprimer CustomAlert JSX
+  const customAlertMatches = content.match(REPLACEMENTS.customAlertJSX.pattern);
+  if (customAlertMatches) {
+    content = content.replace(REPLACEMENTS.customAlertJSX.pattern, '');
+    hasChanges = true;
+  }
+  
+  // Ajouter les loaders dans les fonctions async
+  REPLACEMENTS.loaderPatterns.forEach(({ pattern, replacement }) => {
+    const matches = content.match(pattern);
+    if (matches) {
+      content = content.replace(pattern, replacement);
+      hasChanges = true;
+    }
+  });
+  
   if (hasChanges) {
     fs.writeFileSync(filePath, content, 'utf8');
     console.log('  ✅ Migration terminée');
@@ -180,7 +231,7 @@ function migrateFile(filePath) {
 }
 
 function main() {
-  console.log('🚀 Début de la migration des alertes...\n');
+  console.log('🚀 Début de la migration des alertes et loaders...\n');
   
   const mobileFiles = findFiles(MOBILE_DIR);
   const livraisonFiles = findFiles(LIVRAISON_DIR);
@@ -204,7 +255,7 @@ function main() {
   console.log(`\n🎉 Migration terminée !`);
   console.log(`\n📝 Prochaines étapes:`);
   console.log(`  1. Vérifier les fichiers migrés`);
-  console.log(`  2. Tester les nouvelles alertes`);
+  console.log(`  2. Tester les nouvelles alertes et loaders`);
   console.log(`  3. Ajuster les messages si nécessaire`);
   console.log(`  4. Utiliser le composant AlertDemo pour tester`);
 }

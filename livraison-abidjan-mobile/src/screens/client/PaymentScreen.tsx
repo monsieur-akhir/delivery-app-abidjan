@@ -103,7 +103,7 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
       return
     }
 
-    if (selectedMethod === 'wallet' && walletBalance < amount) {
+    if (selectedMethod === 'wallet' && walletBalance < (amount || 0)) {
       Alert.alert('Solde insuffisant', 'Votre solde est insuffisant pour effectuer ce paiement')
       return
     }
@@ -113,7 +113,7 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
     try {
       const paymentData = {
         delivery_id: deliveryId,
-        amount,
+        amount: amount || 0,
         payment_method: selectedMethod,
         phone_number: phoneNumber || undefined,
         description: description || `Paiement pour livraison #${deliveryId}`
@@ -132,7 +132,7 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
             text: 'OK',
             onPress: () => navigation.navigate('PaymentSuccess', { 
               deliveryId,
-              amount,
+              amount: amount || 0,
               paymentMethod: selectedMethod
             })
           }
@@ -193,7 +193,7 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
       <ScrollView style={styles.content}>
         <View style={styles.amountCard}>
           <Text style={styles.amountLabel}>Montant à payer</Text>
-          <Text style={styles.amountValue}>{formatPrice(amount)} FCFA</Text>
+          <Text style={styles.amountValue}>{formatPrice(amount || 0)} FCFA</Text>
           {description && (
             <Text style={styles.amountDescription}>{description}</Text>
           )}
@@ -229,11 +229,11 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Montant</Text>
-              <Text style={styles.summaryValue}>{formatPrice(amount)} FCFA</Text>
+              <Text style={styles.summaryValue}>{formatPrice(amount || 0)} FCFA</Text>
             </View>
             <View style={[styles.summaryRow, styles.summaryTotal]}>
               <Text style={styles.summaryLabelTotal}>Total</Text>
-              <Text style={styles.summaryValueTotal}>{formatPrice(amount)} FCFA</Text>
+              <Text style={styles.summaryValueTotal}>{formatPrice(amount || 0)} FCFA</Text>
             </View>
           </View>
         </View>
@@ -251,7 +251,7 @@ const PaymentScreen = ({ route, navigation }: PaymentScreenProps) => {
             <>
               <Ionicons name="card" size={20} color="#ffffff" />
               <Text style={styles.payButtonText}>
-                Payer {formatPrice(amount)} FCFA
+                Payer {formatPrice(amount || 0)} FCFA
               </Text>
             </>
           )}

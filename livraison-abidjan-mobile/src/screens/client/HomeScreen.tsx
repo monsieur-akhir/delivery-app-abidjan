@@ -25,6 +25,9 @@ import LocationService from '../../services/LocationService';
 import WeatherService from '../../services/CommuneWeatherService';
 import OfflineIndicator from '../../components/OfflineIndicator';
 import type { Delivery, Weather } from '../../types/models';
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
+import { useAlert } from '../../hooks/useAlert'
 
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
@@ -399,7 +402,12 @@ export default function HomeScreen() {
         onPress={() => navigation.navigate('CreateDelivery')}
         color="#FFFFFF"
       />
-    </SafeAreaView>
+    
+      {/* Composants d'alerte modernes */}
+      
+
+     
+</SafeAreaView>
   );
 }
 

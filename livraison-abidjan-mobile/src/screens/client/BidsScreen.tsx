@@ -7,13 +7,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  RefreshControl,
-  Image
+  Image,
+  RefreshControl
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import DeliveryService from '../../services/DeliveryService'
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 
 interface Bid {
   id: number
@@ -43,6 +45,8 @@ interface BidsScreenProps {
 
 const BidsScreen = ({ route, navigation }: BidsScreenProps) => {
   const { deliveryId } = route.params
+  const { showConfirmationAlert } = useAlert()
+  const { hideLoader } = useLoader()
   const [bids, setBids] = useState<Bid[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -53,6 +57,7 @@ const BidsScreen = ({ route, navigation }: BidsScreenProps) => {
   }, [deliveryId])
 
   const loadBids = async () => {
+    setLoading(true)
     try {
       const response = await DeliveryService.getDeliveryBids(deliveryId.toString())
       setBids(response.map((bid: any) => ({
@@ -81,31 +86,25 @@ const BidsScreen = ({ route, navigation }: BidsScreenProps) => {
   }
 
   const handleAcceptBid = async (bidId: number) => {
-    Alert.alert(
+    showConfirmationAlert(
       'Accepter cette enchère',
-      'Voulez-vous vraiment accepter cette enchère ? Cette action est irréversible.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Accepter',
-          onPress: async () => {
-            setAcceptingBid(bidId)
-            try {
-              await DeliveryService.acceptBid(deliveryId.toString(), bidId)
-              Alert.alert('Succès', 'Enchère acceptée! Le coursier a été assigné.', [
-                {
-                  text: 'OK',
-                  onPress: () => navigation.navigate('ActiveOrderTracking', { deliveryId })
-                }
-              ])
-            } catch (error) {
-              Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
-            } finally {
-              setAcceptingBid(null)
-            }
-          }
+      'Êtes-vous sûr de vouloir accepter cette enchère ?',
+      async () => {
+        setAcceptingBid(bidId)
+        try {
+          await DeliveryService.acceptBid(deliveryId.toString(), bidId)
+          showConfirmationAlert(
+            'Succès', 
+            'Enchère acceptée! Le coursier a été assigné.',
+            () => navigation.navigate('ActiveOrderTracking', { deliveryId })
+          )
+        } catch (error) {
+          Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
+        } finally {
+          hideLoader()
+          setAcceptingBid(null)
         }
-      ]
+      }
     )
   }
 

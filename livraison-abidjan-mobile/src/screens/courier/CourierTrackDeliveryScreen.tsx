@@ -26,6 +26,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery, DeliveryStatus } from "../../types/models"
+import { useLoader } from '../../contexts/LoaderContext'
 
 type CourierTrackDeliveryScreenProps = {
   route: RouteProp<RootStackParamList, "CourierTrackDelivery">

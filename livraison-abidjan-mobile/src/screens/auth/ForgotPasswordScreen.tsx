@@ -17,6 +17,8 @@ import * as Animatable from "react-native-animatable"
 import { useTranslation } from "react-i18next"
 import { resetPassword } from "../../services/api"
 import { validatePhone } from "../../utils/validators"
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import { LinearGradient } from 'expo-linear-gradient'
@@ -27,43 +29,44 @@ type ForgotPasswordScreenProps = {
 
 const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
+  const { showErrorAlert, showSuccessAlert } = useAlert()
+  const { showLoader, hideLoader, showSuccessLoader } = useLoader()
 
   const [phone, setPhone] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
-  const [success, setSuccess] = useState<string>("")
-  const [visible, setVisible] = useState<boolean>(false)
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   
   const pulseAnim = useRef(new Animated.Value(1)).current
   const shakeAnim = useRef(new Animated.Value(0)).current
 
   const handleResetPassword = async (): Promise<void> => {
     if (!phone || !validatePhone(phone)) {
-      setError(t("forgotPassword.errorInvalidPhone"))
-      setVisible(true)
+      showErrorAlert('Erreur', t("forgotPassword.errorInvalidPhone"))
+      startShakeAnimation()
       return
     }
 
     setLoading(true)
+    showLoader('Envoi du code de réinitialisation...')
+    
     try {
       await resetPassword(phone)
-      setSuccess(t("forgotPassword.resetSent"))
-      setVisible(true)
+      hideLoader()
+      showSuccessLoader('Code envoyé avec succès !', 2000)
       startPulseAnimation()
+      
       // Redirect to OTP verification screen after a short delay
       setTimeout(() => {
         navigation.navigate("VerifyOTP", { phoneNumber: phone })
       }, 2000)
     } catch (error) {
       console.error("Password reset error:", error)
-      setError(error instanceof Error ? error.message : t("forgotPassword.errorGeneric"))
-      setVisible(true)
+      hideLoader()
+      showErrorAlert('Erreur', error instanceof Error ? error.message : t("forgotPassword.errorGeneric"))
     } finally {
       setLoading(false)
     }
   }
-
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Animation for successful reset
   const startPulseAnimation = () => {
@@ -203,19 +206,6 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
           <Text style={styles.backText}>{t("forgotPassword.backToLogin")}</Text>
         </TouchableOpacity>
       </Animatable.View>
-
-      <Snackbar
-        visible={visible}
-        onDismiss={() => setVisible(false)}
-        duration={3000}
-        action={{
-          label: "OK",
-          onPress: () => setVisible(false),
-        }}
-        style={success ? styles.successSnackbar : {}}
-      >
-        {success || error}
-      </Snackbar>
     </KeyboardAvoidingView>
   )
 }
@@ -354,9 +344,6 @@ const styles = StyleSheet.create({
     color: "#757575",
     fontSize: 15,
     textDecorationLine: "underline",
-  },
-  successSnackbar: {
-    backgroundColor: "#4CAF50",
   },
 })
 

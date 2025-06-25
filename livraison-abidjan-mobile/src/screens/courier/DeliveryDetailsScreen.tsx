@@ -16,6 +16,8 @@ import DeliveryService from '../../services/DeliveryService'
 import { Delivery } from '../../types/models'
 import DeliveryStatusBadge from '../../components/DeliveryStatusBadge'
 import VTCStyleMap from '../../components/VTCStyleMap'
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 
 interface DeliveryDetailsScreenProps {
   route: {
@@ -28,6 +30,8 @@ interface DeliveryDetailsScreenProps {
 
 const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps) => {
   const { deliveryId } = route.params
+  const { showErrorAlert, showConfirmationAlert } = useAlert()
+  const { hideLoader } = useLoader()
   const [delivery, setDelivery] = useState<Delivery | null>(null)
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState(false)
@@ -42,8 +46,9 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
       setDelivery(data)
     } catch (error) {
       console.error('Erreur lors du chargement:', error)
-      Alert.alert('Erreur', 'Impossible de charger les détails de la livraison')
+      showErrorAlert('Erreur', 'Impossible de charger les détails de la livraison')
     } finally {
+      hideLoader()
       setLoading(false)
     }
   }
@@ -51,33 +56,27 @@ const DeliveryDetailsScreen = ({ route, navigation }: DeliveryDetailsScreenProps
   const handleAcceptDelivery = async () => {
     if (!delivery) return
 
-    Alert.alert(
+    showConfirmationAlert(
       'Accepter la livraison',
       `Voulez-vous accepter cette livraison pour ${delivery.proposed_price} FCFA ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Accepter',
-          onPress: async () => {
-            setAccepting(true)
-            try {
-              await DeliveryService.acceptDelivery(delivery.id)
-              Alert.alert('Succès', 'Livraison acceptée avec succès!', [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    navigation.replace('CourierTrackDelivery', { deliveryId: delivery.id })
-                  }
-                }
-              ])
-            } catch (error) {
-              Alert.alert('Erreur', 'Impossible d\'accepter la livraison')
-            } finally {
-              setAccepting(false)
+      async () => {
+        setAccepting(true)
+        try {
+          await DeliveryService.acceptDelivery(delivery.id)
+          showConfirmationAlert(
+            'Succès', 
+            'Livraison acceptée avec succès!',
+            () => {
+              navigation.replace('CourierTrackDelivery', { deliveryId: delivery.id })
             }
-          }
+          )
+        } catch (error) {
+          Alert.alert('Erreur', 'Impossible d\'accepter la livraison')
+        } finally {
+          hideLoader()
+          setAccepting(false)
         }
-      ]
+      }
     )
   }
 

@@ -7,13 +7,19 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
+  Linking,
+  Modal,
+  Image,
 } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/Ionicons'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useTheme } from '../../contexts/ThemeContext'
 import { colors } from '../../styles/colors'
 import { CustomLoaderModal, MultiDestinationActions } from '../../components'
 import MultiDestinationService, { MultiDestinationDelivery, MultiDestinationBid } from '../../services/MultiDestinationService'
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 
 const MultiDestinationDeliveryDetailsScreen = () => {
   const navigation = useNavigation()
@@ -27,6 +33,10 @@ const MultiDestinationDeliveryDetailsScreen = () => {
   const [bidsLoading, setBidsLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [currentAction, setCurrentAction] = useState('')
+  const [callModalVisible, setCallModalVisible] = useState(false)
+
+  const { showErrorAlert, showSuccessAlert } = useAlert()
+  const { hideLoader } = useLoader()
 
   useEffect(() => {
     loadDeliveryDetails()
@@ -42,9 +52,10 @@ const MultiDestinationDeliveryDetailsScreen = () => {
       setDelivery(data)
     } catch (error) {
       console.error('Erreur lors du chargement des détails:', error)
-      Alert.alert('Erreur', 'Impossible de charger les détails de la livraison')
+      showErrorAlert('Erreur', 'Impossible de charger les détails de la livraison')
       navigation.goBack()
     } finally {
+    hideLoader()
       setLoading(false)
     }
   }
@@ -57,6 +68,7 @@ const MultiDestinationDeliveryDetailsScreen = () => {
     } catch (error) {
       console.error('Erreur lors du chargement des enchères:', error)
     } finally {
+    hideLoader()
       setBidsLoading(false)
     }
   }
@@ -75,12 +87,13 @@ const handleAcceptBid = async (bidId: number) => {
                 setCurrentAction('Acceptation de l\'enchère...')
                 setActionLoading(true)
                 await MultiDestinationService.acceptBid(deliveryId, bidId)
-                Alert.alert('Succès', 'Enchère acceptée avec succès')
+                showSuccessAlert('Succès', 'Enchère acceptée avec succès')
                 loadDeliveryDetails() // Recharger les détails
               } catch (error) {
                 console.error('Erreur lors de l\'acceptation:', error)
                 Alert.alert('Erreur', 'Impossible d\'accepter cette enchère')
               } finally {
+    hideLoader()
                 setActionLoading(false)
               }
             }
@@ -94,11 +107,7 @@ const handleAcceptBid = async (bidId: number) => {
 
   const handleEditDelivery = () => {
     // Naviguer vers l'écran de modification
-    navigation.navigate('CreateMultiDestinationDelivery', {
-      editMode: true,
-      deliveryId: deliveryId,
-      existingData: delivery
-    })
+    navigation.navigate('CreateMultiDestinationDelivery')
   }
 
   const handleCancelDelivery = async () => {
@@ -106,12 +115,13 @@ const handleAcceptBid = async (bidId: number) => {
       setCurrentAction('Annulation de la livraison...')
       setActionLoading(true)
       await MultiDestinationService.cancelDelivery(deliveryId, 'Annulation par le client')
-      Alert.alert('Succès', 'Livraison annulée avec succès')
+      showSuccessAlert('Succès', 'Livraison annulée avec succès')
       navigation.goBack()
     } catch (error) {
       console.error('Erreur lors de l\'annulation:', error)
       Alert.alert('Erreur', 'Impossible d\'annuler cette livraison')
     } finally {
+    hideLoader()
       setActionLoading(false)
     }
   }
@@ -124,21 +134,33 @@ const handleAcceptBid = async (bidId: number) => {
         proposed_price: price,
         message: message
       })
-      Alert.alert('Succès', 'Contre-offre envoyée avec succès')
+      showSuccessAlert('Succès', 'Contre-offre envoyée avec succès')
       loadBids() // Recharger les enchères
     } catch (error) {
       console.error('Erreur lors de la contre-offre:', error)
       Alert.alert('Erreur', 'Impossible d\'envoyer la contre-offre')
     } finally {
+    hideLoader()
       setActionLoading(false)
+    }
+  }
+
+  const handleCallCourier = () => {
+    setCallModalVisible(true)
+  }
+
+  const confirmCall = () => {
+    setCallModalVisible(false)
+    if (delivery && delivery.courier && delivery.courier.phone) {
+      Linking.openURL(`tel:${delivery.courier.phone}`)
     }
   }
 
   if (loading || !delivery) {
     return (
-      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>
+      <View style={[styles.container, styles.centered, { backgroundColor: colors.gray }]}>
+        <ActivityIndicator size="large" color={colors.orange} />
+        <Text style={[styles.loadingText, { color: colors.black }]}>
           Chargement des détails...
         </Text>
       </View>
@@ -151,7 +173,7 @@ const handleAcceptBid = async (bidId: number) => {
       case 'in_progress': return '#2196F3'
       case 'completed': return '#4CAF50'
       case 'cancelled': return '#F44336'
-      default: return colors.text
+      default: return colors.gray
     }
   }
 
@@ -171,7 +193,7 @@ const handleAcceptBid = async (bidId: number) => {
       case 'in_progress': return '#2196F3'
       case 'delivered': return '#4CAF50'
       case 'failed': return '#F44336'
-      default: return colors.text
+      default: return colors.gray
     }
   }
 
@@ -186,178 +208,116 @@ const handleAcceptBid = async (bidId: number) => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.gray }]}>
       <ScrollView>
         {/* Informations de base */}
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {delivery.package_type} - {delivery.destinations.length} destination(s)
-          </Text>
-
-          <View style={styles.infoRow}>
-            <Icon name="cube-outline" size={20} color={colors.primary} />
-            <View style={styles.infoContent}>
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
-                Statut
-              </Text>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(delivery.status) }]}>
-                <Text style={styles.statusText}>
-                  {getStatusText(delivery.status)}
-                </Text>
-              </View>
-            </View>
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.headerRow}>
+            <Text style={styles.price}><MaterialCommunityIcons name="cash" size={18} /> {(delivery.total_final_price || delivery.total_proposed_price || 0).toLocaleString()} FCFA</Text>
+            <View style={styles.statusBadge}><Text style={styles.statusText}>{getStatusText(delivery.status)}</Text></View>
           </View>
-
           <View style={styles.infoRow}>
-            <Icon name="location-outline" size={20} color={colors.primary} />
-            <View style={styles.infoContent}>
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
-                Point de ramassage
-              </Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>
-                {delivery.pickup_address}
-              </Text>
-            </View>
+            <MaterialCommunityIcons name="cube-outline" size={18} color="#FF9800" />
+            <Text style={styles.infoText}>{delivery.package_type} - {delivery.destinations.length} destination(s)</Text>
           </View>
-
           <View style={styles.infoRow}>
-            <Icon name="document-text-outline" size={20} color={colors.primary} />
-            <View style={styles.infoContent}>
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
-                Description du colis
-              </Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>
-                {delivery.package_description}
-              </Text>
-            </View>
+            <MaterialCommunityIcons name="map-marker" size={18} color="#FF9800" />
+            <Text style={styles.infoText}>Point de ramassage : {delivery.pickup_address}</Text>
           </View>
-
           <View style={styles.infoRow}>
-            <Icon name="cash-outline" size={20} color={colors.primary} />
-            <View style={styles.infoContent}>
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
-                Prix total
-              </Text>
-              <Text style={[styles.priceText, { color: colors.primary }]}>
-                {(delivery.total_final_price || delivery.total_proposed_price || 0).toLocaleString()} FCFA
-              </Text>
-            </View>
+            <MaterialCommunityIcons name="calendar" size={18} color="#FF9800" />
+            <Text style={styles.infoText}>Créée le {new Date(delivery.created_at).toLocaleDateString('fr-FR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</Text>
           </View>
-
           {delivery.special_instructions && (
             <View style={styles.infoRow}>
-              <Icon name="information-circle-outline" size={20} color={colors.primary} />
-              <View style={styles.infoContent}>
-                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
-                  Instructions spéciales
-                </Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {delivery.special_instructions}
-                </Text>
-              </View>
+              <MaterialCommunityIcons name="information-circle" size={18} color="#FF9800" />
+              <Text style={styles.infoText}>Instructions spéciales : {delivery.special_instructions}</Text>
             </View>
           )}
-
-          <View style={styles.infoRow}>
-            <Icon name="time-outline" size={20} color={colors.primary} />
-            <View style={styles.infoContent}>
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
-                Date de création
-              </Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>
-                {new Date(delivery.created_at).toLocaleDateString('fr-FR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </Text>
-            </View>
-          </View>
         </View>
 
         {/* Destinations */}
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Destinations ({delivery.destinations.length})
-          </Text>
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+          <Text style={styles.sectionTitle}>Destinations ({delivery.destinations.length})</Text>
 
           {delivery.destinations.map((destination, index) => (
-            <View key={destination.id || index} style={styles.destinationItem}>
+            <View key={destination.id || index} style={styles.destinationCard}>
               <View style={styles.destinationHeader}>
-                <View style={[styles.orderBadge, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.orderText}>
-                    {destination.delivery_order}
-                  </Text>
-                </View>
-                <View style={[styles.destinationStatusBadge, { backgroundColor: getDestinationStatusColor(destination.status) }]}>
-                  <Text style={styles.destinationStatusText}>
-                    {getDestinationStatusText(destination.status)}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.destinationInfo}>
-                <Text style={[styles.destinationAddress, { color: colors.text }]}>
+                <View style={styles.statusDot} />
+                <Text style={styles.destinationStatus}>{getDestinationStatusText(destination.status)}</Text>
+                <MaterialCommunityIcons name="map-marker" size={16} color="#FF9800" style={{ marginLeft: 8 }} />
+                <Text
+                  style={styles.destinationName}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {destination.delivery_address}
                 </Text>
-                <Text style={[styles.contactName, { color: colors.textSecondary }]}>
+              </View>
+              <View style={styles.contactRow}>
+                <MaterialCommunityIcons name="account" size={15} color="#888" />
+                <Text style={styles.contactText} numberOfLines={1} ellipsizeMode="tail">
                   Contact: {destination.recipient_name}
                 </Text>
-                <Text style={[styles.contactPhone, { color: colors.textSecondary }]}>
+                <MaterialCommunityIcons name="phone" size={15} color="#888" style={{ marginLeft: 12 }} />
+                <Text style={styles.contactText} numberOfLines={1} ellipsizeMode="tail">
                   Téléphone: {destination.recipient_phone}
                 </Text>
-                {destination.delivery_notes && (
-                  <Text style={[styles.deliveryNotes, { color: colors.textSecondary }]}>
-                    Notes: {destination.delivery_notes}
-                  </Text>
-                )}
               </View>
+              {destination.delivery_notes && (
+                <View style={styles.infoRow}>
+                  <MaterialCommunityIcons name="information-circle" size={18} color="#FF9800" />
+                  <Text style={styles.infoText}>Notes: {destination.delivery_notes}</Text>
+                </View>
+              )}
             </View>
           ))}
         </View>
 
         {/* Enchères */}
         {delivery.status === 'pending' && bids.length > 0 && (
-          <View style={[styles.section, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Enchères reçues ({bids.length})
-            </Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+            <Text style={styles.sectionTitle}>Enchères reçues ({bids.length})</Text>
 
             {bidsLoading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={colors.orange} />
             ) : (
               bids.map((bid) => (
                 <View key={bid.id} style={styles.bidItem}>
                   <View style={styles.bidHeader}>
-                    <Text style={[styles.courierName, { color: colors.text }]}>
+                    <Text style={[styles.courierName, { color: colors.black }]}>
                       {bid.courier.first_name} {bid.courier.last_name}
                     </Text>
                     <View style={styles.ratingContainer}>
                       <Icon name="star" size={16} color="#FFD700" />
-                      <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
+                      <Text style={[styles.ratingText, { color: colors.darkGray }]}>
                         {bid.courier.rating}/5
                       </Text>
                     </View>
                   </View>
 
                   <View style={styles.bidDetails}>
-                    <Text style={[styles.bidPrice, { color: colors.primary }]}>
+                    <Text style={[styles.bidPrice, { color: colors.orange }]}>
                       {bid.proposed_price.toLocaleString()} FCFA
                     </Text>
-                    <Text style={[styles.bidTime, { color: colors.textSecondary }]}>
+                    <Text style={[styles.bidTime, { color: colors.darkGray }]}>
                       Temps estimé: {bid.estimated_total_time} min
                     </Text>
                     {bid.message && (
-                      <Text style={[styles.bidMessage, { color: colors.textSecondary }]}>
+                      <Text style={[styles.bidMessage, { color: colors.darkGray }]}>
                         Message: {bid.message}
                       </Text>
                     )}
                   </View>
 
                   <TouchableOpacity
-                    style={[styles.acceptBidButton, { backgroundColor: colors.primary }]}
+                    style={[styles.acceptBidButton, { backgroundColor: colors.orange }]}
                     onPress={() => handleAcceptBid(bid.id)}
                   >
                     <Text style={styles.acceptBidText}>Accepter</Text>
@@ -370,36 +330,24 @@ const handleAcceptBid = async (bidId: number) => {
 
         {/* Informations du coursier */}
         {delivery.courier && (
-          <View style={[styles.section, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Coursier assigné
-            </Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
+            <Text style={styles.sectionTitle}>Coursier assigné</Text>
 
             <View style={styles.courierInfo}>
               <View style={styles.courierDetails}>
-                <Text style={[styles.courierName, { color: colors.text }]}>
+                <Text style={[styles.courierName, { color: colors.black }]}>
                   {delivery.courier.first_name} {delivery.courier.last_name}
                 </Text>
-                <Text style={[styles.courierPhone, { color: colors.textSecondary }]}>
+                <Text style={[styles.courierPhone, { color: colors.darkGray }]}>
                   {delivery.courier.phone}
                 </Text>
                 <View style={styles.ratingContainer}>
                   <Icon name="star" size={16} color="#FFD700" />
-                  <Text style={[styles.ratingText, { color: colors.textSecondary }]}>
+                  <Text style={[styles.ratingText, { color: colors.darkGray }]}>
                     {delivery.courier.rating}/5
                   </Text>
                 </View>
               </View>
-
-              <TouchableOpacity 
-                style={[styles.callButton, { backgroundColor: colors.primary }]}
-                onPress={() => {
-                  // TODO: Implémenter l'appel
-                  Alert.alert('Appel', `Appeler ${delivery.courier.phone}`)
-                }}
-              >
-                <Icon name="call" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -416,6 +364,56 @@ const handleAcceptBid = async (bidId: number) => {
         />
       </ScrollView>
 
+      {/* Bouton flottant d'appel du coursier */}
+      {delivery && delivery.courier && (
+        <TouchableOpacity
+          style={[styles.fabCallButton, { backgroundColor: colors.orange, shadowColor: colors.orange }]}
+          activeOpacity={0.8}
+          onPress={handleCallCourier}
+        >
+          <Icon name="call" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {/* Modal personnalisé de confirmation d'appel */}
+      {delivery && delivery.courier && (
+        <Modal
+          visible={callModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCallModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Image
+                source={require('../../assets/images/default-avatar.png')}
+                style={styles.courierAvatar}
+              />
+              <Text style={styles.modalTitle}>Appeler le coursier</Text>
+              <Text style={styles.modalName}>
+                {delivery.courier.first_name} {delivery.courier.last_name}
+              </Text>
+              <Text style={styles.modalPhone}>{delivery.courier.phone}</Text>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: '#4CAF50' }]}
+                  onPress={confirmCall}
+                >
+                  <Icon name="call" size={20} color="#fff" />
+                  <Text style={styles.modalButtonText}>Appeler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: colors.gray }]}
+                  onPress={() => setCallModalVisible(false)}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.black }]}>Annuler</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       {/* Loader personnalisé pour les actions */}
       <CustomLoaderModal
         visible={actionLoading}
@@ -430,88 +428,149 @@ const handleAcceptBid = async (bidId: number) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F6FA',
+    padding: 0,
   },
-  section: {
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
+  sectionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 18,
+    marginHorizontal: 12,
+    marginTop: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  sectionTitle: {
-    fontSize: 18,
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  price: {
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 12,
+    color: '#FF9800',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    backgroundColor: '#FF9800',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  statusText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
+    marginTop: 2,
   },
-  infoContent: {
+  infoText: {
+    fontSize: 15,
+    color: '#444',
     marginLeft: 8,
+    fontWeight: '500',
   },
-  infoLabel: {
-    fontSize: 14,
-    color: '#757575',
-  },
-  infoValue: {
-    fontSize: 16,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-  },
-  priceText: {
-    fontSize: 18,
+  sectionTitle: {
+    fontSize: 17,
     fontWeight: 'bold',
+    marginTop: 18,
+    marginBottom: 8,
+    marginLeft: 18,
+    color: '#222',
   },
-  destinationItem: {
-    marginBottom: 16,
+  destinationCard: {
+    backgroundColor: '#FAFAFA',
+    borderRadius: 16,
     padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    marginHorizontal: 8,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
+    minWidth: 0,
   },
   destinationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
+    flexWrap: 'wrap',
+    minWidth: 0,
   },
-  orderBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF9800',
+    marginRight: 6,
+  },
+  destinationStatus: {
+    color: '#FF9800',
+    fontWeight: '600',
+    fontSize: 13,
     marginRight: 8,
   },
-  orderText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  destinationName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#222',
+    marginLeft: 4,
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '60%',
   },
-  destinationStatusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 6,
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    flexWrap: 'wrap',
+    minWidth: 0,
   },
-  destinationStatusText: {
-    color: '#FFFFFF',
-    fontSize: 10,
+  contactText: {
+    fontSize: 13,
+    color: '#555',
+    marginLeft: 4,
+    marginRight: 8,
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '40%',
   },
-  destinationInfo: {
-    marginLeft: 32,
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 18,
+    marginHorizontal: 18,
+    marginBottom: 24,
   },
-  destinationAddress: {
-    fontSize: 16,
-    marginBottom: 4,
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF9800',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    marginRight: 10,
   },
-  contactName: {
-    fontSize: 14,
-    marginBottom: 4,
+  actionButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+    marginLeft: 6,
+  },
+  actionButtonDanger: {
+    backgroundColor: '#F44336',
   },
   courierInfo: {
     flexDirection: 'row',
@@ -590,13 +649,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  contactPhone: {
-    fontSize: 14,
-    marginBottom: 4,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  deliveryNotes: {
+  modalContent: {
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  courierAvatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalPhone: {
     fontSize: 14,
-    fontStyle: 'italic',
+    color: colors.darkGray,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  modalButton: {
+    padding: 12,
+    borderRadius: 6,
+    backgroundColor: colors.orange,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  fabCallButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
 })
 

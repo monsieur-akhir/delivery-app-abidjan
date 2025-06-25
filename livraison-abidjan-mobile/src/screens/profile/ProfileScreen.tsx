@@ -13,6 +13,9 @@ import { getUserProfile, updateUserProfile, uploadProfileImage } from "../../ser
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import type { UserProfile, User } from "../../types/models"
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
+import { useAlert } from '../../hooks/useAlert'
 
 type ProfileScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Profile">
@@ -202,22 +205,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         // Mettre à jour le profil en ligne
         const updatedUser = await updateUserProfile(editedProfile as Partial<User>)
         // Convert User to UserProfile
-        setProfile({
+        const updatedProfile: UserProfile = {
           user_id: updatedUser.id,
           full_name: updatedUser.full_name,
           phone: updatedUser.phone,
+          email: updatedUser.email || "",
+          role: updatedUser.role,
           city: updatedUser.commune || "",
           country: "Côte d'Ivoire",
           address: updatedUser.commune || "",
-          email: updatedUser.email || "",
-          role: updatedUser.role,
-          // language_preference managed separately
-          vehicle_type: updatedUser.role === 'courier' ? 'motorcycle' : undefined,
+          vehicle_type: updatedUser.vehicle_type,
           license_plate: "",
-          business_name: "",
-          business_address: "",
-        })
+          business_name: updatedUser.business_name || "",
+          business_address: updatedUser.business_address || "",
+          profile_picture: updatedUser.profile_picture,
+        }
+        setProfile(updatedProfile)
+        setEditing(false)
         updateUserData(updatedUser)
+        Alert.alert(t("profile.success"), t("profile.profileUpdated"))
       } else {
         // Stocker pour synchronisation ultérieure
         addPendingUpload({
@@ -226,17 +232,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           retries: 0
         })
 
-        // Mettre à jour localement
-        setProfile((prev) => ({ ...prev, ...editedProfile }) as UserProfile)
-        updateUserData(editedProfile as Partial<User>)
-
-        Alert.alert(t("profile.offlineUpdateSaved"), t("profile.offlineUpdateSavedMessage"))
+        Alert.alert(t("profile.offlineSaved"), t("profile.offlineSavedMessage"))
+        setEditing(false)
       }
-
-      setEditing(false)
     } catch (error) {
-      console.error("Error updating profile:", error)
-      Alert.alert(t("profile.error"), t("profile.errorUpdatingProfile"))
+      console.error("Error saving profile:", error)
+      Alert.alert(t("profile.error"), t("profile.errorSaving"))
     } finally {
       setSaving(false)
     }

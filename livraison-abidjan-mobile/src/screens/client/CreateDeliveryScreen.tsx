@@ -37,6 +37,7 @@ import { useNetwork } from '../../contexts/NetworkContext'
 import { useDelivery } from '../../hooks/useDelivery'
 import { useUser } from '../../hooks/useUser'
 import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 import DeliveryService from '../../services/DeliveryService'
 import api, { getAddressAutocomplete, getWeatherData } from '../../services/api'
 import { getGoogleMapsApiKey } from '../../config/environment'
@@ -986,7 +987,7 @@ type CreateDeliveryScreenNavigationProp = NativeStackNavigationProp<RootStackPar
 const CreateDeliveryScreen: React.FC = () => {
   const navigation = useNavigation<CreateDeliveryScreenNavigationProp>()
   const route = useRoute()
-  const params = route.params as RouteParams
+  const params = route.params as RouteParams | undefined
   const { user } = useAuth()
   const { isConnected, addPendingUpload } = useNetwork()
   const {
@@ -1009,6 +1010,7 @@ const CreateDeliveryScreen: React.FC = () => {
     hideAlert,
     hideToast
   } = useAlert()
+  const { showLoader, hideLoader, showSuccessLoader, showErrorLoader } = useLoader()
   const { t } = useTranslation()
 
   const mapRef = useRef<any>(null)
@@ -1515,6 +1517,7 @@ const CreateDeliveryScreen: React.FC = () => {
 
     try {
       setLoading(true)
+      showLoader('Création de votre livraison en cours...')
 
       const payload = {
         pickup_address: pickupAddress,
@@ -1552,38 +1555,48 @@ const CreateDeliveryScreen: React.FC = () => {
           data: payload,
           retries: 0
         })
+        hideLoader()
         showInfoAlert('Hors ligne', 'Votre livraison sera créée dès la reconnexion')
         navigation.navigate('Home')
         return
       }
 
-      let result
+      let result: Delivery
       
       if (params?.isModification && deliveryId) {
         // Mode modification - mettre à jour la livraison existante
+        showLoader('Modification de votre livraison...')
         result = await DeliveryService.updateDelivery(deliveryId, payload)
-        showSuccessAlert('Succès', 'Votre livraison a été modifiée avec succès!')
+        hideLoader()
+        showSuccessLoader('Livraison modifiée avec succès !', 2000)
         
         // Rediriger vers l'écran des propositions de prix avec l'ID de la livraison
-        navigation.navigate('BidScreen', { 
-          deliveryId: deliveryId
-        })
+        setTimeout(() => {
+          navigation.navigate('BidScreen', { 
+            deliveryId: deliveryId
+          })
+        }, 2000)
       } else {
         // Mode création - créer une nouvelle livraison
         result = await createDelivery(payload)
         
         if (result && result.id) {
-          showSuccessAlert('Succès', 'Votre livraison a été créée avec succès!')
+          hideLoader()
+          showSuccessLoader('Livraison créée avec succès !', 2000)
           
           // Rediriger vers l'écran des propositions de prix avec l'ID de la livraison
-          navigation.navigate('BidScreen', { 
-            deliveryId: result.id.toString()
-          })
+          setTimeout(() => {
+            navigation.navigate('BidScreen', { 
+              deliveryId: result.id.toString()
+            })
+          }, 2000)
         } else {
           throw new Error('La livraison a été créée mais l\'ID est manquant')
         }
       }
     } catch (error: any) {
+      hideLoader()
+      
       // Extraction du message d'erreur backend 
       let message = params?.isModification 
         ? "Une erreur est survenue lors de la modification de la livraison."

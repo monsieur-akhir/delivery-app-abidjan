@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -14,38 +13,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-import { DeliveryService } from '../../services/DeliveryService';
+import DeliveryService from '../../services/DeliveryService';
 import { EmptyState } from '../../components/EmptyState';
-import { Card } from '../../components/Card';
+import Card from '../../components/Card';
 import { DeliveryStatusBadge } from '../../components/DeliveryStatusBadge';
-
-interface MultiDestinationDelivery {
-  id: string;
-  title: string;
-  pickup_address: string;
-  destinations: Array<{
-    id: string;
-    address: string;
-    recipient_name: string;
-    recipient_phone: string;
-    delivery_notes?: string;
-    order: number;
-  }>;
-  total_price: number;
-  status: string;
-  client_name: string;
-  vehicle_type: string;
-  package_type: string;
-  estimated_duration: number;
-  total_distance: number;
-  delivery_fee_per_stop: number;
-}
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
+import { useAlert } from '../../hooks/useAlert'
+import type { AvailableDelivery } from '../../types/models';
 
 const CourierMultiDestinationScreen: React.FC = () => {
-  const [deliveries, setDeliveries] = useState<MultiDestinationDelivery[]>([]);
+  const [deliveries, setDeliveries] = useState<AvailableDelivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
+  const { showErrorAlert, showSuccessAlert } = useAlert();
 
   useEffect(() => {
     loadMultiDestinationDeliveries();
@@ -54,15 +36,19 @@ const CourierMultiDestinationScreen: React.FC = () => {
   const loadMultiDestinationDeliveries = async () => {
     try {
       setLoading(true);
-      // Récupérer les livraisons multi-destinations disponibles
+      // Récupérer les livraisons disponibles
       const response = await DeliveryService.getAvailableDeliveries({
-        delivery_type: 'multi_destination',
-        status: 'pending'
+        limit: 50
       });
-      setDeliveries(response);
+      // Filtrer les livraisons multi-destinations côté client
+      const multiDestinationDeliveries = response.filter((delivery: any) => 
+        delivery.delivery_type === 'multi_destination' || 
+        delivery.destinations?.length > 1
+      );
+      setDeliveries(multiDestinationDeliveries);
     } catch (error) {
       console.error('Erreur lors du chargement des livraisons multi-destinations:', error);
-      Alert.alert('Erreur', 'Impossible de charger les livraisons multi-destinations');
+      showErrorAlert('Erreur', 'Impossible de charger les livraisons multi-destinations');
     } finally {
       setLoading(false);
     }
@@ -85,7 +71,7 @@ const CourierMultiDestinationScreen: React.FC = () => {
             text: 'Accepter',
             onPress: async () => {
               await DeliveryService.acceptDelivery(deliveryId);
-              Alert.alert('Succès', 'Livraison acceptée avec succès');
+              showSuccessAlert('Succès', 'Livraison acceptée avec succès');
               loadMultiDestinationDeliveries();
             }
           }
@@ -117,12 +103,12 @@ const CourierMultiDestinationScreen: React.FC = () => {
     </View>
   );
 
-  const renderDeliveryItem = ({ item }: { item: MultiDestinationDelivery }) => (
+  const renderDeliveryItem = ({ item }: { item: AvailableDelivery }) => (
     <Card style={styles.deliveryCard}>
       <View style={styles.cardHeader}>
         <View style={styles.headerLeft}>
-          <Text style={styles.deliveryTitle}>{item.title}</Text>
-          <Text style={styles.clientName}>Client: {item.client_name}</Text>
+          <Text style={styles.deliveryTitle}>{item.package_description || 'Livraison'}</Text>
+          <Text style={styles.clientName}>Client: {item.client?.full_name || 'Client'}</Text>
         </View>
         <DeliveryStatusBadge status={item.status} />
       </View>
@@ -137,15 +123,28 @@ const CourierMultiDestinationScreen: React.FC = () => {
 
       <View style={styles.destinationsSection}>
         <View style={styles.sectionHeader}>
-          <Ionicons name="flag-outline" size={16} color="#FF5722" />
+          <Ionicons name="flag" size={16} color="#FF5722" />
           <Text style={styles.sectionTitle}>
-            Destinations ({item.destinations.length})
+            Destinations ({(item as any).destinations?.length || 1})
           </Text>
         </View>
         <ScrollView style={styles.destinationsList} nestedScrollEnabled>
-          {item.destinations
-            .sort((a, b) => a.order - b.order)
-            .map((destination, index) => renderDestination(destination, index))}
+          {(item as any).destinations ? 
+            (item as any).destinations
+              .sort((a: any, b: any) => a.order - b.order)
+              .map((destination: any, index: number) => renderDestination(destination, index))
+            : 
+            <View style={styles.destinationItem}>
+              <View style={styles.destinationNumber}>
+                <Text style={styles.destinationNumberText}>1</Text>
+              </View>
+              <View style={styles.destinationInfo}>
+                <Text style={styles.destinationAddress} numberOfLines={2}>
+                  {item.delivery_address}
+                </Text>
+              </View>
+            </View>
+          }
         </ScrollView>
       </View>
 
@@ -156,11 +155,11 @@ const CourierMultiDestinationScreen: React.FC = () => {
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="car-outline" size={16} color="#666" />
-          <Text style={styles.detailText}>{item.vehicle_type}</Text>
+          <Text style={styles.detailText}>{(item as any).vehicle_type || 'Tous véhicules'}</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="speedometer-outline" size={16} color="#666" />
-          <Text style={styles.detailText}>{item.total_distance} km</Text>
+          <Text style={styles.detailText}>{item.distance} km</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="time-outline" size={16} color="#666" />
@@ -170,23 +169,19 @@ const CourierMultiDestinationScreen: React.FC = () => {
 
       <View style={styles.pricingDetails}>
         <View style={styles.pricingRow}>
-          <Text style={styles.pricingLabel}>Prix par arrêt:</Text>
-          <Text style={styles.pricingValue}>{item.delivery_fee_per_stop} FCFA</Text>
-        </View>
-        <View style={styles.pricingRow}>
-          <Text style={styles.pricingLabel}>Nombre d'arrêts:</Text>
-          <Text style={styles.pricingValue}>{item.destinations.length}</Text>
+          <Text style={styles.pricingLabel}>Prix estimé:</Text>
+          <Text style={styles.pricingValue}>{item.estimated_price || item.proposed_price} FCFA</Text>
         </View>
         <View style={[styles.pricingRow, styles.totalRow]}>
           <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalValue}>{item.total_price} FCFA</Text>
+          <Text style={styles.totalValue}>{item.estimated_price || item.proposed_price} FCFA</Text>
         </View>
       </View>
 
       <View style={styles.cardFooter}>
         <TouchableOpacity
           style={styles.acceptButton}
-          onPress={() => acceptMultiDestinationDelivery(item.id)}
+          onPress={() => acceptMultiDestinationDelivery(item.id.toString())}
         >
           <Text style={styles.acceptButtonText}>Accepter</Text>
         </TouchableOpacity>
@@ -197,6 +192,15 @@ const CourierMultiDestinationScreen: React.FC = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Livraisons Multi-Destinations</Text>
+        </View>
         <View style={styles.loadingContainer}>
           <Text>Chargement...</Text>
         </View>
@@ -218,20 +222,19 @@ const CourierMultiDestinationScreen: React.FC = () => {
 
       {deliveries.length === 0 ? (
         <EmptyState
-          icon="flag-outline"
-          title="Aucune livraison multi-destinations"
-          message="Il n'y a pas de livraisons multi-destinations disponibles pour le moment"
+          icon="flag"
+          title="Aucune livraison disponible"
+          message="Il n'y a actuellement aucune livraison multi-destinations disponible."
         />
       ) : (
         <FlatList
           data={deliveries}
           renderItem={renderDeliveryItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          showsVerticalScrollIndicator={false}
         />
       )}
     </SafeAreaView>

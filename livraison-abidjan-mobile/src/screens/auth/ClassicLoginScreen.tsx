@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
+import { useAlert } from '../../hooks/useAlert'
+import { useLoader } from '../../contexts/LoaderContext'
 import LoginIllustration from "../../assets/login-connexion.svg"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
@@ -22,13 +24,13 @@ const ClassicLoginScreen: React.FC<ClassicLoginScreenProps> = ({ navigation }) =
   const { t } = useTranslation()
   const { signIn } = useAuth()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
+  const { showErrorAlert, showSuccessAlert } = useAlert()
+  const { showLoader, hideLoader } = useLoader()
 
   const [phone, setPhone] = useState<string>("")
   const [password, setPassword] = useState<string>("")
   const [secureTextEntry, setSecureTextEntry] = useState<boolean>(true)
   const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
-  const [visible, setVisible] = useState<boolean>(false)
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
 
@@ -70,22 +72,26 @@ const ClassicLoginScreen: React.FC<ClassicLoginScreenProps> = ({ navigation }) =
 
   const handleLogin = async (): Promise<void> => {
     if (phone.trim() === "" || password.trim() === "") {
-      setError(t("login.errorRequiredFields"))
-      setVisible(true)
+      showErrorAlert('Erreur', t("login.errorRequiredFields"))
       return
     }
 
     setLoading(true)
+    showLoader('Connexion en cours...')
+    
     try {
       // Sauvegarder automatiquement le numéro de téléphone
       await AsyncStorage.setItem("savedPhone", phone)
 
       // Connexion
       await signIn(phone, password)
+      
+      hideLoader()
+      showSuccessAlert('Connexion réussie', 'Bienvenue !')
     } catch (error) {
       console.error("Login error:", error)
-      setError(error instanceof Error ? error.message : t("login.errorGeneric"))
-      setVisible(true)
+      hideLoader()
+      showErrorAlert('Erreur', error instanceof Error ? error.message : t("login.errorGeneric"))
     } finally {
       setLoading(false)
     }

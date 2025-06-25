@@ -3,6 +3,7 @@ import Constants from 'expo-constants'
 import { Platform } from 'react-native'
 import api from './api'
 import type { Notification, NotificationType } from '../types/models'
+import { SchedulableTriggerInputTypes } from 'expo-notifications/build/Notifications.types'
 
 export interface NotificationSettings {
   delivery_updates: boolean
@@ -25,7 +26,8 @@ class NotificationService {
       // Configuration des notifications
       Notifications.setNotificationHandler({
         handleNotification: async () => ({
-          shouldShowAlert: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
           shouldPlaySound: true,
           shouldSetBadge: true,
         }),
@@ -239,7 +241,7 @@ class NotificationService {
           body: `N'oubliez pas votre livraison #${deliveryId}`,
           data: { deliveryId, type: 'delivery_reminder' },
         },
-        trigger: scheduledTime,
+        trigger: { type: SchedulableTriggerInputTypes.DATE, date: scheduledTime },
       })
     } catch (error) {
       console.error('Erreur lors de la programmation du rappel:', error)

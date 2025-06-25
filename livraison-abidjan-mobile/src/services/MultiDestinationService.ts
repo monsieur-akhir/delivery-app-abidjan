@@ -1,4 +1,3 @@
-
 import api from './api'
 import { getToken } from '../utils'
 
@@ -100,7 +99,7 @@ class MultiDestinationService {
   /**
    * Créer une livraison multi-destinations
    */
-  static async createDelivery(deliveryData: MultiDestinationDeliveryCreate): Promise<MultiDestinationDelivery> {
+  static async createDelivery(deliveryData: any): Promise<MultiDestinationDelivery> {
     try {
       const token = await getToken();
       const response = await api.post('/api/multi-destination-deliveries', deliveryData, {

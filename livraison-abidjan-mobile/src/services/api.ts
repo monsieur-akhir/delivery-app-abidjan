@@ -1471,3 +1471,12 @@ export const getDeliveryOptions = async (
 // Exporter d'autres fonctions d'API au besoin
 export default api
 export { api }
+
+export const fetchMultiDestinationDeliveries = async (filter?: string) => {
+  let url = "/api/multi-destination-deliveries"
+  if (filter && filter !== "all") {
+    url += `?status=${filter}`
+  }
+  const response = await api.get(url)
+  return response.data
+}

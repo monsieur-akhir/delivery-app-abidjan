@@ -24,6 +24,7 @@ class MultiDestinationDelivery(Base):
 
     # Informations générales
     status = Column(String, default=MultiDestinationStatus.pending.value)
+    title = Column(String(200), nullable=True)
 
     # Champs pickup
     pickup_address = Column(String, nullable=False)

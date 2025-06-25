@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -13,6 +12,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import CustomLoaderModal from './CustomLoaderModal';
+import CustomAlert from '../components/CustomAlert'
+import CustomToast from '../components/CustomToast'
+import { useAlert } from '../hooks/useAlert'
 
 interface MultiDestinationActionsProps {
   deliveryId: number;
@@ -47,6 +49,7 @@ const MultiDestinationActions: React.FC<MultiDestinationActionsProps> = ({
   const [counterOfferMessage, setCounterOfferMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [currentAction, setCurrentAction] = useState('');
+  const { showErrorAlert } = useAlert()
 
   const handleEdit = () => {
     if (onEdit) {
@@ -99,13 +102,13 @@ const MultiDestinationActions: React.FC<MultiDestinationActionsProps> = ({
 
   const handleCounterOffer = () => {
     if (!counterOfferPrice.trim()) {
-      Alert.alert('Erreur', 'Veuillez saisir un prix pour votre contre-offre');
+      showErrorAlert('Erreur', 'Veuillez saisir un prix pour votre contre-offre');
       return;
     }
 
     const price = parseFloat(counterOfferPrice);
     if (isNaN(price) || price <= 0) {
-      Alert.alert('Erreur', 'Veuillez saisir un prix valide');
+      showErrorAlert('Erreur', 'Veuillez saisir un prix valide');
       return;
     }
 
@@ -260,6 +263,7 @@ const MultiDestinationActions: React.FC<MultiDestinationActionsProps> = ({
         title={currentAction}
         message="Veuillez patienter..."
         type="loading"
+        onDismiss={() => setActionLoading(false)}
       />
     </>
   );

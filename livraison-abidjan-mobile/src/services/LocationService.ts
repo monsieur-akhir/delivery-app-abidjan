@@ -630,7 +630,7 @@ class LocationService {
       const results = await Location.reverseGeocodeAsync({ latitude, longitude });
       if (results && results.length > 0) {
         // Selon la structure, la commune peut être dans 'district', 'suburb' ou 'city'
-        return results[0].district || results[0].suburb || results[0].city || null;
+        return results[0].district || (results[0] as any).suburb || results[0].city || null;
       }
       return null;
     } catch (error) {

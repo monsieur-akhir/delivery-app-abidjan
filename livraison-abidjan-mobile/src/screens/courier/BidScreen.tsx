@@ -16,6 +16,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery } from "../../types/models"
+import CustomAlert from '../components/CustomAlert'
+import CustomToast from '../components/CustomToast'
+import { useAlert } from '../hooks/useAlert'
 
 type BidScreenProps = {
   route: RouteProp<RootStackParamList, "Bid">
@@ -131,6 +134,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       setError("Erreur lors du chargement des détails de la livraison")
       setVisible(true)
     } finally {
+    hideLoader()
       setLoading(false)
     }
   }, [deliveryId, getDeliveryDetails])
@@ -242,6 +246,7 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       setError(error instanceof Error ? error.message : "Erreur lors de la soumission de l'enchère")
       setVisible(true)
     } finally {
+    hideLoader()
       setBidLoading(false)
     }
   }
@@ -417,7 +422,21 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       >
         {error}
       </Snackbar>
-    </SafeAreaView>
+    
+      {/* Composants d'alerte modernes */}
+      
+
+      <CustomToast
+        visible={toastVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        onDismiss={hideToast}
+        action={toastConfig.action}
+        icon={toastConfig.icon}
+        title={toastConfig.title}
+      />
+</SafeAreaView>
   )
 }
 

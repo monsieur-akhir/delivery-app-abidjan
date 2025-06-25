@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -46,6 +45,7 @@ class MultiDestinationStopResponse(BaseModel):
         from_attributes = True
 
 class MultiDestinationDeliveryCreate(BaseModel):
+    title: Optional[str] = None
     pickup_address: str
     pickup_commune: str
     pickup_lat: Optional[float] = None
@@ -61,6 +61,7 @@ class MultiDestinationDeliveryCreate(BaseModel):
     is_urgent: bool = False
 
 class MultiDestinationDeliveryResponse(BaseModel):
+    title: Optional[str] = None
     id: int
     client_id: int
     courier_id: Optional[int] = None

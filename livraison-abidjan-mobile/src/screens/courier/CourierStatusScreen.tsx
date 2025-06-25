@@ -11,11 +11,12 @@ import FeatherIcon, { type FeatherIconName } from "../../components/FeatherIcon"
 import * as Location from "expo-location"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNetwork } from "../../contexts/NetworkContext"
-import { updateCourierStatus, fetchCourierProfile, fetchWeatherForecast } from "../../services/api"
+import { updateCourierStatus, fetchCourierProfile, getWeatherData } from "../../services/api"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import type { CourierProfile, VehicleType } from "../../types/models"
 import type { UserProfile, Weather } from "../../types/models"
+import { useLoader } from '../../contexts/LoaderContext'
 
 type CourierStatusScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "CourierStatus">
@@ -71,7 +72,7 @@ const CourierStatusScreen: React.FC<CourierStatusScreenProps> = ({ navigation })
       })
 
       // Charger les données météo
-      const weatherData = await fetchWeatherForecast(location.coords.latitude, location.coords.longitude)
+      const weatherData = await getWeatherData(location.coords.latitude, location.coords.longitude)
       setWeather(weatherData)
     } catch (error) {
       console.error("Error loading data:", error)
