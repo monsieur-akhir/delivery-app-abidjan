@@ -7,6 +7,7 @@ import {
   TextInput,
   Alert,
   StyleSheet,
+  Platform,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -17,6 +18,8 @@ import { RootStackParamList } from '../../types/navigation'
 import { Card } from '../../components'
 import { useTheme } from '../../contexts/ThemeContext'
 import ScheduledDeliveryService from '../../services/ScheduledDeliveryService'
+import CustomLoaderModal from '../../components/CustomLoaderModal'
+import AddressAutocomplete from '../../components/AddressAutocomplete'
 
 type ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateScheduledDelivery'>
 
@@ -40,6 +43,8 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
 
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [pickupCommune, setPickupCommune] = useState('')
+  const [deliveryCommune, setDeliveryCommune] = useState('')
 
   const handleCreate = async () => {
     if (!formData.title || !formData.pickup_address || !formData.delivery_address) {
@@ -73,126 +78,120 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
   ]
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: '#F6F7FB' }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color={colors.text} />
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-back" size={28} color="#FF9800" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Nouvelle livraison planifiée
-        </Text>
+        <Text style={styles.headerTitle}>Nouvelle livraison planifiée</Text>
+        <View style={{ width: 28 }} />
       </View>
 
+      <CustomLoaderModal
+        visible={isLoading}
+        title="Création en cours..."
+        message="Veuillez patienter"
+        type="loading"
+      />
+
       <ScrollView style={styles.content}>
-        <Card style={styles.formCard}>
+        <View style={styles.formCard}>
           {/* Titre */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Titre *</Text>
+            <Text style={styles.label}>Titre *</Text>
             <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              style={styles.input}
               value={formData.title}
               onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
               placeholder="Ex: Livraison hebdomadaire bureau"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="#BDBDBD"
             />
           </View>
 
           {/* Description */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Description</Text>
+            <Text style={styles.label}>Description</Text>
             <TextInput
-              style={[styles.textArea, { borderColor: colors.border, color: colors.text }]}
+              style={styles.textArea}
               value={formData.description}
               onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
               placeholder="Description optionnelle"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="#BDBDBD"
               multiline
               numberOfLines={3}
             />
           </View>
 
-          {/* Adresses */}
+          {/* Adresse de récupération */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Adresse de récupération *</Text>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            <Text style={styles.label}>Adresse de récupération *</Text>
+            <AddressAutocomplete
+              label="Adresse de récupération"
               value={formData.pickup_address}
               onChangeText={(text) => setFormData(prev => ({ ...prev, pickup_address: text }))}
-              placeholder="Adresse complète de récupération"
-              placeholderTextColor={colors.textSecondary}
+              onAddressSelect={(address) => {
+                setFormData(prev => ({ ...prev, pickup_address: address.description }))
+                setPickupCommune(address.commune || '')
+              }}
+              placeholder="Saisir ou rechercher une adresse"
             />
+            {pickupCommune ? (
+              <Text style={styles.communeText}>Commune détectée : {pickupCommune}</Text>
+            ) : null}
           </View>
 
+          {/* Adresse de livraison */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Commune de récupération *</Text>
-            <View style={[styles.picker, { borderColor: colors.border }]}>
-              {/* Ici vous pourriez utiliser un picker plus sophistiqué */}
-              <TextInput
-                style={[styles.input, { borderWidth: 0, color: colors.text }]}
-                value={formData.pickup_commune}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, pickup_commune: text }))}
-                placeholder="Sélectionner la commune"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Adresse de livraison *</Text>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+            <Text style={styles.label}>Adresse de livraison *</Text>
+            <AddressAutocomplete
+              label="Adresse de livraison"
               value={formData.delivery_address}
               onChangeText={(text) => setFormData(prev => ({ ...prev, delivery_address: text }))}
-              placeholder="Adresse complète de livraison"
-              placeholderTextColor={colors.textSecondary}
+              onAddressSelect={(address) => {
+                setFormData(prev => ({ ...prev, delivery_address: address.description }))
+                setDeliveryCommune(address.commune || '')
+              }}
+              placeholder="Saisir ou rechercher une adresse"
             />
+            {deliveryCommune ? (
+              <Text style={styles.communeText}>Commune détectée : {deliveryCommune}</Text>
+            ) : null}
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Commune de livraison *</Text>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-              value={formData.delivery_commune}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, delivery_commune: text }))}
-              placeholder="Sélectionner la commune"
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
+          {/* Séparateur */}
+          <View style={styles.sectionDivider} />
 
           {/* Prix proposé */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Prix proposé (FCFA)</Text>
+            <Text style={styles.label}>Prix proposé (FCFA)</Text>
             <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+              style={styles.input}
               value={formData.proposed_price}
               onChangeText={(text) => setFormData(prev => ({ ...prev, proposed_price: text }))}
               placeholder="0"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="#BDBDBD"
               keyboardType="numeric"
             />
           </View>
 
           {/* Date et heure */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Date et heure de début</Text>
+            <Text style={styles.label}>Date et heure de début</Text>
             <TouchableOpacity
-              style={[styles.dateButton, { borderColor: colors.border }]}
+              style={styles.dateButton}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text style={[styles.dateText, { color: colors.text }]}>
+              <Text style={styles.dateText}>
                 {formData.scheduled_date.toLocaleDateString()} à {formData.scheduled_date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
               </Text>
-              <Icon name="date-range" size={20} color={colors.textSecondary} />
+              <Icon name="date-range" size={20} color="#BDBDBD" />
             </TouchableOpacity>
           </View>
 
           {/* Récurrence */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Type de récurrence</Text>
+            <Text style={styles.label}>Type de récurrence</Text>
             <View style={styles.recurrenceOptions}>
               {[
                 { key: 'none', label: 'Unique' },
@@ -205,8 +204,8 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
                   style={[
                     styles.recurrenceOption,
                     {
-                      backgroundColor: formData.recurrence_type === option.key ? colors.primary : 'transparent',
-                      borderColor: colors.primary,
+                      backgroundColor: formData.recurrence_type === option.key ? '#FF9800' : 'transparent',
+                      borderColor: '#FF9800',
                     }
                   ]}
                   onPress={() => setFormData(prev => ({ ...prev, recurrence_type: option.key as any }))}
@@ -214,7 +213,7 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
                   <Text
                     style={[
                       styles.recurrenceText,
-                      { color: formData.recurrence_type === option.key ? 'white' : colors.primary }
+                      { color: formData.recurrence_type === option.key ? 'white' : '#FF9800' }
                     ]}
                   >
                     {option.label}
@@ -223,14 +222,15 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
               ))}
             </View>
           </View>
-        </Card>
+        </View>
 
         {/* Bouton de création */}
         <TouchableOpacity
-          style={[styles.createButton, { backgroundColor: colors.primary }]}
+          style={styles.createButton}
           onPress={handleCreate}
           disabled={isLoading}
         >
+          <Icon name="check" size={20} color="#fff" />
           <Text style={styles.createButtonText}>
             {isLoading ? 'Création...' : 'Créer la livraison planifiée'}
           </Text>
@@ -242,8 +242,16 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
         <DateTimePicker
           value={formData.scheduled_date}
           mode="datetime"
-          display="default"
+          display={Platform.OS === 'android' ? 'calendar' : 'default'}
           onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+            if (!event || typeof event !== 'object' || !('type' in event)) {
+              setShowDatePicker(false)
+              return
+            }
+            if (event.type === 'dismissed') {
+              setShowDatePicker(false)
+              return
+            }
             setShowDatePicker(false)
             if (selectedDate) {
               setFormData(prev => ({ ...prev, scheduled_date: selectedDate }))
@@ -348,6 +356,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 16,
+  },
+  communeText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
 })
 
