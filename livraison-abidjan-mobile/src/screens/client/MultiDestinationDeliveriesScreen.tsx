@@ -21,6 +21,7 @@ import { getToken } from '../../utils'
 import { fetchMultiDestinationDeliveries } from '../../services/api'
 import { useAlert } from '../../hooks/useAlert'
 import { useLoader } from '../../contexts/LoaderContext'
+import CustomLoaderModal from '../../components/CustomLoaderModal'
 
 type ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MultiDestinationDeliveries'>
 
@@ -127,6 +128,8 @@ const MultiDestinationDeliveriesScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Loader personnalisé */}
+      <CustomLoaderModal visible={isLoading} title="Chargement des livraisons..." message="Veuillez patienter pendant le chargement de vos livraisons multiples." type="loading" />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity

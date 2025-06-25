@@ -24,6 +24,7 @@ import NotificationService from '../../services/NotificationService'
 import { useAuth } from '../../contexts/AuthContext'
 import { Delivery, DeliveryStatus } from '../../types/models'
 import { EmptyState } from '../../components/EmptyState'
+import CustomLoaderModal from '../../components/CustomLoaderModal'
 
 const { width, height } = Dimensions.get('window')
 
@@ -340,6 +341,9 @@ const OrdersScreen: React.FC<OrdersScreenProps> = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Loader personnalisé */}
+      <CustomLoaderModal visible={loading} title="Chargement des commandes..." message="Veuillez patienter pendant le chargement de vos commandes." type="loading" />
 
       {/* Header animé */}
       <Animated.View

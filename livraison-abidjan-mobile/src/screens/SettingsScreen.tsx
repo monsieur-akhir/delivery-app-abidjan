@@ -69,173 +69,140 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <IconButton
-          icon="arrow-left"
-          size={24}
-          onPress={() => navigation.goBack()}
-        />
-        <Text style={styles.headerTitle}>{t("settings.title")}</Text>
-        <View style={styles.headerRight} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F6F7FB' }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
+          <Feather name="arrow-left" size={24} color="#222" />
+        </TouchableOpacity>
+        <Text style={{ flex: 1, fontSize: 20, fontWeight: 'bold', color: '#222', marginLeft: 12 }}>{t("settings.title")}</Text>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* User Profile Card */}
-        <TouchableOpacity style={[styles.profileCard, { backgroundColor: colors.card }]} onPress={goToProfile}>
-          <View style={styles.profileContent}>
-            <Avatar.Image
-              size={80}
-              source={
-                user?.profile_picture ? { uri: user.profile_picture } : require("../assets/images/default-avatar.png")
-              }
-            />
-            <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: colors.text }]}>{user?.first_name || user?.username}</Text>
-              <Text style={[styles.profilePhone, { color: colors.text }]}>{user?.phone}</Text>
-              <Button
-                mode="outlined"
-                onPress={goToProfile}
-                style={[styles.profileButton, { borderColor: colors.primary }]}
-                compact
-              >
-                {t("settings.editProfile")}
-              </Button>
-            </View>
+
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        {/* Profil */}
+        <TouchableOpacity 
+          onPress={goToProfile}
+          style={{ 
+            backgroundColor: '#fff',
+            borderRadius: 12,
+            padding: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 24,
+            elevation: 1,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 2,
+          }}
+        >
+          <Avatar.Image
+            size={56}
+            source={user?.profile_picture ? { uri: user.profile_picture } : require("../assets/images/default-avatar.png")}
+            style={{ backgroundColor: '#f0f0f0' }}
+          />
+          <View style={{ marginLeft: 16, flex: 1 }}>
+            <Text style={{ fontSize: 16, color: '#666', marginBottom: 2 }}>{user?.phone}</Text>
           </View>
+          <Feather name="chevron-right" size={24} color="#999" />
         </TouchableOpacity>
 
-        {/* App Settings */}
-        <Card style={styles.settingsCard}>
-          <Card.Title title={t("settings.appSettings")} />
-          <Card.Content>
-            <List.Item
-              title={t("settings.language")}
-              description={t("settings.languageDescription")}
-              left={() => <Feather name="globe" size={24} color="#212121" style={styles.icon} />}
-              right={() => (
-                <Button mode="text" onPress={() => navigation.navigate("LanguageSettings")} style={styles.actionButton}>
-                  {language === "fr" ? "Français" : language === "en" ? "English" : "Español"}
-                </Button>
-              )}
+        {/* Paramètres de l'application */}
+        <View style={{ backgroundColor: '#fff', borderRadius: 12, marginBottom: 24, elevation: 1 }}>
+          <Text style={{ fontSize: 16, color: '#666', padding: 16, paddingBottom: 8 }}>{t("settings.appSettings")}</Text>
+          
+          {/* Langue */}
+          <TouchableOpacity 
+            onPress={() => navigation.navigate("LanguageSettings")}
+            style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}
+          >
+            <Feather name="globe" size={22} color="#FF9800" />
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.language")}</Text>
+              <Text style={{ fontSize: 14, color: '#666', marginTop: 2 }}>Français</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+
+          <View style={{ height: 1, backgroundColor: '#f5f5f5' }} />
+
+          {/* Mode sombre */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+            <Feather name="moon" size={22} color="#FF9800" />
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.darkMode")}</Text>
+            </View>
+            <Switch
+              value={theme === "dark"}
+              onValueChange={toggleTheme}
+              trackColor={{ false: "#ddd", true: "#FF9800" }}
+              thumbColor="#fff"
             />
+          </View>
 
-            <Divider style={styles.divider} />
+          <View style={{ height: 1, backgroundColor: '#f5f5f5' }} />
 
-            <View style={[styles.sectionHeader, { backgroundColor: colors.card }]}>
-              <Feather name="moon" size={20} color={colors.primary} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("settings.darkMode")}</Text>
+          {/* Mode hors ligne */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+            <Feather name="wifi-off" size={22} color="#FF9800" />
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.offlineMode")}</Text>
             </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingText, { color: colors.text }]}>{t("settings.enableDarkMode")}</Text>
-              <Switch
-                value={theme === "dark"}
-                onValueChange={toggleTheme}
-                trackColor={{ false: "#767577", true: "#FF6B00" }}
-                thumbColor={theme === "dark" ? "#f5dd4b" : "#f4f3f4"}
-                style={styles.switch}
-              />
-            </View>
-
-            <Divider style={styles.divider} />
-
-            <View style={[styles.sectionHeader, { backgroundColor: colors.card }]}>
-              <Feather name="wifi-off" size={20} color={colors.primary} />
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("settings.offlineMode")}</Text>
-            </View>
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingText, { color: colors.text }]}>{t("settings.enableOfflineMode")}</Text>
-              <Switch
-                value={isOfflineMode}
-                onValueChange={toggleOfflineMode}
-                trackColor={{ false: "#767577", true: "#FF6B00" }}
-                thumbColor={isOfflineMode ? "#f5dd4b" : "#f4f3f4"}
-                style={styles.switch}
-              />
-            </View>
-          </Card.Content>
-        </Card>
+            <Switch
+              value={isOfflineMode}
+              onValueChange={toggleOfflineMode}
+              trackColor={{ false: "#ddd", true: "#FF9800" }}
+              thumbColor="#fff"
+            />
+          </View>
+        </View>
 
         {/* Notifications */}
-        <Card style={styles.settingsCard}>
-          <Card.Title title={t("settings.notifications")} />
-          <Card.Content>
-            <List.Item
-              title={t("settings.pushNotifications")}
-              description={t("settings.pushNotificationsDescription")}
-              left={() => <Feather name="bell" size={24} color="#212121" style={styles.icon} />}
-              right={() => (
-                <Button mode="text" onPress={goToNotificationSettings} style={styles.actionButton}>
-                  {t("settings.manage")}
-                </Button>
-              )}
-            />
-          </Card.Content>
-        </Card>
+        <View style={{ backgroundColor: '#fff', borderRadius: 12, marginBottom: 24, elevation: 1 }}>
+          <Text style={{ fontSize: 16, color: '#666', padding: 16 }}>{t("settings.notifications")}</Text>
+          
+          <TouchableOpacity 
+            onPress={goToNotificationSettings}
+            style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}
+          >
+            <Feather name="bell" size={22} color="#FF9800" />
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.pushNotifications")}</Text>
+              <Text style={{ fontSize: 14, color: '#666', marginTop: 2 }}>{t("settings.pushNotificationsDescription")}</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
+        </View>
 
         {/* Support */}
-        <Card style={styles.settingsCard}>
-          <Card.Title title={t("settings.support")} />
-          <Card.Content>
-            <List.Item
-              title={t("settings.helpCenter")}
-              description={t("settings.helpCenterDescription")}
-              left={() => <Feather name="help-circle" size={24} color="#212121" style={styles.icon} />}
-              onPress={() => navigation.navigate("Support")}
-              right={() => <Feather name="chevron-right" size={24} color="#757575" />}
-            />
+        <View style={{ backgroundColor: '#fff', borderRadius: 12, marginBottom: 24, elevation: 1 }}>
+          <Text style={{ fontSize: 16, color: '#666', padding: 16 }}>Support</Text>
+          
+          <TouchableOpacity 
+            onPress={() => navigation.navigate("Support")}
+            style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}
+          >
+            <Feather name="help-circle" size={22} color="#FF9800" />
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.helpCenter")}</Text>
+              <Text style={{ fontSize: 14, color: '#666', marginTop: 2 }}>{t("settings.helpCenterDescription")}</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
 
-            <Divider style={styles.divider} />
+          <View style={{ height: 1, backgroundColor: '#f5f5f5' }} />
 
-            <List.Item
-              title={t("settings.contactUs")}
-              description={t("settings.contactUsDescription")}
-              left={() => <Feather name="mail" size={24} color="#212121" style={styles.icon} />}
-              onPress={() => {
-                /* Handle contact us */
-              }}
-              right={() => <Feather name="chevron-right" size={24} color="#757575" />}
-            />
-
-            <Divider style={styles.divider} />
-
-            <List.Item
-              title={t("settings.about")}
-              description={t("settings.aboutDescription")}
-              left={() => <Feather name="info" size={24} color="#212121" style={styles.icon} />}
-              onPress={() => {
-                /* Handle about */
-              }}
-              right={() => <Feather name="chevron-right" size={24} color="#757575" />}
-            />
-          </Card.Content>
-        </Card>
-
-        {/* Account */}
-        <Card style={styles.settingsCard}>
-          <Card.Title title={t("settings.account")} />
-          <Card.Content>
-            <List.Item
-              title={t("settings.security")}
-              description={t("settings.securityDescription")}
-              left={() => <Feather name="lock" size={24} color="#212121" style={styles.icon} />}
-              onPress={goToSecuritySettings}
-              right={() => <Feather name="chevron-right" size={24} color="#757575" />}
-            />
-
-            <Divider style={styles.divider} />
-
-            <List.Item
-              title={t("settings.logout")}
-              description={t("settings.logoutDescription")}
-              left={() => <Feather name="log-out" size={24} style={[styles.icon, { color: "#F44336" }]} />}
-              onPress={handleLogout}
-              titleStyle={{ color: "#F44336" }}
-            />
-          </Card.Content>
-        </Card>
-
-        <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>{t("settings.version")} 1.0.0 (Build 100)</Text>
+          <TouchableOpacity 
+            onPress={() => {/* Handle contact us */}}
+            style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}
+          >
+            <Feather name="mail" size={22} color="#FF9800" />
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.contactUs")}</Text>
+              <Text style={{ fontSize: 14, color: '#666', marginTop: 2 }}>{t("settings.contactUsDescription")}</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#999" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

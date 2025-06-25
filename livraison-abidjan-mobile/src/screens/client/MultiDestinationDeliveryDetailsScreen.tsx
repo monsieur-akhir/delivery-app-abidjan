@@ -209,6 +209,10 @@ const handleAcceptBid = async (bidId: number) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.gray }]}>
+      {/* Bouton retour */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color={colors.orange} />
+      </TouchableOpacity>
       <ScrollView>
         {/* Informations de base */}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
@@ -707,6 +711,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 24,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
 })
 

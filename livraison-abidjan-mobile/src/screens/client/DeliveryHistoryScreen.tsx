@@ -22,6 +22,7 @@ import { useDelivery } from '../../hooks/useDelivery'
 import { formatPrice } from '../../utils/formatters'
 import { EmptyState } from '../../components/EmptyState'
 import DeliveryStatusBadge from '../../components/DeliveryStatusBadge'
+import CustomLoaderModal from '../../components/CustomLoaderModal'
 
 const { width, height } = Dimensions.get('window')
 
@@ -389,6 +390,9 @@ export const DeliveryHistoryScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Loader personnalisé */}
+      <CustomLoaderModal visible={loading} title="Chargement de l'historique..." message="Veuillez patienter pendant le chargement de votre historique de livraisons." type="loading" />
 
       {/* En-tête */}
       <View style={styles.header}>

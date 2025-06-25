@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Dimensions, Animated } from "react-native"
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Dimensions, Animated, Image } from "react-native"
 import { Text, Card, Button, Avatar, TextInput, Divider, IconButton, ActivityIndicator, Surface, Chip } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import * as ImagePicker from "expo-image-picker"
@@ -267,231 +267,171 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header avec gradient */}
-      <LinearGradient
-        colors={['#FF6B00', '#FF8E53']}
-        style={styles.headerGradient}
-      >
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t("profile.title")}</Text>
-          {!editing ? (
-            <TouchableOpacity onPress={handleEdit} style={styles.editButton}>
-              <Ionicons name="pencil" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          ) : (
-            <View style={{ width: 40 }} />
-          )}
-        </View>
-      </LinearGradient>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F6F7FB' }}>
+      <View style={{ flex: 1, marginTop: 8 }}>
+        {/* Alerte profil incomplet */}
+        {(!profile?.email || !profile?.commune || !profile?.profile_picture) && (
+          <View style={{ backgroundColor: '#FFF8E1', padding: 16, flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="alert-circle" size={20} color="#FF9800" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#795548', flex: 1 }}>
+              Complétez votre profil pour une meilleure expérience.
+            </Text>
+          </View>
+        )}
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContainer}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            colors={["#FF6B00"]} 
-            tintColor="#FF6B00"
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View style={{ opacity: fadeAnim }}>
-          {/* Section Photo de profil */}
-          <View style={styles.profileSection}>
-            <View style={styles.profileImageContainer}>
-              <View style={styles.profileImageWrapper}>
-                {uploadingImage ? (
-                  <View style={styles.uploadingContainer}>
-                    <ActivityIndicator size="large" color="#FF6B00" />
-                    <Text style={styles.uploadingText}>Mise à jour...</Text>
-                  </View>
-                ) : profile?.profile_picture ? (
-                  <Avatar.Image 
-                    source={{ uri: profile.profile_picture }} 
-                    size={120} 
-                    style={styles.profileImage}
-                  />
-                ) : (
-                  <Avatar.Icon 
-                    size={120} 
-                    icon="account" 
-                    style={[styles.profileImage, { backgroundColor: "#FF6B00" }]} 
-                  />
-                )}
-                
-                <TouchableOpacity 
-                  style={styles.cameraButton} 
-                  onPress={handlePickImage} 
-                  disabled={uploadingImage}
-                >
-                  <Ionicons name="camera" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
+        <ScrollView>
+          {/* Photo de profil */}
+          <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 12 }}>
+            <TouchableOpacity
+              onPress={handlePickImage}
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 60,
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 12,
+                elevation: 3,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+              }}
+            >
+              <Image
+                source={profile?.profile_picture ? { uri: profile.profile_picture } : require('../../assets/images/default-avatar.png')}
+                style={{ width: 120, height: 120, borderRadius: 60 }}
+              />
+              <View style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#FF9800', borderRadius: 15, padding: 8 }}>
+                <Ionicons name="camera" size={18} color="#fff" />
               </View>
-              
-              <Text style={styles.userName}>{profile?.full_name}</Text>
-              <View style={[styles.kycBadge, { backgroundColor: getKYCProps(profile).color }]}> 
-                <Ionicons name={getKYCProps(profile).icon} size={16} color="#FFF" style={{ marginRight: 6 }} />
-                <Text style={styles.kycBadgeText}>{getKYCProps(profile).label}</Text>
-              </View>
-              <Chip 
-                icon={getRoleIcon(profile?.role || '')}
-                style={[styles.roleChip, { backgroundColor: getRoleColor(profile?.role || '') }]}
-                textStyle={{ color: '#FFFFFF' }}
-              >
-                {profile?.role === "client" ? t("roles.client") :
-                 profile?.role === "courier" ? t("roles.courier") :
-                 profile?.role === "business" ? t("roles.business") : profile?.role}
-              </Chip>
+            </TouchableOpacity>
+
+            {/* Badge Client */}
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              backgroundColor: '#E8F5E9', 
+              paddingHorizontal: 12, 
+              paddingVertical: 6, 
+              borderRadius: 16 
+            }}>
+              <Ionicons name="person" size={16} color="#4CAF50" style={{ marginRight: 6 }} />
+              <Text style={{ color: '#4CAF50', fontWeight: '500' }}>Client</Text>
             </View>
           </View>
 
-          {/* Section Informations personnelles */}
-          <Surface style={styles.infoSection}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="person" size={20} color="#FF6B00" />
-              <Text style={styles.sectionTitle}>Informations personnelles</Text>
+          {/* Infos personnelles */}
+          <View style={{ 
+            backgroundColor: '#fff', 
+            marginHorizontal: 16,
+            marginTop: 20,
+            borderRadius: 12,
+            padding: 20,
+            elevation: 2
+          }}>
+            <View style={{ marginBottom: 20 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                <Ionicons name="person" size={20} color="#FF9800" style={{ marginRight: 12 }} />
+                <Text style={{ fontSize: 16, color: '#212121' }}>{profile?.full_name || 'Client Test'}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                <Ionicons name="call" size={20} color="#FF9800" style={{ marginRight: 12 }} />
+                <Text style={{ fontSize: 16, color: '#212121' }}>{profile?.phone || '+22507071234567'}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                <Ionicons name="mail" size={20} color="#FF9800" style={{ marginRight: 12 }} />
+                <Text style={{ fontSize: 16, color: '#212121' }}>{profile?.email || 'client.test-delivery@yopmail.com'}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="location" size={20} color="#FF9800" style={{ marginRight: 12 }} />
+                <Text style={{ fontSize: 16, color: '#212121' }}>{profile?.commune || 'Non renseignée'}</Text>
+              </View>
             </View>
+          </View>
 
-            <View style={styles.infoList}>
-              <View style={styles.infoRowList}>
-                <Ionicons name="call" size={18} color="#FF6B00" style={styles.infoIcon} />
-                <Text style={styles.infoValueList}>{profile?.phone || 'Non renseigné'}</Text>
-              </View>
-              <View style={styles.infoRowList}>
-                <Ionicons name="mail" size={18} color="#FF6B00" style={styles.infoIcon} />
-                <Text style={styles.infoValueList}>{profile?.email || 'Non renseigné'}</Text>
-              </View>
-              <View style={styles.infoRowList}>
-                <Ionicons name="location" size={18} color="#FF6B00" style={styles.infoIcon} />
-                <Text style={styles.infoValueList}>{profile?.commune || profile?.address || 'Non renseigné'}</Text>
-              </View>
-            </View>
-          </Surface>
+          {/* Bouton Modifier */}
+          <TouchableOpacity
+            onPress={handleEdit}
+            style={{
+              backgroundColor: '#FF9800',
+              marginHorizontal: 16,
+              marginTop: 16,
+              borderRadius: 8,
+              padding: 16,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Modifier</Text>
+          </TouchableOpacity>
 
-          {/* Section spécifique au rôle */}
-          {profile?.role === "courier" && (
-            <Surface style={styles.infoSection}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name="bicycle" size={20} color="#FF6B00" />
-                <Text style={styles.sectionTitle}>Informations coursier</Text>
-              </View>
-
-              <View style={styles.infoList}>
-                <View style={styles.infoRowList}>
-                  <Ionicons name="call" size={18} color="#FF6B00" style={styles.infoIcon} />
-                  <Text style={styles.infoValueList}>{profile?.phone || 'Non renseigné'}</Text>
-                </View>
-                <View style={styles.infoRowList}>
-                  <Ionicons name="mail" size={18} color="#FF6B00" style={styles.infoIcon} />
-                  <Text style={styles.infoValueList}>{profile?.email || 'Non renseigné'}</Text>
-                </View>
-                <View style={styles.infoRowList}>
-                  <Ionicons name="location" size={18} color="#FF6B00" style={styles.infoIcon} />
-                  <Text style={styles.infoValueList}>{profile?.commune || profile?.address || 'Non renseigné'}</Text>
-                </View>
-              </View>
-            </Surface>
-          )}
-
-          {profile?.role === "business" && (
-            <Surface style={styles.infoSection}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name="business" size={20} color="#FF6B00" />
-                <Text style={styles.sectionTitle}>Informations entreprise</Text>
-              </View>
-
-              <View style={styles.infoList}>
-                <View style={styles.infoRowList}>
-                  <Ionicons name="call" size={18} color="#FF6B00" style={styles.infoIcon} />
-                  <Text style={styles.infoValueList}>{profile?.phone || 'Non renseigné'}</Text>
-                </View>
-                <View style={styles.infoRowList}>
-                  <Ionicons name="mail" size={18} color="#FF6B00" style={styles.infoIcon} />
-                  <Text style={styles.infoValueList}>{profile?.email || 'Non renseigné'}</Text>
-                </View>
-                <View style={styles.infoRowList}>
-                  <Ionicons name="location" size={18} color="#FF6B00" style={styles.infoIcon} />
-                  <Text style={styles.infoValueList}>{profile?.commune || profile?.address || 'Non renseigné'}</Text>
-                </View>
-              </View>
-            </Surface>
-          )}
-
-          {/* Section Actions */}
-          <Surface style={styles.actionsSection}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="settings" size={20} color="#FF6B00" />
-              <Text style={styles.sectionTitle}>Actions</Text>
-            </View>
-
+          {/* Actions en bas */}
+          <View style={{ 
+            flexDirection: 'row', 
+            justifyContent: 'space-around', 
+            marginTop: 40,
+            marginHorizontal: 20,
+            marginBottom: 20 
+          }}>
             <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate("Settings")}
+              style={{ alignItems: 'center' }} 
+              onPress={() => navigation.navigate('Settings')}
             >
-              <Ionicons name="settings-outline" size={24} color="#FF6B00" />
-              <Text style={styles.actionText}>{t("profile.settings")}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
+              <View style={{ 
+                width: 56, 
+                height: 56, 
+                borderRadius: 28,
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                elevation: 2,
+                marginBottom: 8
+              }}>
+                <Ionicons name="settings" size={24} color="#FF9800" />
+              </View>
+              <Text style={{ color: '#757575', fontSize: 12 }}>Paramètres</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => navigation.navigate("Notifications")}
+              style={{ alignItems: 'center' }} 
+              onPress={() => signOut()}
             >
-              <Ionicons name="notifications-outline" size={24} color="#FF6B00" />
-              <Text style={styles.actionText}>Notifications</Text>
-              <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
+              <View style={{ 
+                width: 56, 
+                height: 56, 
+                borderRadius: 28,
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                elevation: 2,
+                marginBottom: 8
+              }}>
+                <Ionicons name="log-out" size={24} color="#FF9800" />
+              </View>
+              <Text style={{ color: '#757575', fontSize: 12 }}>Déconnexion</Text>
             </TouchableOpacity>
-          </Surface>
 
-          {/* Boutons d'édition */}
-          {editing && (
-            <View style={styles.editButtonsContainer}>
-              <Button 
-                mode="outlined" 
-                onPress={handleCancel} 
-                style={styles.cancelButton} 
-                disabled={saving}
-                contentStyle={styles.buttonContent}
-              >
-                {t("common.cancel")}
-              </Button>
-              <Button 
-                mode="contained" 
-                onPress={handleSave} 
-                style={styles.saveButton} 
-                loading={saving} 
-                disabled={saving}
-                contentStyle={styles.buttonContent}
-              >
-                {t("common.save")}
-              </Button>
-            </View>
-          )}
-        </Animated.View>
-      </ScrollView>
-
-      <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.actionCircle} onPress={() => navigation.navigate('Settings')}>
-          <Ionicons name="settings" size={24} color="#FF6B00" />
-          <Text style={styles.actionLabel}>Paramètres</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCircle} onPress={() => signOut()}>
-          <Ionicons name="log-out" size={24} color="#FF6B00" />
-          <Text style={styles.actionLabel}>Déconnexion</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionCircle} onPress={() => navigation.navigate('Support')}>
-          <Ionicons name="help-circle" size={24} color="#FF6B00" />
-          <Text style={styles.actionLabel}>Aide</Text>
-        </TouchableOpacity>
+            <TouchableOpacity 
+              style={{ alignItems: 'center' }} 
+              onPress={() => navigation.navigate('Support')}
+            >
+              <View style={{ 
+                width: 56, 
+                height: 56, 
+                borderRadius: 28,
+                backgroundColor: '#fff',
+                justifyContent: 'center',
+                alignItems: 'center',
+                elevation: 2,
+                marginBottom: 8
+              }}>
+                <Ionicons name="help-circle" size={24} color="#FF9800" />
+              </View>
+              <Text style={{ color: '#757575', fontSize: 12 }}>Aide</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   )

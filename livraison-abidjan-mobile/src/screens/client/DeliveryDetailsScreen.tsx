@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import DeliveryService from '../../services/DeliveryService'
 import { formatPrice, formatDate, formatDistance } from '../../utils/formatters'
 import type { RootStackParamList, Delivery, Bid } from '../../types'
+import CustomLoaderModal from '../../components/CustomLoaderModal'
 
 interface RouteParams {
   deliveryId: number
@@ -179,6 +180,7 @@ const DeliveryDetailsScreen: React.FC = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
+        <CustomLoaderModal visible={loading} title="Chargement de la livraison..." message="Veuillez patienter pendant le chargement des détails de la livraison." type="loading" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FF6B00" />
           <Text style={styles.loadingText}>Chargement...</Text>
@@ -428,7 +430,7 @@ const DeliveryDetailsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5'
+    backgroundColor: '#F6F7FB'
   },
   header: {
     flexDirection: 'row',
@@ -473,14 +475,20 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   statusCard: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2
   },
   statusHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12
   },
   statusInfo: {
@@ -490,14 +498,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#000',
-    marginBottom: 8
+    marginBottom: 0
   },
   statusChip: {
-    alignSelf: 'flex-start'
+    alignSelf: 'flex-start',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    backgroundColor: '#EF5350'
   },
   statusChipText: {
-    color: '#FFFFFF',
-    fontWeight: '600'
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14
   },
   deliveryDate: {
     fontSize: 14,
@@ -529,15 +542,21 @@ const styles = StyleSheet.create({
     color: '#000'
   },
   addressCard: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
-    marginBottom: 16
+    marginBottom: 12
   },
   addressPoint: {
     flexDirection: 'row',
@@ -547,7 +566,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F6F7FB',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12
@@ -594,9 +613,15 @@ const styles = StyleSheet.create({
     color: '#757575'
   },
   priceCard: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2
   },
   priceInfo: {
     marginTop: 8
