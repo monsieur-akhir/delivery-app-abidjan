@@ -244,6 +244,14 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
           mode="datetime"
           display={Platform.OS === 'android' ? 'calendar' : 'default'}
           onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+            if (!event || typeof event !== 'object' || !('type' in event)) {
+              setShowDatePicker(false)
+              return
+            }
+            if (event.type === 'dismissed') {
+              setShowDatePicker(false)
+              return
+            }
             setShowDatePicker(false)
             
             // Vérification robuste de l'événement
