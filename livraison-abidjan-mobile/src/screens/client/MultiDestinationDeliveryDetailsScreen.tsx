@@ -249,26 +249,22 @@ const handleAcceptBid = async (bidId: number) => {
           {delivery.destinations.map((destination, index) => (
             <View key={destination.id || index} style={styles.destinationCard}>
               <View style={styles.destinationHeader}>
-                <View style={styles.statusDot} />
-                <Text style={styles.destinationStatus}>{getDestinationStatusText(destination.status)}</Text>
-                <MaterialCommunityIcons name="map-marker" size={16} color="#FF9800" style={{ marginLeft: 8 }} />
-                <Text
-                  style={styles.destinationName}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {destination.delivery_address}
-                </Text>
+                <View style={styles.destinationAddress}>
+                  <MaterialCommunityIcons name="map-marker" size={18} color="#FF9800" style={{ marginRight: 6 }} />
+                  <Text style={styles.destinationName} numberOfLines={2} ellipsizeMode="tail">
+                    {destination.delivery_address}
+                  </Text>
+                </View>
+                <View style={styles.destinationStatusRow}>
+                  <View style={[styles.statusDot, { backgroundColor: getDestinationStatusColor(destination.status) }]} />
+                  <Text style={[styles.destinationStatus, { color: getDestinationStatusColor(destination.status) }]}> {getDestinationStatusText(destination.status)}</Text>
+                </View>
               </View>
               <View style={styles.contactRow}>
-                <MaterialCommunityIcons name="account" size={15} color="#888" />
-                <Text style={styles.contactText} numberOfLines={1} ellipsizeMode="tail">
-                  Contact: {destination.recipient_name}
-                </Text>
-                <MaterialCommunityIcons name="phone" size={15} color="#888" style={{ marginLeft: 12 }} />
-                <Text style={styles.contactText} numberOfLines={1} ellipsizeMode="tail">
-                  Téléphone: {destination.recipient_phone}
-                </Text>
+                <MaterialCommunityIcons name="account" size={15} color="#888" style={{ marginRight: 4 }} />
+                <Text style={styles.contactText}>{destination.recipient_name}</Text>
+                <MaterialCommunityIcons name="phone" size={15} color="#888" style={{ marginLeft: 12, marginRight: 4 }} />
+                <Text style={styles.contactText}>{destination.recipient_phone}</Text>
               </View>
               {destination.delivery_notes && (
                 <View style={styles.infoRow}>
@@ -490,62 +486,63 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   destinationCard: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 12,
-    marginHorizontal: 8,
-    marginBottom: 12,
+    padding: 16,
+    marginHorizontal: 0,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
-    minWidth: 0,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   destinationHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  destinationAddress: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-    flexWrap: 'wrap',
+    flex: 1,
     minWidth: 0,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FF9800',
-    marginRight: 6,
-  },
-  destinationStatus: {
-    color: '#FF9800',
-    fontWeight: '600',
-    fontSize: 13,
-    marginRight: 8,
   },
   destinationName: {
     fontSize: 15,
     fontWeight: '500',
     color: '#222',
-    marginLeft: 4,
-    flexShrink: 1,
-    minWidth: 0,
-    maxWidth: '60%',
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  destinationStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginLeft: 8,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 4,
+  },
+  destinationStatus: {
+    fontWeight: '600',
+    fontSize: 13,
   },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 4,
+    marginBottom: 2,
     flexWrap: 'wrap',
-    minWidth: 0,
   },
   contactText: {
     fontSize: 13,
     color: '#555',
-    marginLeft: 4,
     marginRight: 8,
-    flexShrink: 1,
-    minWidth: 0,
-    maxWidth: '40%',
   },
   actionsRow: {
     flexDirection: 'row',
