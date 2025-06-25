@@ -18,10 +18,9 @@ import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Picker as NativePicker } from '@react-native-picker/picker';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import axios from 'axios';
 
 import { AddressAutocomplete, CustomLoaderModal } from '../../components';
-import MultiDestinationService from '../../services/MultiDestinationService';
+import MultiDestinationService, { MultiDestinationDeliveryCreate } from '../../services/MultiDestinationService';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlert } from '../../hooks/useAlert';
@@ -139,7 +138,7 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
     }
   };
 
-  const updateDestination = (index: number, field: keyof Destination, value: string) => {
+  const updateDestination = (index: number, field: keyof Destination, value: string | number) => {
     const newDestinations = [...destinations];
     newDestinations[index] = { ...newDestinations[index], [field]: value };
     setDestinations(newDestinations);
@@ -184,32 +183,31 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
 
       const deliveryData = {
         pickup_address: pickupAddress,
-        pickup_commune: pickupCommune,
-        pickup_contact_name: pickupContactName,
-        pickup_contact_phone: pickupContactPhone,
-        pickup_instructions: pickupInstructions,
+        pickup_latitude: pickupLocation?.coords.latitude,
+        pickup_longitude: pickupLocation?.coords.longitude,
+        package_type: 'standard',
         package_description: packageDescription,
-        preferred_date: preferredDate.toISOString(),
-        proposed_price: parseFloat(proposedPrice) || 0,
-        destinations: validDestinations.map(dest => ({
+        destinations: validDestinations.map((dest, index) => ({
           address: dest.address,
-          commune: dest.commune,
-          contact_name: dest.contactName,
-          contact_phone: dest.contactPhone,
-          instructions: dest.instructions,
           latitude: dest.latitude,
           longitude: dest.longitude,
-        }))
+          recipient_name: dest.contactName,
+          recipient_phone: dest.contactPhone,
+          delivery_notes: dest.instructions,
+          order: index + 1,
+        })),
+        is_fragile: false,
+        is_urgent: false,
+        special_instructions: pickupInstructions,
+        vehicle_type_required: 'any',
       };
 
-      await MultiDestinationService.createMultiDestinationDelivery(deliveryData);
+      const result = await MultiDestinationService.createDelivery(deliveryData);
 
-      showAlert('Succès', 'Livraison multi-destinations créée avec succès', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('MultiDestinationDeliveries' as never)
-        }
-      ]);
+      showAlert('Succès', 'Livraison multi-destinations créée avec succès');
+      
+      // Rediriger vers l'écran des enchères
+      navigation.navigate('MultiDestinationDeliveries' as never);
     } catch (error: any) {
       console.error('Erreur création:', error);
       showAlert('Erreur', error.message || 'Impossible de créer la livraison');
@@ -220,18 +218,20 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
   };
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowDatePicker(false);
-
-    if (!event) {
-      return;
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
     }
 
-    if (event.type === 'dismissed' || event.type === 'neutralButtonPressed') {
+    if (event.type === 'dismissed') {
+      setShowDatePicker(false);
       return;
     }
 
     if (event.type === 'set' && selectedDate) {
       setPreferredDate(selectedDate);
+      if (Platform.OS === 'ios') {
+        setShowDatePicker(false);
+      }
     }
   };
 
@@ -277,6 +277,14 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
               onAddressSelect={(address) => {
                 setPickupAddress(address.description);
                 setPickupCommune(address.commune || '');
+                if (address.geometry?.location) {
+                  setRegion({
+                    latitude: address.geometry.location.lat,
+                    longitude: address.geometry.location.lng,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  });
+                }
               }}
               placeholder="Saisir ou rechercher une adresse"
             />
@@ -368,6 +376,10 @@ const CreateMultiDestinationDeliveryScreen: React.FC = () => {
                   onAddressSelect={(address) => {
                     updateDestination(index, 'address', address.description);
                     updateDestination(index, 'commune', address.commune || '');
+                    if (address.geometry?.location) {
+                      updateDestination(index, 'latitude', address.geometry.location.lat);
+                      updateDestination(index, 'longitude', address.geometry.location.lng);
+                    }
                   }}
                   placeholder="Saisir ou rechercher une adresse"
                 />
