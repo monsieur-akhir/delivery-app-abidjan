@@ -253,19 +253,7 @@ const CreateScheduledDeliveryScreen: React.FC = () => {
               return
             }
             setShowDatePicker(false)
-            
-            // Vérification robuste de l'événement
-            if (!event) {
-              return
-            }
-            
-            // Si l'événement est dismissed ou annulé, on ne fait rien
-            if (event.type === 'dismissed' || event.type === 'neutralButtonPressed') {
-              return
-            }
-            
-            // Si une date est sélectionnée et l'événement est 'set'
-            if (event.type === 'set' && selectedDate) {
+            if (selectedDate) {
               setFormData(prev => ({ ...prev, scheduled_date: selectedDate }))
             }
           }}

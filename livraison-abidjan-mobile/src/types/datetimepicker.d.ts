@@ -3,8 +3,8 @@ declare module '@react-native-community/datetimepicker' {
   import { ViewProps } from 'react-native';
 
   export interface DateTimePickerEvent {
-    type: 'set' | 'dismissed' | 'neutralButtonPressed';
-    nativeEvent?: {
+    type: 'set' | 'dismissed';
+    nativeEvent: {
       timestamp?: number;
     };
   }
