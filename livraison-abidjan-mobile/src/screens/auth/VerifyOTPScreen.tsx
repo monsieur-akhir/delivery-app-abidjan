@@ -123,7 +123,9 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
     }
     setLoading(true);
     try {
-      const result = await verifyOTP(phoneNumber || route.params.phone || '', otpCode);
+      const otpType = 'registration';
+      console.log('[FRONT][OTP] Type utilisé pour la vérification:', otpType);
+      const result = await verifyOTP(phoneNumber || route.params.phone || '', otpCode, otpType);
       if (result.success) {
         if (setAuthData && result.token && result.user) {
           setAuthData(result.user, result.token);

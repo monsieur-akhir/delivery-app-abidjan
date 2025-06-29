@@ -131,6 +131,9 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
     setLoading(true)
     showLoader('Vérification du code OTP...')
     
+    const otpType = 'login'
+    console.log('[FRONT][OTP] Type utilisé pour la vérification:', otpType)
+    
     try {
       const result = await loginWithOTP(phone, otp)
       

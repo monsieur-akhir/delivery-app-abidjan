@@ -667,10 +667,13 @@ export const login = async (phone: string, password: string): Promise<{ token: s
 // Inscription
 export const register = async (userData: RegisterUserData): Promise<void> => {
   try {
+    console.log('[FRONT][REGISTER] Endpoint: /api/auth/register-with-otp');
+    console.log('[FRONT][REGISTER] Données envoyées:', userData);
     const response = await api.post("/api/auth/register-with-otp", userData)
+    console.log('[FRONT][REGISTER] Réponse reçue:', response.data);
     return response.data
   } catch (error: unknown) {
-    console.error("Registration error:", error);
+    console.error('[FRONT][REGISTER] Erreur:', error);
     if (axios.isAxiosError(error) && error.response?.data?.detail) {
       throw new Error(error.response.data.detail);
     }
@@ -689,13 +692,31 @@ export const verifyToken = async (token: string): Promise<boolean> => {
   }
 }
 
+// Utilitaire pour normaliser le numéro de téléphone au format +225XXXXXXXXX
+export function normalizePhone(phone: string): string {
+  let phoneClean = phone.trim().replace(/\s+/g, '').replace(/-/g, '').replace(/\./g, '');
+  if (phoneClean.length === 10) {
+    phoneClean = '+225' + phoneClean;
+  }
+  if (phoneClean.startsWith('00225')) {
+    phoneClean = '+225' + phoneClean.slice(5);
+  }
+  if (phoneClean.startsWith('225') && !phoneClean.startsWith('+225')) {
+    phoneClean = '+225' + phoneClean.slice(3);
+  }
+  return phoneClean;
+}
+
 // Vérification OTP
-export const verifyOTP = async (phone: string, otp: string): Promise<{ success: boolean; token?: string; user?: User }> => {
+export const verifyOTP = async (phone: string, otp: string, otpType: 'registration' | 'login' | 'password_reset' = 'login'): Promise<{ success: boolean; token?: string; user?: User }> => {
   try {
+    const normalizedPhone = normalizePhone(phone);
+    // Log détaillé pour debug OTP
+    console.log(`[FRONT][OTP] Vérification OTP - phone: ${normalizedPhone}, code: ${otp}, otp_type: ${otpType}`);
     const response = await api.post("/api/auth/verify-otp", { 
-      phone, 
+      phone: normalizedPhone, 
       code: otp,  // Backend expects 'code', not 'otp'
-      otp_type: "login"  // Required parameter
+      otp_type: otpType
     })
     return response.data
   } catch (error: unknown) {
@@ -710,8 +731,11 @@ export const verifyOTP = async (phone: string, otp: string): Promise<{ success: 
 // Envoyer OTP
 export const sendOTP = async (phone: string, otpType: 'registration' | 'login' | 'password_reset' = 'login'): Promise<{message: string, success: boolean}> => {
   try {
+    const normalizedPhone = normalizePhone(phone);
+    // Log détaillé pour debug OTP envoi
+    console.log(`[FRONT][OTP] Envoi OTP - phone: ${normalizedPhone}, otp_type: ${otpType}`);
     const response = await api.post("/api/auth/send-otp", { 
-      phone: phone,
+      phone: normalizedPhone,
       otp_type: otpType
     }, {
       timeout: 10000 // Timeout de 10 secondes
@@ -729,8 +753,11 @@ export const sendOTP = async (phone: string, otpType: 'registration' | 'login' |
 // Renvoyer OTP
 export const resendOTP = async (phone: string, otpType: 'login' | 'registration' | 'password_reset' = 'login'): Promise<void> => {
   try {
+    const normalizedPhone = normalizePhone(phone);
+    // Log détaillé pour debug OTP renvoi
+    console.log(`[FRONT][OTP] Renvoi OTP - phone: ${normalizedPhone}, otp_type: ${otpType}`);
     const response = await api.post("/api/auth/resend-otp", { 
-      phone,
+      phone: normalizedPhone,
       otp_type: otpType  // Backend requires otp_type parameter
     })
     return response.data

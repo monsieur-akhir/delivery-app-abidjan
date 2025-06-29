@@ -19,6 +19,7 @@ class OTPRequest(BaseModel):
     phone: str = Field(..., description="Phone number")
     email: Optional[str] = Field(None, description="Email address (optional)")
     otp_type: OTPType = Field(..., description="Type of OTP")
+    user_id: Optional[int] = Field(None, description="ID utilisateur à lier à l'OTP (optionnel)")
 
 class OTPVerification(BaseModel):
     phone: str = Field(..., description="Phone number")

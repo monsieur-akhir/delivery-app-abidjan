@@ -5,10 +5,11 @@ from typing import Any, Optional
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 import logging
+import os
 
 from ..db.session import get_db
-from ..services.auth import register_user, register_user_atomic, login_user, enable_two_factor, refresh_token
-from ..services.otp_service import OTPService
+from ..services.auth import register_user, login_user, enable_two_factor, refresh_token, register_user_no_check
+from ..services.otp_service import OTPService, OTPRequest
 from ..schemas.user import UserCreate, UserLogin, Token, UserResponse, PasswordChangeRequest, PasswordResetRequest, PasswordResetConfirm
 from ..schemas.otp import OTPRequest, OTPVerification, OTPResend, OTPResponse, OTPVerificationResponse, RegisterWithOTPRequest, RegisterWithOTPResponse
 from ..core.security import get_current_user, verify_password, get_password_hash
@@ -36,15 +37,13 @@ def register(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Le numéro de téléphone est requis"
             )
-        
         if user_data.email and (not user_data.email.strip() or "@" not in user_data.email or "." not in user_data.email):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Format d'email invalide"
             )
-        
-        return register_user(db, user_data)
-        
+        # Désactivation temporaire de la vérification d'unicité
+        return register_user(db, user_data, skip_uniqueness_check=True)
     except ConflictError as e:
         # En cas de conflit (numéro ou email déjà existant)
         logger.warning(f"Conflit lors de l'inscription: {str(e)}")
@@ -67,6 +66,9 @@ def register(
             detail="Erreur lors de l'inscription. Veuillez réessayer."
         )
 
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+
 @router.post("/register-with-otp", response_model=RegisterWithOTPResponse)
 def register_with_otp(
     user_data: RegisterWithOTPRequest,
@@ -75,8 +77,13 @@ def register_with_otp(
     """
     Inscription d'un nouvel utilisateur avec envoi automatique d'OTP.
     """
+    logger.info("🚀 ENDPOINT: Début register-with-otp")
+    logger.info(f"[REGISTER-WITH-OTP] user_data reçu: {user_data}")
+    logger.info(f"📱 Numéro reçu: {user_data.phone}")
+    logger.info(f"📧 Email reçu: {user_data.email}")
+
     try:
-        # Validation préliminaire des données
+        # Validation des champs
         if not user_data.phone or len(user_data.phone.strip()) == 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -87,48 +94,54 @@ def register_with_otp(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Format d'email invalide"
             )
-        # Créer l'utilisateur
-        user = register_user(db, user_data)
-        # Envoyer l'OTP immédiatement avec le numéro préfixé (celui stocké en base)
+        # Désactivation temporaire de la vérification d'unicité
+        logger.info("👤 Création de l'utilisateur...")
+        user = register_user(db, user_data, skip_uniqueness_check=True)
+        logger.info(f"✅ Utilisateur créé ID={user.id}, phone={user.phone}, email={user.email}")
+        # Envoi OTP
         otp_service = OTPService(db)
         otp_request = OTPRequest(
-            phone=user.phone,  # Utiliser le numéro préfixé de l'utilisateur créé
+            phone=user.phone,
             email=user_data.email,
             otp_type=OTPType.REGISTRATION
         )
-        otp_response = otp_service.send_otp(otp_request)
+        logger.info(f"[REGISTER-WITH-OTP] OTPRequest: {otp_request}")
+        otp_response = otp_service.send_otp_no_check(otp_request, user_id=user.id)
+        logger.info(f"[REGISTER-WITH-OTP] OTP envoyé: success={otp_response.success}, otp_id={otp_response.otp_id}, channels={otp_response.channels_used}, code={getattr(otp_response, 'dev_otp_code', None)}")
         return RegisterWithOTPResponse(
             success=True,
-            message="Inscription réussie et code OTP envoyé",
+            message="Inscription réussie et OTP envoyé",
             user_id=user.id,
-            otp_sent_to=user.phone,  # Retourner le numéro préfixé
+            otp_sent_to=user.phone,
             expires_at=otp_response.expires_at
         )
-    except ConflictError as e:
-        logger.warning(f"Conflit lors de l'inscription: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(e)
-        )
-    except ValueError as e:
-        logger.warning(f"Erreur de validation lors de l'inscription: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+    except HTTPException:
+        raise  # Laisse passer les HTTPException telles quelles
     except Exception as e:
-        logger.error(f"Erreur lors de l'inscription avec OTP: {str(e)}")
-        # Nettoyage manuel si l'utilisateur a été créé
-        try:
-            if 'user' in locals() and user and user.id:
-                db.delete(user)
-                db.commit()
-        except Exception as cleanup_error:
-            logger.error(f"Erreur lors du nettoyage: {str(cleanup_error)}")
+        logger.exception(f"💥 Erreur interne register-with-otp: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erreur lors de l'inscription. Veuillez réessayer."
+            detail="Erreur serveur. Veuillez réessayer."
         )
+
+def normalize_phone(phone: str) -> str:
+    """Garantit le format +225XXXXXXXXX"""
+    digits = ''.join(c for c in phone if c.isdigit())
+    
+    if not digits:
+        raise ValueError("Numéro invalide")
+    
+    if len(digits) == 10:
+        return f"+225{digits}"
+    elif digits.startswith("225") and len(digits) == 12:
+        return f"+{digits}"
+    else:
+        raise ValueError("Format de numéro non supporté")
+
+def mask_phone(phone: str) -> str:
+    """Masque partiellement le numéro"""
+    return f"{phone[:4]}****{phone[-2:]}" if phone else ""
+
 
 @router.post("/login", response_model=Token)
 def login(
@@ -181,6 +194,13 @@ def verify_otp(
         phone = "+225" + phone[5:]
     if phone.startswith("225") and not phone.startswith("+225"):
         phone = "+225" + phone[3:]
+    # Contrôle numéro trop court
+    if len(phone) < 13:
+        logger.error(f"[OTP VERIFY] Numéro trop court reçu: {phone} (longueur={len(phone)})")
+        raise HTTPException(
+            status_code=400,
+            detail="Numéro de téléphone incomplet ou invalide pour la vérification OTP."
+        )
     verification.phone = phone
     otp_service = OTPService(db)
     success, otp = otp_service.verify_otp(verification)
@@ -198,14 +218,15 @@ def verify_otp(
         response.user = UserResponse.model_validate(otp.user, from_attributes=True).model_dump()
     return response
 
-@router.post("/resend-otp", response_model=OTPResponse)
+@router.post("/resend-otp", response_model=dict)
 def resend_otp(
     request: OTPResend,
     db: Session = Depends(get_db)
 ) -> Any:
     """
-    Renvoyer un code OTP.
+    Renvoyer un code OTP. Retourne le code OTP et l'email dans la réponse si DEBUG_OTP_IN_RESPONSE est à true.
     """
+    # Formatage du numéro avec indicatif +225
     phone = request.phone.strip().replace(" ", "").replace("-", "").replace(".", "")
     if len(phone) == 10:
         phone = "+225" + phone
@@ -214,7 +235,21 @@ def resend_otp(
     if phone.startswith("225") and not phone.startswith("+225"):
         phone = "+225" + phone[3:]
     otp_service = OTPService(db)
-    return otp_service.resend_otp(phone, request.otp_type)
+    otp_response = otp_service.resend_otp(phone, request.otp_type)
+    # Log du code OTP envoyé (pour debug/test)
+    from ..models.otp import OTP
+    last_otp = db.query(OTP).filter(OTP.phone == phone, OTP.otp_type == request.otp_type).order_by(OTP.created_at.desc()).first()
+    otp_code = last_otp.code if last_otp else None
+    email = last_otp.email if last_otp else None
+    logger.info(f"[OTP-RESEND] Code OTP envoyé: {otp_code} | Email: {email}")
+    debug_otp = os.getenv("DEBUG_OTP_IN_RESPONSE", "false").lower() == "true"
+    response = otp_response.model_dump() if hasattr(otp_response, 'model_dump') else otp_response.__dict__
+    if debug_otp:
+        if otp_code:
+            response["otp_code"] = otp_code
+        if email:
+            response["email"] = email
+    return response
 
 # Password Reset Endpoints
 @router.post("/forgot-password", response_model=OTPResponse)
@@ -453,4 +488,73 @@ async def get_websocket_status(current_user: User = Depends(get_current_user)):
         raise HTTPException(
             status_code=500,
             detail="Erreur lors de la vérification du statut"
+        )
+
+@router.post("/register-no-check", response_model=dict)
+def register_no_check(
+    user_data: UserCreate,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Inscription d'un nouvel utilisateur SANS aucune vérification d'unicité (usage test/debug).
+    Envoie aussi un OTP (SMS/email) et logue le code OTP généré.
+    Retourne le code OTP dans la réponse HTTP si DEBUG_OTP_IN_RESPONSE est à true.
+    """
+    from ..services.auth import register_user_no_check
+    from ..services.otp_service import OTPService, OTPRequest
+    from ..models.otp import OTPType
+    try:
+        if not user_data.phone or len(user_data.phone.strip()) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Le numéro de téléphone est requis"
+            )
+        if user_data.email and (not user_data.email.strip() or "@" not in user_data.email or "." not in user_data.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Format d'email invalide"
+            )
+        user = register_user_no_check(db, user_data)
+        # Envoi OTP sans vérification
+        otp_service = OTPService(db)
+        otp_request = OTPRequest(
+            phone=user.phone,
+            email=user.email,
+            otp_type=OTPType.REGISTRATION,
+            user_id=user.id
+        )
+        otp_response = otp_service.send_otp_no_check(otp_request, user_id=user.id)
+        # Log du code OTP envoyé (pour debug/test)
+        if hasattr(otp_response, 'dev_otp_code'):
+            logger.info(f"[OTP-NO-CHECK] Code OTP envoyé (dev): {otp_response.dev_otp_code}")
+            otp_code = otp_response.dev_otp_code
+        else:
+            from ..models.otp import OTP
+            last_otp = db.query(OTP).filter(OTP.phone == user.phone, OTP.otp_type == OTPType.REGISTRATION).order_by(OTP.created_at.desc()).first()
+            otp_code = last_otp.code if last_otp else None
+            if otp_code:
+                logger.info(f"[OTP-NO-CHECK] Code OTP envoyé: {otp_code}")
+        # Contrôle via variable d'environnement
+        debug_otp = os.getenv("DEBUG_OTP_IN_RESPONSE", "false").lower() == "true"
+        response = {"success": True, "user": UserResponse.model_validate(user, from_attributes=True).model_dump()}
+        if debug_otp and otp_code:
+            response["otp_code"] = otp_code
+        return response
+    except ConflictError as e:
+        logger.warning(f"Conflit lors de l'inscription (no-check): {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except ValueError as e:
+        logger.warning(f"Erreur de validation lors de l'inscription (no-check): {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Erreur lors de l'inscription (no-check): {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de l'inscription. Veuillez réessayer."
         )

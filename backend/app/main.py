@@ -19,7 +19,7 @@ from .api import (
     manager, transport, assistant, courier, complaints, business, business_analytics,
     support, zones, promotions, scheduled_deliveries, negotiations,
     multi_destination_deliveries,
-    market
+    market, email
 )
 from .websockets import tracking
 from .services.geolocation import get_google_places_suggestions
@@ -72,6 +72,7 @@ app.include_router(promotions.router, prefix=f"{settings.API_V1_STR}/promotions"
 app.include_router(scheduled_deliveries.router, prefix="/api", tags=["scheduled-deliveries"])
 app.include_router(negotiations.router, prefix="/api", tags=["negotiations"])
 app.include_router(multi_destination_deliveries.router, prefix="/api", tags=["Multi-Destination Deliveries"])
+app.include_router(email.router, prefix=f"{settings.API_V1_STR}", tags=["Email"])
 
 # Endpoint WebSocket pour le tracking en temps réel
 @app.websocket("/ws/tracking/{delivery_id}")

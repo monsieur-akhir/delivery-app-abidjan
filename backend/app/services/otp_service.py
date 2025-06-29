@@ -29,6 +29,15 @@ class OTPService:
 
     def create_otp(self, phone: str, email: Optional[str], otp_type: OTPType, user_id: Optional[int] = None) -> OTP:
         """Create a new OTP record."""
+        # Normalisation du numéro
+        phone_clean = phone.strip().replace(" ", "").replace("-", "").replace(".", "")
+        if len(phone_clean) == 10:
+            phone_clean = "+225" + phone_clean
+        if phone_clean.startswith("00225"):
+            phone_clean = "+225" + phone_clean[5:]
+        if phone_clean.startswith("225") and not phone_clean.startswith("+225"):
+            phone_clean = "+225" + phone_clean[3:]
+        phone = phone_clean
         # Invalidate any existing pending OTPs for the same phone and type
         existing_otps = self.db.query(OTP).filter(
             and_(
@@ -115,13 +124,13 @@ class OTPService:
                 if settings.ENVIRONMENT == "development":
                     logger.info(f"✅ Utilisateur trouvé - ID: {user.id}, Role: {user.role}")
 
-        # For registration, check if user already exists
-        if request.otp_type == OTPType.REGISTRATION:
-            existing_user = self.db.query(User).filter(User.phone == request.phone).first()
-            if existing_user:
-                if settings.ENVIRONMENT == "development":
-                    logger.warning(f"❌ ERREUR - Utilisateur existe déjà pour: {request.phone}")
-                raise ConflictError("Un utilisateur avec ce numéro de téléphone existe déjà")
+        # Désactivation temporaire de la vérification d'existence pour REGISTRATION
+        # if request.otp_type == OTPType.REGISTRATION:
+        #     existing_user = self.db.query(User).filter(User.phone == request.phone).first()
+        #     if existing_user:
+        #         if settings.ENVIRONMENT == "development":
+        #             logger.warning(f"❌ ERREUR - Utilisateur existe déjà pour: {request.phone}")
+        #         raise ConflictError("Un utilisateur avec ce numéro de téléphone existe déjà")
 
         # Create OTP
         otp = self.create_otp(
@@ -206,7 +215,8 @@ class OTPService:
             logger.info(f"🔍 DÉBUT - Vérification OTP pour: {verification.phone}")
             logger.info(f"🔑 Code fourni: {verification.code}")
             logger.info(f"📱 Type OTP: {verification.otp_type}")
-
+        # Log debug supplémentaire
+        logger.info(f"[DEBUG OTP] Recherche OTP pour phone={verification.phone}, type={verification.otp_type}, status=PENDING")
         # Find the OTP
         otp = self.db.query(OTP).filter(
             and_(
@@ -289,3 +299,45 @@ class OTPService:
 
         self.db.commit()
         return count
+
+    def send_otp_no_check(self, request: OTPRequest, user_id: Optional[int] = None) -> OTPResponse:
+        """
+        Envoie un OTP sans aucune vérification d'existence d'utilisateur ou de conflit, pour tous les types d'OTP.
+        Logue explicitement le code OTP envoyé pour debug.
+        """
+        logger.info(f"[OTP] Envoi SANS VÉRIFICATION pour {request.phone}, type={request.otp_type}")
+        otp = self.create_otp(
+            phone=request.phone,
+            email=request.email,
+            otp_type=request.otp_type,
+            user_id=user_id
+        )
+        logger.info(f"[OTP-NO-CHECK] Code OTP généré: {otp.code}")
+        # Envoi SMS
+        sms_sent = self.send_otp_via_sms(request.phone, otp.code, request.otp_type)
+        logger.info(f"[OTP-NO-CHECK] SMS envoyé: {'OUI' if sms_sent else 'NON'} pour {request.phone}")
+        email_sent = True
+        if request.email:
+            try:
+                email_sent = self.send_otp_via_email(request.email, otp.code, request.otp_type)
+                logger.info(f"[OTP-NO-CHECK] Email envoyé: {'OUI' if email_sent else 'NON'} à {request.email}")
+                logger.info(f"[OTP-NO-CHECK] Détail email: code={otp.code}, destinataire={request.email}")
+            except Exception as e:
+                email_sent = False
+                logger.error(f"[OTP-NO-CHECK] Erreur envoi email: {str(e)}")
+        else:
+            logger.info(f"[OTP-NO-CHECK] Aucun email fourni, pas d'envoi email.")
+        self.db.commit()
+        response_data = {
+            "success": True,
+            "message": "Code OTP envoyé (sans vérification)",
+            "otp_id": otp.id,
+            "expires_at": otp.expires_at,
+            "channels_used": [],
+            "dev_otp_code": otp.code  # Ajouté pour debug
+        }
+        if sms_sent:
+            response_data["channels_used"].append("sms")
+        if email_sent and request.email:
+            response_data["channels_used"].append("email")
+        return OTPResponse(**response_data)

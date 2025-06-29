@@ -34,11 +34,11 @@ class EmailService:
 
     def __init__(self):
         # Configuration Brevo
-        self.brevo_api_key = getattr(settings, 'BREVO_API_KEY', '') or getattr(settings, 'BREVO_API_KEY_MAIL', '')
-        self.brevo_enabled = getattr(settings, 'BREVO_ENABLED', False) and bool(self.brevo_api_key)
-        self.brevo_url = "https://api.brevo.com/v3/smtp/email"
+        self.brevo_api_key = os.environ.get('BREVO_API_KEY_MAIL') or getattr(settings, 'BREVO_API_KEY_MAIL', '')
+        self.brevo_enabled = bool(self.brevo_api_key)
+        self.brevo_url = os.environ.get('BREVO_MAIL_API_URL', 'https://api.brevo.com/v3/smtp/email')
+        self.brevo_from_name = os.environ.get('EMAIL_SENDER_NAME', 'Royal Tech')
         self.brevo_from_email = getattr(settings, 'BREVO_FROM_EMAIL', '') or getattr(settings, 'FROM_EMAIL', '')
-        self.brevo_from_name = getattr(settings, 'BREVO_FROM_NAME', 'Livraison Abidjan')
 
         # Configuration SMTP fallback
         self.smtp_server = getattr(settings, 'SMTP_SERVER', 'smtp.gmail.com')
@@ -78,10 +78,11 @@ class EmailService:
             if html_content:
                 payload["htmlContent"] = html_content
 
-            if settings.ENVIRONMENT == "development":
-                logger.info(f"🚀 [BREVO] Envoi email à {to_email}")
-                logger.info(f"📧 [BREVO] Sujet: {subject}")
-                logger.info(f"🔗 [BREVO] URL: {self.brevo_url}")
+            logger.info(f"[BREVO] Tentative d'envoi d'email à {to_email} via {self.brevo_url}")
+            logger.info(f"[BREVO] Sujet: {subject}")
+            logger.info(f"[BREVO] Contenu texte: {text_content}")
+            if html_content:
+                logger.info(f"[BREVO] Contenu HTML: {html_content}")
 
             response = requests.post(self.brevo_url, headers=headers, json=payload, timeout=10)
 

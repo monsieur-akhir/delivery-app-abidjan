@@ -15,7 +15,7 @@ import {
 import { Text, TextInput, Button, Snackbar, Card, HelperText, IconButton } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
 import { useTranslation } from "react-i18next"
-import { resetPassword } from "../../services/api"
+import { resetPassword, verifyOTP } from "../../services/api"
 import { validatePhone } from "../../utils/validators"
 import { useAlert } from '../../hooks/useAlert'
 import { useLoader } from '../../contexts/LoaderContext'
@@ -66,6 +66,14 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleVerifyOTP = async () => {
+    // ...
+    const otpType = 'password_reset';
+    console.log('[FRONT][OTP] Type utilisé pour la vérification:', otpType);
+    const result = await verifyOTP(phone, otp, otpType);
+    // ...
   }
 
   // Animation for successful reset
