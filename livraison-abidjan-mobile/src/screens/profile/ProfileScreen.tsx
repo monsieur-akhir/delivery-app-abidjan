@@ -304,7 +304,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <View style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#FF9800', borderRadius: 15, padding: 8 }}>
                 <Ionicons name="camera" size={18} color="#fff" />
               </View>
-            </TouchableOpacity>
+          </TouchableOpacity>
 
             {/* Badge Client */}
             <View style={{ 
@@ -318,7 +318,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <Ionicons name="person" size={16} color="#4CAF50" style={{ marginRight: 6 }} />
               <Text style={{ color: '#4CAF50', fontWeight: '500' }}>Client</Text>
             </View>
-          </View>
+            </View>
 
           {/* Infos personnelles */}
           <View style={{ 
@@ -341,13 +341,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
                 <Ionicons name="mail" size={20} color="#FF9800" style={{ marginRight: 12 }} />
                 <Text style={{ fontSize: 16, color: '#212121' }}>{profile?.email || 'client.test-delivery@yopmail.com'}</Text>
-              </View>
+            </View>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="location" size={20} color="#FF9800" style={{ marginRight: 12 }} />
                 <Text style={{ fontSize: 16, color: '#212121' }}>{profile?.commune || 'Non renseignée'}</Text>
-              </View>
             </View>
-          </View>
+            </View>
+                </View>
 
           {/* Bouton Modifier */}
           <TouchableOpacity
@@ -387,7 +387,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: 8
               }}>
                 <Ionicons name="settings" size={24} color="#FF9800" />
-              </View>
+                </View>
               <Text style={{ color: '#757575', fontSize: 12 }}>Paramètres</Text>
             </TouchableOpacity>
 
@@ -406,7 +406,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: 8
               }}>
                 <Ionicons name="log-out" size={24} color="#FF9800" />
-              </View>
+                </View>
               <Text style={{ color: '#757575', fontSize: 12 }}>Déconnexion</Text>
             </TouchableOpacity>
 
@@ -425,13 +425,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 marginBottom: 8
               }}>
                 <Ionicons name="help-circle" size={24} color="#FF9800" />
-              </View>
+                </View>
               <Text style={{ color: '#757575', fontSize: 12 }}>Aide</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+      </ScrollView>
       </View>
-    </SafeAreaView>
+</SafeAreaView>
   )
 }
 

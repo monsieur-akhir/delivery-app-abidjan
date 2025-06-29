@@ -45,6 +45,9 @@ class OTPService:
         code = self.generate_otp_code()
         expires_at = OTP.generate_expiry_time(minutes=5)  # 5 minutes expiry
 
+        # Log du code OTP généré immédiatement
+        logger.info(f"[OTP] Code généré dans create_otp: {code} pour {phone}")
+
         otp = OTP(
             user_id=user_id,
             phone=phone,
@@ -128,6 +131,8 @@ class OTPService:
             user_id=user.id if user else None
         )
 
+        # Log du code OTP généré (toujours, pour debug)
+        logger.info(f"[OTP] Code généré pour {request.phone}: {otp.code}")
         # Log du code OTP généré en développement
         if settings.ENVIRONMENT == "development":
             logger.info(f"🔑 CODE OTP GÉNÉRÉ: {otp.code}")
@@ -156,7 +161,20 @@ class OTPService:
         if not sms_sent and not email_sent:
             if settings.ENVIRONMENT == "development":
                 logger.error("❌ ERREUR - Aucun canal de communication disponible")
-            raise BadRequestError("Impossible d'envoyer l'OTP. Veuillez vérifier votre numéro de téléphone et email.")
+                # En mode dev, on retourne quand même le code OTP pour debug
+                response_data = {
+                    "success": True,
+                    "message": "Code OTP généré (mode debug - envoi échoué)",
+                    "otp_id": otp.id,
+                    "expires_at": otp.expires_at,
+                    "channels_used": [],
+                    "dev_otp_code": otp.code,
+                    "dev_note": "SMS/Email non configurés - code affiché pour debug"
+                }
+                logger.info(f"🔑 CODE OTP POUR DEBUG: {otp.code}")
+                return OTPResponse(**response_data)
+            else:
+                raise BadRequestError("Impossible d'envoyer l'OTP. Veuillez vérifier votre numéro de téléphone et email.")
 
         self.db.commit()
 
@@ -233,6 +251,11 @@ class OTPService:
         # Mark as verified
         otp.mark_as_verified()
         self.db.commit()
+
+        # Si c'est une inscription, activer l'utilisateur
+        if otp.otp_type == OTPType.REGISTRATION and otp.user:
+            otp.user.status = UserStatus.active
+            self.db.commit()
 
         if settings.ENVIRONMENT == "development":
             logger.info(f"🎉 SUCCÈS - OTP vérifié pour: {verification.phone}")

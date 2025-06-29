@@ -135,12 +135,8 @@ class Settings(BaseSettings):
     # Google Places
     GOOGLE_PLACES_API_KEY: str = os.getenv("GOOGLE_PLACES_API_KEY", "")
 
-    # === Email Configuration ===
-    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
-    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")
+    # Notifications
+    NOTIFICATION_ENABLED: bool = os.getenv("NOTIFICATION_ENABLED", "True").lower() == "true"
 
     class Config:
         env_file = ".env"

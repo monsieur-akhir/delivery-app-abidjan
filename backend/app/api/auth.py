@@ -7,15 +7,16 @@ from jose import JWTError, jwt
 import logging
 
 from ..db.session import get_db
-from ..services.auth import register_user, login_user, enable_two_factor, refresh_token
+from ..services.auth import register_user, register_user_atomic, login_user, enable_two_factor, refresh_token
 from ..services.otp_service import OTPService
 from ..schemas.user import UserCreate, UserLogin, Token, UserResponse, PasswordChangeRequest, PasswordResetRequest, PasswordResetConfirm
-from ..schemas.otp import OTPRequest, OTPVerification, OTPResend, OTPResponse, OTPVerificationResponse
+from ..schemas.otp import OTPRequest, OTPVerification, OTPResend, OTPResponse, OTPVerificationResponse, RegisterWithOTPRequest, RegisterWithOTPResponse
 from ..core.security import get_current_user, verify_password, get_password_hash
 from ..models.user import User
 from ..models.otp import OTPType
 from ..core.config import settings
 from ..websockets.tracking import manager
+from ..core.exceptions import ConflictError
 
 router = APIRouter(tags=["authentication"])
 logger = logging.getLogger(__name__)
@@ -28,7 +29,106 @@ def register(
     """
     Inscription d'un nouvel utilisateur.
     """
-    return register_user(db, user_data)
+    try:
+        # Validation préliminaire des données
+        if not user_data.phone or len(user_data.phone.strip()) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Le numéro de téléphone est requis"
+            )
+        
+        if user_data.email and (not user_data.email.strip() or "@" not in user_data.email or "." not in user_data.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Format d'email invalide"
+            )
+        
+        return register_user(db, user_data)
+        
+    except ConflictError as e:
+        # En cas de conflit (numéro ou email déjà existant)
+        logger.warning(f"Conflit lors de l'inscription: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except ValueError as e:
+        # Erreur de validation des données
+        logger.warning(f"Erreur de validation lors de l'inscription: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        # En cas d'erreur générale
+        logger.error(f"Erreur lors de l'inscription: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de l'inscription. Veuillez réessayer."
+        )
+
+@router.post("/register-with-otp", response_model=RegisterWithOTPResponse)
+def register_with_otp(
+    user_data: RegisterWithOTPRequest,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Inscription d'un nouvel utilisateur avec envoi automatique d'OTP.
+    """
+    try:
+        # Validation préliminaire des données
+        if not user_data.phone or len(user_data.phone.strip()) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Le numéro de téléphone est requis"
+            )
+        if user_data.email and (not user_data.email.strip() or "@" not in user_data.email or "." not in user_data.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Format d'email invalide"
+            )
+        # Créer l'utilisateur
+        user = register_user(db, user_data)
+        # Envoyer l'OTP immédiatement avec le numéro préfixé (celui stocké en base)
+        otp_service = OTPService(db)
+        otp_request = OTPRequest(
+            phone=user.phone,  # Utiliser le numéro préfixé de l'utilisateur créé
+            email=user_data.email,
+            otp_type=OTPType.REGISTRATION
+        )
+        otp_response = otp_service.send_otp(otp_request)
+        return RegisterWithOTPResponse(
+            success=True,
+            message="Inscription réussie et code OTP envoyé",
+            user_id=user.id,
+            otp_sent_to=user.phone,  # Retourner le numéro préfixé
+            expires_at=otp_response.expires_at
+        )
+    except ConflictError as e:
+        logger.warning(f"Conflit lors de l'inscription: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except ValueError as e:
+        logger.warning(f"Erreur de validation lors de l'inscription: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Erreur lors de l'inscription avec OTP: {str(e)}")
+        # Nettoyage manuel si l'utilisateur a été créé
+        try:
+            if 'user' in locals() and user and user.id:
+                db.delete(user)
+                db.commit()
+        except Exception as cleanup_error:
+            logger.error(f"Erreur lors du nettoyage: {str(cleanup_error)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de l'inscription. Veuillez réessayer."
+        )
 
 @router.post("/login", response_model=Token)
 def login(
@@ -74,23 +174,28 @@ def verify_otp(
     """
     Vérifier un code OTP.
     """
+    phone = verification.phone.strip().replace(" ", "").replace("-", "").replace(".", "")
+    if len(phone) == 10:
+        phone = "+225" + phone
+    if phone.startswith("00225"):
+        phone = "+225" + phone[5:]
+    if phone.startswith("225") and not phone.startswith("+225"):
+        phone = "+225" + phone[3:]
+    verification.phone = phone
     otp_service = OTPService(db)
     success, otp = otp_service.verify_otp(verification)
-    
     response = OTPVerificationResponse(
         success=success,
         message="Code OTP vérifié avec succès"
     )
-    
-    # If it's a login OTP, generate access token
-    if otp.otp_type == OTPType.LOGIN and otp.user:
+    # Générer un token pour LOGIN et REGISTRATION
+    if otp.otp_type in [OTPType.LOGIN, OTPType.REGISTRATION] and otp.user:
         from ..core.security import create_access_token, get_token_expiration
         access_token = create_access_token(
             data={"sub": otp.user.phone, "role": otp.user.role}
         )
         response.token = access_token
         response.user = UserResponse.model_validate(otp.user, from_attributes=True).model_dump()
-    
     return response
 
 @router.post("/resend-otp", response_model=OTPResponse)
@@ -101,8 +206,15 @@ def resend_otp(
     """
     Renvoyer un code OTP.
     """
+    phone = request.phone.strip().replace(" ", "").replace("-", "").replace(".", "")
+    if len(phone) == 10:
+        phone = "+225" + phone
+    if phone.startswith("00225"):
+        phone = "+225" + phone[5:]
+    if phone.startswith("225") and not phone.startswith("+225"):
+        phone = "+225" + phone[3:]
     otp_service = OTPService(db)
-    return otp_service.resend_otp(request.phone, request.otp_type)
+    return otp_service.resend_otp(phone, request.otp_type)
 
 # Password Reset Endpoints
 @router.post("/forgot-password", response_model=OTPResponse)

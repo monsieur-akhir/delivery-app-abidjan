@@ -379,7 +379,7 @@ const ActiveOrderTrackingScreen: React.FC = () => {
                   <Text style={styles.timelineItemTitle}>{item.title}</Text>
                   <Text style={styles.timelineItemDescription}>{item.description}</Text>
                   <Text style={styles.timelineItemTime}>
-                    {formatDate(item.timestamp, 'short')}
+                    {formatDate(item.timestamp)}
                   </Text>
                 </View>
               </View>

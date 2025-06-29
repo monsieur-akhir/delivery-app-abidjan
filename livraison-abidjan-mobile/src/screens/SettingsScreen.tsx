@@ -96,7 +96,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             shadowRadius: 2,
           }}
         >
-          <Avatar.Image
+            <Avatar.Image
             size={56}
             source={user?.profile_picture ? { uri: user.profile_picture } : require("../assets/images/default-avatar.png")}
             style={{ backgroundColor: '#f0f0f0' }}
@@ -132,13 +132,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             <View style={{ flex: 1, marginLeft: 16 }}>
               <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.darkMode")}</Text>
             </View>
-            <Switch
-              value={theme === "dark"}
-              onValueChange={toggleTheme}
+              <Switch
+                value={theme === "dark"}
+                onValueChange={toggleTheme}
               trackColor={{ false: "#ddd", true: "#FF9800" }}
               thumbColor="#fff"
-            />
-          </View>
+              />
+            </View>
 
           <View style={{ height: 1, backgroundColor: '#f5f5f5' }} />
 
@@ -148,13 +148,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             <View style={{ flex: 1, marginLeft: 16 }}>
               <Text style={{ fontSize: 16, color: '#222' }}>{t("settings.offlineMode")}</Text>
             </View>
-            <Switch
-              value={isOfflineMode}
-              onValueChange={toggleOfflineMode}
+              <Switch
+                value={isOfflineMode}
+                onValueChange={toggleOfflineMode}
               trackColor={{ false: "#ddd", true: "#FF9800" }}
               thumbColor="#fff"
-            />
-          </View>
+              />
+            </View>
         </View>
 
         {/* Notifications */}
@@ -179,7 +179,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
           <Text style={{ fontSize: 16, color: '#666', padding: 16 }}>Support</Text>
           
           <TouchableOpacity 
-            onPress={() => navigation.navigate("Support")}
+              onPress={() => navigation.navigate("Support")}
             style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}
           >
             <Feather name="help-circle" size={22} color="#FF9800" />

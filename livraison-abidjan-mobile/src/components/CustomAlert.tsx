@@ -549,8 +549,23 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     }),
   }), [rotateAnim, glowAnim, progressAnim]);
 
+  // Ajout d'un bouton "Fermer" par défaut si aucun bouton n'est fourni
+  const effectiveButtons = useMemo(() => {
+    if (buttons && buttons.length > 0) return buttons;
+    return [
+      {
+        text: 'Fermer',
+        onPress: onDismiss,
+        style: 'primary',
+        isPrimary: true,
+        icon: type === 'error' ? 'close' : type === 'success' ? 'checkmark' : 'close',
+        accessibilityLabel: 'Fermer l\'alerte',
+      },
+    ];
+  }, [buttons, onDismiss, type]);
+
   const renderButtons = useCallback(() => {
-    if (buttons.length === 0) {
+    if (effectiveButtons.length === 0) {
       return (
         <TouchableOpacity
           style={[
@@ -569,7 +584,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
       );
     }
 
-    return buttons.map((button, index) => {
+    return effectiveButtons.map((button, index) => {
       const isPrimary = button.isPrimary || button.style === 'primary';
       const isDestructive = button.style === 'destructive';
       const isCancel = button.style === 'cancel';
@@ -587,7 +602,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
             isCancel && styles.cancelButton,
             isSecondary && styles.secondaryButton,
             isDisabled && styles.disabledButton,
-            buttons.length > 1 && styles.multiButton,
+            effectiveButtons.length > 1 && styles.multiButton,
             { borderColor: button.color || getTypeConfig.borderColor },
             darkMode && styles.darkButton,
           ]}
@@ -632,7 +647,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         </TouchableOpacity>
       );
     });
-  }, [buttons, getTypeConfig, buttonLoadingStates, handleButtonPress, handleDismiss, darkMode, testID]);
+  }, [effectiveButtons, getTypeConfig, buttonLoadingStates, handleButtonPress, handleDismiss, darkMode, testID]);
 
   const getPositionStyle = (): import('react-native').ViewStyle => {
     switch (position) {
@@ -870,7 +885,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
               )}
 
               {/* Séparateur */}
-              {(message || richContent || priority === 'critical') && buttons.length > 0 && (
+              {(message || richContent || priority === 'critical') && effectiveButtons.length > 0 && (
                 <View style={[
                   styles.separator,
                   { backgroundColor: darkMode ? '#374151' : '#E5E7EB' }
@@ -880,8 +895,8 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
               {/* Zone des boutons */}
               <View style={[
                 styles.buttonContainer,
-                buttons.length > 2 && styles.verticalButtonContainer,
-                buttons.length === 2 && styles.horizontalButtonContainer,
+                effectiveButtons.length > 2 && styles.verticalButtonContainer,
+                effectiveButtons.length === 2 && styles.horizontalButtonContainer,
               ]}>
                 {renderButtons()}
               </View>

@@ -359,7 +359,10 @@ export const translations = {
         errorEmailAlreadyUsed: "Cet email est déjà utilisé par un autre compte",
         errorPhoneAlreadyUsed: "Ce numéro de téléphone est déjà utilisé par un autre compte",
         errorAccountExists: "Un compte existe déjà avec ce numéro de téléphone",
+        errorPhone10Digits: "Le numéro de téléphone doit contenir exactement 10 chiffres",
+        errorPhoneNoPrefix: "Le numéro ne doit pas commencer par +, +225 ou 00",
         or: "ou",
+        alreadyAccount: "Déjà un compte ? Se connecter",
       },
 
       // VTC-style map translations
@@ -1452,6 +1455,7 @@ export const translations = {
         licensePlate: "Lori nimɛro",
         licensePlateHelp: "I sé ka kɛ yen coursier ye",
         errorLicensePlateRequired: "Lori nimɛro i sé ka kɛ yen coursier ye",
+        alreadyAccount: "Déjà un compte ? Se connecter",
       },
       roles: {
         client: "Client",
@@ -1697,6 +1701,40 @@ export const translations = {
             estimatedTime: 'Estimated time',
             packageType: 'Package type',
         },
+       },
+       // Traductions pour l'inscription en anglais
+       register: {
+         title: "Registration",
+         subtitle: "Create your account to get started",
+         fullName: "Full Name",
+         phone: "Phone Number",
+         email: "Email",
+         password: "Password",
+         confirmPassword: "Confirm Password",
+         role: "Role",
+         commune: "Commune",
+         submit: "Register",
+         client: "Client",
+         courier: "Courier",
+         business: "Business",
+         errors: {
+           nameRequired: "Full name is required",
+           nameMinLength: "Full name must be at least 2 characters",
+           emailRequired: "Email is required",
+           emailInvalid: "Invalid email address",
+           phoneRequired: "Phone number is required",
+           phoneInvalid: "Invalid phone number",
+           phone10Digits: "Phone number must contain exactly 10 digits",
+           phoneNoPrefix: "Phone number must not start with +, +225 or 00",
+           passwordRequired: "Password is required",
+           passwordMinLength: "Password must be at least 6 characters",
+           confirmPasswordRequired: "Password confirmation is required",
+           passwordMismatch: "Passwords do not match",
+           generic: "Registration failed. Please try again.",
+           phoneExists: "This phone number is already in use",
+           emailExists: "This email address is already in use",
+           networkError: "Network error. Please check your internet connection",
+         }
        }
     }
   }

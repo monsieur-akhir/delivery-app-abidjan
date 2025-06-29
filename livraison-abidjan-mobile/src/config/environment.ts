@@ -15,8 +15,8 @@ declare const process: {
 
 export const environment = {
   development: {
-    API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.2:8000',
-    WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'ws://192.168.1.2:8001/ws',
+    API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.5:8000',
+    WS_URL: process.env.EXPO_PUBLIC_WS_URL || 'ws://192.168.1.5:8001/ws',
     GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
     CINETPAY_API_KEY: process.env.EXPO_PUBLIC_CINETPAY_API_KEY || '',
@@ -85,7 +85,7 @@ export const APP_SETTINGS = {
   maxImageSize: 5 * 1024 * 1024, // 5MB en octets
   maxImageDimension: 2048, // pixels
   maxUploadRetries: 3,
-  offlineDataExpirationDays: 7,
+  offlineDataExpirationDays: 365,
 }
 
 // Endpoints de l'API

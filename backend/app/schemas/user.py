@@ -63,15 +63,54 @@ class CourierProfileResponse(CourierProfileBase):
 
 # Base user schemas
 class UserBase(BaseModel):
-    phone: str = Field(..., description="Phone number (primary identifier)")
+    phone: str = Field(..., description="Phone number (primary identifier)", min_length=8, max_length=15)
     email: Optional[EmailStr] = None
-    full_name: str = Field(..., description="Full name")
+    full_name: str = Field(..., description="Full name", min_length=2, max_length=100)
     role: UserRole = UserRole.client
     commune: Optional[str] = None
     language_preference: Optional[str] = "fr"
+    
+    @validator('phone')
+    def validate_phone(cls, v):
+        if not v:
+            raise ValueError('Le numéro de téléphone est requis')
+        
+        # Nettoyer le numéro
+        phone_clean = v.strip().replace(" ", "").replace("-", "").replace(".", "")
+        
+        # Vérifier le format pour la Côte d'Ivoire
+        if not phone_clean.startswith(('+225', '225', '0')):
+            raise ValueError('Le numéro de téléphone doit être au format ivoirien (+225, 225, ou 0)')
+        
+        # Vérifier la longueur après nettoyage
+        if len(phone_clean) < 10 or len(phone_clean) > 15:
+            raise ValueError('Le numéro de téléphone doit contenir entre 10 et 15 chiffres')
+        
+        return phone_clean
+    
+    @validator('email')
+    def validate_email(cls, v):
+        if v is not None:
+            email_clean = v.strip().lower()
+            if not email_clean or "@" not in email_clean or "." not in email_clean:
+                raise ValueError('Format d\'email invalide')
+            return email_clean
+        return v
+    
+    @validator('full_name')
+    def validate_full_name(cls, v):
+        if not v or len(v.strip()) < 2:
+            raise ValueError('Le nom complet doit contenir au moins 2 caractères')
+        return v.strip()
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6, description="Password (min 6 characters)")
+    
+    @validator('password')
+    def validate_password(cls, v):
+        if len(v) < 6:
+            raise ValueError('Le mot de passe doit contenir au moins 6 caractères')
+        return v
 
 class UserLogin(BaseModel):
     phone: str = Field(..., description="Phone number")

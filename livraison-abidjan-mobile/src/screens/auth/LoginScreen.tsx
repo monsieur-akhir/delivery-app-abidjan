@@ -68,10 +68,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Image d'illustration de connexion */}
         <Animatable.View animation="fadeIn" duration={1000} style={styles.illustrationContainer}>
-          <View style={styles.illustrationPlaceholder}>
-            <Feather name="smartphone" size={80} color="#FF6B00" />
-            <Text style={styles.illustrationText}>Livraison Abidjan</Text>
-          </View>
+          <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" duration={800} style={styles.formContainer}>
@@ -174,25 +171,19 @@ const styles = StyleSheet.create({
   illustrationContainer: {
     alignItems: "center",
     marginTop: 30,
-    marginBottom: 30,
+    marginBottom: 0,
   },
-  illustrationPlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-    height: 220,
-    width: "100%",
-  },
-  illustrationText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#FF6B00",
-    marginTop: 16,
+  logo: {
+    width: 200,
+    height: 200,
+    alignSelf: "center",
+    marginBottom: 0,
   },
   formContainer: {
     width: "100%",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     marginBottom: 5,
     color: "#000000",

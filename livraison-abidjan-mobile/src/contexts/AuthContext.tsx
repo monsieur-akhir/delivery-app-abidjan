@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import type { User } from '../types/models';
 import type { RegisterUserData } from '../services/api';
-import { login, register, verifyOTP } from '../services/api';
+import { login, register, verifyOTP, sendOTP as sendOTPRequest } from '../services/api';
 import { API_BASE_URL } from '../config';
 
 // Fonction utilitaire pour vérifier la validité des objets
@@ -27,7 +27,7 @@ const isTokenExpired = (token: string | null): boolean => {
   }
 };
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null
   token: string | null
   loading: boolean
@@ -36,6 +36,7 @@ interface AuthContextType {
   setSessionExpired: (expired: boolean) => void
   signIn: (phone: string, password: string) => Promise<void>
   signUp: (userData: RegisterUserData) => Promise<void>
+  sendOTP: (phone: string, otpType: 'registration' | 'login' | 'password_reset') => Promise<void>
   verify: (phone: string, otp: string) => Promise<void>
   signOut: (expired?: boolean) => Promise<void>
   updateUserData: (data: Partial<User>) => void
@@ -53,6 +54,7 @@ export const AuthContext = createContext<AuthContextType>({
   setSessionExpired: () => {},
   signIn: async () => {},
   signUp: async () => {},
+  sendOTP: async () => {},
   verify: async () => {},
   signOut: async () => {},
   updateUserData: () => {},
@@ -152,7 +154,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signUp = async (userData: RegisterUserData) => {
-    setLoading(true)
+    // Ne pas changer l'état loading global pour éviter le démontage du composant
+    // setLoading(true)
     setError(null)
     try {
       await register(userData)
@@ -161,7 +164,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(e instanceof Error ? e.message : "An error occurred during sign up")
       throw e
     } finally {
-      setLoading(false)
+      // Ne pas changer l'état loading global
+      // setLoading(false)
+    }
+  }
+
+  const sendOTP = async (phone: string, otpType: 'registration' | 'login' | 'password_reset' = 'login') => {
+    // Ne pas changer l'état loading global pour éviter le démontage du composant
+    // setLoading(true)
+    setError(null)
+    try {
+      await sendOTPRequest(phone, otpType)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An error occurred while sending OTP")
+      throw e
+    } finally {
+      // Ne pas changer l'état loading global
+      // setLoading(false)
     }
   }
 
@@ -169,9 +188,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true)
     setError(null)
     try {
-      await verifyOTP(phone, otp)
-      // Après vérification OTP, il faut recharger l'utilisateur et le token depuis le backend ou le storage
-      // Ici, on suppose que l'utilisateur doit se reconnecter ou que l'API met à jour le storage
+      const result = await verifyOTP(phone, otp)
+      if (result.success && result.token && result.user) {
+        setUser(result.user)
+        setToken(result.token)
+        await AsyncStorage.setItem("user", JSON.stringify(result.user))
+        await AsyncStorage.setItem("token", result.token)
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "An error occurred during verification")
       throw e
@@ -222,6 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSessionExpired, 
       signIn, 
       signUp, 
+      sendOTP,
       verify, 
       signOut, 
       updateUserData, 

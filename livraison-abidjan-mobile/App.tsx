@@ -16,6 +16,7 @@ import './src/i18n';
 import { useTokenSync } from './src/hooks/useTokenSync';
 import CustomAlert from './src/components/CustomAlert';
 import CustomLoaderModal from './src/components/CustomLoaderModal';
+import CustomToast from './src/components/CustomToast';
 import { useAlert } from './src/hooks/useAlert';
 
 // Composant pour gérer la synchronisation des tokens
@@ -46,6 +47,18 @@ const GlobalUIWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) 
         visible={alertVisible}
         {...alertConfig}
         onDismiss={hideAlert}
+      />
+      
+      {/* Toast global */}
+      <CustomToast
+        visible={toastVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        onDismiss={hideToast}
+        action={toastConfig.action}
+        icon={toastConfig.icon}
+        title={toastConfig.title}
       />
       
       {/* Loader global */}

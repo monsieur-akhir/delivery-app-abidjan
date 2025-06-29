@@ -11,7 +11,7 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
-  VerifyOTP: { phoneNumber: string; phone?: string; isRegistration?: boolean };
+  VerifyOTP: { phoneNumber: string; phone?: string; isRegistration?: boolean; role?: string };
   OTPLogin: undefined;
   Onboarding: undefined;
   ClassicLogin: undefined;

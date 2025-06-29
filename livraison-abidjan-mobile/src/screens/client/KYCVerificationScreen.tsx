@@ -14,6 +14,7 @@ import { useUser } from "../../hooks"
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RootStackParamList } from "../../types/navigation"
 import type { KYCDocument, KYCStatus } from "../../types/models"
+import { sendOTP } from '../../services/api'
 
 // Removed unused type: KYCStatusUI
 
@@ -180,14 +181,18 @@ const KYCVerificationScreen: React.FC<KYCVerificationScreenProps> = ({ navigatio
 
     try {
       setSubmitting(true)
-      // Call submitKYCForVerification without arguments as the backend already has the documents
       await submitKYCDocuments()
-      
-      Alert.alert(
-        t('kyc.submitted'),
-        t('kyc.submittedMessage'),
-        [{ text: t('common.ok'), onPress: () => navigation.goBack() }]
-      )
+      // Envoi OTP après KYC
+      if (user?.phone) {
+        await sendOTP(user.phone, 'registration')
+        navigation.navigate('VerifyOTP', {
+          phoneNumber: user.phone,
+          isRegistration: true,
+          role: 'courier',
+        })
+      } else {
+        Alert.alert(t('common.error'), t('kyc.noPhone'))
+      }
     } catch (error) {
       console.error('Error submitting KYC:', error)
       Alert.alert(t('common.error'), t('kyc.submitError'))

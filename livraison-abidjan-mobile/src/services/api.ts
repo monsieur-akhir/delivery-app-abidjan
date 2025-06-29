@@ -667,7 +667,7 @@ export const login = async (phone: string, password: string): Promise<{ token: s
 // Inscription
 export const register = async (userData: RegisterUserData): Promise<void> => {
   try {
-    const response = await api.post("/api/auth/register", userData)
+    const response = await api.post("/api/auth/register-with-otp", userData)
     return response.data
   } catch (error: unknown) {
     console.error("Registration error:", error);
