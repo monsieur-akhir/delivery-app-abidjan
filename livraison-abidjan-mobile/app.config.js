@@ -68,6 +68,13 @@ export default ({ config }) => ({
         color: "#FF6B00"
       }
     ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "Cette application accède à vos photos pour sélectionner des images.",
+        cameraPermission: "Cette application accède à votre caméra pour prendre des photos."
+      }
+    ],
     "expo-localization"
   ],
   extra: {

@@ -16,9 +16,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import type { RouteProp } from "@react-navigation/native"
 import type { RootStackParamList } from "../../types/navigation"
 import type { Delivery } from "../../types/models"
-import CustomAlert from '../components/CustomAlert'
-import CustomToast from '../components/CustomToast'
-import { useAlert } from '../hooks/useAlert'
+import CustomAlert from '../../components/CustomAlert'
+import CustomToast from '../../components/CustomToast'
+import { useAlert } from '../../hooks/useAlert'
 
 type BidScreenProps = {
   route: RouteProp<RootStackParamList, "Bid">
@@ -34,6 +34,8 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
   const { deliveryId } = route.params
   const { isConnected, isOfflineMode, addPendingUpload } = useNetwork()
   const { getDeliveryDetails, placeBid } = useDelivery()
+
+  const { toastVisible, toastConfig, hideToast } = useAlert()
 
   const [delivery, setDelivery] = useState<Delivery | null>(null)
   const [bidAmount, setBidAmount] = useState<string>("")
@@ -134,7 +136,6 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       setError("Erreur lors du chargement des détails de la livraison")
       setVisible(true)
     } finally {
-    hideLoader()
       setLoading(false)
     }
   }, [deliveryId, getDeliveryDetails])
@@ -246,7 +247,6 @@ const BidScreen: React.FC<BidScreenProps> = ({ route, navigation }) => {
       setError(error instanceof Error ? error.message : "Erreur lors de la soumission de l'enchère")
       setVisible(true)
     } finally {
-    hideLoader()
       setBidLoading(false)
     }
   }

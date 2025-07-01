@@ -42,6 +42,7 @@ from .delivery import Delivery, Bid, TrackingPoint
 from .rating import Rating
 from .wallet import Wallet, Transaction, Loan
 from .complaint import Complaint
+from .kyc_document import KycDocument
 
 # Export all models for easy access 
 __all__ = [

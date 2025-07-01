@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, and_, or_
+from math import radians, cos, sin, asin, sqrt
 
 from ..models.delivery import Delivery, DeliveryStatus, DeliveryType, Bid, TrackingPoint
 from ..models.collaborative_delivery import CollaborativeDelivery
@@ -587,23 +588,21 @@ def estimate_delivery_price(
     """
     try:
         # Calculer la distance en utilisant la formule de Haversine
-        import math
-
         def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
             """Calcule la distance entre deux points géographiques en kilomètres."""
             R = 6371  # Rayon de la Terre en kilomètres
 
-            lat1_rad = math.radians(lat1)
-            lon1_rad = math.radians(lon1)
-            lat2_rad = math.radians(lat2)
-            lon2_rad = math.radians(lon2)
+            lat1_rad = radians(lat1)
+            lon1_rad = radians(lon1)
+            lat2_rad = radians(lat2)
+            lon2_rad = radians(lon2)
 
             dlat = lat2_rad - lat1_rad
             dlon = lon2_rad - lon1_rad
 
-            a = (math.sin(dlat/2)**2 + 
-                 math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon/2)**2)
-            c = 2 * math.asin(math.sqrt(a))
+            a = (sin(dlat/2)**2 + 
+                 cos(lat1_rad) * cos(lat2_rad) * sin(dlon/2)**2)
+            c = 2 * asin(sqrt(a))
 
             return R * c
 
@@ -669,7 +668,7 @@ def estimate_delivery_price(
         final_price = estimated_price * total_multiplier
 
         # Arrondir au multiple de 50 FCFA supérieur
-        final_price = math.ceil(final_price / 50) * 50
+        final_price = ceil(final_price / 50) * 50
 
         # Estimation du temps de livraison (en minutes)
         # Vitesse moyenne en ville: 25 km/h
@@ -790,16 +789,19 @@ def get_courier_deliveries(db: Session, courier_id: int, skip: int = 0, limit: i
         Delivery.courier_id == courier_id
     ).order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
 
-def get_available_deliveries(db: Session, courier_id: int, commune: Optional[str] = None, skip: int = 0, limit: int = 100) -> List[Delivery]:
-    """
-    Obtenir les livraisons disponibles (sans coursier assigné) pour un coursier.
-    """
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    return R * c
+
+def get_available_deliveries(db: Session, courier_id: int, commune: Optional[str] = None, skip: int = 0, limit: int = 100, lat: Optional[float] = None, lng: Optional[float] = None, radius_km: float = 5.0) -> List[Delivery]:
     query = db.query(Delivery).filter(
         Delivery.courier_id.is_(None),
         Delivery.status == DeliveryStatus.pending
     )
-
-    # Filtrer par commune si spécifié
     if commune:
         query = query.filter(
             or_(
@@ -807,5 +809,14 @@ def get_available_deliveries(db: Session, courier_id: int, commune: Optional[str
                 Delivery.delivery_address.contains(commune)
             )
         )
-
+        return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()
+    elif lat is not None and lng is not None:
+        deliveries = query.all()
+        nearby = []
+        for d in deliveries:
+            if hasattr(d, 'pickup_latitude') and hasattr(d, 'pickup_longitude') and d.pickup_latitude and d.pickup_longitude:
+                distance = haversine(lat, lng, d.pickup_latitude, d.pickup_longitude)
+                if distance <= radius_km:
+                    nearby.append(d)
+        return nearby[skip:skip+limit]
     return query.order_by(desc(Delivery.created_at)).offset(skip).limit(limit).all()

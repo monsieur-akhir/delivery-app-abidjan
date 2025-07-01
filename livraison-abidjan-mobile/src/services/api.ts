@@ -1168,13 +1168,23 @@ export const fetchCourierDeliveryHistory = async (filter?: string): Promise<Deli
 }
 
 // Récupérer les livraisons disponibles pour un coursier
-export const fetchAvailableDeliveries = async (commune?: string): Promise<Delivery[]> => {
-  let url = "/api/courier/deliveries/available"
-  if (commune) {
-    url += `?commune=${encodeURIComponent(commune)}`
+export const fetchAvailableDeliveries = async (
+  commune?: string,
+  lat?: number,
+  lng?: number,
+  radius_km: number = 5
+): Promise<Delivery[]> => {
+  let url = "/api/courier/available-deliveries";
+  const params = new URLSearchParams();
+  if (commune) params.append("commune", commune);
+  if (!commune && lat !== undefined && lng !== undefined) {
+    params.append("lat", lat.toString());
+    params.append("lng", lng.toString());
+    params.append("radius_km", radius_km.toString());
   }
-  const response = await api.get(url)
-  return response.data
+  if (params.toString()) url += "?" + params.toString();
+  const response = await api.get(url);
+  return response.data;
 }
 
 // Récupérer les livraisons actives pour un client

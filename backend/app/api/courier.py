@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
+import os
+import json
+from fastapi.responses import JSONResponse
 
 from ..db.session import get_db
 from ..core.dependencies import get_current_user, get_current_active_user
@@ -282,7 +285,7 @@ async def get_courier_stats(
     ).scalar() or 0
 
     # Note moyenne
-    average_rating = db.query(func.avg(models.Rating.rating)).filter(
+    average_rating = db.query(func.avg(models.Rating.score)).filter(
         models.Rating.rated_user_id == current_user.id
     ).scalar() or 0
 
@@ -356,6 +359,9 @@ async def get_courier_earnings(
 @router.get("/available-deliveries", response_model=List[DeliveryResponse])
 async def get_available_deliveries_route(
     commune: Optional[str] = None,
+    lat: Optional[float] = Query(None),
+    lng: Optional[float] = Query(None),
+    radius_km: float = Query(5.0),
     skip: int = 0,
     limit: int = 100,
     current_user: User = Depends(get_current_user),
@@ -364,4 +370,58 @@ async def get_available_deliveries_route(
     """
     Obtenir les livraisons disponibles pour le coursier.
     """
-    return get_available_deliveries(db, current_user.id, commune, skip, limit)
+    deliveries = get_available_deliveries(db, current_user.id, commune, skip, limit, lat, lng, radius_km)
+    result = []
+    for d in deliveries:
+        delivery_dict = d.__dict__.copy()
+        # Relations: client, courier, vehicle
+        if hasattr(d, 'client') and d.client:
+            delivery_dict['client'] = {
+                'id': d.client.id,
+                'full_name': d.client.full_name,
+                'phone': d.client.phone,
+                'email': d.client.email,
+                'profile_picture': d.client.profile_picture,
+            }
+        else:
+            delivery_dict['client'] = None
+        if hasattr(d, 'courier') and d.courier:
+            delivery_dict['courier'] = {
+                'id': d.courier.id,
+                'full_name': d.courier.full_name,
+                'phone': d.courier.phone,
+                'email': d.courier.email,
+                'profile_picture': d.courier.profile_picture,
+            }
+        else:
+            delivery_dict['courier'] = None
+        if hasattr(d, 'vehicle') and d.vehicle:
+            delivery_dict['vehicle'] = {
+                'id': d.vehicle.id,
+                'type': getattr(d.vehicle, 'type', None),
+                'plate': getattr(d.vehicle, 'plate', None),
+            }
+        else:
+            delivery_dict['vehicle'] = None
+        result.append(delivery_dict)
+    return result
+
+@router.get("/communes")
+async def get_communes():
+    """Retourne la liste des communes disponibles pour le filtrage des livraisons."""
+    try:
+        # Utiliser un chemin absolu depuis la racine du projet
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        communes_path = os.path.join(current_dir, '..', 'data', 'communes.json')
+        
+        print(f"🔍 [DEBUG] Chemin du fichier communes: {communes_path}")
+        print(f"🔍 [DEBUG] Fichier existe: {os.path.exists(communes_path)}")
+        
+        with open(communes_path, encoding='utf-8') as f:
+            communes = json.load(f)
+        
+        print(f"✅ [DEBUG] Communes chargées: {len(communes)} communes")
+        return communes
+    except Exception as e:
+        print(f"❌ [DEBUG] Erreur lors du chargement des communes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors du chargement des communes: {str(e)}")

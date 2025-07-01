@@ -920,8 +920,16 @@ export const translations = {
           levelValue: "Niveau {{level}}",
           weeklyEarnings: "Gains hebdomadaires",
           seeAll: "Voir tout",
-          availableDeliveries: "Livraisons disponibles",
-          noAvailableDeliveries: "Aucune livraison disponible",
+          availableDeliveries: "Courses disponibles",
+          noAvailableDeliveries: "Aucune course disponible",
+          goOnline: "Se rendre disponible",
+          goOffline: "Se rendre indisponible",
+          onlineStatus: "Vous êtes en ligne et recevrez des courses en temps réel.",
+          offlineStatus: "Vous êtes hors ligne et ne recevrez pas de nouvelles courses.",
+          viewNotifications: "Voir les notifications",
+          viewDetails: "Voir les détails",
+          moreAlerts: "autres alertes",
+          role: "Coursier",
         },
            alerts: {
         newDeliveryRequest: 'Nouvelle demande de livraison',
@@ -1606,6 +1614,7 @@ export const translations = {
           findDeliveries: "Find Deliveries",
           viewDetails: "View Details",
           moreAlerts: "more alerts",
+          role: "Coursier",
         },
          deliveries: {
           acceptDelivery: 'Ci sɔrɔli tɛ se ka kɛ',
@@ -1736,6 +1745,14 @@ export const translations = {
            networkError: "Network error. Please check your internet connection",
          }
        }
+    }
+  },
+  weather: {
+    conditions: {
+      "Partiellement nuageux": "Partiellement nuageux",
+      "Ensoleillé": "Ensoleillé",
+      "Pluvieux": "Pluvieux",
+      // ... autres conditions
     }
   }
 }

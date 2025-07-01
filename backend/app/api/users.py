@@ -8,7 +8,8 @@ from ..services.user import (
     get_user, get_users, update_user, update_user_status, update_user_kyc,
     upload_profile_picture, upload_kyc_document, get_business_profile,
     create_business_profile, update_business_profile, get_courier_profile,
-    create_courier_profile, update_courier_profile, update_courier_location
+    create_courier_profile, update_courier_profile, update_courier_location,
+    update_kyc_status
 )
 from ..services.auth import register_user, register_user_admin
 from ..models.user import User, UserRole
@@ -21,13 +22,15 @@ from ..schemas.user import (
 router = APIRouter(tags=["users"])
 
 @router.get("/me", response_model=UserResponse)
-def read_user_me(
+def read_current_user(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
-) -> Any:
-    """
-    Récupérer le profil de l'utilisateur connecté.
-    """
-    return current_user
+):
+    user = db.query(User).filter(User.id == current_user.id).first()
+    user_response = UserResponse.from_orm(user)
+    user_response_dict = user_response.dict()
+    user_response_dict["kyc_documents"] = user.kyc_documents
+    return user_response_dict
 
 @router.put("/me", response_model=UserResponse)
 def update_user_me(
@@ -50,17 +53,6 @@ def upload_user_profile_picture(
     Télécharger une photo de profil.
     """
     return upload_profile_picture(db, current_user.id, file)
-
-@router.post("/me/kyc-document", response_model=UserResponse)
-def upload_user_kyc_document(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-) -> Any:
-    """
-    Télécharger un document KYC (CNI, SIRET, etc.).
-    """
-    return upload_kyc_document(db, current_user.id, file)
 
 @router.get("/{user_id}", response_model=UserResponse)
 def read_user(
@@ -283,3 +275,25 @@ def unregister_push_token(
         "message": "Token de notification supprimé avec succès",
         "user_id": current_user.id
     }
+
+@router.get("/me/kyc-status")
+def get_my_kyc_status(
+    current_user: User = Depends(get_current_user)  # Utiliser get_current_user au lieu de get_current_active_user
+):
+    print(f"🔍 [DEBUG] get_my_kyc_status appelé pour user_id={current_user.id}, phone={current_user.phone}, role={current_user.role}, status={current_user.status}")
+    return {
+        "kyc_status": current_user.kyc_status,
+        "kyc_rejection_reason": current_user.kyc_rejection_reason,
+        "user_status": current_user.status,  # Ajouter le statut pour debug
+    }
+
+@router.post("/users/kyc-submit")
+def submit_kyc(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """
+    Soumission finale du dossier KYC : met à jour le statut global KYC de l'utilisateur.
+    """
+    update_kyc_status(current_user.id, db)
+    return {"success": True, "message": "Votre dossier KYC a été soumis pour vérification."}

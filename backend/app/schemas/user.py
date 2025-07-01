@@ -63,12 +63,22 @@ class CourierProfileResponse(CourierProfileBase):
 
 # Base user schemas
 class UserBase(BaseModel):
-    phone: str = Field(..., description="Phone number (primary identifier)", min_length=8, max_length=15)
-    email: Optional[EmailStr] = None
-    full_name: str = Field(..., description="Full name", min_length=2, max_length=100)
-    role: UserRole = UserRole.client
-    commune: Optional[str] = None
-    language_preference: Optional[str] = "fr"
+    id: int
+    phone: str
+    email: Optional[str]
+    full_name: str
+    role: UserRole
+    status: UserStatus
+    commune: Optional[str]
+    profile_picture: Optional[str]
+    kyc_rejection_reason: Optional[str]
+    language_preference: Optional[str]
+    keycloak_id: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
     
     @validator('phone')
     def validate_phone(cls, v):

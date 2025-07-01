@@ -14,6 +14,7 @@ import i18n from "../../i18n"
 import { useAuth } from '../../contexts/AuthContext'
 import { useAlert } from '../../hooks/useAlert'
 import { useLoader } from '../../contexts/LoaderContext'
+import CustomAlert from '../../components/CustomAlert'
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">
@@ -23,7 +24,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
   const { sessionExpired, setSessionExpired } = useAuth()
-  const { showWarningAlert, showErrorAlert, showSuccessAlert } = useAlert()
+  const { showWarningAlert, showErrorAlert, showSuccessAlert, alertVisible, alertConfig, hideAlert } = useAlert()
   const { showLoader, hideLoader } = useLoader()
   
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
@@ -65,6 +66,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+      {/* Modal d'alerte customisé */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onDismiss={hideAlert}
+        showCloseButton={alertConfig.showCloseButton}
+        autoDismiss={alertConfig.autoDismiss}
+        dismissAfter={alertConfig.dismissAfter}
+      />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Image d'illustration de connexion */}
         <Animatable.View animation="fadeIn" duration={1000} style={styles.illustrationContainer}>

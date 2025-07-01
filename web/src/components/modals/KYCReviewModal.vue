@@ -63,6 +63,11 @@
                 <p v-if="document.notes">
                   <strong>{{ $t('kyc.notes') }}:</strong> {{ document.notes }}
                 </p>
+                <p>
+                  <a :href="getDownloadUrl(document)" target="_blank" rel="noopener">
+                    Télécharger le document
+                  </a>
+                </p>
               </div>
 
               <div class="document-actions">
@@ -150,6 +155,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import managerApi from '@/api/manager'
+import { getKYCDocumentDownloadUrl, uploadKYCDocumentWeb } from '@/services/api'
 
 export default {
   name: 'KYCReviewModal',
@@ -297,6 +303,21 @@ export default {
       })
     }
 
+    const getDownloadUrl = (document) => {
+      return getKYCDocumentDownloadUrl(document.user_id || props.user.id, document.url.split('/').pop())
+    }
+
+    // Ajout d'une méthode d'upload KYC avec gestion d'erreur explicite
+    const uploadDocument = async (file, type) => {
+      try {
+        await uploadKYCDocumentWeb(file, type)
+        showToast('Document envoyé ou remplacé avec succès.', 'success')
+        await loadKycData()
+      } catch (error) {
+        showToast(error.message, 'error')
+      }
+    }
+
     onMounted(() => {
       loadKycData()
     })
@@ -316,6 +337,8 @@ export default {
       rejectKyc,
       requestMoreInfo,
       formatDate,
+      getDownloadUrl,
+      uploadDocument,
     }
   },
 }

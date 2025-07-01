@@ -8,6 +8,7 @@ import type { User } from '../types/models';
 import type { RegisterUserData } from '../services/api';
 import { login, register, verifyOTP, sendOTP as sendOTPRequest } from '../services/api';
 import { API_BASE_URL } from '../config';
+import AuthService from '../services/AuthService';
 
 // Fonction utilitaire pour vérifier la validité des objets
 const isValidObject = (obj: any): boolean => {
@@ -43,6 +44,7 @@ export interface AuthContextType {
   setAuthData: (user: User, token: string, refreshToken?: string) => Promise<void>
   checkTokenValidity: () => Promise<boolean>
   isTokenValid: () => boolean
+  refreshAccessToken: () => Promise<boolean>
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -61,6 +63,7 @@ export const AuthContext = createContext<AuthContextType>({
   setAuthData: async () => {},
   checkTokenValidity: async () => false,
   isTokenValid: () => false,
+  refreshAccessToken: async () => false,
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -77,12 +80,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return !isTokenExpired(token);
   };
 
-  // Vérifier la validité du token et déconnecter si nécessaire
-  const checkTokenValidity = async (): Promise<boolean> => {
-    if (!token || isTokenExpired(token)) {
-      console.log('[Auth] Token expiré, déconnexion automatique');
+  // Rafraîchit le token d'accès si expiré
+  const refreshAccessToken = async (): Promise<boolean> => {
+    try {
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+      if (!refreshToken) return false;
+      const { access_token, refresh_token } = await AuthService["refreshAccessToken"](refreshToken);
+      setToken(access_token);
+      await AsyncStorage.setItem('token', access_token);
+      if (refresh_token) {
+        await AsyncStorage.setItem('refreshToken', refresh_token);
+      }
+      return true;
+    } catch (e) {
+      console.error('[Auth] Erreur lors du refresh token:', e);
       await signOut(true);
       return false;
+    }
+  };
+
+  // Vérifier la validité du token et tenter un refresh si expiré
+  const checkTokenValidity = async (): Promise<boolean> => {
+    if (!token || isTokenExpired(token)) {
+      console.log('[Auth] Token expiré, tentative de refresh...');
+      const refreshed = await refreshAccessToken();
+      if (!refreshed) {
+        console.log('[Auth] Refresh token échoué, déconnexion.');
+        await signOut(true);
+        return false;
+      }
+      return true;
     }
     return true;
   };
@@ -92,7 +119,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const storedUser = await AsyncStorage.getItem("user")
         const storedToken = await AsyncStorage.getItem("token")
-
+        console.log('[AUTH][LOAD] storedUser:', storedUser)
+        console.log('[AUTH][LOAD] storedToken:', storedToken)
         if (storedUser && storedToken) {
           if (isTokenExpired(storedToken)) {
             console.log('[Auth] Token stocké expiré, nettoyage');
@@ -100,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             setUser(JSON.parse(storedUser))
             setToken(storedToken)
+            console.log('[AUTH][LOAD] setUser & setToken effectués');
           }
         }
       } catch (e) {
@@ -107,11 +136,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await signOut();
       } finally {
         setLoading(false)
+        console.log('[AUTH][LOAD] loading terminé');
       }
     }
-
     loadUserData()
   }, [])
+
+  // Ajout de logs lors de la mise à jour du token
+  useEffect(() => {
+    console.log('[AUTH][CTX] user:', user)
+    console.log('[AUTH][CTX] token:', token)
+  }, [user, token])
 
   // Vérification périodique du token toutes les 30 secondes
   useEffect(() => {
@@ -139,7 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true)
     setError(null)
     try {
-      const { token: authToken } = await login(phone, password)
+      const loginResult = await login(phone, password)
+      const authToken = loginResult.token
       const userData = await fetchUserFromAPI(authToken)
       setUser(userData)
       setToken(authToken)
@@ -251,7 +287,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateUserData, 
       setAuthData,
       checkTokenValidity,
-      isTokenValid
+      isTokenValid,
+      refreshAccessToken
     }}>
       {children}
     </AuthContext.Provider>

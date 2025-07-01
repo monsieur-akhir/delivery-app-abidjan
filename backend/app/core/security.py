@@ -20,6 +20,8 @@ logging.getLogger("passlib").setLevel(logging.ERROR)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
+logger = logging.getLogger("auth")
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -47,6 +49,7 @@ async def get_current_user(
     if settings.ENVIRONMENT == "development" and getattr(settings, "DISABLE_KEYCLOAK", False):
         test_user = db.query(User).filter(User.phone == "test@example.com").first()
         if test_user:
+            logger.info(f"[AUTH] Utilisateur de test retourné: {test_user.phone} (id={test_user.id}, role={test_user.role})")
             return test_user
         # Créer un utilisateur de test si nécessaire
         test_user = User(
@@ -59,6 +62,7 @@ async def get_current_user(
         db.add(test_user)
         db.commit()
         db.refresh(test_user)
+        logger.info(f"[AUTH] Utilisateur de test créé: {test_user.phone} (id={test_user.id}, role={test_user.role})")
         return test_user
 
     credentials_exception = HTTPException(
@@ -70,28 +74,35 @@ async def get_current_user(
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         phone: str = payload.get("sub")
         if phone is None:
+            logger.warning(f"[AUTH] Token sans 'sub' (phone). Token: {token}")
             raise credentials_exception
-    except jwt.JWTError:
+    except jwt.JWTError as e:
+        logger.warning(f"[AUTH] JWTError lors du décodage du token: {str(e)} | Token: {token}")
         raise credentials_exception
         
     user = db.query(User).filter(User.phone == phone).first()
     if user is None:
+        logger.warning(f"[AUTH] Aucun utilisateur trouvé pour phone={phone}")
         raise credentials_exception
     if user.status == "suspended":
+        logger.warning(f"[AUTH] Compte suspendu: user_id={user.id}, phone={user.phone}, role={user.role}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Compte suspendu. Veuillez contacter le support.",
         )
+    logger.info(f"[AUTH] Authentification réussie: user_id={user.id}, phone={user.phone}, role={user.role}, status={user.status}")
     return user
 
 async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     if current_user.status != "active":
+        logger.warning(f"[AUTH] Compte inactif: user_id={current_user.id}, phone={current_user.phone}, role={current_user.role}, status={current_user.status}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Compte inactif. Veuillez vérifier votre compte.",
         )
+    logger.info(f"[AUTH] Utilisateur actif: user_id={current_user.id}, phone={current_user.phone}, role={current_user.role}")
     return current_user
 
 async def get_current_manager(

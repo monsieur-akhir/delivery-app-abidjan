@@ -18,6 +18,8 @@ import WeatherInfo from "../../components/WeatherInfo"
 import { fetchCourierStats, fetchCourierEarnings, fetchAvailableDeliveries } from "../../services/api"
 import type { Delivery, Notification } from "../../types/models"
 import { LineChart } from "react-native-chart-kit";
+import Ionicons from "react-native-vector-icons/Ionicons"
+import { API_URL } from '../../config/environment';
 
 // Define the missing types for the chart components
 declare module 'react-native-chart-kit' {
@@ -83,6 +85,7 @@ const CourierDashboardScreen = () => {
   const [loading, setLoading] = useState(true)
   const [deliveryAlerts, setDeliveryAlerts] = useState<Notification[]>([])
   const [showAlerts, setShowAlerts] = useState(false)
+  const [isOnline, setIsOnline] = useState(false);
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -97,10 +100,10 @@ const CourierDashboardScreen = () => {
 
       // Formater les données pour le graphique
       const chartData = {
-        labels: earningsData.days.map((day: { day_short: string }) => day.day_short),
+        labels: Array.isArray(earningsData.days) ? earningsData.days.map((day: { day_short: string }) => day.day_short) : ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
         datasets: [
           {
-            data: earningsData.days.map((day: { amount: number }) => day.amount),
+            data: Array.isArray(earningsData.days) ? earningsData.days.map((day: { amount: number }) => day.amount) : [0, 0, 0, 0, 0, 0, 0],
           },
         ],
       }
@@ -196,23 +199,46 @@ const CourierDashboardScreen = () => {
     decimalPlaces: 0,
   }
 
-  const userProfilePicture = user?.profile_picture || "https://via.placeholder.com/40";
+  const userProfilePicture = user?.profile_picture
+    ? user.profile_picture.startsWith('http')
+      ? { uri: user.profile_picture }
+      : { uri: `${API_URL.replace(/\/$/, '')}/${user.profile_picture.replace(/^\//, '')}` }
+    : require('../../assets/images/default-avatar.png');
   const userFullName = user?.full_name || "Anonymous";
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Avatar.Image size={40} source={{ uri: userProfilePicture }} />
-          <View style={styles.headerText}>
-            <Text style={styles.welcomeText}>{t("dashboard.welcome")}</Text>
-            <Text style={styles.nameText}>{userFullName}</Text>
-          </View>
+        <Avatar.Image source={userProfilePicture} size={56} style={styles.avatar} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.userName}>{user?.full_name}</Text>
+          <Text style={styles.userRole}>{t('dashboard.role')}</Text>
         </View>
-        <View style={styles.headerRight}>
-          <IconButton icon="bell-outline" iconColor="#212121" size={24} onPress={() => navigation.navigate("Notifications")} />
-          <IconButton icon="cog-outline" iconColor="#212121" size={24} onPress={() => navigation.navigate("Settings")} />
-        </View>
+        <IconButton icon="bell-outline" iconColor="#212121" size={28} onPress={() => navigation.navigate("Notifications")} />
+      </View>
+
+      {/* Bouton En ligne / Hors ligne */}
+      <View style={{ alignItems: 'center', marginVertical: 12 }}>
+        <Button
+          mode={isOnline ? 'contained' : 'outlined'}
+          onPress={() => setIsOnline(v => !v)}
+          style={{
+            backgroundColor: isOnline ? '#4CAF50' : '#fff',
+            borderColor: isOnline ? '#4CAF50' : '#FF6B00',
+            borderWidth: 2,
+            borderRadius: 24,
+            paddingHorizontal: 32,
+            paddingVertical: 8,
+            minWidth: 200,
+          }}
+          labelStyle={{ color: isOnline ? '#fff' : '#FF6B00', fontWeight: 'bold', fontSize: 16 }}
+          icon={isOnline ? 'check-circle-outline' : 'power'}
+        >
+          {isOnline ? t('dashboard.goOffline') : t('dashboard.goOnline')}
+        </Button>
+        <Text style={{ color: isOnline ? '#4CAF50' : '#888', marginTop: 8, fontSize: 14, textAlign: 'center' }}>
+          {isOnline ? t('dashboard.onlineStatus') : t('dashboard.offlineStatus')}
+        </Text>
       </View>
 
       {!isConnected && <OfflineIndicator />}
@@ -281,21 +307,16 @@ const CourierDashboardScreen = () => {
           <Card style={styles.statsCard}>
             <Card.Content>
               <View style={styles.statsRow}>
-                <View style={styles.statItem}>
+                <View style={styles.statCard}>
                   <Text style={styles.statValue}>{stats.deliveries_completed}</Text>
                   <Text style={styles.statLabel}>{t("dashboard.deliveries")}</Text>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{formatPrice(stats.total_earnings)}</Text>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{formatPrice(stats.total_earnings)} FCFA</Text>
                   <Text style={styles.statLabel}>{t("dashboard.earnings")}</Text>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <View style={styles.ratingContainer}>
-                    <Text style={styles.statValue}>{stats.rating.toFixed(1)}</Text>
-                    <IconButton icon="star" size={16} iconColor="#FFC107" style={styles.ratingIcon} />
-                  </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{stats.rating}</Text>
                   <Text style={styles.statLabel}>{t("dashboard.rating")}</Text>
                 </View>
               </View>
@@ -320,7 +341,11 @@ const CourierDashboardScreen = () => {
 
             <View style={styles.progressContainer}>
               <ProgressBar
-                progress={stats.experience_points / stats.next_level_points}
+                progress={
+                  stats.next_level_points && stats.next_level_points > 0
+                    ? Math.max(0, Math.min(1, stats.experience_points / stats.next_level_points))
+                    : 0
+                }
                 color="#FF6B00"
                 style={styles.progressBar}
               />
@@ -436,32 +461,31 @@ const styles = StyleSheet.create({
     color: "#757575",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 2,
+    marginBottom: 8,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#222',
   },
-  headerText: {
-    marginLeft: 12,
+  userRole: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 2,
   },
-  welcomeText: {
-    fontSize: 12,
-    color: "#757575",
-  },
-  nameText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
-  },
-  headerRight: {
-    flexDirection: "row",
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 16,
+    backgroundColor: '#eee',
   },
   scrollContent: {
     padding: 16,
@@ -477,36 +501,28 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 12,
+    marginTop: 16,
   },
-  statItem: {
+  statCard: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    marginHorizontal: 4,
+    padding: 12,
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#212121",
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FF6B00',
   },
   statLabel: {
-    fontSize: 12,
-    color: "#757575",
+    fontSize: 13,
+    color: '#888',
     marginTop: 4,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: "#EEEEEE",
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  ratingIcon: {
-    margin: 0,
-    padding: 0,
   },
   levelCard: {
     borderRadius: 8,
@@ -569,13 +585,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#212121",
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#222',
   },
   seeAllText: {
     fontSize: 14,
-    color: "#FF6B00",
+    color: '#FF6B00',
+    fontWeight: 'bold',
+    alignSelf: 'flex-end',
+    marginTop: 8,
   },
   chart: {
     marginVertical: 8,

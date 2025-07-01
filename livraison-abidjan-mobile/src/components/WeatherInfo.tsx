@@ -6,7 +6,7 @@ import { View, StyleSheet, Image, TouchableOpacity, type ImageSourcePropType } f
 import { Text, Card, ActivityIndicator, IconButton } from "react-native-paper"
 import { useTranslation } from "react-i18next"
 import { useNetwork } from "../contexts/NetworkContext"
-import { fetchWeatherForecast } from "../services/api"
+import { getWeatherData } from "../services/api"
 import type { WeatherAlert } from "../types/models"
 
 interface WeatherLocation {
@@ -58,7 +58,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({ location, onPress, weather: i
 
     try {
       setLoading(true)
-      const apiData = await fetchWeatherForecast(latitude, longitude)
+      const apiData = await getWeatherData(latitude, longitude)
       // Transform the API data to match the WeatherData interface
       const formattedData: WeatherData = {
         current: apiData.current || {

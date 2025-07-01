@@ -410,17 +410,77 @@ class DeliveryService {
   }
 
   // Méthodes pour les coursiers
-  static async getAvailableDeliveries(searchParams?: DeliverySearchParams): Promise<AvailableDelivery[]> {
+  static async getAvailableDeliveries(params?: {
+    commune?: string;
+    lat?: number;
+    lng?: number;
+    radius_km?: number;
+  }): Promise<AvailableDelivery[]> {
     try {
-      const params = new URLSearchParams()
-      if (searchParams?.commune) params.append('commune', searchParams.commune)
-      if (searchParams?.max_distance) params.append('max_distance', searchParams.max_distance.toString())
-      if (searchParams?.min_price) params.append('min_price', searchParams.min_price.toString())
-      if (searchParams?.max_price) params.append('max_price', searchParams.max_price.toString())
-      if (searchParams?.vehicle_type) params.append('vehicle_type', searchParams.vehicle_type)
+      const queryParams = new URLSearchParams()
+      if (params?.commune) queryParams.append('commune', params.commune)
+      if (params?.lat) queryParams.append('lat', params.lat.toString())
+      if (params?.lng) queryParams.append('lng', params.lng.toString())
+      if (params?.radius_km) queryParams.append('radius_km', params.radius_km.toString())
 
-      const response = await api.get(`/courier/available-deliveries?${params.toString()}`)
-      return response.data
+      console.log('🔍 [DEBUG] getAvailableDeliveries appelé avec params:', params)
+      
+      // Essayer plusieurs endpoints possibles
+      const endpoints = [
+        `/api/v1/courier/available-deliveries?${queryParams.toString()}`,
+        `/api/courier/available-deliveries?${queryParams.toString()}`,
+        `/api/courier/deliveries/available?${queryParams.toString()}`,
+        `/courier/available-deliveries?${queryParams.toString()}`
+      ]
+
+      let response = null
+      let usedEndpoint = ''
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log('🔍 [DEBUG] Tentative avec endpoint:', endpoint)
+          response = await api.get(endpoint)
+          usedEndpoint = endpoint
+          console.log('✅ [DEBUG] Succès avec endpoint:', endpoint)
+          break
+        } catch (endpointError: unknown) {
+          if (endpointError instanceof Error) {
+            console.log(endpointError.message)
+          } else if (typeof endpointError === 'object' && endpointError !== null && 'response' in endpointError) {
+            // @ts-expect-error: on sait que response existe ici
+            console.log(endpointError.response?.data)
+          } else {
+            console.log(String(endpointError))
+          }
+          continue
+        }
+      }
+
+      if (!response) {
+        console.error('❌ [DEBUG] Tous les endpoints ont échoué')
+        return []
+      }
+
+      console.log('📦 [DEBUG] Réponse API reçue')
+      console.log('📦 [DEBUG] Type de réponse:', typeof response.data)
+      console.log('📦 [DEBUG] Est un tableau:', Array.isArray(response.data))
+      console.log('📦 [DEBUG] Longueur:', Array.isArray(response.data) ? response.data.length : 'N/A')
+
+      // Extraire les livraisons de la réponse API
+      let deliveries = []
+      if (Array.isArray(response.data)) {
+        deliveries = response.data
+      } else if (response.data && response.data.deliveries && Array.isArray(response.data.deliveries)) {
+        deliveries = response.data.deliveries
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        deliveries = response.data.data
+      } else {
+        deliveries = []
+      }
+
+      console.log('📦 [DEBUG] Livraisons extraites:', deliveries.length)
+      
+      return deliveries
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error('Erreur lors de la récupération des livraisons disponibles:', error.message)
@@ -1089,6 +1149,77 @@ class DeliveryService {
     } catch (error) {
       console.error('Erreur lors de la création de la livraison multi-destinations:', error);
       throw error;
+    }
+  }
+
+  static async getCommunes(): Promise<string[]> {
+    try {
+      console.log('🔍 [DEBUG] getCommunes appelé')
+      
+      // Essayer plusieurs endpoints possibles
+      const endpoints = [
+        '/api/courier/communes',
+        '/api/v1/courier/communes',
+        '/api/communes',
+        '/communes'
+      ]
+
+      let response = null
+      let usedEndpoint = ''
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log('🔍 [DEBUG] Tentative getCommunes avec endpoint:', endpoint)
+          response = await api.get(endpoint)
+          usedEndpoint = endpoint
+          console.log('✅ [DEBUG] Succès getCommunes avec endpoint:', endpoint)
+          break
+        } catch (endpointError: unknown) {
+          if (endpointError instanceof Error) {
+            console.log(endpointError.message)
+          } else if (typeof endpointError === 'object' && endpointError !== null && 'response' in endpointError) {
+            // @ts-expect-error: on sait que response existe ici
+            console.log(endpointError.response?.data)
+          } else {
+            console.log(String(endpointError))
+          }
+          continue
+        }
+      }
+
+      if (!response) {
+        console.error('❌ [DEBUG] Tous les endpoints getCommunes ont échoué')
+        // Fallback avec les communes par défaut
+        return ["Abobo","Adjamé","Attécoubé","Cocody","Koumassi","Marcory","Plateau","Port-Bouët","Treichville","Yopougon","Bingerville","Songon"]
+      }
+
+      console.log('📦 [DEBUG] Réponse communes reçue')
+      console.log('📦 [DEBUG] Type de réponse:', typeof response.data)
+      console.log('📦 [DEBUG] Est un tableau:', Array.isArray(response.data))
+
+      // Extraire les communes de la réponse API
+      let communes = []
+      if (Array.isArray(response.data)) {
+        communes = response.data
+      } else if (response.data && response.data.communes && Array.isArray(response.data.communes)) {
+        communes = response.data.communes
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        communes = response.data.data
+      } else {
+        communes = []
+      }
+
+      console.log('📦 [DEBUG] Communes extraites:', communes.length)
+      
+      return communes
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Erreur lors de la récupération des communes:', error.message)
+      } else {
+        console.error('Erreur lors de la récupération des communes:', String(error))
+      }
+      // Fallback avec les communes par défaut en cas d'erreur
+      return ["Abobo","Adjamé","Attécoubé","Cocody","Koumassi","Marcory","Plateau","Port-Bouët","Treichville","Yopougon","Bingerville","Songon"]
     }
   }
 }

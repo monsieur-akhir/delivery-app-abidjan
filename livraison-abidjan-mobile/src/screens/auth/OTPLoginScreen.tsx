@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { View, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native"
-import { TextInput, Button, Text } from "react-native-paper"
+import { TextInput, Button, Text, Snackbar } from "react-native-paper"
 import * as Animatable from "react-native-animatable"
 import { useTranslation } from "react-i18next"
 import AsyncStorage from "@react-native-async-storage/async-storage"
@@ -16,6 +16,7 @@ import type { RootStackParamList } from "../../types/navigation"
 import i18n from "../../i18n"
 import { useAlert } from '../../hooks/useAlert'
 import { useLoader } from '../../contexts/LoaderContext'
+import CustomAlert from '../../components/CustomAlert'
 
 type OTPLoginScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, "OTPLogin">
@@ -25,7 +26,7 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { isConnected, isOfflineMode, toggleOfflineMode } = useNetwork()
   const { setAuthData } = useAuth()
-  const { showErrorAlert, showSuccessAlert, showInfoAlert } = useAlert()
+  const { showErrorAlert, showSuccessAlert, showInfoAlert, alertVisible, alertConfig, hideAlert } = useAlert()
   const { showLoader, hideLoader } = useLoader()
 
   const [phone, setPhone] = useState<string>("")
@@ -35,6 +36,7 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
   const [showOfflineWarning, setShowOfflineWarning] = useState<boolean>(false)
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized)
   const [countdown, setCountdown] = useState<number>(0)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   // Charger le téléphone sauvegardé
   useEffect(() => {
@@ -191,6 +193,19 @@ const OTPLoginScreen: React.FC<OTPLoginScreenProps> = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+      {/* Modal d'alerte customisé */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onDismiss={hideAlert}
+        showCloseButton={alertConfig.showCloseButton}
+        autoDismiss={alertConfig.autoDismiss}
+        dismissAfter={alertConfig.dismissAfter}
+      />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Image d'illustration de connexion */}
         <Animatable.View animation="fadeIn" duration={1000} style={styles.illustrationContainer}>

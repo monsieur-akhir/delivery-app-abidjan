@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 from jose import jwt
 from ..models.user import User
 from .config import settings
+import logging
+
+logger = logging.getLogger("ws_auth")
 
 async def get_current_user_ws(
     websocket: WebSocket,
@@ -24,6 +27,7 @@ async def get_current_user_ws(
         token = websocket.query_params.get("token")
 
     if not token:
+        logger.warning(f"[WS_AUTH] Token manquant pour connexion WebSocket")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token manquant",
@@ -35,6 +39,7 @@ async def get_current_user_ws(
         exp = payload.get("exp")
 
         if phone is None:
+            logger.warning(f"[WS_AUTH] Token invalide: phone manquant. Token: {token}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token invalide - phone manquant",
@@ -42,6 +47,7 @@ async def get_current_user_ws(
 
         # Vérifier l'expiration explicitement
         if exp is None:
+            logger.warning(f"[WS_AUTH] Token invalide: expiration manquante. Token: {token}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token invalide - expiration manquante",
@@ -49,36 +55,41 @@ async def get_current_user_ws(
 
         import time
         if exp < time.time():
+            logger.warning(f"[WS_AUTH] Token expiré pour phone={phone}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token expiré",
             )
 
     except jwt.ExpiredSignatureError:
+        logger.warning(f"[WS_AUTH] Token expiré (jwt.ExpiredSignatureError)")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token expiré",
         )
     except jwt.JWTError as e:
-        print(f"JWT Error in WebSocket auth: {e}")
+        logger.warning(f"[WS_AUTH] JWTError lors du décodage du token: {str(e)} | Token: {token}")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return None
     except Exception as e:
-        print(f"Unexpected error in WebSocket auth: {e}")
+        logger.error(f"[WS_AUTH] Unexpected error in WebSocket auth: {e}")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return None
 
     user = db.query(User).filter(User.phone == phone).first()
     if not user:
+        logger.warning(f"[WS_AUTH] Utilisateur non trouvé pour phone={phone}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Utilisateur non trouvé",
         )
 
     if user.status != "active":
+        logger.warning(f"[WS_AUTH] Compte inactif: user_id={user.id}, phone={user.phone}, role={user.role}, status={user.status}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Compte inactif",
         )
 
+    logger.info(f"[WS_AUTH] Authentification WS réussie: user_id={user.id}, phone={user.phone}, role={user.role}, status={user.status}")
     return user

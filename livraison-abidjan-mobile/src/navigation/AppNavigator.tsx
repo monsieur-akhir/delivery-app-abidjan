@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useUser } from '../hooks/useUser';
 import { FeatherIcon } from '../components';
 import { RootStackParamList, TabParamList } from '../types/navigation';
+import { useNavigation } from '@react-navigation/native';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -31,6 +33,7 @@ import CreateMultiDestinationDeliveryScreen from '../screens/client/CreateMultiD
 import MultiDestinationDeliveryDetailsScreen from '../screens/client/MultiDestinationDeliveryDetailsScreen';
 import ScheduledDeliveriesScreen from '../screens/client/ScheduledDeliveriesScreen';
 import CreateScheduledDeliveryScreen from '../screens/client/CreateScheduledDeliveryScreen';
+import KYCVerificationScreen from '../screens/client/KYCVerificationScreen';
 
 // Courier Screens
 import CourierDashboardScreen from '../screens/courier/CourierDashboardScreen';
@@ -42,6 +45,7 @@ import GamificationScreen from '../screens/courier/GamificationScreen';
 import CommunityWalletScreen from '../screens/courier/CommunityWalletScreen';
 import ExpressDeliveriesScreen from '../screens/courier/ExpressDeliveriesScreen';
 import CourierMultiDestinationScreen from '../screens/courier/CourierMultiDestinationScreen';
+import CourierKYCVerificationScreen from '../screens/courier/KYCVerificationScreen';
 
 // Profile Screens
 import ProfileScreen from '../screens/profile/ProfileScreen';
@@ -147,10 +151,51 @@ function CourierTabs() {
 }
 
 export default function AppNavigator() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, token, loading: authLoading } = useAuth();
+  const { kycStatus, getKYCStatus } = useUser();
+  const navigation = useNavigation();
+  const [kycLoading, setKycLoading] = useState(false);
 
-  if (authLoading) {
-    return null; // Or a loading screen
+  useEffect(() => {
+    let retryTimeout: NodeJS.Timeout | null = null;
+    if (user && user.role === 'courier' && token) {
+      setKycLoading(true);
+      getKYCStatus()
+        .catch((e) => {
+          if (e?.response?.status === 401) {
+            retryTimeout = setTimeout(() => {
+              getKYCStatus().finally(() => setKycLoading(false));
+            }, 500);
+          }
+        })
+        .finally(() => {
+          if (!retryTimeout) setKycLoading(false);
+        });
+    }
+    return () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
+  }, [user, token]);
+
+  useEffect(() => {
+    if (
+      user &&
+      user.role === 'courier' &&
+      kycStatus &&
+      typeof kycStatus === 'object' &&
+      'status' in kycStatus &&
+      (kycStatus.status as any).status !== 'verified'
+    ) {
+      navigation.navigate('KYCVerification');
+    }
+  }, [user, kycStatus]);
+
+  if (authLoading || kycLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
+        <Text style={{ fontSize: 18, color: '#FF6B00' }}>Chargement...</Text>
+      </View>
+    );
   }
 
   // Gestion d'erreur pour éviter les problèmes de navigation
@@ -198,6 +243,7 @@ export default function AppNavigator() {
           <Stack.Screen name="MultiDestinationDeliveryDetails" component={MultiDestinationDeliveryDetailsScreen} />
           <Stack.Screen name="ScheduledDeliveries" component={ScheduledDeliveriesScreen} />
           <Stack.Screen name="CreateScheduledDelivery" component={CreateScheduledDeliveryScreen} />
+          <Stack.Screen name="KYCVerification" component={user.role === 'courier' ? CourierKYCVerificationScreen : KYCVerificationScreen} />
 
           {/* Courier Specific Screens */}
           <Stack.Screen name="CourierTrackDelivery" component={CourierTrackDeliveryScreen} />

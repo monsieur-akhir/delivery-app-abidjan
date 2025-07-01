@@ -7,6 +7,7 @@ from typing import Optional, List, Dict, Any
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+import logging
 
 from .core.config import settings
 from .core.security import get_current_user
@@ -19,10 +20,13 @@ from .api import (
     manager, transport, assistant, courier, complaints, business, business_analytics,
     support, zones, promotions, scheduled_deliveries, negotiations,
     multi_destination_deliveries,
-    market, email
+    market, email, notification, kyc_documents
 )
 from .websockets import tracking
 from .services.geolocation import get_google_places_suggestions
+from .websockets.tracking import manager
+from .core.websocket_auth import get_current_user_ws
+from .models.user import User
 
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
@@ -49,6 +53,7 @@ app.add_middleware(
 # Monter le dossier des fichiers statiques
 os.makedirs("uploads", exist_ok=True)
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Inclure les routes API
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentification"])
@@ -59,7 +64,6 @@ app.include_router(gamification.router, prefix=f"{settings.API_V1_STR}/gamificat
 app.include_router(market.router, prefix=f"{settings.API_V1_STR}/market", tags=["Marché"])
 app.include_router(wallet.router, prefix=f"{settings.API_V1_STR}/wallet", tags=["Portefeuille"])
 app.include_router(traffic.router, prefix=f"{settings.API_V1_STR}/traffic", tags=["Trafic et Météo"])
-app.include_router(manager.router, prefix=f"{settings.API_V1_STR}/manager", tags=["Gestionnaires"])
 app.include_router(transport.router, prefix=f"{settings.API_V1_STR}/transport", tags=["Transport"])
 app.include_router(assistant.router, prefix=f"{settings.API_V1_STR}/assistant", tags=["Assistant"])
 app.include_router(courier.router, prefix=f"{settings.API_V1_STR}/courier", tags=["Coursiers"])
@@ -73,11 +77,26 @@ app.include_router(scheduled_deliveries.router, prefix="/api", tags=["scheduled-
 app.include_router(negotiations.router, prefix="/api", tags=["negotiations"])
 app.include_router(multi_destination_deliveries.router, prefix="/api", tags=["Multi-Destination Deliveries"])
 app.include_router(email.router, prefix=f"{settings.API_V1_STR}", tags=["Email"])
+app.include_router(notification.router, prefix=f"{settings.API_V1_STR}/notifications", tags=["Notifications"])
+app.include_router(kyc_documents.router, prefix="/api")
 
 # Endpoint WebSocket pour le tracking en temps réel
 @app.websocket("/ws/tracking/{delivery_id}")
 async def websocket_tracking(websocket: WebSocket, delivery_id: int, db: Session = Depends(get_db)):
     await tracking.tracking_endpoint(websocket, delivery_id, db)
+
+# Endpoint WebSocket personnel
+@app.websocket("/ws/personal")
+async def websocket_personal(websocket: WebSocket, db: Session = Depends(get_db)):
+    user = await get_current_user_ws(websocket, db)
+    await manager.connect_personal(websocket, user)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Ici tu peux traiter les messages reçus si besoin
+    except WebSocketDisconnect:
+        manager.disconnect_personal(websocket, user.id)
+        logger.info(f"WebSocket personnel déconnecté pour l'utilisateur {user.id}")
 
 # Import all models to initialize them correctly
 from .models import *

@@ -1420,7 +1420,7 @@ const CreateDeliveryScreen: React.FC = () => {
         setDeliveryOptions({
           vehicle_types: [
             { type: 'moto', label: 'Livraison à moto', min_price: 500, icon: 'motorbike' },
-            { type: 'voiture', label: 'Livraison en voiture', min_price: 500, icon: 'car' },
+            { type: 'voiture', label: 'Livraison en voiture', min_price: 500, icon: 'truck' },
             { type: 'interville', label: 'Intervilles', min_price: 1990, icon: 'bus' }
           ],
           delivery_speeds: [

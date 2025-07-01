@@ -219,7 +219,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
             <Button
               mode="contained"
               style={styles.emptyButton}
-              onPress={() => navigation.navigate('AddVehicle')}>
+              onPress={() => navigation.navigate({ name: 'AddVehicle', params: {} })}>
               Ajouter un véhicule
             </Button>
           </View>
@@ -238,7 +238,7 @@ const VehicleManagementScreen: React.FC<VehicleManagementScreenProps> = ({ navig
         <FAB
           style={styles.fab}
           icon="plus"
-          onPress={() => navigation.navigate('AddVehicle')}
+          onPress={() => navigation.navigate({ name: 'AddVehicle', params: {} })}
           label="Ajouter"
         />
       )}

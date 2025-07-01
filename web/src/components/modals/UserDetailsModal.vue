@@ -17,6 +17,22 @@
               :alt="user.full_name"
               class="profile-avatar"
             />
+            <input
+              ref="profilePictureInput"
+              type="file"
+              accept="image/*"
+              style="display: none"
+              @change="handleProfilePictureChange"
+            />
+            <button
+              v-if="!uploadingProfilePicture"
+              class="btn btn-outline btn-sm"
+              style="margin-left: 12px"
+              @click="$refs.profilePictureInput.click()"
+            >
+              <i class="fas fa-camera"></i> Modifier la photo
+            </button>
+            <span v-else style="margin-left: 12px"><i class="fas fa-spinner fa-spin"></i> Upload...</span>
             <div class="profile-info">
               <h3>{{ user.full_name }}</h3>
               <p class="user-role">{{ $t(`roles.${user.role}`) }}</p>
@@ -234,6 +250,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import managerApi from '@/api/manager'
+import { getKYCDocumentDownloadUrl, uploadKYCDocumentWeb, uploadUserProfilePicture } from '@/services/api'
 
 export default {
   name: 'UserDetailsModal',
@@ -262,6 +279,8 @@ export default {
     const recentActivity = ref([])
     const courierProfile = ref(null)
     const businessProfile = ref(null)
+    const profilePictureInput = ref(null)
+    const uploadingProfilePicture = ref(false)
 
     const loadUserStats = async () => {
       try {
@@ -358,6 +377,23 @@ export default {
       }).format(amount)
     }
 
+    const handleProfilePictureChange = async (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+      try {
+        uploadingProfilePicture.value = true
+        const response = await uploadUserProfilePicture(file)
+        if (response && response.profile_picture) {
+          props.user.profile_picture = response.profile_picture
+          showToast('Photo de profil mise à jour', 'success')
+        }
+      } catch (error) {
+        showToast(error.message || "Erreur lors de l'upload de la photo de profil.", 'error')
+      } finally {
+        uploadingProfilePicture.value = false
+      }
+    }
+
     onMounted(() => {
       loadUserStats()
       loadRecentActivity()
@@ -377,6 +413,9 @@ export default {
       toggleUserStatus,
       formatDate,
       formatCurrency,
+      profilePictureInput,
+      uploadingProfilePicture,
+      handleProfilePictureChange,
     }
   },
 }

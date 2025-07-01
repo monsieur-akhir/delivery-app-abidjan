@@ -255,7 +255,7 @@ export default function CourierHomeScreen() {
 
   const serviceItems = [
     { title: 'Revenus', icon: 'cash', color: '#4CAF50', screen: 'CourierEarnings' },
-    { title: 'Véhicules', icon: 'car', color: '#2196F3', screen: 'VehicleManagement' },
+    { title: 'Véhicules', icon: 'truck', color: '#2196F3', screen: 'VehicleManagement' },
     { title: 'Statistiques', icon: 'chart-line', color: '#9C27B0', screen: 'CourierStats' },
     { title: 'Récompenses', icon: 'trophy', color: '#FF9800', screen: 'Gamification' }
   ];

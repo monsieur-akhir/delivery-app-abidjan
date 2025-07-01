@@ -23,13 +23,21 @@ class ConnectionManager:
         self.active_connections: Dict[int, List[WebSocket]] = {}
         # Dernières positions par livraison
         self.last_positions: Dict[int, Dict[str, Any]] = {}
-        # Informations sur les utilisateurs connectés
+        # Informations sur les utilisateurs connectés par livraison
         self.user_connections: Dict[int, List[Dict[str, Any]]] = {}
+        # Connexions personnelles par utilisateur
+        self.personal_connections: Dict[int, List[WebSocket]] = {}  # user_id -> WebSockets
         # Tâches de nettoyage
         self.cleanup_tasks: Dict[int, asyncio.Task] = {}
     
     async def connect(self, websocket: WebSocket, delivery_id: int, user: User):
         await websocket.accept()
+        
+        client_host, client_port = None, None
+        if hasattr(websocket.client, 'host') and hasattr(websocket.client, 'port'):
+            client_host = websocket.client.host
+            client_port = websocket.client.port
+        logger.info(f"[WS] {client_host}:{client_port} - WebSocket /ws/{delivery_id}?user_id={user.id}&role={user.role}&status={user.status} [accepted]")
         
         if delivery_id not in self.active_connections:
             self.active_connections[delivery_id] = []
@@ -172,6 +180,34 @@ class ConnectionManager:
                     
             except Exception as e:
                 logger.error(f"Erreur lors du nettoyage des connexions: {str(e)}")
+
+    async def connect_personal(self, websocket: WebSocket, user: User):
+        await websocket.accept()
+        client_host, client_port = None, None
+        if hasattr(websocket.client, 'host') and hasattr(websocket.client, 'port'):
+            client_host = websocket.client.host
+            client_port = websocket.client.port
+        logger.info(f"[WS] {client_host}:{client_port} - WebSocket /ws/personal?user_id={user.id}&role={user.role}&status={user.status} [accepted]")
+        if user.id not in self.personal_connections:
+            self.personal_connections[user.id] = []
+        self.personal_connections[user.id].append(websocket)
+        logger.info(f"Utilisateur {user.id} connecté à son WebSocket personnel")
+
+    def disconnect_personal(self, websocket: WebSocket, user_id: int):
+        if user_id in self.personal_connections:
+            if websocket in self.personal_connections[user_id]:
+                self.personal_connections[user_id].remove(websocket)
+                logger.info(f"WebSocket personnel déconnecté pour l'utilisateur {user_id}")
+            if not self.personal_connections[user_id]:
+                del self.personal_connections[user_id]
+
+    async def send_personal(self, user_id: int, message: dict):
+        if user_id in self.personal_connections:
+            for ws in self.personal_connections[user_id]:
+                try:
+                    await ws.send_json(message)
+                except Exception as e:
+                    logger.error(f"Erreur envoi WebSocket personnel: {str(e)}")
 
 # Créer une instance du gestionnaire
 manager = ConnectionManager()

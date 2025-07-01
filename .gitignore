@@ -211,3 +211,6 @@ mobile/dist/
 attached_assets_private/
 attached_assets/
 .env.dev
+
+backend/uploads/
+backend/backend/uploads/kyc_documents/

@@ -1,4 +1,3 @@
-
 # Ajouter ces imports si nécessaire
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, Enum, Table, JSON
 from sqlalchemy.orm import relationship
@@ -13,7 +12,9 @@ class DeliveryStatus(str, enum.Enum):
     pending = "pending"  # En attente d'enchères
     bidding = "bidding"  # Enchères en cours
     accepted = "accepted"  # Enchère acceptée, en attente de ramassage
+    picked_up = "picked_up"  # Colis récupéré
     in_progress = "in_progress"  # En cours de livraison
+    in_transit = "in_transit"  # En transit
     delivered = "delivered"  # Livré, en attente de confirmation
     completed = "completed"  # Terminé et confirmé
     cancelled = "cancelled"  # Annulé

@@ -1,11 +1,13 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 import os
+from datetime import datetime
 
 from ..models.user import User, UserRole, UserStatus, KYCStatus, BusinessProfile, CourierProfile
 from ..schemas.user import UserCreate, UserUpdate, UserStatusUpdate, KYCUpdate, BusinessProfileCreate, BusinessProfileUpdate, CourierProfileCreate, CourierProfileUpdate
 from ..core.exceptions import NotFoundError, ConflictError, BadRequestError
+from ..models.kyc_document import KycDocument
 
 def get_user(db: Session, user_id: int) -> User:
     user = db.query(User).filter(User.id == user_id).first()
@@ -191,3 +193,24 @@ def update_courier_location(db: Session, user_id: int, lat: float, lng: float) -
     db.commit()
     db.refresh(profile)
     return profile
+
+def update_kyc_status(user_id: int, db: Session):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    docs = db.query(KycDocument).filter(KycDocument.user_id == user_id).all()
+    if not docs:
+        user.kyc_status = KYCStatus.pending
+    elif any(doc.status == 'pending' for doc in docs):
+        user.kyc_status = KYCStatus.pending
+    elif any(doc.status == 'rejected' for doc in docs):
+        user.kyc_status = KYCStatus.rejected
+    elif all(doc.status == 'approved' for doc in docs):
+        user.kyc_status = KYCStatus.verified
+    else:
+        user.kyc_status = KYCStatus.pending
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour du statut KYC: {str(e)}")

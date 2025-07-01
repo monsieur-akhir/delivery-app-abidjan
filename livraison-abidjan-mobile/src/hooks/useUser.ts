@@ -81,6 +81,9 @@ interface UseUserReturn extends UserState {
   // Utilitaires
   clearError: () => void;
   refreshProfile: () => Promise<void>;
+
+  // Helper pour savoir si le KYC est vérifié
+  isKYCVerified: () => boolean;
 }
 
 export const useUser = (): UseUserReturn => {  const [state, setState] = useState<UserState>({
@@ -155,7 +158,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
       setState(prev => ({ ...prev, error: null }));
 
       const kycStatus = await UserService.getKYCStatus();
-
+      console.log('[HOOK] KYC STATUS mis à jour :', kycStatus);
       setState(prev => ({
         ...prev,
         kycStatus,
@@ -532,6 +535,12 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
   // Alias pour la compatibilité
   const getUserPreferences = getPreferences;
   const updateUserPreferences = updatePreferences;
+
+  // Helper pour savoir si le KYC est vérifié
+  const isKYCVerified = useCallback((): boolean => {
+    return !!(state.kycStatus && typeof state.kycStatus.status === 'string' && state.kycStatus.status === 'verified');
+  }, [state.kycStatus]);
+
   return {
     ...state,
     // Propriétés compatibles
@@ -568,6 +577,7 @@ export const useUser = (): UseUserReturn => {  const [state, setState] = useStat
     getWalletTransactions,
     withdrawFunds,
     requestPayout,
+    isKYCVerified,
   };
 };
 

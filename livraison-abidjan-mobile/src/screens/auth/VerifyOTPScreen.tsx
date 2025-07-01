@@ -128,19 +128,19 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
       const result = await verifyOTP(phoneNumber || route.params.phone || '', otpCode, otpType);
       if (result.success) {
         if (setAuthData && result.token && result.user) {
-          setAuthData(result.user, result.token);
+          await setAuthData(result.user, result.token);
         } else if (completeRegistration) {
           await completeRegistration();
         }
         if (role === 'courier') {
-          navigation.reset({ index: 0, routes: [{ name: 'KYCVerification' }] });
+          // navigation.navigate('KYCVerification'); // Suppression de la navigation directe
         } else {
           navigation.reset({ index: 0, routes: [{ name: 'ClientMain' }] });
         }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
         setErrorModalTitle('Erreur');
-        setErrorModalMessage(result.message || t('verifyOTP.errorInvalidOTP', 'Code incorrect ou expiré.'));
+        setErrorModalMessage(t('verifyOTP.errorInvalidOTP', 'Code incorrect ou expiré.'));
         setShowErrorModal(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setShake(true);
@@ -161,15 +161,11 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
     setResendLoading(true);
     setOtpSuccess('');
     try {
-      const otpResponse = await resendOTP(route.params.phoneNumber || route.params.phone || '', 'login');
+      await resendOTP(route.params.phoneNumber || route.params.phone || '', 'login');
       setCountdown(60);
       setOtpSuccess(t('verifyOTP.otpResent', 'Code renvoyé avec succès.'));
       setShowSuccessModal(true);
       setSuccessModalMessage(t('verifyOTP.otpResent', 'Code renvoyé avec succès.'));
-      // Log du code OTP si dispo (pour dev)
-      if (otpResponse && otpResponse.dev_otp_code) {
-        console.log('OTP envoyé (dev):', otpResponse.dev_otp_code);
-      }
     } catch (error) {
       setErrorModalTitle('Erreur');
       setErrorModalMessage(error instanceof Error ? error.message : t('verifyOTP.errorResendOTP', "Erreur lors de l'envoi du code."));
@@ -222,12 +218,12 @@ const VerifyOTPScreen: React.FC<VerifyOTPScreenProps> = ({ route, navigation }) 
               </LinearGradient>
             </Animated.View>
             <Text style={styles.otpTitle}>{t('verifyOTP.title', 'Entrez votre code')}</Text>
-            <Text style={styles.otpSubtitle}>{t('verifyOTP.subtitle', 'Nous avons envoyé un code au')} <Text style={styles.otpPhone}>{formatPhoneNumber(route.params.phoneNumber || route.params.phone)}</Text></Text>
+            <Text style={styles.otpSubtitle}>{t('verifyOTP.subtitle', 'Nous avons envoyé un code au')} <Text style={styles.otpPhone}>{formatPhoneNumber(route.params.phoneNumber || route.params.phone || '')}</Text></Text>
             <View style={styles.otpInputRow}>
               {otp.map((digit, index) => (
                 <RNTextInput
                   key={index}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  ref={(ref) => { inputRefs.current[index] = ref; }}
                   style={[
                     styles.otpInputBox,
                     digit ? styles.otpInputBoxFilled : {},

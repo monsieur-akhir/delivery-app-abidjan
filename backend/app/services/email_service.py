@@ -145,19 +145,27 @@ class EmailService:
         """
         Envoie un email en essayant Brevo en premier, puis SMTP en fallback.
         """
+        logger.info(f"[EMAIL_SERVICE] Appel send_email: to={to_email}, subject={subject}")
         # Essayer Brevo d'abord
         if self.brevo_enabled:
             if self.send_email_via_brevo(to_email, subject, text_content, html_content):
+                logger.info(f"[EMAIL_SERVICE] Email envoyé avec succès à {to_email} via Brevo ou fallback SMTP")
                 return True
             logger.warning("⚠️ Brevo a échoué, tentative SMTP...")
 
         # Fallback vers SMTP
-        return self.send_email_via_smtp(to_email, subject, text_content, html_content)
+        result = self.send_email_via_smtp(to_email, subject, text_content, html_content)
+        if result:
+            logger.info(f"[EMAIL_SERVICE] Email envoyé avec succès à {to_email} via SMTP")
+        else:
+            logger.error(f"[EMAIL_SERVICE] Échec de l'envoi d'email à {to_email} via tous les canaux")
+        return result
 
     def send_otp_email(self, email: str, code: str, otp_type: str) -> bool:
         """
         Envoie un code OTP par email avec template professionnel.
         """
+        logger.info(f"[EMAIL_SERVICE] Appel send_otp_email: email={email}, otp_type={otp_type}, code={code}")
         try:
             # Templates selon le type d'OTP
             templates = {
@@ -286,15 +294,20 @@ class EmailService:
                 }
             }
 
-            template_data = templates.get(otp_type, templates["login"])
-
-            return self.send_email(
-                to_email=email,
-                subject=template_data["subject"],
-                text_content=template_data["text_content"],
-                html_content=template_data["html_template"]
-            )
+            if otp_type not in templates:
+                logger.error(f"[EMAIL_SERVICE] Type d'OTP inconnu: {otp_type}")
+                return False
+            tpl = templates[otp_type]
+            subject = tpl["subject"]
+            html_content = tpl["html_template"]
+            text_content = tpl["text_content"]
+            result = self.send_email(email, subject, text_content, html_content)
+            if result:
+                logger.info(f"[EMAIL_SERVICE] OTP email envoyé avec succès à {email}")
+            else:
+                logger.error(f"[EMAIL_SERVICE] Échec de l'envoi OTP email à {email}")
+            return result
 
         except Exception as e:
-            logger.error(f"❌ Erreur envoi email OTP: {e}")
+            logger.error(f"❌ Exception send_otp_email: {str(e)}")
             return False

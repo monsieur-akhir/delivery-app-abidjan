@@ -6,8 +6,8 @@ import { View, StyleSheet, ScrollView, Alert, Image } from "react-native"
 import { Text, Card, Button, TextInput, Chip, ActivityIndicator, ProgressBar } from "react-native-paper"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Feather } from "@expo/vector-icons"
-import * as ImagePicker from 'expo-image-picker'
 import * as DocumentPicker from 'expo-document-picker'
+import { launchCamera, launchImageLibrary } from '../../utils/cameraPermissions'
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../../contexts/AuthContext"
 import { useUser } from "../../hooks"
@@ -41,7 +41,7 @@ type KYCVerificationScreenProps = {
 const KYCVerificationScreen: React.FC<KYCVerificationScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { getKYCStatus, submitKYCForVerification: submitKYCDocuments, uploadKYCDocument } = useUser()
+  const { getKYCStatus, submitKYCForVerification: submitKYCDocuments, uploadKYCDocument, kycStatus: currentKYCStatus } = useUser()
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -63,13 +63,12 @@ const KYCVerificationScreen: React.FC<KYCVerificationScreenProps> = ({ navigatio
     try {
       setLoading(true)
       await getKYCStatus()
-      // Use the current state from useUser hook
-      const { kycStatus: currentStatus } = useUser();
       
-      if (currentStatus) {
-        setKycStatus(currentStatus);
-        if (currentStatus.documents) {
-          setDocuments(currentStatus.documents)
+      // Utiliser directement currentKYCStatus du hook
+      if (currentKYCStatus) {
+        setKycStatus(currentKYCStatus);
+        if (currentKYCStatus.documents) {
+          setDocuments(currentKYCStatus.documents)
         }
       }
       
@@ -118,15 +117,7 @@ const KYCVerificationScreen: React.FC<KYCVerificationScreenProps> = ({ navigatio
       let result;
 
       if (type === 'selfie') {
-        const permission = await ImagePicker.requestCameraPermissionsAsync()
-        if (!permission.granted) {
-          Alert.alert(t('kyc.permissionRequired'), t('kyc.cameraPermissionRequired'))
-          return
-        }
-
-        result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
+        result = await launchCamera({
           aspect: [1, 1],
           quality: 0.8,
         })
@@ -162,9 +153,15 @@ const KYCVerificationScreen: React.FC<KYCVerificationScreenProps> = ({ navigatio
         await loadKYCStatus();
 
         Alert.alert(t('kyc.success'), t('kyc.documentUploaded'))
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error uploading document:', error)
-        Alert.alert(t('common.error'), t('kyc.uploadError'))
+        let message = t('kyc.uploadError');
+        if (error?.response?.data?.detail) {
+          message = error.response.data.detail;
+        } else if (error?.message) {
+          message = error.message;
+        }
+        Alert.alert(t('common.error'), message)
       } finally {
         setSubmitting(false)
       }

@@ -85,6 +85,9 @@ class User(Base):
     scheduled_deliveries_as_client = relationship("ScheduledDelivery", foreign_keys="ScheduledDelivery.client_id")
     scheduled_deliveries_as_courier = relationship("ScheduledDelivery", foreign_keys="ScheduledDelivery.courier_id")
 
+    # Relations pour les documents KYC
+    kyc_documents = relationship("KycDocument", back_populates="user", cascade="all, delete-orphan")
+
 class BusinessProfile(Base):
     __tablename__ = "business_profiles"
 

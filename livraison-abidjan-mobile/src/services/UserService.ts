@@ -135,9 +135,14 @@ class UserService {
     // Intercepteur pour ajouter le token d'authentification
     this.api.interceptors.request.use(
       async (config) => {
-        const token = await AsyncStorage.getItem('auth_token')
+        const token = await AsyncStorage.getItem('token')
+        console.log('🔍 [DEBUG] Intercepteur request - Token récupéré:', token ? 'OUI' : 'NON')
+        console.log('🔍 [DEBUG] Intercepteur request - URL:', config.url)
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
+          console.log('🔍 [DEBUG] Intercepteur request - Header Authorization ajouté')
+        } else {
+          console.log('❌ [DEBUG] Intercepteur request - Aucun token trouvé')
         }
         return config
       },
@@ -153,6 +158,7 @@ class UserService {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await this.api.get('/users/me')
+      console.log('[API] Réponse /users/me :', response.data)
       return response.data
     } catch (error) {
       console.error('Get current user error:', error)
@@ -298,41 +304,62 @@ class UserService {
   // === GESTION KYC (VÉRIFICATION D'IDENTITÉ) ===
 
   /**
-   * Récupération du statut KYC
-   */  async getKYCStatus(): Promise<{ status: KYCStatus; documents: KYCDocument[] }> {
+   * Récupération du statut KYC global et des documents
+   */
+  async getKYCStatus(): Promise<{ status: KYCStatus; documents: KYCDocument[] }> {
     try {
-      const response = await this.api.get('/users/kyc-status')
-      return response.data
+      const response = await this.api.get('/users/me')
+      // On suppose que l'API retourne { ..., kyc_status, kyc_documents: [...] }
+      return {
+        status: response.data.kyc_status,
+        documents: response.data.kyc_documents || []
+      }
     } catch (error) {
-      console.error('Get KYC status error:', error)
       throw this.handleError(error)
     }
   }
 
   /**
-   * Upload d'un document KYC
-   */  async uploadKYCDocument(documentType: string, imageUri: string): Promise<void> {
+   * Upload d'un fichier (KYC, profil, etc.)
+   */
+  async uploadFile(fileUri: string): Promise<string> {
+    const formData = new FormData();
+    const filename = fileUri.split('/').pop();
+    const match = /\.(\w+)$/.exec(filename || '');
+    let type = 'image';
+    if (match) {
+      const ext = match[1].toLowerCase();
+      if (ext === 'pdf') type = 'application/pdf';
+      else if (ext === 'png') type = 'image/png';
+      else if (ext === 'jpg' || ext === 'jpeg') type = 'image/jpeg';
+      else type = `image/${ext}`;
+    }
+    formData.append('file', {
+      uri: fileUri,
+      name: filename,
+      type,
+    } as unknown as Blob);
+    const response = await this.api.post('/kyc-documents/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    // L'API retourne { file_url: ... } qui est l'URL de téléchargement sécurisé
+    return response.data.file_url;
+  }
+
+  /**
+   * Upload d'un document KYC (nouvelle version)
+   */
+  async uploadKYCDocument(documentType: string, fileUri: string): Promise<void> {
     try {
-      const formData = new FormData()
-      const filename = imageUri.split('/').pop()
-      const match = /\.(\w+)$/.exec(filename || '')
-      const type = match ? `image/${match[1]}` : 'image'
-
-      formData.append('file', {
-        uri: imageUri,
-        name: filename,
-        type,
-      } as unknown as Blob)
-      formData.append('document_type', documentType)
-
-      await this.api.post('/users/kyc-documents', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+      // 1. Uploader le fichier sur le serveur (endpoint d'upload sécurisé)
+      const url = await this.uploadFile(fileUri);
+      // 2. Enregistrer le document dans la base via l'API REST
+      await this.api.post('/kyc-documents/me', {
+        type: documentType,
+        url: url
+      });
     } catch (error) {
-      console.error('Upload KYC document error:', error)
-      throw this.handleError(error)
+      throw this.handleError(error);
     }
   }
 
@@ -356,6 +383,18 @@ class UserService {
       await this.api.post('/users/kyc-submit')
     } catch (error) {
       console.error('Submit KYC error:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Récupération des documents KYC de l'utilisateur connecté
+   */
+  async getKYCDocuments(): Promise<KYCDocument[]> {
+    try {
+      const response = await this.api.get('/kyc-documents/me')
+      return response.data
+    } catch (error) {
       throw this.handleError(error)
     }
   }
